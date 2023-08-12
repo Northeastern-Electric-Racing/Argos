@@ -1,0 +1,14 @@
+generator client {
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:./mydatabase.db"
+}
+
+model Run {
+    id   Int    @id @default(autoincrement())
+    name String
+}

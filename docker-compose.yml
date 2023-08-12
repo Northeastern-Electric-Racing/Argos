@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  scylla-server:
+    container_name: scylla-server
+    restart: unless-stopped
+    image: scylla-server-prod:1.0.0
+    build:
+      context: scylla-server
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    networks:
+      - shared-network
+
+  client:
+    container_name: client
+    restart: unless-stopped
+    image: client-prod:1.0.0
+    build:
+      context: client
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - shared-network
+    depends_on:
+      - scylla-server
+
+networks:
+  shared-network:

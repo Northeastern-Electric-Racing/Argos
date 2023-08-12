@@ -1,0 +1,11 @@
+{
+  "name": "telemetry-hub",
+  "version": "1.0.0",
+  "scripts": {
+    "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
+    "build": "cd scylla-server && npm run build && cd ../client && npm run build",
+    "start:production": "cd scylla-server && npm run start:production && cd ../client && npm run start:production"
+  },
+  "author": "",
+  "license": "ISC"
+}
