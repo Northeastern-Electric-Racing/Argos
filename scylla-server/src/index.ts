@@ -20,6 +20,19 @@ app.get("/runs", async (req: Request, res: Response) => {
   }
 });
 
+app.post("/create", async (req: Request, res: Response) => {
+  try {
+    const data = await prisma.run.create({
+      data: {
+        name: "test",
+      },
+    });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
