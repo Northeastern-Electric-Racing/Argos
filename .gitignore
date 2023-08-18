@@ -3,3 +3,5 @@
 
 # environment config
 **/.env
+scylla-server/src/prisma/mydatabase.db
+scylla-server/src/prisma/mydatabase.db-journal
