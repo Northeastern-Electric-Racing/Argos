@@ -29,7 +29,7 @@ app.post("/create", async (req: Request, res: Response) => {
     });
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: "Database error" });
+    res.status(500).json({ error });
   }
 });
 
