@@ -9,19 +9,19 @@ datasource db {
 }
 
 model Run {
-    id           Int      @id @default(autoincrement())
+    id           Int      @id @unique @default(autoincrement())
     locationName String
     location     Location @relation(fields: [locationName], references: [name])
-    driverId     String?  @unique
+    driverId     String?
     driver       Driver?  @relation(fields: [driverId], references: [username])
-    systemId     String?  @unique
+    systemId     String?
     system       System?  @relation(fields: [systemId], references: [name])
     data         Data[]
     time         DateTime
 }
 
 model Location {
-    name      String @id
+    name      String @id @unique
     latitude  Float
     longitude Float
     radius    Float
@@ -29,17 +29,17 @@ model Location {
 }
 
 model Driver {
-    username String @id
+    username String @id @unique
     runs     Run[]
 }
 
 model System {
-    name String @id
+    name String @id @unique
     runs Run[]
 }
 
 model Data {
-    id           Int      @id @default(autoincrement())
+    id           Int      @id @unique @default(autoincrement())
     value        Int
     dataTypeName String
     dataType     DataType @relation(fields: [dataTypeName], references: [name])
@@ -49,15 +49,14 @@ model Data {
 }
 
 model DataType {
-    name     String @id
+    name     String @id @unique
     unit     String
     data     Data[]
-    nodeId   Int
     node     Node   @relation(fields: [nodeName], references: [name])
     nodeName String
 }
 
 model Node {
-    name      String     @id
+    name      String     @id @unique
     dataTypes DataType[]
 }
