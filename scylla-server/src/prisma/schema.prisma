@@ -9,6 +9,55 @@ datasource db {
 }
 
 model Run {
-    id   Int    @id @default(autoincrement())
-    name String
+    id           Int      @id @default(autoincrement())
+    locationName String
+    location     Location @relation(fields: [locationName], references: [name])
+    driverId     String?  @unique
+    driver       Driver?  @relation(fields: [driverId], references: [username])
+    systemId     String?  @unique
+    system       System?  @relation(fields: [systemId], references: [name])
+    data         Data[]
+    time         DateTime
+}
+
+model Location {
+    name      String @id
+    latitude  Float
+    longitude Float
+    radius    Float
+    runs      Run[]
+}
+
+model Driver {
+    username String @id
+    runs     Run[]
+}
+
+model System {
+    name String @id
+    runs Run[]
+}
+
+model Data {
+    id           Int      @id @default(autoincrement())
+    value        Int
+    dataTypeName String
+    dataType     DataType @relation(fields: [dataTypeName], references: [name])
+    time         DateTime
+    runId        Int
+    run          Run      @relation(fields: [runId], references: [id])
+}
+
+model DataType {
+    name     String @id
+    unit     String
+    data     Data[]
+    nodeId   Int
+    node     Node   @relation(fields: [nodeName], references: [name])
+    nodeName String
+}
+
+model Node {
+    name      String     @id
+    dataTypes DataType[]
 }
