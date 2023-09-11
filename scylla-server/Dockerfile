@@ -1,20 +1,13 @@
-FROM node:16 AS Production
+FROM oven/bun:latest as Production
 
 ENV NODE_ENV=production
 
-WORKDIR /usr/src/api
-
 COPY package.json . 
-COPY package-lock.json .
 
-RUN npm install
+RUN bun install
 
 COPY . .
 
-RUN npx prisma@5.1.1 generate
+RUN bun run build
 
-RUN npx prisma@5.1.1 migrate deploy
-
-RUN npm run build
-
-CMD ["sh", "-c", "npm run start:production"]
+CMD ["sh", "-c", "bun start"]

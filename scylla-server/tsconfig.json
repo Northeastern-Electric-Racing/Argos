@@ -1,10 +1,17 @@
-{
-    "compilerOptions": {
-      "target": "ES6",
-      "module": "CommonJS",
-      "outDir": "./dist",
-      "rootDir": "./src",
-      "strict": true,
-      "esModuleInterop": true
-    }
+
+  {
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "module": "NodeNext",
+    "target": "esnext",
+    //"target": "ES6",
+    //"module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    // "bun-types" is the important part
+    "types": ["bun-types"],
+    "moduleResolution": "NodeNext"
   }
+}

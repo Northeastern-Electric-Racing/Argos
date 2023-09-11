@@ -1,26 +1,26 @@
 {
-  "name": "siren-server",
+  "name": "scylla-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd src && tsc",
-    "start:production": "node dist/index.js",
-    "start": "npx ts-node src/index.ts",
-    "prisma:generate": "npx prisma generate",
-    "prisma:migrate":"npx prisma migrate dev"
+    "build": "bun build ./src/index.ts",
+    "start:production": "bun ./src/index.ts",
+    "start": "bun ./src/index.ts",
+    "prisma:generate": "bunx prisma@5.1.1 generate",
+    "prisma:migrate": "bunx prisma@5.1.1 migrate dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.1.1",
+    "@prisma/client": "5.1.1",
     "@types/express": "^4.17.17",
+    "bun-types": "^1.0.1",
     "express": "^4.18.2",
-    "prisma": "^5.1.1",
+    "prisma": "5.1.1",
     "sqlite3": "^5.1.6",
-    "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
   "prisma": {
