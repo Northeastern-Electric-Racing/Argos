@@ -14,7 +14,7 @@ model Run {
     location     Location @relation(fields: [locationName], references: [name])
     driverId     String?
     driver       Driver?  @relation(fields: [driverId], references: [username])
-    systemId     String?
+    systemId     Int?
     system       System?  @relation(fields: [systemId], references: [name])
     data         Data[]
     time         DateTime
@@ -34,14 +34,14 @@ model Driver {
 }
 
 model System {
-    name String @id @unique
+    name Int   @id @unique
     runs Run[]
 }
 
 model Data {
     id           Int      @id @unique @default(autoincrement())
     value        Int
-    dataTypeName String
+    dataTypeName Int
     dataType     DataType @relation(fields: [dataTypeName], references: [name])
     time         DateTime
     runId        Int
@@ -49,7 +49,7 @@ model Data {
 }
 
 model DataType {
-    name     String @id @unique
+    name     Int    @id @unique
     unit     String
     data     Data[]
     node     Node   @relation(fields: [nodeName], references: [name])
