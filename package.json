@@ -2,6 +2,7 @@
   "name": "telemetry-hub",
   "version": "1.0.0",
   "scripts": {
+    "lint": "npx eslint . --max-warnings=0",
     "prettier-check": "npx prettier --check .",
     "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
     "build": "cd scylla-server && npm run build && cd ../client && npm run build",
@@ -12,5 +13,9 @@
   "license": "ISC",
   "dependencies": {
     "prettier": "^3.0.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "eslint-plugin-react": "^7.33.2"
   }
 }

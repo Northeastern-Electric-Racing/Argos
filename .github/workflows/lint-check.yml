@@ -22,4 +22,4 @@ jobs:
       - name: Install modules
         run: npm install && npm run prisma:generate
       - name: Run linting check
-        run: npm lint --max-warnings=0
+        run: npm run lint
