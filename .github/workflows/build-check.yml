@@ -1,0 +1,28 @@
+name: Build
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+jobs:
+  run-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install docker-compose
+
+      - name: Build Docker Compose
+        run: |
+          if ! docker-compose build; then
+            echo "Docker Compose build failed."
+            exit 1  # This will cause the workflow to fail
+          fi

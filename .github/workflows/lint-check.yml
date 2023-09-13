@@ -1,0 +1,25 @@
+name: Linting Check
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+jobs:
+  run-linting-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.17.1
+          cache: 'npm'
+      - name: Install modules
+        run: npm install && npm run prisma:generate
+      - name: Run linting check
+        run: npm run lint --max-warnings=0
