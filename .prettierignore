@@ -3,5 +3,6 @@
 
 client/build
 client/public/index.html
+client/tsconfig.json
 
-client/tsconfig/json
+docker-compose.yml
