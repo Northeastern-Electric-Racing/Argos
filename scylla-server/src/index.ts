@@ -1,9 +1,9 @@
-import express, { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { Server } from "socket.io";
-import ProxyController from "./proxy/proxy-controller";
-import { WebSocket } from "ws";
-import { Message } from "./utils/message.utils";
+import express, { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { Server } from 'socket.io';
+import ProxyController from './proxy/proxy-controller';
+import { WebSocket } from 'ws';
+import { Message } from './utils/message.utils';
 
 const app = express();
 const port = 8000;
@@ -56,4 +56,3 @@ socketClient.on('open', () => {
 socketClient.on('close', () => {
   console.log('disconnected from Siren');
 });
-
