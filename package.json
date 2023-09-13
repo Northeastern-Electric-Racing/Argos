@@ -1,11 +1,26 @@
 {
-  "name": "telemetry-hub",
+  "name": "argos",
   "version": "1.0.0",
   "scripts": {
+    "lint": "npx eslint .",
+    "prettier-check": "npx prettier --check .",
     "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
     "build": "cd scylla-server && npm run build && cd ../client && npm run build",
-    "start:production": "cd scylla-server && npm run start:production && cd ../client && npm run start:production"
+    "start:production": "cd scylla-server && npm run start:production && cd ../client && npm run start:production",
+    "prisma:generate": "cd scylla-server && npm run prisma:generate"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dev-dependencies": {
+    "prettier": "^3.0.3",
+    "eslint": "^7.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "eslint": "^8.49.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-react": "^7.33.2"
+  }
 }
