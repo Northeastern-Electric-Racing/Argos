@@ -2,7 +2,7 @@
   "name": "telemetry-hub",
   "version": "1.0.0",
   "scripts": {
-    "lint": "npx eslint . --max-warning=0",
+    "lint": "npx eslint . --max-warnings=0",
     "prettier-check": "npx prettier --check .",
     "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
     "build": "cd scylla-server && npm run build && cd ../client && npm run build",
