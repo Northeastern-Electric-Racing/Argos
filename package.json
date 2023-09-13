@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "lint": "npx eslint .",
+    "test": "cd scylla-server && npm run test",
     "prettier-check": "npx prettier --check .",
     "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
     "build": "cd scylla-server && npm run build && cd ../client && npm run build",
