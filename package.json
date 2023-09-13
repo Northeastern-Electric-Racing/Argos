@@ -17,70 +17,10 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "guard-for-in": "error",
-      "prefer-arrow-callback": "error",
-      "no-unsafe-negation": [
-        "error",
-        {
-          "enforceForOrderingRelations": true
-        }
-      ],
-      "no-unsafe-optional-chaining": [
-        "error",
-        {
-          "disallowArithmeticOperators": true
-        }
-      ],
-      "eqeqeq": "error",
-      "no-else-return": "error",
-      "no-lonely-if": "error",
-      "no-throw-literal": "error",
-      "prefer-promise-reject-errors": "error",
-      "no-unneeded-ternary": "error",
-      "no-var": "error",
-      "object-shorthand": "error",
-      "prefer-const": "error",
-      "prefer-destructuring": [
-        "error",
-        {
-          "VariableDeclarator": {
-            "array": true,
-            "object": true
-          },
-          "AssignmentExpression": {
-            "array": true,
-            "object": true
-          }
-        },
-        {
-          "enforceForRenamedProperties": false
-        }
-      ],
-      "prefer-exponentiation-operator": "error",
-      "prefer-object-spread": "error",
-      "prefer-rest-params": "error",
-      "prefer-spread": "error"
-    },
-    "ignorePatterns": [
-      "**/.github/**",
-      "build",
-      "coverage",
-      "docs",
-      "lambda",
-      "node_modules",
-      "public",
-      "lib",
-      "dist"
-    ]
-  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "eslint": "^8.49.0",
+    "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.33.2"
   }
 }
