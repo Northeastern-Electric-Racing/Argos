@@ -1,5 +1,5 @@
 {
-  "name": "telemetry-hub",
+  "name": "argos",
   "version": "1.0.0",
   "scripts": {
     "lint": "npx eslint .",
