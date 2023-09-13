@@ -2,7 +2,8 @@ import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import WebSocket from 'ws';
 import { Message } from "./utils/message.utils";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
+import ProxyController from "./proxy/proxy-controller";
 
 const app = express();
 const port = 8000;
@@ -33,12 +34,9 @@ const serverSocket = new Server(server, {
   }
 });
 
-serverSocket.on('connection', (socket: Socket) => {
-  console.log('connected to client');
-  socket.on('disconnect', () => {
-    console.log('disconnected from client');
-  });
-});
+const proxyController = new ProxyController();
+
+serverSocket.on('connection', proxyController.handleClientConnection);
 
 
 // const socketClient = new WebSocket('TODO: TALK TO Siren');
