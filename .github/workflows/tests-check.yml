@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.17.1
-          cache: 'yarn'
+          cache: npm
       - name: Install modules
         run: npm install && npm run prisma:generate
       - name: Run tests
