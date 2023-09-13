@@ -2,8 +2,6 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { Server } from 'socket.io';
 import ProxyController from './proxy/proxy-controller';
-import { WebSocket } from 'ws';
-import { Message } from './utils/message.utils';
 
 const app = express();
 const port = 8000;
@@ -39,20 +37,20 @@ const serverProxyController = new ProxyController();
 serverSocket.on('connection', serverProxyController.handleClientConnection);
 
 //TODO: Get host/port from DNC
-const socketClient = new WebSocket('http://localhost:8080');
+// const socketClient = new WebSocket('http://localhost:8080');
 
-socketClient.on('open', () => {
-  console.log('connected to Siren');
-  socketClient.on('message', (data: any) => {
-    try {
-      const message = JSON.parse(data) as Message;
-      console.log(message);
-    } catch (error) {
-      console.log('error parsing message', error);
-    }
-  });
-});
+// socketClient.on('open', () => {
+//   console.log('connected to Siren');
+//   socketClient.on('message', (data: any) => {
+//     try {
+//       const message = JSON.parse(data) as Message;
+//       console.log(message);
+//     } catch (error) {
+//       console.log('error parsing message', error);
+//     }
+//   });
+// });
 
-socketClient.on('close', () => {
-  console.log('disconnected from Siren');
-});
+// socketClient.on('close', () => {
+//   console.log('disconnected from Siren');
+// });
