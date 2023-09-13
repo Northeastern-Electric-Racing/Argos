@@ -2,7 +2,7 @@
   "name": "telemetry-hub",
   "version": "1.0.0",
   "scripts": {
-    "lint": "npx eslint . --max-warnings=0",
+    "lint": "npx eslint .",
     "prettier-check": "npx prettier --check .",
     "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
     "build": "cd scylla-server && npm run build && cd ../client && npm run build",
@@ -18,6 +18,10 @@
     "eslint-plugin-prettier": "^4.2.1"
   },
   "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
     "rules": {
       "guard-for-in": "error",
       "prefer-arrow-callback": "error",
