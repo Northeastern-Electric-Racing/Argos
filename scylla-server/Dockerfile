@@ -15,8 +15,6 @@ RUN npx prisma@5.1.1 generate
 
 RUN npx prisma@5.1.1 migrate deploy
 
-RUN npm i --save-dev @types/ws
-
 RUN npm run build
 
 CMD ["sh", "-c", "npm run start:production"]
