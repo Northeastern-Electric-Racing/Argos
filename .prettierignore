@@ -3,3 +3,5 @@
 
 client/build
 client/public/index.html
+
+client/tsconfig/json
