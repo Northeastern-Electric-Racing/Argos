@@ -20,6 +20,18 @@ app.get("/runs", async (req: Request, res: Response) => {
   }
 });
 
+// #15 CRUD Operations 
+// Service Function, gets all systems and returns result as json
+app.get("/systems", async (req: Request, res: Response) => {
+  try {
+    const data = await prisma.system.findMany();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({error: "Database error getting systems"})
+  }
+  
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
