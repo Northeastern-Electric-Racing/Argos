@@ -2,10 +2,15 @@
   "name": "telemetry-hub",
   "version": "1.0.0",
   "scripts": {
+    "prettier-check": "npx prettier --check .",
     "install-dependencies": "npm install && cd scylla-server && npm install && cd ../client && npm install",
     "build": "cd scylla-server && npm run build && cd ../client && npm run build",
-    "start:production": "cd scylla-server && npm run start:production && cd ../client && npm run start:production"
+    "start:production": "cd scylla-server && npm run start:production && cd ../client && npm run start:production",
+    "prisma:generate": "cd scylla-server && npm run prisma:generate"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "prettier": "^3.0.3"
+  }
 }
