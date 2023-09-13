@@ -14,6 +14,7 @@ export default class ProxyController {
   }
 
   public handleClientConnection(socket: Socket): void {
+    console.log('connected to client');
     socket.on('message', this.handleClientMessage);
     socket.on('disconnect', this.handleClientDisconnect);
   }

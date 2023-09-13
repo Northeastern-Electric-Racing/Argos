@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import ProxyController from './proxy/proxy-controller';
 
 const app = express();
@@ -34,7 +34,9 @@ const serverSocket = new Server(server, {
 
 const serverProxyController = new ProxyController();
 
-serverSocket.on('connection', serverProxyController.handleClientConnection);
+serverSocket.on('connection', (socket: Socket) => {
+  serverProxyController.handleClientConnection(socket);
+});
 
 //TODO: Get host/port from DNC
 // const socketClient = new WebSocket('http://localhost:8080');
