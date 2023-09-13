@@ -6,3 +6,4 @@ client/public/index.html
 client/tsconfig.json
 
 docker-compose.yml
+.eslintrc.json
