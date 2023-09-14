@@ -1,6 +1,15 @@
 import express, { Request, Response } from 'express';
 import prisma from './prisma/prisma-client';
 
+async function getAllDataTypes() {
+  try {
+    const dataTypes = await prisma.dataType.findMany();
+    return dataTypes;
+  } catch (error) {
+    throw new Error('There was an error fetching data types.');
+  }
+}
+
 const app = express();
 const port = 8000;
 
@@ -18,6 +27,17 @@ app.get('/runs', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Database error' });
   }
 });
+
+const clientMessageMap = {
+  allDataTypes: async () => {
+    try {
+      const dataTypes = await getAllDataTypes();
+      return { success: true, data: dataTypes };
+    } catch (error) {
+      return { success: false, error: 'Error' };
+    }
+  }
+};
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
