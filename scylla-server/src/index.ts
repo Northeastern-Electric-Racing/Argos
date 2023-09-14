@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import ProxyController from './proxy/proxy-controller';
 import prisma from './prisma/prisma-client';
+import { createServerMessageMap } from './utils/message-maps.utils';
 
 const app = express();
 const port = 8000;
@@ -31,10 +32,9 @@ const serverSocket = new Server(server, {
   }
 });
 
-const serverProxyController = new ProxyController();
-
 serverSocket.on('connection', (socket: Socket) => {
-  serverProxyController.handleClientConnection(socket);
+  const serverProxy = new ProxyController(createServerMessageMap(), socket);
+  serverProxy.configure();
 });
 
 //TODO: Get host/port from DNC
