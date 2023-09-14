@@ -1,4 +1,4 @@
-import { getAllSystems } from "../services/systems.services";
+import { getAllSystems } from '../services/systems.services';
 
 // since these functions are async i think should output Promise<JSON> but could be wrong
 export type ResponseFunction = (data: JSON) => Promise<JSON>;
@@ -27,7 +27,7 @@ export const createClientMessageMap = (): Map<string, ResponseFunction> => {
     return Promise.resolve(data);
   });
   // adds the getAllSystems CRUD to ClientMessageMap
-  clientMessageMap.set('getAllSystems', getAllSystems)
-  console.log('getAllSystems', getAllSystems)
+  clientMessageMap.set('getAllSystems', getAllSystems);
+  console.log('getAllSystems', getAllSystems);
   return clientMessageMap;
 };
