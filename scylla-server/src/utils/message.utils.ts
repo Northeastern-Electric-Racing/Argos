@@ -13,4 +13,4 @@ type ServerData = {
 export type ClientMessage = {
   argument: string;
   data: JSON;
-}
+};
