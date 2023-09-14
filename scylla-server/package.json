@@ -31,15 +31,5 @@
     "@types/jest": "^29.5.4",
     "@types/ws": "^8.5.5",
     "prisma": "^5.2.0"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "transform": {
-      "node_modules/variables/.+\\.(j|t)sx?$": "ts-jest"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!variables/.*)"
-    ]
   }
 }
