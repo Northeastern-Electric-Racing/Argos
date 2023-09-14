@@ -25,12 +25,12 @@ export default class ProxyController {
   private handleMessage = (data: any): void => {
     try {
       const decodedMessage: ClientMessage = JSON.parse(data) as ClientMessage;
-      const responseFunction = this.messageMap.get(data.argument);
+      const responseFunction = this.messageMap.get(decodedMessage.argument);
       if (responseFunction) {
         const responseData = responseFunction(decodedMessage.data);
         this.socket.emit('message', responseData);
       } else {
-        throw new Error('Invalid Argument');
+        throw new Error(`Invalid Argument ${decodedMessage.argument}`);
       }
     } catch (error) {
       if (error instanceof Error) {
