@@ -47,6 +47,7 @@ serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyController(createServerMessageMap(), socket);
   serverProxy.configure();
 });
+}
 
 //TODO: Get host/port from DNC
 // const socketClient = new WebSocket('http://localhost:8080');
@@ -66,4 +67,3 @@ serverSocket.on('connection', (socket: Socket) => {
 // socketClient.on('close', () => {
 //   console.log('disconnected from Siren');
 // });
-}
