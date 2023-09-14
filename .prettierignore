@@ -7,3 +7,4 @@ client/tsconfig.json
 
 docker-compose.yml
 .eslintrc.js
+tsconfig.json

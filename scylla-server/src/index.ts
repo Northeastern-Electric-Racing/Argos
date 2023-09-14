@@ -1,11 +1,10 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 import ProxyController from './proxy/proxy-controller';
+import prisma from './prisma/prisma-client';
 
 const app = express();
 const port = 8000;
-const prisma = new PrismaClient();
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello, Express server with TypeScript!');

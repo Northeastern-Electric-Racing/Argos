@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
     "build": "cd src && tsc",
     "start:production": "node dist/index.js",
     "start": "npx ts-node src/index.ts",
@@ -23,12 +23,14 @@
     "sqlite3": "^5.1.6",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
+    "vitest": "^0.34.4",
     "ws": "^8.14.1"
   },
   "prisma": {
     "schema": "./src/prisma/schema.prisma"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.4",
     "@types/ws": "^8.5.5",
     "prisma": "^5.2.0"
   }
