@@ -10,6 +10,7 @@ function App() {
   useEffect(() => {
     const onConnect = () => {
       setIsConnected(true);
+      socket.emit('message', JSON.stringify({ argument: 'test' }));
     };
 
     const onDisconnect = () => {

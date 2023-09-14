@@ -21,7 +21,7 @@ export default class ProxyController {
    * Handles a message from the client
    * @param data The data received from the client
    */
-  private handleClientMessage(data: any): void {
+  private handleClientMessage = (data: any): void => {
     try {
       data = JSON.parse(data);
       const responseFunction = this.messageMap.get(data.argument);
@@ -37,28 +37,28 @@ export default class ProxyController {
       }
       console.log('error in message', error);
     }
-  }
+  };
 
   /**
    * Handles a client disconnect
    */
-  private handleClientDisconnect(): void {
+  private handleClientDisconnect = (): void => {
     console.log('disconnected from client');
-  }
+  };
 
   /**
    * Handles a client connection
    */
-  private handleClientConnection(): void {
+  private handleClientConnection = (): void => {
     console.log('connected to client');
     this.socket.on('message', this.handleClientMessage);
     this.socket.on('disconnect', this.handleClientDisconnect);
-  }
+  };
 
   /**
    * Configures the proxy controller
    */
-  public configure(): void {
+  public configure = (): void => {
     this.handleClientConnection();
-  }
+  };
 }
