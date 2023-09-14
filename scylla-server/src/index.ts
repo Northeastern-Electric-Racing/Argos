@@ -66,3 +66,4 @@ serverSocket.on('connection', (socket: Socket) => {
 // socketClient.on('close', () => {
 //   console.log('disconnected from Siren');
 // });
+}
