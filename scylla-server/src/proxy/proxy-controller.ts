@@ -1,11 +1,12 @@
 import { Socket } from 'socket.io';
 import { ClientMessage } from '../utils/message.utils';
+import { ResponseFunction } from '../utils/message-maps.utils';
 
 /**
  * Proxy Controller To Handle Inputting and Outputting Messages to a Client
  */
 export default class ProxyController {
-  messageMap: Map<string, (data: JSON) => void>;
+  messageMap: Map<string, ResponseFunction>;
   socket: Socket;
 
   /**
@@ -13,7 +14,7 @@ export default class ProxyController {
    * @param messageMap A map of input arguments to functions that handle the input
    * @param socket the socket to send and receive messages from
    */
-  constructor(messageMap: Map<string, (data: JSON) => void>, socket: Socket) {
+  constructor(messageMap: Map<string, ResponseFunction>, socket: Socket) {
     this.messageMap = messageMap;
     this.socket = socket;
   }
