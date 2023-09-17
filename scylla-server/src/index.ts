@@ -1,7 +1,9 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
-import ProxyController from './proxy/proxy-controller';
 import { createServerMessageMap } from './utils/message-maps.utils';
+import { WebSocket } from 'ws';
+import ProxyServer from './proxy/proxy-server';
+import ProxyClient from './proxy/proxy-client';
 
 const app = express();
 const port = 8000;
@@ -21,25 +23,12 @@ const serverSocket = new Server(server, {
 });
 
 serverSocket.on('connection', (socket: Socket) => {
-  const serverProxy = new ProxyController(createServerMessageMap(), socket);
+  const serverProxy = new ProxyServer(createServerMessageMap(), socket);
   serverProxy.configure();
 });
 
-//TODO: Get host/port from DNC
-// const socketClient = new WebSocket('http://localhost:8080');
+// TODO: Get host/port from DNC
+const socketClient = new WebSocket('ws://localhost:8000');
 
-// socketClient.on('open', () => {
-//   console.log('connected to Siren');
-//   socketClient.on('message', (data: any) => {
-//     try {
-//       const message = JSON.parse(data) as Message;
-//       console.log(message);
-//     } catch (error) {
-//       console.log('error parsing message', error);
-//     }
-//   });
-// });
-
-// socketClient.on('close', () => {
-//   console.log('disconnected from Siren');
-// });
+const proxyClient = new ProxyClient(socketClient);
+proxyClient.configure();
