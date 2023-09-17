@@ -4,14 +4,18 @@ ENV NODE_ENV=production
 
 WORKDIR /usr/src/api
 
+
 COPY package.json . 
 COPY package-lock.json .
 
 RUN npm install
 
-RUN git submodule update --init --recursive
-
 COPY . .
+
+# Initialize for git submodules
+RUN git init
+RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey-base.git ./src/odyssey-base && \
+    git submodule update --init --recursive
 
 RUN npx prisma@5.1.1 generate
 
