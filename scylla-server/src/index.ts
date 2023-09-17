@@ -1,14 +1,14 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
-import { createServerMessageMap } from './utils/message-maps.utils';
 import { WebSocket } from 'ws';
 import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
+import { createClientMessageMap } from './utils/message-maps.utils';
 
 const app = express();
 const port = 8000;
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.send('Hello, Express server with TypeScript!');
 });
 
@@ -23,7 +23,7 @@ const serverSocket = new Server(server, {
 });
 
 serverSocket.on('connection', (socket: Socket) => {
-  const serverProxy = new ProxyServer(createServerMessageMap(), socket);
+  const serverProxy = new ProxyServer(createClientMessageMap(), socket);
   serverProxy.configure();
 });
 
