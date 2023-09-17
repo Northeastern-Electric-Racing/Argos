@@ -1,5 +1,8 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
+// Ignoring this because it wont build on github for some reason
+// @ts-ignore
+import { WebSocket } from 'ws';
 import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
 import { createClientMessageMap } from './utils/message-maps.utils';
@@ -27,6 +30,7 @@ serverSocket.on('connection', (socket: Socket) => {
 });
 
 // TODO: Get host/port from DNC
+const socketClient = new WebSocket('ws://localhost:8000');
 
-const proxyClient = new ProxyClient();
+const proxyClient = new ProxyClient(socketClient);
 proxyClient.configure();

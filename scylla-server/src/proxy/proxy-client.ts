@@ -12,8 +12,8 @@ export default class ProxyClient {
    * Constructor
    * @param socket The socket to send and receive messages from
    */
-  constructor() {
-    this.socket = new WebSocket('ws://localhost:8080');
+  constructor(socket: WebSocket) {
+    this.socket = socket;
   }
 
   /**
