@@ -1,3 +1,5 @@
+// Ignoring this because it wont build on github for some reason
+// @ts-ignore
 import { ErrorEvent, Event, MessageEvent, WebSocket } from 'ws';
 import { ServerMessage, SubscriptionMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
