@@ -4,7 +4,6 @@ import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
 import { createClientMessageMap } from './utils/message-maps.utils';
 
-const { WebSocket } = require('ws');
 const app = express();
 const port = 8000;
 
@@ -28,7 +27,6 @@ serverSocket.on('connection', (socket: Socket) => {
 });
 
 // TODO: Get host/port from DNC
-const socketClient = new WebSocket('ws://localhost:8000');
 
-const proxyClient = new ProxyClient(socketClient);
+const proxyClient = new ProxyClient();
 proxyClient.configure();
