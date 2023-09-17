@@ -2,6 +2,10 @@
 
 I've setup the barebones skeleton for what we're gonna be running on the telemetry hub router. It's a react app running in its own docker container and an express server (scylla) setup with prisma and sqlite in its own docker container (prisma and sqlite to probably be swapped out with other things later, this was just what I knew, so I set it up with them for now).
 
+### Initializing Submodule
+
+To initialize the odyssey submodule run `git submodule init` and `git submodule update`
+
 ### Running the Project in Dev Mode
 
 To run the project locally for development, you'll want to run the client and the server separately.

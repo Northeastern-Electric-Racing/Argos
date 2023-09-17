@@ -1,6 +1,6 @@
 import { ErrorEvent, Event, MessageEvent, WebSocket } from 'ws';
-import { Topic } from '../utils/topics.utils';
-import { ServerMessage, SubscriptionMessage } from '../utils/message.utils';
+import { ServerMessage, SubscriptionMessage } from '../odyssey-base/src/types/message.types';
+import { Topic } from '../odyssey-base/src/types/topic';
 
 /**
  * Handler for receiving messages from Siren

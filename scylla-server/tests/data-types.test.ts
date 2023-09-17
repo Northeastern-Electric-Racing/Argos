@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import prisma from '../src/prisma/prisma-client';
 
 describe('Data Type', () => {
