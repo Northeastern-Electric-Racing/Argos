@@ -1,3 +1,3 @@
 [submodule "scylla-server/src/odyssey-base"]
 	path = scylla-server/src/odyssey-base
-	url = https://github.com/Northeastern-Electric-Racing/Odyssey-base.git
+	url = https://github.com/Northeastern-Electric-Racing/Odyssey-Base.git
