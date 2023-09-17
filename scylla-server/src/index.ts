@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
-import { WebSocket } from 'ws';
 import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
 import { createClientMessageMap } from './utils/message-maps.utils';
 
+const { WebSocket } = require('ws');
 const app = express();
 const port = 8000;
 
