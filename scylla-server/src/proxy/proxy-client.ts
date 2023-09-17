@@ -1,9 +1,9 @@
 import { ErrorEvent, Event, MessageEvent, WebSocket } from 'ws';
 import { Topic } from '../utils/topics.utils';
-import { SubscriptionMessage } from '../utils/message.utils';
+import { ServerMessage, SubscriptionMessage } from '../utils/message.utils';
 
 /**
- * Handler for receiving messages from the server
+ * Handler for receiving messages from Siren
  */
 export default class ProxyClient {
   socket: WebSocket;
@@ -17,7 +17,7 @@ export default class ProxyClient {
   }
 
   /**
-   * Sends a subscription message to the server
+   * Sends a subscription message to Siren
    * @param topics The topics to subscribe to
    */
   private subscribeToTopics = (topics: Topic[]) => {
@@ -29,7 +29,7 @@ export default class ProxyClient {
   };
 
   /**
-   * Handles disconnecting from the server
+   * Handles disconnecting from Siren
    * @param event The event that triggered the close
    */
   private handleClose = (event: Event) => {
@@ -37,7 +37,7 @@ export default class ProxyClient {
   };
 
   /**
-   * Handles connecting to the server
+   * Handles connecting to Siren
    * @param event The event that triggered the open
    */
   private handleOpen = (event: Event) => {
@@ -46,11 +46,32 @@ export default class ProxyClient {
   };
 
   /**
-   * Handles messages received from the server
-   * @param message The message received from the server
+   * Handles messages received from Siren
+   * @param message The message received from Siren
    */
   private handleMessage = (message: MessageEvent) => {
     console.log('Received Message: ', message);
+    try {
+      const data = JSON.parse(message.data.toString()) as ServerMessage;
+      this.handleData(data);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Error Decoding Message: ', error.message);
+        this.socket.emit('Error', error.message);
+      }
+    }
+  };
+
+  /**
+   * Handles receiving data from the car and:
+   * 1. Logs the data
+   * 2. Sends the data to the client
+   * @param data The data received from Siren
+   */
+  private handleData = (data: ServerMessage) => {
+    //TODO: Send data to client
+    //TODO: Log data
+    console.log('Received Data: ', data);
   };
 
   /**
@@ -62,7 +83,7 @@ export default class ProxyClient {
   };
 
   /**
-   * Configures the proxy client for connecting and disconnecting to/from the server,
+   * Configures the proxy client for connecting and disconnecting to/from Siren,
    * sending and receiving messages, and handling errors
    */
   public configure = () => {
