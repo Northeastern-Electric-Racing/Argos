@@ -1,15 +1,6 @@
-export type ServerMessage = {
-  unix_time: number;
-  node: string;
-  data: ServerData[];
-};
-
-type ServerData = {
-  name: string;
-  value: number;
-  units: string;
-};
-
+/**
+ * The format of a message sent from the client
+ */
 export type ClientMessage = {
   argument: string;
   data: JSON;

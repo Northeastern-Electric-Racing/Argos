@@ -3,9 +3,9 @@ import { ClientMessage } from '../utils/message.utils';
 import { ResponseFunction } from '../utils/message-maps.utils';
 
 /**
- * Proxy Controller To Handle Inputting and Outputting Messages to a Client
+ * Proxy for handling Inputting and Outputting Messages to a Client
  */
-export default class ProxyController {
+export default class ProxyServer {
   messageMap: Map<string, ResponseFunction>;
   socket: Socket;
 

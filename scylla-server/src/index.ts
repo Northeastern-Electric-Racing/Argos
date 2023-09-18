@@ -1,12 +1,16 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
-import ProxyController from './proxy/proxy-controller';
-import { createServerMessageMap } from './utils/message-maps.utils';
+// Ignoring this because it wont build on github for some reason
+// @ts-ignore
+import { WebSocket } from 'ws';
+import ProxyServer from './proxy/proxy-server';
+import ProxyClient from './proxy/proxy-client';
+import { createClientMessageMap } from './utils/message-maps.utils';
 
 const app = express();
 const port = 8000;
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.send('Hello, Express server with TypeScript!');
 });
 
@@ -21,25 +25,12 @@ const serverSocket = new Server(server, {
 });
 
 serverSocket.on('connection', (socket: Socket) => {
-  const serverProxy = new ProxyController(createServerMessageMap(), socket);
+  const serverProxy = new ProxyServer(createClientMessageMap(), socket);
   serverProxy.configure();
 });
 
-//TODO: Get host/port from DNC
-// const socketClient = new WebSocket('http://localhost:8080');
+// TODO: Get host/port from DNC
+const socketClient = new WebSocket('ws://localhost:8000');
 
-// socketClient.on('open', () => {
-//   console.log('connected to Siren');
-//   socketClient.on('message', (data: any) => {
-//     try {
-//       const message = JSON.parse(data) as Message;
-//       console.log(message);
-//     } catch (error) {
-//       console.log('error parsing message', error);
-//     }
-//   });
-// });
-
-// socketClient.on('close', () => {
-//   console.log('disconnected from Siren');
-// });
+const proxyClient = new ProxyClient(socketClient);
+proxyClient.configure();
