@@ -17,12 +17,9 @@ describe('Data Type', () => {
       { id: 1, dataType: 'string' },
       { id: 2, dataType: 'int' }
     ];
-    const prismaMock = require('/Users/waasifmahmood/desktop/argos/scylla-server/tests/dataTypes-services.test');
-    prismaMock.dataType.findMany.mockResolvedValue(expected);
 
     const result = await getAllDataTypes;
 
-    expect(prismaMock.dataType.findMany).toHaveBeenCalled();
     expect(result).toBe(JSON.stringify(expected));
   });
 });
