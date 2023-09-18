@@ -1,3 +1,4 @@
+import { getAllDataTypes } from '../services/dataTypes.services';
 import { getAllSystems } from '../services/systems.services';
 
 export type ResponseFunction = (data: JSON) => Promise<string>;
@@ -9,5 +10,6 @@ export type ResponseFunction = (data: JSON) => Promise<string>;
 export const createClientMessageMap = (): Map<string, ResponseFunction> => {
   const clientMessageMap = new Map<string, ResponseFunction>();
   clientMessageMap.set('getAllSystems', getAllSystems);
+  clientMessageMap.set('getAllDataTypes', getAllDataTypes);
   return clientMessageMap;
 };
