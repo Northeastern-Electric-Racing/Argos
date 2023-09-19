@@ -1,7 +1,7 @@
 import { getAllDataTypes } from '../services/dataTypes.services';
 import { getAllSystems } from '../services/systems.services';
 
-export type ResponseFunction = (data: JSON) => Promise<string>;
+export type ResponseFunction = (data?: JSON) => Promise<string>;
 
 /**
  * Creates a map of messages received from the client to functions that handle the messages
