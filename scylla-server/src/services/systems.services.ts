@@ -23,7 +23,7 @@ export async function upsertSystems(system_name: string): Promise<void> {
     update: {},
     create: {
       name: system_name,
-      runs: undefined,
+      runs: undefined
     }
   });
 }
