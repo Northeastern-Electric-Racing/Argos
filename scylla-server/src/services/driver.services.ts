@@ -14,7 +14,7 @@ export const getAllDrivers: ResponseFunction = async () => {
  * CRUD operation to create a driver in the database if it doesn't already exist, does nothing otherwise.
  *
  */
-export const upsertDriver = async (driver_name: string) => {
+export const upsertDriver = async (driverName: string) => {
   await prisma.driver.upsert({
     where: {
       username: driver_name
