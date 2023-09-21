@@ -17,11 +17,11 @@ export const getAllDrivers: ResponseFunction = async () => {
 export const upsertDriver = async (driverName: string) => {
   await prisma.driver.upsert({
     where: {
-      username: driver_name
+      username: driverName
     },
     update: {},
     create: {
-      username: driver_name
+      username: driverName
     }
   });
 };
