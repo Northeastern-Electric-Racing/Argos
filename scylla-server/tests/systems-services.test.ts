@@ -1,5 +1,6 @@
 import { describe, test, expect, afterAll } from 'vitest';
 import { getAllSystems, upsertSystems } from '../src/services/systems.services';
+import { getRunById, getAllRuns , upsertRun } from '../src/services/systems.services';
 
 import prisma from '../src/prisma/prisma-client';
 
@@ -56,3 +57,30 @@ describe('CRUD Systems', () => {
     });
   });
 });
+
+
+describe('CRUD Run', () => {
+   /**
+    * get runs
+    */
+  test('Get All runs', async () => { 
+ 
+  // assume system starts with 0
+  await upsertRun(100, 'Boston');
+  await upsertRun(200, 'New York');
+  
+  const result = JSON.parse(await getAllRuns ());
+  const parsedResult = JSON.parse(result);
+  expect(parsedResult.length).toEqual(2);
+  });
+  
+  test('Get run by id', async () => { 
+   
+  // assume system starts with 0
+  await upsertRun(100, 'Boston');
+  const result = JSON.parse(await getRunById (100));
+  const parsedResult = JSON.parse(result);
+  expect(parsedResult.length).toEqual(1);
+  });
+  });
+  
