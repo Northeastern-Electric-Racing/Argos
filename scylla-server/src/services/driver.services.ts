@@ -1,4 +1,4 @@
-import prisma from '../prisma/prisma-client';
+import prisma from '../odyssey-base/src/prisma/prisma-client';
 import { ResponseFunction } from '../utils/message-maps.utils';
 
 /**
