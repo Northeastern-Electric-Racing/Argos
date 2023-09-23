@@ -27,11 +27,10 @@
     "ws": "8.14.1"
   },
   "prisma": {
-    "schema": "./src/prisma/schema.prisma"
+    "schema": "./src/odyssey-base/src/prisma/schema.prisma"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
-    "@types/ws": "8.5.5",
     "prisma": "^5.2.0"
   }
 }

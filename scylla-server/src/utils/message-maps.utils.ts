@@ -1,8 +1,7 @@
-import { getAllDataTypes } from '../services/dataTypes.services';
-import { getAllDrivers } from '../services/driver.services';
-import { getAllSystems } from '../services/systems.services';
-
-export type ResponseFunction = (data?: JSON) => Promise<string>;
+import { getAllDataTypes } from '../odyssey-base/src/services/dataTypes.services';
+import { getAllDrivers } from '../odyssey-base/src/services/driver.services';
+import { getAllSystems } from '../odyssey-base/src/services/systems.services';
+import { ResponseFunction } from '../odyssey-base/src/types/message.types';
 
 /**
  * Creates a map of messages received from the client to functions that handle the messages
