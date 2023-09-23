@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, afterEach } from 'vitest';
 import { getAllSystems, upsertSystem } from '../src/services/systems.services';
 import prisma from '../src/odyssey-base/src/prisma/prisma-client';
 
@@ -50,6 +50,7 @@ describe('CRUD Systems', () => {
    */
   test('Upsert System Does Nothing', async () => {
     const expected = [{ name: 'test' }];
+    await upsertSystem('test');
     await upsertSystem('test');
     const result = JSON.parse(await getAllSystems());
 

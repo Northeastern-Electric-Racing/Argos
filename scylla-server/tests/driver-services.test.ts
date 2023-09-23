@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, afterEach } from 'vitest';
 import { getAllDrivers, upsertDriver } from '../src/services/driver.services';
 import prisma from '../src/odyssey-base/src/prisma/prisma-client';
 
@@ -19,7 +19,7 @@ describe('CRUD Driver', () => {
   /**
    * unit test for get all drivers
    */
-  test('Get All Data Types Works', async () => {
+  test('Get All Drivers Works', async () => {
     const expected = [];
     const result = await getAllDrivers();
 
