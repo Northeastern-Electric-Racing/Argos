@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import { ClientMessage } from '../utils/message.utils';
-import { ResponseFunction } from '../odyssey-base/src/types/message.types';
+import { ResponseFunction } from '../utils/message-maps.utils';
 
 /**
  * Proxy for handling Inputting and Outputting Messages to a Client
