@@ -1,6 +1,6 @@
-import { getAllDataTypes } from '../odyssey-base/services/dataTypes.services';
-import { getAllDrivers } from '../odyssey-base/services/driver.services';
-import { getAllSystems } from '../odyssey-base/services/systems.services';
+import { getAllDataTypes } from '../odyssey-base/src/services/dataTypes.services';
+import { getAllDrivers } from '../odyssey-base/src/services/driver.services';
+import { getAllSystems } from '../odyssey-base/src/services/systems.services';
 import { ResponseFunction } from '../odyssey-base/src/types/message.types';
 
 /**
