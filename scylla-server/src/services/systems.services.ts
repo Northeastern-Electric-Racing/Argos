@@ -13,17 +13,17 @@ export const getAllSystems: ResponseFunction = async () => {
 /**
  * CRUD opertation that creates system if it doesn't exist, otherwise does nothing.
  * Currently designated private so not hooked up to server.
- * @param system_name name of the system as string
+ * @param systemName name of the system as string
  * @returns Promise<void>
  */
-export const upsertSystems = async (system_name: string) => {
+export const upsertSystem = async (systemName: string) => {
   await prisma.system.upsert({
     where: {
-      name: system_name
+      name: systemName
     },
     update: {},
     create: {
-      name: system_name
+      name: systemName
     }
   });
 };

@@ -1,10 +1,21 @@
 import { describe, test, expect } from 'vitest';
 import { getAllDrivers, upsertDriver } from '../src/services/driver.services';
+import prisma from '../src/odyssey-base/src/prisma/prisma-client';
 
 /**
  * Tests for CRUD Service functions
  */
 describe('CRUD Driver', () => {
+  //Deleting test driver after each test
+  afterEach(async () => {
+    try {
+      await prisma.driver.delete({
+        where: {
+          username: 'test'
+        }
+      });
+    } catch (err) {}
+  });
   /**
    * unit test for get all drivers
    */
