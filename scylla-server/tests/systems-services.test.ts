@@ -23,8 +23,9 @@ describe('CRUD Systems', () => {
    */
   test('Upsert System Creates', async () => {
     const expected = [{ name: 'test' }];
+    const data = {} as JSON
     await upsertSystem('test');
-    const result = JSON.parse(await getAllSystems());
+    const result = JSON.parse(await getAllSystems(data));
 
     // Use toEqual to compare parsedResult with the expected array
     expect(result).toEqual(expected);
@@ -36,7 +37,8 @@ describe('CRUD Systems', () => {
   test('Get All Systems Works', async () => {
     await upsertSystem('test');
     const expected = [{ name: 'test' }];
-    const result = await getAllSystems();
+    const data = {} as JSON
+    const result = await getAllSystems(data);
 
     // Parse result to a JavaScript object from the JSON string
     const parsedResult = JSON.parse(result);
@@ -51,8 +53,9 @@ describe('CRUD Systems', () => {
    */
   test('Upsert System Does Nothing', async () => {
     const expected = [{ name: 'test' }];
+    const data = {} as JSON
     await upsertSystem('test');
-    const result = JSON.parse(await getAllSystems());
+    const result = JSON.parse(await getAllSystems(data));
 
     // Use toEqual to compare result with the expected array
     expect(result).toEqual(expected);
