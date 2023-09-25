@@ -4,7 +4,7 @@ import { getAllDataTypes } from '../src/services/dataTypes.services';
 describe('Data Type', () => {
   test('Get All Data Types Works', async () => {
     const expected = [];
-    const data = {} as JSON
+    const data = {} as JSON;
     const result = await getAllDataTypes(data);
 
     // Parse result to a JavaScript object from the JSON string

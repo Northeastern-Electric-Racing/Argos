@@ -21,7 +21,7 @@ describe('CRUD Driver', () => {
    */
   test('Get All Data Types Works', async () => {
     const expected = [];
-    const data = {} as JSON
+    const data = {} as JSON;
     const result = await getAllDrivers(data);
 
     // Parse result to a JavaScript object from the JSON string
@@ -38,7 +38,7 @@ describe('CRUD Driver', () => {
   test('Upsert Driver Creates', async () => {
     const expected = [{ username: 'test' }];
     await upsertDriver('test');
-    const data = {} as JSON
+    const data = {} as JSON;
     const result = JSON.parse(await getAllDrivers(data));
 
     expect(result).toEqual(expected);
