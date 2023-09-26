@@ -2,9 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { getDataByDataTypeName } from '../src/services/data.services';
 
 /**
- * Unit Test for Get All Data by DataType Name
- * Checks that given datatype name, functionr returns expected data
- * Currently no data in database
+ * Unit Tests for Data
  */
 describe('Data', () => {
   test('Get All Data by DataType Name works w valid data', async () => {
@@ -21,9 +19,13 @@ describe('Data', () => {
 
   test('Get All Data by DataType Name throws w invalid data', async () => {
     //throws w no data
-    await expect(() => getDataByDataTypeName()).rejects.toThrowError(/Invalid/);
+    await expect(() => getDataByDataTypeName()).rejects.toThrowError(
+      'Invalid data provided, Expected data of type {dataTypeName: string} and got undefined'
+    );
     //throws with bad data
     const badData = JSON.parse('{"bruh": "test"}');
-    await expect(() => getDataByDataTypeName(badData)).rejects.toThrowError(/Invalid/);
+    await expect(() => getDataByDataTypeName(badData)).rejects.toThrowError(
+      'Invalid data provided, Expected data of type {dataTypeName: string} and got [object Object]'
+    );
   });
 });
