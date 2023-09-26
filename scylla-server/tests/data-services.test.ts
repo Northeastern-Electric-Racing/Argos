@@ -7,7 +7,7 @@ import { getDataByDataTypeName } from '../src/services/data.services';
  * Currently no data in database
  */
 describe('Data', () => {
-  test('Get All Data by DataType Name', async () => {
+  test('Get All Data by DataType Name works w valid data', async () => {
     const expected = [];
     const data = JSON.parse('{"dataTypeName": "test"}');
     const result = await getDataByDataTypeName(data);
@@ -17,5 +17,13 @@ describe('Data', () => {
 
     // Use toEqual to compare parsedResult with the expected array
     expect(parsedResult).toEqual(expected);
+  });
+
+  test('Get All Data by DataType Name throws w invalid data', async () => {
+    //throws w no data
+    await expect(() => getDataByDataTypeName()).rejects.toThrowError(/Invalid/);
+    //throws with bad data
+    const badData = JSON.parse('{"bruh": "test"}');
+    await expect(() => getDataByDataTypeName(badData)).rejects.toThrowError(/Invalid/);
   });
 });

@@ -1,3 +1,4 @@
+import { JsonObject } from '@prisma/client/runtime/library';
 import prisma from '../prisma/prisma-client';
 import { ResponseFunction } from '../utils/message-maps.utils';
 
@@ -9,28 +10,14 @@ type DataTypeName = {
 };
 
 /**
- * Casts and validates given JSON data, otherwise throws error
- * @param jsonData the given JSON data
- * @returns DataTypeName
- */
-function castAndValidate(jsonData: JSON | undefined): DataTypeName {
-  if (
-    typeof jsonData === 'object' &&
-    jsonData !== null &&
-    'dataTypeName' in jsonData &&
-    typeof jsonData.dataTypeName === 'string'
-  ) {
-    return jsonData as DataTypeName;
-  }
-  throw new Error('Provided JSON data is invalid');
-}
-
-/**
  * CRUD operation to get all the data for a given datatype name
  * @returns string contianing list of all data with dataype name
  */
-export const getDataByDataTypeName: ResponseFunction = async (data: JSON | undefined) => {
-  const validData = castAndValidate(data);
+export const getDataByDataTypeName: ResponseFunction = async (data?: JsonObject) => {
+  const validData = data as DataTypeName;
+  if (!validData || !validData.dataTypeName) {
+    throw new Error(`Invalid data provided, Expected data of type {dataTypeName: string} and got ${data}`);
+  }
   const queriedData = await prisma.data.findMany({
     where: {
       dataTypeName: validData.dataTypeName
