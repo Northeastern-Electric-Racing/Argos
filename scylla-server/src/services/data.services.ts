@@ -6,7 +6,7 @@ import { ResponseFunction } from '../utils/message-maps.utils';
  * Type of data needed for getting data by dataTypeName
  */
 export type DataTypeName = {
-  dataTypeName: string
+  dataTypeName: string;
 };
 
 /**
