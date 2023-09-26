@@ -6,7 +6,7 @@ import { ResponseFunction } from '../utils/message-maps.utils';
  * @returns string contianing list of all data with dataype name
  */
 export const getDataByDataTypeName: ResponseFunction = async (data: JSON | undefined) => {
-    const queriedData = await prisma.data.findMany({
+  const queriedData = await prisma.data.findMany({
     where: {
       dataTypeName: JSON.stringify(data)
     }
