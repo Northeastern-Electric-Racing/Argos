@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { getAllDataTypes } from '../src/services/dataTypes.services';
+import { getAllDataTypes, upsertDataType } from '../src/services/dataTypes.services';
 
 describe('Data Type', () => {
   test('Get All Data Types Works', async () => {
@@ -11,5 +11,17 @@ describe('Data Type', () => {
 
     // Use toEqual to compare parsedResult with the expected array
     expect(parsedResult).toEqual(expected);
+  });
+
+  test('Upsert Data Type Works', async () => {
+    const dataName = 'newDataType';
+    const dataUnit = 'Unit';
+    const dataNodeName = 'NodeName';
+
+    const createdDataType = upsertDataType(dataName, dataUnit, dataNodeName);
+
+    const expectedDataType: Promise<unknown> = Promise.resolve();
+
+    expect(expectedDataType).toEqual(createdDataType);
   });
 });

@@ -8,8 +8,8 @@ describe('CRUD Driver', () => {
   /**
    * unit test for get all drivers
    */
-  test('Get All Data Types Works', async () => {
-    const expected = [];
+  test('Get All Drivers Works', async () => {
+    const expected = [{ username: 'test' }];
     const result = await getAllDrivers();
 
     // Parse result to a JavaScript object from the JSON string
