@@ -25,7 +25,7 @@ describe('Data', () => {
     //throws with bad data
     const badData = JSON.parse('{"bruh": "test"}');
     await expect(() => getDataByDataTypeName(badData)).rejects.toThrowError(
-      'Invalid data provided, Expected data of type {dataTypeName: string} and got [object Object]'
+      `Invalid data provided, Expected data of type {dataTypeName: string} and got ${badData}`
     );
   });
 });
