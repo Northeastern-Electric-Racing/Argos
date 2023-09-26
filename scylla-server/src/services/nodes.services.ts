@@ -8,4 +8,4 @@ import { ResponseFunction } from '../utils/message-maps.utils';
 export const getAllNodes: ResponseFunction = async () => {
   const data = await prisma.node.findMany();
   return JSON.stringify(data);
-};
+}; 
