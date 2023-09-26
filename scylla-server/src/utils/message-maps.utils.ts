@@ -3,7 +3,7 @@ import { getAllDrivers } from '../services/driver.services';
 import { getAllSystems } from '../services/systems.services';
 import { getDataByDataTypeName } from '../services/data.services';
 
-export type ResponseFunction = (data: JSON) => Promise<string>;
+export type ResponseFunction = (data?: JSON) => Promise<string>;
 
 /**
  * Creates a map of messages received from the client to functions that handle the messages
