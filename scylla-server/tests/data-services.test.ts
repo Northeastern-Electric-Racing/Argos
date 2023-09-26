@@ -20,12 +20,12 @@ describe('Data', () => {
   test('Get All Data by DataType Name throws w invalid data', async () => {
     //throws w no data
     await expect(() => getDataByDataTypeName()).rejects.toThrowError(
-      'Invalid data provided, Expected data of type {dataTypeName: string} and got undefined'
+      'Invalid data provided, Expected data of type DataTypeName and got undefined'
     );
     //throws with bad data
     const badData = JSON.parse('{"bruh": "test"}');
     await expect(() => getDataByDataTypeName(badData)).rejects.toThrowError(
-      `Invalid data provided, Expected data of type {dataTypeName: string} and got ${badData}`
+      `Invalid data provided, Expected data of type DataTypeName and got {"bruh":"test"}`
     );
   });
 });
