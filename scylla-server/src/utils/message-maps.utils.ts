@@ -1,6 +1,7 @@
 import { getAllDataTypes } from '../services/dataTypes.services';
 import { getAllDrivers } from '../services/driver.services';
 import { getAllSystems } from '../services/systems.services';
+import { getAllNodes } from '../services/nodes.services';
 
 export type ResponseFunction = (data?: JSON) => Promise<string>;
 
@@ -13,5 +14,6 @@ export const createClientMessageMap = (): Map<string, ResponseFunction> => {
   clientMessageMap.set('getAllSystems', getAllSystems);
   clientMessageMap.set('getAllDataTypes', getAllDataTypes);
   clientMessageMap.set('getAllDrivers', getAllDrivers);
+  clientMessageMap.set('getAllNodes', getAllNodes);
   return clientMessageMap;
 };
