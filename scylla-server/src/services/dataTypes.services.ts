@@ -15,12 +15,11 @@ export const getAllDataTypes: ResponseFunction = async () => {
 export const upsertDataType = async (dataTypeName: string, unit: string, nodeName: string): Promise<DataType> => {
   const createdDataType = prisma.dataType.upsert({
     where: { name: dataTypeName },
-    create: {
-      name: dataTypeName,
+    update: {
       unit,
       nodeName
     },
-    update: {
+    create: {
       unit,
       nodeName
     }
