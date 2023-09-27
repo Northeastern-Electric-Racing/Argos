@@ -19,7 +19,7 @@ describe('CRUD Driver', () => {
   /**
    * unit test for get all drivers
    */
-  test('Get All Data Types Works', async () => {
+  test('Get All Drivers Works', async () => {
     const expected = [];
     const result = await getAllDrivers();
 
