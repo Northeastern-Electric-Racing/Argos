@@ -17,7 +17,7 @@ export const getAllNodes: ResponseFunction = async () => {
  * @returns Promise<void>
  */
 export const upsertNode = async (nodeName: string) => {
-  await prisma.system.upsert({
+  await prisma.node.upsert({
     where: {
       name: nodeName
     },
