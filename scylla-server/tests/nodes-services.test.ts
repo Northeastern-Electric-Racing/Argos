@@ -28,7 +28,7 @@ describe('Node', () => {
   });
 
   test('Get All Nodes Works', async () => {
-    const expected = [];
+    const expected = [{ name: 'test' }];
     const result = await getAllNodes();
 
     // Parse result to a JavaScript object from the JSON string
