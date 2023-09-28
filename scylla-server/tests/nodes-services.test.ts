@@ -6,7 +6,7 @@ describe('Node', () => {
   //cleaning up
   afterEach(async () => {
     try {
-      await prisma.system.delete({
+      await prisma.node.delete({
         where: {
           name: 'test'
         }
@@ -28,7 +28,7 @@ describe('Node', () => {
   });
 
   test('Get All Nodes Works', async () => {
-    const expected = [{ name: 'test' }];
+    const expected = [];
     const result = await getAllNodes();
 
     // Parse result to a JavaScript object from the JSON string
@@ -44,6 +44,7 @@ describe('Node', () => {
    */
   test('Upsert Node Does Nothing', async () => {
     const expected = [{ name: 'test' }];
+    await upsertNode('test');
     await upsertNode('test');
     const result = JSON.parse(await getAllNodes());
 
