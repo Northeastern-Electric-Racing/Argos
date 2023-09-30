@@ -34,3 +34,27 @@ const socketClient = new WebSocket('ws://localhost:8000');
 
 const proxyClient = new ProxyClient(socketClient);
 proxyClient.configure();
+
+function canCompleteCircuit(gas: number[], cost: number[]): number {
+    let maxStationIndex = 0
+    let maxStationBalance = gas[0] - cost[0];
+    let balance = 0;
+    let totalBalance = maxStationBalance;
+    let i = 1;
+    while (i < gas.length) {
+        balance = gas[i] - cost[i];
+        totalBalance += balance;
+        console.log(totalBalance)
+        if (balance > maxStationBalance || totalBalance < 0) {
+            maxStationIndex = i;
+            maxStationBalance = balance;
+        }
+        i++;
+    }
+    if (totalBalance >= 0) {
+        return maxStationIndex;
+    }
+    return -1;
+};
+
+console.log(canCompleteCircuit([3, 1, 1], [1, 2, 2]));
