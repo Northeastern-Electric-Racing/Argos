@@ -3,12 +3,17 @@
 import { ErrorEvent, Event, MessageEvent, WebSocket } from 'ws';
 import { ServerMessage, SubscriptionMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
+import { upsertNode } from '../services/nodes.services';
+import { upsertRun } from '../services/runs.services';
+import { upsertData } from '../services/data.services';
 
 /**
  * Handler for receiving messages from Siren
  */
 export default class ProxyClient {
   socket: WebSocket;
+  //should a new run be created, based off if new connection & data received
+  createNewRun: boolean;
 
   /**
    * Constructor
@@ -16,6 +21,8 @@ export default class ProxyClient {
    */
   constructor(socket: WebSocket) {
     this.socket = socket;
+    // only true first time after connected and data received
+    this.createNewRun = false;
   }
 
   /**
@@ -35,6 +42,7 @@ export default class ProxyClient {
    * @param event The event that triggered the close
    */
   private handleClose = (event: Event) => {
+    this.createNewRun = false;
     console.log('Disconnected from Siren', event);
   };
 
@@ -44,11 +52,14 @@ export default class ProxyClient {
    */
   private handleOpen = (event: Event) => {
     console.log('Connected to Siren', event);
+    this.createNewRun = true;
     this.subscribeToTopics(Object.values(Topic));
   };
 
   /**
    * Handles messages received from Siren
+   * Parses as ServerMessage, otherwise throws error
+   * Passes data to handleData
    * @param message The message received from Siren
    */
   private handleMessage = (message: MessageEvent) => {
@@ -70,10 +81,23 @@ export default class ProxyClient {
    * 2. Sends the data to the client
    * @param data The data received from Siren
    */
-  private handleData = (data: ServerMessage) => {
-    //TODO: Send data to client
-    //TODO: Log data
+  private handleData = async (data: ServerMessage) => {
+    // if first time data recieved since connecting to car
+    // then upsert new run
     console.log('Received Data: ', data);
+    if (this.createNewRun) {
+      // what would runID and runLocation be here?
+      // use getallRuns to determine next ID?
+      // await upsertRun(runID, runLocation);
+    }
+    this.createNewRun = false;
+    await upsertNode(data.node);
+    // looping through data and upserting
+    for (const serverdata of data.data) {
+      // again, dataid and runid required to upsert
+      // don't know where ids would come from
+      // await upsertData(serverdata.id, serverdata.name, serverdata.value, data.unix_time, runid);
+    }
   };
 
   /**
