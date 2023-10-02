@@ -7,12 +7,13 @@ import { JsonObject } from '@prisma/client/runtime/library';
 
 export type ResponseFunction = (data?: JsonObject) => Promise<string>;
 
+type Argument = 'getAllSystems' | 'getAllDataTypes' | 'getAllDrivers' | 'getDataByDataTypeName' | 'getAllNodes';
 /**
  * Creates a map of messages received from the client to functions that handle the messages
  * @returns A map of client messages to functions that handle the messages
  */
-export const createClientMessageMap = (): Map<string, ResponseFunction> => {
-  const clientMessageMap = new Map<string, ResponseFunction>();
+export const createClientMessageMap = (): Map<Argument, ResponseFunction> => {
+  const clientMessageMap = new Map<Argument, ResponseFunction>();
   clientMessageMap.set('getAllSystems', getAllSystems);
   clientMessageMap.set('getAllDataTypes', getAllDataTypes);
   clientMessageMap.set('getAllDrivers', getAllDrivers);

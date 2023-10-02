@@ -35,7 +35,7 @@ export default class ProxyServer {
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.socket.emit('Error', error.message);
+        this.socket.emit('error', error.message);
       }
       console.log('error in message', error);
     }
