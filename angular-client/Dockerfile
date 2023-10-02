@@ -7,7 +7,7 @@ WORKDIR /usr/src/client
 COPY package.json . 
 COPY package-lock.json .
 
-RUN npm i @angular/cli
+RUN npm install -g @angular/cli
 RUN npm install
 
 COPY . .
