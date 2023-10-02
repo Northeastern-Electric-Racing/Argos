@@ -1,4 +1,4 @@
-import { describe, test, expect, afterEach } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { getAllNodes, upsertNode } from '../src/services/nodes.services';
 import prisma from '../src/prisma/prisma-client';
 
@@ -12,6 +12,11 @@ describe('Node', () => {
         }
       });
     } catch (err) {}
+  });
+
+  beforeEach(async () => {
+    await prisma.dataType.deleteMany();
+    await prisma.node.deleteMany();
   });
 
   /**
