@@ -20,6 +20,7 @@ services:
     image: client-prod:1.0.0
     build:
       context: angular-client
+      target: production
       dockerfile: Dockerfile
     ports:
       - 3000:3000
