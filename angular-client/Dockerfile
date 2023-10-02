@@ -7,6 +7,7 @@ WORKDIR /usr/src/client
 COPY package.json . 
 COPY package-lock.json .
 
+RUN npm install angular/cli@12.2.0
 RUN npm install
 
 COPY . .
