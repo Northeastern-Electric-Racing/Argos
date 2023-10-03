@@ -1,11 +1,17 @@
+import { DataType } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
-import { ResponseFunction } from '../utils/message-maps.utils';
+import { ResponseFunction } from '../utils/response-function';
 
 /**
- * CRUD operation to get all dataTypes
- * @returns string containing all the dataTypes
+ * Service class to handle data types
  */
-export const getAllDataTypes: ResponseFunction = async () => {
-  const data = await prisma.dataType.findMany();
-  return JSON.stringify(data);
-};
+export default class DataTypeService {
+  /**
+   * CRUD operation to get all dataTypes
+   * @returns string containing all the dataTypes
+   */
+  static getAllDataTypes: ResponseFunction<DataType[]> = async () => {
+    const data = await prisma.dataType.findMany();
+    return data;
+  };
+}

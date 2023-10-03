@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     image: client-prod:1.0.0
     build:
-      context: client
+      context: angular-client
       target: production
       dockerfile: Dockerfile
     ports:
