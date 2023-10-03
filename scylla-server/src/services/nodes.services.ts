@@ -9,7 +9,6 @@ export default class NodeService {
    */
   static getAllNodes: ResponseFunction<Node[]> = async () => {
     const data = await prisma.node.findMany();
-    console.log('your mom')
     return data;
   };
 
