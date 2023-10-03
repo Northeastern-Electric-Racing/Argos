@@ -9,7 +9,7 @@ describe('CRUD Run', () => {
   test('Get All runs', async () => {
     const upsertloc = await upsertLocation('Boston', 100, 200, 300);
     const upsertrun = await upsertRun(100, 'Boston');
-    const result = JSON.parse(await getAllRuns());
+    const result = await getAllRuns();
     expect(Object.keys(result).length).toEqual(1);
   }, 1000);
 
