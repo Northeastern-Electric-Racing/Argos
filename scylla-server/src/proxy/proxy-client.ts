@@ -3,7 +3,7 @@
 import { ErrorEvent, Event, MessageEvent, WebSocket } from 'ws';
 import { ServerMessage, SubscriptionMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
-import { upsertNode } from '../services/nodes.services';
+import NodeService from '../services/nodes.services';
 import { upsertRun } from '../services/runs.services';
 import { upsertData } from '../services/data.services';
 
@@ -91,7 +91,7 @@ export default class ProxyClient {
       // await upsertRun(runID, runLocation);
     }
     this.createNewRun = false;
-    await upsertNode(data.node);
+    await NodeService.upsertNode(data.node);
     // looping through data and upserting
     for (const serverdata of data.data) {
       // again, dataid and runid required to upsert

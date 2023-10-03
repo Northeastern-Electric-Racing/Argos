@@ -1,13 +1,14 @@
+import { Run } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
-import { ResponseFunction } from '../utils/message-maps.utils';
+import { ResponseFunction } from '../utils/response-function';
 
 /**
  * CRUD operation to get all runs
  * @returns Promise<string>  all the runs
  */
-export const getAllRuns: ResponseFunction = async () => {
+export const getAllRuns: ResponseFunction<Run[]> = async () => {
   const data = await prisma.run.findMany();
-  return JSON.stringify(data);
+  return data;
 };
 
 /**
