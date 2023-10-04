@@ -14,4 +14,3 @@ type ClientData = {
   units: string;
   timestamp: number;
 };
-
