@@ -1,6 +1,5 @@
 import { Location } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
-import { Location } from '@prisma/client';
 import { ResponseFunction } from '../utils/response-function';
 
 export default class LocationService {
