@@ -1,65 +1,60 @@
+import { Run } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
+import { ResponseFunction } from '../utils/response-function';
+import { NotFoundError } from '../utils/errors.utils';
 
 /**
- * CRUD operation to get all runs
- * @returns Promise<string>  all the runs
+ * Service for CRUD operations on runs
  */
-export const getAllRuns = async () => {
-  const data = await prisma.run.findMany();
-  return JSON.stringify(data);
-};
+export default class RunService {
+  /**
+   * Gets all the runs from the database
+   * CRUD operation to get all runs
+   * @returns Promise<Run[]>  all the runs
+   */
+  static getAllRuns: ResponseFunction<Run[]> = async () => {
+    return await prisma.run.findMany();
+  };
 
-/**
- * CRUD operation to get run by id
- * @param id id of run
- * @returns Promise<json string of run>
- */
-export const getRunById = async (id: number) => {
-  const data = await prisma.run.findUnique({
-    where: {
-      id
+  /**
+   * CRUD operation to get run by id
+   * @param id id of run
+   * @returns Promise<Run>
+   */
+  static getRunById = async (id: number): Promise<Run> => {
+    const run = await prisma.run.findUnique({
+      where: {
+        id
+      }
+    });
+    if (!run) {
+      throw NotFoundError('run', id);
     }
-  });
+    return run;
+  };
 
-  return JSON.stringify(data);
-};
+  /**
+   * Creates a new run in the database
+   * @param locationName  locationName of run
+   * @returns Promise<Run>
+   */
+  static createRun = async (locationName: string, timestamp: number) => {
+    const location = await prisma.location.findUnique({
+      where: {
+        name: locationName
+      }
+    });
 
-/**
- * @param id id of run
- * @param locationName  locationName of run
- * @returns Promise<void>
- */
-export const upsertRun = async (id: number, locationName: string) => {
-  await prisma.run.upsert({
-    where: {
-      id
-    },
-    update: {
-      locationName
-    },
-    create: {
-      id,
-      locationName,
-      time: new Date()
+    if (!location) {
+      throw NotFoundError('location', locationName);
     }
-  });
-};
 
-export const upsertLocation = async (name: string, latitude: number, longitude: number, radius: number) => {
-  await prisma.location.upsert({
-    where: {
-      name
-    },
-    update: {
-      latitude,
-      longitude,
-      radius
-    },
-    create: {
-      name,
-      latitude,
-      longitude,
-      radius
-    }
-  });
-};
+    const run = await prisma.run.create({
+      data: {
+        locationName,
+        time: timestamp
+      }
+    });
+    return run;
+  };
+}

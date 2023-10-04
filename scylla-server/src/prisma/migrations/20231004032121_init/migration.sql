@@ -4,7 +4,7 @@ CREATE TABLE "Run" (
     "locationName" TEXT NOT NULL,
     "driverId" TEXT,
     "systemId" TEXT,
-    "time" DATETIME NOT NULL,
+    "time" INTEGER NOT NULL,
     CONSTRAINT "Run_locationName_fkey" FOREIGN KEY ("locationName") REFERENCES "Location" ("name") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Run_driverId_fkey" FOREIGN KEY ("driverId") REFERENCES "Driver" ("username") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Run_systemId_fkey" FOREIGN KEY ("systemId") REFERENCES "System" ("name") ON DELETE SET NULL ON UPDATE CASCADE
