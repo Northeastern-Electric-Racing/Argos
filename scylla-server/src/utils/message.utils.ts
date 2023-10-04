@@ -1,9 +1,16 @@
-import { JsonObject } from '@prisma/client/runtime/library';
-
 /**
- * The format of a message sent from the client
+ * The format of a message sent to the client
  */
 export type ClientMessage = {
-  argument: string;
-  data: JsonObject;
+  data: ClientData[];
+};
+
+/**
+ * The format of the data sent to the client
+ */
+type ClientData = {
+  name: string;
+  value: number;
+  units: string;
+  timestamp: number;
 };

@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from 'vitest';
-import { getAllDrivers, upsertDriver } from '../src/services/driver.services';
+import DriverService from '../src/services/driver.services';
 import prisma from '../src/prisma/prisma-client';
 
 /**
@@ -21,13 +21,10 @@ describe('CRUD Driver', () => {
    */
   test('Get All Drivers Works', async () => {
     const expected = [];
-    const result = await getAllDrivers();
-
-    // Parse result to a JavaScript object from the JSON string
-    const parsedResult = JSON.parse(result);
+    const result = await DriverService.getAllDrivers();
 
     // Use toEqual to compare parsedResult with the expected array
-    expect(parsedResult).toEqual(expected);
+    expect(result).toEqual(expected);
   });
 
   /**
@@ -36,8 +33,8 @@ describe('CRUD Driver', () => {
    * */
   test('Upsert Driver Creates', async () => {
     const expected = [{ username: 'test' }];
-    await upsertDriver('test');
-    const result = JSON.parse(await getAllDrivers());
+    await DriverService.upsertDriver('test');
+    const result = await DriverService.getAllDrivers();
 
     expect(result).toEqual(expected);
   });
