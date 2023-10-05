@@ -5,35 +5,39 @@ import { ResponseFunction } from '../utils/response-function';
 export default class LocationService {
   /**
    * CRUD operation to get all locations
-   * @returns
+   * @returns Array of all Locations
    */
   static getAllLocations: ResponseFunction<Location[]> = async () => {
-    const data = await prisma.location.findMany();
-    return data;
+    const locations = await prisma.location.findMany();
+    return locations;
   };
+
   /**
-   * upserts location by name
-   * @param locName
-   * @param locLatitude
-   * @param locLongitude
-   * @param locRadius
+   * Upserts a location to the database
+   * @param name The name of the location
+   * @param latitude the latitude of the location
+   * @param longitude the longitude of the location
+   * @param radius the radius of the location
+   * @returns the location
    */
-  static upsertLocation = async (locName: string, locLatitude: number, locLongitude: number, locRadius: number) => {
-    return await prisma.location.upsert({
+  static upsertLocation = async (name: string, latitude: number, longitude: number, radius: number): Promise<Location> => {
+    const location = await prisma.location.upsert({
       where: {
-        name: locName
+        name
       },
       update: {
-        latitude: locLatitude,
-        longitude: locLongitude,
-        radius: locRadius
+        latitude,
+        longitude,
+        radius
       },
       create: {
-        name: locName,
-        latitude: locLatitude,
-        longitude: locLongitude,
-        radius: locRadius
+        name,
+        latitude,
+        longitude,
+        radius
       }
     });
+
+    return location;
   };
 }
