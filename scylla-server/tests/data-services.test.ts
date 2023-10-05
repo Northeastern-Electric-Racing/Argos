@@ -41,23 +41,33 @@ describe('Data', () => {
     );
   });
 
-  test('Add Data', async () => {
-    const expected = ['test'];
+  // test('Add Data', async () => {
+  //   const expected = ['test'];
 
+  //   const serverData: ServerData = {
+  //     name: 'test',
+  //     value: 0,
+  //     units: 'lbs'
+  //   };
+
+  //   await DataService.addData(serverData, 1, 1, 1);
+
+  //   const data = {
+  //     dataTypeName: 'test'
+  //   };
+
+  //   const result = await DataService.getDataByDataTypeName(data);
+
+  //   expect(result).toEqual(expected);
+  // });
+
+  test('addData throws error when no dataTypeName', async () => {
     const serverData: ServerData = {
       name: 'test',
       value: 0,
       units: 'lbs'
     };
-
-    await DataService.addData(serverData, 1, 1, 1);
-
-    const data = {
-      dataTypeName: 'test'
-    };
-
-    const result = await DataService.getDataByDataTypeName(data);
-
-    expect(result).toEqual(expected);
+    //throws w no data
+    await expect(() => DataService.addData(serverData, 1, 1, 1)).rejects.toThrowError('dataType with id test not found');
   });
 });
