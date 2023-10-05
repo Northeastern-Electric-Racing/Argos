@@ -17,7 +17,7 @@ describe('CRUD Location', () => {
   });
 
   /**
-   * Tests Gets All Runs Succeeds Correctly
+   * Tests Upserts Location and Get All Locations work correctly
    */
   test('Get All Locations and Upsert', async () => {
     await LocationService.upsertLocation('test', 100, 200, 300);
