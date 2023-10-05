@@ -39,4 +39,18 @@ describe('Data', () => {
       `Invalid data provided, Expected data of type DataTypeName and got {"bruh":"test"}`
     );
   });
+
+  test('Add Data', async () => {
+    const expected = ['test'];
+
+    await DataService.addData('test', 1, 1);
+
+    const data = {
+      dataTypeName: 'test'
+    };
+
+    const result = await DataService.getDataByDataTypeName(data);
+
+    expect(result).toEqual(expected);
+  });
 });

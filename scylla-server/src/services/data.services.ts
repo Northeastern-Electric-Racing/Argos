@@ -30,4 +30,16 @@ export default class DataService {
     });
     return queriedData;
   };
+
+  static addData = async (serverData: string, unixTime: number, runId: number): Promise<void> => {
+    return await prisma.data.upsert({
+      where: {
+        dataTypeName: serverData
+      },
+      update: { unixTime, runId },
+      create: {
+        create: { serverData, unixTime, runId }
+      }
+    });
+  };
 }
