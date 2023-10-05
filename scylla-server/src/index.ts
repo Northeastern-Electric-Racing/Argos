@@ -7,6 +7,7 @@ import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
 import nodeRouter from './routes/node.routes';
 import cors from 'cors';
+import locationRouter from './routes/location.routes';
 
 const app = express();
 const port = 8000;
@@ -18,6 +19,7 @@ app.get('/', (_req: Request, res: Response) => {
 app.use(cors());
 
 app.use('/nodes', nodeRouter);
+app.use('/locations', locationRouter);
 
 app.use(express.json());
 
