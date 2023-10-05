@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import LocationController from '../controllers/location.controller';
 
-const nodeRouter = Router();
+const locationRouter = Router();
 
-nodeRouter.get('/locations', LocationController.getAllLocations);
+locationRouter.get('/', LocationController.getAllLocations);
 
-export default nodeRouter;
+export default locationRouter;

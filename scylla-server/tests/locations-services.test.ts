@@ -2,6 +2,9 @@ import { describe, test, expect, afterEach } from 'vitest';
 import LocationService from '../src/services/locations.services';
 import prisma from '../src/prisma/prisma-client';
 
+/**
+ * Service class to handle location crud operations
+ */
 describe('CRUD Location', () => {
   /**
    * Clean up after each test
