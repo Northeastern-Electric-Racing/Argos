@@ -51,7 +51,7 @@ export default class RunService {
 
     const run = await prisma.run.create({
       data: {
-        locationName,
+        location: { connect: { name: locationName } },
         time: timestamp
       }
     });

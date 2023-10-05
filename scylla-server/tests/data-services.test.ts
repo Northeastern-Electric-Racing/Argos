@@ -1,6 +1,7 @@
 import { describe, test, expect, afterEach } from 'vitest';
 import DataService from '../src/services/data.services';
 import prisma from '../src/prisma/prisma-client';
+import { ServerData } from '../src/odyssey-base/src/types/message.types';
 
 /**
  * Unit Tests for Data
@@ -43,7 +44,13 @@ describe('Data', () => {
   test('Add Data', async () => {
     const expected = ['test'];
 
-    await DataService.addData('test', 1, 1);
+    const serverData: ServerData = {
+      name: 'test',
+      value: 0,
+      units: 'lbs'
+    };
+
+    await DataService.addData(serverData, 1, 1, 1);
 
     const data = {
       dataTypeName: 'test'

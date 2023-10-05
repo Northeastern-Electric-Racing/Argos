@@ -1,8 +1,10 @@
 import { JsonObject } from '@prisma/client/runtime/library';
 import prisma from '../prisma/prisma-client';
 import { ResponseFunction } from '../utils/response-function';
-import { InvalidDataError } from '../utils/errors.utils';
+import { InvalidDataError, NotFoundError } from '../utils/errors.utils';
 import { Data } from '@prisma/client';
+import { ServerData } from '../odyssey-base/src/types/message.types';
+
 /**
  * Type of data needed for getting data by dataTypeName
  */
@@ -31,15 +33,19 @@ export default class DataService {
     return queriedData;
   };
 
-  static addData = async (serverData: string, unixTime: number, runId: number): Promise<void> => {
-    return await prisma.data.upsert({
+  static addData = async (serverData: ServerData, unixTime: number, runId: number, value: number): Promise<Data> => {
+    const dataType = await prisma.dataType.findUnique({
       where: {
-        dataTypeName: serverData
-      },
-      update: { unixTime, runId },
-      create: {
-        create: { serverData, unixTime, runId }
+        name: serverData.name
       }
+    });
+
+    if (!dataType) {
+      throw NotFoundError('dataType', serverData.name);
+    }
+
+    return await prisma.data.create({
+      data: { dataType: { connect: { name: serverData.name } }, time: unixTime, run: { connect: { id: runId } }, value }
     });
   };
 }
