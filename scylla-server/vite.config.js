@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     singleThread: true,
     include: ['**/*.test.ts'],
-    globals: true
+    globals: true,
+    singleThread: true
   }
 });
