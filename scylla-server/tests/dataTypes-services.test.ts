@@ -34,7 +34,7 @@ describe('Data Type', () => {
     const nodeName = 'testNode';
 
     await expect(async () => DataTypeService.upsertDataType(dataTypeName, unit, nodeName)).rejects.toThrowError(
-      'Node with id testNode does not exist'
+      'Node with the name "testNode" does not exist'
     );
   });
 
