@@ -1,10 +1,17 @@
 import { Location } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
+import { ResponseFunction } from '../utils/response-function';
 
-/**
- * Service class to handle location crud operations
- */
 export default class LocationService {
+  /**
+   * CRUD operation to get all locations
+   * @returns Array of all Locations
+   */
+  static getAllLocations: ResponseFunction<Location[]> = async () => {
+    const locations = await prisma.location.findMany();
+    return locations;
+  };
+
   /**
    * Upserts a location to the database
    * @param name The name of the location

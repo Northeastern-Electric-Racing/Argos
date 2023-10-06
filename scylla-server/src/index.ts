@@ -1,12 +1,11 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
-// Ignoring this because it wont build on github for some reason
-// @ts-ignore
-import { WebSocket } from 'ws';
 import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
 import nodeRouter from './routes/node.routes';
 import cors from 'cors';
+import locationRouter from './routes/location.routes';
+import { connect } from 'mqtt';
 
 const app = express();
 const port = 8000;
@@ -18,6 +17,7 @@ app.get('/', (_req: Request, res: Response) => {
 app.use(cors());
 
 app.use('/nodes', nodeRouter);
+app.use('/locations', locationRouter);
 
 app.use(express.json());
 
@@ -37,7 +37,20 @@ serverSocket.on('connection', (socket: Socket) => {
 });
 
 // TODO: Get host/port from DNC
-const socketClient = new WebSocket('ws://localhost:8000');
+const host = 'localhost';
+const mqttPort = '8080';
+const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
 
-const proxyClient = new ProxyClient(socketClient);
+const connectUrl = `mqtt://${host}:${mqttPort}`;
+
+const connection = connect(connectUrl, {
+  clientId,
+  clean: true,
+  connectTimeout: 4000,
+  username: 'scylla-server',
+  password: 'public',
+  reconnectPeriod: 1000
+});
+
+const proxyClient = new ProxyClient(connection);
 proxyClient.configure();
