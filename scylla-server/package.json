@@ -27,7 +27,7 @@
     "vitest": "^0.34.4"
   },
   "prisma": {
-    "schema": "./src/prisma/schema.prisma"
+    "schema": "./src/odyssey-base/src/prisma/schema.prisma"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4"
