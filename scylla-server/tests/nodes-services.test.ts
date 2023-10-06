@@ -14,11 +14,6 @@ describe('Node', () => {
     } catch (err) {}
   });
 
-  beforeEach(async () => {
-    await prisma.dataType.deleteMany();
-    await prisma.node.deleteMany();
-  });
-
   /**
    * unit test for upsert node
    * testing creating node if doesn't exist
