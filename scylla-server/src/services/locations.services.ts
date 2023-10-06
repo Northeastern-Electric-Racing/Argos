@@ -1,6 +1,7 @@
 import { Location } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
 import { ResponseFunction } from '../utils/response-function';
+import RunService from './runs.services';
 
 export default class LocationService {
   /**
@@ -18,9 +19,16 @@ export default class LocationService {
    * @param latitude the latitude of the location
    * @param longitude the longitude of the location
    * @param radius the radius of the location
+   * @param runId the id of the run associated with the location
    * @returns the location
    */
-  static upsertLocation = async (name: string, latitude: number, longitude: number, radius: number): Promise<Location> => {
+  static upsertLocation = async (
+    name: string,
+    latitude: number,
+    longitude: number,
+    radius: number,
+    runId: number
+  ): Promise<Location> => {
     const location = await prisma.location.upsert({
       where: {
         name
@@ -35,6 +43,21 @@ export default class LocationService {
         latitude,
         longitude,
         radius
+      }
+    });
+
+    await RunService.getRunById(runId);
+
+    await prisma.run.update({
+      where: {
+        id: runId
+      },
+      data: {
+        location: {
+          connect: {
+            name
+          }
+        }
       }
     });
 

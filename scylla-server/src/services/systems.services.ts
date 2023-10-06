@@ -1,6 +1,7 @@
 import { System } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
 import { ResponseFunction } from '../utils/response-function';
+import RunService from './runs.services';
 
 export default class SystemService {
   /**
@@ -13,13 +14,14 @@ export default class SystemService {
   };
 
   /**
-   * CRUD opertation that creates system if it doesn't exist, otherwise does nothing.
+   * CRUD opertation that creates system if it doesn't exist, connects the system to the current run
    * Currently designated private so not hooked up to server.
    * @param systemName name of the system as string
+   * @param runId id of the run that the system is currently associated with
    * @returns the created system
    */
-  static upsertSystem = async (systemName: string): Promise<System> => {
-    return await prisma.system.upsert({
+  static upsertSystem = async (systemName: string, runId: number): Promise<System> => {
+    const system = await prisma.system.upsert({
       where: {
         name: systemName
       },
@@ -28,5 +30,22 @@ export default class SystemService {
         name: systemName
       }
     });
+
+    await RunService.getRunById(runId);
+
+    await prisma.run.update({
+      where: {
+        id: runId
+      },
+      data: {
+        system: {
+          connect: {
+            name: systemName
+          }
+        }
+      }
+    });
+
+    return system;
   };
 }

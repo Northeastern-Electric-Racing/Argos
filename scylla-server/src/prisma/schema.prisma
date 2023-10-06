@@ -9,13 +9,13 @@ datasource db {
 }
 
 model Run {
-    id           Int      @id @unique @default(autoincrement())
-    locationName String
-    location     Location @relation(fields: [locationName], references: [name])
-    driverId     String?
-    driver       Driver?  @relation(fields: [driverId], references: [username])
-    systemId     String?
-    system       System?  @relation(fields: [systemId], references: [name])
+    id           Int       @id @unique @default(autoincrement())
+    locationName String?
+    location     Location? @relation(fields: [locationName], references: [name])
+    driverName   String?
+    driver       Driver?   @relation(fields: [driverName], references: [username])
+    systemName   String?
+    system       System?   @relation(fields: [systemName], references: [name])
     data         Data[]
     time         Int
 }
