@@ -17,7 +17,7 @@ model Run {
     systemId     String?
     system       System?  @relation(fields: [systemId], references: [name])
     data         Data[]
-    time         DateTime
+    time         Int
 }
 
 model Location {

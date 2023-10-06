@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from 'vitest';
-import { getAllSystems, upsertSystem } from '../src/services/systems.services';
+import SystemService from '../src/services/systems.services';
 
 import prisma from '../src/prisma/prisma-client';
 
@@ -24,8 +24,8 @@ describe('CRUD Systems', () => {
    */
   test('Upsert System Creates', async () => {
     const expected = [{ name: 'test' }];
-    await upsertSystem('test');
-    const result = JSON.parse(await getAllSystems());
+    await SystemService.upsertSystem('test');
+    const result = await SystemService.getAllSystems();
 
     // Use toEqual to compare parsedResult with the expected array
     expect(result).toEqual(expected);
@@ -35,15 +35,12 @@ describe('CRUD Systems', () => {
    * updated unit test for get all systems
    */
   test('Get All Systems Works', async () => {
-    await upsertSystem('test');
+    await SystemService.upsertSystem('test');
     const expected = [{ name: 'test' }];
-    const result = await getAllSystems();
-
-    // Parse result to a JavaScript object from the JSON string
-    const parsedResult = JSON.parse(result);
+    const result = await SystemService.getAllSystems();
 
     // Use toEqual to compare parsedResult with the expected array
-    expect(parsedResult).toEqual(expected);
+    expect(result).toEqual(expected);
   });
 
   /**
@@ -52,8 +49,8 @@ describe('CRUD Systems', () => {
    */
   test('Upsert System Does Nothing', async () => {
     const expected = [{ name: 'test' }];
-    await upsertSystem('test');
-    const result = JSON.parse(await getAllSystems());
+    await SystemService.upsertSystem('test');
+    const result = await SystemService.getAllSystems();
 
     // Use toEqual to compare result with the expected array
     expect(result).toEqual(expected);

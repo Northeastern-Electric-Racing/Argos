@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { getAllNodes, upsertNode } from '../src/services/nodes.services';
+import { describe, test, expect, afterEach } from 'vitest';
+import NodeService from '../src/services/nodes.services';
 import prisma from '../src/prisma/prisma-client';
 
 describe('Node', () => {
@@ -25,8 +25,8 @@ describe('Node', () => {
    */
   test('Upsert Node Creates', async () => {
     const expected = [{ name: 'test' }];
-    await upsertNode('test');
-    const result = JSON.parse(await getAllNodes());
+    await NodeService.upsertNode('test');
+    const result = await NodeService.getAllNodes();
 
     // Use toEqual to compare parsedResult with the expected array
     expect(result).toEqual(expected);
@@ -34,13 +34,10 @@ describe('Node', () => {
 
   test('Get All Nodes Works', async () => {
     const expected = [];
-    const result = await getAllNodes();
-
-    // Parse result to a JavaScript object from the JSON string
-    const parsedResult = JSON.parse(result);
+    const result = await NodeService.getAllNodes();
 
     // Use toEqual to compare parsedResult with the expected array
-    expect(parsedResult).toEqual(expected);
+    expect(result).toEqual(expected);
   });
 
   /**
@@ -49,9 +46,9 @@ describe('Node', () => {
    */
   test('Upsert Node Does Nothing', async () => {
     const expected = [{ name: 'test' }];
-    await upsertNode('test');
-    await upsertNode('test');
-    const result = JSON.parse(await getAllNodes());
+    await NodeService.upsertNode('test');
+    await NodeService.upsertNode('test');
+    const result = await NodeService.getAllNodes();
 
     // Use toEqual to compare result with the expected array
     expect(result).toEqual(expected);

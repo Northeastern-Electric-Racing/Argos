@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach } from 'vitest';
-import { getAllDataTypes, upsertDataType } from '../src/services/dataTypes.services';
+import { describe, test, expect } from 'vitest';
+import DataTypeService from '../src/services/dataTypes.services';
 import prisma from '../src/prisma/prisma-client';
 
 describe('Data Type', () => {
@@ -10,13 +10,10 @@ describe('Data Type', () => {
 
   test('Get All Data Types Works', async () => {
     const expected = [];
-    const result = await getAllDataTypes();
-
-    // Parse result to a JavaScript object from the JSON string
-    const parsedResult = JSON.parse(result);
+    const result = await DataTypeService.getAllDataTypes();
 
     // Use toEqual to compare parsedResult with the expected array
-    expect(parsedResult).toEqual(expected);
+    expect(result).toEqual(expected);
   });
 
   test('Upsert DataType Creates', async () => {
