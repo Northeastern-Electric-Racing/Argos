@@ -1,21 +1,21 @@
 // Ignoring this because it wont build on github for some reason
 // @ts-ignore
-import { ErrorEvent, Event, MessageEvent, WebSocket } from 'ws';
-import { ServerMessage, SubscriptionMessage } from '../odyssey-base/src/types/message.types';
+import { ErrorWithReasonCode, IConnackPacket, MqttClient } from 'mqtt/*';
+import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
 
 /**
  * Handler for receiving messages from Siren
  */
 export default class ProxyClient {
-  socket: WebSocket;
+  connection: MqttClient;
 
   /**
    * Constructor
    * @param socket The socket to send and receive messages from
    */
-  constructor(socket: WebSocket) {
-    this.socket = socket;
+  constructor(mqttClient: MqttClient) {
+    this.connection = mqttClient;
   }
 
   /**
@@ -23,46 +23,31 @@ export default class ProxyClient {
    * @param topics The topics to subscribe to
    */
   private subscribeToTopics = (topics: Topic[]) => {
-    const subscriptionMessage: SubscriptionMessage = {
-      argument: 'subscribe',
-      topics
-    };
-    this.socket.send(JSON.stringify(subscriptionMessage));
+    this.connection.subscribe(topics.map((topic) => topic.toString()));
   };
 
   /**
    * Handles disconnecting from Siren
-   * @param event The event that triggered the close
    */
-  private handleClose = (event: Event) => {
-    console.log('Disconnected from Siren', event);
+  private handleClose = () => {
+    console.log('Disconnected from Siren');
   };
 
   /**
    * Handles connecting to Siren
-   * @param event The event that triggered the open
+   * @param packet The packet sent when the connection is opened
    */
-  private handleOpen = (event: Event) => {
-    console.log('Connected to Siren', event);
+  private handleOpen = (packet: IConnackPacket) => {
+    console.log('Connected to Siren', packet.properties);
     this.subscribeToTopics(Object.values(Topic));
   };
 
   /**
    * Handles messages received from Siren
+   * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = (message: MessageEvent) => {
-    console.log('Received Message: ', message);
-    try {
-      const data = JSON.parse(message.data.toString()) as ServerMessage;
-      this.handleData(data);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log('Error Decoding Message: ', error.message);
-        this.socket.emit('Error', error.message);
-      }
-    }
-  };
+  private handleMessage = (topic: string, payload: Buffer) => {};
 
   /**
    * Handles receiving data from the car and:
@@ -80,7 +65,7 @@ export default class ProxyClient {
    * Handles errors that occur
    * @param error The error that occurred
    */
-  private handleError = (error: ErrorEvent) => {
+  private handleError = (error: Error | ErrorWithReasonCode) => {
     console.log('Error Encountered: ', error.message);
   };
 
@@ -89,9 +74,9 @@ export default class ProxyClient {
    * sending and receiving messages, and handling errors
    */
   public configure = () => {
-    this.socket.onopen = this.handleOpen;
-    this.socket.onmessage = this.handleMessage;
-    this.socket.onerror = this.handleError;
-    this.socket.onclose = this.handleClose;
+    this.connection.on('message', this.handleMessage);
+    this.connection.on('connect', this.handleOpen);
+    this.connection.on('error', this.handleError);
+    this.connection.on('close', this.handleClose);
   };
 }
