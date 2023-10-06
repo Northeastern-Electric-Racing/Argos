@@ -35,23 +35,11 @@ export default class RunService {
 
   /**
    * Creates a new run in the database
-   * @param locationName  locationName of run
    * @returns Promise<Run>
    */
-  static createRun = async (locationName: string, timestamp: number) => {
-    const location = await prisma.location.findUnique({
-      where: {
-        name: locationName
-      }
-    });
-
-    if (!location) {
-      throw NotFoundError('location', locationName);
-    }
-
+  static createRun = async (timestamp: number) => {
     const run = await prisma.run.create({
       data: {
-        location: { connect: { name: locationName } },
         time: timestamp
       }
     });
