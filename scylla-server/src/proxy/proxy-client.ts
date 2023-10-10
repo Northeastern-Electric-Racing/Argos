@@ -4,8 +4,8 @@ import { ErrorWithReasonCode, IConnackPacket, MqttClient } from 'mqtt/*';
 import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
 import NodeService from '../services/nodes.services';
-import { upsertRun } from '../services/runs.services';
-import { upsertData } from '../services/data.services';
+import RunService from '../services/runs.services';
+import DataService from '../services/data.services';
 
 /**
  * Handler for receiving messages from Siren
@@ -53,9 +53,9 @@ export default class ProxyClient {
 
   /**
    * Handles messages received from Siren
-   * @param topic The topic the message was received on
    * Parses as ServerMessage, otherwise throws error
    * Passes data to handleData
+   * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
   private handleMessage = (topic: string, payload: Buffer) => {};

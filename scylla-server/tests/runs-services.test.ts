@@ -1,25 +1,61 @@
-import { describe, test, expect } from 'vitest';
-import { getRunById, getAllRuns, upsertRun } from '../src/services/runs.services';
-import { upsertLocation } from '../src/services/locations.services';
+import { describe, test, expect, afterEach } from 'vitest';
+import RunService from '../src/services/runs.services';
+import prisma from '../src/prisma/prisma-client';
 
 describe('CRUD Run', () => {
   /**
-   * get runs
+   * Clean up after each test
+   */
+  afterEach(async () => {
+    try {
+      await prisma.run.deleteMany({
+        where: {
+          locationName: 'test'
+        }
+      });
+    } catch (error) {}
+    try {
+      await prisma.location.delete({
+        where: {
+          name: 'test'
+        }
+      });
+    } catch (error) {}
+  });
+
+  /**
+   * Tests Gets All Runs Succeeds Correctly
    */
   test('Get All runs', async () => {
-    const upsertloc = await upsertLocation('Boston', 100, 200, 300);
-    const upsertrun = await upsertRun(100, 'Boston');
-    const result = await getAllRuns();
-    expect(Object.keys(result).length).toEqual(1);
-  }, 1000);
+    await RunService.createRun(1);
 
+    const result = await RunService.getAllRuns();
+
+    expect(result).toEqual([
+      {
+        id: result[0].id,
+        locationName: null,
+        time: 1,
+        driverName: null,
+        systemName: null
+      }
+    ]);
+  });
+
+  /**
+   * Tests Get Run By Id Succeeds Correctly
+   */
   test('Get run by id', async () => {
-    const upsertloc = await upsertLocation('Boston', 100, 200, 300);
-    const upsertrun = await upsertRun(100, 'Boston');
+    const createdRun = await RunService.createRun(1);
 
-    const result = JSON.parse(await getRunById(100));
+    const result = await RunService.getRunById(createdRun.id);
 
-    expect(result.id).toEqual(100);
-    expect(result.locationName).toEqual('Boston');
-  }, 1000);
+    expect(result).toEqual({
+      id: createdRun.id,
+      locationName: null,
+      time: 1,
+      driverName: null,
+      systemName: null
+    });
+  });
 });
