@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import LocationService from '../services/locations.services';
+import LocationService from '../odyssey-base/src/services/locations.services';
 
 /**
  * Controller to manage Node requests and responses
