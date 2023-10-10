@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import DataService from '../odyssey-base/src/services/data.services';
 
 /**
- * Controller to manage Data requests and responses
+ * Controller to manage Data requests and responses.
  */
 export default class DataController {
   static async getDataByDataTypeName(req: Request, res: Response) {
