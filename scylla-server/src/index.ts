@@ -19,6 +19,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.use(cors());
+app.use(express.json());
 
 app.use('/nodes', nodeRouter);
 app.use('/locations', locationRouter);
@@ -26,8 +27,6 @@ app.use('/systems', systemRouter);
 app.use('/runs', runRouter);
 app.use('/data', dataRouter);
 app.use('/datatypes', dataTypeRouter);
-
-app.use(express.json());
 
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
