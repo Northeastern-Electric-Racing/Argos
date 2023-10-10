@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import NodeService from '../services/nodes.services';
+import NodeService from '../odyssey-base/src/services/nodes.services';
 
 /**
  * Controller to manage Node requests and responses
