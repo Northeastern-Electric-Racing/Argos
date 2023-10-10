@@ -6,7 +6,11 @@ import LocationService from '../odyssey-base/src/services/locations.services';
  */
 export default class LocationController {
   static async getAllLocations(req: Request, res: Response) {
-    const allLocations = await LocationService.getAllLocations();
-    res.status(200).json(allLocations);
+    try {
+      const allLocations = await LocationService.getAllLocations();
+      res.status(200).json(allLocations);
+    } catch (error: any) {
+      res.status(error.status).send(error.message);
+    }
   }
 }

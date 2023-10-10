@@ -6,7 +6,11 @@ import NodeService from '../odyssey-base/src/services/nodes.services';
  */
 export default class NodeController {
   static async getAllNodes(req: Request, res: Response) {
-    const allNodes = await NodeService.getAllNodes();
-    res.status(200).json(allNodes);
+    try {
+      const allNodes = await NodeService.getAllNodes();
+      res.status(200).json(allNodes);
+    } catch (error: any) {
+      res.status(error.status).send(error.message);
+    }
   }
 }
