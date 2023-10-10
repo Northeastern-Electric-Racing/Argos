@@ -1,6 +1,7 @@
 import { Driver } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
 import { ResponseFunction } from '../utils/response-function';
+import RunService from './runs.services';
 
 /**
  * Service class to handle drivers
@@ -18,10 +19,11 @@ export default class DriverService {
   /**
    * CRUD operation to create a driver in the database if it doesn't already exist, does nothing otherwise.
    * @param driverName name of the driver as string
+   * @param runId id of the run that the driver is currently associated with
    * @returns the created driver
    */
-  static upsertDriver = async (driverName: string): Promise<Driver> => {
-    return await prisma.driver.upsert({
+  static upsertDriver = async (driverName: string, runId: number): Promise<Driver> => {
+    const driver = await prisma.driver.upsert({
       where: {
         username: driverName
       },
@@ -30,5 +32,22 @@ export default class DriverService {
         username: driverName
       }
     });
+
+    await RunService.getRunById(runId);
+
+    await prisma.run.update({
+      where: {
+        id: runId
+      },
+      data: {
+        driver: {
+          connect: {
+            username: driverName
+          }
+        }
+      }
+    });
+
+    return driver;
   };
 }

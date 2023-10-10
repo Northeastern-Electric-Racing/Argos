@@ -1,49 +1,48 @@
 import { Run } from '@prisma/client';
 import prisma from '../prisma/prisma-client';
 import { ResponseFunction } from '../utils/response-function';
+import { NotFoundError } from '../utils/errors.utils';
 
 /**
- * CRUD operation to get all runs
- * @returns Promise<string>  all the runs
+ * Service for CRUD operations on runs
  */
-export const getAllRuns: ResponseFunction<Run[]> = async () => {
-  const data = await prisma.run.findMany();
-  return data;
-};
+export default class RunService {
+  /**
+   * Gets all the runs from the database
+   * CRUD operation to get all runs
+   * @returns Promise<Run[]>  all the runs
+   */
+  static getAllRuns: ResponseFunction<Run[]> = async () => {
+    return await prisma.run.findMany();
+  };
 
-/**
- * CRUD operation to get run by id
- * @param runId id of run
- * @returns Promise<json string of run>
- */
-export const getRunById = async (runId: number) => {
-  const data = await prisma.run.findUnique({
-    where: {
-      id: runId
+  /**
+   * CRUD operation to get run by id
+   * @param id id of run
+   * @returns Promise<Run>
+   */
+  static getRunById = async (id: number): Promise<Run> => {
+    const run = await prisma.run.findUnique({
+      where: {
+        id
+      }
+    });
+    if (!run) {
+      throw NotFoundError('run', id);
     }
-  });
+    return run;
+  };
 
-  return JSON.stringify(data);
-};
-
-/**
- * CRUD operation to upsert a Run by id
- * @param runId id of run
- * @param runLocationName  locationName of run
- * @returns Promise<void>
- */
-export const upsertRun = async (runId: number, runLocationName: string) => {
-  return await prisma.run.upsert({
-    where: {
-      id: runId
-    },
-    update: {
-      locationName: runLocationName
-    },
-    create: {
-      id: runId,
-      locationName: runLocationName,
-      time: new Date()
-    }
-  });
-};
+  /**
+   * Creates a new run in the database
+   * @returns Promise<Run>
+   */
+  static createRun = async (timestamp: number) => {
+    const run = await prisma.run.create({
+      data: {
+        time: timestamp
+      }
+    });
+    return run;
+  };
+}
