@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client';
@@ -10,6 +10,7 @@ import systemRouter from './routes/system.routes';
 import runRouter from './routes/run.routes';
 import dataRouter from './routes/data.routes';
 import dataTypeRouter from './routes/datatype.routes';
+import { NotFoundError } from './odyssey-base/src/utils/errors.utils';
 
 const app = express();
 const port = 8000;
@@ -27,6 +28,15 @@ app.use('/systems', systemRouter);
 app.use('/runs', runRouter);
 app.use('/data', dataRouter);
 app.use('/datatypes', dataTypeRouter);
+
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction): void => {
+  const status = err instanceof NotFoundError ? err.status : 500;
+  const message = err.message || 'Internal Server Error';
+
+  // Send the error response as a JSON object
+  res.status(status).json({ status, message });
+});
 
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
