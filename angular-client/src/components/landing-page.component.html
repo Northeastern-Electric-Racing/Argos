@@ -1,0 +1,29 @@
+<div style="background-image: url(../assets/images/NERO.jpeg); background-size: cover; height: 100%;">
+  <div
+    style="background-color: rgba(255, 255, 255, 0.5); height: 100%; padding-top: 16px; padding-left: 16px; padding-right: 16px;">
+    <div style="display: flex; justify-content: space-between; padding-top: 50px;">
+      <div>
+        <p style="font-size: 8rem; padding-bottom: 60px;">
+          {{time | date: "HH:mm:ss"}}
+        </p>
+        <p style="font-size: xx-large;">
+          {{time | date: "MM/dd/yyyy"}}
+        </p>
+        <h1>
+          ARGOS
+        </h1>
+      </div>
+      <div style="text-align: right;">
+        <h1 style="font-size: xx-large;">
+          {{currentDriver}}
+        </h1>
+        <h3>
+          {{currentSystem}}
+        </h3>
+        <h4>
+          {{currentLocation}}
+        </h4>
+      </div>
+    </div>
+  </div>
+</div>
