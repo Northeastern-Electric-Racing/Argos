@@ -1,5 +1,5 @@
 export enum ImportantDataType {
-   DRIVER = "driver",
-   LOCATION = "location",
-   SYSTEM = "system",
+  DRIVER = 'driver',
+  LOCATION = 'location',
+  SYSTEM = 'system'
 }
