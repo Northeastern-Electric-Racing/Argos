@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { io } from 'socket.io-client';
-import { ImportantDataType } from 'src/enumeration/ImportantDataType';
 import APIService from 'src/services/api.service';
 import { SocketService } from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
+import { IdentifierDataType } from 'src/utils/enumerations/ImportantDataType';
 import { DataValue } from 'src/utils/socket.utils';
 
 @Component({
@@ -18,9 +18,9 @@ export default class LandingPage implements OnInit {
   socket = io('http://localhost:3000');
   socketService = new SocketService(this.socket);
   time = new Date();
-  currentDriver = this.storage.get(ImportantDataType.DRIVER)?.[0].value ?? 'No Driver Selected';
-  currentLocation = this.storage.get(ImportantDataType.LOCATION)?.[0].value ?? 'No Location Selected';
-  currentSystem = this.storage.get(ImportantDataType.SYSTEM)?.[0].value ?? 'No System Selected';
+  currentDriver = this.storage.get(IdentifierDataType.DRIVER)?.[0].value ?? 'No Driver Selected';
+  currentLocation = this.storage.get(IdentifierDataType.LOCATION)?.[0].value ?? 'No Location Selected';
+  currentSystem = this.storage.get(IdentifierDataType.SYSTEM)?.[0].value ?? 'No System Selected';
 
   ngOnInit() {
     this.socketService.receiveData(this.storage);
