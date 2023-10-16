@@ -5,6 +5,4 @@ docker-compose.yml
 .eslintrc.js
 tsconfig.json
 
-**/*.css
-
 tsconfig.*.json
