@@ -3,24 +3,22 @@
     <div class="header-div">
       <div class="header-left">
         <h1 class="large-title">
-          {{time | date: "HH:mm:ss"}}
+          {{ time | date: 'HH:mm:ss' }}
         </h1>
         <h1 class="subtitle">
-          {{time | date: "MM/dd/yyyy"}}
+          {{ time | date: 'MM/dd/yyyy' }}
         </h1>
-        <h1>
-          ARGOS
-        </h1>
+        <h1>ARGOS</h1>
       </div>
       <div class="header-right">
-        <h1 style="font-size: xx-large;">
-          {{currentDriver}}
+        <h1 style="font-size: xx-large">
+          {{ currentDriver }}
         </h1>
         <h3>
-          {{currentSystem}}
+          {{ currentSystem }}
         </h3>
         <h4>
-          {{currentLocation}}
+          {{ currentLocation }}
         </h4>
       </div>
     </div>
