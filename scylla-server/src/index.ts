@@ -11,6 +11,7 @@ import runRouter from './routes/run.routes';
 import dataRouter from './routes/data.routes';
 import dataTypeRouter from './routes/datatype.routes';
 import { NotFoundError } from './odyssey-base/src/utils/errors.utils';
+import driverRouter from './routes/driver.routes';
 
 const app = express();
 const port = 8000;
@@ -28,6 +29,7 @@ app.use('/systems', systemRouter);
 app.use('/runs', runRouter);
 app.use('/data', dataRouter);
 app.use('/datatypes', dataTypeRouter);
+app.use('/drivers', driverRouter);
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction): void => {
