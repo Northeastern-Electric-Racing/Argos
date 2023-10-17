@@ -6,7 +6,7 @@ export type StorageMap = Map<string, DataValue[]>;
 /**
  * The value of a data point
  */
-type DataValue = {
+export type DataValue = {
   value: number;
   timestamp: number;
 };
