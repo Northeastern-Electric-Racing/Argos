@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Socket } from 'socket.io-client';
-import { ServerData, StorageMap } from 'src/utils/socket.utils';
+import { ServerData } from 'src/utils/socket.utils';
+import Storage from './storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,7 @@ export class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData(storage: StorageMap) {
+  receiveData(storage: Storage) {
     this.socket.on('message', (message: string) => {
       try {
         const data = JSON.parse(message) as ServerData;
