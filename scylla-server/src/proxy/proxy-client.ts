@@ -3,17 +3,21 @@
 import { ErrorWithReasonCode, IConnackPacket, MqttClient } from 'mqtt/*';
 import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
+import { Run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
+import { empty } from '@prisma/client/runtime/library';
 
 /**
  * Handler for receiving messages from Siren
  */
 export default class ProxyClient {
   connection: MqttClient;
-  //should a new run be created, based off if new connection & data received
+  // should a new run be created, based off if new connection & data received
   createNewRun: boolean;
+  // the run for the current connection, at start is undefined
+  currentRun: Run | undefined;
 
   /**
    * Constructor
@@ -23,6 +27,8 @@ export default class ProxyClient {
     this.connection = mqttClient;
     // only true first time after connected and data received
     this.createNewRun = false;
+    // haven't connected yet so no run yet
+    this.currentRun = undefined;
   }
 
   /**
@@ -82,18 +88,15 @@ export default class ProxyClient {
     // then create new run
     console.log('Received Data: ', data);
     if (this.createNewRun) {
-      await RunService.createRun(data.unix_time);
+      this.currentRun = await RunService.createRun(data.unix_time);
     }
     this.createNewRun = false;
     await NodeService.upsertNode(data.node);
     // looping through data and adding
-    // need runid to add Data
-    // where should i get that from question mark
-    // guess i will do this
-    const runs = await RunService.getAllRuns();
-    const runid = runs[-1].id;
-    for (const serverdata of data.data) {
-      await DataService.addData(serverdata, data.unix_time, serverdata.value, runid);
+    if (this.currentRun) {
+      for (const serverdata of data.data) {
+        await DataService.addData(serverdata, data.unix_time, serverdata.value, this.currentRun.id);
+      }
     }
   };
 
