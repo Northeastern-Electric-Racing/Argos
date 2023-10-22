@@ -9,6 +9,8 @@ import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
 import DataTypeService from '../odyssey-base/src/services/dataTypes.services';
 import LocationService from '../odyssey-base/src/services/locations.services';
+import DriverService from '../odyssey-base/src/services/driver.services';
+import SystemService from '../odyssey-base/src/services/systems.services';
 
 /**
  * Handler for receiving messages from Siren
@@ -104,26 +106,63 @@ export default class ProxyClient {
         const dataAdded = await DataService.addData(serverdata, data.unix_time, serverdata.value, this.currentRun.id);
         dataReceived.push(dataAdded);
       }
-      // supposed to also upsert location, driver, system but how bro
-      for (const datType of dataTypesReceived) {
-        if (datType.name === 'location') {
-          // should i then try to find dataType with name "lattitude"?
-          // idk this doesn't make sense with the prisma schema
-          const lattitude = 0;
-          const longitude = 0;
-          const radius = 0;
-          const locationName = '';
-          const location = await LocationService.upsertLocation(
-            locationName,
-            lattitude,
-            longitude,
-            radius,
-            this.currentRun.id
-          );
+      // upserting location, system, driver ( can be added to above loop but
+      // not gonna do that rn because i still dont think this remotely right
+      // cuz it doesnt make sense with the prisma schema )
+      let latitude = 0;
+      let longitude = 0;
+      let radius = 0;
+      const locationName = '';
+      const driverUser = '';
+      const systemName = '';
+      let locCounter = 0;
+      let drivCounter = 0;
+      let systCounter = 0;
+
+      for (const serverdata of data.data) {
+        if (serverdata.name === 'driverUser') {
+          // serverdata.value can only be integer, need string
+          // driverUser = serverdata.value
+          drivCounter += 1;
+        }
+        if (serverdata.name === 'systemName') {
+          // serverdata.value can only be integer, need string
+          // systemName = serverdata.value
+          systCounter += 1;
+        }
+        if (serverdata.name === 'lattitude') {
+          latitude = serverdata.value;
+          locCounter += 1;
+        }
+        if (serverdata.name === 'longitude') {
+          longitude = serverdata.value;
+          locCounter += 1;
+        }
+        if (serverdata.name === 'radius') {
+          radius = serverdata.value;
+          locCounter += 1;
+        }
+        if (serverdata.name === 'locationName') {
+          // serverdata.value can only be integer, need string
+          // locationName = serverdata.value
+          locCounter += 1;
         }
       }
+      if (locCounter === 4) {
+        const location = await LocationService.upsertLocation(locationName, latitude, longitude, radius, this.currentRun.id);
+        locCounter = 0;
+      }
+      if (drivCounter === 1) {
+        const driver = await DriverService.upsertDriver(driverUser, this.currentRun.id);
+        drivCounter = 0;
+      }
+      if (systCounter === 1) {
+        const system = await SystemService.upsertSystem(systemName, this.currentRun.id);
+        locCounter = 0;
+      }
       // then send everything to Proxy Server, so i guess keep log of
-      // of everything
+      // of everything?
+      this.connection.publish('topic', dataReceived.toString());
     }
   };
 
