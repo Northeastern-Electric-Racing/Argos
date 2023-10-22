@@ -3,11 +3,12 @@
 import { ErrorWithReasonCode, IConnackPacket, MqttClient } from 'mqtt/*';
 import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
-import { Run } from '@prisma/client';
+import { Run, DataType, Data } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
-import { empty } from '@prisma/client/runtime/library';
+import DataTypeService from '../odyssey-base/src/services/dataTypes.services';
+import LocationService from '../odyssey-base/src/services/locations.services';
 
 /**
  * Handler for receiving messages from Siren
@@ -16,7 +17,7 @@ export default class ProxyClient {
   connection: MqttClient;
   // should a new run be created, based off if new connection & data received
   createNewRun: boolean;
-  // the run for the current connection, at start is undefined
+  // storing run for the current connection, at start is undefined
   currentRun: Run | undefined;
 
   /**
@@ -91,12 +92,38 @@ export default class ProxyClient {
       this.currentRun = await RunService.createRun(data.unix_time);
     }
     this.createNewRun = false;
-    await NodeService.upsertNode(data.node);
+    // upsert the node
+    const node = await NodeService.upsertNode(data.node);
     // looping through data and adding
     if (this.currentRun) {
+      const dataTypesReceived: DataType[] = [];
+      const dataReceived: Data[] = [];
       for (const serverdata of data.data) {
-        await DataService.addData(serverdata, data.unix_time, serverdata.value, this.currentRun.id);
+        const dataType = await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
+        dataTypesReceived.push(dataType);
+        const dataAdded = await DataService.addData(serverdata, data.unix_time, serverdata.value, this.currentRun.id);
+        dataReceived.push(dataAdded);
       }
+      // supposed to also upsert location, driver, system but how bro
+      for (const datType of dataTypesReceived) {
+        if (datType.name === 'location') {
+          // should i then try to find dataType with name "lattitude"?
+          // idk this doesn't make sense with the prisma schema
+          const lattitude = 0;
+          const longitude = 0;
+          const radius = 0;
+          const locationName = '';
+          const location = await LocationService.upsertLocation(
+            locationName,
+            lattitude,
+            longitude,
+            radius,
+            this.currentRun.id
+          );
+        }
+      }
+      // then send everything to Proxy Server, so i guess keep log of
+      // of everything
     }
   };
 
