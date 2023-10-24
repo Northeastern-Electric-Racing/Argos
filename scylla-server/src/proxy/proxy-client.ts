@@ -3,7 +3,7 @@
 import { ErrorWithReasonCode, IConnackPacket, MqttClient } from 'mqtt/*';
 import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { Topic } from '../odyssey-base/src/types/topic';
-import { Run, DataType, Data } from '@prisma/client';
+import { Run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
@@ -11,7 +11,8 @@ import DataTypeService from '../odyssey-base/src/services/dataTypes.services';
 import LocationService from '../odyssey-base/src/services/locations.services';
 import DriverService from '../odyssey-base/src/services/driver.services';
 import SystemService from '../odyssey-base/src/services/systems.services';
-
+import ProxyServer from './proxy-server';
+import { ClientMessage, ClientData } from '../utils/message.utils';
 /**
  * Handler for receiving messages from Siren
  */
@@ -22,16 +23,20 @@ export default class ProxyClient {
   // storing run for the current connection, at start is undefined
   currentRun: Run | undefined;
 
+  proxyServer: ProxyServer;
+
   /**
    * Constructor
    * @param socket The socket to send and receive messages from
    */
-  constructor(mqttClient: MqttClient) {
+  constructor(mqttClient: MqttClient, proxyServer: ProxyServer) {
     this.connection = mqttClient;
     // only true first time after connected and data received
     this.createNewRun = false;
     // haven't connected yet so no run yet
     this.currentRun = undefined;
+
+    this.proxyServer = proxyServer;
   }
 
   /**
@@ -89,81 +94,75 @@ export default class ProxyClient {
   private handleData = async (data: ServerMessage) => {
     // if first time data recieved since connecting to car
     // then create new run
-    console.log('Received Data: ', data);
     if (this.createNewRun) {
       this.currentRun = await RunService.createRun(data.unix_time);
     }
     this.createNewRun = false;
     // upsert the node
     const node = await NodeService.upsertNode(data.node);
-    // looping through data and adding
-    if (this.currentRun) {
-      const dataTypesReceived: DataType[] = [];
-      const dataReceived: Data[] = [];
-      for (const serverdata of data.data) {
-        const dataType = await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
-        dataTypesReceived.push(dataType);
-        const dataAdded = await DataService.addData(serverdata, data.unix_time, serverdata.value, this.currentRun.id);
-        dataReceived.push(dataAdded);
-      }
-      // upserting location, system, driver ( can be added to above loop but
-      // not gonna do that rn because i still dont think this remotely right
-      // cuz it doesnt make sense with the prisma schema )
-      let latitude = 0;
-      let longitude = 0;
-      let radius = 0;
-      const locationName = '';
-      const driverUser = '';
-      const systemName = '';
-      let locCounter = 0;
-      let drivCounter = 0;
-      let systCounter = 0;
-
-      for (const serverdata of data.data) {
-        if (serverdata.name === 'driverUser') {
-          // serverdata.value can only be integer, need string
-          // driverUser = serverdata.value
-          drivCounter += 1;
-        }
-        if (serverdata.name === 'systemName') {
-          // serverdata.value can only be integer, need string
-          // systemName = serverdata.value
-          systCounter += 1;
-        }
-        if (serverdata.name === 'lattitude') {
-          latitude = serverdata.value;
-          locCounter += 1;
-        }
-        if (serverdata.name === 'longitude') {
-          longitude = serverdata.value;
-          locCounter += 1;
-        }
-        if (serverdata.name === 'radius') {
-          radius = serverdata.value;
-          locCounter += 1;
-        }
-        if (serverdata.name === 'locationName') {
-          // serverdata.value can only be integer, need string
-          // locationName = serverdata.value
-          locCounter += 1;
-        }
-      }
-      if (locCounter === 4) {
-        const location = await LocationService.upsertLocation(locationName, latitude, longitude, radius, this.currentRun.id);
-        locCounter = 0;
-      }
-      if (drivCounter === 1) {
-        const driver = await DriverService.upsertDriver(driverUser, this.currentRun.id);
-        drivCounter = 0;
-      }
-      if (systCounter === 1) {
-        const system = await SystemService.upsertSystem(systemName, this.currentRun.id);
-        locCounter = 0;
-      }
-      // then send everything to Proxy Server, so i guess keep log of
-      // of everything?
-      this.connection.publish('topic', dataReceived.toString());
+    // start upserting data
+    if (!this.currentRun) {
+      console.log('no current run');
+      return;
     }
+    // initializing params
+    let latitude = undefined;
+    let longitude = undefined;
+    let radius = undefined;
+    let locationName = undefined;
+    let driverName = undefined;
+    let systemName = undefined;
+
+    // iterating and upserting
+    const clientData: ClientData[] = [];
+    for (const serverdata of data.data) {
+      // transform serverdata into client data to send to ProxyServer
+      const clientdata: ClientData = {
+        name: serverdata.name,
+        value: serverdata.value,
+        units: serverdata.units,
+        timestamp: data.unix_time
+      };
+      clientData.push(clientdata);
+
+      switch (serverdata.name) {
+        case 'driverUser':
+          driverName = serverdata.value as string;
+          break;
+        case 'systemName':
+          systemName = serverdata.value as string;
+          break;
+        case 'locationName':
+          locationName = serverdata.value as string;
+          break;
+        case 'latitude':
+          latitude = serverdata.value as number;
+          break;
+        case 'longitude':
+          longitude = serverdata.value as number;
+          break;
+        case 'radius':
+          radius = serverdata.value as number;
+          break;
+        default:
+          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
+          await DataService.addData(serverdata, data.unix_time, serverdata.value as number, this.currentRun.id);
+      }
+    }
+
+    if (systemName) {
+      SystemService.upsertSystem(systemName, this.currentRun.id);
+    }
+    if (driverName) {
+      DriverService.upsertDriver(driverName, this.currentRun.id);
+    }
+    if (latitude && longitude && radius && locationName) {
+      LocationService.upsertLocation(locationName, latitude, longitude, radius, this.currentRun.id);
+    }
+    const clientMessage: ClientMessage = {
+      data: clientData
+    };
+    this.proxyServer.sendMessage(clientMessage);
   };
 
   /**

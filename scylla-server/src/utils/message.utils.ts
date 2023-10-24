@@ -8,9 +8,9 @@ export type ClientMessage = {
 /**
  * The format of the data sent to the client
  */
-type ClientData = {
+export type ClientData = {
   name: string;
-  value: number;
+  value: number | string;
   units: string;
   timestamp: number;
 };
