@@ -127,13 +127,13 @@ export default class ProxyClient {
 
       switch (serverdata.name) {
         case 'driverUser':
-          driverName = serverdata.value as string;
+          driverName = serverdata.value as unknown as string;
           break;
         case 'systemName':
-          systemName = serverdata.value as string;
+          systemName = serverdata.value as unknown as string;
           break;
         case 'locationName':
-          locationName = serverdata.value as string;
+          locationName = serverdata.value as unknown as string;
           break;
         case 'latitude':
           latitude = serverdata.value as number;
