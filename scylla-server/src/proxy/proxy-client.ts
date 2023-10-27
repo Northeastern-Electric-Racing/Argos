@@ -113,9 +113,46 @@ export default class ProxyClient {
     let driverName = undefined;
     let systemName = undefined;
 
+    // enum instead of raw string representing
+    // driver, system, location props
+    enum Property {
+      driverUser = 'driverUser',
+      systemName = 'systemName',
+      locationName = 'locationName',
+      latitude = 'latitude',
+      longitude = 'longitude',
+      radius = 'radius'
+    }
+
     // iterating and upserting
     const clientData: ClientData[] = [];
     for (const serverdata of data.data) {
+      switch (serverdata.name) {
+        case Property.driverUser:
+          driverName = serverdata.value as string;
+          break;
+        case Property.systemName:
+          systemName = serverdata.value as string;
+          break;
+        case Property.locationName:
+          locationName = serverdata.value as string;
+          break;
+        case Property.latitude:
+          latitude = serverdata.value as number;
+          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
+          break;
+        case Property.longitude:
+          longitude = serverdata.value as number;
+          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
+          break;
+        case Property.radius:
+          radius = serverdata.value as number;
+          break;
+        default:
+          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
+          await DataService.addData(serverdata, data.unix_time, serverdata.value as number, this.currentRun.id);
+      }
+
       // transform serverdata into client data to send to ProxyServer
       const clientdata: ClientData = {
         name: serverdata.name,
@@ -124,30 +161,6 @@ export default class ProxyClient {
         timestamp: data.unix_time
       };
       clientData.push(clientdata);
-
-      switch (serverdata.name) {
-        case 'driverUser':
-          driverName = serverdata.value as unknown as string;
-          break;
-        case 'systemName':
-          systemName = serverdata.value as unknown as string;
-          break;
-        case 'locationName':
-          locationName = serverdata.value as unknown as string;
-          break;
-        case 'latitude':
-          latitude = serverdata.value as number;
-          break;
-        case 'longitude':
-          longitude = serverdata.value as number;
-          break;
-        case 'radius':
-          radius = serverdata.value as number;
-          break;
-        default:
-          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
-          await DataService.addData(serverdata, data.unix_time, serverdata.value as number, this.currentRun.id);
-      }
     }
 
     if (systemName) {
