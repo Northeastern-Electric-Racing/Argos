@@ -10,10 +10,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { MatDialogModule } from '@angular/material/dialog';
 import LandingPage from 'src/components/landing-page/landing-page.component';
+import MoreDetails from 'src/components/more-details/more-details.component';
+import { HistoryDialog, HistoryButton } from 'src/components/history/history.component';
 
 @NgModule({
-  declarations: [LandingPage],
+  declarations: [LandingPage, MoreDetails, HistoryButton, HistoryDialog],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -25,9 +28,10 @@ import LandingPage from 'src/components/landing-page/landing-page.component';
     MatButtonModule,
     MatToolbarModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
+    MatDialogModule
   ],
   providers: [],
-  bootstrap: [LandingPage]
+  bootstrap: [LandingPage, MoreDetails, HistoryButton, HistoryDialog]
 })
 export class AppModule {}
