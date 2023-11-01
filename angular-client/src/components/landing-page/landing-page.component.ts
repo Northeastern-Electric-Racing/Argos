@@ -25,16 +25,14 @@ export default class LandingPage implements OnInit {
   dataType: string = 'Place holder data type';
   currentValue: string = 'Place holder Current Value';
   unit: string = 'Place holder Unit';
-  runId: string = 'Place holder RunID';
 
   ngOnInit() {
     this.socketService
       .receiveData(this.storage)
-      .subscribe((data: { dataType: string; currentValue: string; unit: string; runId: string }) => {
+      .subscribe((data: { dataType: string; currentValue: string; unit: string }) => {
         this.dataType = data.dataType;
         this.currentValue = data.currentValue;
         this.unit = data.unit;
-        this.runId = data.runId;
       });
 
     // Perform the query and subscribe to the result

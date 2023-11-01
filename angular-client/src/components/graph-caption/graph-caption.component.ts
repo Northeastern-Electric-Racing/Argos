@@ -18,5 +18,4 @@ export class GraphInfoComponent {
   @Input() currentDriver: string | number = '';
   @Input() currentSystem: string | number = '';
   @Input() currentLocation: string | number = '';
-  @Input() runId: string | number = '';
 }
