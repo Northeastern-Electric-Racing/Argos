@@ -11,12 +11,13 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
+import { CarouselModule } from 'primeng/carousel';
 import LandingPage from 'src/components/landing-page/landing-page.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
-import { HistoryDialog, HistoryButton } from 'src/components/history/history.component';
+import { HistoryButton, CarouselRun } from 'src/components/history/history.component';
 
 @NgModule({
-  declarations: [LandingPage, MoreDetails, HistoryButton, HistoryDialog],
+  declarations: [LandingPage, MoreDetails, HistoryButton, CarouselRun],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -29,9 +30,10 @@ import { HistoryDialog, HistoryButton } from 'src/components/history/history.com
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
-    MatDialogModule
+    MatDialogModule,
+    CarouselModule
   ],
   providers: [],
-  bootstrap: [LandingPage, MoreDetails, HistoryButton, HistoryDialog]
+  bootstrap: [LandingPage, MoreDetails, HistoryButton, CarouselRun]
 })
 export class AppModule {}

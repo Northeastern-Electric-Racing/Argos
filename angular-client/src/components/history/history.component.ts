@@ -1,9 +1,15 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Run } from '@prisma/client';
+import { getAllRuns } from 'src/api/run.api';
+import APIService from 'src/services/api.service';
 
+// ok the history component should query all the runs and display
+// each run as a card with the required info
+
+// the data for the dialog, basically just all the runs
 export interface DialogData {
-  animal: string;
-  name: string;
+  runs: Run[];
 }
 
 @Component({
@@ -12,35 +18,48 @@ export interface DialogData {
   styleUrls: ['./history.component.css']
 })
 export class HistoryButton {
-  animal!: string;
-  name!: string;
+  runs: Run[];
+  serverService = new APIService();
 
-  constructor(public dialog: MatDialog) {}
+  constructor(public dialog: MatDialog) {
+    // currently using sample run data, actual would use api call something like below
+    // this.runs = this.serverService.query<Run[]>(getAllRuns).data.subscribe.arguments;
+    this.runs = [
+      { id: 1, locationName: 'Boston', driverId: 'Bruh', systemId: 'Yuh', time: new Date() },
+      { id: 2, locationName: 'China', driverId: 'Bruh', systemId: 'Yuh', time: new Date() },
+      { id: 3, locationName: 'China', driverId: 'Bruh', systemId: 'Yuh', time: new Date() }
+    ];
+  }
 
   openDialog(): void {
-    const dialogRef = this.dialog.open(HistoryDialog, {
-      width: '250px',
-      data: { name: this.name, animal: this.animal }
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log('The dialog was closed');
-      this.animal = result;
+    this.dialog.open(CarouselRun, {
+      width: '550px',
+      height: '200px',
+      data: { runs: this.runs }
     });
   }
 }
 
 @Component({
-  selector: 'history-dialog',
-  templateUrl: 'history-dialog.component.html'
+  selector: 'carousel',
+  templateUrl: 'carousel.component.html',
+  styleUrls: ['history.component.css']
 })
-export class HistoryDialog {
+export class CarouselRun implements OnInit {
+  runs: Run[];
+
+  responsiveOptions: any[] | undefined;
+
   constructor(
-    public dialogRef: MatDialogRef<HistoryDialog>,
+    public dialogRef: MatDialogRef<CarouselRun>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {}
+  ) {
+    this.runs = data.runs;
+  }
 
   onNoClick(): void {
     this.dialogRef.close();
   }
+
+  ngOnInit() {}
 }

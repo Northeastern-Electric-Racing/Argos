@@ -1,0 +1,21 @@
+<p-carousel [value]="runs" [numVisible]="1" [numScroll]="1" [circular]="true" [showIndicators]="false">
+  <ng-template let-run pTemplate="item">
+    <div class="runcard">
+      <div class="row">
+        <h3 class="left">Run #{{ run.id }}</h3>
+        <h3 class="right">Driver: {{ run.driverId }}</h3>
+      </div>
+      <div class="row">
+        <h3 class="left">{{ run.time.toLocaleString() }}</h3>
+        <h3 class="right">System: {{ run.systemId }}</h3>
+      </div>
+      <div class="row">
+        <h3 class="right">Location: {{ run.locationName }}</h3>
+      </div>
+    </div>
+  </ng-template>
+</p-carousel>
+<div class="vertical-center">
+  <button mat-button (click)="onNoClick()">Back</button>
+  <button mat-button (click)="onNoClick()" cdkFocusInitial>Select this Run</button>
+</div>
