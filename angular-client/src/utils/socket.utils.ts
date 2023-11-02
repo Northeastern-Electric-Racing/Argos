@@ -16,7 +16,7 @@ export type DataValue = {
  */
 export type ServerData = {
   dataType: string;
-  currentValue: string;
+  currentValue: number;
   runId: string;
   name: string;
   unit: string;

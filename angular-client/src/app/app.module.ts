@@ -13,8 +13,6 @@ import { MatListModule } from '@angular/material/list';
 import LandingPage from 'src/components/landing-page/landing-page.component';
 import { GraphInfoComponent } from 'src/components/graph-caption/graph-caption.component';
 
-import { DatePipe } from '@angular/common';
-
 @NgModule({
   declarations: [LandingPage, GraphInfoComponent],
   imports: [
@@ -30,7 +28,7 @@ import { DatePipe } from '@angular/common';
     MatSidenavModule,
     MatListModule
   ],
-  providers: [DatePipe],
+  providers: [],
   bootstrap: [LandingPage]
 })
 export class AppModule {}

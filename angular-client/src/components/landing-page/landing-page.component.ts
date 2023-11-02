@@ -23,13 +23,13 @@ export default class LandingPage implements OnInit {
   currentSystem = this.storage.get(IdentifierDataType.SYSTEM)?.[0].value ?? 'No System Selected';
 
   dataType: string = 'Place holder data type';
-  currentValue: string = 'Place holder Current Value';
+  currentValue: number = 0;
   unit: string = 'Place holder Unit';
 
   ngOnInit() {
     this.socketService
       .receiveData(this.storage)
-      .subscribe((data: { dataType: string; currentValue: string; unit: string }) => {
+      .subscribe((data: { dataType: string; currentValue: number; unit: string }) => {
         this.dataType = data.dataType;
         this.currentValue = data.currentValue;
         this.unit = data.unit;
