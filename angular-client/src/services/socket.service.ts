@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Socket } from 'socket.io-client';
 import { ServerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
-import { Observable, Observer } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -24,31 +23,20 @@ export class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData(storage: Storage): Observable<ServerData> {
-    return new Observable((observer: Observer<ServerData>) => {
-      this.socket.on('message', (message: string) => {
-        try {
-          const data = JSON.parse(message) as ServerData;
-          observer.next(data); // Notify any subscribers with the new data
-
-          const key = JSON.stringify({
-            name: data.name,
-            unit: data.unit
-          });
-          const value = storage.get(key);
-          const newValue = { value: data.value, timestamp: data.timestamp };
-          value ? storage.set(key, value.concat(newValue)) : storage.set(key, [newValue]);
-        } catch (error) {
-          if (error instanceof Error) {
-            this.sendError(error.message);
-            observer.error(error); // Notify any subscribers about the error
-          }
-        }
-      });
-
-      return () => {
-        this.socket.off('message'); // Unsubscribe from the 'message' event when there are no more subscribers
-      };
+  receiveData(storage: Storage) {
+    this.socket.on('message', (message: string) => {
+      try {
+        const data = JSON.parse(message) as ServerData;
+        const key = JSON.stringify({
+          name: data.name,
+          unit: data.unit
+        });
+        const value = storage.get(key);
+        const newValue = { value: data.value, timestamp: data.timestamp };
+        value ? storage.set(key, value.concat(newValue)) : storage.set(key, [newValue]);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
     });
   }
 
