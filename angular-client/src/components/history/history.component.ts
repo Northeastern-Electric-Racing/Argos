@@ -1,16 +1,12 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Run } from 'src/utils/types.utils';
 import APIService from 'src/services/api.service';
+import { CarouselRun } from '../carousel/carousel.component';
 // import { getAllRuns } from 'src/api/run.api';
 
 // ok the history component should query all the runs and display
 // each run as a card with the required info
-
-// the data for the dialog, basically just all the runs
-export interface DialogData {
-  runs: Run[];
-}
 
 @Component({
   selector: 'history',
@@ -34,32 +30,9 @@ export class HistoryButton {
   openDialog(): void {
     this.dialog.open(CarouselRun, {
       width: '550px',
-      height: '200px',
-      data: { runs: this.runs }
+      data: { runs: this.runs },
+      hasBackdrop: true,
+      backdropClass: 'dialog-background'
     });
   }
-}
-
-@Component({
-  selector: 'carousel',
-  templateUrl: 'carousel.component.html',
-  styleUrls: ['history.component.css']
-})
-export class CarouselRun implements OnInit {
-  runs: Run[];
-
-  responsiveOptions: any[] | undefined;
-
-  constructor(
-    public dialogRef: MatDialogRef<CarouselRun>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {
-    this.runs = data.runs;
-  }
-
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
-
-  ngOnInit() {}
 }

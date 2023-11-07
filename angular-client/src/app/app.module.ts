@@ -14,7 +14,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { CarouselModule } from 'primeng/carousel';
 import LandingPage from 'src/components/landing-page/landing-page.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
-import { HistoryButton, CarouselRun } from 'src/components/history/history.component';
+import { HistoryButton } from 'src/components/history/history.component';
+import { CarouselRun } from 'src/components/carousel/carousel.component';
 
 @NgModule({
   declarations: [LandingPage, MoreDetails, HistoryButton, CarouselRun],
@@ -34,6 +35,6 @@ import { HistoryButton, CarouselRun } from 'src/components/history/history.compo
     CarouselModule
   ],
   providers: [],
-  bootstrap: [LandingPage, MoreDetails, HistoryButton, CarouselRun]
+  bootstrap: [LandingPage]
 })
 export class AppModule {}

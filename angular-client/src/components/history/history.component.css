@@ -1,4 +1,4 @@
-.button {
+.history-button {
   background-color: #f04346;
   border: none;
   color: white;
@@ -9,50 +9,4 @@
   text-decoration: none;
   display: inline-block;
   font-size: 18px;
-}
-
-:host ::ng-deep .p-carousel {
-  background-color: #262626;
-}
-
-:host ::ng-deep .runcard {
-  display: flex;
-  background-color: #262626;
-  flex-direction: column;
-  justify-content: space-between;
-  margin-top: 5px;
-  margin-left: 25px;
-  color: #ffff;
-  height: 125px;
-  width: 425px;
-}
-
-:host ::ng-deep .row {
-  display: flex;
-  padding: 0px;
-  background-color: #262626;
-  color: #ffff;
-  height: 50px;
-  width: 450px;
-}
-
-:host ::ng-deep .left {
-  font-size: 15px;
-  margin-left: 5px;
-  margin-right: 0px;
-  text-align: left;
-}
-
-:host ::ng-deep .right {
-  font-size: 15px;
-  margin-left: auto;
-  margin-right: 5px;
-  text-align: right;
-}
-
-:host ::ng-deep .vertical-center {
-  margin: 0;
-  position: absolute;
-  top: 70%;
-  transform: translateX(85%);
 }
