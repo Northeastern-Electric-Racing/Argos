@@ -2,6 +2,12 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input, OnInit } from '@angular/core';
 import { Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
+/**
+ * Sidebar component that displays the nodes and their data types.
+ * @param nodes The nodes to display.
+ * Has animations for when a node is selected to collapse and expand the associated datatypes
+ *
+ */
 @Component({
   selector: 'sidebar',
   templateUrl: './sidebar.component.html',
@@ -40,6 +46,9 @@ export default class Sidebar implements OnInit {
   @Input() nodes!: Node[];
   nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
 
+  /**
+   * Initializes the nodes with the visibility toggle.
+   */
   ngOnInit(): void {
     this.nodesWithVisibilityToggle = this.nodes.map((node: Node) => {
       return {
@@ -49,6 +58,10 @@ export default class Sidebar implements OnInit {
     });
   }
 
+  /**
+   * Toggles Visibility whenever a node is selected
+   * @param node The node to toggle the visibility of the data types for.
+   */
   toggleDataTypeVisibility(node: NodeWithVisibilityToggle) {
     node.dataTypesAreVisible = !node.dataTypesAreVisible;
   }

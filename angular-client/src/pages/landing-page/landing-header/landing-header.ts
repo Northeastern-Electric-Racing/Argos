@@ -1,5 +1,11 @@
 import { Component, Input } from '@angular/core';
 
+/**
+ * Landing Header Component to display the header on the landing page.
+ * @param driver The driver to display.
+ * @param location The location to display.
+ * @param system The system to display.
+ */
 @Component({
   selector: 'landing-header',
   templateUrl: './landing-header.component.html',
@@ -11,8 +17,10 @@ export default class LandingHeader {
   @Input() location!: string;
   @Input() system!: string;
 
+  /**
+   * Updates the time every second.
+   */
   ngOnInit() {
-    // Perform the query and subscribe to the result
     setInterval(() => {
       this.time = new Date();
     }, 1000);

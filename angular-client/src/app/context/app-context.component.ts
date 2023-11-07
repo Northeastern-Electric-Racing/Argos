@@ -5,6 +5,9 @@ import { SocketService } from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 
+/**
+ * Container for the entire application, contains the socket service, API serivce, and storage service.
+ */
 @Component({
   selector: 'app-context',
   templateUrl: './app-context.component.html'

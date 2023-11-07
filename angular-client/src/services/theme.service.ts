@@ -1,4 +1,8 @@
+/**
+ * This class is used to store the themes of the application.
+ */
 export default class Theme {
+  /* Text Themes */
   static readonly font: string = 'font-family: "Roboto"; ';
   static readonly textColor: string = 'color: #EFEFEF; ';
   static readonly textStyle: string = this.font + this.textColor;

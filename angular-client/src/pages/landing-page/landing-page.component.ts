@@ -2,6 +2,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/ImportantDataType';
 
+/**
+ * Container for the landing page, obtains data from the storage service.
+ * @param storage - The storage service to obtain data from.
+ */
 @Component({
   selector: 'landing-page',
   styleUrls: ['./landing-page.component.css'],
