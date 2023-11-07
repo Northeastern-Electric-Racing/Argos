@@ -10,10 +10,28 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import LandingPage from 'src/components/landing-page/landing-page.component';
+import LandingPage from 'src/pages/landing-page/landing-page.component';
+import Sidebar from 'src/pages/graph-page/sidebar/sidebar.component';
+import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
+import AppContext from './context/app-context.component';
+import GraphPage from 'src/pages/graph-page/graph-page.component';
+import BackgroundContainer from 'src/components/background-container/background-container.component';
+import Typography from 'src/components/typography/typography.component';
+import LoadingPage from 'src/components/loading-page/loading-page.component';
+import ErrorPage from 'src/components/error-page/error-page.component';
 
 @NgModule({
-  declarations: [LandingPage],
+  declarations: [
+    AppContext,
+    LandingPage,
+    GraphPage,
+    Sidebar,
+    SidebarCard,
+    BackgroundContainer,
+    Typography,
+    LoadingPage,
+    ErrorPage
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -28,6 +46,6 @@ import LandingPage from 'src/components/landing-page/landing-page.component';
     MatListModule
   ],
   providers: [],
-  bootstrap: [LandingPage]
+  bootstrap: [AppContext]
 })
 export class AppModule {}

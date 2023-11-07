@@ -1,0 +1,11 @@
+<div *ngIf="!nodes || nodesIsLoading; else checkError">
+  <loading-page />
+</div>
+<ng-template #checkError>
+  <div *ngIf="nodesIsError; else displayData">
+    <error-page [errorMessage]="nodesError!.message" />
+  </div>
+</ng-template>
+<ng-template #displayData>
+  <sidebar [nodes]="nodes!" />
+</ng-template>
