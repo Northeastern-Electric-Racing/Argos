@@ -26,6 +26,6 @@ jobs:
           node-version: 16.17.1
           cache: npm
       - name: Install modules
-        run: npm install && npm run prisma:generate && npm run prisma:migrate
+        run: npm install && npm run prisma:generate && npm run prisma:migrate:prod
       - name: Run tests
         run: npm run test
