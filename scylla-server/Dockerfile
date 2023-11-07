@@ -17,7 +17,7 @@ RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey
     git submodule update --init --recursive
 
 RUN npm run prisma:generate && \
-    npm run prisma:migrate
+    npm run prisma:migrate:prod
 
 RUN npm run build
 

@@ -9,7 +9,8 @@
     "start:production": "node dist/index.js",
     "start": "npx ts-node src/index.ts",
     "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate reset"
+    "prisma:migrate": "npx prisma migrate reset",
+    "prisma:migrate:prod": "npx prisma migrate deploy --preview-feature"
   },
   "keywords": [],
   "author": "",
