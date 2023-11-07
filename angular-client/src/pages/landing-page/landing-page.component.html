@@ -1,26 +1,3 @@
 <div class="image-container">
-  <div class="overlay-div">
-    <div class="header-div">
-      <div class="header-left">
-        <h1 class="large-title">
-          {{ time | date: 'HH:mm:ss' }}
-        </h1>
-        <h1 class="subtitle">
-          {{ time | date: 'MM/dd/yyyy' }}
-        </h1>
-        <h1>ARGOS</h1>
-      </div>
-      <div class="header-right">
-        <h1 style="font-size: xx-large">
-          {{ currentDriver }}
-        </h1>
-        <h3>
-          {{ currentSystem }}
-        </h3>
-        <h4>
-          {{ currentLocation }}
-        </h4>
-      </div>
-    </div>
-  </div>
+  <landing-header [driver]="currentDriver" [location]="currentLocation" [system]="currentSystem" />
 </div>

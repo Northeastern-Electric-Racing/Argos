@@ -3,4 +3,7 @@ export default class Theme {
   static readonly textColor: string = 'color: #EFEFEF; ';
   static readonly textStyle: string = this.font + this.textColor;
   static readonly HEADER: string = this.textStyle + 'fontSize: 20px; fontWeight: bold;';
+  static readonly SUBHEADER: string = this.textStyle + 'fontSize: 16px;';
+  static readonly XXLARGEHEADER: string = this.textStyle + 'font-size: 7.5rem; padding-bottom: 60px;';
+  static readonly LARGEHEADER: string = this.textStyle + 'font-size: xx-large;';
 }

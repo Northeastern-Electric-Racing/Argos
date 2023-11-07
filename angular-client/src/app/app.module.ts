@@ -19,6 +19,9 @@ import BackgroundContainer from 'src/components/background-container/background-
 import Typography from 'src/components/typography/typography.component';
 import LoadingPage from 'src/components/loading-page/loading-page.component';
 import ErrorPage from 'src/components/error-page/error-page.component';
+import Header from 'src/components/header/header.component';
+import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
+import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +33,10 @@ import ErrorPage from 'src/components/error-page/error-page.component';
     BackgroundContainer,
     Typography,
     LoadingPage,
-    ErrorPage
+    ErrorPage,
+    Header,
+    LandingHeader,
+    GraphHeader
   ],
   imports: [
     BrowserModule,
