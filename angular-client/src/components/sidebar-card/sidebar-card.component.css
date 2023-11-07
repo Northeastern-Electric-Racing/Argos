@@ -8,7 +8,6 @@
   justify-content: center;
   transition: background-color 0.3s;
 
-
   &:hover {
     background-color: #3f3f3f;
     cursor: pointer;
