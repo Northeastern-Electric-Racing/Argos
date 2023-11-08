@@ -17,3 +17,14 @@
     background-color: #4f4f4f;
   }
 }
+
+.icon {
+  margin-left: 8px;
+  color: white;
+  transition: transform 0.3s;
+
+  &.selected {
+    /* Animate rotation */
+    transform: rotate(-90deg);
+  }
+}

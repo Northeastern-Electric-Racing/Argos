@@ -1,7 +1,7 @@
 <div class="background">
   <mat-list>
     <mat-list-item *ngFor="let node of nodesWithVisibilityToggle" style="height: 100%">
-      <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)"> </sidebar-card>
+      <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)" [dropDown]="true"> </sidebar-card>
       <mat-list *ngIf="node.dataTypesAreVisible" @toggleExpand>
         <mat-list-item *ngFor="let dataType of node.dataTypes">
           <sidebar-card [title]="dataType.name" [subtitle]="dataType.unit" />

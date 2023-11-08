@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 /**
  * Sidebar Card Component to display a card in the sidebar.
@@ -10,10 +10,15 @@ import { Component, Input } from '@angular/core';
   templateUrl: './sidebar-card.component.html',
   styleUrls: ['./sidebar-card.component.css']
 })
-export default class SidebarCard {
+export default class SidebarCard implements OnInit {
   @Input() title!: string;
   @Input() subtitle?: string;
+  @Input() dropDown?: boolean;
+  iconId!: string;
 
+  ngOnInit(): void {
+    this.iconId = `${this.title}-icon`;
+  }
   /**
    * Runs animation when card is selected
    */
@@ -24,6 +29,10 @@ export default class SidebarCard {
       setTimeout(() => {
         card.classList.remove('selected');
       }, 250);
+    }
+    const dropDown = document.getElementById(this.iconId);
+    if (dropDown) {
+      dropDown.classList.toggle('selected');
     }
   }
 }
