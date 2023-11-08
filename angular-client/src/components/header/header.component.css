@@ -1,7 +1,6 @@
 .header-div {
   display: flex;
   justify-content: space-between;
-  padding-top: 50px;
   padding-left: 16px;
   padding-right: 16px;
 }

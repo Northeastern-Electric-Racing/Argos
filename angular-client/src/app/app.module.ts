@@ -15,7 +15,6 @@ import Sidebar from 'src/pages/graph-page/sidebar/sidebar.component';
 import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
 import AppContext from './context/app-context.component';
 import GraphPage from 'src/pages/graph-page/graph-page.component';
-import BackgroundContainer from 'src/components/background-container/background-container.component';
 import Typography from 'src/components/typography/typography.component';
 import LoadingPage from 'src/components/loading-page/loading-page.component';
 import ErrorPage from 'src/components/error-page/error-page.component';
@@ -30,7 +29,6 @@ import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.componen
     GraphPage,
     Sidebar,
     SidebarCard,
-    BackgroundContainer,
     Typography,
     LoadingPage,
     ErrorPage,
