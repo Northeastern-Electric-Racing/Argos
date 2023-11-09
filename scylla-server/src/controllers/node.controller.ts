@@ -8,6 +8,7 @@ export default class NodeController {
   static async getAllNodes(req: Request, res: Response, next: NextFunction) {
     try {
       const allNodes = await NodeService.getAllNodes();
+      console.log('allNodes: ', allNodes);
       res.status(200).json(allNodes);
     } catch (error: unknown) {
       next(error);

@@ -6,5 +6,15 @@ body {
 }
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background-color: #101010;
+}
+
+/* WebKit (Chrome, Safari) scrollbar styles */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox scrollbar styles */
+* {
+  scrollbar-width: none;
 }
