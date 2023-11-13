@@ -8,5 +8,8 @@
 </ng-template>
 <ng-template #displayData>
   <graph-header />
-  <sidebar [nodes]="nodes!" />
+  <div class="content-div">
+    <sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" />
+    <graph [valuesSubject]="selectedDataTypeValuesSubject" />
+  </div>
 </ng-template>

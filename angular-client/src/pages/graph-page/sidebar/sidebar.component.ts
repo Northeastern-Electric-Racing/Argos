@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input, OnInit } from '@angular/core';
-import { Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -45,6 +45,7 @@ import { Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 export default class Sidebar implements OnInit {
   @Input() nodes!: Node[];
   nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
+  @Input() selectDataType!: (dataType: DataType) => void;
 
   /**
    * Initializes the nodes with the visibility toggle.

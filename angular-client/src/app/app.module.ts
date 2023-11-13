@@ -21,6 +21,8 @@ import ErrorPage from 'src/components/error-page/error-page.component';
 import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import Graph from 'src/pages/graph-page/graph/graph.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +36,8 @@ import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.componen
     ErrorPage,
     Header,
     LandingHeader,
-    GraphHeader
+    GraphHeader,
+    Graph
   ],
   imports: [
     BrowserModule,
@@ -47,7 +50,8 @@ import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.componen
     MatButtonModule,
     MatToolbarModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
+    NgApexchartsModule
   ],
   providers: [],
   bootstrap: [AppContext]
