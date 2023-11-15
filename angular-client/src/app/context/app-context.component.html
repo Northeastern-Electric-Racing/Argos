@@ -1,0 +1,4 @@
+<landing-page *ngIf="showLandingPage; else elseBlock" [storage]="storage" />
+<ng-template #elseBlock>
+  <graph-page [serverService]="serverService" [storage]="storage" />
+</ng-template>

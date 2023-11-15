@@ -1,0 +1,14 @@
+.header-div {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.header-left {
+  text-align: left;
+}
+
+.header-right {
+  text-align: right;
+}

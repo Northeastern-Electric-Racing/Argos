@@ -11,10 +11,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import LandingPage from 'src/components/landing-page/landing-page.component';
-import { GraphInfoComponent } from 'src/components/graph-caption/graph-caption.component';
 
 @NgModule({
-  declarations: [LandingPage, GraphInfoComponent],
+  declarations: [LandingPage],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -29,6 +28,6 @@ import { GraphInfoComponent } from 'src/components/graph-caption/graph-caption.c
     MatListModule
   ],
   providers: [],
-  bootstrap: [LandingPage]
+  bootstrap: [AppContext]
 })
 export class AppModule {}
