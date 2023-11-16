@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { getAllNodes } from 'src/api/node.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
+import { IdentifierDataType } from 'src/utils/enumerations/ImportantDataType';
 import { Node } from 'src/utils/types.utils';
 
 @Component({
@@ -16,6 +17,22 @@ export default class GraphPage implements OnInit {
   nodesIsLoading = true;
   nodesIsError = false;
   nodesError?: Error;
+
+  dataType: string;
+  currentValue: number;
+  unit: string;
+  currentDriver: string;
+  currentSystem: string;
+  currentLocation: string;
+
+  constructor() {
+    this.dataType = 'Some DataType';
+    this.currentValue = 0;
+    this.unit = 'Some Unit';
+    this.currentDriver = 'Some Driver';
+    this.currentSystem = 'Some System';
+    this.currentLocation = 'Some Location';
+  }
 
   ngOnInit(): void {
     const nodeQueryResponse = this.serverService.query<Node[]>(getAllNodes);

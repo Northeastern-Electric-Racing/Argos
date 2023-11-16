@@ -9,4 +9,13 @@
 <ng-template #displayData>
   <graph-header />
   <sidebar [nodes]="nodes!" />
+  <graph-info
+    [dataType]="dataType"
+    [currentValue]="currentValue"
+    [unit]="unit"
+    [currentDriver]="currentDriver"
+    [currentSystem]="currentSystem"
+    [currentLocation]="currentLocation"
+  >
+  </graph-info>
 </ng-template>
