@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { io } from 'socket.io-client';
 import APIService from 'src/services/api.service';
 import { SocketService } from 'src/services/socket.service';
@@ -15,7 +16,7 @@ import { DataValue } from 'src/utils/socket.utils';
 export default class AppContext implements OnInit {
   title = 'angular-client';
   serverService = new APIService();
-  storageMap = new Map<string, DataValue[]>();
+  storageMap = new Map<string, BehaviorSubject<DataValue[]>>();
   storage = new Storage(this.storageMap);
   socket = io('http://localhost:8000');
   socketService = new SocketService(this.socket);

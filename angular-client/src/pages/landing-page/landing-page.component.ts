@@ -18,8 +18,11 @@ export default class LandingPage implements OnInit {
   currentSystem!: string;
 
   ngOnInit() {
-    this.currentDriver = (this.storage.get(IdentifierDataType.DRIVER)?.[0].value as string) ?? 'No Driver Selected';
-    this.currentLocation = (this.storage.get(IdentifierDataType.LOCATION)?.[0].value as string) ?? 'No Location Selected';
-    this.currentSystem = (this.storage.get(IdentifierDataType.SYSTEM)?.[0].value as string) ?? 'No System Selected';
+    this.currentDriver =
+      (this.storage.get(IdentifierDataType.DRIVER)?.getValue()[0].value as string) ?? 'No Driver Selected';
+    this.currentLocation =
+      (this.storage.get(IdentifierDataType.LOCATION)?.getValue()[0].value as string) ?? 'No Location Selected';
+    this.currentSystem =
+      (this.storage.get(IdentifierDataType.SYSTEM)?.getValue()[0].value as string) ?? 'No System Selected';
   }
 }

@@ -7,15 +7,16 @@
   </div>
 </ng-template>
 <ng-template #displayData>
-  <graph-header />
-  <sidebar [nodes]="nodes!" />
-  <graph-info
+  <div class="content-div">
+    <sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" />
+    <graph [valuesSubject]="selectedDataTypeValuesSubject" />
+    <graph-info
     [dataType]="dataType"
     [currentValue]="currentValue"
     [unit]="unit"
     [currentDriver]="currentDriver"
     [currentSystem]="currentSystem"
     [currentLocation]="currentLocation"
-  >
-  </graph-info>
+  />
+  </div>
 </ng-template>

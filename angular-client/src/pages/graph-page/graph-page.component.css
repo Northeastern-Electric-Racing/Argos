@@ -1,3 +1,10 @@
 :host {
   max-height: inherit;
 }
+
+.content-div {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
