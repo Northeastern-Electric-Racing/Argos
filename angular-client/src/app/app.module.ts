@@ -21,7 +21,7 @@ import ErrorPage from 'src/components/error-page/error-page.component';
 import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
-import GraphInfo from 'src/components/graph-caption/graph-caption.component';
+import GraphInfo from 'src/pages/graph-page/graph-caption/graph-caption.component';
 
 @NgModule({
   declarations: [
