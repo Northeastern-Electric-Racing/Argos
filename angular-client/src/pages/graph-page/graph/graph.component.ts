@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import * as ApexCharts from 'apexcharts';
 import {
   ApexAxisChartSeries,
   ApexXAxis,
@@ -31,17 +32,20 @@ type ChartOptions = {
 export default class Graph implements OnInit {
   @Input() valuesSubject!: Subject<DataValue[]>;
   options!: ChartOptions;
+  chart!: ApexCharts;
 
   updateChart(values: DataValue[]) {
     console.log(values);
     const mappedValues = values.map((value: DataValue) => [+value.time, +value.value]);
 
-    this.options.series = [
+    const newSeries = [
       {
         name: 'My-series',
         data: mappedValues
       }
     ];
+
+    this.chart.updateSeries(newSeries);
   }
 
   ngOnInit(): void {
@@ -49,12 +53,19 @@ export default class Graph implements OnInit {
       this.updateChart(values);
     });
 
+    const chartContainer = document.getElementById('chart-container');
+    if (!chartContainer) {
+      console.log('Something went very wrong');
+      return;
+    }
+
     this.options = {
       series: [],
       chart: {
         id: 'graph',
         type: 'area',
         width: '100%',
+        height: '100%',
         zoom: {
           autoScaleYaxis: true
         }
@@ -88,5 +99,9 @@ export default class Graph implements OnInit {
         show: false
       }
     };
+
+    this.chart = new ApexCharts(chartContainer, this.options);
+
+    this.chart.render();
   }
 }

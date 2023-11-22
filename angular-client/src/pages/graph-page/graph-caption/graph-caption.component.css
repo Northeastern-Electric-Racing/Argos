@@ -1,17 +1,15 @@
 .info-container {
   font: small-caption;
-  position: absolute;
-  width: 80%;
-  right: -168px;
+  width: 100%;
   bottom: 0;
   background-color: #323232;
   border-radius: 10px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 0px 16px;
-  margin: 0 10%;
   color: #ffffff;
+  padding-right: 8px;
+  padding-left: 8px;
 }
 
 .left-info {
