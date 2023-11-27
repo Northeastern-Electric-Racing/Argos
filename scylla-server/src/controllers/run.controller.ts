@@ -17,7 +17,7 @@ export default class RunController {
   static async getRunById(req: Request, res: Response, next: NextFunction) {
     try {
       const runId = parseInt(req.params.id);
-      console.log(runId)
+      console.log(runId);
       const run = await RunService.getRunById(runId);
       res.status(200).json(run);
     } catch (error: unknown) {
