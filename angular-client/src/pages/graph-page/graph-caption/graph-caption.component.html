@@ -1,0 +1,20 @@
+<div class="info-container">
+  <div class="left-info">
+    <div *ngIf="dataTypeName && dataTypeUnit; else elseBlock">
+      <typography variant="header" [content]="dataTypeName" />
+      <typography variant="subheader" [content]="value + ' ' + dataTypeUnit" />
+    </div>
+    <ng-template #elseBlock>
+      <typography variant="header" content="No Data Selected" />
+    </ng-template>
+  </div>
+  <div class="right-info">
+    <div class="driver-info">
+      <typography variant="header" [content]="currentDriver ?? 'No Driver Selected'" />
+    </div>
+    <div class="system-info">
+      <typography variant="subheader" [content]="currentSystem ?? 'No System Selected'" />
+      <typography variant="subheader" [content]="currentLocation ?? 'No Location Selected'" />
+    </div>
+  </div>
+</div>

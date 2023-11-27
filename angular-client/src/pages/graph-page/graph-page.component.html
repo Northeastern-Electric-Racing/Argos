@@ -1,4 +1,4 @@
-<div *ngIf="!nodes || nodesIsLoading; else checkError">
+<div *ngIf="!nodes || nodesIsLoading || !run || runIsLoading; else checkError">
   <loading-page />
 </div>
 <ng-template #checkError>
@@ -7,9 +7,21 @@
   </div>
 </ng-template>
 <ng-template #displayData>
-  <graph-header />
-  <div class="content-div">
-    <sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" />
-    <graph [valuesSubject]="selectedDataTypeValuesSubject" />
+  <div class="container">
+    <graph-header class="graph-header" [realTime]="realTime" [runId]="runId" />
+    <div class="content-div">
+      <sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="sidebar" />
+      <div class="right-container">
+        <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
+        <graph-caption
+          [dataType]="selectedDataType"
+          [currentValue]="currentValue"
+          [currentDriver]="run?.driverName"
+          [currentSystem]="run?.systemName"
+          [currentLocation]="run?.locationName"
+          class="graph-caption"
+        />
+      </div>
+    </div>
   </div>
 </ng-template>

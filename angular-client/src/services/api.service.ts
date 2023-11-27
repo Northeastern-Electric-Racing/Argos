@@ -21,6 +21,7 @@ export default class APIService {
         data.next(resolvedData);
         isLoading.next(false);
       });
+    console.log('test');
     return {
       data,
       isLoading,

@@ -1,0 +1,21 @@
+.info-container {
+  font: small-caption;
+  width: 100%;
+  bottom: 0;
+  background-color: #323232;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  color: #ffffff;
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+.left-info {
+  text-align: left;
+}
+
+.right-info {
+  text-align: right;
+}
