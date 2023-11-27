@@ -4,7 +4,7 @@ services:
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
-    image: scylla-server-prod:1.0.0
+    image: mckeep/scylla-server-prod:1.0.0
     build:
       context: scylla-server
       target: production
@@ -17,7 +17,7 @@ services:
   client:
     container_name: client
     restart: unless-stopped
-    image: client-prod:1.0.0
+    image: mckeep/client-prod:1.0.0
     build:
       context: angular-client
       target: production
