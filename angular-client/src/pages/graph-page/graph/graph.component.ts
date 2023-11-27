@@ -10,7 +10,7 @@ import {
   ApexTooltip,
   ApexFill
 } from 'ng-apexcharts';
-import { Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
 
 type ChartOptions = {
@@ -30,7 +30,7 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class Graph implements OnInit {
-  @Input() valuesSubject!: Subject<DataValue[]>;
+  @Input() valuesSubject!: BehaviorSubject<DataValue[]>;
   options!: ChartOptions;
   chart!: ApexCharts;
 
@@ -64,7 +64,6 @@ export default class Graph implements OnInit {
       chart: {
         id: 'graph',
         type: 'area',
-        width: '100%',
         height: '100%',
         zoom: {
           autoScaleYaxis: true

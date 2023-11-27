@@ -6,6 +6,7 @@ import { DataValue, StorageMap } from 'src/utils/socket.utils';
  */
 export default class Storage {
   private storage: StorageMap;
+  private currentRunId?: number;
 
   constructor(storage: StorageMap) {
     this.storage = storage;
@@ -17,5 +18,13 @@ export default class Storage {
 
   public set(key: string, value: BehaviorSubject<DataValue[]>): void {
     this.storage.set(key, value);
+  }
+
+  public getCurrentRun(): number | undefined {
+    return this.currentRunId;
+  }
+
+  public setCurrentRun(runId: number) {
+    this.currentRunId = runId;
   }
 }

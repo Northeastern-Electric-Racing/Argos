@@ -20,3 +20,11 @@ export type DataType = {
   name: string;
   unit: string;
 };
+
+export type Run = {
+  id: number;
+  locationName: string;
+  driverName: string;
+  systemName: string;
+  time: number;
+};
