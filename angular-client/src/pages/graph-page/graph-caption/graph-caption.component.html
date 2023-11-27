@@ -1,11 +1,11 @@
 <div class="info-container">
   <div class="left-info">
     <div *ngIf="dataTypeName && dataTypeUnit; else elseBlock">
-      <typography variant="header" [content]="dataTypeName" />
+      <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
       <typography variant="subheader" [content]="value + ' ' + dataTypeUnit" />
     </div>
     <ng-template #elseBlock>
-      <typography variant="header" content="No Data Selected" />
+      <typography variant="large-header" content="No Data Selected" />
     </ng-template>
   </div>
   <div class="right-info">
