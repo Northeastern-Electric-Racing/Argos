@@ -34,11 +34,11 @@
 }
 
 .graph {
-  flex: 4 1 auto;
+  flex: 1 1 auto;
 }
 
 .graph-caption {
-  flex: 1 0 100px;
+  flex: 0 0 100px;
   margin-bottom: 8px;
   margin-right: 8px;
 }
