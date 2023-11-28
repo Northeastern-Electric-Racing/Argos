@@ -1,12 +1,14 @@
-.history-button {
+.btn {
   background-color: #f04346;
   border: none;
   color: white;
   border-radius: 12px;
-  margin: 6px;
   padding: 2px 20px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
   font-size: 18px;
+  cursor: pointer;
+
+  margin-bottom: 16px;
+  display: inline-block;
 }
