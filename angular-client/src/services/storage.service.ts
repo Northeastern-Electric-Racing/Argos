@@ -1,5 +1,8 @@
 import { DataValue, StorageMap } from 'src/utils/socket.utils';
 
+/**
+ * Service for interacting with the storage
+ */
 export default class Storage {
   private storage: StorageMap;
 
