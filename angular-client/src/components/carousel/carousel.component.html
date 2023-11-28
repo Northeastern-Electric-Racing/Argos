@@ -1,0 +1,28 @@
+<div class="modal-container">
+  <button mat-dialog-close class="closebutton">
+    <mat-icon>close</mat-icon>
+  </button>
+  <p-carousel [value]="runs" [numVisible]="1" [numScroll]="1" [circular]="true" [showIndicators]="false">
+    <ng-template pTemplate="header">
+      <h2 class="title">Run History</h2>
+    </ng-template>
+    <ng-template let-run pTemplate="item">
+      <div class="runcard">
+        <div class="row">
+          <h3 class="left">Run #{{ run.id }}</h3>
+          <h3 class="right">Driver: {{ run.driverName }}</h3>
+        </div>
+        <div class="row">
+          <h3 class="left">Time: {{ run.time }}</h3>
+          <h3 class="right">System: {{ run.systemName }}</h3>
+        </div>
+        <div class="row">
+          <h3 class="right">Location: {{ run.locationName }}</h3>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button mat-button class="runselectbutton" (click)="onNoClick()">Select this Run</button>
+    </ng-template>
+  </p-carousel>
+</div>
