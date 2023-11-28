@@ -1,4 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { getDataByDataTypeName } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
@@ -14,10 +15,9 @@ import { DataType, Node, Run } from 'src/utils/types.utils';
   styleUrls: ['./graph-page.component.css']
 })
 export default class GraphPage implements OnInit {
-  @Input() serverService!: APIService;
-  @Input() storage!: Storage;
-  @Input() runId!: number;
-  @Input() realTime?: boolean;
+  paramsError?: Error;
+  runId?: number;
+  realTime!: boolean;
 
   nodes?: Node[];
   nodesIsLoading = true;
@@ -34,29 +34,16 @@ export default class GraphPage implements OnInit {
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
 
+  constructor(
+    private serverService: APIService,
+    private storage: Storage,
+    private route: ActivatedRoute
+  ) {}
+
   ngOnInit(): void {
-    const nodeQueryResponse = this.serverService.query<Node[]>(getAllNodes);
-    nodeQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.nodesIsLoading = isLoading;
-    });
-    nodeQueryResponse.error.subscribe((error: Error) => {
-      this.nodesIsError = true;
-      this.nodesError = error;
-    });
-    nodeQueryResponse.data.subscribe((data: Node[]) => {
-      console.log(data);
-      this.nodes = data;
-    });
-
-    const runQueryResponse = this.serverService.query<Run>(() => getRunById(this.runId));
-
-    runQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.runIsLoading = isLoading;
-    });
-
-    runQueryResponse.data.subscribe((run) => {
-      this.run = run;
-    });
+    this.parseParams();
+    this.queryNodes();
+    this.queryRuns();
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
@@ -90,6 +77,65 @@ export default class GraphPage implements OnInit {
         });
       }
     };
+  }
+
+  /**
+   * Queries the nodes from the server.
+   */
+  private queryNodes() {
+    const nodeQueryResponse = this.serverService.query<Node[]>(getAllNodes);
+    nodeQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+      this.nodesIsLoading = isLoading;
+    });
+    nodeQueryResponse.error.subscribe((error: Error) => {
+      this.nodesIsError = true;
+      this.nodesError = error;
+    });
+    nodeQueryResponse.data.subscribe((data: Node[]) => {
+      this.nodes = data;
+    });
+  }
+
+  /**
+   * Queries the runs from the server.
+   */
+  private queryRuns() {
+    if (!this.runId) {
+      return;
+    }
+    const runQueryResponse = this.serverService.query<Run>(() => getRunById(this.runId!));
+
+    runQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+      this.runIsLoading = isLoading;
+    });
+
+    runQueryResponse.data.subscribe((run) => {
+      this.run = run;
+    });
+  }
+
+  private parseParams() {
+    const realtTime = this.route.snapshot.paramMap.get('realTime');
+    if (realtTime) this.realTime = realtTime === 'true';
+    else {
+      this.paramsError = new Error('No real time value provided');
+      return;
+    }
+    const runId = this.route.snapshot.paramMap.get('runId');
+    if (runId) {
+      if (runId === 'undefined' && this.realTime) {
+        this.paramsError = new Error('No Real Time Data Available');
+        return;
+      }
+      this.runId = parseInt(runId);
+      if (isNaN(this.runId)) {
+        this.paramsError = new Error('Run Id must be a number');
+        return;
+      }
+    } else {
+      this.paramsError = new Error('No run id provided');
+      return;
+    }
   }
 
   /**

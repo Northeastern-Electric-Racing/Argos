@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs';
 /**
  * Service for interacting with the socket
  */
-export class SocketService {
+export default class SocketService {
   private socket: Socket;
 
   /**

@@ -1,6 +1,8 @@
 <header>
   <div header-left class="header-left">
-    <typography variant="large-header" content="ARGOS" />
+    <a routerLink="/" >
+      <typography variant="large-header" content="ARGOS" />
+    </a>
   </div>
   <div header-right>
     <typography variant="large-header" [content]="realTime ? 'Real Time' : 'Run #' + runId" />

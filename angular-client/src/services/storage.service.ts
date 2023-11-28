@@ -1,15 +1,17 @@
+import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { DataValue, StorageMap } from 'src/utils/socket.utils';
 
 /**
  * Service for interacting with the storage
  */
+@Injectable({ providedIn: 'root' })
 export default class Storage {
   private storage: StorageMap;
   private currentRunId?: number;
 
-  constructor(storage: StorageMap) {
-    this.storage = storage;
+  constructor() {
+    this.storage = new Map<string, BehaviorSubject<DataValue[]>>();
   }
 
   public get(key: string): BehaviorSubject<DataValue[]> | undefined {
@@ -20,11 +22,11 @@ export default class Storage {
     this.storage.set(key, value);
   }
 
-  public getCurrentRun(): number | undefined {
+  public getCurrentRunId(): number | undefined {
     return this.currentRunId;
   }
 
-  public setCurrentRun(runId: number) {
+  public setCurrentRunId(runId: number) {
     this.currentRunId = runId;
   }
 }

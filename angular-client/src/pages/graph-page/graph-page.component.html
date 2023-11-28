@@ -1,9 +1,14 @@
-<div *ngIf="!nodes || nodesIsLoading || !run || runIsLoading; else checkError">
-  <loading-page />
+<div *ngIf="paramsError; else checkNodesError">
+  <error-page [errorMessage]="paramsError.message" />
 </div>
-<ng-template #checkError>
-  <div *ngIf="nodesIsError; else displayData">
+<ng-template #checkNodesError>
+  <div *ngIf="nodesIsError; else checkLoading">
     <error-page [errorMessage]="nodesError!.message" />
+  </div>
+</ng-template>
+<ng-template #checkLoading>
+  <div *ngIf="!nodes || nodesIsLoading || !run || runIsLoading; else displayData">
+    <loading-page />
   </div>
 </ng-template>
 <ng-template #displayData>

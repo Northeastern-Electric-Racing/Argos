@@ -21,6 +21,9 @@ export type DataType = {
   unit: string;
 };
 
+/**
+ * Frontend type of a Run
+ */
 export type Run = {
   id: number;
   locationName: string;
