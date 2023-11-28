@@ -24,8 +24,9 @@ import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
-import { HistoryButton } from 'src/components/history/history.component';
+import { HistoryButton } from 'src/components/history-button/history.component';
 import { CarouselRun } from 'src/components/carousel/carousel.component';
+import { ButtonComponent } from 'src/components/button/button.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,11 @@ import { CarouselRun } from 'src/components/carousel/carousel.component';
     ErrorPage,
     Header,
     LandingHeader,
-    GraphHeader
+    GraphHeader,
+    MoreDetails,
+    HistoryButton,
+    CarouselRun,
+    ButtonComponent
   ],
   imports: [
     BrowserModule,
