@@ -40,9 +40,12 @@ import { ButtonComponent } from 'src/components/button/button.component';
     ErrorPage,
     Header,
     LandingHeader,
-    GraphHeader
+    GraphHeader,
+    MoreDetails,
+    HistoryButton,
+    CarouselRun,
+    ButtonComponent
   ],
->>>>>>>>> Temporary merge branch 2
   imports: [
     BrowserModule,
     AppRoutingModule,
