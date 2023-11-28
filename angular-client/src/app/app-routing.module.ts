@@ -1,9 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import GraphPage from 'src/pages/graph-page/graph-page.component';
+import LandingPage from 'src/pages/landing-page/landing-page.component';
 
 const routes: Routes = [
-  // this is a placeholder for the route to the real time data graph
-  { path: 'realtimedatagraph', children: [] }
+  { path: 'landing', component: LandingPage },
+  { path: 'graph/:realTime/:runId', component: GraphPage },
+  { path: '', redirectTo: '/landing', pathMatch: 'full' }
 ];
 
 @NgModule({

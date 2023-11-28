@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 /**
  * Simple custom button component that does something on click
@@ -7,15 +7,10 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
  */
 @Component({
   selector: 'argos-button',
-  templateUrl: './button.component.html',
-  styleUrls: ['./button.component.css']
+  templateUrl: './argos-button.component.html',
+  styleUrls: ['./argos-button.component.css']
 })
 export class ButtonComponent {
   @Input() label!: string;
-  @Input() functionCall!: string;
-  @Output() onClick = new EventEmitter<any>();
-
-  onClickButton(event: any) {
-    this.onClick.emit(event);
-  }
+  @Input() onClick!: () => void;
 }

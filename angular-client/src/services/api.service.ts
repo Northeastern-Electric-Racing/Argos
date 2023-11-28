@@ -1,6 +1,11 @@
+import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { QueryResponse } from 'src/utils/api.utils';
 
+/**
+ * Service for interacting with the api
+ */
+@Injectable({ providedIn: 'root' })
 export default class APIService {
   /**
    * Function to query data from the api
@@ -21,7 +26,6 @@ export default class APIService {
         data.next(resolvedData);
         isLoading.next(false);
       });
-    console.log('test');
     return {
       data,
       isLoading,

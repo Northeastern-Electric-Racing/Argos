@@ -4,25 +4,23 @@
   </button>
   <p-carousel [value]="runs" [numVisible]="1" [numScroll]="1" [circular]="true" [showIndicators]="false">
     <ng-template pTemplate="header">
-      <h2 class="title">Run History</h2>
+      <typography additionalStyles="margin-left: 8px;" variant="header" content="Run History" />
     </ng-template>
     <ng-template let-run pTemplate="item">
       <div class="runcard">
         <div class="row">
-          <h3 class="left">Run #{{ run.id }}</h3>
-          <h3 class="right">Driver: {{ run.driverName }}</h3>
+          <typography class="left" variant="subheader" [content]="'Run #' + run.id" />
+          <typography class="right" variant="subheader" [content]="'Driver: ' + run.driverName" />
         </div>
         <div class="row">
-          <h3 class="left">Time: {{ run.time }}</h3>
-          <h3 class="right">System: {{ run.systemName }}</h3>
+          <typography class="left" variant="subheader" [content]="'Time: ' + datePipe(run.time)" />
+          <typography class="right" variant="subheader" [content]="'System: ' + run.systemName" />
         </div>
         <div class="row">
-          <h3 class="right">Location: {{ run.locationName }}</h3>
+          <typography variant="subheader" class="right" [content]="'Location: ' + run.locationName" />
         </div>
       </div>
-    </ng-template>
-    <ng-template pTemplate="footer">
-      <button mat-button class="runselectbutton" (click)="onNoClick()">Select this Run</button>
+      <button mat-button class="runselectbutton" (click)="selectRun(run)">Select this Run</button>
     </ng-template>
   </p-carousel>
 </div>

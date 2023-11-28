@@ -29,7 +29,6 @@ Style for select run and close dialog buttons
 :host ::ng-deep .title {
   font-size: 24px;
   color: white;
-  margin-left: 38%;
   margin-top: 5px;
 }
 /* this looks stupid but is actually useful*/
@@ -47,10 +46,10 @@ Style for select run and close dialog buttons
 
 :host ::ng-deep .runcard {
   display: flex;
+  margin-left: 12.5px;
   background-color: white;
   flex-direction: column;
   justify-content: space-between;
-  margin-left: 25px;
   border: 2px solid white;
   color: #ffff;
   height: 120px;

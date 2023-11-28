@@ -1,3 +1,7 @@
 .header-left {
   margin-left: 50px;
 }
+
+a {
+  text-decoration: none;
+}

@@ -11,5 +11,5 @@ import { Component, Input } from '@angular/core';
 })
 export default class GraphHeader {
   @Input() realTime?: boolean;
-  @Input() runId!: number;
+  @Input() runId?: number;
 }

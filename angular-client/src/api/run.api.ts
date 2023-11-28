@@ -5,7 +5,7 @@ import { urls } from './urls';
  * @returns A promise containing the response from the server
  */
 export const getAllRuns = (): Promise<Response> => {
-  return fetch(urls.getAllRuns);
+  return fetch(urls.getAllRuns());
 };
 
 /**
@@ -13,6 +13,6 @@ export const getAllRuns = (): Promise<Response> => {
  * @param id The id of the run to request
  * @returns The requested run
  */
-export const getRunById = (id: number) => {
+export const getRunById = (id: number): Promise<Response> => {
   return fetch(urls.getRunById(id));
 };
