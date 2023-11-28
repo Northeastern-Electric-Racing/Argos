@@ -1,0 +1,12 @@
+<header>
+  <div header-left>
+    <typography variant="xx-large-title" [content]="time | date: 'HH:mm:ss'" />
+    <typography variant="header" [content]="time | date: 'MM/dd/yyyy'" />
+    <typography variant="header" content="ARGOS" />
+  </div>
+  <div header-right>
+    <typography variant="large-header" [content]="driver" />
+    <typography variant="subheader" [content]="system" />
+    <typography variant="subheader" [content]="location" />
+  </div>
+</header>

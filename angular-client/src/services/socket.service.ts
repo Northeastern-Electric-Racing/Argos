@@ -1,11 +1,7 @@
-import { Injectable } from '@angular/core';
 import { Socket } from 'socket.io-client';
 import { ServerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
 
-@Injectable({
-  providedIn: 'root'
-})
 /**
  * Service for interacting with the socket
  */

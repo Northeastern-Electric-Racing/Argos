@@ -1,10 +1,6 @@
-import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { QueryResponse } from 'src/utils/api.utils';
 
-@Injectable({
-  providedIn: 'root'
-})
 export default class APIService {
   /**
    * Function to query data from the api
