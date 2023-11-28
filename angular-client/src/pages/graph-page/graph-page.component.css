@@ -1,3 +1,44 @@
 :host {
   max-height: inherit;
 }
+
+.container {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.graph-header {
+  flex: 0 1 auto;
+}
+
+.content-div {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: row;
+  height: 100%;
+  width: 100%;
+}
+
+.sidebar {
+  flex: 0 1 auto;
+}
+
+.right-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  overflow: hidden;
+  padding-right: 16px;
+}
+
+.graph {
+  flex: 1 1 auto;
+}
+
+.graph-caption {
+  flex: 0 0 100px;
+  margin-bottom: 8px;
+  margin-right: 8px;
+}

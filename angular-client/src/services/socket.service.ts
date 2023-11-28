@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io-client';
-import { ServerData } from 'src/utils/socket.utils';
+import { DataValue, ServerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
+import { BehaviorSubject } from 'rxjs';
 
 /**
  * Service for interacting with the socket
@@ -27,9 +28,16 @@ export class SocketService {
           name: data.name,
           unit: data.unit
         });
-        const value = storage.get(key);
-        const newValue = { value: data.value, timestamp: data.timestamp };
-        value ? storage.set(key, value.concat(newValue)) : storage.set(key, [newValue]);
+        const valuesSubject = storage.get(key);
+        const newValue = { value: data.value, time: data.timestamp };
+        if (valuesSubject) {
+          const value = valuesSubject.getValue();
+          value.push(newValue);
+          valuesSubject.next(value);
+        } else {
+          const newValuesSubject = new BehaviorSubject<DataValue[]>([newValue]);
+          storage.set(key, newValuesSubject);
+        }
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }

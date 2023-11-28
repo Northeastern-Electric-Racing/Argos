@@ -1,8 +1,6 @@
 .background {
   width: 200px;
   margin-left: 16px;
-  margin-top: 0px;
-  margin-bottom: 0px;
-  height: 60%;
+  height: 80%;
   overflow: scroll;
 }

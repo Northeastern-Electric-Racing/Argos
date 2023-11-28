@@ -7,3 +7,12 @@ import { urls } from './urls';
 export const getAllRuns = (): Promise<Response> => {
   return fetch(urls.getAllRuns);
 };
+
+/**
+ * Fetches the run with the given id
+ * @param id The id of the run to request
+ * @returns The requested run
+ */
+export const getRunById = (id: number) => {
+  return fetch(urls.getRunById(id));
+};

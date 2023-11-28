@@ -3,6 +3,6 @@ import DataController from '../controllers/data.controller';
 
 const dataRouter = Router();
 
-dataRouter.get('/', DataController.getDataByDataTypeName);
+dataRouter.get('/:dataTypeName', DataController.getDataByDataTypeName);
 
 export default dataRouter;

@@ -4,7 +4,7 @@
       <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)" [dropDown]="true"> </sidebar-card>
       <mat-list *ngIf="node.dataTypesAreVisible" @toggleExpand>
         <mat-list-item *ngFor="let dataType of node.dataTypes">
-          <sidebar-card [title]="dataType.name" [subtitle]="dataType.unit" />
+          <sidebar-card [title]="dataType.name" [subtitle]="dataType.unit" (click)="selectDataType(dataType)" />
         </mat-list-item>
       </mat-list>
     </mat-list-item>

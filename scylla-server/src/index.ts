@@ -56,20 +56,20 @@ serverSocket.on('connection', (socket: Socket) => {
 });
 
 // TODO: Get host/port from DNC
-const host = 'localhost';
-const mqttPort = '8080';
-const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
+// const host = 'localhost';
+// const mqttPort = '8080';
+// const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
 
-const connectUrl = `mqtt://${host}:${mqttPort}`;
+// const connectUrl = `mqtt://${host}:${mqttPort}`;
 
-const connection = connect(connectUrl, {
-  clientId,
-  clean: true,
-  connectTimeout: 4000,
-  username: 'scylla-server',
-  password: 'public',
-  reconnectPeriod: 1000
-});
+// const connection = connect(connectUrl, {
+//   clientId,
+//   clean: true,
+//   connectTimeout: 4000,
+//   username: 'scylla-server',
+//   password: 'public',
+//   reconnectPeriod: 1000
+// });
 
-const proxyClient = new ProxyClient(connection);
-proxyClient.configure();
+// const proxyClient = new ProxyClient(connection);
+// proxyClient.configure();

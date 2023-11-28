@@ -27,6 +27,9 @@ import MoreDetails from 'src/components/more-details/more-details.component';
 import { HistoryButton } from 'src/components/history-button/history.component';
 import { CarouselRun } from 'src/components/carousel/carousel.component';
 import { ButtonComponent } from 'src/components/button/button.component';
+import GraphInfo from 'src/pages/graph-page/graph-caption/graph-caption.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import Graph from 'src/pages/graph-page/graph/graph.component';
 
 @NgModule({
   declarations: [
@@ -45,6 +48,8 @@ import { ButtonComponent } from 'src/components/button/button.component';
     HistoryButton,
     CarouselRun,
     ButtonComponent
+    GraphInfo,
+    Graph
   ],
   imports: [
     BrowserModule,
@@ -59,7 +64,8 @@ import { ButtonComponent } from 'src/components/button/button.component';
     MatSidenavModule,
     MatListModule,
     MatDialogModule,
-    CarouselModule
+    CarouselModule,
+    NgApexchartsModule
   ],
   providers: [],
   bootstrap: [AppContext]
