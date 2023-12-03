@@ -1,5 +1,9 @@
 <div class="popup-tab" (click)="toggleSidebar()">
-  <typography additionalStyles="margin: 0; margin-bottom: 5px;" variant="subheader" content="Select Data Type" />
+  <typography
+    additionalStyles="margin: 0; margin-bottom: 5px; cursor: pointer;"
+    variant="subheader"
+    content="Select Data Type"
+  />
   <div *ngIf="showSelection" class="container" @toggleSidebar>
     <div *ngFor="let node of nodesWithVisibilityToggle" class="subcontainer">
       <sidebar-card
