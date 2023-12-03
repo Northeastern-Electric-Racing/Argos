@@ -13,7 +13,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
 import { CarouselModule } from 'primeng/carousel';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
-import Sidebar from 'src/pages/graph-page/sidebar/sidebar.component';
+import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
 import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
 import AppContext from './context/app-context.component';
 import GraphPage from 'src/pages/graph-page/graph-page.component';
@@ -31,13 +31,17 @@ import GraphInfo from 'src/pages/graph-page/graph-caption/graph-caption.componen
 import { NgApexchartsModule } from 'ng-apexcharts';
 import Graph from 'src/pages/graph-page/graph/graph.component';
 import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-buttons.component';
+import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
+import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 
 @NgModule({
   declarations: [
     AppContext,
     LandingPage,
     GraphPage,
-    Sidebar,
+    GraphSidebar,
+    GraphSidebarMobile,
+    GraphSidebarDesktop,
     SidebarCard,
     Typography,
     LoadingPage,

@@ -15,7 +15,7 @@
   <div class="container">
     <graph-header class="graph-header" [realTime]="realTime" [runId]="runId" />
     <div class="content-div">
-      <sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="sidebar" />
+      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
       <div class="right-container">
         <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
         <graph-caption
@@ -27,6 +27,7 @@
           class="graph-caption"
         />
       </div>
+      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="mobile-sidebar" />
     </div>
   </div>
 </ng-template>

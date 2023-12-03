@@ -20,7 +20,7 @@
   width: 100%;
 }
 
-.sidebar {
+.desktop-sidebar {
   flex: 0 1 auto;
 }
 
@@ -33,6 +33,10 @@
   padding-right: 16px;
 }
 
+.mobile-sidebar {
+  display: none;
+}
+
 .graph {
   flex: 1 1 auto;
 }
@@ -41,4 +45,27 @@
   flex: 0 0 100px;
   margin-bottom: 8px;
   margin-right: 8px;
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .content-div {
+    flex-flow: column;
+  }
+
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .mobile-sidebar {
+    display: block;
+  }
+
+  .right-container {
+    flex: 1 1 auto;
+  }
+
+  .graph-caption {
+    flex: 0 0 auto;
+  }
 }

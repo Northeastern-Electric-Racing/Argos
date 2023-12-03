@@ -1,31 +1,47 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
-/**
- * Sidebar component that displays the nodes and their data types.
- * @param nodes The nodes to display.
- * Has animations for when a node is selected to collapse and expand the associated datatypes
- *
- */
 @Component({
-  selector: 'sidebar',
-  templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css'],
+  selector: 'graph-sidebar-mobile',
+  templateUrl: './graph-sidebar-mobile.component.html',
+  styleUrls: ['./graph-sidebar-mobile.component.css'],
   animations: [
-    trigger('toggleExpand', [
+    trigger('toggleCardExpand', [
+      transition(':enter', [
+        style({
+          width: 0,
+          opacity: 0
+        }),
+        animate(
+          '400ms',
+          style({
+            width: '*',
+            opacity: 1
+          })
+        )
+      ]),
+      transition(':leave', [
+        animate(
+          '400ms',
+          style({
+            width: 0,
+            opacity: 0
+          })
+        )
+      ])
+    ]),
+    trigger('toggleSidebar', [
       transition(':enter', [
         style({
           height: 0,
-          opacity: 0,
-          transform: 'translateY(-25%)'
+          opacity: 0
         }),
         animate(
           '400ms',
           style({
             height: '*',
-            opacity: 1,
-            transform: 'translateY(0)'
+            opacity: 1
           })
         )
       ]),
@@ -34,18 +50,18 @@ import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils'
           '400ms',
           style({
             height: 0,
-            opacity: 0,
-            transform: 'translateY(-25%)'
+            opacity: 0
           })
         )
       ])
     ])
   ]
 })
-export default class Sidebar implements OnInit {
+export default class GraphSidebarMobile {
   @Input() nodes!: Node[];
-  nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
   @Input() selectDataType!: (dataType: DataType) => void;
+  nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
+  showSelection = false;
 
   /**
    * Initializes the nodes with the visibility toggle.
@@ -63,7 +79,14 @@ export default class Sidebar implements OnInit {
    * Toggles Visibility whenever a node is selected
    * @param node The node to toggle the visibility of the data types for.
    */
-  toggleDataTypeVisibility(node: NodeWithVisibilityToggle) {
+  toggleDataTypeVisibility = (node: NodeWithVisibilityToggle) => {
     node.dataTypesAreVisible = !node.dataTypesAreVisible;
-  }
+  };
+
+  /**
+   * Toggles the sidebar.
+   */
+  toggleSidebar = () => {
+    this.showSelection = !this.showSelection;
+  };
 }
