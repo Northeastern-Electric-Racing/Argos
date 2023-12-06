@@ -7,12 +7,19 @@ import { Component, Input } from '@angular/core';
 })
 export class BatteryPercentageComponent {
   @Input() percentage!: number;
-  @Input() color!: string;
+  highColor: string = '#AFE1AF';
+  lowColor: string = '#b31015';
+  color: string = '';
   arrayColor: any[] = [];
   numBars: number = 5;
   barColor: string = '#efefed';
 
   ngOnInit() {
+    if (this.percentage < 35) {
+      this.color = this.lowColor;
+    } else {
+      this.color = this.highColor;
+    }
     this.renderArrayColor();
     console.log(this.arrayColor);
   }
