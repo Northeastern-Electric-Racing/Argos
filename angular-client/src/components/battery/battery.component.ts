@@ -21,19 +21,18 @@ export class BatteryPercentageComponent {
   // currently width of bars / size of battery is hard coded to 5 bars of width 7px
   renderArrayColor() {
     const part = 100 / this.numBars;
-    let currentLevel = 0 + part;
+    let currentLevel = 100 - part;
     // for each bar, fills it if percentage greater, otherwise fills it to percentage and leaves
     // rest empty
     for (let i = 0; i < this.numBars; i++) {
-      if (this.percentage >= currentLevel) {
-        this.arrayColor.push({ full: true, color: this.color, width: '14px' });
-        currentLevel += part;
+      if (this.percentage <= currentLevel) {
+        this.arrayColor.push({ full: true, backColor: this.barColor, height: '14px' });
+        currentLevel -= part;
       } else {
-        // 16 percent / 20 percent bar
-        const newWidth = ((part - (currentLevel - this.percentage)) / 20) * 14;
-        this.arrayColor.push({ full: false, color: this.barColor, width: newWidth + 'px' });
+        const newHeight = ((currentLevel - this.percentage + part) / 20) * 14;
+        this.arrayColor.push({ full: false, backColor: this.color, fillColor: this.barColor, height: newHeight + 'px' });
         for (let j = i + 1; j < this.numBars; j++) {
-          this.arrayColor.push({ full: true, color: this.barColor, width: '14px' });
+          this.arrayColor.push({ full: true, backColor: this.color, height: '14px' });
         }
         break;
       }
