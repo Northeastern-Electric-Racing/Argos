@@ -21,6 +21,7 @@ import ErrorPage from 'src/components/error-page/error-page.component';
 import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
+import { BatteryPercentageComponent } from 'src/components/battery/battery.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.componen
     ErrorPage,
     Header,
     LandingHeader,
-    GraphHeader
+    GraphHeader,
+    BatteryPercentageComponent
   ],
   imports: [
     BrowserModule,
