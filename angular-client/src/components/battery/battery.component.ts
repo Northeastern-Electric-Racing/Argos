@@ -7,12 +7,12 @@ import { Component, Input } from '@angular/core';
 })
 export class BatteryPercentageComponent {
   @Input() percentage!: number;
-  highColor: string = '#AFE1AF';
-  lowColor: string = '#b31015';
+  highColor: string = '#1ae824';
+  lowColor: string = '#f50905';
   color: string = '';
   arrayColor: any[] = [];
-  numBars: number = 5;
-  barColor: string = '#efefed';
+  item: any;
+  backColor: string = '#efefed';
 
   ngOnInit() {
     if (this.percentage < 35) {
@@ -20,30 +20,15 @@ export class BatteryPercentageComponent {
     } else {
       this.color = this.highColor;
     }
-    this.renderArrayColor();
-    console.log(this.arrayColor);
+    this.renderBattery();
   }
 
-  // renders array of bars, filled according to input percentage with input color
-  // currently width of bars / size of battery is hard coded to 5 bars of width 7px
-  renderArrayColor() {
-    const part = 100 / this.numBars;
-    let currentLevel = 100 - part;
-    // for each bar, fills it if percentage greater, otherwise fills it to percentage and leaves
-    // rest empty
-    for (let i = 0; i < this.numBars; i++) {
-      if (this.percentage <= currentLevel) {
-        this.arrayColor.push({ full: true, backColor: this.barColor, height: '14px' });
-        currentLevel -= part;
-      } else {
-        const newHeight = ((currentLevel - this.percentage + part) / 20) * 14;
-        this.arrayColor.push({ full: false, backColor: this.color, fillColor: this.barColor, height: newHeight + 'px' });
-        for (let j = i + 1; j < this.numBars; j++) {
-          this.arrayColor.push({ full: true, backColor: this.color, height: '14px' });
-        }
-        break;
-      }
+  // fills battery bar based on current percentage
+  renderBattery() {
+    const batHeight = ((100 - this.percentage) / 100) * 70;
+    if (this.percentage === 100) {
+      this.item = { full: true, backColor: this.color, fillColor: this.backColor, height: batHeight + 'px' };
     }
-    console.log(this.arrayColor);
+    this.item = { full: false, backColor: this.color, fillColor: this.backColor, height: batHeight + 'px' };
   }
 }

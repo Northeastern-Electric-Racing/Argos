@@ -1,5 +1,8 @@
-<div class="battery-bar" *ngFor="let item of arrayColor" [ngStyle]="{ 'background-color': item.backColor }">
-  <ng-template [ngIf]="item.full == false">
-    <div [ngStyle]="{ 'background-color': item.fillColor, height: item.height, width: '30px' }"></div>
-  </ng-template>
+<div class="battery">
+  <div class="battery-nub"></div>
+  <div class="battery-bar" [ngStyle]="{ 'background-color': item.backColor }">
+    <ng-template [ngIf]="item.full == false">
+      <div [ngStyle]="{ 'background-color': item.fillColor, height: item.height, width: '30px' }"></div>
+    </ng-template>
+  </div>
 </div>

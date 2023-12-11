@@ -9,5 +9,7 @@
 <ng-template #displayData>
   <graph-header />
   <sidebar [nodes]="nodes!" />
-  <battery [percentage]="15" />
+  <div style="position: absolute; left: 100px">
+    <battery [percentage]="80" />
+  </div>
 </ng-template>
