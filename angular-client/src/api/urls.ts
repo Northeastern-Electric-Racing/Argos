@@ -1,4 +1,6 @@
-const baseURL = 'http://localhost:8000';
+import { environment } from 'src/environment/environment';
+
+const baseURL = environment.url;
 
 /* Nodes */
 const getAllNodes = () => `${baseURL}/nodes`;

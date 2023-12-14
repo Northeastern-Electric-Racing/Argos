@@ -26,7 +26,7 @@ Style for select run and close dialog buttons
 
 /* Carousel contents and style overrides */
 
-:host ::ng-deep .title {
+.title {
   font-size: 24px;
   color: white;
   margin-top: 5px;
@@ -41,39 +41,39 @@ Style for select run and close dialog buttons
   background-color: #262626;
   border-color: #262626;
   color: white;
-  scale: 125%;
+  margin-bottom: 40px;
 }
 
-:host ::ng-deep .runcard {
+.runcard {
   display: flex;
-  margin-left: 12.5px;
   background-color: white;
   flex-direction: column;
   justify-content: space-between;
   border: 2px solid white;
   color: #ffff;
   height: 120px;
-  width: 450px;
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 /* should eventually be replaced with Grid component*/
 
-:host ::ng-deep .row {
+.row {
   display: flex;
   background-color: #262626;
   color: #ffff;
   height: 40px;
-  width: 450px;
+  width: 100%;
 }
 
-:host ::ng-deep .left {
+.left {
   font-size: 15px;
   margin-left: 5px;
   margin-right: 0px;
   text-align: left;
 }
 
-:host ::ng-deep .right {
+.right {
   font-size: 15px;
   margin-left: auto;
   margin-right: 5px;

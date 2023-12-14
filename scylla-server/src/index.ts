@@ -55,19 +55,20 @@ serverSocket.on('connection', (socket: Socket) => {
   serverProxy.configure();
 });
 
-// Mqtt Host when connected to router: '192.168.100.176' port: 1883
-const host = '192.168.100.176';
-const mqttPort = '1883';
-const clientId = `Scylla-Server`;
+if (process.env.PROD === 'true') {
+  const host = process.env.PROD_SIREN_HOST_URL;
+  const mqttPort = '1883';
+  const clientId = `Scylla-Server`;
 
-const connectUrl = `mqtt://${host}:${mqttPort}`;
+  const connectUrl = `mqtt://${host}:${mqttPort}`;
 
-const connection = connect(connectUrl, {
-  clientId,
-  clean: true,
-  connectTimeout: 4000,
-  reconnectPeriod: 1000
-});
+  const connection = connect(connectUrl, {
+    clientId,
+    clean: true,
+    connectTimeout: 4000,
+    reconnectPeriod: 1000
+  });
 
-const proxyClient = new ProxyClient(connection);
-proxyClient.configure();
+  const proxyClient = new ProxyClient(connection);
+  proxyClient.configure();
+}

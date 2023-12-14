@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { io } from 'socket.io-client';
+import { environment } from 'src/environment/environment';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
 
@@ -11,7 +12,7 @@ import Storage from 'src/services/storage.service';
   templateUrl: './app-context.component.html'
 })
 export default class AppContext implements OnInit {
-  socket = io('http://localhost:8000');
+  socket = io(environment.url);
   socketService = new SocketService(this.socket);
 
   constructor(private storage: Storage) {}

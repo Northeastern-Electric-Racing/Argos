@@ -19,13 +19,20 @@ export default class APIService {
     const error = new Subject<Error>();
     isLoading.next(true);
     isError.next(false);
-    apiCall()
-      .then((response) => this.handleErrors(response, error, isError))
-      .then((response) => response.json() as Promise<T>)
-      .then((resolvedData) => {
-        data.next(resolvedData);
-        isLoading.next(false);
-      });
+    try {
+      apiCall()
+        .then((response) => this.handleErrors(response, error, isError))
+        .then((response) => response.json() as Promise<T>)
+        .then((resolvedData) => {
+          data.next(resolvedData);
+          isLoading.next(false);
+        });
+    } catch (err) {
+      if (err instanceof Error) {
+        isError.next(true);
+        error.next(err);
+      }
+    }
     return {
       data,
       isLoading,
