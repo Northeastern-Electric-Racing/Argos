@@ -1,15 +1,19 @@
-/*
-Style for select run and close dialog buttons
-*/
-.runselectbutton {
+/* Style for select run and close dialog buttons */
+.select-button-container {
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.run-select-button {
   border-radius: 10px;
   color: #262626;
   background-color: white;
-  margin-left: 38%;
-  margin-top: 20px;
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
-.closebutton {
+.close-button {
   background-color: #262626;
   color: #ffff;
   position: absolute;
@@ -20,20 +24,7 @@ Style for select run and close dialog buttons
 
 /* Container that holds the carousel */
 .modal-container {
-  height: 250px;
   background-color: #262626;
-}
-
-/* Carousel contents and style overrides */
-
-.title {
-  font-size: 24px;
-  color: white;
-  margin-top: 5px;
-}
-/* this looks stupid but is actually useful*/
-:host ::ng-deep .p-carousel-container {
-  width: 99%;
 }
 
 :host ::ng-deep .p-carousel-prev,
@@ -44,37 +35,31 @@ Style for select run and close dialog buttons
   margin-bottom: 40px;
 }
 
-.runcard {
+.run-card {
   display: flex;
-  background-color: white;
   flex-direction: column;
   justify-content: space-between;
   border: 2px solid white;
-  color: #ffff;
-  height: 120px;
   margin-left: 8px;
   margin-right: 8px;
 }
 
-/* should eventually be replaced with Grid component*/
+/* should eventually be replaced with Grid component */
 
 .row {
   display: flex;
   background-color: #262626;
   color: #ffff;
-  height: 40px;
   width: 100%;
 }
 
 .left {
-  font-size: 15px;
   margin-left: 5px;
-  margin-right: 0px;
   text-align: left;
+  margin-right: auto;
 }
 
 .right {
-  font-size: 15px;
   margin-left: auto;
   margin-right: 5px;
   text-align: right;
