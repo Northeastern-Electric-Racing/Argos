@@ -5,4 +5,6 @@ const runRouter = Router();
 
 runRouter.get('/', RunController.getAllRuns);
 
+runRouter.get('/:id', RunController.getRunById);
+
 export default runRouter;

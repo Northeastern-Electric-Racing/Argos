@@ -1,12 +1,33 @@
-<div *ngIf="!nodes || nodesIsLoading; else checkError">
-  <loading-page />
+<div *ngIf="paramsError; else checkNodesError">
+  <error-page [errorMessage]="paramsError.message" />
 </div>
-<ng-template #checkError>
-  <div *ngIf="nodesIsError; else displayData">
+<ng-template #checkNodesError>
+  <div *ngIf="nodesIsError; else checkLoading">
     <error-page [errorMessage]="nodesError!.message" />
   </div>
 </ng-template>
+<ng-template #checkLoading>
+  <div *ngIf="!nodes || nodesIsLoading || !run || runIsLoading; else displayData">
+    <loading-page />
+  </div>
+</ng-template>
 <ng-template #displayData>
-  <graph-header />
-  <sidebar [nodes]="nodes!" />
+  <div class="container">
+    <graph-header class="graph-header" [realTime]="realTime" [runId]="runId" />
+    <div class="content-div">
+      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
+      <div class="right-container">
+        <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
+        <graph-caption
+          [dataType]="selectedDataType"
+          [currentValue]="currentValue"
+          [currentDriver]="run?.driverName"
+          [currentSystem]="run?.systemName"
+          [currentLocation]="run?.locationName"
+          class="graph-caption"
+        />
+      </div>
+      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="mobile-sidebar" />
+    </div>
+  </div>
 </ng-template>

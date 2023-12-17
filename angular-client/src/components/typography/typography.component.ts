@@ -18,7 +18,7 @@ import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
 export default class Typography implements OnInit {
   @Input() variant!: StyleVariant;
   @Input() content?: string | null;
-  @Input() additionalStyles?: string | null;
+  @Input() additionalStyles?: string;
   style!: string;
 
   ngOnInit(): void {

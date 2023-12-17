@@ -1,3 +1,71 @@
 :host {
   max-height: inherit;
 }
+
+.container {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.graph-header {
+  flex: 0 1 auto;
+}
+
+.content-div {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: row;
+  height: 100%;
+  width: 100%;
+}
+
+.desktop-sidebar {
+  flex: 0 1 auto;
+}
+
+.right-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  overflow: hidden;
+  padding-right: 16px;
+}
+
+.mobile-sidebar {
+  display: none;
+}
+
+.graph {
+  flex: 1 1 auto;
+}
+
+.graph-caption {
+  flex: 0 0 100px;
+  margin-bottom: 8px;
+  margin-right: 8px;
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .content-div {
+    flex-flow: column;
+  }
+
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .mobile-sidebar {
+    display: block;
+  }
+
+  .right-container {
+    flex: 1 1 auto;
+  }
+
+  .graph-caption {
+    flex: 0 0 auto;
+  }
+}

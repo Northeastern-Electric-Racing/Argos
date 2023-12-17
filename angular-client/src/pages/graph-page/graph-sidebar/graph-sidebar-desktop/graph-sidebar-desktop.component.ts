@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input, OnInit } from '@angular/core';
-import { Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -9,9 +9,9 @@ import { Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
  *
  */
 @Component({
-  selector: 'sidebar',
-  templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css'],
+  selector: 'graph-sidebar-desktop',
+  templateUrl: './graph-sidebar-desktop.component.html',
+  styleUrls: ['./graph-sidebar-desktop.component.css'],
   animations: [
     trigger('toggleExpand', [
       transition(':enter', [
@@ -42,9 +42,10 @@ import { Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
     ])
   ]
 })
-export default class Sidebar implements OnInit {
+export default class GraphSidebarDesktop implements OnInit {
   @Input() nodes!: Node[];
   nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
+  @Input() selectDataType!: (dataType: DataType) => void;
 
   /**
    * Initializes the nodes with the visibility toggle.
