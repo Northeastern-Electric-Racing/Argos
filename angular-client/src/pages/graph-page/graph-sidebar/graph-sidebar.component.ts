@@ -17,12 +17,14 @@ export default class GraphSidebar implements OnInit {
 
   isMobile!: boolean;
 
+  mobileThreshold = 768;
+
   ngOnInit() {
-    this.isMobile = window.innerWidth <= 768;
+    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 
   @HostListener('window:resize', ['$event'])
   onResize() {
-    this.isMobile = window.innerWidth <= 768;
+    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

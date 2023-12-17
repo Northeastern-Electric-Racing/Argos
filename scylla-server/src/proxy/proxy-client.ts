@@ -48,6 +48,7 @@ export default class ProxyClient {
    * @param message The message received from Siren
    */
   private handleMessage = (topic: string, payload: Buffer) => {
+    //TODO: Handle the message
     console.log('Received Message: ', topic, payload.toString());
   };
 

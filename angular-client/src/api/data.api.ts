@@ -1,5 +1,5 @@
 import { urls } from './urls';
 
-export const getDataByDataTypeName = async (dataTypeName: string) => {
-  return await fetch(urls.getDataByDataTypeName(dataTypeName));
+export const getDataByDataTypeName = (dataTypeName: string): Promise<Response> => {
+  return fetch(urls.getDataByDataTypeName(dataTypeName));
 };
