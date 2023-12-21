@@ -11,7 +11,8 @@ import SwiftUI
 struct ArgosApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LandingView()
+                .withErrorHandling()
         }
     }
 }

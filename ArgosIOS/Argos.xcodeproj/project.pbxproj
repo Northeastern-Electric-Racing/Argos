@@ -7,16 +7,100 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1551645C2B30BFDB0082044C /* SocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551645B2B30BFDB0082044C /* SocketClient.swift */; };
+		1551645F2B30C19F0082044C /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 1551645E2B30C19F0082044C /* SocketIO */; };
+		155164622B311AE50082044C /* ServerData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155164612B311AE50082044C /* ServerData.swift */; };
+		155164642B311DB40082044C /* APIHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155164632B311DB40082044C /* APIHandler.swift */; };
+		155164672B31205D0082044C /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155164662B31205D0082044C /* Route.swift */; };
+		155164692B3122B00082044C /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155164682B3122B00082044C /* Node.swift */; };
+		1551646B2B3127420082044C /* DataType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646A2B3127420082044C /* DataType.swift */; };
+		1551646E2B312B820082044C /* ErrorHandlerAlertViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */; };
+		155164702B312BA30082044C /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646F2B312BA30082044C /* ErrorHandling.swift */; };
+		15AE8F7D2B33665900479691 /* ArgosButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F7C2B33665900479691 /* ArgosButton.swift */; };
+		15AE8F7F2B33692B00479691 /* BatteryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F7E2B33692B00479691 /* BatteryView.swift */; };
+		15AE8F812B3369A300479691 /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F802B3369A300479691 /* Direction.swift */; };
+		15AE8F832B336D2700479691 /* ThermometerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F822B336D2700479691 /* ThermometerView.swift */; };
+		15AE8F862B3377F100479691 /* GraphContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F852B3377F100479691 /* GraphContainer.swift */; };
+		15AE8F892B3378A400479691 /* GraphCaption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F882B3378A400479691 /* GraphCaption.swift */; };
+		15AE8F8B2B338F7000479691 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F8A2B338F7000479691 /* GraphView.swift */; };
+		15AE8F8E2B33A57C00479691 /* ConfigureError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F8D2B33A57C00479691 /* ConfigureError.swift */; };
+		15AE8F902B33A71B00479691 /* Run.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F8F2B33A71B00479691 /* Run.swift */; };
+		15AE8F922B33ACF900479691 /* CarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F912B33ACF900479691 /* CarouselView.swift */; };
+		15AE8F972B33B1D200479691 /* DialogPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F962B33B1D200479691 /* DialogPresentation.swift */; };
+		15AE8F992B33B27C00479691 /* CustomDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F982B33B27C00479691 /* CustomDialog.swift */; };
+		15AE8F9B2B33B3E700479691 /* DialogContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F9A2B33B3E700479691 /* DialogContent.swift */; };
+		15AE8FA02B33B9D600479691 /* CarouselContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F9F2B33B9D600479691 /* CarouselContent.swift */; };
+		15AE8FA22B33BCB200479691 /* ArgosHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FA12B33BCB200479691 /* ArgosHeader.swift */; };
+		15AE8FA42B33BCBE00479691 /* ArgosLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FA32B33BCBE00479691 /* ArgosLabel.swift */; };
+		15AE8FB02B33C02E00479691 /* Roboto-BlackItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FA62B33C02D00479691 /* Roboto-BlackItalic.ttf */; };
+		15AE8FB12B33C02E00479691 /* Roboto-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FA72B33C02D00479691 /* Roboto-MediumItalic.ttf */; };
+		15AE8FB22B33C02E00479691 /* Roboto-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FA82B33C02D00479691 /* Roboto-BoldItalic.ttf */; };
+		15AE8FB32B33C02E00479691 /* Roboto-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FA92B33C02D00479691 /* Roboto-Thin.ttf */; };
+		15AE8FB42B33C02E00479691 /* Roboto-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FAA2B33C02E00479691 /* Roboto-Light.ttf */; };
+		15AE8FB52B33C02E00479691 /* Roboto-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FAB2B33C02E00479691 /* Roboto-Bold.ttf */; };
+		15AE8FB62B33C02E00479691 /* Roboto-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FAC2B33C02E00479691 /* Roboto-Italic.ttf */; };
+		15AE8FB72B33C02E00479691 /* Roboto-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FAD2B33C02E00479691 /* Roboto-ThinItalic.ttf */; };
+		15AE8FB82B33C02E00479691 /* Roboto-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FAE2B33C02E00479691 /* Roboto-Medium.ttf */; };
+		15AE8FB92B33C02E00479691 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 15AE8FAF2B33C02E00479691 /* Roboto-Regular.ttf */; };
+		15AE8FBC2B33C5E600479691 /* ChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FBB2B33C5E600479691 /* ChipView.swift */; };
+		15AE8FC12B33CEDC00479691 /* HorizontalExpandingScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FC02B33CEDC00479691 /* HorizontalExpandingScrollView.swift */; };
+		15AE8FC32B33CF2500479691 /* ScrollCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FC22B33CF2500479691 /* ScrollCard.swift */; };
+		15AE8FC52B33D1C500479691 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FC42B33D1C500479691 /* Data.swift */; };
+		15AE8FC72B33E28400479691 /* ExpandableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FC62B33E28400479691 /* ExpandableView.swift */; };
+		15AE8FC92B33E36100479691 /* ScrollViewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FC82B33E36100479691 /* ScrollViewItem.swift */; };
+		15AE8FCB2B33F7F700479691 /* GraphSelectionPopUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8FCA2B33F7F700479691 /* GraphSelectionPopUp.swift */; };
 		C977D19E2B2FEE410016D932 /* ArgosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C977D19D2B2FEE410016D932 /* ArgosApp.swift */; };
-		C977D1A02B2FEE410016D932 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C977D19F2B2FEE410016D932 /* ContentView.swift */; };
+		C977D1A02B2FEE410016D932 /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C977D19F2B2FEE410016D932 /* LandingView.swift */; };
 		C977D1A22B2FEE420016D932 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A12B2FEE420016D932 /* Assets.xcassets */; };
 		C977D1A52B2FEE420016D932 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1551645B2B30BFDB0082044C /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
+		155164612B311AE50082044C /* ServerData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerData.swift; sourceTree = "<group>"; };
+		155164632B311DB40082044C /* APIHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIHandler.swift; sourceTree = "<group>"; };
+		155164662B31205D0082044C /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		155164682B3122B00082044C /* Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
+		1551646A2B3127420082044C /* DataType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataType.swift; sourceTree = "<group>"; };
+		1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlerAlertViewModifier.swift; sourceTree = "<group>"; };
+		1551646F2B312BA30082044C /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
+		15AE8F7C2B33665900479691 /* ArgosButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgosButton.swift; sourceTree = "<group>"; };
+		15AE8F7E2B33692B00479691 /* BatteryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryView.swift; sourceTree = "<group>"; };
+		15AE8F802B3369A300479691 /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
+		15AE8F822B336D2700479691 /* ThermometerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermometerView.swift; sourceTree = "<group>"; };
+		15AE8F852B3377F100479691 /* GraphContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphContainer.swift; sourceTree = "<group>"; };
+		15AE8F882B3378A400479691 /* GraphCaption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphCaption.swift; sourceTree = "<group>"; };
+		15AE8F8A2B338F7000479691 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
+		15AE8F8D2B33A57C00479691 /* ConfigureError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigureError.swift; sourceTree = "<group>"; };
+		15AE8F8F2B33A71B00479691 /* Run.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Run.swift; sourceTree = "<group>"; };
+		15AE8F912B33ACF900479691 /* CarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselView.swift; sourceTree = "<group>"; };
+		15AE8F962B33B1D200479691 /* DialogPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogPresentation.swift; sourceTree = "<group>"; };
+		15AE8F982B33B27C00479691 /* CustomDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDialog.swift; sourceTree = "<group>"; };
+		15AE8F9A2B33B3E700479691 /* DialogContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogContent.swift; sourceTree = "<group>"; };
+		15AE8F9F2B33B9D600479691 /* CarouselContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselContent.swift; sourceTree = "<group>"; };
+		15AE8FA12B33BCB200479691 /* ArgosHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgosHeader.swift; sourceTree = "<group>"; };
+		15AE8FA32B33BCBE00479691 /* ArgosLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgosLabel.swift; sourceTree = "<group>"; };
+		15AE8FA62B33C02D00479691 /* Roboto-BlackItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-BlackItalic.ttf"; sourceTree = "<group>"; };
+		15AE8FA72B33C02D00479691 /* Roboto-MediumItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-MediumItalic.ttf"; sourceTree = "<group>"; };
+		15AE8FA82B33C02D00479691 /* Roboto-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-BoldItalic.ttf"; sourceTree = "<group>"; };
+		15AE8FA92B33C02D00479691 /* Roboto-Thin.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Thin.ttf"; sourceTree = "<group>"; };
+		15AE8FAA2B33C02E00479691 /* Roboto-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Light.ttf"; sourceTree = "<group>"; };
+		15AE8FAB2B33C02E00479691 /* Roboto-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Bold.ttf"; sourceTree = "<group>"; };
+		15AE8FAC2B33C02E00479691 /* Roboto-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Italic.ttf"; sourceTree = "<group>"; };
+		15AE8FAD2B33C02E00479691 /* Roboto-ThinItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-ThinItalic.ttf"; sourceTree = "<group>"; };
+		15AE8FAE2B33C02E00479691 /* Roboto-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Medium.ttf"; sourceTree = "<group>"; };
+		15AE8FAF2B33C02E00479691 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
+		15AE8FBA2B33C0B400479691 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		15AE8FBB2B33C5E600479691 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
+		15AE8FC02B33CEDC00479691 /* HorizontalExpandingScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalExpandingScrollView.swift; sourceTree = "<group>"; };
+		15AE8FC22B33CF2500479691 /* ScrollCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollCard.swift; sourceTree = "<group>"; };
+		15AE8FC42B33D1C500479691 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		15AE8FC62B33E28400479691 /* ExpandableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableView.swift; sourceTree = "<group>"; };
+		15AE8FC82B33E36100479691 /* ScrollViewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewItem.swift; sourceTree = "<group>"; };
+		15AE8FCA2B33F7F700479691 /* GraphSelectionPopUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphSelectionPopUp.swift; sourceTree = "<group>"; };
 		C977D19A2B2FEE410016D932 /* Argos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Argos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C977D19D2B2FEE410016D932 /* ArgosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgosApp.swift; sourceTree = "<group>"; };
-		C977D19F2B2FEE410016D932 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C977D19F2B2FEE410016D932 /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		C977D1A12B2FEE420016D932 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -26,12 +110,143 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1551645F2B30C19F0082044C /* SocketIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1551645A2B30BFC40082044C /* Singletons */ = {
+			isa = PBXGroup;
+			children = (
+				1551645B2B30BFDB0082044C /* SocketClient.swift */,
+				155164632B311DB40082044C /* APIHandler.swift */,
+			);
+			path = Singletons;
+			sourceTree = "<group>";
+		};
+		155164602B311AD80082044C /* Types */ = {
+			isa = PBXGroup;
+			children = (
+				155164612B311AE50082044C /* ServerData.swift */,
+				155164682B3122B00082044C /* Node.swift */,
+				1551646A2B3127420082044C /* DataType.swift */,
+				15AE8F8F2B33A71B00479691 /* Run.swift */,
+				15AE8FC42B33D1C500479691 /* Data.swift */,
+			);
+			path = Types;
+			sourceTree = "<group>";
+		};
+		155164652B3120540082044C /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				155164662B31205D0082044C /* Route.swift */,
+				15AE8F802B3369A300479691 /* Direction.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		1551646C2B312A310082044C /* ErrorHandling */ = {
+			isa = PBXGroup;
+			children = (
+				1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */,
+				1551646F2B312BA30082044C /* ErrorHandling.swift */,
+			);
+			path = ErrorHandling;
+			sourceTree = "<group>";
+		};
+		15AE8F7B2B3365EB00479691 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8F7C2B33665900479691 /* ArgosButton.swift */,
+				15AE8FA12B33BCB200479691 /* ArgosHeader.swift */,
+				15AE8FA32B33BCBE00479691 /* ArgosLabel.swift */,
+				15AE8F7E2B33692B00479691 /* BatteryView.swift */,
+				15AE8F822B336D2700479691 /* ThermometerView.swift */,
+				15AE8FBB2B33C5E600479691 /* ChipView.swift */,
+				15AE8FBD2B33CE8600479691 /* HorizontalScrollPopUp */,
+				15AE8F9E2B33B9C800479691 /* Carousel */,
+				15AE8F952B33B1BD00479691 /* Dialog */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		15AE8F842B3377E800479691 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C977D19F2B2FEE410016D932 /* LandingView.swift */,
+				15AE8F872B33789500479691 /* Graph */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		15AE8F872B33789500479691 /* Graph */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8F852B3377F100479691 /* GraphContainer.swift */,
+				15AE8F882B3378A400479691 /* GraphCaption.swift */,
+				15AE8F8A2B338F7000479691 /* GraphView.swift */,
+				15AE8FCA2B33F7F700479691 /* GraphSelectionPopUp.swift */,
+			);
+			path = Graph;
+			sourceTree = "<group>";
+		};
+		15AE8F8C2B33A54600479691 /* Errors */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8F8D2B33A57C00479691 /* ConfigureError.swift */,
+			);
+			path = Errors;
+			sourceTree = "<group>";
+		};
+		15AE8F952B33B1BD00479691 /* Dialog */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8F962B33B1D200479691 /* DialogPresentation.swift */,
+				15AE8F9A2B33B3E700479691 /* DialogContent.swift */,
+				15AE8F982B33B27C00479691 /* CustomDialog.swift */,
+			);
+			path = Dialog;
+			sourceTree = "<group>";
+		};
+		15AE8F9E2B33B9C800479691 /* Carousel */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8F912B33ACF900479691 /* CarouselView.swift */,
+				15AE8F9F2B33B9D600479691 /* CarouselContent.swift */,
+			);
+			path = Carousel;
+			sourceTree = "<group>";
+		};
+		15AE8FA52B33BFF300479691 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8FA62B33C02D00479691 /* Roboto-BlackItalic.ttf */,
+				15AE8FAB2B33C02E00479691 /* Roboto-Bold.ttf */,
+				15AE8FA82B33C02D00479691 /* Roboto-BoldItalic.ttf */,
+				15AE8FAC2B33C02E00479691 /* Roboto-Italic.ttf */,
+				15AE8FAA2B33C02E00479691 /* Roboto-Light.ttf */,
+				15AE8FAE2B33C02E00479691 /* Roboto-Medium.ttf */,
+				15AE8FA72B33C02D00479691 /* Roboto-MediumItalic.ttf */,
+				15AE8FAF2B33C02E00479691 /* Roboto-Regular.ttf */,
+				15AE8FA92B33C02D00479691 /* Roboto-Thin.ttf */,
+				15AE8FAD2B33C02E00479691 /* Roboto-ThinItalic.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		15AE8FBD2B33CE8600479691 /* HorizontalScrollPopUp */ = {
+			isa = PBXGroup;
+			children = (
+				15AE8FC02B33CEDC00479691 /* HorizontalExpandingScrollView.swift */,
+				15AE8FC82B33E36100479691 /* ScrollViewItem.swift */,
+				15AE8FC62B33E28400479691 /* ExpandableView.swift */,
+				15AE8FC22B33CF2500479691 /* ScrollCard.swift */,
+			);
+			path = HorizontalScrollPopUp;
+			sourceTree = "<group>";
+		};
 		C977D1912B2FEE410016D932 = {
 			isa = PBXGroup;
 			children = (
@@ -51,8 +266,16 @@
 		C977D19C2B2FEE410016D932 /* Argos */ = {
 			isa = PBXGroup;
 			children = (
+				15AE8FBA2B33C0B400479691 /* Info.plist */,
 				C977D19D2B2FEE410016D932 /* ArgosApp.swift */,
-				C977D19F2B2FEE410016D932 /* ContentView.swift */,
+				15AE8FA52B33BFF300479691 /* Fonts */,
+				15AE8F8C2B33A54600479691 /* Errors */,
+				15AE8F842B3377E800479691 /* Views */,
+				15AE8F7B2B3365EB00479691 /* Components */,
+				1551646C2B312A310082044C /* ErrorHandling */,
+				155164652B3120540082044C /* Utils */,
+				155164602B311AD80082044C /* Types */,
+				1551645A2B30BFC40082044C /* Singletons */,
 				C977D1A12B2FEE420016D932 /* Assets.xcassets */,
 				C977D1A32B2FEE420016D932 /* Preview Content */,
 			);
@@ -83,6 +306,9 @@
 			dependencies = (
 			);
 			name = Argos;
+			packageProductDependencies = (
+				1551645E2B30C19F0082044C /* SocketIO */,
+			);
 			productName = Argos;
 			productReference = C977D19A2B2FEE410016D932 /* Argos.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +337,9 @@
 				Base,
 			);
 			mainGroup = C977D1912B2FEE410016D932;
+			packageReferences = (
+				1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */,
+			);
 			productRefGroup = C977D19B2B2FEE410016D932 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -125,7 +354,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15AE8FB72B33C02E00479691 /* Roboto-ThinItalic.ttf in Resources */,
+				15AE8FB12B33C02E00479691 /* Roboto-MediumItalic.ttf in Resources */,
+				15AE8FB62B33C02E00479691 /* Roboto-Italic.ttf in Resources */,
 				C977D1A52B2FEE420016D932 /* Preview Assets.xcassets in Resources */,
+				15AE8FB32B33C02E00479691 /* Roboto-Thin.ttf in Resources */,
+				15AE8FB02B33C02E00479691 /* Roboto-BlackItalic.ttf in Resources */,
+				15AE8FB92B33C02E00479691 /* Roboto-Regular.ttf in Resources */,
+				15AE8FB42B33C02E00479691 /* Roboto-Light.ttf in Resources */,
+				15AE8FB22B33C02E00479691 /* Roboto-BoldItalic.ttf in Resources */,
+				15AE8FB82B33C02E00479691 /* Roboto-Medium.ttf in Resources */,
+				15AE8FB52B33C02E00479691 /* Roboto-Bold.ttf in Resources */,
 				C977D1A22B2FEE420016D932 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -137,8 +376,39 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C977D1A02B2FEE410016D932 /* ContentView.swift in Sources */,
+				155164622B311AE50082044C /* ServerData.swift in Sources */,
+				15AE8FC52B33D1C500479691 /* Data.swift in Sources */,
+				15AE8FC12B33CEDC00479691 /* HorizontalExpandingScrollView.swift in Sources */,
+				15AE8F8E2B33A57C00479691 /* ConfigureError.swift in Sources */,
+				15AE8F832B336D2700479691 /* ThermometerView.swift in Sources */,
+				155164672B31205D0082044C /* Route.swift in Sources */,
+				C977D1A02B2FEE410016D932 /* LandingView.swift in Sources */,
+				15AE8F7F2B33692B00479691 /* BatteryView.swift in Sources */,
+				15AE8FC92B33E36100479691 /* ScrollViewItem.swift in Sources */,
+				15AE8F862B3377F100479691 /* GraphContainer.swift in Sources */,
+				15AE8FC72B33E28400479691 /* ExpandableView.swift in Sources */,
+				15AE8FC32B33CF2500479691 /* ScrollCard.swift in Sources */,
+				15AE8F972B33B1D200479691 /* DialogPresentation.swift in Sources */,
+				155164642B311DB40082044C /* APIHandler.swift in Sources */,
+				15AE8FA02B33B9D600479691 /* CarouselContent.swift in Sources */,
+				1551645C2B30BFDB0082044C /* SocketClient.swift in Sources */,
+				15AE8F7D2B33665900479691 /* ArgosButton.swift in Sources */,
+				15AE8F922B33ACF900479691 /* CarouselView.swift in Sources */,
+				15AE8F8B2B338F7000479691 /* GraphView.swift in Sources */,
+				1551646E2B312B820082044C /* ErrorHandlerAlertViewModifier.swift in Sources */,
+				15AE8F992B33B27C00479691 /* CustomDialog.swift in Sources */,
+				1551646B2B3127420082044C /* DataType.swift in Sources */,
+				155164702B312BA30082044C /* ErrorHandling.swift in Sources */,
+				15AE8FA22B33BCB200479691 /* ArgosHeader.swift in Sources */,
+				15AE8F812B3369A300479691 /* Direction.swift in Sources */,
+				15AE8F892B3378A400479691 /* GraphCaption.swift in Sources */,
 				C977D19E2B2FEE410016D932 /* ArgosApp.swift in Sources */,
+				15AE8F9B2B33B3E700479691 /* DialogContent.swift in Sources */,
+				15AE8FBC2B33C5E600479691 /* ChipView.swift in Sources */,
+				15AE8F902B33A71B00479691 /* Run.swift in Sources */,
+				155164692B3122B00082044C /* Node.swift in Sources */,
+				15AE8FCB2B33F7F700479691 /* GraphSelectionPopUp.swift in Sources */,
+				15AE8FA42B33BCBE00479691 /* ArgosLabel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +545,7 @@
 				DEVELOPMENT_TEAM = STGT8VT9K6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Argos/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -304,6 +575,7 @@
 				DEVELOPMENT_TEAM = STGT8VT9K6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Argos/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -344,6 +616,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1551645E2B30C19F0082044C /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C977D1922B2FEE410016D932 /* Project object */;
 }
