@@ -9,6 +9,8 @@ import SwiftUI
 
 struct LandingView: View {
     @EnvironmentObject private var errorHandling: ErrorHandling
+    @ObservedObject private var socketClient = SocketClient.shared
+    
     @State private var showMain = false
     @State private var stateOfCharge: Double = 0
     @State private var packTemp: Float = 0
@@ -25,6 +27,13 @@ struct LandingView: View {
         NavigationStack {
             if self.showMain {
                 VStack {
+                    if self.socketClient.isConnected {
+                        ArgosHeader("Connected To Router")
+                            .multilineTextAlignment(.center)
+                    } else {
+                        ArgosHeader("Not Connected To Router")
+                            .multilineTextAlignment(.center)
+                    }
                     BatteryView(progress: .constant(self.stateOfCharge), fill: .green, outline: .secondary, direction: .horizontal)
                     HStack {
                         ThermometerView(current: self.packTemp, minimum: -15, maximum: 60, label: "Pack").frame(maxWidth: .infinity)
@@ -75,8 +84,7 @@ struct LandingView: View {
                 }
             })
             
-            SocketClient.shared.receiveMessage()
-            SocketClient.shared.connect()
+            self.socketClient.connect()
             
             DispatchQueue.main.asyncAfter(deadline: DispatchTime.now().advanced(by: .seconds(2)), execute: {
                 withAnimation {

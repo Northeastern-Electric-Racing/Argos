@@ -26,8 +26,12 @@ struct GraphContainer: View {
     var body: some View {
         VStack {
             GraphView(data: self.$currentData).frame(maxHeight: .infinity)
-            GraphCaption(dataType: self.$selectedDataType, mostRecentvalue: self.$currentData.last?.value, driver: self.$driver, location: self.$location, system: self.$system)
-            GraphSelectionPopUp(selectDataType: self.setSelectedDataType)
+            ZStack {
+                GraphCaption(dataType: self.$selectedDataType, mostRecentvalue: self.$currentData.last?.value, driver: self.$driver, location: self.$location, system: self.$system)
+            }
+            .overlay(GraphSelectionPopUp(selectDataType: self.setSelectedDataType)
+                .frame(maxWidth: .infinity, alignment: .bottomLeading),
+                     alignment: .bottom)
         }
         .onAppear {
             APIHandler.shared.getRunById(id: runId, completion: {

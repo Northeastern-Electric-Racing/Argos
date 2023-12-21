@@ -16,23 +16,27 @@ class SocketClient: ObservableObject {
     static let shared = SocketClient(manager: SocketManager(socketURL: URL(string: "http://localhost:8000")!, config: [.log(true), .compress]))
     private let socket: SocketIOClient
     private let manager: SocketManager
-
+    
+    @Published public private(set) var isConnected = false
     @Published public private(set) var runId: Int? = nil
     @Published public private(set) var values = [String: DataValue]()
 
     private init(manager: SocketManager) {
         self.manager = manager
         self.socket = manager.defaultSocket
+        self.receiveMessage()
+        self.handleConnection()
+        self.handleDisconnection()
     }
 
     public func connect() {
-        socket.connect(timeoutAfter: 10, withHandler: {
+        self.socket.connect(timeoutAfter: 10, withHandler: {
             print("Could Not connect to Server")
         })
     }
 
-    public func receiveMessage() {
-        socket.on("message", callback: {
+    private func receiveMessage() {
+        self.socket.on("message", callback: {
             data, _ in
             do {
                 let decoder = JSONDecoder()
@@ -43,6 +47,20 @@ class SocketClient: ObservableObject {
             } catch {
                 print(error)
             }
+        })
+    }
+    
+    private func handleConnection() {
+        self.socket.on(clientEvent: .connect, callback: {
+            _, _ in
+            self.isConnected = true
+        })
+    }
+    
+    private func handleDisconnection() {
+        self.socket.on(clientEvent: .disconnect, callback: {
+            _, _ in
+            self.isConnected = false
         })
     }
 }

@@ -18,7 +18,7 @@ struct HorizontalExpandingScrollView : View {
                 }
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .onAppear {
             print("HOriz")
         }

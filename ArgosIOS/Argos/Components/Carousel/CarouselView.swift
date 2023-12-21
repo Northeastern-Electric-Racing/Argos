@@ -13,38 +13,50 @@ struct CarouselView: View {
     @State private var selectedIndex: Int = 0
     @Binding var isPresented: Bool
     
-
-    
     var body: some View {
         ZStack {
-            TabView(selection: self.$selectedIndex) {
-                ForEach(0..<runs.count, id: \.self) { index in
-                    ZStack(alignment: .topLeading) {
-                        CarouselContent(run: self.runs[index], selectRun: {
-                            selectRun(self.runs[index])
-                        })
-                    }
-                    .shadow(radius: 20)
-                }
-            }
-            .frame(height: 300)
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .ignoresSafeArea()
-            
-            HStack {
-                ForEach(0..<runs.count, id: \.self) { index in
-                    Capsule()
-                        .fill(.foreground.opacity(self.selectedIndex == index ? 1 : 0.33))
-                        .frame(width: 35, height: 8)
-                        .onTapGesture {
-                            self.selectedIndex = index
+            if self.runs.count == 0 {
+                VStack {
+                    ArgosHeader("No Runs Found")
+                    ArgosButton(title: "Close", action: {
+                        withAnimation {
+                            self.isPresented.toggle()
                         }
+                    })
                 }
-                .offset(y: 130)
+                .padding()
+
+            } else {
+                TabView(selection: self.$selectedIndex) {
+                    ForEach(0..<runs.count, id: \.self) { index in
+                        ZStack(alignment: .topLeading) {
+                            CarouselContent(run: self.runs[index], selectRun: {
+                                selectRun(self.runs[index])
+                            })
+                        }
+                        .shadow(radius: 20)
+                    }
+                }
+                .frame(height: 300)
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .ignoresSafeArea()
+                
+                HStack {
+                    ForEach(0..<runs.count, id: \.self) { index in
+                        Capsule()
+                            .fill(.foreground.opacity(self.selectedIndex == index ? 1 : 0.33))
+                            .frame(width: 35, height: 8)
+                            .onTapGesture {
+                                self.selectedIndex = index
+                            }
+                    }
+                    .offset(y: 130)
+                }
             }
         }
         .background(Color(.systemBackground))
         .clipShape(.buttonBorder)
+        
     }
 }
 

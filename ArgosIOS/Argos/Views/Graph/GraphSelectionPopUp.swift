@@ -15,17 +15,25 @@ struct GraphSelectionPopUp : View {
     var selectDataType : (_ dataType: DataType) -> Void
 
     var body: some View {
-        VStack {
-            ArgosLabel("Select Data Type")
-                .onTapGesture {
-                    self.present()
-                }
+        VStack (spacing: 0) {
+            HStack {
+                ArgosLabel("Select Data Type")
+                    .onTapGesture {
+                        self.present()
+                    }
+                    .background(Color(.systemBackground))
+                    .clipShape(.buttonBorder)
+            } 
+            .frame(maxWidth: .infinity, alignment: .leading)
             if (self.isPresented) {
                 HorizontalExpandingScrollView(items: self.nodes.map({
                     ScrollViewItem(name: $0.name, subItems: $0.dataTypes.map({
                         dataType in
                         ScrollViewSubItem(name: dataType.name, onSelect: {
-                            self.selectDataType(dataType)
+                            withAnimation {
+                                self.selectDataType(dataType)
+                                self.isPresented.toggle()
+                            }
                         })
                     }))
                 }))
