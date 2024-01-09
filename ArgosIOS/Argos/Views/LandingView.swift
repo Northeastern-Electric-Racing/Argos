@@ -18,7 +18,7 @@ struct LandingView: View {
     
     @State private var realTimeGraphViewIsActive = false
     @State private var historicalGraphViewIsActive = false
-
+    
     @State private var dialogPresentation = DialogPresentation()
     @State private var runs = [Run]()
     @State private var selectedRun: Run?
@@ -41,12 +41,12 @@ struct LandingView: View {
                     }
                     HStack {
                         ArgosButton(title: "Historical", action: {
-                            dialogPresentation.show(content: .carousel(runs: self.runs, selectRun: self.selectRun, isPresented: $dialogPresentation.isPresented))
+                            dialogPresentation.show(content: .carousel(runs: self.runs, selectRun: self.selectRun, isPresented: self.$dialogPresentation.isPresented))
                         })
                         .navigationDestination(isPresented: self.$historicalGraphViewIsActive) {
                             GraphContainer(runId: selectedRun?.id ?? -1)
                         }
-
+                        
                         ArgosButton(title: "More Details", action: {
                             guard SocketClient.shared.runId != nil else {
                                 self.errorHandling.handle(error: ConfigureError.runIdNotSet)

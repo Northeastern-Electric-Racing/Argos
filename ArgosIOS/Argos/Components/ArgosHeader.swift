@@ -18,3 +18,7 @@ struct ArgosHeader: View {
         ArgosLabel(self.text, 36).fontWeight(.bold)
     }
 }
+
+#Preview {
+    ArgosHeader("Hello World")
+}

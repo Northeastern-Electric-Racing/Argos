@@ -17,32 +17,31 @@ struct BatteryView: View {
     }
     
     var body: some View {
-            ZStack {
-                Image(systemName: "battery.0")
-                    .resizable()
-                    .scaledToFit()
-                    .font(.headline.weight(.ultraLight))
-                    .foregroundColor(self.outline)
-                    .background(
-                        Rectangle()
-                            .fill(self.fill)
-                            .scaleEffect(x: self.progress,  y: 1, anchor: .leading)
-                    )
-                    .mask(
-                        Image(systemName: "battery.100")
-                            .resizable()
-                            .font(.headline.weight(.ultraLight))
-                            .scaledToFit()
-                    )
-                    .frame(width: 200)
-                    .padding()
-            }
-            .rotationEffect(.degrees(self.rotation))
+        ZStack {
+            Image(systemName: "battery.0")
+                .resizable()
+                .scaledToFit()
+                .font(.headline.weight(.ultraLight))
+                .foregroundColor(self.outline)
+                .background(
+                    Rectangle()
+                        .fill(self.fill)
+                        .scaleEffect(x: self.progress,  y: 1, anchor: .leading)
+                )
+                .mask(
+                    Image(systemName: "battery.100")
+                        .resizable()
+                        .font(.headline.weight(.ultraLight))
+                        .scaledToFit()
+                )
+                .frame(width: 200)
+                .padding()
         }
+        .rotationEffect(.degrees(self.rotation))
+    }
 }
 
-struct BatteryView_Previews: PreviewProvider {
-    static var previews: some View {
-        BatteryView(progress: .constant(0.5), fill: .green, outline: .secondary, direction: .vertical)
-    }
+#Preview {
+    BatteryView(progress: .constant(0.5), fill: .green, outline: .secondary, direction: .vertical)
+    
 }

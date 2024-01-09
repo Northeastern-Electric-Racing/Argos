@@ -27,12 +27,8 @@ struct ChipView: View {
     }
 }
 
-
-
-struct ChipView_Previews: PreviewProvider {
-    static var previews: some View {
-        ChipView(systemImage: "heart.circle", titleKey: "Title")
-            .previewLayout(.sizeThatFits)
-            .padding()
-    }
+#Preview {
+    ChipView(systemImage: "heart.circle", titleKey: "Title")
+        .previewLayout(.sizeThatFits)
+        .padding()
 }

@@ -21,3 +21,7 @@ struct ArgosLabel: View {
             .font(.custom("Roboto", size: self.size))
     }
 }
+
+#Preview {
+    ArgosLabel("Hello World")
+}

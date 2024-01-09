@@ -14,7 +14,7 @@ protocol API {
 enum Route: RawRepresentable, API {
     init?(rawValue: String) { nil }
     
-
+    
     static let baseUrl: URL = URL(string: "http://localhost:8000")!
     
     case allNodes

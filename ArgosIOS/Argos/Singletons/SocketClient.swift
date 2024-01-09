@@ -13,7 +13,7 @@ import SocketIO
  * Wrapper class for the socket connection to the server
  */
 class SocketClient: ObservableObject {
-    static let shared = SocketClient(manager: SocketManager(socketURL: URL(string: "http://localhost:8000")!, config: [.log(true), .compress]))
+    static let shared = SocketClient(manager: SocketManager(socketURL: Route.baseUrl, config: [.log(true), .compress]))
     private let socket: SocketIOClient
     private let manager: SocketManager
     
