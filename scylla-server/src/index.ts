@@ -46,7 +46,13 @@ const server = app.listen(port, () => {
 
 const serverSocket = new Server(server, {
   cors: {
-    origin: 'http://localhost:4200'
+    origin(requestOrigin, callback) {
+      if (requestOrigin === 'http://localhost:4200') {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    }
   }
 });
 
