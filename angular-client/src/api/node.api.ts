@@ -5,5 +5,5 @@ import { urls } from './urls';
  * @returns A promise containing the response from the server
  */
 export const getAllNodes = (): Promise<Response> => {
-  return fetch(urls.getAllNodes);
+  return fetch(urls.getAllNodes());
 };

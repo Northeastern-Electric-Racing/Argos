@@ -1,0 +1,10 @@
+<header>
+  <div header-left class="header-left">
+    <a routerLink="/">
+      <typography variant="large-header" content="ARGOS" />
+    </a>
+  </div>
+  <div header-right>
+    <typography variant="large-header" [content]="realTime ? 'Real Time' : 'Run #' + runId" />
+  </div>
+</header>

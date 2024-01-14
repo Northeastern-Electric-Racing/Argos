@@ -1,0 +1,66 @@
+/* Style for select run and close dialog buttons */
+.select-button-container {
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.run-select-button {
+  border-radius: 10px;
+  color: #262626;
+  background-color: white;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.close-button {
+  background-color: #262626;
+  color: white;
+  position: absolute;
+  top: 0;
+  right: 0;
+  scale: 75%;
+}
+
+/* Container that holds the carousel */
+.modal-container {
+  background-color: #262626;
+}
+
+:host ::ng-deep .p-carousel-prev,
+:host ::ng-deep .p-carousel-next {
+  background-color: #262626;
+  border-color: #262626;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.run-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid white;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+/* should eventually be replaced with Grid component */
+
+.row {
+  display: flex;
+  background-color: #262626;
+  color: #ffff;
+  width: 100%;
+}
+
+.left {
+  margin-left: 5px;
+  text-align: left;
+  margin-right: auto;
+}
+
+.right {
+  margin-left: auto;
+  margin-right: 5px;
+  text-align: right;
+}

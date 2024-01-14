@@ -44,7 +44,7 @@ export default class ProxyClient {
    * @param topics The topics to subscribe to
    */
   private subscribeToTopics = (topics: Topic[]) => {
-    this.connection.subscribe(topics.map((topic) => topic.toString()));
+    this.connection.subscribe(topics.map((topic) => topic.valueOf()));
   };
 
   /**
@@ -62,7 +62,7 @@ export default class ProxyClient {
   private handleOpen = (packet: IConnackPacket) => {
     console.log('Connected to Siren', packet.properties);
     this.createNewRun = true;
-    this.subscribeToTopics(Object.values(Topic));
+    this.subscribeToTopics([Topic.ALL]);
   };
 
   /**

@@ -1,0 +1,30 @@
+.container {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-start;
+  width: fit-content;
+}
+
+.subcontainer {
+  display: flex;
+  flex-flow: row;
+  width: fit-content;
+  justify-content: flex-start;
+}
+
+.popup-tab {
+  height: fit-content;
+  bottom: 0px;
+  background-color: #1b1b1b;
+  position: fixed;
+  padding: 8px;
+  overflow: scroll;
+  max-width: 95%;
+  border-top-right-radius: 8px;
+  margin: 0px 0px 0px 8px;
+}
+
+:host ::ng-deep sidebar-card .card {
+  height: 50px;
+  width: 100px;
+}
