@@ -56,9 +56,12 @@ const serverSocket = new Server(server, {
   }
 });
 
+const proxyServers: ProxyServer[] = [];
+
 serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyServer(socket);
   serverProxy.configure();
+  proxyServers.push(serverProxy);
 });
 
 if (process.env.PROD === 'true') {
@@ -75,6 +78,6 @@ if (process.env.PROD === 'true') {
     reconnectPeriod: 1000
   });
 
-  const proxyClient = new ProxyClient(connection);
+  const proxyClient = new ProxyClient(connection, proxyServers);
   proxyClient.configure();
 }

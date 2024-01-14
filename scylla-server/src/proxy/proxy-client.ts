@@ -1,7 +1,6 @@
 // Ignoring this because it wont build on github for some reason
 // @ts-ignore
-import { ErrorWithReasonCode, IConnackPacket, MqttClient } from 'mqtt/*';
-import { ServerMessage } from '../odyssey-base/src/types/message.types';
+import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
 import { Topic } from '../odyssey-base/src/types/topic';
 import { Run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
@@ -12,7 +11,8 @@ import LocationService from '../odyssey-base/src/services/locations.services';
 import DriverService from '../odyssey-base/src/services/driver.services';
 import SystemService from '../odyssey-base/src/services/systems.services';
 import ProxyServer from './proxy-server';
-import { ClientMessage, ClientData } from '../utils/message.utils';
+import { ClientData } from '../utils/message.utils';
+import { ServerData, ServerMessage } from '../odyssey-base/src/types/message.types';
 /**
  * Handler for receiving messages from Siren
  */
@@ -23,20 +23,26 @@ export default class ProxyClient {
   // storing run for the current connection, at start is undefined
   currentRun: Run | undefined;
 
-  proxyServer: ProxyServer;
+  proxyServers: ProxyServer[];
+
+  recentLatitude: number | undefined;
+  recentLongitude: number | undefined;
+  recentRadius: number | undefined;
+  recentLocationName: string | undefined;
+  newLocation: boolean = true;
 
   /**
    * Constructor
    * @param socket The socket to send and receive messages from
    */
-  constructor(mqttClient: MqttClient, proxyServer: ProxyServer) {
+  constructor(mqttClient: MqttClient, proxyServers: ProxyServer[]) {
     this.connection = mqttClient;
     // only true first time after connected and data received
     this.createNewRun = false;
     // haven't connected yet so no run yet
     this.currentRun = undefined;
 
-    this.proxyServer = proxyServer;
+    this.proxyServers = proxyServers;
   }
 
   /**
@@ -72,12 +78,28 @@ export default class ProxyClient {
    * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = (topic: string, payload: Buffer) => {
-    // am i supposed to do something with topic
-    console.log('Received Message: ', payload);
+  private handleMessage = (topic: string, payload: Buffer, packet: IPublishPacket) => {
     try {
-      const data = JSON.parse(payload.toString()) as ServerMessage;
-      this.handleData(data);
+      const data = JSON.parse(payload.toString()) as ServerData;
+      /* Infer node name from topics first segment */
+      const [node] = topic.split('/');
+      /* Infer data type name from topic after node */
+      const dataType = topic.split('/').slice(1).join('-');
+
+      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['unix_time'] : undefined;
+
+      if (!unix_time) {
+        throw new Error('No unix_time property in packet');
+      }
+
+      const serverMessage: ServerMessage = {
+        node,
+        dataType,
+        unix_time: parseInt(unix_time as string),
+        data
+      };
+
+      this.handleData(serverMessage);
     } catch (error) {
       if (error instanceof Error) {
         console.log('Error Decoding Message: ', error.message);
@@ -94,10 +116,11 @@ export default class ProxyClient {
   private handleData = async (data: ServerMessage) => {
     // if first time data recieved since connecting to car
     // then create new run
+
     if (this.createNewRun) {
       this.currentRun = await RunService.createRun(data.unix_time);
+      this.createNewRun = false;
     }
-    this.createNewRun = false;
     // upsert the node
     const node = await NodeService.upsertNode(data.node);
     // start upserting data
@@ -106,12 +129,8 @@ export default class ProxyClient {
       return;
     }
     // initializing params
-    let latitude = undefined;
-    let longitude = undefined;
-    let radius = undefined;
-    let locationName = undefined;
-    let driverName = undefined;
-    let systemName = undefined;
+    let driverName: string | undefined = undefined;
+    let systemName: string | undefined = undefined;
 
     // enum instead of raw string representing
     // driver, system, location props
@@ -125,57 +144,70 @@ export default class ProxyClient {
     }
 
     // iterating and upserting
-    const clientData: ClientData[] = [];
-    for (const serverdata of data.data) {
-      switch (serverdata.name) {
-        case Property.driverUser:
-          driverName = serverdata.value as string;
-          break;
-        case Property.systemName:
-          systemName = serverdata.value as string;
-          break;
-        case Property.locationName:
-          locationName = serverdata.value as string;
-          break;
-        case Property.latitude:
-          latitude = serverdata.value as number;
-          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
-          break;
-        case Property.longitude:
-          longitude = serverdata.value as number;
-          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
-          break;
-        case Property.radius:
-          radius = serverdata.value as number;
-          break;
-        default:
-          await DataTypeService.upsertDataType(serverdata.name, serverdata.units, node.name);
-          await DataService.addData(serverdata, data.unix_time, serverdata.value as number, this.currentRun.id);
-      }
-
-      // transform serverdata into client data to send to ProxyServer
-      const clientdata: ClientData = {
-        name: serverdata.name,
-        value: serverdata.value,
-        units: serverdata.units,
-        timestamp: data.unix_time
-      };
-      clientData.push(clientdata);
+    const serverdata = data.data;
+    switch (data.dataType) {
+      case Property.driverUser:
+        driverName = serverdata.value as string;
+        break;
+      case Property.systemName:
+        systemName = serverdata.value as string;
+        break;
+      case Property.locationName:
+        if (this.recentLocationName) {
+          if (this.recentLocationName !== serverdata.value) {
+            this.newLocation = true;
+          }
+        } else {
+          this.recentLocationName = serverdata.value as string;
+          this.newLocation = true;
+        }
+        break;
+      case Property.latitude:
+        this.recentLatitude = serverdata.value as number;
+        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
+        break;
+      case Property.longitude:
+        this.recentLongitude = serverdata.value as number;
+        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
+        break;
+      case Property.radius:
+        this.recentRadius = serverdata.value as number;
+        break;
+      default:
+        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
+        await DataService.addData(serverdata, data.unix_time, data.dataType, this.currentRun.id);
     }
+
+    // transform serverdata into client data to send to ProxyServer
+    const clientData: ClientData = {
+      name: data.dataType,
+      value: serverdata.value,
+      units: serverdata.unit,
+      timestamp: data.unix_time
+    };
 
     if (systemName) {
-      SystemService.upsertSystem(systemName, this.currentRun.id);
+      await SystemService.upsertSystem(systemName, this.currentRun.id);
     }
     if (driverName) {
-      DriverService.upsertDriver(driverName, this.currentRun.id);
+      await DriverService.upsertDriver(driverName, this.currentRun.id);
     }
-    if (latitude && longitude && radius && locationName) {
-      LocationService.upsertLocation(locationName, latitude, longitude, radius, this.currentRun.id);
+
+    if (this.newLocation && this.recentLatitude && this.recentLongitude && this.recentRadius && this.recentLocationName) {
+      await LocationService.upsertLocation(
+        this.recentLocationName,
+        this.recentLatitude,
+        this.recentLongitude,
+        this.recentRadius,
+        this.currentRun.id
+      );
+      this.recentLatitude = undefined;
+      this.recentLongitude = undefined;
+      this.recentRadius = undefined;
+      this.newLocation = false;
     }
-    const clientMessage: ClientMessage = {
-      data: clientData
-    };
-    this.proxyServer.sendMessage(clientMessage);
+
+    this.proxyServers.forEach((server) => server.sendMessage(clientData));
   };
 
   /**
