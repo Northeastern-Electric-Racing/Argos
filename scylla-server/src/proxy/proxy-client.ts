@@ -180,9 +180,10 @@ export default class ProxyClient {
 
     // transform serverdata into client data to send to ProxyServer
     const clientData: ClientData = {
+      runId: this.currentRun.id,
       name: data.dataType,
       value: serverdata.value,
-      units: serverdata.unit,
+      unit: serverdata.unit,
       timestamp: data.unix_time
     };
 

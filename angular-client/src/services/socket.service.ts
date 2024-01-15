@@ -24,6 +24,7 @@ export default class SocketService {
     this.socket.on('message', (message: string) => {
       try {
         const data = JSON.parse(message) as ServerData;
+        storage.setCurrentRunId(data.runId);
         const key = JSON.stringify({
           name: data.name,
           unit: data.unit

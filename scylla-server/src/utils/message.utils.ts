@@ -9,8 +9,9 @@ export type ClientMessage = {
  * The format of the data sent to the client
  */
 export type ClientData = {
+  runId: number;
   name: string;
+  unit: string;
   value: number | string;
-  units: string;
   timestamp: number;
 };
