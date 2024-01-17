@@ -16,13 +16,13 @@
 		1551646B2B3127420082044C /* DataType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646A2B3127420082044C /* DataType.swift */; };
 		1551646E2B312B820082044C /* ErrorHandlerAlertViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */; };
 		155164702B312BA30082044C /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646F2B312BA30082044C /* ErrorHandling.swift */; };
-		1595397B2B57457F0093EBD0 /* LoadingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539782B57457F0093EBD0 /* LoadingState.swift */; };
-		1595397C2B57457F0093EBD0 /* LoadableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539792B57457F0093EBD0 /* LoadableObject.swift */; };
-		1595397D2B57457F0093EBD0 /* AsyncContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1595397A2B57457F0093EBD0 /* AsyncContentView.swift */; };
 		159539802B5745A40093EBD0 /* LandingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1595397F2B5745A40093EBD0 /* LandingViewModel.swift */; };
 		159539822B57488A0093EBD0 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539812B57488A0093EBD0 /* APIError.swift */; };
 		159539842B5752CA0093EBD0 /* DataTypeName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539832B5752CA0093EBD0 /* DataTypeName.swift */; };
 		159539872B5853550093EBD0 /* GraphContainerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539862B5853550093EBD0 /* GraphContainerModel.swift */; };
+		1595398C2B58663D0093EBD0 /* LoadingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539892B58663D0093EBD0 /* LoadingState.swift */; };
+		1595398D2B58663D0093EBD0 /* LoadableObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1595398A2B58663D0093EBD0 /* LoadableObject.swift */; };
+		1595398E2B58663D0093EBD0 /* AsyncContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1595398B2B58663D0093EBD0 /* AsyncContentView.swift */; };
 		15AE8F7D2B33665900479691 /* ArgosButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F7C2B33665900479691 /* ArgosButton.swift */; };
 		15AE8F7F2B33692B00479691 /* BatteryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F7E2B33692B00479691 /* BatteryView.swift */; };
 		15AE8F812B3369A300479691 /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15AE8F802B3369A300479691 /* Direction.swift */; };
@@ -71,13 +71,13 @@
 		1551646A2B3127420082044C /* DataType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataType.swift; sourceTree = "<group>"; };
 		1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlerAlertViewModifier.swift; sourceTree = "<group>"; };
 		1551646F2B312BA30082044C /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
-		159539782B57457F0093EBD0 /* LoadingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingState.swift; sourceTree = "<group>"; };
-		159539792B57457F0093EBD0 /* LoadableObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadableObject.swift; sourceTree = "<group>"; };
-		1595397A2B57457F0093EBD0 /* AsyncContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncContentView.swift; sourceTree = "<group>"; };
 		1595397F2B5745A40093EBD0 /* LandingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingViewModel.swift; sourceTree = "<group>"; };
 		159539812B57488A0093EBD0 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		159539832B5752CA0093EBD0 /* DataTypeName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypeName.swift; sourceTree = "<group>"; };
 		159539862B5853550093EBD0 /* GraphContainerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphContainerModel.swift; sourceTree = "<group>"; };
+		159539892B58663D0093EBD0 /* LoadingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingState.swift; sourceTree = "<group>"; };
+		1595398A2B58663D0093EBD0 /* LoadableObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadableObject.swift; sourceTree = "<group>"; };
+		1595398B2B58663D0093EBD0 /* AsyncContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncContentView.swift; sourceTree = "<group>"; };
 		15AE8F7C2B33665900479691 /* ArgosButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgosButton.swift; sourceTree = "<group>"; };
 		15AE8F7E2B33692B00479691 /* BatteryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryView.swift; sourceTree = "<group>"; };
 		15AE8F802B3369A300479691 /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
@@ -171,17 +171,6 @@
 			path = ErrorHandling;
 			sourceTree = "<group>";
 		};
-		159539772B57457F0093EBD0 /* AsyncContentLoader */ = {
-			isa = PBXGroup;
-			children = (
-				159539782B57457F0093EBD0 /* LoadingState.swift */,
-				159539792B57457F0093EBD0 /* LoadableObject.swift */,
-				1595397A2B57457F0093EBD0 /* AsyncContentView.swift */,
-			);
-			name = AsyncContentLoader;
-			path = ../../../../Snowport/Snowport/Components/AsyncContentLoader;
-			sourceTree = "<group>";
-		};
 		1595397E2B5745980093EBD0 /* LandingPage */ = {
 			isa = PBXGroup;
 			children = (
@@ -200,6 +189,16 @@
 			path = GraphContainer;
 			sourceTree = "<group>";
 		};
+		159539882B58663D0093EBD0 /* AsyncContentLoader */ = {
+			isa = PBXGroup;
+			children = (
+				159539892B58663D0093EBD0 /* LoadingState.swift */,
+				1595398A2B58663D0093EBD0 /* LoadableObject.swift */,
+				1595398B2B58663D0093EBD0 /* AsyncContentView.swift */,
+			);
+			path = AsyncContentLoader;
+			sourceTree = "<group>";
+		};
 		15AE8F7B2B3365EB00479691 /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -209,7 +208,7 @@
 				15AE8F7E2B33692B00479691 /* BatteryView.swift */,
 				15AE8F822B336D2700479691 /* ThermometerView.swift */,
 				15AE8FBB2B33C5E600479691 /* ChipView.swift */,
-				159539772B57457F0093EBD0 /* AsyncContentLoader */,
+				159539882B58663D0093EBD0 /* AsyncContentLoader */,
 				15AE8FBD2B33CE8600479691 /* HorizontalScrollPopUp */,
 				15AE8F9E2B33B9C800479691 /* Carousel */,
 				15AE8F952B33B1BD00479691 /* Dialog */,
@@ -434,7 +433,9 @@
 				15AE8FC92B33E36100479691 /* ScrollViewItem.swift in Sources */,
 				15AE8F862B3377F100479691 /* GraphContainerView.swift in Sources */,
 				15AE8FC72B33E28400479691 /* ExpandableView.swift in Sources */,
+				1595398C2B58663D0093EBD0 /* LoadingState.swift in Sources */,
 				15AE8FC32B33CF2500479691 /* ScrollCard.swift in Sources */,
+				1595398D2B58663D0093EBD0 /* LoadableObject.swift in Sources */,
 				15AE8F972B33B1D200479691 /* DialogPresentation.swift in Sources */,
 				155164642B311DB40082044C /* APIHandler.swift in Sources */,
 				15AE8FA02B33B9D600479691 /* CarouselContent.swift in Sources */,
@@ -442,16 +443,14 @@
 				15AE8F7D2B33665900479691 /* ArgosButton.swift in Sources */,
 				159539802B5745A40093EBD0 /* LandingViewModel.swift in Sources */,
 				15AE8F922B33ACF900479691 /* CarouselView.swift in Sources */,
-				1595397B2B57457F0093EBD0 /* LoadingState.swift in Sources */,
 				15AE8F8B2B338F7000479691 /* GraphView.swift in Sources */,
 				1551646E2B312B820082044C /* ErrorHandlerAlertViewModifier.swift in Sources */,
 				15AE8F992B33B27C00479691 /* CustomDialog.swift in Sources */,
 				1551646B2B3127420082044C /* DataType.swift in Sources */,
 				155164702B312BA30082044C /* ErrorHandling.swift in Sources */,
-				1595397C2B57457F0093EBD0 /* LoadableObject.swift in Sources */,
-				1595397D2B57457F0093EBD0 /* AsyncContentView.swift in Sources */,
 				159539842B5752CA0093EBD0 /* DataTypeName.swift in Sources */,
 				159539822B57488A0093EBD0 /* APIError.swift in Sources */,
+				1595398E2B58663D0093EBD0 /* AsyncContentView.swift in Sources */,
 				15AE8FA22B33BCB200479691 /* ArgosHeader.swift in Sources */,
 				15AE8F812B3369A300479691 /* Direction.swift in Sources */,
 				15AE8F892B3378A400479691 /* GraphCaption.swift in Sources */,
