@@ -30,6 +30,7 @@ class SocketClient: ObservableObject {
     
     public func connect() {
         self.socket.connect(timeoutAfter: 10, withHandler: {
+            self.isConnected = false
             print("Could Not connect to Server")
         })
     }
