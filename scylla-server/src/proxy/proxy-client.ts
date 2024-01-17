@@ -18,7 +18,6 @@ import { ServerData, ServerMessage } from '../odyssey-base/src/types/message.typ
  */
 export default class ProxyClient {
   connection: MqttClient;
-  // should a new run be created, based off if new connection & data received
   createNewRun: boolean;
   // storing run for the current connection, at start is undefined
   currentRun: Run | undefined;
@@ -35,14 +34,11 @@ export default class ProxyClient {
    * Constructor
    * @param socket The socket to send and receive messages from
    */
-  constructor(mqttClient: MqttClient, proxyServers: ProxyServer[]) {
+  constructor(mqttClient: MqttClient) {
     this.connection = mqttClient;
-    // only true first time after connected and data received
     this.createNewRun = false;
-    // haven't connected yet so no run yet
     this.currentRun = undefined;
-
-    this.proxyServers = proxyServers;
+    this.proxyServers = [];
   }
 
   /**
@@ -107,6 +103,7 @@ export default class ProxyClient {
       }
     }
   };
+
   /**
    * Handles receiving data from the car and:
    * 1. Logs the data
@@ -116,7 +113,6 @@ export default class ProxyClient {
   private handleData = async (data: ServerMessage) => {
     // if first time data recieved since connecting to car
     // then create new run
-
     if (this.createNewRun) {
       this.currentRun = await RunService.createRun(data.unix_time);
       this.createNewRun = false;
@@ -228,5 +224,9 @@ export default class ProxyClient {
     this.connection.on('connect', this.handleOpen);
     this.connection.on('error', this.handleError);
     this.connection.on('close', this.handleClose);
+  };
+
+  public addProxyServer = (proxyServer: ProxyServer) => {
+    this.proxyServers.push(proxyServer);
   };
 }

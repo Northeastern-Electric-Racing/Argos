@@ -56,13 +56,7 @@ const serverSocket = new Server(server, {
   }
 });
 
-const proxyServers: ProxyServer[] = [];
-
-serverSocket.on('connection', (socket: Socket) => {
-  const serverProxy = new ProxyServer(socket);
-  serverProxy.configure();
-  proxyServers.push(serverProxy);
-});
+let proxyClient: ProxyClient | undefined = undefined;
 
 if (process.env.PROD === 'true') {
   const host = process.env.PROD_SIREN_HOST_URL;
@@ -78,6 +72,14 @@ if (process.env.PROD === 'true') {
     reconnectPeriod: 1000
   });
 
-  const proxyClient = new ProxyClient(connection, proxyServers);
+  proxyClient = new ProxyClient(connection);
   proxyClient.configure();
 }
+
+serverSocket.on('connection', (socket: Socket) => {
+  const serverProxy = new ProxyServer(socket);
+  serverProxy.configure();
+  if (proxyClient) {
+    proxyClient.addProxyServer(serverProxy);
+  }
+});
