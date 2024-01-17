@@ -10,7 +10,7 @@ import Foundation
 /**
  * Format of a piece of data
  */
-struct Data : Codable {
+struct ArgosData : Codable {
     var id: Int
     var value: Float
     var dataTypeName: String

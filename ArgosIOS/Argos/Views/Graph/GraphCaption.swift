@@ -9,28 +9,28 @@ import SwiftUI
 
 struct GraphCaption : View {
     var dataType: Binding<DataType?>
-    var mostRecentvalue: Binding<Float>?
-    var driver: Binding<String>
-    var location: Binding<String>
-    var system: Binding<String>
+    var mostRecentvalue: Float?
+    var driver: String
+    var location: String
+    var system: String
 
     var body: some View {
         VStack {
             HStack{
                 ArgosHeader(self.dataType.wrappedValue?.name ?? "No Data Selected")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                ArgosLabel(self.driver.wrappedValue)
+                ArgosLabel(self.driver)
             }
             .frame(maxHeight: .infinity)
             
             HStack {
                 HStack {
-                    ArgosLabel(self.mostRecentvalue?.wrappedValue.description ?? "")
+                    ArgosLabel(self.mostRecentvalue?.description ?? "")
                     ArgosLabel(self.dataType.wrappedValue?.unit ?? "")
                 }
                 .frame(alignment: .leading)
 
-                ArgosLabel(self.system.wrappedValue)
+                ArgosLabel(self.system)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .frame(maxHeight: .infinity)
@@ -38,7 +38,7 @@ struct GraphCaption : View {
             HStack {
                 Color(.clear)
                     .gridCellUnsizedAxes(.horizontal).gridCellUnsizedAxes(.vertical)
-                ArgosLabel(self.location.wrappedValue)
+                ArgosLabel(self.location)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .frame(maxHeight: .infinity)
@@ -51,5 +51,5 @@ struct GraphCaption : View {
 }
 
 #Preview {
-    GraphCaption(dataType: .constant(DataType(name: "Pack Temp", unit: "C")), mostRecentvalue: .constant(25), driver: .constant("Fergus"), location: .constant("Gainsborough"), system: .constant("Drive Train"))
+    GraphCaption(dataType: .constant(DataType(name: "Pack Temp", unit: "C")), mostRecentvalue: (25), driver: ("Fergus"), location: ("Gainsborough"), system: ("Drive Train"))
 }

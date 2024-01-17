@@ -29,9 +29,6 @@ struct ExpandableView: View {
                 }
             }
         }
-        .onAppear {
-            print(isExpanded)
-        }
     }
 }
 
