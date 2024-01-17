@@ -8,7 +8,6 @@
 import Foundation
 import SocketIO
 
-
 /**
  * Wrapper class for the socket connection to the server
  */
@@ -20,7 +19,7 @@ class SocketClient: ObservableObject {
     @Published public private(set) var isConnected = false
     @Published public private(set) var runId: Int? = nil
     @Published public private(set) var values = [String: DataValue]()
-
+    
     private init(manager: SocketManager) {
         self.manager = manager
         self.socket = manager.defaultSocket
@@ -28,24 +27,23 @@ class SocketClient: ObservableObject {
         self.handleConnection()
         self.handleDisconnection()
     }
-
+    
     public func connect() {
         self.socket.connect(timeoutAfter: 10, withHandler: {
+            self.isConnected = false
             print("Could Not connect to Server")
         })
     }
-
+    
     private func receiveMessage() {
         self.socket.on("message", callback: {
             data, _ in
             do {
                 let decoder = JSONDecoder()
-//                let serverData: [ServerData] = try decoder.decode([ServerData].self, from: data[0] as! Data)
-//                serverData.forEach({
-//                    self.values.updateValue(DataValue(value: $0.value, time: $0.timestamp), forKey: $0.name)
-//                })
+                let serverData: ServerData = try decoder.decode(ServerData.self, from: data[0] as! Data)
+                self.values.updateValue(DataValue(value: serverData.value, time: serverData.timestamp), forKey: serverData.name)
             } catch {
-                print(error)
+                print("error")
             }
         })
     }
