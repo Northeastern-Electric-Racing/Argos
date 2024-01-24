@@ -43,3 +43,7 @@ This will build the docker images that will be run:
 This will run the two docker images and output all the outputs from both of them to the terminal:
 
 `docker compose up`
+
+##### Codegen Protobuf Types
+
+`npm run build:proto`

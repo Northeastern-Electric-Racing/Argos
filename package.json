@@ -10,7 +10,8 @@
     "start:production": "cd scylla-server && npm run start:production && cd ../angular-client && npm run start:production",
     "prisma:generate": "cd scylla-server && npm run prisma:generate",
     "prisma:migrate": "cd scylla-server && npm run prisma:migrate",
-    "prisma:migrate:prod": "cd scylla-server && npm run prisma:migrate:prod"
+    "prisma:migrate:prod": "cd scylla-server && npm run prisma:migrate:prod",
+    "build:proto": "cd scylla-server && npm run build:proto"
   },
   "author": "Northeastern Electric Racing",
   "license": "ISC",

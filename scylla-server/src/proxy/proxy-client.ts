@@ -47,9 +47,49 @@ export default class ProxyClient {
    * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = (topic: string, payload: Buffer) => {
-    //TODO: Handle the message
-    console.log('Received Message: ', topic, payload.toString());
+  private handleMessage = (topic: string, payload: Buffer, packet: IPublishPacket) => {
+    try {
+      const data = serverdata.v1.ServerData.deserializeBinary(payload).toObject();
+      /* Infer node name from topics first segment */
+      const [node] = topic.split('/');
+      /* Infer data type name from topic after node */
+      const dataType = topic.split('/').slice(1).join('-');
+
+      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['unix_time'] : undefined;
+
+      if (!unix_time) {
+        throw new Error('No unix_time property in packet');
+      }
+
+      let value: string;
+      let unit: string;
+
+      if (data.value && data.unit) {
+        ({ value } = data);
+        ({ unit } = data);
+      } else {
+        return;
+      }
+
+      if (data.unit && data.value) {
+        const serverMessage: ServerMessage = {
+          node,
+          dataType,
+          unix_time: parseInt(unix_time as string),
+          data: {
+            value,
+            unit
+          }
+        };
+
+        this.handleData(serverMessage);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log('Error Decoding Message: ', error.message);
+        this.handleError(error);
+      }
+    }
   };
 
   /**
