@@ -7,18 +7,15 @@ WORKDIR /usr/src/api
 COPY package.json . 
 COPY package-lock.json .
 
-RUN apt-get update && apt-get install -y protobuf-compiler
-
 RUN npm install
 
 COPY . .
+
 
 # Initialize for git submodules
 RUN git init
 RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey-Base.git ./src/odyssey-base && \
     git submodule update --init --recursive
-
-RUN npm run build:proto
 
 RUN npm run prisma:generate && \
     npm run prisma:migrate:prod
