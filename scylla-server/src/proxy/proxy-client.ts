@@ -12,7 +12,8 @@ import DriverService from '../odyssey-base/src/services/driver.services';
 import SystemService from '../odyssey-base/src/services/systems.services';
 import ProxyServer from './proxy-server';
 import { ClientData } from '../utils/message.utils';
-import { ServerData, ServerMessage } from '../odyssey-base/src/types/message.types';
+import { ServerMessage } from '../odyssey-base/src/types/message.types';
+import { serverdata } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
 /**
  * Handler for receiving messages from Siren
  */
@@ -76,7 +77,7 @@ export default class ProxyClient {
    */
   private handleMessage = (topic: string, payload: Buffer, packet: IPublishPacket) => {
     try {
-      const data = JSON.parse(payload.toString()) as ServerData;
+      const data = serverdata.v1.ServerData.deserializeBinary(payload).toObject();
       /* Infer node name from topics first segment */
       const [node] = topic.split('/');
       /* Infer data type name from topic after node */
@@ -88,14 +89,29 @@ export default class ProxyClient {
         throw new Error('No unix_time property in packet');
       }
 
-      const serverMessage: ServerMessage = {
-        node,
-        dataType,
-        unix_time: parseInt(unix_time as string),
-        data
-      };
+      let value: string;
+      let unit: string;
 
-      this.handleData(serverMessage);
+      if (data.value && data.unit) {
+        ({ value } = data);
+        ({ unit } = data);
+      } else {
+        return;
+      }
+
+      if (data.unit && data.value) {
+        const serverMessage: ServerMessage = {
+          node,
+          dataType,
+          unix_time: parseInt(unix_time as string),
+          data: {
+            value,
+            unit
+          }
+        };
+
+        this.handleData(serverMessage);
+      }
     } catch (error) {
       if (error instanceof Error) {
         console.log('Error Decoding Message: ', error.message);
