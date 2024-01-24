@@ -11,4 +11,8 @@ export default class Theme {
   static readonly SUBHEADER: string = this.textStyle + 'fontSize: 16px;';
   static readonly XXLARGEHEADER: string = this.boldedText + 'font-size: 7.5rem; padding-bottom: 60px;';
   static readonly LARGEHEADER: string = this.boldedText + 'font-size: xx-large;';
+  static readonly battteryLow: string = '#f50905';
+  static readonly battteryMed: string = '#FFEA00';
+  static readonly battteryHigh: string = '#1ae824';
+  static readonly batteryBack: string = '#efefed';
 }

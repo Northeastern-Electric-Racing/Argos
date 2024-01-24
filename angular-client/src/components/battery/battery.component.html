@@ -4,6 +4,7 @@
     [ngStyle]="{
       height: item.nubHeight,
       width: item.nubWidth,
+      'background-color': item.backColor,
       'border-top-left-radius': item.roundCorner,
       'border-top-right-radius': item.roundCorner
     }"
@@ -11,7 +12,7 @@
   <div
     class="battery-bar"
     [ngStyle]="{
-      'background-color': item.backColor,
+      'background-color': item.fillColor,
       height: item.height,
       width: item.width,
       'border-radius': item.roundCorner
@@ -20,7 +21,7 @@
     <ng-template [ngIf]="item.full == false">
       <div
         [ngStyle]="{
-          'background-color': item.fillColor,
+          'background-color': item.backColor,
           height: item.batHeight,
           width: item.width,
           'border-top-left-radius': item.roundCorner,
