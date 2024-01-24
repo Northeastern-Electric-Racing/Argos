@@ -55,7 +55,7 @@ import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sideba
     ButtonComponent,
     GraphInfo,
     Graph,
-    LandingButtons
+    LandingButtons    
   ],
   imports: [
     BrowserModule,
