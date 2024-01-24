@@ -10,6 +10,6 @@
   <graph-header />
   <sidebar [nodes]="nodes!" />
   <div style="position: absolute; left: 100px">
-    <battery [percentage]="80" />
+    <battery [props]="{ percentage: 70, height: 140, width: 70 }" />
   </div>
 </ng-template>

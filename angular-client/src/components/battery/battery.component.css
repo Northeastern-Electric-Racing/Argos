@@ -5,12 +5,5 @@
 }
 
 .battery-nub {
-  width: 14px;
-  height: 7px;
   background-color: #efefed;
-}
-
-.battery-bar {
-  width: 30px;
-  height: 70px;
 }

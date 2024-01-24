@@ -1,8 +1,32 @@
 <div class="battery">
-  <div class="battery-nub"></div>
-  <div class="battery-bar" [ngStyle]="{ 'background-color': item.backColor }">
+  <div
+    class="battery-nub"
+    [ngStyle]="{
+      height: item.nubHeight,
+      width: item.nubWidth,
+      'border-top-left-radius': item.roundCorner,
+      'border-top-right-radius': item.roundCorner
+    }"
+  ></div>
+  <div
+    class="battery-bar"
+    [ngStyle]="{
+      'background-color': item.backColor,
+      height: item.height,
+      width: item.width,
+      'border-radius': item.roundCorner
+    }"
+  >
     <ng-template [ngIf]="item.full == false">
-      <div [ngStyle]="{ 'background-color': item.fillColor, height: item.height, width: '30px' }"></div>
+      <div
+        [ngStyle]="{
+          'background-color': item.fillColor,
+          height: item.batHeight,
+          width: item.width,
+          'border-top-left-radius': item.roundCorner,
+          'border-top-right-radius': item.roundCorner
+        }"
+      ></div>
     </ng-template>
   </div>
 </div>
