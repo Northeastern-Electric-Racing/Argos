@@ -115,8 +115,8 @@ export default class GraphPage implements OnInit {
   }
 
   private parseParams() {
-    const realtTime = this.route.snapshot.paramMap.get('realTime');
-    if (realtTime) this.realTime = realtTime === 'true';
+    const realTime = this.route.snapshot.paramMap.get('realTime');
+    if (realTime) this.realTime = realTime === 'true';
     else {
       this.paramsError = new Error('No real time value provided');
       return;
