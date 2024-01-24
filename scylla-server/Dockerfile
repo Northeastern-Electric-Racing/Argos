@@ -8,7 +8,6 @@ COPY package.json .
 COPY package-lock.json .
 
 RUN npm install
-RUN npm i --save-dev @types/google-protobuf
 
 COPY . .
 
