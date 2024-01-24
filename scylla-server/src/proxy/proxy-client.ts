@@ -12,7 +12,8 @@ import DriverService from '../odyssey-base/src/services/driver.services';
 import SystemService from '../odyssey-base/src/services/systems.services';
 import ProxyServer from './proxy-server';
 import { ClientData } from '../utils/message.utils';
-import { ServerData, ServerMessage } from '../odyssey-base/src/types/message.types';
+import { ServerMessage } from '../odyssey-base/src/types/message.types';
+import { serverdata } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
 /**
  * Handler for receiving messages from Siren
  */
