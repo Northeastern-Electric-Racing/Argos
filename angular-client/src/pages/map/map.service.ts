@@ -6,17 +6,19 @@ import { environment } from 'src/environment/environment';
 providedIn: 'root'
 })
 export class MapService {
-map: mapboxgl.Map | undefined;
+  map: mapboxgl.Map | undefined;
 
-//constructor() { }
+  constructor() {
+    (mapboxgl as any).accessToken = environment.mapbox.accessToken
+ }
 
-buildMap() {
-  this.map = new mapboxgl.Map({
-    container: 'map',
-    zoom: 0,
-    center: [0, 0],
-    accessToken: environment.mapbox.accessToken
-  });
+  buildMap() {
+    this.map = new mapboxgl.Map({
+      container: 'map',
+      zoom: 0,
+      center: [0, 0],
+      accessToken: environment.mapbox.accessToken
+    });
   this.map.addControl(new mapboxgl.NavigationControl());
-}
+  }
 }
