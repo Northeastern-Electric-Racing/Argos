@@ -33,6 +33,7 @@ import Graph from 'src/pages/graph-page/graph/graph.component';
 import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-buttons.component';
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
+import Map from 'src/pages/map/map.component';
 
 @NgModule({
   declarations: [
@@ -55,7 +56,8 @@ import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sideba
     ButtonComponent,
     GraphInfo,
     Graph,
-    LandingButtons    
+    LandingButtons,
+    Map
   ],
   imports: [
     BrowserModule,
