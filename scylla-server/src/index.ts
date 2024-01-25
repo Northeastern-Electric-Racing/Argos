@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import ProxyServer from './proxy/proxy-server';
-import ProxyClient from './proxy/proxy-client';
+import ProxyClient from './proxy/proxy-client-prod';
 import cors from 'cors';
 import { connect } from 'mqtt';
 import locationRouter from './routes/location.routes';
