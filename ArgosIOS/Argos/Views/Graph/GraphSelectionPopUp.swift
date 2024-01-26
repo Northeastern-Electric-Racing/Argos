@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GraphSelectionPopUp : View {
-    @State private var nodes = [Node]()
+    var nodes = [Node]()
     @State private var isPresented: Bool = false
     @EnvironmentObject var errorHandling: ErrorHandling
     
@@ -38,23 +38,6 @@ struct GraphSelectionPopUp : View {
                     }))
                 }))
             }
-        }
-        
-        .onAppear {
-            print("pop \(isPresented)")
-            APIHandler.shared.getAllNodes(completion: {
-                result in
-                do {
-                    let nodes = try result.get()
-                    DispatchQueue.main.async {
-                        self.nodes = nodes
-                    }
-                } catch {
-                    DispatchQueue.main.async {
-                        self.errorHandling.handle(error: error)
-                    }
-                }
-            })
         }
     }
     

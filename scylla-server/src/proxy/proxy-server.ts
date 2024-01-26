@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { ClientMessage } from '../utils/message.utils';
+import { ClientData } from '../utils/message.utils';
 
 /**
  * Proxy for handling Inputting and Outputting Messages to a Client
@@ -25,7 +25,7 @@ export default class ProxyServer {
   /**
    * Sends data to the client
    */
-  public sendMessage = (message: ClientMessage) => {
+  public sendMessage = (message: ClientData) => {
     this.socket.emit('message', message);
   };
 

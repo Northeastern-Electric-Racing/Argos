@@ -17,9 +17,9 @@ export type DataValue = {
  * The format of a message sent from the server
  */
 export type ServerData = {
-  runId: string;
+  runId: number;
   name: string;
   unit: string;
-  value: number;
+  value: number | string;
   timestamp: number;
 };

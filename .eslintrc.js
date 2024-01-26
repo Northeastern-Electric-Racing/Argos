@@ -62,5 +62,6 @@ module.exports = {
     'public',
     'lib',
     'dist',
+    'generated'
   ],
 };
