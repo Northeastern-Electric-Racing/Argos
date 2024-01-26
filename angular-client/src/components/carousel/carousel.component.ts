@@ -15,6 +15,8 @@ export interface DialogData {
 })
 export class Carousel {
   runs: Run[];
+  currentIndex: number = 0;
+  previousIndex: number = 0;
 
   responsiveOptions: any[] | undefined;
 
@@ -26,8 +28,28 @@ export class Carousel {
     this.runs = data.runs;
   }
 
+  ngOnInit(): void {
+    this.currentIndex = 0;
+  }
+
+  updateIndex(nexIndex: number) {
+    this.currentIndex = nexIndex;
+  }
+
   onNoClick(): void {
     this.dialogRef.close();
+  }
+
+  handlePageChange(event: any): void {
+    // Assuming event.page gives the new index
+    const newIndex = event.page;
+
+    if (newIndex > this.previousIndex) {
+      this.currentIndex = Math.min(this.currentIndex + 1, this.runs.length - 1);
+    } else if (newIndex < this.previousIndex) {
+      this.currentIndex = Math.max(this.currentIndex - 1, 0);
+    }
+    this.previousIndex = newIndex;
   }
 
   datePipe = (time: string) => {
@@ -35,7 +57,7 @@ export class Carousel {
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}`;
   };
 
-  selectRun = (run: Run) => {
+  selectRun = (run: Run, index: number) => {
     this.router.navigate([`graph/false/${run.id}`]);
     this.dialogRef.close();
   };
