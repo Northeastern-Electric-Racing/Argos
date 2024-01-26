@@ -6,6 +6,8 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
   selector: 'battery',
   templateUrl: 'battery.component.html',
   styleUrls: ['battery.component.css'],
+  // this is just a dumb animationt that changes the color of the nub, would like to make something actually
+  // cool or interesting in the future
   animations: [
     // metadata array
     trigger('toggleClick', [
@@ -14,13 +16,13 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
         'true',
         style({
           // final CSS following animation
-          backgroundColor: 'yellow'
+          backgroundColor: 'grey'
         })
       ),
       state(
         'false',
         style({
-          backgroundColor: 'purple'
+          backgroundColor: Theme.batteryBack
         })
       ),
       transition('true => false', animate('1000ms linear')), // animation timing

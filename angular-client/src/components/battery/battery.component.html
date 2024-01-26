@@ -1,6 +1,17 @@
 <div class="battery">
   >
-  <div class="battery-nub" (click)="toggleIsCorrect()" [@toggleClick]="clicked"></div>
+  <div
+    class="battery-nub"
+    (click)="toggleIsCorrect()"
+    [@toggleClick]="clicked"
+    [ngStyle]="{
+      height: nubHeight,
+      width: nubWidth,
+      'background-color': backColor,
+      'border-top-left-radius': roundCorner,
+      'border-top-right-radius': roundCorner
+    }"
+  ></div>
   <div
     class="battery-bar"
     [ngStyle]="{

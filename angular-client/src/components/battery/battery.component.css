@@ -2,12 +2,5 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.battery-nub {
-  height: nubHeight;
-  width: nubWidth;
-  background-color: backColor;
-  border-top-left-radius: roundCorner;
-  border-top-right-radius: roundCorner;
+  position: absolute;
 }
