@@ -3,14 +3,12 @@ import * as mapboxgl from 'mapbox-gl';
 import { environment } from 'src/environment/environment';
 
 @Injectable({
-providedIn: 'root'
+  providedIn: 'root'
 })
-export class MapService {
-  map: mapboxgl.Map | undefined;
 
-  constructor() {
-    (mapboxgl as any).accessToken = environment.mapbox.accessToken
- }
+export class MapService {
+  map!: mapboxgl.Map;
+
 
   buildMap() {
     this.map = new mapboxgl.Map({
