@@ -1,7 +1,4 @@
 {
-  "extends": [
-    "development"
-  ],
   "hints": {
     "compat-api/css": [
       "default",
