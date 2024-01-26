@@ -23,7 +23,7 @@ export default class ProxyClient {
    * @param topics The topics to subscribe to
    */
   private subscribeToTopics = (topics: Topic[]) => {
-    this.connection.subscribe(topics.map((topic) => topic.toString()));
+    this.connection.subscribe(topics.map((topic) => topic.valueOf()));
   };
 
   /**
@@ -39,7 +39,7 @@ export default class ProxyClient {
    */
   private handleOpen = (packet: IConnackPacket) => {
     console.log('Connected to Siren', packet.properties);
-    this.subscribeToTopics(Object.values(Topic));
+    this.subscribeToTopics([Topic.ALL]);
   };
 
   /**
@@ -47,7 +47,10 @@ export default class ProxyClient {
    * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = (topic: string, payload: Buffer) => {};
+  private handleMessage = (topic: string, payload: Buffer) => {
+    //TODO: Handle the message
+    console.log('Received Message: ', topic, payload.toString());
+  };
 
   /**
    * Handles receiving data from the car and:

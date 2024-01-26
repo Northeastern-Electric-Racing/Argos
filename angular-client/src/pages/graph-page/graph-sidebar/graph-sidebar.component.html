@@ -1,0 +1,6 @@
+<div *ngIf="isMobile; else desktopView">
+  <graph-sidebar-mobile [nodes]="nodes" [selectDataType]="selectDataType" />
+</div>
+<ng-template #desktopView>
+  <graph-sidebar-desktop [nodes]="nodes" [selectDataType]="selectDataType" />
+</ng-template>

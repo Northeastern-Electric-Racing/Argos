@@ -1,0 +1,25 @@
+<div class="popup-tab" (click)="toggleSidebar()">
+  <typography
+    additionalStyles="margin: 0; margin-bottom: 5px; cursor: pointer;"
+    variant="subheader"
+    content="Select Data Type"
+  />
+  <div *ngIf="showSelection" class="container" @toggleSidebar>
+    <div *ngFor="let node of nodesWithVisibilityToggle" class="subcontainer">
+      <sidebar-card
+        [title]="node.name"
+        onclick="event.stopPropagation()"
+        (click)="toggleDataTypeVisibility(node)"
+        [dropDown]="true"
+      />
+      <div *ngIf="node.dataTypesAreVisible" class="subcontainer" @toggleCardExpand>
+        <sidebar-card
+          *ngFor="let dataType of node.dataTypes"
+          [title]="dataType.name"
+          [subtitle]="dataType.unit"
+          (click)="selectDataType(dataType)"
+        />
+      </div>
+    </div>
+  </div>
+</div>

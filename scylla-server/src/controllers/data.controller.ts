@@ -7,7 +7,8 @@ import DataService from '../odyssey-base/src/services/data.services';
 export default class DataController {
   static async getDataByDataTypeName(req: Request, res: Response, next: NextFunction) {
     try {
-      const dataByDataTypeName = await DataService.getDataByDataTypeName(req.body.dataTypeName);
+      const { dataTypeName } = req.params;
+      const dataByDataTypeName = await DataService.getDataByDataTypeName(dataTypeName);
       res.status(200).json(dataByDataTypeName);
     } catch (error: unknown) {
       next(error);
