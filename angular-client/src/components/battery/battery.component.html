@@ -1,31 +1,23 @@
 <div class="battery">
-  <div
-    class="battery-nub"
-    [ngStyle]="{
-      height: item.nubHeight,
-      width: item.nubWidth,
-      'background-color': item.backColor,
-      'border-top-left-radius': item.roundCorner,
-      'border-top-right-radius': item.roundCorner
-    }"
-  ></div>
+  >
+  <div class="battery-nub" (click)="toggleIsCorrect()" [@toggleClick]="clicked"></div>
   <div
     class="battery-bar"
     [ngStyle]="{
-      'background-color': item.fillColor,
-      height: item.height,
-      width: item.width,
-      'border-radius': item.roundCorner
+      'background-color': fillColor,
+      height: heightpx,
+      width: widthpx,
+      'border-radius': roundCorner
     }"
   >
-    <ng-template [ngIf]="item.full == false">
+    <ng-template [ngIf]="full == false">
       <div
         [ngStyle]="{
-          'background-color': item.backColor,
-          height: item.batHeight,
-          width: item.width,
-          'border-top-left-radius': item.roundCorner,
-          'border-top-right-radius': item.roundCorner
+          'background-color': backColor,
+          height: batHeight,
+          width: widthpx,
+          'border-top-left-radius': roundCorner,
+          'border-top-right-radius': roundCorner
         }"
       ></div>
     </ng-template>
