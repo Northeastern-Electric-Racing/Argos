@@ -5,10 +5,8 @@ import { environment } from 'src/environment/environment';
 @Injectable({
   providedIn: 'root'
 })
-
 export class MapService {
   map!: mapboxgl.Map;
-
 
   buildMap() {
     this.map = new mapboxgl.Map({
@@ -17,6 +15,6 @@ export class MapService {
       center: [0, 0],
       accessToken: environment.mapbox.accessToken
     });
-  this.map.addControl(new mapboxgl.NavigationControl());
+    this.map.addControl(new mapboxgl.NavigationControl());
   }
 }
