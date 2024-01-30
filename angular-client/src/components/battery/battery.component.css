@@ -1,0 +1,13 @@
+.battery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.battery-bar {
+  transform: rotate(180deg);
+  /* Center a div */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

@@ -23,6 +23,7 @@ import ErrorPage from 'src/components/error-page/error-page.component';
 import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
+import { BatteryPercentageComponent } from 'src/components/battery/battery.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
 import { History } from 'src/components/history-button/history.component';
 import { Carousel } from 'src/components/carousel/carousel.component';
@@ -50,6 +51,7 @@ import Map from 'src/pages/map/map.component';
     Header,
     LandingHeader,
     GraphHeader,
+    BatteryPercentageComponent,
     MoreDetails,
     History,
     Carousel,

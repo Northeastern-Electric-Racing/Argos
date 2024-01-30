@@ -1,0 +1,34 @@
+<div class="battery">
+  <div
+    (click)="toggleIsCorrect()"
+    [@toggleClick]="clicked"
+    [style]="{
+      height: nubHeight,
+      width: nubWidth,
+      'background-color': backgroundColor,
+      'border-top-left-radius': roundCorner,
+      'border-top-right-radius': roundCorner
+    }"
+  ></div>
+  <div
+    class="battery-bar"
+    [style]="{
+      'background-color': backgroundColor,
+      height: heightpx,
+      width: widthpx,
+      'border-top-left-radius': roundCorner,
+      'border-top-right-radius': roundCorner,
+      'border-bottom-left-radius': roundCorner,
+      'border-bottom-right-radius': roundCorner
+    }"
+  >
+    <div
+      [style]="{
+        'background-color': fillColor,
+        height: fillHeight,
+        width: fillWidth,
+        'margin-top': fillMarginBottom
+      }"
+    ></div>
+  </div>
+</div>
