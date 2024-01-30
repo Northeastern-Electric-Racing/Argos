@@ -6,7 +6,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
   selector: 'battery',
   templateUrl: 'battery.component.html',
   styleUrls: ['battery.component.css'],
-  // TO DO: this is just a dumb animation that changes the color of the nub, would like to make something actually
+  // TODO: this is just a dumb animation that changes the color of the nub, would like to make something actually
   // cool or interesting in the future
   animations: [
     // metadata array
@@ -34,16 +34,25 @@ export class BatteryPercentageComponent {
   @Input() percentage!: number;
   @Input() height!: number;
   @Input() width!: number;
+
+  // Background Styles
   heightpx!: string;
   widthpx!: string;
-  color: string = '';
-  clicked: boolean = false;
+  backgroundColor: string = Theme.batteryBack;
+
+  // Fill Styles
   full!: boolean;
   fillColor!: string;
-  backColor: string = Theme.batteryBack;
-  batHeight!: string;
+  fillWidth!: string;
+  fillHeight!: string;
+  fillMarginBottom!: string;
+
+  // Nub Styles
+  clicked: boolean = false;
   nubHeight!: string;
   nubWidth!: string;
+
+  // Corner Styles
   roundCorner!: string;
   adjustedTopCorner!: string;
   adjustedBotCorner!: string;
@@ -56,30 +65,36 @@ export class BatteryPercentageComponent {
       this.full = false;
     }
     if (this.percentage <= 20) {
-      this.color = Theme.battteryLow;
+      this.fillColor = Theme.battteryLow;
     } else if (this.percentage <= 50) {
-      this.color = Theme.battteryMed;
+      this.fillColor = Theme.battteryMed;
     } else {
-      this.color = Theme.battteryHigh;
+      this.fillColor = Theme.battteryHigh;
     }
     this.renderBattery();
   }
 
   // fills battery bar based on current percentage
   renderBattery() {
-    this.batHeight = (this.percentage / 100) * this.height + 'px';
-    this.nubHeight = this.height / 10 + 'px';
-    this.nubWidth = this.width / 2 + 'px';
     const minDim = Math.min(this.width, this.height);
-    this.roundCorner = minDim * 0.05 + 'px';
-    this.fillColor = this.color;
     this.heightpx = this.height + 'px';
     this.widthpx = this.width + 'px';
+    
+    this.fillHeight = (this.percentage / 100) * (this.height * 0.9) + 'px';
+    this.fillWidth = this.width * 0.9 + 'px';
+    this.fillMarginBottom = this.height * 0.05 + 'px';
+
+    this.nubHeight = this.height / 10 + 'px';
+    this.nubWidth = this.width / 2 + 'px';
+
+    this.roundCorner = minDim * 0.05 + 'px';
     this.adjustedTopCorner = '0px';
     this.adjustedBotCorner = this.roundCorner;
+  
     if (this.percentage >= 95) {
       this.adjustedTopCorner = this.roundCorner;
     }
+
     if (this.percentage <= 5 && this.percentage > 0) {
       this.adjustedBotCorner = (this.height * this.percentage) / 100 + 'px';
     }

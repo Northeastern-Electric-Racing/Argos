@@ -1,21 +1,19 @@
 <div class="battery">
-  >
   <div
-    class="battery-nub"
     (click)="toggleIsCorrect()"
     [@toggleClick]="clicked"
-    [ngStyle]="{
+    [style]="{
       height: nubHeight,
       width: nubWidth,
-      'background-color': backColor,
+      'background-color': backgroundColor,
       'border-top-left-radius': roundCorner,
       'border-top-right-radius': roundCorner
     }"
   ></div>
   <div
     class="battery-bar"
-    [ngStyle]="{
-      'background-color': backColor,
+    [style]="{
+      'background-color': backgroundColor,
       height: heightpx,
       width: widthpx,
       'border-top-left-radius': adjustedBotCorner,
@@ -25,15 +23,11 @@
     }"
   >
     <div
-      class="battery-bar"
-      [ngStyle]="{
+      [style]="{
         'background-color': fillColor,
-        height: batHeight,
-        width: widthpx,
-        'border-top-left-radius': adjustedTopCorner,
-        'border-top-right-radius': adjustedTopCorner,
-        'border-bottom-left-radius': roundCorner,
-        'border-bottom-right-radius': roundCorner
+        height: fillHeight,
+        width: fillWidth,
+        'margin-top': fillMarginBottom,
       }"
     ></div>
   </div>

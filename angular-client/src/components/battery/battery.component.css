@@ -2,10 +2,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: absolute;
-  padding-left: 15px;
 }
 
 .battery-bar {
   transform: rotate(180deg);
+  /* Center a div */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
