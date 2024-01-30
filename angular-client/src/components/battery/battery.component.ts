@@ -53,8 +53,6 @@ export class BatteryPercentageComponent {
 
   // Corner Styles
   roundCorner!: string;
-  adjustedTopCorner!: string;
-  adjustedBotCorner!: string;
 
   // setting color and rendering
   ngOnInit() {
@@ -82,16 +80,6 @@ export class BatteryPercentageComponent {
     this.nubWidth = this.width / 2 + 'px';
 
     this.roundCorner = minDim * 0.05 + 'px';
-    this.adjustedTopCorner = '0px';
-    this.adjustedBotCorner = this.roundCorner;
-
-    if (this.percentage >= 95) {
-      this.adjustedTopCorner = this.roundCorner;
-    }
-
-    if (this.percentage <= 5 && this.percentage > 0) {
-      this.adjustedBotCorner = (this.height * this.percentage) / 100 + 'px';
-    }
   }
 
   toggleIsCorrect() {
