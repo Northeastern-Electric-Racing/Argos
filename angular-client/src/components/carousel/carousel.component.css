@@ -1,4 +1,3 @@
-/* Style for select run and close dialog buttons */
 .select-button-container {
   width: 100%;
   text-align: center;
@@ -14,12 +13,15 @@
 }
 
 .close-button {
-  background-color: #262626;
+  background-color: #f04346;
   color: white;
   position: absolute;
   top: 0;
   right: 0;
   scale: 75%;
+  border-radius: 10px;
+  margin-top: 15px;
+  margin-right: 10px;
 }
 
 .run-card {
@@ -44,12 +46,15 @@
   margin-top: 15px;
   margin-bottom: 5px;
   margin-right: 10px;
-  left: 25%;
+  margin-left: 10px;
+  left: 22.5%;
 }
 
 /* Container that holds the carousel */
 .modal-container {
   background-color: #262626;
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 :host ::ng-deep .p-carousel-prev,
@@ -57,7 +62,15 @@
   background-color: #262626;
   border-color: #262626;
   color: white;
-  margin-bottom: 40px;
+  border-radius: 10px;
+}
+
+:host ::ng-deep .p-carousel-prev {
+  margin-left: 10px;
+}
+
+:host ::ng-deep .p-carousel-next {
+  margin-right: 10px;
 }
 
 

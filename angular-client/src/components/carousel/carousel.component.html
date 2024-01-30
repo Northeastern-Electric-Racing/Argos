@@ -1,12 +1,15 @@
 <div class="modal-container">
+  <button mat-dialog-close class="close-button">
+    <mat-icon>close</mat-icon>
+  </button>
   <p-carousel [value]="runs" 
               [numVisible]="1" 
-              [numScroll]="2" 
+              [numScroll]="1" 
               [circular]="true" 
               [showIndicators]="false"
               (onPage)="handlePageChange($event)">
     <ng-template pTemplate="header">
-      <typography additionalStyles="margin-left: 8px;" variant="header" content="" />
+      <typography additionalStyles="margin-left: 10px;" variant="header" content="Run History" />
     </ng-template>
     <ng-template let-run let-i="index" pTemplate="item">
       <div class="run-card">
@@ -27,6 +30,9 @@
             <typography variant="subheader" class="right" [content]="run.locationName" />
           </mat-grid-tile>
         </mat-grid-list>
+      </div>
+            <div class="select-button-container">
+        <button mat-button class="run-select-button" (click)="selectRun(run, 1)">Select this Run</button>
       </div>
     </ng-template>
   </p-carousel>

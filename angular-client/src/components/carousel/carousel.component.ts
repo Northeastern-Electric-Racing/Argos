@@ -28,9 +28,6 @@ export class Carousel {
     this.runs = data.runs;
   }
 
-  ngOnInit(): void {
-    this.currentIndex = 0;
-  }
 
   updateIndex(nexIndex: number) {
     this.currentIndex = nexIndex;
@@ -41,14 +38,16 @@ export class Carousel {
   }
 
   handlePageChange(event: any): void {
-    // Assuming event.page gives the new index
     const newIndex = event.page;
 
-    if (newIndex > this.previousIndex) {
-      this.currentIndex = Math.min(this.currentIndex + 1, this.runs.length - 1);
-    } else if (newIndex < this.previousIndex) {
-      this.currentIndex = Math.max(this.currentIndex - 1, 0);
+    if (newIndex === this.runs.length) {
+      this.currentIndex = 0;
+    } else if (newIndex === -1) {
+      this.currentIndex = this.runs.length - 1;
+    } else {
+      this.currentIndex = newIndex;
     }
+  
     this.previousIndex = newIndex;
   }
 
