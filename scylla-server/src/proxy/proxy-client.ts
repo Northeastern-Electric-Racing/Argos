@@ -13,7 +13,8 @@ import SystemService from '../odyssey-base/src/services/systems.services';
 import ProxyServer from './proxy-server';
 import { ClientData } from '../utils/message.utils';
 import { ServerMessage } from '../odyssey-base/src/types/message.types';
-import { serverdata } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
+import { serverdata as ServerData } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
+
 /**
  * Handler for receiving messages from Siren
  */
@@ -77,7 +78,7 @@ export default class ProxyClient {
    */
   private handleMessage = (topic: string, payload: Buffer, packet: IPublishPacket) => {
     try {
-      const data = serverdata.v1.ServerData.deserializeBinary(payload).toObject();
+      const data = ServerData.v1.ServerData.deserializeBinary(payload).toObject();
       /* Infer node name from topics first segment */
       const [node] = topic.split('/');
       /* Infer data type name from topic after node */
@@ -89,23 +90,24 @@ export default class ProxyClient {
         throw new Error('No unix_time property in packet');
       }
 
-      let value: string;
+      let values: string[];
       let unit: string;
 
-      if (data.value && data.unit) {
-        ({ value } = data);
+      if (data.values && data.unit) {
+        ({ values } = data);
         ({ unit } = data);
       } else {
         return;
       }
 
-      if (data.unit && data.value) {
+      if (data.unit && data.values) {
         const serverMessage: ServerMessage = {
           node,
           dataType,
           unix_time: parseInt(unix_time as string),
           data: {
-            value,
+            //TODO: Correct this to use the correct server data edit the ServerMessage value to be an array of strings
+            value: values[0],
             unit
           }
         };
@@ -146,6 +148,7 @@ export default class ProxyClient {
 
     // enum instead of raw string representing
     // driver, system, location props
+    //TODO: Move this to a new file
     enum Property {
       driverUser = 'driverUser',
       systemName = 'systemName',
@@ -187,7 +190,8 @@ export default class ProxyClient {
         break;
       default:
         await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
-        await DataService.addData(serverdata, data.unix_time, data.dataType, this.currentRun.id);
+        //TODO: Correct this to use the correct server data
+        await DataService.addData(new ServerData.v1.ServerData({}), data.unix_time, data.dataType, this.currentRun.id);
     }
 
     // transform serverdata into client data to send to ProxyServer
