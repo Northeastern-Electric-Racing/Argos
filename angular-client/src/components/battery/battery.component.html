@@ -15,22 +15,26 @@
   <div
     class="battery-bar"
     [ngStyle]="{
-      'background-color': fillColor,
+      'background-color': backColor,
       height: heightpx,
       width: widthpx,
-      'border-radius': roundCorner
+      'border-top-left-radius': adjustedBotCorner,
+      'border-top-right-radius': adjustedBotCorner,
+      'border-bottom-left-radius': roundCorner,
+      'border-bottom-right-radius': roundCorner
     }"
   >
-    <ng-template [ngIf]="full == false">
-      <div
-        [ngStyle]="{
-          'background-color': backColor,
-          height: batHeight,
-          width: widthpx,
-          'border-top-left-radius': roundCorner,
-          'border-top-right-radius': roundCorner
-        }"
-      ></div>
-    </ng-template>
+    <div
+      class="battery-bar"
+      [ngStyle]="{
+        'background-color': fillColor,
+        height: batHeight,
+        width: widthpx,
+        'border-top-left-radius': adjustedTopCorner,
+        'border-top-right-radius': adjustedTopCorner,
+        'border-bottom-left-radius': roundCorner,
+        'border-bottom-right-radius': roundCorner
+      }"
+    ></div>
   </div>
 </div>
