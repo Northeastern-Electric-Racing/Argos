@@ -41,7 +41,6 @@ export class BatteryPercentageComponent {
   backgroundColor: string = Theme.batteryBack;
 
   // Fill Styles
-  full!: boolean;
   fillColor!: string;
   fillWidth!: string;
   fillHeight!: string;
@@ -59,11 +58,6 @@ export class BatteryPercentageComponent {
 
   // setting color and rendering
   ngOnInit() {
-    if (this.percentage === 100) {
-      this.full = true;
-    } else {
-      this.full = false;
-    }
     if (this.percentage <= 20) {
       this.fillColor = Theme.battteryLow;
     } else if (this.percentage <= 50) {
@@ -79,7 +73,7 @@ export class BatteryPercentageComponent {
     const minDim = Math.min(this.width, this.height);
     this.heightpx = this.height + 'px';
     this.widthpx = this.width + 'px';
-    
+
     this.fillHeight = (this.percentage / 100) * (this.height * 0.9) + 'px';
     this.fillWidth = this.width * 0.9 + 'px';
     this.fillMarginBottom = this.height * 0.05 + 'px';
@@ -90,7 +84,7 @@ export class BatteryPercentageComponent {
     this.roundCorner = minDim * 0.05 + 'px';
     this.adjustedTopCorner = '0px';
     this.adjustedBotCorner = this.roundCorner;
-  
+
     if (this.percentage >= 95) {
       this.adjustedTopCorner = this.roundCorner;
     }
