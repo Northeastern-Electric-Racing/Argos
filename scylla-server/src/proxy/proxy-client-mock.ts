@@ -1,5 +1,5 @@
 import ProxyServer from './proxy-server';
-import { ClientData } from '../utils/message.utils';
+import { ClientData, ClientMessage } from '../utils/message.utils';
 import { Unit } from '../odyssey-base/src/types/unit';
 
 /**
@@ -7,18 +7,19 @@ import { Unit } from '../odyssey-base/src/types/unit';
  * we want to pass to frontend
  */
 
-type Parameter = {
+type MockData = {
     name: string,
     unit: string,
     min: number,
     max: number
 }
 
+//make dictionary for values for every parameter
 
 /**
  * base case for class constructor, somewhat arbitrary min/max values
  */
-const baseParameters = {
+export const baseParameters = {
     "pack_temp" : {
         "name" : "Pack Temp",
         "unit" : Unit.CELSIUS,
@@ -69,25 +70,26 @@ const baseParameters = {
 export default class ProxyClientMock {
     proxyServers: ProxyServer[];
     currentRunID: number;
+    mockData: {[DataType: string]: MockData};
+    prevValues: {[Name: string] : number};
+    dataTypes: string[];
 
-    //holds the possible data to be sent through socket(s)
-    mockParameters: {[DataType: string]: Parameter};
-
-    /**
-     * 
-     * @param runID the ID of the run, if specified
-     * @param servers the sockets through which the messages will be sent
-     * @param mockParameters information used to generate random messages
-     */
-
-    constructor(runID: number = 1, servers: ProxyServer[], mockParameters: {[DataType: string]: Parameter} = baseParameters){
+    
+    constructor(runID: number = 1, servers: ProxyServer[], mockData: {[dataType: string]: MockData} = baseParameters){
         this.proxyServers = servers;
         this.currentRunID = runID;
-        this.mockParameters = mockParameters;
-    
-    
+        this.mockData = mockData;
+        this.dataTypes = [];
+        this.prevValues = {};
         
-        
+
+        //initializes a list of the dataType names and a dictionary
+        //to store their previous values
+        for (let key in this.mockData) {
+            
+            this.dataTypes.push(key)
+            this.prevValues[key] = this.getRandomNum(this.mockData[key].min, this.mockData[key].max );
+        }
     }
 
     /**
@@ -108,34 +110,63 @@ export default class ProxyClientMock {
      */
     private getRandomIndex = (length: number) : number => {
         return Math.floor(Math.random() * length);
-
     }
 
     /**
      * perpetually sends random data through socket(s) to client
      */
-    private messageLoop = () : void => {
+    public messageLoop = () : void => {
+        
+        let dataType : string;
+        let delta : number;
+        let newVal : number;
+        let clientData : ClientData;
+        let clientMessage : ClientMessage;
 
-        let keys : string[] = []
-        let dataType : String;
-
-        //get keys in list then randomize
-        for (let key in this.mockParameters) {
-            keys.push(key)
-        }
         while (true) {
-            dataType = keys[this.getRandomIndex(keys.length)]
+            dataType = this.dataTypes[this.getRandomIndex(this.dataTypes.length)];
 
-            let clientData : ClientData = {
+            if (Math.random() > 0.5) {
+                delta = 1
+            } else {
+                delta = -1;
+            }
+
+            newVal = this.prevValues[dataType] + delta;
+
+            //makes sure new value for datatype is in range
+            if (newVal > this.mockData[dataType].max) {
+                newVal = this.mockData[dataType].max;
+            } else if(newVal < this.mockData[dataType].min) {
+                newVal = this.mockData[dataType].min;
+            } 
+
+            this.prevValues[dataType] = newVal;
+
+            clientData = {
                 runId: this.currentRunID,
-                name: this.mockParameters.dataType.name,
-                unit: this.mockParameters.dataType.unit,
-                value: this.getRandomNum(this.mockParameters.dataType.min, this.mockParameters.dataType.max),
+                name: this.mockData[dataType].name,
+                unit: this.mockData[dataType].unit,
+                value: newVal,
                 timestamp: Date.now()
             }
+
+            
+
+            console.log(clientData);
+            console.log(this.proxyServers)
             this.proxyServers.forEach((server) => server.sendMessage(clientData));
         }
     }
+
+    /**
+     * adds a proxy server to object
+     * @param proxyServer 
+     */
+
+    public addProxyServer = (proxyServer: ProxyServer) => {
+        this.proxyServers.push(proxyServer);
+    };
 
     
 }

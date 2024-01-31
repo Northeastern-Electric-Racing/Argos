@@ -2,6 +2,8 @@ import express, { NextFunction, Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import ProxyServer from './proxy/proxy-server';
 import ProxyClient from './proxy/proxy-client-prod';
+import ProxyClientMock from './proxy/proxy-client-mock';
+import { Unit } from './odyssey-base/src/types/unit';
 import cors from 'cors';
 import { connect } from 'mqtt';
 import locationRouter from './routes/location.routes';
@@ -76,10 +78,62 @@ if (process.env.PROD === 'true') {
   proxyClient.configure();
 }
 
+//ignore this, just using this for testing right now
+export const baseParameters = {
+  "pack_temp" : {
+      "name" : "Pack Temp",
+      "unit" : Unit.CELSIUS,
+      "min" : -20,
+      "max" : 54
+  },
+
+  "motor_temp" : {
+      "name" : "Motor Temp",
+      "unit" : Unit.CELSIUS,
+      "min" : -20,
+      "max" : 54
+  },
+
+  "pack_soc" : {
+      "name" : "Pack SOC",
+      "unit" : Unit.PERCENT,
+      "min" : 0,
+      "max" : 100
+  },
+
+  "accel_x" : {
+      "name" : "Accel X",
+      "unit" : Unit.G,
+      "min" : -6,
+      "max" : 6
+  },
+
+  "accel_y" : {
+      "name" : "Accel Y",
+      "unit" : Unit.G,
+      "min" : -6,
+      "max" : 6
+  },
+
+  "accel_z" : {
+      "name" : "Accel Z",
+      "unit" : Unit.G,
+      "min" : -6,
+      "max" : 6
+  },
+
+};
+
+
 serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyServer(socket);
+  
   serverProxy.configure();
-  if (proxyClient) {
+  if (process.env.PROD === 'false') {
+    const proxyClientMock = new ProxyClientMock(198798656, [serverProxy], baseParameters )
+    proxyClientMock.messageLoop();
+    
+  }else if (proxyClient) {
     proxyClient.addProxyServer(serverProxy);
   }
 });
