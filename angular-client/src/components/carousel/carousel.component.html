@@ -2,12 +2,14 @@
   <button mat-dialog-close class="close-button">
     <mat-icon>close</mat-icon>
   </button>
-  <p-carousel [value]="runs" 
-              [numVisible]="1" 
-              [numScroll]="1" 
-              [circular]="true" 
-              [showIndicators]="false"
-              (onPage)="handlePageChange($event)">
+  <p-carousel
+    [value]="runs"
+    [numVisible]="1"
+    [numScroll]="1"
+    [circular]="true"
+    [showIndicators]="false"
+    (onPage)="handlePageChange($event)"
+  >
     <ng-template pTemplate="header">
       <typography additionalStyles="margin-left: 10px;" variant="header" content="Run History" />
     </ng-template>
@@ -31,18 +33,21 @@
           </mat-grid-tile>
         </mat-grid-list>
       </div>
-            <div class="select-button-container">
+      <div class="select-button-container">
         <button mat-button class="run-select-button" (click)="selectRun(run, 1)">Select this Run</button>
       </div>
     </ng-template>
   </p-carousel>
-  
+
   <div class="select-number-run">
-    <button *ngFor="let run of runs; let idx = index" 
-            mat-button 
-            class="number_buttons" 
-            [ngClass]="{'highlight': currentIndex === idx}" 
-            (click)="selectRun(run, idx)">
+    <button
+      *ngFor="let run of runs; let idx = index"
+      mat-button
+      class="number_buttons"
+      [ngClass]="{ highlight: currentIndex === idx }"
+      (click)="selectRun(run, idx)"
+    >
       {{ idx + 1 }}
     </button>
   </div>
+</div>

@@ -28,7 +28,6 @@ export class Carousel {
     this.runs = data.runs;
   }
 
-
   updateIndex(nexIndex: number) {
     this.currentIndex = nexIndex;
   }
@@ -47,7 +46,7 @@ export class Carousel {
     } else {
       this.currentIndex = newIndex;
     }
-  
+
     this.previousIndex = newIndex;
   }
 
