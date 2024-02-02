@@ -60,6 +60,7 @@
 		C977D1A02B2FEE410016D932 /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C977D19F2B2FEE410016D932 /* LandingView.swift */; };
 		C977D1A22B2FEE420016D932 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A12B2FEE420016D932 /* Assets.xcassets */; };
 		C977D1A52B2FEE420016D932 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */; };
+		E13D03142B6C816000EF6436 /* MapboxMaps in Frameworks */ = {isa = PBXBuildFile; productRef = E13D03132B6C816000EF6436 /* MapboxMaps */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -124,6 +125,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E13D03142B6C816000EF6436 /* MapboxMaps in Frameworks */,
 				1551645F2B30C19F0082044C /* SocketIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -353,6 +355,7 @@
 			name = Argos;
 			packageProductDependencies = (
 				1551645E2B30C19F0082044C /* SocketIO */,
+				E13D03132B6C816000EF6436 /* MapboxMaps */,
 			);
 			productName = Argos;
 			productReference = C977D19A2B2FEE410016D932 /* Argos.app */;
@@ -384,6 +387,7 @@
 			mainGroup = C977D1912B2FEE410016D932;
 			packageReferences = (
 				1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */,
+				E13D03122B6C65AB00EF6436 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */,
 			);
 			productRefGroup = C977D19B2B2FEE410016D932 /* Products */;
 			projectDirPath = "";
@@ -678,6 +682,14 @@
 				kind = branch;
 			};
 		};
+		E13D03122B6C65AB00EF6436 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mapbox/mapbox-maps-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -685,6 +697,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */;
 			productName = SocketIO;
+		};
+		E13D03132B6C816000EF6436 /* MapboxMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E13D03122B6C65AB00EF6436 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */;
+			productName = MapboxMaps;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
