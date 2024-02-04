@@ -23,6 +23,7 @@ import ErrorPage from 'src/components/error-page/error-page.component';
 import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
+import { BatteryPercentageComponent } from 'src/components/battery/battery.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
 import { History } from 'src/components/history-button/history.component';
 import { Carousel } from 'src/components/carousel/carousel.component';
@@ -33,6 +34,7 @@ import Graph from 'src/pages/graph-page/graph/graph.component';
 import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-buttons.component';
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
+import Map from 'src/pages/map/map.component';
 
 @NgModule({
   declarations: [
@@ -49,13 +51,15 @@ import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sideba
     Header,
     LandingHeader,
     GraphHeader,
+    BatteryPercentageComponent,
     MoreDetails,
     History,
     Carousel,
     ButtonComponent,
     GraphInfo,
     Graph,
-    LandingButtons
+    LandingButtons,
+    Map
   ],
   imports: [
     BrowserModule,
