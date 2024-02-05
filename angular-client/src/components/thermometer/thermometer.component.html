@@ -1,0 +1,15 @@
+<div class="thermometer-container">
+  <div class="temperature-value">
+    <div>{{ currentValue }}°C</div>
+    <div>Park</div>
+  </div>
+  <div class="meter">
+    <span class="glass">
+      <span class="amount" [style.height]="topvalue" [style.background]="color"></span>
+    </span>
+    <div class="bulb">
+      <span class="red-circle" [style.background]="color"></span>
+      <span class="filler" [style.background]="color"></span>
+    </div>
+  </div>
+</div>

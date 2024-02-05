@@ -1,0 +1,89 @@
+.meter {
+  margin-left: 30px;
+  width: 100px;
+}
+.meter .glass {
+  background: #e5e5e5;
+  border-radius: 100px 100px 0 0;
+  display: block;
+  height: 120px;
+  margin: 0 5px 10px;
+  padding: 5px;
+  position: relative;
+  width: 20px;
+}
+
+.meter .amount {
+  background: #f34e54;
+  border-radius: 100px;
+  display: block;
+  width: 20px;
+  position: absolute;
+  bottom: 5px;
+}
+.meter strong {
+  display: block;
+  text-align: center;
+}
+.meter .goal {
+  font-size: 30px;
+}
+.meter .total {
+  font-size: 16px;
+  position: absolute;
+  right: 35px;
+}
+
+.bulb {
+  background: #e5e5e5;
+  border-radius: 100px;
+  display: block;
+  height: 50px;
+  margin: 0 5px 10px;
+  padding: 5px;
+  position: relative;
+  top: -20px;
+  right: 15px;
+  width: 50px;
+}
+
+.bulb .red-circle {
+  /* background: #f34e54; */
+  border-radius: 100px;
+  display: block;
+  height: 50px;
+  width: 50px;
+}
+.bulb .filler {
+  background: #f34e54;
+  border-radius: 100px 100px 0 0;
+  display: block;
+  height: 30px;
+  width: 20px;
+  position: relative;
+  top: -65px;
+  right: -15px;
+  z-index: 30;
+}
+
+
+.temperature-value {
+  font-size: 1.5em; 
+  font-weight: bold;
+  color: white;
+  margin-right: 10px;
+}
+
+
+.additional-text {
+  font-size: 1em; 
+  color: white;
+  display: block;
+  text-align: center;
+}
+
+
+.thermometer-container {
+  display: flex;
+  align-items: center;
+}
