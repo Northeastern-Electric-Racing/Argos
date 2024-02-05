@@ -74,5 +74,4 @@ class LandingViewModel: LoadableObject {
         self.selectedRunId = runId
         self.showGraph = true
     }
-    
 }

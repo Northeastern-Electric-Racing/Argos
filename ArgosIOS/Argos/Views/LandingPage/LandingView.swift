@@ -14,8 +14,6 @@ struct LandingView: View {
     @ObservedObject private var socketClient = SocketClient.shared
     @ObservedObject private var viewModel = LandingViewModel()
     
-    @State private var action: Int? = 0
-    
     var body: some View {
         AsyncContentView(source: viewModel) { props in
             NavigationStack {
