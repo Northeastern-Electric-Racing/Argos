@@ -14,6 +14,8 @@ struct LandingView: View {
     @ObservedObject private var socketClient = SocketClient.shared
     @ObservedObject private var viewModel = LandingViewModel()
     
+    @State private var action: Int? = 0
+    
     var body: some View {
         AsyncContentView(source: viewModel) { props in
             NavigationStack {
@@ -25,8 +27,6 @@ struct LandingView: View {
                         ArgosHeader("Not Connected To Router")
                             .multilineTextAlignment(.center)
                     }
-                    let center = CLLocationCoordinate2D(latitude: 39.5, longitude: -98.0)
-                    Map(initialViewport: .camera(center: center, zoom: 2, bearing: 0, pitch: 0))
                     BatteryView(progress: .constant(self.viewModel.stateOfCharge), fill: .green, outline: .secondary, direction: .horizontal)
                     HStack {
                         ThermometerView(current: self.viewModel.packTemp, minimum: -15, maximum: 60, label: "Pack").frame(maxWidth: .infinity)
@@ -36,10 +36,14 @@ struct LandingView: View {
                         ArgosButton(title: "Historical", action: {
                             self.viewModel.dialogPresentation.show(content: .carousel(runs: props.runs, selectRun: self.viewModel.selectRun, isPresented: self.$viewModel.dialogPresentation.isPresented))
                         })
-                        
+    
                         ArgosButton(title: "More Details", action: {
                             self.viewModel.onMoreDetailsClicked()
                         })
+                        
+                    }
+                    NavigationStack {
+                        ArgosNavLink(title: "Map View") {MapView()}
                     }
                 }
                 .padding()
