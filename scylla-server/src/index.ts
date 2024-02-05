@@ -1,8 +1,9 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import ProxyServer from './proxy/proxy-server';
-import ProxyClient from './proxy/proxy-client-prod';
-import ProxyClientMock from './proxy/proxy-client-mock';
+import ProdProxyClient from './proxy/prod-proxy-client';
+import MockProxyClient from './proxy/mock-proxy-client';
+import ProxyClient from './proxy/proxy-client';
 import { Unit } from './odyssey-base/src/types/unit';
 import cors from 'cors';
 import { connect } from 'mqtt';
@@ -24,7 +25,6 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use(cors());
 app.use(express.json());
-
 app.use('/nodes', nodeRouter);
 app.use('/locations', locationRouter);
 app.use('/systems', systemRouter);
@@ -58,7 +58,7 @@ const serverSocket = new Server(server, {
   }
 });
 
-let proxyClient: ProxyClient | undefined = undefined;
+let proxyClient: ProxyClient;
 
 if (process.env.PROD === 'true') {
   const host = process.env.PROD_SIREN_HOST_URL;
@@ -74,61 +74,21 @@ if (process.env.PROD === 'true') {
     reconnectPeriod: 1000
   });
 
-  proxyClient = new ProxyClient(connection);
-  proxyClient.configure();
+  proxyClient = new ProdProxyClient(connection);
+  
+} else {
+  proxyClient = new MockProxyClient(198798656);
 }
 
-//ignore this, just using this for testing right now
-export const baseParameters = {
-  "pack_temp" : {
-      "name" : "Pack Temp",
-      "unit" : Unit.CELSIUS,
-      "min" : -20,
-      "max" : 54
-  },
-
-  "motor_temp" : {
-      "name" : "Motor Temp",
-      "unit" : Unit.CELSIUS,
-      "min" : -20,
-      "max" : 54
-  },
-
-  "pack_soc" : {
-      "name" : "Pack SOC",
-      "unit" : Unit.PERCENT,
-      "min" : 0,
-      "max" : 100
-  },
-
-  "accel_x" : {
-      "name" : "Accel X",
-      "unit" : Unit.G,
-      "min" : -6,
-      "max" : 6
-  },
-
-  "accel_y" : {
-      "name" : "Accel Y",
-      "unit" : Unit.G,
-      "min" : -6,
-      "max" : 6
-  },
-
-  "accel_z" : {
-      "name" : "Accel Z",
-      "unit" : Unit.G,
-      "min" : -6,
-      "max" : 6
-  },
-
-};
+proxyClient.configure();
 
 
 serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyServer(socket);
   
   serverProxy.configure();
+  proxyClient.addProxyServer(serverProxy);
+  /*
   if (process.env.PROD === 'false') {
     const proxyClientMock = new ProxyClientMock(198798656, [serverProxy], baseParameters )
     proxyClientMock.messageLoop();
@@ -136,4 +96,5 @@ serverSocket.on('connection', (socket: Socket) => {
   }else if (proxyClient) {
     proxyClient.addProxyServer(serverProxy);
   }
+  */
 });
