@@ -12,7 +12,7 @@ import SocketIO
  * Wrapper class for the socket connection to the server
  */
 class SocketClient: ObservableObject {
-    static let shared = SocketClient(manager: SocketManager(socketURL: Route.baseUrl, config: [.log(true), .compress]))
+    static let shared = SocketClient(manager: SocketManager(socketURL: Route.baseUrl, config: [.log(false), .compress]))
     private let socket: SocketIOClient
     private let manager: SocketManager
     
@@ -39,11 +39,15 @@ class SocketClient: ObservableObject {
         self.socket.on("message", callback: {
             data, _ in
             do {
+                guard let data = (data[0] as? String)?.data(using: .utf8) else {
+                    return
+                }
                 let decoder = JSONDecoder()
-                let serverData: ServerData = try decoder.decode(ServerData.self, from: data[0] as! Data)
+                let serverData: ServerData = try decoder.decode(ServerData.self, from: data)
+                self.runId = serverData.runId
                 self.values.updateValue(DataValue(value: serverData.value, time: serverData.timestamp), forKey: serverData.name)
             } catch {
-                print("error")
+                print("error", error)
             }
         })
     }

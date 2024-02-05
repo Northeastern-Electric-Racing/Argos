@@ -15,7 +15,7 @@ struct LandingViewProps {
 class LandingViewModel: LoadableObject {
     @ObservedObject var socketClient = SocketClient.shared
     
-    @Published var state: LoadingState<LandingViewProps> = .idle
+    @Published var state: LoadingState<LandingViewProps> = .loading
     
     @Published var stateOfCharge: Double = 0
     @Published var packTemp: Double = 0
@@ -34,10 +34,11 @@ class LandingViewModel: LoadableObject {
         return .init(runs: self.runs)
     }
     
-    func load() {
-        Task {
-            do {
-                self.runs = try await APIHandler.getAllRuns()
+    func load() async {
+        do {
+            let runs = try await APIHandler.getAllRuns()
+            DispatchQueue.main.async {
+                self.runs = runs
                 self.socketClient.connect()
                 self.socketClient.$values
                     .sink { [weak self] values in
@@ -54,9 +55,9 @@ class LandingViewModel: LoadableObject {
                     }
                     .store(in: &self.cancellables)
                 self.load(self.cachedProps)
-            } catch {
-                self.fail(error, self.cachedProps)
             }
+        } catch {
+            self.fail(error, self.cachedProps)
         }
     }
     
@@ -67,7 +68,7 @@ class LandingViewModel: LoadableObject {
     }
     
     func onMoreDetailsClicked() {
-        guard let runId = socketClient.runId else {
+        guard let runId = self.socketClient.runId else {
             self.fail(ConfigureError.runIdNotSet, self.cachedProps)
             return
         }

@@ -12,11 +12,11 @@ import Foundation
  */
 struct Run: Codable {
     var id: Int
-    var locationName: String
-    var driverName: String
-    var systemName: String
+    var locationName: String?
+    var driverName: String?
+    var systemName: String?
     var time: String
     var timestamp: Int {
-        return Int(time)! / 1000
+        return Int(self.time)! / 1000
     }
 }

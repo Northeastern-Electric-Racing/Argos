@@ -11,22 +11,22 @@ export default class Storage {
   private currentRunId?: number;
 
   constructor() {
-    this.storage = new Map<string, BehaviorSubject<DataValue[]>>();
+    this.storage = new Map<string, BehaviorSubject<DataValue>>();
   }
 
-  public get(key: string): BehaviorSubject<DataValue[]> | undefined {
+  public get = (key: string): BehaviorSubject<DataValue> | undefined => {
     return this.storage.get(key);
-  }
+  };
 
-  public set(key: string, value: BehaviorSubject<DataValue[]>): void {
+  public set = (key: string, value: BehaviorSubject<DataValue>): void => {
     this.storage.set(key, value);
-  }
+  };
 
-  public getCurrentRunId(): number | undefined {
+  public getCurrentRunId = (): number | undefined => {
     return this.currentRunId;
-  }
+  };
 
-  public setCurrentRunId(runId: number) {
+  public setCurrentRunId = (runId: number) => {
     this.currentRunId = runId;
-  }
+  };
 }
