@@ -1,38 +1,10 @@
 import ProxyServer from './proxy-server';
-import { ClientData, ClientMessage } from '../utils/message.utils';
+import { ClientData } from '../utils/message.utils';
 import { Unit } from '../odyssey-base/src/types/unit';
 import ProxyClient from './proxy-client';
 import { MockData, DataType } from '../utils/data.utils';
 
-/**
- * Data definition to represent fake values
- * we want to pass to frontend
- */
 
-
-
-/**
-   * delete this, use current proxy client
-   * rename to mock proxy client
-   * delete that thing in server
-   * remove conditional in socket setup
-   * change message to configure
-   * fix while true
-   * make it separate true
-   * make it so that sometimes it doesn't change
-   * make mockdata it's own datatype
-   * make the names an enum
-   * add enum in odyssey
-   * capitlization
-   * make mockdata a list of mockdata, choose random index
-   * make mockdata hold prev value
-   * 
-   * current objectives
-   * get interface done
-   * update index.ts with new data definition
-   * figure out threading
-
-//make dictionary for values for every parameter
 
 /**
  * base case for class constructor, somewhat arbitrary min/max values
@@ -128,6 +100,8 @@ export default class MockProxyClient implements ProxyClient {
         return Math.floor(Math.random() * length);
     }
 
+    //makes an empty promise to prevent blocking
+    //from while loop
     private eventLoopQueue = ()  => {
         return new Promise(resolve => 
           setImmediate(() => {
@@ -137,6 +111,7 @@ export default class MockProxyClient implements ProxyClient {
         );
     }
 
+    //enters a non-blocking while loop to send data
     public loop = async () => {
         let data : MockData;
         let delta : number;

@@ -88,13 +88,4 @@ serverSocket.on('connection', (socket: Socket) => {
   
   serverProxy.configure();
   proxyClient.addProxyServer(serverProxy);
-  /*
-  if (process.env.PROD === 'false') {
-    const proxyClientMock = new ProxyClientMock(198798656, [serverProxy], baseParameters )
-    proxyClientMock.messageLoop();
-    
-  }else if (proxyClient) {
-    proxyClient.addProxyServer(serverProxy);
-  }
-  */
 });
