@@ -44,7 +44,7 @@ class LandingViewModel: LoadableObject {
                     .sink { [weak self] values in
                         guard let self = self else {return}
                         if let stateOfCharge = values[DataTypeName.stateOfCharge.rawValue] {
-                            self.stateOfCharge = Double(stateOfCharge.value)
+                            self.stateOfCharge = Double(stateOfCharge.value / 100)
                         }
                         if let packTemp = values[DataTypeName.packTemp.rawValue] {
                             self.packTemp = Double(packTemp.value)
