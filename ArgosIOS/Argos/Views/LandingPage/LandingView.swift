@@ -40,8 +40,10 @@ struct LandingView: View {
                         })
                         
                     }
-                    NavigationStack {
-                        ArgosNavLink(title: "Map View") {MapView()}
+                    ArgosButton(title: "Map View", action: {
+                        self.viewModel.onMapViewClicked()
+                    }).navigationDestination(isPresented: self.$viewModel.showMap) {
+                        MapView()
                     }
                 }
                 .padding()
