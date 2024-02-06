@@ -22,6 +22,7 @@ class LandingViewModel: LoadableObject {
     @Published var motorTemp: Double = 0
     
     @Published var showGraph = false
+    @Published var showMap = false
     
     @Published var dialogPresentation = DialogPresentation()
     @Published var selectedRunId: Int?
@@ -74,5 +75,9 @@ class LandingViewModel: LoadableObject {
         }
         self.selectedRunId = runId
         self.showGraph = true
+    }
+    
+    func onMapViewClicked() {
+        self.showMap = true
     }
 }

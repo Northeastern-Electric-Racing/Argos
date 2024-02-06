@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+@_spi(Experimental) import MapboxMaps
 
 struct LandingView: View {
     @EnvironmentObject private var errorHandling: ErrorHandling
@@ -33,10 +34,16 @@ struct LandingView: View {
                         ArgosButton(title: "Historical", action: {
                             self.viewModel.dialogPresentation.show(content: .carousel(runs: props.runs, selectRun: self.viewModel.selectRun, isPresented: self.$viewModel.dialogPresentation.isPresented))
                         })
-                        
+    
                         ArgosButton(title: "More Details", action: {
                             self.viewModel.onMoreDetailsClicked()
                         })
+                        
+                    }
+                    ArgosButton(title: "Map View", action: {
+                        self.viewModel.onMapViewClicked()
+                    }).navigationDestination(isPresented: self.$viewModel.showMap) {
+                        MapView()
                     }
                 }
                 .padding()
