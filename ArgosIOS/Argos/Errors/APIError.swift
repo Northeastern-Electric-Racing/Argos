@@ -8,34 +8,34 @@
 import Foundation
 
 struct HttpError: Codable {
-    var statusCode: Int
+    var status: Int
     var message: String
     
     enum CodingKeys: CodingKey {
         case message
-        case statusCode
+        case status
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.message, forKey: .message)
-        try container.encode(self.statusCode, forKey: .statusCode)
+        try container.encode(self.status, forKey: .status)
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.message = try container.decode(String.self, forKey: .message)
-        self.statusCode = try container.decode(Int.self, forKey: .statusCode)
+        self.status = try container.decode(Int.self, forKey: .status)
     }
     
-    init(statusCode: Int, message: String) {
-        self.statusCode = statusCode
+    init(_ status: Int, _ message: String) {
+        self.status = status
         self.message = message
     }
 }
 
 extension HttpError: Error, LocalizedError {
     var errorDescription: String? {
-        return "Error: \(self.statusCode), \(self.message)"
+        return "Error: \(self.status), \(self.message)"
     }
 }

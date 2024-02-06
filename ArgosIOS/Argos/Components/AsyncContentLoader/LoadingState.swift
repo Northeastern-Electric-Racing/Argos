@@ -8,7 +8,6 @@
 import Foundation
 
 enum LoadingState<Value> {
-    case idle
     case loading
     case failed(Error, Value)
     case loaded(Value)

@@ -8,7 +8,6 @@ import Storage from 'src/services/storage.service';
 })
 export default class MoreDetails {
   label: string;
-  runId = this.storage.getCurrentRunId();
 
   constructor(
     private router: Router,
@@ -18,6 +17,7 @@ export default class MoreDetails {
   }
 
   goToGraph = () => {
-    this.router.navigate([`graph/true/${this.runId}`]);
+    const runId = this.storage.getCurrentRunId();
+    this.router.navigate([`graph/true/${runId}`]);
   };
 }

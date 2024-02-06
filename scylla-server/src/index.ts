@@ -4,7 +4,6 @@ import ProxyServer from './proxy/proxy-server';
 import ProdProxyClient from './proxy/prod-proxy-client';
 import MockProxyClient from './proxy/mock-proxy-client';
 import ProxyClient from './proxy/proxy-client';
-import { Unit } from './odyssey-base/src/types/unit';
 import cors from 'cors';
 import { connect } from 'mqtt';
 import locationRouter from './routes/location.routes';
@@ -75,17 +74,15 @@ if (process.env.PROD === 'true') {
   });
 
   proxyClient = new ProdProxyClient(connection);
-  
 } else {
-  proxyClient = new MockProxyClient(198798656);
+  proxyClient = new MockProxyClient(2);
 }
 
 proxyClient.configure();
 
-
 serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyServer(socket);
-  
+
   serverProxy.configure();
   proxyClient.addProxyServer(serverProxy);
 });

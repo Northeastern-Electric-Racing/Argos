@@ -10,19 +10,23 @@ import SwiftUI
 protocol LoadableObject: ObservableObject {
     associatedtype Output
     var state: LoadingState<Output> { get set }
-    func load()
+    func load() async
 }
 
 extension LoadableObject {
     func fail(_ error: Error, _ output: Output) {
-        withAnimation {
-            self.state = .failed(error, output)
+        DispatchQueue.main.async {
+            withAnimation {
+                self.state = .failed(error, output)
+            }
         }
     }
     
     func load(_ output: Output) {
-        withAnimation {
-            self.state = .loaded(output)
+        DispatchQueue.main.async {
+            withAnimation {
+                self.state = .loaded(output)
+            }
         }
     }
     

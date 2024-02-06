@@ -8,7 +8,7 @@
 import Foundation
 
 enum DataTypeName: String {
-    case stateOfCharge = "stateOfCharge"
-    case packTemp = "packTemp"
-    case motorTemp = "motorTemp"
+    case stateOfCharge = "Pack SOC"
+    case packTemp = "Pack Temp"
+    case motorTemp = "Motor Temp"
 }

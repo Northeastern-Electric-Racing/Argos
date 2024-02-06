@@ -26,7 +26,7 @@ export default class ProxyServer {
    * Sends data to the client
    */
   public sendMessage = (message: ClientData) => {
-    this.socket.emit('message', message);
+    this.socket.emit('message', JSON.stringify(message));
   };
 
   /**

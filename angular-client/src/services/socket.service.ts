@@ -20,11 +20,13 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData(storage: Storage) {
+  receiveData = (storage: Storage) => {
     this.socket.on('message', (message: string) => {
       try {
         /* Parse the message and store it in the storage service */
+
         const data = JSON.parse(message) as ServerData;
+        console.log(data.runId);
         storage.setCurrentRunId(data.runId);
 
         /* Create key based on name and unit for hashmap */
@@ -39,25 +41,23 @@ export default class SocketService {
 
         /* If the values exist, add the new value to the end of the array */
         if (valuesSubject) {
-          const value = valuesSubject.getValue();
-          value.push(newValue);
-          valuesSubject.next(value);
+          valuesSubject.next(newValue);
         } else {
-          /* Otherwise, create a new array with the new value */
-          const newValuesSubject = new BehaviorSubject<DataValue[]>([newValue]);
+          /* Otherwise, create a new key with the new value */
+          const newValuesSubject = new BehaviorSubject<DataValue>(newValue);
           storage.set(key, newValuesSubject);
         }
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
     });
-  }
+  };
 
   /**
    * Sends an error message to the server
    * @param message The error message to send to the server
    */
-  sendError(message: string) {
+  sendError = (message: string) => {
     this.socket.emit('error', message);
-  }
+  };
 }
