@@ -1,6 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import ProxyServer from './proxy/proxy-server';
+import ProdProxyClient from './proxy/prod-proxy-client';
+import MockProxyClient from './proxy/mock-proxy-client';
 import ProxyClient from './proxy/proxy-client';
 import cors from 'cors';
 import { connect } from 'mqtt';
@@ -22,7 +24,6 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use(cors());
 app.use(express.json());
-
 app.use('/nodes', nodeRouter);
 app.use('/locations', locationRouter);
 app.use('/systems', systemRouter);
@@ -56,7 +57,7 @@ const serverSocket = new Server(server, {
   }
 });
 
-let proxyClient: ProxyClient | undefined = undefined;
+let proxyClient: ProxyClient;
 
 if (process.env.PROD === 'true') {
   const host = process.env.PROD_SIREN_HOST_URL;
@@ -72,14 +73,16 @@ if (process.env.PROD === 'true') {
     reconnectPeriod: 1000
   });
 
-  proxyClient = new ProxyClient(connection);
-  proxyClient.configure();
+  proxyClient = new ProdProxyClient(connection);
+} else {
+  proxyClient = new MockProxyClient(2);
 }
+
+proxyClient.configure();
 
 serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyServer(socket);
+
   serverProxy.configure();
-  if (proxyClient) {
-    proxyClient.addProxyServer(serverProxy);
-  }
+  proxyClient.addProxyServer(serverProxy);
 });

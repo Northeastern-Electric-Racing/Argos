@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 /**
  * The storage system for the data received from the server
  */
-export type StorageMap = Map<string, BehaviorSubject<DataValue[]>>;
+export type StorageMap = Map<string, BehaviorSubject<DataValue>>;
 
 /**
  * The value of a data point
