@@ -90,7 +90,7 @@ export default class ProxyClient {
         throw new Error('No unix_time property in packet');
       }
 
-      let values: string[];
+      let values: string[] | number[];
       let unit: string;
 
       if (data.values && data.unit) {
