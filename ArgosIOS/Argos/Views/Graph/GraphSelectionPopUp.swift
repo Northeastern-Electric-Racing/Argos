@@ -46,7 +46,6 @@ struct GraphSelectionPopUp : View {
             self.isPresented.toggle()
         }
     }
-    
 }
 
 #Preview {

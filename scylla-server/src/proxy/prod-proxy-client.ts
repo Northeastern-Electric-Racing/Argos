@@ -1,12 +1,25 @@
-import ProxyServer from './proxy-server';
+// Ignoring this because it wont build on github for some reason
+// @ts-ignore
+import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
+import { Topic } from '../odyssey-base/src/types/topic';
+import { Run } from '@prisma/client';
+import NodeService from '../odyssey-base/src/services/nodes.services';
+import RunService from '../odyssey-base/src/services/runs.services';
+import DataService from '../odyssey-base/src/services/data.services';
+import DataTypeService from '../odyssey-base/src/services/dataTypes.services';
+import LocationService from '../odyssey-base/src/services/locations.services';
+import DriverService from '../odyssey-base/src/services/driver.services';
+import SystemService from '../odyssey-base/src/services/systems.services';
 import { ClientData } from '../utils/message.utils';
 import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { serverdata as ServerData } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
+import ProxyClient from './proxy-client';
+import ProxyServer from './proxy-server';
 
 /**
  * Handler for receiving messages from Siren
  */
-export default class ProxyClient {
+export default class ProdProxyClient implements ProxyClient {
   connection: MqttClient;
   createNewRun: boolean;
   // storing run for the current connection, at start is undefined

@@ -14,21 +14,23 @@ struct AsyncContentView<Source: LoadableObject, Content: View>: View {
     @EnvironmentObject private var errorHandling: ErrorHandling
     
     var body: some View {
-        switch source.state {
-        case .idle:
-            Color.clear
-                .onAppear {
-                    source.load()
+        Group {
+            switch self.source.state {
+            case .loading:
+                ProgressView()
+            case .failed(let error, let output):
+                self.content(output)
+                    .onAppear {
+                        self.errorHandling.handle(error: error)
+                    }
+            case .loaded(let output):
+                Group {
+                    self.content(output)
                 }
-        case .loading:
-            ProgressView()
-        case .failed(let error, let output):
-            content(output)
-                .onAppear {
-                    self.errorHandling.handle(error: error)
-                }
-        case .loaded(let output):
-            content(output)
+            }
+        }
+        .task {
+            await self.source.load()
         }
     }
 }

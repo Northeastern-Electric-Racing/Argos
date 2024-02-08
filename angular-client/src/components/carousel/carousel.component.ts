@@ -15,6 +15,8 @@ export interface DialogData {
 })
 export class Carousel {
   runs: Run[];
+  currentIndex: number = 0;
+  previousIndex: number = 0;
 
   responsiveOptions: any[] | undefined;
 
@@ -26,8 +28,26 @@ export class Carousel {
     this.runs = data.runs;
   }
 
+  updateIndex(nexIndex: number) {
+    this.currentIndex = nexIndex;
+  }
+
   onNoClick(): void {
     this.dialogRef.close();
+  }
+
+  handlePageChange(event: any): void {
+    const newIndex = event.page;
+
+    if (newIndex === this.runs.length) {
+      this.currentIndex = 0;
+    } else if (newIndex === -1) {
+      this.currentIndex = this.runs.length - 1;
+    } else {
+      this.currentIndex = newIndex;
+    }
+
+    this.previousIndex = newIndex;
   }
 
   datePipe = (time: string) => {
@@ -35,7 +55,7 @@ export class Carousel {
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}`;
   };
 
-  selectRun = (run: Run) => {
+  selectRun = (run: Run, index: number) => {
     this.router.navigate([`graph/false/${run.id}`]);
     this.dialogRef.close();
   };

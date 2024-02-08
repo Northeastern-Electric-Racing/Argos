@@ -13,7 +13,7 @@ import Foundation
 struct ServerData: Codable {
     var runId: Int
     var name: String
-    var units: String
+    var unit: String
     var value: Float
     var timestamp: Int
 }

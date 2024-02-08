@@ -22,12 +22,12 @@ struct CarouselContent: View {
                     .multilineTextAlignment(.trailing)
             }
             HStack {
-                ChipView(systemImage: "person.badge.key", titleKey: self.run.driverName)
-                ChipView(systemImage: "location.circle", titleKey: self.run.locationName)
+                ChipView(systemImage: "person.badge.key", titleKey: self.run.driverName ?? "")
+                ChipView(systemImage: "location.circle", titleKey: self.run.locationName ?? "")
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             HStack {
-                ChipView(systemImage: "wrench.and.screwdriver.fill", titleKey: run.systemName)
+                ChipView(systemImage: "wrench.and.screwdriver.fill", titleKey: run.systemName ?? "")
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             ArgosButton(title: "Select Run", action: selectRun)

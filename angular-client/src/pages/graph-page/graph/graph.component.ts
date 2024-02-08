@@ -34,7 +34,7 @@ export default class Graph implements OnInit {
   options!: ChartOptions;
   chart!: ApexCharts;
 
-  updateChart(values: DataValue[]) {
+  updateChart = (values: DataValue[]) => {
     const mappedValues = values.map((value: DataValue) => [+value.time, +value.value]);
 
     const newSeries = [
@@ -45,7 +45,7 @@ export default class Graph implements OnInit {
     ];
 
     this.chart.updateSeries(newSeries);
-  }
+  };
 
   ngOnInit(): void {
     this.valuesSubject.subscribe((values: DataValue[]) => {

@@ -18,3 +18,7 @@ body {
 * {
   scrollbar-width: none;
 }
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: transparent !important;
+}

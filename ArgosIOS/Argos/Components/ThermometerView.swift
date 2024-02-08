@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ThermometerView: View {
     
-    @State var current: Double
+    var current: Double
     let minimum: Float
     let maximum: Float
     let label: String

@@ -60,6 +60,8 @@
 		C977D1A02B2FEE410016D932 /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C977D19F2B2FEE410016D932 /* LandingView.swift */; };
 		C977D1A22B2FEE420016D932 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A12B2FEE420016D932 /* Assets.xcassets */; };
 		C977D1A52B2FEE420016D932 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */; };
+		E13D03142B6C816000EF6436 /* MapboxMaps in Frameworks */ = {isa = PBXBuildFile; productRef = E13D03132B6C816000EF6436 /* MapboxMaps */; };
+		E1ABF32C2B7083F000833174 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABF32B2B7083F000833174 /* MapView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -117,6 +119,7 @@
 		C977D19F2B2FEE410016D932 /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		C977D1A12B2FEE420016D932 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		E1ABF32B2B7083F000833174 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +127,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E13D03142B6C816000EF6436 /* MapboxMaps in Frameworks */,
 				1551645F2B30C19F0082044C /* SocketIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -219,6 +223,7 @@
 		15AE8F842B3377E800479691 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E1ABF32A2B7083D300833174 /* MapPage */,
 				1595397E2B5745980093EBD0 /* LandingPage */,
 				15AE8F872B33789500479691 /* Graph */,
 			);
@@ -335,6 +340,14 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		E1ABF32A2B7083D300833174 /* MapPage */ = {
+			isa = PBXGroup;
+			children = (
+				E1ABF32B2B7083F000833174 /* MapView.swift */,
+			);
+			path = MapPage;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -353,6 +366,7 @@
 			name = Argos;
 			packageProductDependencies = (
 				1551645E2B30C19F0082044C /* SocketIO */,
+				E13D03132B6C816000EF6436 /* MapboxMaps */,
 			);
 			productName = Argos;
 			productReference = C977D19A2B2FEE410016D932 /* Argos.app */;
@@ -384,6 +398,7 @@
 			mainGroup = C977D1912B2FEE410016D932;
 			packageReferences = (
 				1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */,
+				E13D03122B6C65AB00EF6436 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */,
 			);
 			productRefGroup = C977D19B2B2FEE410016D932 /* Products */;
 			projectDirPath = "";
@@ -439,6 +454,7 @@
 				15AE8F972B33B1D200479691 /* DialogPresentation.swift in Sources */,
 				155164642B311DB40082044C /* APIHandler.swift in Sources */,
 				15AE8FA02B33B9D600479691 /* CarouselContent.swift in Sources */,
+				E1ABF32C2B7083F000833174 /* MapView.swift in Sources */,
 				1551645C2B30BFDB0082044C /* SocketClient.swift in Sources */,
 				15AE8F7D2B33665900479691 /* ArgosButton.swift in Sources */,
 				159539802B5745A40093EBD0 /* LandingViewModel.swift in Sources */,
@@ -678,6 +694,14 @@
 				kind = branch;
 			};
 		};
+		E13D03122B6C65AB00EF6436 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mapbox/mapbox-maps-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -685,6 +709,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1551645D2B30C19F0082044C /* XCRemoteSwiftPackageReference "socket" */;
 			productName = SocketIO;
+		};
+		E13D03132B6C816000EF6436 /* MapboxMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E13D03122B6C65AB00EF6436 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */;
+			productName = MapboxMaps;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

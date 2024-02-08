@@ -47,6 +47,7 @@ export default class GraphPage implements OnInit {
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
+      this.selectedDataTypeValuesSubject.next([]);
       if (this.realTime) {
         const key = JSON.stringify({
           name: dataType.name,
@@ -54,9 +55,17 @@ export default class GraphPage implements OnInit {
         });
         const valuesSubject = this.storage.get(key);
         if (valuesSubject) {
-          this.selectedDataTypeValuesSubject.next(valuesSubject.getValue());
-        } else {
-          this.storage.set(key, this.selectedDataTypeValuesSubject);
+          valuesSubject.subscribe((value: DataValue) => {
+            let nextValue;
+            if (this.selectedDataTypeValuesSubject.value.length > 30) {
+              nextValue = this.selectedDataTypeValuesSubject.value.slice(1).concat(value);
+              this.selectedDataTypeValuesSubject.next(nextValue);
+            } else {
+              nextValue = this.selectedDataTypeValuesSubject.value.concat(value);
+            }
+            this.currentValue.next(value);
+            this.selectedDataTypeValuesSubject.next(nextValue);
+          });
         }
       } else {
         this.selectedDataTypeValuesIsLoading = true;
