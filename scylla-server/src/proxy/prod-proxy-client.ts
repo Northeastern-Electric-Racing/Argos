@@ -1,5 +1,4 @@
 // Ignoring this because it wont build on github for some reason
-// @ts-ignore
 import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
 import { Topic } from '../odyssey-base/src/types/topic';
 import { Run } from '@prisma/client';
