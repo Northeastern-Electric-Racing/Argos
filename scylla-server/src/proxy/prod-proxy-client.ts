@@ -133,8 +133,8 @@ export default class ProdProxyClient implements ProxyClient {
       return;
     }
     // initializing params
-    let driverName: string[] | undefined = undefined;
-    let systemName: string[] | undefined = undefined;
+    let driverName: string | string[] | undefined = undefined;
+    let systemName: string | string[] | undefined = undefined;
 
     // enum instead of raw string representing
     // driver, system, location props
@@ -152,10 +152,10 @@ export default class ProdProxyClient implements ProxyClient {
     const serverdata = data.data;
     switch (data.dataType) {
       case Property.driverUser:
-        driverName = serverdata.value as string[];
+        driverName = serverdata.value as string;
         break;
       case Property.systemName:
-        systemName = serverdata.value as string[];
+        systemName = serverdata.value as string;
         break;
       case Property.locationName:
         if (this.recentLocationName) {
