@@ -21,7 +21,7 @@ struct GraphContainer: View, Equatable {
             VStack {
                 GraphView(data: self.$viewModel.currentData).frame(maxHeight: .infinity)
                 ZStack {
-                    GraphCaption(dataType: self.$viewModel.selectedDataType, mostRecentvalue: self.viewModel.currentData.last?.value, driver: self.viewModel.driver, location: self.viewModel.location, system: self.viewModel.system)
+                    GraphCaption(dataType: self.$viewModel.selectedDataType, mostRecentvalue: self.viewModel.currentData.last?.value[0], driver: self.viewModel.driver, location: self.viewModel.location, system: self.viewModel.system)
                 }
                 .overlay(GraphSelectionPopUp(nodes: props.nodes, selectDataType: {self.viewModel.setSelectedDataType($0)})
                     .frame(maxWidth: .infinity, alignment: .bottomLeading),

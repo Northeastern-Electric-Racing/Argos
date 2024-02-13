@@ -43,7 +43,7 @@ struct LandingView: View {
                     ArgosButton(title: "Map View", action: {
                         self.viewModel.onMapViewClicked()
                     }).navigationDestination(isPresented: self.$viewModel.showMap) {
-                        MapView(latitude:self.viewModel.latitude, longitude: self.viewModel.longitude)
+                        MapView()
                     }
                 }
                 .padding()

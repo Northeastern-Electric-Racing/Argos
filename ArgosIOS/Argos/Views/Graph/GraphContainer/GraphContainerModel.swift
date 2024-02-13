@@ -77,7 +77,7 @@ class GraphContainerModel: LoadableObject {
             do {
                 let currentData = try await APIHandler.getDataByDataType(name: dataType.name)
                 DispatchQueue.main.async {
-                    self.currentData = currentData.map({.init(value: $0.value, time: $0.timestamp)})
+                    self.currentData = currentData.map({.init(value: [$0.value], time: $0.timestamp)})
                     self.load(self.cachedProps)
                 }
             } catch {

@@ -21,9 +21,6 @@ class LandingViewModel: LoadableObject {
     @Published var packTemp: Double = 0
     @Published var motorTemp: Double = 0
     
-    @Published var latitude: Double = 42.34037221430655
-    @Published var longitude: Double = -71.09065805832445
-    
     @Published var showGraph = false
     @Published var showMap = false
     
@@ -48,24 +45,13 @@ class LandingViewModel: LoadableObject {
                     .sink { [weak self] values in
                         guard let self = self else {return}
                         if let stateOfCharge = values[DataTypeName.stateOfCharge.rawValue] {
-                            self.stateOfCharge = Double(stateOfCharge.value / 100)
+                            self.stateOfCharge = Double(stateOfCharge.value[0] / 100)
                         }
                         if let packTemp = values[DataTypeName.packTemp.rawValue] {
-                            self.packTemp = Double(packTemp.value)
+                            self.packTemp = Double(packTemp.value[0])
                         }
                         if let motorTemp = values[DataTypeName.motorTemp.rawValue] {
-                            self.motorTemp = Double(motorTemp.value)
-                        }
-                    }
-                    .store(in: &self.cancellables)
-                self.socketClient.$coords
-                    .sink { [weak self] coords in
-                        guard let self = self else {return}
-                        if let latitude = coords[DataTypeName.latitude.rawValue] {
-                            self.latitude = Double(latitude.value)
-                        }
-                        if let longitude = coords[DataTypeName.longitude.rawValue] {
-                            self.longitude = Double(longitude.value)
+                            self.motorTemp = Double(motorTemp.value[0])
                         }
                     }
                     .store(in: &self.cancellables)

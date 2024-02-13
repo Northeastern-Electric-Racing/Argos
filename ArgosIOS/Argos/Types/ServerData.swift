@@ -22,6 +22,6 @@ struct ServerData: Codable {
  * Format of a data point
  */
 struct DataValue: Codable {
-    var value: Float
+    var value: Array<Float>
     var time: Int
 }

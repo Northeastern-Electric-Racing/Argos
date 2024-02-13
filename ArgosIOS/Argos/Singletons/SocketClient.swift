@@ -19,7 +19,6 @@ class SocketClient: ObservableObject {
     @Published public private(set) var isConnected = false
     @Published public private(set) var runId: Int? = nil
     @Published public private(set) var values = [String: DataValue]()
-    @Published public private(set) var coords = [String: DataValue]()
     
     private init(manager: SocketManager) {
         self.manager = manager
@@ -46,22 +45,7 @@ class SocketClient: ObservableObject {
                 let decoder = JSONDecoder()
                 let serverData: ServerData = try decoder.decode(ServerData.self, from: data)
                 self.runId = serverData.runId
-                self.values.updateValue(DataValue(value: serverData.value, time: serverData.timestamp), forKey: serverData.name)
-            } catch {
-                print("error", error)
-            }
-        })
-        
-        self.socket.on("pointMessage", callback: {
-            data, _ in
-            do {
-                guard let data = (data[0] as? String)?.data(using: .utf8) else {
-                    return
-                }
-                let decoder = JSONDecoder()
-                let serverData: ServerData = try decoder.decode(ServerData.self, from: data)
-                self.runId = serverData.runId
-                self.coords.updateValue(DataValue(value: serverData.value, time: serverData.timestamp), forKey: serverData.name)
+                self.values.updateValue(DataValue(value: [serverData.value], time: serverData.timestamp), forKey: serverData.name)
             } catch {
                 print("error", error)
             }
