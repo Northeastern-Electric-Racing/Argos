@@ -1,6 +1,16 @@
 version: "3.8"
 
 services:
+  odyssey-timescale:
+    container_name: odyssey-timescale
+    image: timescale/timescaledb:2.13.1-pg15
+    command: tail -F anything
+    ports:
+      - 5432:5432
+    networks:
+      - shared-network
+    platform: linux/amd64
+
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
@@ -13,6 +23,8 @@ services:
       - 8000:8000
     networks:
       - shared-network
+    depends_on:
+      - odyssey-timescale
 
   client:
     container_name: client
