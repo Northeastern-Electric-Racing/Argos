@@ -91,16 +91,6 @@ export default class ProdProxyClient implements ProxyClient {
         throw new Error('No unix_time property in packet');
       }
 
-      let values: string[];
-      let unit: string;
-
-      if (data.values && data.unit) {
-        ({ values } = data);
-        ({ unit } = data);
-      } else {
-        return;
-      }
-
       if (data.unit && data.values) {
         const serverMessage: ServerMessage = {
           node,
@@ -108,8 +98,8 @@ export default class ProdProxyClient implements ProxyClient {
           unix_time: parseInt(unix_time as string),
           data: {
             //TODO: Correct this to use the correct server data edit the ServerMessage value to be an array of strings
-            value: values[0],
-            unit
+            value: data.values,
+            unit: data.unit
           }
         };
 
@@ -144,8 +134,8 @@ export default class ProdProxyClient implements ProxyClient {
       return;
     }
     // initializing params
-    let driverName: string | undefined = undefined;
-    let systemName: string | undefined = undefined;
+    let driverName: string[] | undefined = undefined;
+    let systemName: string[] | undefined = undefined;
 
     // enum instead of raw string representing
     // driver, system, location props
@@ -163,10 +153,10 @@ export default class ProdProxyClient implements ProxyClient {
     const serverdata = data.data;
     switch (data.dataType) {
       case Property.driverUser:
-        driverName = serverdata.value as string;
+        driverName = serverdata.value as string[];
         break;
       case Property.systemName:
-        systemName = serverdata.value as string;
+        systemName = serverdata.value as string[];
         break;
       case Property.locationName:
         if (this.recentLocationName) {

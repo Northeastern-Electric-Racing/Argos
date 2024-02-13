@@ -14,9 +14,9 @@ export default class GraphInfo {
   @Input() currentDriver?: string;
   @Input() currentSystem?: string;
   @Input() currentLocation?: string;
-  dataTypeName?: string;
-  dataTypeUnit?: string;
-  value?: string | number;
+  dataTypeName?: string | string[];
+  dataTypeUnit?: string | string[];
+  value?: string | number | string[] | number[];
 
   ngOnInit(): void {
     this.dataType.subscribe((dataType: DataType) => {
