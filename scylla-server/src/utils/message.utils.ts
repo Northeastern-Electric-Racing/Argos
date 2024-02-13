@@ -12,6 +12,6 @@ export type ClientData = {
   runId: number;
   name: string;
   unit: string;
-  value: string | number | string[] | number[]  ;
+  value:string[] | number[]  ;
   timestamp: number;
 };

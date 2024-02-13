@@ -26,10 +26,10 @@ export default class ProdProxyClient implements ProxyClient {
 
   proxyServers: ProxyServer[];
 
-  recentLatitude: number | undefined;
-  recentLongitude: number | undefined;
-  recentRadius: number | undefined;
-  recentLocationName: string | undefined;
+  recentLatitude: number[] | undefined;
+  recentLongitude: number[] | undefined;
+  recentRadius: number[] | undefined;
+  recentLocationName: string[] | undefined;
   newLocation: boolean = true;
 
   /**
@@ -133,8 +133,8 @@ export default class ProdProxyClient implements ProxyClient {
       return;
     }
     // initializing params
-    let driverName: string | string[] | undefined = undefined;
-    let systemName: string | string[] | undefined = undefined;
+    let driverName: string[] | undefined = undefined;
+    let systemName: string[] | undefined = undefined;
 
     // enum instead of raw string representing
     // driver, system, location props
@@ -152,10 +152,10 @@ export default class ProdProxyClient implements ProxyClient {
     const serverdata = data.data;
     switch (data.dataType) {
       case Property.driverUser:
-        driverName = serverdata.value as string;
+        driverName = serverdata.value as string[];
         break;
       case Property.systemName:
-        systemName = serverdata.value as string;
+        systemName = serverdata.value as string[];
         break;
       case Property.locationName:
         if (this.recentLocationName) {
@@ -163,20 +163,20 @@ export default class ProdProxyClient implements ProxyClient {
             this.newLocation = true;
           }
         } else {
-          this.recentLocationName = serverdata.value as string;
+          this.recentLocationName = serverdata.value as string[];
           this.newLocation = true;
         }
         break;
       case Property.latitude:
-        this.recentLatitude = serverdata.value as number;
+        this.recentLatitude = serverdata.value as number[];
         await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
         break;
       case Property.longitude:
-        this.recentLongitude = serverdata.value as number;
+        this.recentLongitude = serverdata.value as number[];
         await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
         break;
       case Property.radius:
-        this.recentRadius = serverdata.value as number;
+        this.recentRadius = serverdata.value as number[];
         break;
       default:
         await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
@@ -202,10 +202,10 @@ export default class ProdProxyClient implements ProxyClient {
 
     if (this.newLocation && this.recentLatitude && this.recentLongitude && this.recentRadius && this.recentLocationName) {
       await LocationService.upsertLocation(
-        this.recentLocationName,
-        this.recentLatitude,
-        this.recentLongitude,
-        this.recentRadius,
+        this.recentLocationName[0], // Fix: Access the first element of the string array
+        this.recentLatitude[0],
+        this.recentLongitude[0],
+        this.recentRadius[0],
         this.currentRun.id
       );
       this.recentLatitude = undefined;

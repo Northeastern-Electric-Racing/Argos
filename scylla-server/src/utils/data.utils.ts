@@ -11,7 +11,7 @@ export enum DataType {
 export type MockData = {
   name: DataType;
   unit: string;
-  val: number;
+  val: number[];
   min: number;
   max: number;
 };

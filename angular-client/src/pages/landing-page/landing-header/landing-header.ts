@@ -13,9 +13,9 @@ import { Component, Input } from '@angular/core';
 })
 export default class LandingHeader {
   time = new Date();
-  @Input() driver!: string;
-  @Input() location!: string;
-  @Input() system!: string;
+  @Input() driver!: string[];
+  @Input() location!: string[];
+  @Input() system!: string[];
 
   /**
    * Updates the time every second.
