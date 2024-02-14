@@ -1,0 +1,8 @@
+<div class="container" (click)="onClick()">
+  <div class="title">
+    <mat-icon aria-hidden="false" aria-label="Example home icon" fontIcon="{{ icon }}"></mat-icon>
+    <typography variant="header" content="{{ title }}" additionalStyles="color: white; margin: 0; font-weight:normal" />
+  </div>
+  <typography variant="subheader" content="{{ subtitle }}" additionalStyles="color: #cacaca; margin: 0" />
+  <ng-content></ng-content>
+</div>
