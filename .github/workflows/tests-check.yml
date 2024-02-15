@@ -28,7 +28,7 @@ jobs:
           node-version: 16.17.1
           cache: npm
       - name: Set Database URL
-        run: echo "SOURCE_DATABASE_URL=postgresql://postgres:password@localhost:5432/timescaledb" >> scylla-server/.env
+        run: echo "SOURCE_DATABASE_URL=postgresql://postgres:password@localhost:5432/timescaledb" >> scylla-server/.env 
       - name: Set up Docker Compose
         run: |
           sudo apt-get -y update
