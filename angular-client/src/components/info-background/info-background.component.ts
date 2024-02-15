@@ -13,6 +13,5 @@ import { Component, Input } from '@angular/core';
 export class InfoBackgroundComponent {
   @Input() icon!: string;
   @Input() title!: string;
-  @Input() subtitle!: string;
   @Input() onClick!: () => void;
 }

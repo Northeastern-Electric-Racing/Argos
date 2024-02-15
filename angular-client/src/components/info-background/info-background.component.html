@@ -1,8 +1,8 @@
 <div class="container" (click)="onClick()">
   <div class="title">
-    <mat-icon aria-hidden="false" aria-label="Example home icon" fontIcon="{{ icon }}"></mat-icon>
-    <typography variant="header" content="{{ title }}" additionalStyles="color: white; margin: 0; font-weight:normal" />
+    <mat-icon aria-hidden="false"  fontIcon="{{ icon }}"></mat-icon>
+    <typography variant="info-title" content="{{ title }}" />
   </div>
-  <typography variant="subheader" content="{{ subtitle }}" additionalStyles="color: #cacaca; margin: 0" />
+  <typography *ngIf="onClick" variant="info-subtitle" content="Click for more details"/>
   <ng-content></ng-content>
 </div>
