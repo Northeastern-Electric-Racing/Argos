@@ -17,6 +17,7 @@ RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey
     git submodule update --init --recursive
 
 RUN npm run build
+RUN echo "SOURCE_DATABASE_URL=postgresql://postgres:password@docker.for.mac.host.internal:5432/timescaledb" > .env
 
 CMD ["sh", "-c", "npm run prisma:generate && \
     npm run prisma:migrate:prod && \
