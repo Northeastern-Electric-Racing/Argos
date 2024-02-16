@@ -53,16 +53,12 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get -y install docker-compose
-      - name: Start TimescaleDB
-        run: docker run -e POSTGRES_HOST_AUTH_METHOD=trust -d -p 5432:5432  --platform=linux/amd64 timescale/timescaledb:2.13.1-pg15
       - name: Build Docker Compose
         run: |
           if ! docker-compose build; then
             echo "Docker Compose build failed."
             exit 1  # This will cause the workflow to fail
           fi
-      - name: Close TimescaleDB
-        run: docker stop $(docker ps -a -q --filter ancestor=timescale/timescaledb:2.13.1-pg15 --format="{{.ID}}")
       - name: Start Docker Container
         run: docker-compose up -d
       - name: Run tests

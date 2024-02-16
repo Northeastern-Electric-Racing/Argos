@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  scylla-server:
+    container_name: scylla-server
+    restart: unless-stopped
+    image: mckeep/scylla-server-prod:1.0.0
+    build:
+      context: scylla-server/test
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    networks:
+      - shared-network
+    depends_on:
+      - odyssey-timescale
+
+networks:
+  shared-network:
