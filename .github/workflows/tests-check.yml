@@ -13,26 +13,6 @@ on:
       - main
       - Develop
       - 'feature/**'
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'
-        required: true
-        default: 'warning'
-        type: choice
-        options:
-        - info
-        - warning
-        - debug
-      tags:
-        description: 'Test scenario tags'
-        required: false
-        type: boolean
-      environment:
-        description: 'Environment to run tests against'
-        type: environment
-        required: true
-
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -47,9 +27,9 @@ jobs:
         with:
           node-version: 16.17.1
           cache: npm
-      - name: Set Database URL
-        run: echo "SOURCE_DATABASE_URL=postgresql://postgres:password@localhost:5432/timescaledb" >> scylla-server/.env 
-      - name: Set up database
+      - name: Install modules
+        run: npm install && npm run prisma:generate && npm run prisma:migrate:prod
+      - name: Start Database
         run: docker run -e POSTGRES_HOST_AUTH_METHOD=trust -d -p 5432:5432  --platform=linux/amd64 timescale/timescaledb:2.13.1-pg15
       - name: Run tests
         run: npm run test
