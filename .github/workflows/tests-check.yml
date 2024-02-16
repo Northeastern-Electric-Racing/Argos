@@ -49,17 +49,7 @@ jobs:
           cache: npm
       - name: Set Database URL
         run: echo "SOURCE_DATABASE_URL=postgresql://postgres:password@localhost:5432/timescaledb" >> scylla-server/.env 
-      - name: Set up Docker Compose
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install docker-compose
-      - name: Build Docker Compose
-        run: |
-          if ! docker-compose build; then
-            echo "Docker Compose build failed."
-            exit 1  # This will cause the workflow to fail
-          fi
-      - name: Start Docker Container
-        run: docker-compose up -d
+      - name: Set up database
+        run: docker run -e POSTGRES_HOST_AUTH_METHOD=trust -d -p 5432:5432  --platform=linux/amd64 timescale/timescaledb:2.13.1-pg15
       - name: Run tests
         run: npm run test
