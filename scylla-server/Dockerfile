@@ -16,9 +16,8 @@ RUN git init
 RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey-Base.git ./src/odyssey-base && \
     git submodule update --init --recursive
 
-RUN npm run prisma:generate && \
-    npm run prisma:migrate:prod
-
 RUN npm run build
 
-CMD ["sh", "-c", "npm run start:production"]
+CMD ["sh", "-c", "npm run prisma:generate && \
+    npm run prisma:migrate:prod && \
+    npm run start:production"]
