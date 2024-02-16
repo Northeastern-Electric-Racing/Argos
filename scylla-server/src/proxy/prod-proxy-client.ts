@@ -2,7 +2,7 @@
 // @ts-ignore
 import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
 import { Topic } from '../odyssey-base/src/types/topic';
-import { Run } from '@prisma/client';
+import { run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
@@ -23,7 +23,7 @@ export default class ProdProxyClient implements ProxyClient {
   connection: MqttClient;
   createNewRun: boolean;
   // storing run for the current connection, at start is undefined
-  currentRun: Run | undefined;
+  currentRun: run | undefined;
 
   proxyServers: ProxyServer[];
 
