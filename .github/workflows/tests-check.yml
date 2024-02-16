@@ -27,11 +27,11 @@ jobs:
         with:
           node-version: 16.17.1
           cache: npm
-      - name: Install modules
-        run: npm install && npm run prisma:generate && npm run prisma:migrate:prod
       - name: Set Env Variable
         run: cd scylla-server && echo "postgresql://postgres:password@localhost:5432/timescaledb" > .env
       - name: Start Database
         run: docker run -e POSTGRES_HOST_AUTH_METHOD=trust -d -p 5432:5432  --platform=linux/amd64 timescale/timescaledb:2.13.1-pg15
+      - name: Install modules
+        run: npm install && npm run prisma:generate && npm run prisma:migrate:prod
       - name: Run tests
         run: npm run test
