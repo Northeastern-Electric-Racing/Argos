@@ -35,6 +35,12 @@ export default class Typography implements OnInit {
       case 'subheader':
         this.style = Theme.SUBHEADER;
         break;
+      case 'info-title':
+        this.style = Theme.INFOTITLE;
+        break;
+      case 'info-subtitle':
+        this.style = Theme.INFOSUBTITLE;
+        break;
     }
 
     if (this.additionalStyles) {
