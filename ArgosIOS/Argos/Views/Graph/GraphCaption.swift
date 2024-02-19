@@ -9,7 +9,7 @@ import SwiftUI
 
 struct GraphCaption : View {
     var dataType: Binding<DataType?>
-    var mostRecentvalue: Float?
+    var mostRecentvalue: String?
     var driver: String
     var location: String
     var system: String
@@ -25,7 +25,7 @@ struct GraphCaption : View {
             
             HStack {
                 HStack {
-                    ArgosLabel(self.mostRecentvalue?.description ?? "")
+                    ArgosLabel(String(format: "% .2f", Float(self.mostRecentvalue ?? "") ?? ""))
                     ArgosLabel(self.dataType.wrappedValue?.unit ?? "")
                 }
                 .frame(alignment: .leading)
@@ -51,5 +51,5 @@ struct GraphCaption : View {
 }
 
 #Preview {
-    GraphCaption(dataType: .constant(DataType(name: "Pack Temp", unit: "C")), mostRecentvalue: (25), driver: ("Fergus"), location: ("Gainsborough"), system: ("Drive Train"))
+    GraphCaption(dataType: .constant(DataType(name: "Pack Temp", unit: "C")), mostRecentvalue: ("25"), driver: ("Fergus"), location: ("Gainsborough"), system: ("Drive Train"))
 }

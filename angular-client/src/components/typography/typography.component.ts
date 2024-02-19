@@ -17,7 +17,7 @@ import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
 })
 export default class Typography implements OnInit {
   @Input() variant!: StyleVariant;
-  @Input() content?: string | null;
+  @Input() content?: string | string[] | null;
   @Input() additionalStyles?: string;
   style!: string;
 

@@ -16,7 +16,7 @@ struct Run: Codable {
     var driverName: String?
     var systemName: String?
     var time: String
-    var timestamp: Int {
-        return Int(self.time)! / 1000
+    var dateTime: Date {
+        return DateFormatter().date(from: time) ?? Date.distantPast
     }
 }
