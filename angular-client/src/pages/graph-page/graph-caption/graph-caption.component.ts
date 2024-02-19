@@ -16,15 +16,16 @@ export default class GraphInfo {
   @Input() currentLocation?: string;
   dataTypeName?: string | string[];
   dataTypeUnit?: string | string[];
-  value?: string | number | string[] | number[];
+  value?: string | number;
 
   ngOnInit(): void {
     this.dataType.subscribe((dataType: DataType) => {
       this.dataTypeName = dataType.name;
       this.dataTypeUnit = dataType.unit;
     });
-    this.currentValue.subscribe((value?: DataValue) => {
-      this.value = value?.value ?? 'No Values';
+    this.currentValue.subscribe((pvalue?: DataValue) => {
+      const value = pvalue?.values[0];
+      this.value = value ? parseFloat(value).toFixed(2) : 'No Values';
     });
   }
 }
