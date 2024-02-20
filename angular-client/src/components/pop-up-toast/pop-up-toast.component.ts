@@ -1,5 +1,3 @@
-// pop-up-toast.component.ts
-
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
@@ -9,7 +7,7 @@ import { Component, Input, OnInit } from '@angular/core';
 })
 export class PopUpToastComponent implements OnInit {
   @Input() message: string = 'No data found.';
-  @Input() isVisible: boolean = false; // This should initially be false unless you want the toast to show immediately.
+  @Input() isVisible: boolean = false;
 
   ngOnInit(): void {
   }

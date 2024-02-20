@@ -20,22 +20,18 @@ export default class MoreDetailsComponent {
     if (this.routerIsConnected()) {
       this.router.navigate([`graph/true/${runId}`]);
     } else {
-      console.log('Router is disconnected, showing toast.'); // Add this line for debugging
+      console.log('Router is disconnected, showing toast.');
       this.showRouterDisconnectedToast();
     }
   };
   
 
   routerIsConnected(): boolean {
-    // Here you should implement the logic to check if the router is connected
-    // For now, let's assume it returns false to show the toast
     return false;
   }
 
   showRouterDisconnectedToast() {
-    // First, set it to false to ensure that toggling to true is recognized as a change
     this.showToast = false;
-    // Use a timeout to allow Angular to register the change to false before setting it to true again
     setTimeout(() => {
       this.showToast = true;
     });

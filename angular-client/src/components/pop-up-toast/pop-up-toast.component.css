@@ -24,32 +24,31 @@
 
 .toast p {
     margin: 0;
-    font-weight: bold; /* Emphasize the message */
+    font-weight: bold;
 }
 
 .toast button {
     position: absolute;
     top: 37%;
-    right: 20px; /* Adjust as needed to position the 'X' button on the far right */
-    transform: translateY(-50%); /* Center the button vertically */
+    right: 20px;
+    transform: translateY(-50%);
     background: none;
-    border: 1px solid white; /* Black border */
-    border-radius: 2px; /* Optional: add a slight border radius */
+    border: 1px solid white;
+    border-radius: 2px;
     color: #fff;
-    padding: 0 8px; /* Adjust padding as needed */
+    padding: 0 8px;
     font-size: 12px;
     cursor: pointer;
     transition: color 0.3s ease;
 }
 
 .toast button:hover {
-    background-color: #f04346; /* Optional: change background color on hover */
+    background-color: #f04346;
     color: #fff;
 }
 
-/* Optional: Add a warning icon to the toast */
 .toast::before {
-    content: '⚠️'; /* Warning icon - choose an icon that suits your design */
+    content: '⚠️'; /* Warning icon */
     display: inline-block;
     margin-right: 8px;
     font-size: 18px;
