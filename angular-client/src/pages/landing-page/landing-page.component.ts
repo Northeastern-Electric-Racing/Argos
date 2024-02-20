@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { IdentifierDataType } from 'src/utils/enumerations/ImportantDataType';
+import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 
 /**
  * Container for the landing page, obtains data from the storage service.
