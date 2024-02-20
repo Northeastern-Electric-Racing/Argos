@@ -5,5 +5,5 @@ export enum DataTypeName {
   location = 'location',
   radius = 'radius',
   packTemp = 'Pack Temp',
-  points = 'Points',
+  points = 'Points'
 }
