@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { getDataByDataTypeName } from 'src/api/data.api';
+import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
 import { getRunById } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
@@ -67,12 +67,14 @@ export default class GraphPage implements OnInit {
             this.selectedDataTypeValuesSubject.next(nextValue);
           });
         }
-      } else {
+      } else if (this.runId) {
         this.selectedDataTypeValuesIsLoading = true;
         this.selectedDataTypeValuesIsError = false;
         this.selectedDataTypeValuesError = undefined;
 
-        const dataQueryResponse = this.serverService.query<DataValue[]>(() => getDataByDataTypeName(dataType.name));
+        const dataQueryResponse = this.serverService.query<DataValue[]>(() =>
+          getDataByDataTypeNameAndRunId(dataType.name, this.runId!)
+        );
         dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
           this.selectedDataTypeValuesIsLoading = isLoading;
         });

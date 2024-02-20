@@ -24,6 +24,7 @@ import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
 import { BatteryPercentageComponent } from 'src/components/battery/battery.component';
+import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
 import { History } from 'src/components/history-button/history.component';
 import { Carousel } from 'src/components/carousel/carousel.component';
@@ -61,7 +62,8 @@ import { PopUpToastComponent } from 'src/components/pop-up-toast/pop-up-toast.co
     Graph,
     LandingButtons,
     Map,
-    PopUpToastComponent
+    PopUpToastComponent,
+    InfoBackgroundComponent
   ],
   imports: [
     BrowserModule,
