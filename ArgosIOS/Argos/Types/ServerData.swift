@@ -14,7 +14,7 @@ struct ServerData: Codable {
     var runId: Int
     var name: String
     var unit: String
-    var values: [String]
+    var value: Float
     var timestamp: Int
 }
 
@@ -22,6 +22,6 @@ struct ServerData: Codable {
  * Format of a data point
  */
 struct DataValue: Codable {
-    var values: [String]
+    var value: Float
     var time: Int
 }

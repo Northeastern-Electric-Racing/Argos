@@ -13,10 +13,10 @@ struct LandingView: View {
     
     @ObservedObject private var socketClient = SocketClient.shared
     @ObservedObject private var viewModel = LandingViewModel()
-
+    
     var body: some View {
         AsyncContentView(source: self.viewModel) { props in
-            NavigationStack(path: self.$viewModel.path) {
+            NavigationStack {
                 VStack {
                     if self.socketClient.isConnected {
                         ArgosHeader("Connected To Router")
@@ -42,21 +42,17 @@ struct LandingView: View {
                     }
                     ArgosButton(title: "Map View", action: {
                         self.viewModel.onMapViewClicked()
-                    })
+                    }).navigationDestination(isPresented: self.$viewModel.showMap) {
+                        MapView()
+                    }
                 }
                 .padding()
                 .navigationTitle("Argos")
                 .customDialog(presentationManger: self.viewModel.dialogPresentation)
-                .navigationDestination(for: HomeNavigation.self) { destination in
-                    switch destination {
-                    case .map:
-                        MapView()
-                    case .graph:
-                        if let selectedRunId = self.viewModel.selectedRunId {
-                            GraphContainer(viewModel: .init(runId: selectedRunId, realTime: self.viewModel.realTimeSelected))
-                        }
+                .navigationDestination(isPresented: self.$viewModel.showGraph) {
+                    if let selectedRunId = self.viewModel.selectedRunId {
+                        GraphContainer(viewModel: .init(runId: selectedRunId))
                     }
-                    
                 }
             }
         }

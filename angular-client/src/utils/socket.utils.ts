@@ -9,7 +9,7 @@ export type StorageMap = Map<string, BehaviorSubject<DataValue>>;
  * The value of a data point
  */
 export type DataValue = {
-  values: string[];
+  value: string | number;
   time: number;
 };
 
@@ -20,6 +20,6 @@ export type ServerData = {
   runId: number;
   name: string;
   unit: string;
-  values: string[];
+  value: number | string;
   timestamp: number;
 };

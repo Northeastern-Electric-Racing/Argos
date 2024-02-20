@@ -21,11 +21,11 @@ class LandingViewModel: LoadableObject {
     @Published var packTemp: Double = 0
     @Published var motorTemp: Double = 0
     
+    @Published var showGraph = false
+    @Published var showMap = false
+    
     @Published var dialogPresentation = DialogPresentation()
     @Published var selectedRunId: Int?
-    @Published var realTimeSelected = false
-    
-    @Published var path: [HomeNavigation] = []
     
     private var cancellables: Set<AnyCancellable> = []
     
@@ -44,14 +44,14 @@ class LandingViewModel: LoadableObject {
                 self.socketClient.$values
                     .sink { [weak self] values in
                         guard let self = self else {return}
-                        if let first = values[DataTypeName.stateOfCharge.rawValue]?.values.first, let stateOfCharge = Float(first) {
-                            self.stateOfCharge = Double(stateOfCharge / 100)
+                        if let stateOfCharge = values[DataTypeName.stateOfCharge.rawValue] {
+                            self.stateOfCharge = Double(stateOfCharge.value / 100)
                         }
-                        if let first = values[DataTypeName.packTemp.rawValue]?.values.first, let packTemp = Float(first) {
-                            self.packTemp = Double(packTemp)
+                        if let packTemp = values[DataTypeName.packTemp.rawValue] {
+                            self.packTemp = Double(packTemp.value)
                         }
-                        if let first = values[DataTypeName.motorTemp.rawValue]?.values.first, let motorTemp = Float(first) {
-                            self.motorTemp = Double(motorTemp)
+                        if let motorTemp = values[DataTypeName.motorTemp.rawValue] {
+                            self.motorTemp = Double(motorTemp.value)
                         }
                     }
                     .store(in: &self.cancellables)
@@ -65,8 +65,7 @@ class LandingViewModel: LoadableObject {
     func selectRun(_ run: Run) {
         self.selectedRunId = run.id
         self.dialogPresentation.show(content: nil)
-        self.realTimeSelected = false
-        self.path.append(.graph)
+        self.showGraph = true
     }
     
     func onMoreDetailsClicked() {
@@ -75,11 +74,10 @@ class LandingViewModel: LoadableObject {
             return
         }
         self.selectedRunId = runId
-        self.realTimeSelected = true
-        self.path.append(.graph)
+        self.showGraph = true
     }
     
     func onMapViewClicked() {
-        self.path.append(.map)
+        self.showMap = true
     }
 }

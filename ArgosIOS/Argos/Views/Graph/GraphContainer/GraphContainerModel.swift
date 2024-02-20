@@ -47,7 +47,7 @@ class GraphContainerModel: LoadableObject {
             DispatchQueue.main.async {
                 self.socketClient.$values
                     .sink { [weak self] values in
-                        guard let self = self, self.realTime, let selectedDataType = self.selectedDataType, let nextValue = values[selectedDataType.name] else { return }
+                        guard let self = self, let selectedDataType = self.selectedDataType, let nextValue = values[selectedDataType.name] else { return }
                         if (self.currentData.count > 100) {
                             self.currentData.removeFirst()
                         }
@@ -72,25 +72,17 @@ class GraphContainerModel: LoadableObject {
             return
         }
         
-        Task { [weak self] in
-            guard let self = self else {return}
+        Task {
             self.transitionState(.loading)
             do {
-                let currentData = try await APIHandler.getDataByDataTypeAndRunId(name: dataType.name, runId: self.runId)
+                let currentData = try await APIHandler.getDataByDataType(name: dataType.name)
                 DispatchQueue.main.async {
-                    self.currentData = currentData.map({.init(values: $0.values, time: $0.timestamp)})
+                    self.currentData = currentData.map({.init(value: $0.value, time: $0.timestamp)})
                     self.load(self.cachedProps)
                 }
             } catch {
                 self.fail(error, self.cachedProps)
             }
         }
-    }
-    
-    func transformDataValueToGraphData(_ value: DataValue) throws -> GraphData {
-        guard let first = value.values.first, let dataPoint = Float(first) else {
-            throw TransformerError.failedToConvertDataValueToGraphData
-        }
-        return .init(time: value.time, value: dataPoint)
     }
 }

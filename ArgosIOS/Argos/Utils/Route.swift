@@ -22,7 +22,7 @@ enum Route: RawRepresentable, API {
     case allRuns
     case runById(id: Int)
     
-    case dataByDataTypeAndRunId(name: String, runId: Int)
+    case dataByDataType(name: String)
     
     var rawValue: String {
         switch self {
@@ -31,7 +31,7 @@ enum Route: RawRepresentable, API {
         case .allRuns: return "/runs"
         case .runById(let id): return "\(Route.allRuns.rawValue)/\(id)"
             
-        case .dataByDataTypeAndRunId(let name, let runId): return "data/\(name)/\(runId)"
+        case .dataByDataType(let name): return "data/\(name)"
         }
     }
 }

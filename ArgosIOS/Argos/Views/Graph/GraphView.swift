@@ -8,13 +8,8 @@
 import SwiftUI
 import Charts
 
-struct GraphData {
-    var time: Int
-    var value: Float
-}
-
 struct GraphView: View {
-    var data: [GraphData]
+    @Binding var data: [DataValue]
     
     var body: some View {
         Chart(Array(self.data.enumerated()), id: \.0) {
@@ -32,5 +27,5 @@ struct GraphView: View {
 }
 
 #Preview {
-    GraphView(data: [])
+    GraphView(data: .constant([]))
 }
