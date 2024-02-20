@@ -10,7 +10,7 @@ const getAllNodes = () => `${baseURL}/nodes`;
 const getAllSystems = () => `${baseURL}/systems`;
 
 /* Data */
-const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) => `${baseURL}/data/${dataTypeName}`;
+const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) => `${baseURL}/data/${dataTypeName}/${runId}`;
 
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;

@@ -29,5 +29,5 @@ export type Run = {
   locationName: string;
   driverName: string;
   systemName: string;
-  time: number;
+  time: Date;
 };

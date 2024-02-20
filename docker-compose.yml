@@ -1,6 +1,21 @@
 version: "3.8"
 
 services:
+  odyssey-timescale:
+    container_name: odyssey-timescale
+    image: timescale/timescaledb:2.13.1-pg15
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    networks:
+      - shared-network
+    tty: true
+
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
@@ -11,8 +26,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8000:8000
+    expose: 
+      - 8000
     networks:
       - shared-network
+    depends_on:
+      - odyssey-timescale
 
   client:
     container_name: client
@@ -31,3 +50,4 @@ services:
 
 networks:
   shared-network:
+    driver: bridge

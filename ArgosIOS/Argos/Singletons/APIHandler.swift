@@ -91,8 +91,8 @@ class APIHandler {
      * API Call to get the data related to the data type name in the database
      - parameter name: the name of the data type to get the data for
      */
-    public static func getDataByDataType(name: String) async throws -> [ArgosData] {
-        let data: [ArgosData] = try await Self.queryData(route: .dataByDataType(name: name))
+    public static func getDataByDataTypeAndRunId(name: String, runId: Int) async throws -> [ArgosData] {
+        let data: [ArgosData] = try await Self.queryData(route: .dataByDataTypeAndRunId(name: name, runId: runId))
         return data
     }
 }

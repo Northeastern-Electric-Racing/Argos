@@ -9,7 +9,8 @@
     "start:production": "node dist/index.js",
     "start": "npx ts-node src/index.ts",
     "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate reset",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:seed": "ts-node ./src/odyssey-base/src/prisma/seed.ts",
     "prisma:migrate:prod": "npx prisma migrate deploy --preview-feature",
     "build:proto": "src/odyssey-base/src/scripts/protoc-generate.sh"
   },

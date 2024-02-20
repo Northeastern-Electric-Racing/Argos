@@ -61,7 +61,7 @@ struct CarouselView: View {
 }
 
 #Preview {
-    CarouselView(runs: [Run(id: 1, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: "100000000"), Run(id: 2, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: "100000000"), Run(id: 3, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: "100000000")], selectRun: {
+    CarouselView(runs: [Run(id: 1, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: Date.now.formatted()), Run(id: 2, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: Date.now.formatted()), Run(id: 3, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: Date.now.formatted())], selectRun: {
         run in
         print("selected run")
     }, isPresented: .constant(true))

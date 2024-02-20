@@ -38,13 +38,13 @@ struct CarouselContent: View {
     }
     
     private func formatDate() -> String {
-        return Date(timeIntervalSince1970: TimeInterval(self.run.timestamp)).formatted(date: .abbreviated, time: .shortened)
+        return self.run.dateTime.formatted(date: .abbreviated, time: .shortened)
         
     }
 }
 
 #Preview {
-    CarouselContent(run: Run(id: 1, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: "100000000"), selectRun: {
+    CarouselContent(run: Run(id: 1, locationName: "Gainsborough", driverName: "Fergus", systemName: "Drive Train", time: Date.now.formatted()), selectRun: {
         print("selected run")
     })
 }

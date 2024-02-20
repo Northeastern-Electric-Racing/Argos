@@ -1,0 +1,17 @@
+mat-icon {
+  color: white;
+  margin-right: 12px;
+}
+
+.container {
+  background-color: #414141;
+  display: inline-block;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

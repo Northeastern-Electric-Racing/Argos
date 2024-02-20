@@ -50,8 +50,8 @@ export class Carousel {
     this.previousIndex = newIndex;
   }
 
-  datePipe = (time: string) => {
-    const date = new Date(parseInt(time));
+  datePipe = (date: Date) => {
+    date = new Date(date);
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}`;
   };
 

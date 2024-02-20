@@ -35,7 +35,7 @@ export default class Graph implements OnInit {
   chart!: ApexCharts;
 
   updateChart = (values: DataValue[]) => {
-    const mappedValues = values.map((value: DataValue) => [+value.time, +value.value]);
+    const mappedValues = values.map((value: DataValue) => [value.time, +value.values[0]]);
 
     const newSeries = [
       {

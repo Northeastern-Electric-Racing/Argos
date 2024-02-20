@@ -17,7 +17,7 @@ import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
 })
 export default class Typography implements OnInit {
   @Input() variant!: StyleVariant;
-  @Input() content?: string | null;
+  @Input() content?: string | string[] | null;
   @Input() additionalStyles?: string;
   style!: string;
 
@@ -34,6 +34,12 @@ export default class Typography implements OnInit {
         break;
       case 'subheader':
         this.style = Theme.SUBHEADER;
+        break;
+      case 'info-title':
+        this.style = Theme.INFOTITLE;
+        break;
+      case 'info-subtitle':
+        this.style = Theme.INFOSUBTITLE;
         break;
     }
 

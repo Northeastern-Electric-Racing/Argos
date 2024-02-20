@@ -16,6 +16,8 @@
 		1551646B2B3127420082044C /* DataType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646A2B3127420082044C /* DataType.swift */; };
 		1551646E2B312B820082044C /* ErrorHandlerAlertViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */; };
 		155164702B312BA30082044C /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1551646F2B312BA30082044C /* ErrorHandling.swift */; };
+		15854D252B831AA40072C102 /* TransformerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15854D242B831AA40072C102 /* TransformerError.swift */; };
+		15854D272B8321810072C102 /* HomeNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15854D262B8321810072C102 /* HomeNavigation.swift */; };
 		159539802B5745A40093EBD0 /* LandingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1595397F2B5745A40093EBD0 /* LandingViewModel.swift */; };
 		159539822B57488A0093EBD0 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539812B57488A0093EBD0 /* APIError.swift */; };
 		159539842B5752CA0093EBD0 /* DataTypeName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159539832B5752CA0093EBD0 /* DataTypeName.swift */; };
@@ -73,6 +75,8 @@
 		1551646A2B3127420082044C /* DataType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataType.swift; sourceTree = "<group>"; };
 		1551646D2B312B820082044C /* ErrorHandlerAlertViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlerAlertViewModifier.swift; sourceTree = "<group>"; };
 		1551646F2B312BA30082044C /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
+		15854D242B831AA40072C102 /* TransformerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformerError.swift; sourceTree = "<group>"; };
+		15854D262B8321810072C102 /* HomeNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeNavigation.swift; sourceTree = "<group>"; };
 		1595397F2B5745A40093EBD0 /* LandingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingViewModel.swift; sourceTree = "<group>"; };
 		159539812B57488A0093EBD0 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		159539832B5752CA0093EBD0 /* DataTypeName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypeName.swift; sourceTree = "<group>"; };
@@ -160,6 +164,7 @@
 			isa = PBXGroup;
 			children = (
 				155164662B31205D0082044C /* Route.swift */,
+				15854D262B8321810072C102 /* HomeNavigation.swift */,
 				159539832B5752CA0093EBD0 /* DataTypeName.swift */,
 				15AE8F802B3369A300479691 /* Direction.swift */,
 			);
@@ -245,6 +250,7 @@
 			isa = PBXGroup;
 			children = (
 				15AE8F8D2B33A57C00479691 /* ConfigureError.swift */,
+				15854D242B831AA40072C102 /* TransformerError.swift */,
 				159539812B57488A0093EBD0 /* APIError.swift */,
 			);
 			path = Errors;
@@ -438,6 +444,7 @@
 			files = (
 				155164622B311AE50082044C /* ServerData.swift in Sources */,
 				15AE8FC52B33D1C500479691 /* Data.swift in Sources */,
+				15854D252B831AA40072C102 /* TransformerError.swift in Sources */,
 				159539872B5853550093EBD0 /* GraphContainerModel.swift in Sources */,
 				15AE8FC12B33CEDC00479691 /* HorizontalExpandingScrollView.swift in Sources */,
 				15AE8F8E2B33A57C00479691 /* ConfigureError.swift in Sources */,
@@ -469,6 +476,7 @@
 				1595398E2B58663D0093EBD0 /* AsyncContentView.swift in Sources */,
 				15AE8FA22B33BCB200479691 /* ArgosHeader.swift in Sources */,
 				15AE8F812B3369A300479691 /* Direction.swift in Sources */,
+				15854D272B8321810072C102 /* HomeNavigation.swift in Sources */,
 				15AE8F892B3378A400479691 /* GraphCaption.swift in Sources */,
 				C977D19E2B2FEE410016D932 /* ArgosApp.swift in Sources */,
 				15AE8F9B2B33B3E700479691 /* DialogContent.swift in Sources */,

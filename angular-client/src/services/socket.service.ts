@@ -26,7 +26,6 @@ export default class SocketService {
         /* Parse the message and store it in the storage service */
 
         const data = JSON.parse(message) as ServerData;
-        console.log(data.runId);
         storage.setCurrentRunId(data.runId);
 
         /* Create key based on name and unit for hashmap */
@@ -37,7 +36,7 @@ export default class SocketService {
 
         /* Retrieve the previous values */
         const valuesSubject = storage.get(key);
-        const newValue = { value: data.value, time: data.timestamp };
+        const newValue: DataValue = { values: data.values, time: data.timestamp };
 
         /* If the values exist, add the new value to the end of the array */
         if (valuesSubject) {
