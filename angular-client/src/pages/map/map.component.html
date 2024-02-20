@@ -1,3 +1,11 @@
-<div id="map" class="map-container"></div>
-
-```
+<div *ngIf="isError; else checkIsLoading">
+  <error-page [errorMessage]="error!.message"></error-page>
+</div>
+<ng-template #checkIsLoading>
+  <div *ngIf="isLoading; else displayMap">
+    <loading-page></loading-page>
+  </div>
+</ng-template>
+<ng-template #displayMap>
+  <div id="map" class="map-container"></div>
+</ng-template>
