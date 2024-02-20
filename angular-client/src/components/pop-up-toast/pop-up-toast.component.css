@@ -1,56 +1,59 @@
 .toast {
-    position: relative;
-    top: 20px;
-    right: 20px;
-    background-color: #f04346; /* Changed to a more neutral color */
-    color: #fff;
-    padding: 16px;
-    border-radius: 8px; /* More rounded corners */
-    z-index: 10000;
-    transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-    transform: translateY(-100%);
-    opacity: 0;
-    visibility: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow for depth */
-    font-family: 'Arial', sans-serif; /* Improved typography */
-    font-size: 14px;
+  position: relative;
+  top: 20px;
+  right: 20px;
+  background-color: #f04346;
+  color: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  z-index: 10000;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease,
+    box-shadow 0.3s ease;
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
 }
 
 .toast.show {
-    transform: translateY(0);
-    opacity: 1;
-    visibility: visible;
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
 }
 
 .toast p {
-    margin: 0;
-    font-weight: bold;
+  margin: 0;
+  font-weight: bold;
 }
 
 .toast button {
-    position: absolute;
-    top: 37%;
-    right: 20px;
-    transform: translateY(-50%);
-    background: none;
-    border: 1px solid white;
-    border-radius: 2px;
-    color: #fff;
-    padding: 0 8px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: color 0.3s ease;
+  position: absolute;
+  top: 37%;
+  right: 20px;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid white;
+  border-radius: 2px;
+  color: #fff;
+  padding: 0 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.4s ease;
 }
 
 .toast button:hover {
-    background-color: #f04346;
-    color: #fff;
+  background-color: #f04346;
+  color: #fff;
 }
 
 .toast::before {
-    content: '⚠️'; /* Warning icon */
-    display: inline-block;
-    margin-right: 8px;
-    font-size: 18px;
-    vertical-align: middle;
+  content: '⚠️';
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 18px;
+  vertical-align: middle;
 }
