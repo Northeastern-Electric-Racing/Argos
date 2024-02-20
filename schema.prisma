@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Run {
+    id           Int       @id @unique @default(autoincrement())
+    locationName String?
+    location     Location? @relation(fields: [locationName], references: [name])
+    driverName   String?
+    driver       Driver?   @relation(fields: [driverName], references: [username])
+    systemName   String?
+    system       System?   @relation(fields: [systemName], references: [name])
+    data         Data[]
+    time         BigInt
+}
+
+model Location {
+    name      String @id @unique
+    latitude  Float
+    longitude Float
+    radius    Float
+    runs      Run[]
+}
+
+model Driver {
+    username String @id @unique
+    runs     Run[]
+}
+
+model System {
+    name String @id @unique
+    runs Run[]
+}
+
+model Data {
+    id           Int      @id @unique @default(autoincrement())
+    value        Int
+    dataTypeName String
+    dataType     DataType @relation(fields: [dataTypeName], references: [name])
+    time         BigInt
+    runId        Int
+    run          Run      @relation(fields: [runId], references: [id])
+}
+
+model DataType {
+    name     String @id @unique
+    unit     String
+    data     Data[]
+    node     Node   @relation(fields: [nodeName], references: [name])
+    nodeName String
+}
+
+model Node {
+    name      String     @id @unique
+    dataTypes DataType[]
+}
