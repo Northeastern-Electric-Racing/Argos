@@ -11,7 +11,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CarouselModule } from 'primeng/carousel';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
@@ -80,7 +79,6 @@ import { PopUpToastComponent } from 'src/components/pop-up-toast/pop-up-toast.co
     MatListModule,
     MatDialogModule,
     CarouselModule,
-    MatProgressSpinnerModule,
     NgApexchartsModule
   ],
   providers: [],
