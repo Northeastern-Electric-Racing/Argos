@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import Theme from 'src/services/theme.service';
-import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
+import { StyleVariant } from 'src/utils/enumerations/style-variant';
 
 /**
  * Custom typography component that allows for the use of different styles of text.

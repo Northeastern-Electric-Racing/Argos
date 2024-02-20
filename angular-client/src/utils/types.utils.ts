@@ -31,3 +31,8 @@ export type Run = {
   systemName: string;
   time: Date;
 };
+
+export type Coordinate = {
+  lat: number;
+  lng: number;
+};
