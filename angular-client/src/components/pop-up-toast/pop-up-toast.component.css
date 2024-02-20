@@ -1,0 +1,57 @@
+.toast {
+    position: relative;
+    top: 20px;
+    right: 20px;
+    background-color: #f04346; /* Changed to a more neutral color */
+    color: #fff;
+    padding: 16px;
+    border-radius: 8px; /* More rounded corners */
+    z-index: 10000;
+    transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+    font-family: 'Arial', sans-serif; /* Improved typography */
+    font-size: 14px;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.toast p {
+    margin: 0;
+    font-weight: bold; /* Emphasize the message */
+}
+
+.toast button {
+    position: absolute;
+    top: 37%;
+    right: 20px; /* Adjust as needed to position the 'X' button on the far right */
+    transform: translateY(-50%); /* Center the button vertically */
+    background: none;
+    border: 1px solid white; /* Black border */
+    border-radius: 2px; /* Optional: add a slight border radius */
+    color: #fff;
+    padding: 0 8px; /* Adjust padding as needed */
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.toast button:hover {
+    background-color: #f04346; /* Optional: change background color on hover */
+    color: #fff;
+}
+
+/* Optional: Add a warning icon to the toast */
+.toast::before {
+    content: '⚠️'; /* Warning icon - choose an icon that suits your design */
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 18px;
+    vertical-align: middle;
+}

@@ -35,6 +35,7 @@ import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-butto
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 import Map from 'src/pages/map/map.component';
+import { PopUpToastComponent } from 'src/components/pop-up-toast/pop-up-toast.component';
 
 @NgModule({
   declarations: [
@@ -59,7 +60,8 @@ import Map from 'src/pages/map/map.component';
     GraphInfo,
     Graph,
     LandingButtons,
-    Map
+    Map,
+    PopUpToastComponent
   ],
   imports: [
     BrowserModule,
