@@ -1,0 +1,20 @@
+:host {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.select-container {
+  width: 150px;
+  background-color: #323232;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.select {
+  background-color: #323232;
+  border: none;
+  color: #efefef;
+  width: 100%;
+}

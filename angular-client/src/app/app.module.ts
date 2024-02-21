@@ -11,6 +11,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CarouselModule } from 'primeng/carousel';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
@@ -37,6 +39,11 @@ import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-butto
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 import Map from 'src/pages/map/map.component';
+import Thermometer from 'src/components/thermometer/thermometer.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import HStack from 'src/components/hstack/hstack.component';
+import VStack from 'src/components/vstack/vstack.component';
+import ResolutionSelector from 'src/components/resolution-selector/resolution-selector.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +69,11 @@ import Map from 'src/pages/map/map.component';
     Graph,
     LandingButtons,
     Map,
-    InfoBackgroundComponent
+    InfoBackgroundComponent,
+    Thermometer,
+    VStack,
+    HStack,
+    ResolutionSelector
   ],
   imports: [
     BrowserModule,
@@ -79,7 +90,10 @@ import Map from 'src/pages/map/map.component';
     MatDialogModule,
     CarouselModule,
     MatProgressSpinnerModule,
-    NgApexchartsModule
+    NgApexchartsModule,
+    FlexLayoutModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   providers: [],
   bootstrap: [AppContext]

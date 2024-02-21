@@ -1,5 +1,27 @@
 <div class="image-container">
   <landing-header [driver]="currentDriver" [location]="currentLocation" [system]="currentSystem" />
+  <hstack spacing="100px">
+    <vstack>
+      <hstack spacing="30px">
+        <vstack spacing="0px" style="width: 100px">
+          <typography variant="value" [content]="packTemp.toString() + '°'" />
+          <typography variant="header" content="Pack" />
+        </vstack>
+        <div class="thermometer-container">
+          <thermometer [temperature]="packTemp" [min]="-15" [max]="50" />
+        </div>
+      </hstack>
+      <hstack spacing="30px">
+        <vstack spacing="0px" style="width: 100px">
+          <typography variant="value" [content]="motorTemp.toString() + '°'" />
+          <typography variant="header" content="Motor" />
+        </vstack>
+        <div class="thermometer-container">
+          <thermometer [temperature]="motorTemp" [min]="-15" [max]="50" />
+        </div>
+      </hstack>
+    </vstack>
+    <battery [percentage]="stateOfCharge" [height]="400" [width]="200" />
+  </hstack>
   <landing-buttons />
-  <battery [percentage]="20" [height]="200" [width]="100" />
 </div>
