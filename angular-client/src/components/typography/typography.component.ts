@@ -24,22 +24,25 @@ export default class Typography implements OnInit {
   ngOnInit(): void {
     switch (this.variant) {
       case 'header':
-        this.style = Theme.HEADER;
+        this.style = Theme.header;
         break;
       case 'xx-large-title':
-        this.style = Theme.XXLARGEHEADER;
+        this.style = Theme.xxLargeHeader;
         break;
       case 'large-header':
-        this.style = Theme.LARGEHEADER;
+        this.style = Theme.largeHeader;
         break;
       case 'subheader':
-        this.style = Theme.SUBHEADER;
+        this.style = Theme.subheader;
         break;
       case 'info-title':
-        this.style = Theme.INFOTITLE;
+        this.style = Theme.infoTitle;
         break;
       case 'info-subtitle':
-        this.style = Theme.INFOSUBTITLE;
+        this.style = Theme.infoSubtitle;
+        break;
+      case 'value':
+        this.style = Theme.value;
         break;
     }
 

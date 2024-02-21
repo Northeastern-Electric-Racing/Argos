@@ -37,6 +37,10 @@ import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-butto
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 import Map from 'src/pages/map/map.component';
+import Thermometer from 'src/components/thermometer/thermometer.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import HStack from 'src/components/hstack/hstack.component';
+import VStack from 'src/components/vstack/vstack.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +66,10 @@ import Map from 'src/pages/map/map.component';
     Graph,
     LandingButtons,
     Map,
-    InfoBackgroundComponent
+    InfoBackgroundComponent,
+    Thermometer,
+    VStack,
+    HStack
   ],
   imports: [
     BrowserModule,
@@ -79,7 +86,8 @@ import Map from 'src/pages/map/map.component';
     MatDialogModule,
     CarouselModule,
     MatProgressSpinnerModule,
-    NgApexchartsModule
+    NgApexchartsModule,
+    FlexLayoutModule
   ],
   providers: [],
   bootstrap: [AppContext]

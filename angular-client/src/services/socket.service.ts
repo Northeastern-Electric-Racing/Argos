@@ -1,7 +1,6 @@
 import { Socket } from 'socket.io-client';
 import { DataValue, ServerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
-import { BehaviorSubject } from 'rxjs';
 
 /**
  * Service for interacting with the socket
@@ -29,23 +28,10 @@ export default class SocketService {
         storage.setCurrentRunId(data.runId);
 
         /* Create key based on name and unit for hashmap */
-        const key = JSON.stringify({
-          name: data.name,
-          unit: data.unit
-        });
+        const key = data.name;
 
-        /* Retrieve the previous values */
-        const valuesSubject = storage.get(key);
-        const newValue: DataValue = { values: data.values, time: data.timestamp };
-
-        /* If the values exist, add the new value to the end of the array */
-        if (valuesSubject) {
-          valuesSubject.next(newValue);
-        } else {
-          /* Otherwise, create a new key with the new value */
-          const newValuesSubject = new BehaviorSubject<DataValue>(newValue);
-          storage.set(key, newValuesSubject);
-        }
+        const newValue: DataValue = { values: data.values, time: data.timestamp, unit: data.unit };
+        storage.addValue(key, newValue);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
