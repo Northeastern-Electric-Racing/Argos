@@ -7,6 +7,7 @@ import Storage from './storage.service';
  */
 export default class SocketService {
   private socket: Socket;
+  private lastTimestamp: number = 0;
 
   /**
    * Constructor
@@ -21,6 +22,8 @@ export default class SocketService {
    */
   receiveData = (storage: Storage) => {
     this.socket.on('message', (message: string) => {
+      if (Date.now() - this.lastTimestamp < storage.getResolution()) return;
+      this.lastTimestamp = Date.now();
       try {
         /* Parse the message and store it in the storage service */
 

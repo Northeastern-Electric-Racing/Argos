@@ -9,6 +9,7 @@ import { DataValue, StorageMap } from 'src/utils/socket.utils';
 export default class Storage {
   private storage: StorageMap;
   private currentRunId?: number;
+  private resolution: number = 100;
 
   constructor() {
     this.storage = new Map<string, Subject<DataValue>>();
@@ -34,5 +35,13 @@ export default class Storage {
 
   public setCurrentRunId = (runId: number) => {
     this.currentRunId = runId;
+  };
+
+  public setResolution = (resolution: number) => {
+    this.resolution = resolution;
+  };
+
+  public getResolution = (): number => {
+    return this.resolution;
   };
 }

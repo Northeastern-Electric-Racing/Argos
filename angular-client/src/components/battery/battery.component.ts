@@ -80,9 +80,6 @@ export class BatteryPercentageComponent {
     if (percentage <= 20) {
       return Theme.battteryLow;
     }
-    if (percentage <= 50) {
-      return Theme.battteryMed;
-    }
     return Theme.battteryHigh;
   };
 
