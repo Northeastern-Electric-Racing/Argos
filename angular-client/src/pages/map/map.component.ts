@@ -19,7 +19,6 @@ export default class Map implements OnInit {
   isLoading: boolean = true;
   isError: boolean = false;
   error?: Error;
-  coordinates: DataValue[] = [];
 
   constructor(
     private map: MapService,
@@ -37,7 +36,6 @@ export default class Map implements OnInit {
         this.map.buildMap();
         this.map.addPolyline([]);
         this.storage.get(IdentifierDataType.POINTS).subscribe((value) => {
-          // this.coordinates.push(value);
           this.map.addCoordinateToPolyline(this.transformDataToCoordinate(value));
         });
       }, 100);
