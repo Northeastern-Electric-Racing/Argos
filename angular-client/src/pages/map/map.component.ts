@@ -5,6 +5,8 @@ import APIService from 'src/services/api.service';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { ActivatedRoute } from '@angular/router';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
+import Storage from 'src/services/storage.service';
+import { Coordinate } from 'src/utils/types.utils';
 
 @Component({
   selector: 'map',
@@ -17,32 +19,48 @@ export default class Map implements OnInit {
   isLoading: boolean = true;
   isError: boolean = false;
   error?: Error;
+  coordinates: DataValue[] = [];
 
   constructor(
     private map: MapService,
+    private storage: Storage,
     private apiService: APIService,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
     this.parseParams();
-    const queryResponse = this.apiService.query<DataValue[]>(() =>
-      getDataByDataTypeNameAndRunId(IdentifierDataType.POINTS, this.runId)
-    );
-    queryResponse.data.subscribe((points) => {
-      console.log(points);
+    if (this.realTime) {
       this.isLoading = false;
       //Allow page to render before building map
       setTimeout(() => {
         this.map.buildMap();
-        this.map.addPolyline(
-          points.map((point) => ({ lat: parseFloat(point.values[1]), lng: parseFloat(point.values[0]) }))
-        );
+        this.map.addPolyline([]);
+        this.storage.get(IdentifierDataType.POINTS).subscribe((value) => {
+          // this.coordinates.push(value);
+          this.map.addCoordinateToPolyline(this.transformDataToCoordinate(value));
+        });
       }, 100);
-    });
-    queryResponse.isLoading.subscribe((isLoading) => (this.isLoading = isLoading));
-    queryResponse.isError.subscribe((isError) => (this.isError = isError));
-    queryResponse.error.subscribe((error) => (this.error = error));
+    } else {
+      const queryResponse = this.apiService.query<DataValue[]>(() =>
+        getDataByDataTypeNameAndRunId(IdentifierDataType.POINTS, this.runId)
+      );
+      queryResponse.data.subscribe((points) => {
+        this.isLoading = false;
+        //Allow page to render before building map
+        setTimeout(() => {
+          this.map.buildMap();
+          this.map.addPolyline(points.map(this.transformDataToCoordinate));
+        }, 100);
+      });
+      queryResponse.isLoading.subscribe((isLoading) => (this.isLoading = isLoading));
+      queryResponse.isError.subscribe((isError) => (this.isError = isError));
+      queryResponse.error.subscribe((error) => (this.error = error));
+    }
+  }
+
+  private transformDataToCoordinate(data: DataValue): Coordinate {
+    return { lat: parseFloat(data.values[1]), lng: parseFloat(data.values[0]) };
   }
 
   private parseParams() {
