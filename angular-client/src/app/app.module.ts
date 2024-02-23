@@ -11,6 +11,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CarouselModule } from 'primeng/carousel';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
@@ -24,6 +27,7 @@ import Header from 'src/components/header/header.component';
 import LandingHeader from 'src/pages/landing-page/landing-header/landing-header';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
 import { BatteryPercentageComponent } from 'src/components/battery/battery.component';
+import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
 import { History } from 'src/components/history-button/history.component';
 import { Carousel } from 'src/components/carousel/carousel.component';
@@ -35,6 +39,11 @@ import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-butto
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 import Map from 'src/pages/map/map.component';
+import Thermometer from 'src/components/thermometer/thermometer.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import HStack from 'src/components/hstack/hstack.component';
+import VStack from 'src/components/vstack/vstack.component';
+import ResolutionSelector from 'src/components/resolution-selector/resolution-selector.component';
 
 @NgModule({
   declarations: [
@@ -59,7 +68,12 @@ import Map from 'src/pages/map/map.component';
     GraphInfo,
     Graph,
     LandingButtons,
-    Map
+    Map,
+    InfoBackgroundComponent,
+    Thermometer,
+    VStack,
+    HStack,
+    ResolutionSelector
   ],
   imports: [
     BrowserModule,
@@ -75,7 +89,11 @@ import Map from 'src/pages/map/map.component';
     MatListModule,
     MatDialogModule,
     CarouselModule,
-    NgApexchartsModule
+    MatProgressSpinnerModule,
+    NgApexchartsModule,
+    FlexLayoutModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   providers: [],
   bootstrap: [AppContext]

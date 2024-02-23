@@ -15,13 +15,14 @@ struct GraphContainer: View, Equatable {
     @ObservedObject var viewModel: GraphContainerModel
     
     @EnvironmentObject var errorHandling: ErrorHandling
-        
+    
     var body: some View {
         AsyncContentView(source: self.viewModel) { props in
             VStack {
-                GraphView(data: self.$viewModel.currentData).frame(maxHeight: .infinity)
+                GraphView(data: (try? self.viewModel.currentData.map(self.viewModel.transformDataValueToGraphData)) ?? [])
+                    .frame(maxHeight: .infinity)
                 ZStack {
-                    GraphCaption(dataType: self.$viewModel.selectedDataType, mostRecentvalue: self.viewModel.currentData.last?.value[0], driver: self.viewModel.driver, location: self.viewModel.location, system: self.viewModel.system)
+                    GraphCaption(dataType: self.$viewModel.selectedDataType, mostRecentvalue: self.viewModel.currentData.last?.values[0], driver: self.viewModel.driver, location: self.viewModel.location, system: self.viewModel.system)
                 }
                 .overlay(GraphSelectionPopUp(nodes: props.nodes, selectDataType: {self.viewModel.setSelectedDataType($0)})
                     .frame(maxWidth: .infinity, alignment: .bottomLeading),

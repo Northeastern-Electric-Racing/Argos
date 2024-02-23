@@ -11,12 +11,21 @@ import Foundation
  * Format of a piece of data
  */
 struct ArgosData : Codable {
-    var id: Int
-    var value: Float
+    var id: String
+    var values: [String]
     var dataTypeName: String
     var time: String
     var timestamp: Int {
-        return Int(self.time)! / 1000
+        return Int((DateFormatter().date(from: time) ?? Date.distantPast).timeIntervalSince1970)
     }
     var runId: Int
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.values = try container.decode([String].self, forKey: .values)
+        self.dataTypeName = try container.decode(String.self, forKey: .dataTypeName)
+        self.time = try container.decode(String.self, forKey: .time)
+        self.runId = try container.decode(Int.self, forKey: .runId)
+    }
 }

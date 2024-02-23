@@ -75,7 +75,7 @@ if (process.env.PROD === 'true') {
 
   proxyClient = new ProdProxyClient(connection);
 } else {
-  proxyClient = new MockProxyClient(2);
+  proxyClient = new MockProxyClient(1);
 }
 
 proxyClient.configure();

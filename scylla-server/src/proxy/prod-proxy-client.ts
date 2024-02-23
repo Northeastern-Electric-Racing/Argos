@@ -1,8 +1,7 @@
 // Ignoring this because it wont build on github for some reason
-// @ts-ignore
 import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
 import { Topic } from '../odyssey-base/src/types/topic';
-import { Run } from '@prisma/client';
+import { run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
@@ -15,6 +14,7 @@ import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { serverdata as ServerData } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
 import ProxyClient from './proxy-client';
 import ProxyServer from './proxy-server';
+import { DataTypeName } from '../utils/data-type-name.utils';
 
 /**
  * Handler for receiving messages from Siren
@@ -23,7 +23,7 @@ export default class ProdProxyClient implements ProxyClient {
   connection: MqttClient;
   createNewRun: boolean;
   // storing run for the current connection, at start is undefined
-  currentRun: Run | undefined;
+  currentRun: run | undefined;
 
   proxyServers: ProxyServer[];
 
@@ -91,25 +91,14 @@ export default class ProdProxyClient implements ProxyClient {
         throw new Error('No unix_time property in packet');
       }
 
-      let values: string[];
-      let unit: string;
-
-      if (data.values && data.unit) {
-        ({ values } = data);
-        ({ unit } = data);
-      } else {
-        return;
-      }
-
       if (data.unit && data.values) {
         const serverMessage: ServerMessage = {
           node,
           dataType,
           unix_time: parseInt(unix_time as string),
           data: {
-            //TODO: Correct this to use the correct server data edit the ServerMessage value to be an array of strings
-            value: values[0],
-            unit
+            values: data.values,
+            unit: data.unit
           }
         };
 
@@ -138,68 +127,63 @@ export default class ProdProxyClient implements ProxyClient {
     }
     // upsert the node
     const node = await NodeService.upsertNode(data.node);
+    //upsert the data type
+    await DataTypeService.upsertDataType(data.dataType, data.data.unit, node.name);
+
     // start upserting data
     if (!this.currentRun) {
       console.log('no current run');
       return;
     }
+
     // initializing params
     let driverName: string | undefined = undefined;
     let systemName: string | undefined = undefined;
 
-    // enum instead of raw string representing
-    // driver, system, location props
-    //TODO: Move this to a new file
-    enum Property {
-      driverUser = 'driverUser',
-      systemName = 'systemName',
-      locationName = 'locationName',
-      latitude = 'latitude',
-      longitude = 'longitude',
-      radius = 'radius'
-    }
-
     // iterating and upserting
     const serverdata = data.data;
     switch (data.dataType) {
-      case Property.driverUser:
-        driverName = serverdata.value as string;
+      case DataTypeName.driverUser:
+        [driverName] = serverdata.values;
         break;
-      case Property.systemName:
-        systemName = serverdata.value as string;
+      case DataTypeName.systemName:
+        [systemName] = serverdata.values;
         break;
-      case Property.locationName:
+      case DataTypeName.locationName:
         if (this.recentLocationName) {
-          if (this.recentLocationName !== serverdata.value) {
+          if (this.recentLocationName !== serverdata.values[0]) {
             this.newLocation = true;
           }
         } else {
-          this.recentLocationName = serverdata.value as string;
+          [this.recentLocationName] = serverdata.values;
           this.newLocation = true;
         }
         break;
-      case Property.latitude:
-        this.recentLatitude = serverdata.value as number;
-        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
+      case DataTypeName.location:
+        this.recentLatitude = parseFloat(serverdata.values[0]);
+        this.recentLongitude = parseFloat(serverdata.values[1]);
         break;
-      case Property.longitude:
-        this.recentLongitude = serverdata.value as number;
-        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
-        break;
-      case Property.radius:
-        this.recentRadius = serverdata.value as number;
+      case DataTypeName.radius:
+        this.recentRadius = parseFloat(serverdata.values[0]);
         break;
       default:
         await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
-        //TODO: Correct this to use the correct server data
-        await DataService.addData(new ServerData.v1.ServerData({}), data.unix_time, data.dataType, this.currentRun.id);
+        await DataService.addData(
+          new ServerData.v1.ServerData({
+            values: serverdata.values,
+            unit: serverdata.unit
+          }),
+          data.unix_time,
+          data.dataType,
+          this.currentRun.id
+        );
     }
 
     // transform serverdata into client data to send to ProxyServer
     const clientData: ClientData = {
       runId: this.currentRun.id,
       name: data.dataType,
-      value: serverdata.value,
+      values: serverdata.values,
       unit: serverdata.unit,
       timestamp: data.unix_time
     };

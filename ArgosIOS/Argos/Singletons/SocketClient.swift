@@ -45,7 +45,7 @@ class SocketClient: ObservableObject {
                 let decoder = JSONDecoder()
                 let serverData: ServerData = try decoder.decode(ServerData.self, from: data)
                 self.runId = serverData.runId
-                self.values.updateValue(DataValue(value: [serverData.value], time: serverData.timestamp), forKey: serverData.name)
+                self.values.updateValue(DataValue(values: serverData.values, time: serverData.timestamp), forKey: serverData.name)
             } catch {
                 print("error", error)
             }

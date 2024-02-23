@@ -29,5 +29,10 @@ export type Run = {
   locationName: string;
   driverName: string;
   systemName: string;
-  time: number;
+  time: Date;
+};
+
+export type Coordinate = {
+  lat: number;
+  lng: number;
 };
