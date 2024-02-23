@@ -19,24 +19,48 @@ export class MapService {
     this.map.addControl(new mapboxgl.NavigationControl());
   };
 
+  addCoordinateToPolyline = (coordinate: Coordinate) => {
+    const source = this.map.getSource('route') as any;
+
+    const data = source._data;
+    // Extract the LineString feature
+    if (data && data.type === 'LineString') {
+      // Append the new coordinate
+      data.coordinates.push([coordinate.lng, coordinate.lat]);
+
+      // Update the source data
+      source.setData(data);
+    } else if (data && data.type === 'Feature') {
+      // Append the new coordinate
+      data.geometry.coordinates.push([coordinate.lng, coordinate.lat]);
+
+      // Update the source data
+      source.setData(data);
+    }
+  };
+
   addPolyline = (coordinates: Coordinate[]) => {
     const lngLatCoordinates = coordinates.map((coordinate) => [coordinate.lng, coordinate.lat]);
 
+    const geojson = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: lngLatCoordinates
+      }
+    };
+
     this.map.on('load', () => {
+      this.map.addSource('route', {
+        type: 'geojson',
+        data: geojson as any
+      });
+
       this.map.addLayer({
         id: 'route',
         type: 'line',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: lngLatCoordinates
-            }
-          }
-        },
+        source: 'route',
         layout: {
           'line-join': 'round',
           'line-cap': 'round'
@@ -46,6 +70,8 @@ export class MapService {
           'line-width': 8
         }
       });
+
+      if (coordinates.length === 0) return;
 
       const bounds = coordinates.reduce(
         (bounds, coord) => {
