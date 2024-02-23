@@ -19,4 +19,5 @@ export default class Theme {
   static readonly battteryMed: string = '#FFEA00';
   static readonly battteryHigh: string = '#1ae824';
   static readonly batteryBack: string = '#efefed';
+
 }

@@ -1,0 +1,63 @@
+.latency-display-container {
+    border-radius: 10px;
+    background-color: #2b2a2a;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.latency-display-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: left;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.latency-display-title {
+    font-size: 18px;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding-right: 20px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+}
+
+.latency-display-icon {
+    font-size: 24px; /* Adjust as needed for your icon */
+    color:aliceblue;
+    display: flex;
+    padding-right: 10px;
+}
+
+.latency-display-value {
+    font-size: 48px; /* Adjusted for better visibility */
+    font-weight: bold;
+    color: aliceblue;
+    display: flex;
+    align-items: center;
+    padding-left: 35px;
+    font-family: 'Roboto', sans-serif;
+    position: relative; /* Added position relative */
+}
+
+.latency-display-dot {
+    height: 15px; /* Fixed size for the dot */
+    width: 15px;
+    border-radius: 50%;
+    position: absolute; /* Added position absolute */
+    left: 15; /* Positioned on the left */
+    top: 65%; /* Centered vertically */
+    transform: translateY(-50%); /* Centered vertically */
+    
+}
+
+.latency-display-unit {
+    font-size: 20px; /* Smaller font size for 'ms' */
+    color: gray;
+    margin-left: 2px;
+    padding-top: 10px;
+}
+

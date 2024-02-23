@@ -44,6 +44,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import HStack from 'src/components/hstack/hstack.component';
 import VStack from 'src/components/vstack/vstack.component';
 import ResolutionSelector from 'src/components/resolution-selector/resolution-selector.component';
+import LatencyDisplay from 'src/components/latency-display/latency-display';
 
 @NgModule({
   declarations: [
@@ -73,7 +74,8 @@ import ResolutionSelector from 'src/components/resolution-selector/resolution-se
     Thermometer,
     VStack,
     HStack,
-    ResolutionSelector
+    ResolutionSelector,
+    LatencyDisplay
   ],
   imports: [
     BrowserModule,

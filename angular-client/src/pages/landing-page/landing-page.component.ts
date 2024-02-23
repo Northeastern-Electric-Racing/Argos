@@ -18,6 +18,7 @@ export default class LandingPage implements OnInit {
   packTemp: number = 0;
   motorTemp: number = 0;
   stateOfCharge: number = 0;
+  latency: number = 0;
 
   constructor(private storage: Storage) {}
 
@@ -40,6 +41,9 @@ export default class LandingPage implements OnInit {
     });
     this.storage.get(IdentifierDataType.STATE_OF_CHARGE).subscribe((value) => {
       this.stateOfCharge = floatPipe(value.values[0]);
+    });
+    this.storage.get(IdentifierDataType.LATENCY).subscribe((value) => {
+      this.latency = floatPipe(value.values[0]);
     });
   }
 }

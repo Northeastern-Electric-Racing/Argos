@@ -22,6 +22,11 @@
       </hstack>
     </vstack>
     <battery [percentage]="stateOfCharge" [height]="400" [width]="200" />
+    <hstack spacing="30px">
+      <div class="latency-display-container">
+        <latency-display [latency]="latency" [lowVal]="0" [medVal]="50" [highVal]="100" [height]="110" [width]="110"></latency-display>
+      </div>
+    </hstack>
   </hstack>
   <landing-buttons />
 </div>
