@@ -11,5 +11,5 @@ enum DataTypeName: String {
     case stateOfCharge = "Pack SOC"
     case packTemp = "Pack Temp"
     case motorTemp = "Motor Temp"
-    case point = "Point"
+    case point = "Points"
 }

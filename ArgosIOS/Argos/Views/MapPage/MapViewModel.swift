@@ -7,13 +7,13 @@
 
 import SwiftUI
 import Combine
+import CoreLocation
 
 struct MapViewProps {
-    var runs: [Run]
+    var center: CLLocationCoordinate2D
 }
 
 class MapViewModel: LoadableObject {
-    
     @ObservedObject var socketClient = SocketClient.shared
     
     @Published var state: LoadingState<MapViewProps> = .loading
@@ -23,33 +23,20 @@ class MapViewModel: LoadableObject {
     
     private var cancellables: Set<AnyCancellable> = []
     
-    private var runs = [Run]()
-    
-    private var cachedProps: MapViewProps {
-        return .init(runs: self.runs)
-    }
-    
     func load() async {
-        do {
-            let runs = try await APIHandler.getAllRuns()
-            DispatchQueue.main.async {
-                self.runs = runs
-                self.socketClient.connect()
-                self.socketClient.$values
-                    .sink { [weak self] values in
-                        guard let self = self else {return}
-                        if let point = values[DataTypeName.point.rawValue] {
-                            self.latitude = Double(point.value[0])
-                            self.longitude = Double(point.value[1])
-                        }
+        DispatchQueue.main.async {
+            self.socketClient.$values
+                .sink { [weak self] values in
+                    guard let self = self else {return}
+                    print(values[DataTypeName.point.rawValue])
+                    if let point = values[DataTypeName.point.rawValue], let lat = Double(point.values[0]), let long = Double(point.values[1]) {
+                        self.latitude = lat
+                        self.longitude = long
+                        print(long, lat)
                     }
-                    .store(in: &self.cancellables)
-                self.load(self.cachedProps)
-            }
-        }
-        catch {
-            self.fail(error, self.cachedProps)
+                }
+                .store(in: &self.cancellables)
+            self.load(.init(center: .init(latitude: self.latitude, longitude: self.longitude)))
         }
     }
-    
 }

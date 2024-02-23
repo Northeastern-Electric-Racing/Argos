@@ -21,7 +21,7 @@ struct GraphView: View {
             index, data in
             AreaMark (
                 x: .value("Frequency", String(index)),
-                y: .value("Magnitude", data.value[0])
+                y: .value("Magnitude", data.value)
             )
             .interpolationMethod(.catmullRom)
             .lineStyle(StrokeStyle(lineWidth: 1, dash: [2]))

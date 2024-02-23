@@ -30,7 +30,6 @@ export default class Map implements OnInit {
       getDataByDataTypeNameAndRunId(IdentifierDataType.POINTS, this.runId)
     );
     queryResponse.data.subscribe((points) => {
-      console.log(points);
       this.isLoading = false;
       //Allow page to render before building map
       setTimeout(() => {
