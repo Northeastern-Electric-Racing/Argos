@@ -1,20 +1,9 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatGridListModule } from '@angular/material/grid-list';
-import { MatCardModule } from '@angular/material/card';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CarouselModule } from 'primeng/carousel';
+import { ToastModule } from 'primeng/toast';
+import { OrderListModule } from 'primeng/orderlist';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
 import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
@@ -44,6 +33,13 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import HStack from 'src/components/hstack/hstack.component';
 import VStack from 'src/components/vstack/vstack.component';
 import ResolutionSelector from 'src/components/resolution-selector/resolution-selector.component';
+import { MatIconModule } from '@angular/material/icon';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { MessageService } from 'primeng/api';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ButtonModule } from 'primeng/button';
 
 @NgModule({
   declarations: [
@@ -78,24 +74,20 @@ import ResolutionSelector from 'src/components/resolution-selector/resolution-se
   imports: [
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
-    MatGridListModule,
-    MatCardModule,
-    MatMenuModule,
-    MatIconModule,
-    MatButtonModule,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatListModule,
-    MatDialogModule,
     CarouselModule,
-    MatProgressSpinnerModule,
     NgApexchartsModule,
     FlexLayoutModule,
-    MatFormFieldModule,
-    MatSelectModule
+    NgApexchartsModule,
+    ToastModule,
+    OrderListModule,
+    ProgressSpinnerModule,
+    MatIconModule,
+    MatGridListModule,
+    DynamicDialogModule,
+    BrowserAnimationsModule,
+    ButtonModule
   ],
-  providers: [],
+  providers: [DialogService, MessageService],
   bootstrap: [AppContext]
 })
 export class AppModule {}
