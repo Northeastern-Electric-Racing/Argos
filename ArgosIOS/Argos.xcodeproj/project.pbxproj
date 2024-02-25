@@ -63,6 +63,7 @@
 		C977D1A22B2FEE420016D932 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A12B2FEE420016D932 /* Assets.xcassets */; };
 		C977D1A52B2FEE420016D932 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */; };
 		E13D03142B6C816000EF6436 /* MapboxMaps in Frameworks */ = {isa = PBXBuildFile; productRef = E13D03132B6C816000EF6436 /* MapboxMaps */; };
+		E1577A332B7C2B71005DCB26 /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1577A322B7C2B71005DCB26 /* MapViewModel.swift */; };
 		E1ABF32C2B7083F000833174 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABF32B2B7083F000833174 /* MapView.swift */; };
 /* End PBXBuildFile section */
 
@@ -123,6 +124,7 @@
 		C977D19F2B2FEE410016D932 /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		C977D1A12B2FEE420016D932 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C977D1A42B2FEE420016D932 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		E1577A322B7C2B71005DCB26 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
 		E1ABF32B2B7083F000833174 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -350,6 +352,7 @@
 			isa = PBXGroup;
 			children = (
 				E1ABF32B2B7083F000833174 /* MapView.swift */,
+				E1577A322B7C2B71005DCB26 /* MapViewModel.swift */,
 			);
 			path = MapPage;
 			sourceTree = "<group>";
@@ -454,6 +457,7 @@
 				15AE8F7F2B33692B00479691 /* BatteryView.swift in Sources */,
 				15AE8FC92B33E36100479691 /* ScrollViewItem.swift in Sources */,
 				15AE8F862B3377F100479691 /* GraphContainerView.swift in Sources */,
+				E1577A332B7C2B71005DCB26 /* MapViewModel.swift in Sources */,
 				15AE8FC72B33E28400479691 /* ExpandableView.swift in Sources */,
 				1595398C2B58663D0093EBD0 /* LoadingState.swift in Sources */,
 				15AE8FC32B33CF2500479691 /* ScrollCard.swift in Sources */,

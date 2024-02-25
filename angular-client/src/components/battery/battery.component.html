@@ -24,10 +24,11 @@
   >
     <div
       [style]="{
-        'background-color': fillColor,
-        height: fillHeight,
+        'background-color': getFillColor(percentage),
+        height: getFillHeight(percentage),
         width: fillWidth,
-        'margin-top': fillMarginBottom
+        'margin-top': fillMarginBottom,
+        'border-radius': '8px'
       }"
     ></div>
   </div>

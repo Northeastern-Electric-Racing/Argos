@@ -1,9 +1,9 @@
-import { BehaviorSubject } from 'rxjs';
+import { Subject } from 'rxjs';
 
 /**
  * The storage system for the data received from the server
  */
-export type StorageMap = Map<string, BehaviorSubject<DataValue>>;
+export type StorageMap = Map<string, Subject<DataValue>>;
 
 /**
  * The value of a data point
@@ -11,6 +11,7 @@ export type StorageMap = Map<string, BehaviorSubject<DataValue>>;
 export type DataValue = {
   values: string[];
   time: number;
+  unit: string;
 };
 
 /**

@@ -31,13 +31,19 @@ const baseMockData: MockData[] = [
     min: 0,
     max: 100
   },
-
   {
     name: DataType.Accel,
     unit: Unit.G,
     vals: [0, 0, 0],
     min: -6,
     max: 6
+  },
+  {
+    name: DataType.Points,
+    unit: Unit.COORD,
+    vals: [0, 0],
+    min: -90,
+    max: 90
   }
 ];
 
@@ -68,7 +74,7 @@ export default class MockProxyClient implements ProxyClient {
     return new Promise((resolve) =>
       setTimeout(() => {
         resolve('loop');
-      }, 10)
+      }, 1)
     );
   };
 

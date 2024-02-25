@@ -1,4 +1,5 @@
 <div class="background">
+  <resolution-selector />
   <mat-list>
     <mat-list-item *ngFor="let node of nodesWithVisibilityToggle" style="height: 100%">
       <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)" [dropDown]="true" />
