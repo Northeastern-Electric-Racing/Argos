@@ -22,3 +22,14 @@ body {
 .mat-mdc-dialog-container {
   --mdc-dialog-container-color: transparent !important;
 }
+
+.p-dialog-header {
+  background-color: #262626 !important;
+  color: white !important;
+  border-radius: 20px 20px 0px 0px !important;
+}
+.p-dialog-content {
+  background-color: #262626 !important;
+  color: white !important;
+  border-radius: 0px 0px 20px 20px !important;
+}

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { Run } from 'src/utils/types.utils';
 import { Carousel } from '../carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'history',
@@ -12,13 +13,13 @@ import APIService from 'src/services/api.service';
 export class History implements OnInit {
   label!: string;
   runs!: Run[];
-  runsError?: Error;
   runsIsLoading = true;
-  runsIsError = false;
+  ref?: DynamicDialogRef;
 
   constructor(
-    public dialog: MatDialog,
-    private serverService: APIService
+    public dialogService: DialogService,
+    private serverService: APIService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit() {
@@ -27,8 +28,7 @@ export class History implements OnInit {
       this.runsIsLoading = isLoading;
     });
     runsQueryResponse.error.subscribe((error: Error) => {
-      this.runsIsError = true;
-      this.runsError = error;
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
     runsQueryResponse.data.subscribe((data: Run[]) => {
       this.runs = data;
@@ -38,11 +38,10 @@ export class History implements OnInit {
   }
 
   openDialog = () => {
-    this.dialog.open(Carousel, {
+    this.ref = this.dialogService.open(Carousel, {
       width: '550px',
       data: { runs: this.runs },
-      hasBackdrop: true,
-      backdropClass: 'dialog-background'
+      header: 'Select a run to view'
     });
   };
 }

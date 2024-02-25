@@ -1,39 +1,37 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 
 @Component({
   selector: 'more-details',
-  templateUrl: './more-details.component.html',
+  templateUrl: './more-details.component.html'
 })
 export default class MoreDetailsComponent {
   label: string = 'More Details';
-  showToast: boolean = false;
 
   constructor(
     private router: Router,
     private storage: Storage,
+    private messageService: MessageService
   ) {}
 
   goToGraph = () => {
     const runId = this.storage.getCurrentRunId();
-    if (this.routerIsConnected()) {
+    if (runId) {
       this.router.navigate([`graph/true/${runId}`]);
     } else {
-      console.log('Router is disconnected, showing toast.');
       this.showRouterDisconnectedToast();
     }
   };
-  
-
-  routerIsConnected(): boolean {
-    return false;
-  }
 
   showRouterDisconnectedToast() {
-    this.showToast = false;
     setTimeout(() => {
-      this.showToast = true;
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Router is disconnected'
+      });
     });
   }
 }
