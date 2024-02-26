@@ -1,63 +1,50 @@
-.latency-display-container {
-    border-radius: 10px;
-    background-color: #2b2a2a;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
+/* Use a flex container for the header to align the icon and title */
 .latency-display-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: left;
-    width: 100%;
-    margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.latency-display-title {
-    font-size: 18px;
-    color: white;
-    display: flex;
-    align-items: center;
-    padding-right: 20px;
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-}
-
+/* Style the icon with appropriate size and color */
 .latency-display-icon {
-    font-size: 24px; /* Adjust as needed for your icon */
-    color:aliceblue;
-    display: flex;
-    padding-right: 10px;
+  color: white;
+  font-size: 24px; /* Adjust icon size as needed */
+  margin-right: 10px; /* Space between the icon and the title */
 }
 
+/* Style the title */
+.latency-display-title {
+  color: white;
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px; /* Adjust title size as needed */
+  font-weight: bold;
+}
+
+/* Style the main value and the dot using flexbox to align them horizontally */
 .latency-display-value {
-    font-size: 48px; /* Adjusted for better visibility */
-    font-weight: bold;
-    color: aliceblue;
-    display: flex;
-    align-items: center;
-    padding-left: 35px;
-    font-family: 'Roboto', sans-serif;
-    position: relative; /* Added position relative */
+  font-size: 48px; /* Adjust main value size as needed */
+  font-weight: bold;
+  color: white;
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px; /* Adjust spacing from the title to the value as needed */
 }
 
+/* Style the dot */
 .latency-display-dot {
-    height: 15px; /* Fixed size for the dot */
-    width: 15px;
-    border-radius: 50%;
-    position: absolute; /* Added position absolute */
-    left: 15; /* Positioned on the left */
-    top: 65%; /* Centered vertically */
-    transform: translateY(-50%); /* Centered vertically */
-    
+  height: 15px; /* Adjust dot size as needed */
+  width: 15px;
+  border-radius: 50%;
+  margin-right: 10px; /* Space between the dot and the value */
+  background-color: inherit; /* Background color is set dynamically by Angular */
 }
 
+/* Style the unit */
 .latency-display-unit {
-    font-size: 20px; /* Smaller font size for 'ms' */
-    color: gray;
-    margin-left: 2px;
-    padding-top: 10px;
+  font-size: 20px; /* Adjust unit size as needed */
+  color: gray;
+  margin-left: 5px; /* Space between the value and the unit */
+  padding-top: 10px;
 }
-
