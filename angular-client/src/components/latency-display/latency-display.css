@@ -2,15 +2,11 @@
   height: 15px;
   width: 15px;
   border-radius: 50%;
-  margin-right: 10px;
   background-color: inherit;
-  align-items: center;
 }
 
-/* Style the unit */
 .latency-display-unit {
   font-size: 30px;
   color: gray;
-  margin-left: 5px;
   padding-top: 10px;
 }

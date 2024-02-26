@@ -1,4 +1,6 @@
 <info-background title="Latency" icon="timelapse">
-  <typography variant="info-value" [content]="latency.toString()" /><span class="latency-display-unit">ms</span>
-  <div class="latency-display-dot" [style.background-color]="mapColor(latency, lowVal, medVal, highVal)"></div>
+  <hstack>
+    <div class="latency-display-dot" [style.background-color]="mapColor(latency, lowVal, medVal, highVal)"></div>
+    <typography variant="info-value" [content]="latency.toString()" /><span class="latency-display-unit">ms</span>
+  </hstack>
 </info-background>
