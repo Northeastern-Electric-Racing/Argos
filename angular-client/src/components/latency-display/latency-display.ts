@@ -6,20 +6,18 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./latency-display.css']
 })
 export default class LatencyDisplay {
-  @Input() latency: number = 0;
+  @Input() latency: number = 90;
   @Input() lowVal: number = 0;
   @Input() medVal: number = 50;
   @Input() highVal: number = 100;
-  @Input() height: number = 100;
-  @Input() width: number = 100;
 
-  mapColor = (currVal: number, lowVal: number, medVal: number, highVal: number): string => {
-    if (currVal < medVal - medVal / 2) {
+  mapColor = (latency: number, lowVal: number, medVal: number, highVal: number): string => {
+    if (latency < (3 * medVal) / 4) {
       return '#53e400';
     }
-    if (currVal > medVal + medVal / 2) {
-      return 'red';
+    if (latency > (3 * medVal) / 4 && latency < (3 * medVal) / 2) {
+      return 'yellow';
     }
-    return 'yellow';
+    return 'red';
   };
 }

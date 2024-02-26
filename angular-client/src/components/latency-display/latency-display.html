@@ -1,13 +1,4 @@
-<info-background>
-  <div class="latency-display-header">
-    <div class="latency-display-icon">
-      <mat-icon>timelapse</mat-icon>
-      <!-- Adjust icon as needed -->
-    </div>
-    <div class="latency-display-title">Latency</div>
-  </div>
-  <div class="latency-display-value">
-    <div class="latency-display-dot" [style.background-color]="mapColor(latency, lowVal, medVal, highVal)"></div>
-    {{ latency }}<span class="latency-display-unit">ms</span>
-  </div>
+<info-background title="Latency" icon="timelapse">
+  <typography variant="info-value" [content]="latency.toString()" /><span class="latency-display-unit">ms</span>
+  <div class="latency-display-dot" [style.background-color]="mapColor(latency, lowVal, medVal, highVal)"></div>
 </info-background>

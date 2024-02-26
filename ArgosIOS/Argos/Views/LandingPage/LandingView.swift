@@ -51,6 +51,7 @@ struct LandingView: View {
                     switch destination {
                     case .map:
                         MapView()
+                            .equatable()
                     case .graph:
                         if let selectedRunId = self.viewModel.selectedRunId {
                             GraphContainer(viewModel: .init(runId: selectedRunId, realTime: self.viewModel.realTimeSelected))

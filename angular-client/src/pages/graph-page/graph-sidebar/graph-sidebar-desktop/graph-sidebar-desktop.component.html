@@ -1,13 +1,18 @@
 <div class="background">
-  <resolution-selector />
-  <mat-list>
-    <mat-list-item *ngFor="let node of nodesWithVisibilityToggle" style="height: 100%">
+  <div>
+    <resolution-selector />
+    <div *ngFor="let node of nodesWithVisibilityToggle" style="height: 100%">
       <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)" [dropDown]="true" />
-      <mat-list *ngIf="node.dataTypesAreVisible" @toggleExpand>
-        <mat-list-item *ngFor="let dataType of node.dataTypes">
-          <sidebar-card [title]="dataType.name" [subtitle]="dataType.unit" (click)="selectDataType(dataType)" />
-        </mat-list-item>
-      </mat-list>
-    </mat-list-item>
-  </mat-list>
+      <div *ngIf="node.dataTypesAreVisible" @toggleExpand>
+        <div *ngFor="let dataType of node.dataTypes" style="display: flex; justify-content: center">
+          <sidebar-card
+            style="width: 90%"
+            [title]="dataType.name"
+            [subtitle]="dataType.unit"
+            (click)="selectDataType(dataType)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
