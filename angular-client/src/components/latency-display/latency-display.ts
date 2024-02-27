@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./latency-display.css']
 })
 export default class LatencyDisplay {
-  @Input() latency: number = 90;
+  @Input() latency: number = 0;
   @Input() lowVal: number = 0;
   @Input() medVal: number = 50;
   @Input() highVal: number = 100;

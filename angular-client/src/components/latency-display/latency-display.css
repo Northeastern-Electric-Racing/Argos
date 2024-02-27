@@ -8,10 +8,12 @@
   width: 17px;
   border-radius: 50%;
   background-color: inherit;
+  margin-right: 20px;
+  margin-top: 5px;
 }
 
 .latency-display-unit {
   font-size: 24px;
   color: gray;
-  padding-top: 30px;
+  padding-top: 22px;
 }
