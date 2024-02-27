@@ -1,0 +1,7 @@
+<info-background title="Latency" icon="timelapse">
+  <div class="latency-display-body">
+    <div class="latency-display-dot" [style.background-color]="mapColor(latency, medVal)"></div>
+    <typography variant="info-value" [content]="latency.toString()" />
+    <span class="latency-display-unit">ms</span>
+  </div>
+</info-background>

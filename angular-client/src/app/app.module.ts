@@ -33,13 +33,14 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import HStack from 'src/components/hstack/hstack.component';
 import VStack from 'src/components/vstack/vstack.component';
 import ResolutionSelector from 'src/components/resolution-selector/resolution-selector.component';
-import { MatIconModule } from '@angular/material/icon';
+import LatencyDisplay from 'src/components/latency-display/latency-display';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
 
 @NgModule({
   declarations: [
@@ -69,7 +70,8 @@ import { ButtonModule } from 'primeng/button';
     Thermometer,
     VStack,
     HStack,
-    ResolutionSelector
+    ResolutionSelector,
+    LatencyDisplay
   ],
   imports: [
     BrowserModule,

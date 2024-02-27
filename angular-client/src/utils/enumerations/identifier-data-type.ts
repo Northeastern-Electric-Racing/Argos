@@ -5,5 +5,6 @@ export enum IdentifierDataType {
   PACK_TEMP = 'Pack Temp',
   MOTOR_TEMP = 'Motor Temp',
   STATE_OF_CHARGE = 'Pack SOC',
-  POINTS = 'Points'
+  POINTS = 'Points',
+  LATENCY = 'Latency'
 }

@@ -8,4 +8,5 @@ export type StyleVariant =
   | 'large-header'
   | 'info-title'
   | 'info-subtitle'
-  | 'value';
+  | 'value'
+  | 'info-value';
