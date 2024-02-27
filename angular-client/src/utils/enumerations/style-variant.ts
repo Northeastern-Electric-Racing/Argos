@@ -9,5 +9,5 @@ export type StyleVariant =
   | 'info-title'
   | 'info-subtitle'
   | 'value'
-  | 'info-value';
+  | 'info-value'
   
