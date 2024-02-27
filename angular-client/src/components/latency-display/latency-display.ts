@@ -11,7 +11,7 @@ export default class LatencyDisplay {
   @Input() medVal: number = 50;
   @Input() highVal: number = 100;
 
-  mapColor = (latency: number, lowVal: number, medVal: number, highVal: number): string => {
+  mapColor = (latency: number, medVal: number): string => {
     if (latency < (3 * medVal) / 4) {
       return '#53e400';
     }

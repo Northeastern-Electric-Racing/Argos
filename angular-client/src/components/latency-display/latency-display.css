@@ -1,12 +1,17 @@
+.latency-display-body {
+  display: flex;
+  align-items: center;
+}
+
 .latency-display-dot {
-  height: 15px;
-  width: 15px;
+  height: 17px;
+  width: 17px;
   border-radius: 50%;
   background-color: inherit;
 }
 
 .latency-display-unit {
-  font-size: 30px;
+  font-size: 24px;
   color: gray;
-  padding-top: 10px;
+  padding-top: 30px;
 }
