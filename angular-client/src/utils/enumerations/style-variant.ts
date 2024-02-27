@@ -10,4 +10,3 @@ export type StyleVariant =
   | 'info-subtitle'
   | 'value'
   | 'info-value';
-  
