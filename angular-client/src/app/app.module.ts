@@ -41,6 +41,7 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { GraphComponent } from 'src/components/graph/graph.component';
 
 @NgModule({
   declarations: [
@@ -71,7 +72,8 @@ import { MessageService } from 'primeng/api';
     VStack,
     HStack,
     ResolutionSelector,
-    LatencyDisplay
+    LatencyDisplay,
+    GraphComponent,
   ],
   imports: [
     BrowserModule,
