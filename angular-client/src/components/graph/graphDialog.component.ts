@@ -39,30 +39,32 @@ export class GraphDialog implements OnInit {
   options!: ChartOptions;
   chart!: ApexCharts;
 
-  constructor(public dialogService: DialogService, public config: DynamicDialogConfig) { }
+  constructor(
+    public dialogService: DialogService,
+    public config: DynamicDialogConfig
+  ) {}
 
   series: ApexAxisChartSeries = [
     {
       name: this.config.data.title,
-      data: [],
+      data: []
     }
   ];
 
   updateChart = () => {
-    this.chart.updateSeries(this.series); 
+    this.chart.updateSeries(this.series);
     setTimeout(() => {
       this.updateChart();
     }, 1000);
   };
 
   ngOnInit(): void {
-
     this.series = [
       {
         name: this.config.data.title,
-        data: this.config.data.data,
+        data: this.config.data.data
       }
-    ]
+    ];
 
     const chartContainer = document.getElementById('chart-dialog-container');
     if (!chartContainer) {
@@ -87,14 +89,14 @@ export class GraphDialog implements OnInit {
           }
         },
         toolbar: {
-          show: false,
+          show: false
         },
-        background: "#5A5A5A"
+        background: '#5A5A5A'
       },
       subtitle: {
         text: this.config.data.subTitle,
         offsetX: 10,
-        offsetY: 5,
+        offsetY: 5
       },
       dataLabels: {
         enabled: false
@@ -111,26 +113,24 @@ export class GraphDialog implements OnInit {
         tickAmount: 2,
         labels: {
           style: {
-            colors: "#FFFFFF"
+            colors: '#FFFFFF'
           },
-          formatter: function(value, timestamp) {
-            return "" + new Date(value).getHours() + ":" 
-              + new Date(value).getMinutes() + ":"
-              + new Date(value).getSeconds();
+          formatter: (value) => {
+            return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
           }
         },
         axisBorder: {
-          show: false,
+          show: false
         },
         axisTicks: {
-          show: false,
+          show: false
         }
       },
       yaxis: {
         tickAmount: 2,
         labels: {
           style: {
-            colors: "#FFFFFF"
+            colors: '#FFFFFF'
           }
         }
       },
@@ -147,12 +147,12 @@ export class GraphDialog implements OnInit {
           opacityFrom: 0.7,
           opacityTo: 0.9,
           stops: [0, 100]
-        },
+        }
       },
       grid: {
         show: false
       }
-    }
+    };
 
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
@@ -161,8 +161,5 @@ export class GraphDialog implements OnInit {
       this.chart.render();
       this.updateChart();
     }, 0);
-
   }
-
-
 }

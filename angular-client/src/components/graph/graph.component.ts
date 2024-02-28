@@ -11,7 +11,7 @@ import {
   ApexFill
 } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialog } from './graphDialog.component'
+import { GraphDialog } from './graphDialog.component';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -45,40 +45,38 @@ export class GraphComponent implements OnInit {
   series: ApexAxisChartSeries = [
     {
       name: this.title,
-      data: [],
+      data: []
     }
   ];
 
-  constructor(public dialogService: DialogService) { 
-  }
+  constructor(public dialogService: DialogService) {}
 
   openDialog = () => {
-    const ref = this.dialogService.open(GraphDialog, {
+    this.dialogService.open(GraphDialog, {
       header: this.title,
       data: {
         data: this.data,
         color: this.color,
         title: this.title,
-        subTitle: this.subTitle,
+        subTitle: this.subTitle
       }
-    })
-  }
+    });
+  };
 
   updateChart = () => {
-    this.chart.updateSeries(this.series); 
+    this.chart.updateSeries(this.series);
     setTimeout(() => {
       this.updateChart();
     }, 1000);
   };
 
   ngOnInit(): void {
-
     this.series = [
       {
         name: this.title,
-        data: this.data,
+        data: this.data
       }
-    ]
+    ];
 
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) {
@@ -103,14 +101,14 @@ export class GraphComponent implements OnInit {
           }
         },
         toolbar: {
-          show: false,
+          show: false
         },
-        background: "#5A5A5A",
+        background: '#5A5A5A'
       },
       subtitle: {
         text: this.subTitle,
         offsetX: 10,
-        offsetY: 5,
+        offsetY: 5
       },
       dataLabels: {
         enabled: false
@@ -127,26 +125,24 @@ export class GraphComponent implements OnInit {
         tickAmount: 2,
         labels: {
           style: {
-            colors: "#FFFFFF"
+            colors: '#FFFFFF'
           },
-          formatter: function(value, timestamp) {
-            return "" + new Date(value).getHours() + ":" 
-              + new Date(value).getMinutes() + ":"
-              + new Date(value).getSeconds();
+          formatter: (value) => {
+            return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
           }
         },
         axisBorder: {
-          show: false,
+          show: false
         },
         axisTicks: {
-          show: false,
+          show: false
         }
       },
       yaxis: {
         tickAmount: 2,
         labels: {
           style: {
-            colors: "#FFFFFF"
+            colors: '#FFFFFF'
           }
         }
       },
@@ -163,12 +159,12 @@ export class GraphComponent implements OnInit {
           opacityFrom: 0.7,
           opacityTo: 0.9,
           stops: [0, 100]
-        },
+        }
       },
       grid: {
         show: false
-      },
-    }
+      }
+    };
 
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
@@ -177,8 +173,5 @@ export class GraphComponent implements OnInit {
       this.chart.render();
       this.updateChart();
     }, 0);
-
   }
-
-
 }
