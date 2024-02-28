@@ -58,6 +58,8 @@ If changes are made to either the client or scylla you will need to rebuild and 
 
 This will run the two docker images and output all the outputs from both of them to the terminal:
 
+If you are on x86_64 you will have to change platform: linux/arm64 to linux/amd64 in order to properly pull the timescaledb
+
 `docker-compose up`
 
 This will start the containers, if the container is not already an image through docker-compose build, it will attempt to pull the images from docker hub. 
