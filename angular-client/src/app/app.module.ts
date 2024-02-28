@@ -42,6 +42,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { GraphComponent } from 'src/components/graph/graph.component';
+import { InfoGraph } from 'src/components/info-graph/info-graph.component';
+import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
 
 @NgModule({
   declarations: [
@@ -73,7 +75,9 @@ import { GraphComponent } from 'src/components/graph/graph.component';
     HStack,
     ResolutionSelector,
     LatencyDisplay,
-    GraphComponent
+    GraphComponent,
+    InfoGraph,
+    GraphDialog
   ],
   imports: [
     BrowserModule,

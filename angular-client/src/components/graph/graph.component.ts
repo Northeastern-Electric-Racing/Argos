@@ -11,12 +11,12 @@ import {
   ApexFill
 } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialog } from './graphDialog.component';
+import { GraphDialog } from '../graph-dialog/graph-dialog.component';
+import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
-  subtitle: ApexTitleSubtitle;
   xaxis: ApexXAxis;
   yaxis: ApexYAxis;
   dataLabels: ApexDataLabels;
@@ -28,18 +28,16 @@ type ChartOptions = {
 };
 
 @Component({
-  selector: 'graphcomponent',
+  selector: 'graph-component',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
   providers: [DialogService]
 })
 export class GraphComponent implements OnInit {
-  @Input() data!: [number, number][];
-  @Input() icon!: string;
-  @Input() title!: string;
-  @Input() onClick!: () => void;
-  @Input() color!: string;
-  @Input() subTitle?: string;
+  @Input() data!: GraphData[];
+  @Input() color!: string; // Must be hex
+  @Input() title?: string;
+  @Input() graphContainerId!: string;
   options!: ChartOptions;
   chart!: ApexCharts;
   series: ApexAxisChartSeries = [
@@ -57,13 +55,13 @@ export class GraphComponent implements OnInit {
       data: {
         data: this.data,
         color: this.color,
-        title: this.title,
-        subTitle: this.subTitle
+        title: this.title
       }
     });
   };
 
   updateChart = () => {
+    this.series[0].data = this.data;
     this.chart.updateSeries(this.series);
     setTimeout(() => {
       this.updateChart();
@@ -77,12 +75,6 @@ export class GraphComponent implements OnInit {
         data: this.data
       }
     ];
-
-    const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) {
-      console.log('Something went very wrong');
-      return;
-    }
 
     this.options = {
       series: [],
@@ -102,13 +94,8 @@ export class GraphComponent implements OnInit {
         },
         toolbar: {
           show: false
-        },
-        background: '#5A5A5A'
-      },
-      subtitle: {
-        text: this.subTitle,
-        offsetX: 10,
-        offsetY: 5
+        }
+        // background: '#5A5A5A'
       },
       dataLabels: {
         enabled: false
@@ -124,6 +111,7 @@ export class GraphComponent implements OnInit {
         type: 'category',
         tickAmount: 2,
         labels: {
+          show: false,
           style: {
             colors: '#FFFFFF'
           },
@@ -147,6 +135,7 @@ export class GraphComponent implements OnInit {
         }
       },
       tooltip: {
+        theme: 'dark',
         x: {
           //format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'
@@ -168,10 +157,16 @@ export class GraphComponent implements OnInit {
 
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
+      const chartContainer = document.getElementById(this.graphContainerId);
+      if (!chartContainer) {
+        console.log('Container with id ' + this.graphContainerId + ' not found');
+        return;
+      }
+
       this.chart = new ApexCharts(chartContainer, this.options);
 
       this.chart.render();
       this.updateChart();
-    }, 0);
+    }, 100);
   }
 }

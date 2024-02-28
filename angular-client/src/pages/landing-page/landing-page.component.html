@@ -25,4 +25,23 @@
     <latency-display [latency]="99" [lowVal]="0" [medVal]="50" [highVal]="100"></latency-display>
   </hstack>
   <landing-buttons />
+  <info-graph
+    [data]="[
+      { x: 0, y: 0 },
+      { x: 1, y: 10 },
+      { x: 2, y: 20 },
+      { x: 3, y: 30 },
+      { x: 4, y: 40 },
+      { x: 5, y: 50 },
+      { x: 6, y: 60 },
+      { x: 7, y: 70 },
+      { x: 8, y: 80 },
+      { x: 9, y: 90 },
+      { x: 10, y: 100 }
+    ]"
+    icon="bar_chart"
+    title="Joe mama"
+    color="#FF0000"
+    graphContainerId="graph1"
+  />
 </div>
