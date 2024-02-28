@@ -1,8 +1,7 @@
 export enum DataTypeName {
-  driverUser = 'driverUser',
-  systemName = 'systemName',
-  locationName = 'locationName',
-  location = 'location',
+  driverUser = 'driver',
+  systemName = 'system',
+  locationName = 'location',
   radius = 'radius',
   packTemp = 'Pack Temp',
   points = 'Points'

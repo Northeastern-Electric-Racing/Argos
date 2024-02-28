@@ -10,7 +10,7 @@ export type StorageMap = Map<string, Subject<DataValue>>;
  */
 export type DataValue = {
   values: string[];
-  time: number;
+  time: string;
   unit: string;
 };
 
