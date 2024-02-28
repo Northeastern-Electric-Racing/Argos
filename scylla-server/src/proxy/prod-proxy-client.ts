@@ -77,7 +77,8 @@ export default class ProdProxyClient implements ProxyClient {
    * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = (topic: string, payload: Buffer, packet: IPublishPacket) => {
+  private handleMessage = async (topic: string, payload: Buffer, packet: IPublishPacket) => {
+    console.log(topic, payload.toString());
     try {
       const data = ServerData.v1.ServerData.deserializeBinary(payload).toObject();
       /* Infer node name from topics first segment */
@@ -85,13 +86,15 @@ export default class ProdProxyClient implements ProxyClient {
       /* Infer data type name from topic after node */
       const dataType = topic.split('/').slice(1).join('-');
 
-      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['unix_time'] : undefined;
+      console.log(packet);
+      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
 
       if (!unix_time) {
-        throw new Error('No unix_time property in packet');
+        throw new Error('No ts property in packet');
       }
 
-      if (data.unit && data.values) {
+      console.log('Received Data: ', data);
+      if (data.unit !== undefined && data.values !== undefined && data.values.length > 0) {
         const serverMessage: ServerMessage = {
           node,
           dataType,
@@ -102,7 +105,7 @@ export default class ProdProxyClient implements ProxyClient {
           }
         };
 
-        this.handleData(serverMessage);
+        await this.handleData(serverMessage);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -121,8 +124,10 @@ export default class ProdProxyClient implements ProxyClient {
   private handleData = async (data: ServerMessage) => {
     // if first time data recieved since connecting to car
     // then create new run
+    console.log('handling data', data);
     if (this.createNewRun) {
       this.currentRun = await RunService.createRun(data.unix_time);
+      console.log('created new run');
       this.createNewRun = false;
     }
     // upsert the node
@@ -159,7 +164,7 @@ export default class ProdProxyClient implements ProxyClient {
           this.newLocation = true;
         }
         break;
-      case DataTypeName.location:
+      case DataTypeName.points:
         this.recentLatitude = parseFloat(serverdata.values[0]);
         this.recentLongitude = parseFloat(serverdata.values[1]);
         break;
@@ -187,6 +192,8 @@ export default class ProdProxyClient implements ProxyClient {
       unit: serverdata.unit,
       timestamp: data.unix_time
     };
+
+    console.log('clientData', clientData);
 
     if (systemName) {
       await SystemService.upsertSystem(systemName, this.currentRun.id);
@@ -225,6 +232,7 @@ export default class ProdProxyClient implements ProxyClient {
    * sending and receiving messages, and handling errors
    */
   public configure = () => {
+    console.log('configuring');
     this.connection.on('message', this.handleMessage);
     this.connection.on('connect', this.handleOpen);
     this.connection.on('error', this.handleError);

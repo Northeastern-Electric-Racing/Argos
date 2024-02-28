@@ -22,7 +22,8 @@ export default class SocketService {
    */
   receiveData = (storage: Storage) => {
     this.socket.on('message', (message: string) => {
-      if (Date.now() - this.lastTimestamp < storage.getResolution()) return;
+      console.log('received message:', message);
+      // if (Date.now() - this.lastTimestamp < storage.getResolution()) return;
       this.lastTimestamp = Date.now();
       try {
         /* Parse the message and store it in the storage service */
@@ -33,7 +34,7 @@ export default class SocketService {
         /* Create key based on name and unit for hashmap */
         const key = data.name;
 
-        const newValue: DataValue = { values: data.values, time: data.timestamp, unit: data.unit };
+        const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
