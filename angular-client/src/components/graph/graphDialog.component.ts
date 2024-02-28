@@ -10,8 +10,7 @@ import {
   ApexTooltip,
   ApexFill
 } from 'ng-apexcharts';
-import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialog } from './graphDialog.component'
+import { DialogService, DynamicDialogConfig } from 'primeng/dynamicdialog';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -28,41 +27,26 @@ type ChartOptions = {
 };
 
 @Component({
-  selector: 'graphcomponent',
-  templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
+  selector: 'graphdialog',
+  templateUrl: './graphDialog.component.html',
   providers: [DialogService]
 })
-export class GraphComponent implements OnInit {
+export class GraphDialog implements OnInit {
   @Input() data!: [number, number][];
-  @Input() icon!: string;
-  @Input() title!: string;
-  @Input() onClick!: () => void;
   @Input() color!: string;
+  @Input() title!: string;
   @Input() subTitle?: string;
   options!: ChartOptions;
   chart!: ApexCharts;
+
+  constructor(public dialogService: DialogService, public config: DynamicDialogConfig) { }
+
   series: ApexAxisChartSeries = [
     {
-      name: this.title,
+      name: this.config.data.title,
       data: [],
     }
   ];
-
-  constructor(public dialogService: DialogService) { 
-  }
-
-  openDialog = () => {
-    const ref = this.dialogService.open(GraphDialog, {
-      header: this.title,
-      data: {
-        data: this.data,
-        color: this.color,
-        title: this.title,
-        subTitle: this.subTitle,
-      }
-    })
-  }
 
   updateChart = () => {
     this.chart.updateSeries(this.series); 
@@ -75,12 +59,12 @@ export class GraphComponent implements OnInit {
 
     this.series = [
       {
-        name: this.title,
-        data: this.data,
+        name: this.config.data.title,
+        data: this.config.data.data,
       }
     ]
 
-    const chartContainer = document.getElementById('chart-container');
+    const chartContainer = document.getElementById('chart-dialog-container');
     if (!chartContainer) {
       console.log('Something went very wrong');
       return;
@@ -105,10 +89,10 @@ export class GraphComponent implements OnInit {
         toolbar: {
           show: false,
         },
-        background: "#5A5A5A",
+        background: "#5A5A5A"
       },
       subtitle: {
-        text: this.subTitle,
+        text: this.config.data.subTitle,
         offsetX: 10,
         offsetY: 5,
       },
@@ -117,7 +101,7 @@ export class GraphComponent implements OnInit {
       },
       stroke: {
         curve: 'straight',
-        colors: [this.color]
+        colors: [this.config.data.color]
       },
       markers: {
         size: 0
@@ -167,7 +151,7 @@ export class GraphComponent implements OnInit {
       },
       grid: {
         show: false
-      },
+      }
     }
 
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
