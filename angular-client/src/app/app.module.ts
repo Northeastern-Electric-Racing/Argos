@@ -73,7 +73,7 @@ import { GraphComponent } from 'src/components/graph/graph.component';
     HStack,
     ResolutionSelector,
     LatencyDisplay,
-    GraphComponent,
+    GraphComponent
   ],
   imports: [
     BrowserModule,
