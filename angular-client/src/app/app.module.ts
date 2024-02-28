@@ -41,6 +41,7 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { BatteryInfoDisplay } from 'src/components/battery-info-display/battery-info-display';
 
 @NgModule({
   declarations: [
@@ -71,7 +72,8 @@ import { MessageService } from 'primeng/api';
     VStack,
     HStack,
     ResolutionSelector,
-    LatencyDisplay
+    LatencyDisplay,
+    BatteryInfoDisplay
   ],
   imports: [
     BrowserModule,

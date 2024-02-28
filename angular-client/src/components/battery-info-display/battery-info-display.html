@@ -1,0 +1,25 @@
+<info-background title="Battery" icon="battery_charging_full">
+  <hstack>
+    <vstack>
+      <hstack>
+        <typography variant="info-value" content="70" />
+        <battery [percentage]="70" [height]="60" [width]="30" />
+      </hstack>
+      <typography variant="subheader" content="Charge State" />
+    </vstack>
+    <vstack>
+      <hstack>
+        <typography variant="info-value" content="30" />
+        <thermometer [temperature]="30" [min]="-15" [max]="30" />
+      </hstack>
+      <typography variant="subheader" content="Pack Temperature" />
+    </vstack>
+    <vstack>
+      <hstack>
+        <typography variant="info-value" content="12" />
+      </hstack>
+      <typography variant="subheader" content="Voltage" />
+      <!--make sure value is changed with the V!-->
+    </vstack>
+  </hstack>
+</info-background>
