@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
 import { getRunById } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, Node, Run } from 'src/utils/types.utils';
+import { DataType, GraphData, Node, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-page',
@@ -27,12 +27,15 @@ export default class GraphPage implements OnInit {
   run?: Run;
   runIsLoading = true;
 
+  previousDataType?: DataType;
+
   selectedDataType: Subject<DataType> = new Subject<DataType>();
-  selectedDataTypeValuesSubject: BehaviorSubject<DataValue[]> = new BehaviorSubject<DataValue[]>([]);
+  selectedDataTypeValuesSubject: BehaviorSubject<GraphData[]> = new BehaviorSubject<GraphData[]>([]);
   currentValue: Subject<DataValue | undefined> = new Subject<DataValue | undefined>();
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
+  subscription?: Subscription;
 
   constructor(
     private serverService: APIService,
@@ -49,15 +52,16 @@ export default class GraphPage implements OnInit {
       this.selectedDataType.next(dataType);
       this.selectedDataTypeValuesSubject.next([]);
       if (this.realTime) {
+        if (this.subscription) this.subscription.unsubscribe();
         const key = dataType.name;
         const valuesSubject = this.storage.get(key);
-        valuesSubject.subscribe((value: DataValue) => {
+        this.subscription = valuesSubject.subscribe((value: DataValue) => {
           /* Take only data from the last minute */
           const now = new Date();
           const lastMinute = new Date(now.getTime() - 60000);
           const storedValues = this.selectedDataTypeValuesSubject.getValue();
-          storedValues.push(value);
-          const nextValue = storedValues.filter((v) => new Date(v.time) > lastMinute);
+          storedValues.push({ x: +value.time, y: +value.values[0] });
+          const nextValue = storedValues.filter((v) => new Date(v.x) > lastMinute);
 
           this.currentValue.next(value);
           this.selectedDataTypeValuesSubject.next(nextValue);
@@ -74,11 +78,12 @@ export default class GraphPage implements OnInit {
           this.selectedDataTypeValuesIsLoading = isLoading;
         });
         dataQueryResponse.error.subscribe((error: Error) => {
-          this.selectedDataTypeValuesIsError = true;
           this.selectedDataTypeValuesError = error;
+          this.selectedDataTypeValuesIsError = true;
         });
         dataQueryResponse.data.subscribe((data: DataValue[]) => {
-          this.selectedDataTypeValuesSubject.next(data);
+          console.log(data);
+          this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
           this.currentValue.next(data.pop());
         });
       }

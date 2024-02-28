@@ -36,3 +36,8 @@ export type Coordinate = {
   lat: number;
   lng: number;
 };
+
+export type GraphData = {
+  x: number;
+  y: number;
+};

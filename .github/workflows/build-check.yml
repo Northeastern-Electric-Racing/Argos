@@ -21,6 +21,11 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get -y install docker-compose
+      - name: Generate Angular Dist
+        run: |
+          cd ./angular-client
+          npm install
+          npm run build
       - name: Build Docker Compose
         run: |
           if ! docker-compose build; then

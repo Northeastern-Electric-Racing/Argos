@@ -11,7 +11,7 @@ import {
   ApexFill
 } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
-import { DataValue } from 'src/utils/socket.utils';
+import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -31,7 +31,7 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class Graph implements OnInit {
-  @Input() valuesSubject!: BehaviorSubject<DataValue[]>;
+  @Input() valuesSubject!: BehaviorSubject<GraphData[]>;
   options!: ChartOptions;
   chart!: ApexCharts;
   series: ApexAxisChartSeries = [
@@ -49,8 +49,8 @@ export default class Graph implements OnInit {
   };
 
   ngOnInit(): void {
-    this.valuesSubject.subscribe((values: DataValue[]) => {
-      const mappedValues = values.map((value: DataValue) => [value.time, +value.values[0]]);
+    this.valuesSubject.subscribe((values: GraphData[]) => {
+      const mappedValues = values.map((value: GraphData) => [value.x, value.y]);
 
       const newSeries = [
         {
