@@ -1,7 +1,7 @@
-.voltage-container {
+.thermometer-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  margin-top: 20px;
+  height: 70px;
+  width: 30px;
 }
