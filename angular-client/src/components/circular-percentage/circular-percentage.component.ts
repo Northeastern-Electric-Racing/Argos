@@ -23,7 +23,6 @@ export class CircularPercentageComponent {
   emptyAngle: number = 360;
   percentageFontSize: number = 0;
   percentageSignFontSize: number = 0;
-  underlineThickness: number = 0;
   percentageSignOffset: number = 0;
 
   //assigns values needed for styling and scaling
@@ -33,7 +32,6 @@ export class CircularPercentageComponent {
     this.emptyAngle = 360 - this.filledAngle;
     this.percentageFontSize = this.dimension * 0.39;
     this.percentageSignFontSize = this.dimension * 0.17;
-    this.underlineThickness = this.dimension * 0.02;
     this.percentageSignOffset = this.dimension * 0.02;
   }
 }
