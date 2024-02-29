@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { IdentifierDataType } from 'src/utils/enumerations/ImportantDataType';
+import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
+import { floatPipe } from 'src/utils/pipes.utils';
 
 /**
  * Container for the landing page, obtains data from the storage service.
@@ -11,16 +12,38 @@ import { IdentifierDataType } from 'src/utils/enumerations/ImportantDataType';
   templateUrl: './landing-page.component.html'
 })
 export default class LandingPage implements OnInit {
-  currentDriver!: string;
-  currentLocation!: string;
-  currentSystem!: string;
+  currentDriver: string = 'No Driver Selected';
+  currentLocation: string = 'No Location Selected';
+  currentSystem: string = 'No System Selected';
+  packTemp: number = 0;
+  motorTemp: number = 0;
+  stateOfCharge: number = 0;
+  latency: number = 0;
 
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.currentDriver = (this.storage.get(IdentifierDataType.DRIVER)?.getValue().value as string) ?? 'No Driver Selected';
-    this.currentLocation =
-      (this.storage.get(IdentifierDataType.LOCATION)?.getValue().value as string) ?? 'No Location Selected';
-    this.currentSystem = (this.storage.get(IdentifierDataType.SYSTEM)?.getValue().value as string) ?? 'No System Selected';
+    this.storage.get(IdentifierDataType.DRIVER).subscribe((value) => {
+      [this.currentDriver] = value.values;
+    });
+    this.storage.get(IdentifierDataType.LOCATION).subscribe((value) => {
+      [this.currentLocation] = value.values;
+    });
+    this.storage.get(IdentifierDataType.SYSTEM).subscribe((value) => {
+      [this.currentSystem] = value.values;
+    });
+
+    this.storage.get(IdentifierDataType.PACK_TEMP).subscribe((value) => {
+      this.packTemp = floatPipe(value.values[0]);
+    });
+    this.storage.get(IdentifierDataType.MOTOR_TEMP).subscribe((value) => {
+      this.motorTemp = floatPipe(value.values[0]);
+    });
+    this.storage.get(IdentifierDataType.STATE_OF_CHARGE).subscribe((value) => {
+      this.stateOfCharge = floatPipe(value.values[0]);
+    });
+    this.storage.get(IdentifierDataType.LATENCY).subscribe((value) => {
+      this.latency = floatPipe(value.values[0]);
+    });
   }
 }

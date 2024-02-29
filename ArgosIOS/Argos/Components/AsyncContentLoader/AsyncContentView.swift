@@ -24,9 +24,8 @@ struct AsyncContentView<Source: LoadableObject, Content: View>: View {
                         self.errorHandling.handle(error: error)
                     }
             case .loaded(let output):
-                Group {
-                    self.content(output)
-                }
+                self.content(output)
+                
             }
         }
         .task {

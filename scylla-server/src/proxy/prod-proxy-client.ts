@@ -1,8 +1,7 @@
 // Ignoring this because it wont build on github for some reason
-// @ts-ignore
 import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
 import { Topic } from '../odyssey-base/src/types/topic';
-import { Run } from '@prisma/client';
+import { run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
 import DataService from '../odyssey-base/src/services/data.services';
@@ -15,6 +14,7 @@ import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { serverdata as ServerData } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
 import ProxyClient from './proxy-client';
 import ProxyServer from './proxy-server';
+import { DataTypeName } from '../utils/data-type-name.utils';
 
 /**
  * Handler for receiving messages from Siren
@@ -23,7 +23,7 @@ export default class ProdProxyClient implements ProxyClient {
   connection: MqttClient;
   createNewRun: boolean;
   // storing run for the current connection, at start is undefined
-  currentRun: Run | undefined;
+  currentRun: run | undefined;
 
   proxyServers: ProxyServer[];
 
@@ -39,7 +39,7 @@ export default class ProdProxyClient implements ProxyClient {
    */
   constructor(mqttClient: MqttClient) {
     this.connection = mqttClient;
-    this.createNewRun = false;
+    this.createNewRun = true;
     this.currentRun = undefined;
     this.proxyServers = [];
   }
@@ -56,7 +56,7 @@ export default class ProdProxyClient implements ProxyClient {
    * Handles disconnecting from Siren
    */
   private handleClose = () => {
-    this.createNewRun = false;
+    this.createNewRun = true;
     console.log('Disconnected from Siren');
   };
 
@@ -64,9 +64,13 @@ export default class ProdProxyClient implements ProxyClient {
    * Handles connecting to Siren
    * @param packet The packet sent when the connection is opened
    */
-  private handleOpen = (packet: IConnackPacket) => {
+  private handleOpen = async (packet: IConnackPacket) => {
     console.log('Connected to Siren', packet.properties);
-    this.createNewRun = true;
+    if (this.createNewRun) {
+      this.createNewRun = false;
+      const run = await RunService.createRun(Date.now());
+      this.currentRun = run;
+    }
     this.subscribeToTopics([Topic.ALL]);
   };
 
@@ -77,7 +81,7 @@ export default class ProdProxyClient implements ProxyClient {
    * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = (topic: string, payload: Buffer, packet: IPublishPacket) => {
+  private handleMessage = async (topic: string, payload: Buffer, packet: IPublishPacket) => {
     try {
       const data = ServerData.v1.ServerData.deserializeBinary(payload).toObject();
       /* Infer node name from topics first segment */
@@ -85,35 +89,24 @@ export default class ProdProxyClient implements ProxyClient {
       /* Infer data type name from topic after node */
       const dataType = topic.split('/').slice(1).join('-');
 
-      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['unix_time'] : undefined;
+      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
 
       if (!unix_time) {
-        throw new Error('No unix_time property in packet');
+        throw new Error('No ts property in packet');
       }
 
-      let values: string[];
-      let unit: string;
-
-      if (data.values && data.unit) {
-        ({ values } = data);
-        ({ unit } = data);
-      } else {
-        return;
-      }
-
-      if (data.unit && data.values) {
+      if (data.unit !== undefined && data.values !== undefined && data.values.length > 0) {
         const serverMessage: ServerMessage = {
           node,
           dataType,
           unix_time: parseInt(unix_time as string),
           data: {
-            //TODO: Correct this to use the correct server data edit the ServerMessage value to be an array of strings
-            value: values[0],
-            unit
+            values: data.values,
+            unit: data.unit
           }
         };
 
-        this.handleData(serverMessage);
+        await this.handleData(serverMessage);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -130,76 +123,65 @@ export default class ProdProxyClient implements ProxyClient {
    * @param data The data received from Siren
    */
   private handleData = async (data: ServerMessage) => {
-    // if first time data recieved since connecting to car
-    // then create new run
-    if (this.createNewRun) {
-      this.currentRun = await RunService.createRun(data.unix_time);
-      this.createNewRun = false;
-    }
     // upsert the node
     const node = await NodeService.upsertNode(data.node);
+    //upsert the data type
+    await DataTypeService.upsertDataType(data.dataType, data.data.unit, node.name);
+
     // start upserting data
     if (!this.currentRun) {
       console.log('no current run');
       return;
     }
+
     // initializing params
     let driverName: string | undefined = undefined;
     let systemName: string | undefined = undefined;
 
-    // enum instead of raw string representing
-    // driver, system, location props
-    //TODO: Move this to a new file
-    enum Property {
-      driverUser = 'driverUser',
-      systemName = 'systemName',
-      locationName = 'locationName',
-      latitude = 'latitude',
-      longitude = 'longitude',
-      radius = 'radius'
-    }
-
     // iterating and upserting
     const serverdata = data.data;
     switch (data.dataType) {
-      case Property.driverUser:
-        driverName = serverdata.value as string;
+      case DataTypeName.driverUser:
+        [driverName] = serverdata.values;
         break;
-      case Property.systemName:
-        systemName = serverdata.value as string;
+      case DataTypeName.systemName:
+        [systemName] = serverdata.values;
         break;
-      case Property.locationName:
+      case DataTypeName.locationName:
         if (this.recentLocationName) {
-          if (this.recentLocationName !== serverdata.value) {
+          if (this.recentLocationName !== serverdata.values[0]) {
             this.newLocation = true;
           }
         } else {
-          this.recentLocationName = serverdata.value as string;
+          [this.recentLocationName] = serverdata.values;
           this.newLocation = true;
         }
         break;
-      case Property.latitude:
-        this.recentLatitude = serverdata.value as number;
-        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
+      case DataTypeName.points:
+        this.recentLatitude = parseFloat(serverdata.values[0]);
+        this.recentLongitude = parseFloat(serverdata.values[1]);
         break;
-      case Property.longitude:
-        this.recentLongitude = serverdata.value as number;
-        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
-        break;
-      case Property.radius:
-        this.recentRadius = serverdata.value as number;
+      case DataTypeName.radius:
+        this.recentRadius = parseFloat(serverdata.values[0]);
         break;
       default:
         await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
-        //TODO: Correct this to use the correct server data
-        await DataService.addData(new ServerData.v1.ServerData({}), data.unix_time, data.dataType, this.currentRun.id);
+        await DataService.addData(
+          new ServerData.v1.ServerData({
+            values: serverdata.values,
+            unit: serverdata.unit
+          }),
+          data.unix_time,
+          data.dataType,
+          this.currentRun.id
+        );
     }
 
     // transform serverdata into client data to send to ProxyServer
     const clientData: ClientData = {
       runId: this.currentRun.id,
       name: data.dataType,
-      value: serverdata.value,
+      values: serverdata.values,
       unit: serverdata.unit,
       timestamp: data.unix_time
     };
@@ -241,6 +223,7 @@ export default class ProdProxyClient implements ProxyClient {
    * sending and receiving messages, and handling errors
    */
   public configure = () => {
+    console.log('configuring');
     this.connection.on('message', this.handleMessage);
     this.connection.on('connect', this.handleOpen);
     this.connection.on('error', this.handleError);

@@ -48,11 +48,8 @@ const server = app.listen(port, () => {
 const serverSocket = new Server(server, {
   cors: {
     origin(requestOrigin, callback) {
-      if (requestOrigin === 'http://localhost:4200') {
-        callback(null, true);
-      } else {
-        callback(null, true);
-      }
+      console.log(requestOrigin);
+      callback(null, true);
     }
   }
 });
@@ -63,19 +60,23 @@ if (process.env.PROD === 'true') {
   const host = process.env.PROD_SIREN_HOST_URL;
   const mqttPort = '1883';
   const clientId = `Scylla-Server`;
+  console.log('host', host);
 
   const connectUrl = `mqtt://${host}:${mqttPort}`;
 
   const connection = connect(connectUrl, {
     clientId,
     clean: true,
+    protocolVersion: 5,
     connectTimeout: 4000,
     reconnectPeriod: 1000
   });
 
+  console.log('Connecting to Siren...');
+
   proxyClient = new ProdProxyClient(connection);
 } else {
-  proxyClient = new MockProxyClient(2);
+  proxyClient = new MockProxyClient(1);
 }
 
 proxyClient.configure();

@@ -1,5 +1,47 @@
 <div class="image-container">
   <landing-header [driver]="currentDriver" [location]="currentLocation" [system]="currentSystem" />
+  <hstack spacing="100px">
+    <vstack>
+      <hstack spacing="30px">
+        <vstack spacing="0px" style="width: 100px">
+          <typography variant="value" [content]="packTemp.toString() + '°'" />
+          <typography variant="header" content="Pack" />
+        </vstack>
+        <div class="thermometer-container">
+          <thermometer [temperature]="packTemp" [min]="-15" [max]="50" />
+        </div>
+      </hstack>
+      <hstack spacing="30px">
+        <vstack spacing="0px" style="width: 100px">
+          <typography variant="value" [content]="motorTemp.toString() + '°'" />
+          <typography variant="header" content="Motor" />
+        </vstack>
+        <div class="thermometer-container">
+          <thermometer [temperature]="motorTemp" [min]="-15" [max]="50" />
+        </div>
+      </hstack>
+    </vstack>
+    <battery [percentage]="stateOfCharge" [height]="400" [width]="200" />
+    <latency-display [latency]="99" [lowVal]="0" [medVal]="50" [highVal]="100"></latency-display>
+  </hstack>
   <landing-buttons />
-  <battery [percentage]="20" [height]="200" [width]="100" />
+  <info-graph
+    [data]="[
+      { x: 0, y: 0 },
+      { x: 1, y: 10 },
+      { x: 2, y: 20 },
+      { x: 3, y: 30 },
+      { x: 4, y: 40 },
+      { x: 5, y: 50 },
+      { x: 6, y: 60 },
+      { x: 7, y: 70 },
+      { x: 8, y: 80 },
+      { x: 9, y: 90 },
+      { x: 10, y: 100 }
+    ]"
+    icon="bar_chart"
+    title="Joe mama"
+    color="#FF0000"
+    graphContainerId="graph1"
+  />
 </div>

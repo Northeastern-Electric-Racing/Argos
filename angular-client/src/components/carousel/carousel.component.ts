@@ -1,6 +1,6 @@
-import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Run } from 'src/utils/types.utils';
 
 // the data for the dialog, basically just all the runs
@@ -21,11 +21,11 @@ export class Carousel {
   responsiveOptions: any[] | undefined;
 
   constructor(
-    public dialogRef: MatDialogRef<Carousel>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    public dialogRef: DynamicDialogRef,
+    public config: DynamicDialogConfig,
     public router: Router
   ) {
-    this.runs = data.runs;
+    this.runs = config.data.runs;
   }
 
   updateIndex(nexIndex: number) {
@@ -50,8 +50,8 @@ export class Carousel {
     this.previousIndex = newIndex;
   }
 
-  datePipe = (time: string) => {
-    const date = new Date(parseInt(time));
+  datePipe = (date: Date) => {
+    date = new Date(date);
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}`;
   };
 

@@ -7,11 +7,11 @@ import ProxyClient from './proxy-client';
 /**
  * base case for class constructor, somewhat arbitrary min/max values
  */
-const baseMockData = [
+const baseMockData: MockData[] = [
   {
     name: DataType.PackTemp,
     unit: Unit.CELSIUS,
-    val: 0,
+    vals: [0],
     min: -20,
     max: 54
   },
@@ -19,7 +19,7 @@ const baseMockData = [
   {
     name: DataType.MotorTemp,
     unit: Unit.CELSIUS,
-    val: 0,
+    vals: [0],
     min: -20,
     max: 54
   },
@@ -27,33 +27,23 @@ const baseMockData = [
   {
     name: DataType.PackSOC,
     unit: Unit.PERCENT,
-    val: 0,
+    vals: [0],
     min: 0,
     max: 100
   },
-
   {
-    name: DataType.AccelX,
+    name: DataType.Accel,
     unit: Unit.G,
-    val: 0,
+    vals: [0, 0, 0],
     min: -6,
     max: 6
   },
-
   {
-    name: DataType.AccelY,
-    unit: Unit.G,
-    val: 0,
-    min: -6,
-    max: 6
-  },
-
-  {
-    name: DataType.AccelZ,
-    unit: Unit.G,
-    val: 0,
-    min: -6,
-    max: 6
+    name: DataType.Points,
+    unit: Unit.COORD,
+    vals: [0, 0],
+    min: -90,
+    max: 90
   }
 ];
 
@@ -84,10 +74,11 @@ export default class MockProxyClient implements ProxyClient {
     return new Promise((resolve) =>
       setTimeout(() => {
         resolve('loop');
-      }, 10)
+      }, 1)
     );
   };
 
+  //modified to now allow an array of data instead of a singular value
   public loop = async () => {
     let data: MockData;
     let index: number;
@@ -96,33 +87,19 @@ export default class MockProxyClient implements ProxyClient {
       index = this.getRandomIndex(this.mockData.length);
       data = this.mockData[index];
 
-      let delta: number;
-      const random = Math.random();
-      if (random > 0.66) {
-        delta = 1;
-      } else if (random > 0.33) {
-        delta = -1;
-      } else {
-        delta = 0;
+      for (const val in data.vals) {
+        if (data.vals.hasOwnProperty(val)) {
+          let newVal = data.vals[val] + Math.random() * 2 - 1;
+          newVal = Math.max(data.min, Math.min(data.max, newVal));
+          data.vals[val] = newVal;
+        }
       }
-
-      let newVal = data.val + delta;
-
-      //makes sure new value for datatype is in range
-      if (newVal > data.max) {
-        newVal = data.max;
-      } else if (newVal < data.min) {
-        newVal = data.min;
-      }
-
-      //update value held in object field
-      this.mockData[index].val = newVal;
 
       const clientData: ClientData = {
         runId: this.currentRunId,
         name: data.name,
         unit: data.unit,
-        value: newVal,
+        values: data.vals.map((val) => val.toString()),
         timestamp: Date.now()
       };
 

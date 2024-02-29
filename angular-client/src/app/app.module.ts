@@ -1,17 +1,9 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatGridListModule } from '@angular/material/grid-list';
-import { MatCardModule } from '@angular/material/card';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatDialogModule } from '@angular/material/dialog';
 import { CarouselModule } from 'primeng/carousel';
+import { ToastModule } from 'primeng/toast';
+import { OrderListModule } from 'primeng/orderlist';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
 import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
@@ -37,6 +29,22 @@ import LandingButtons from 'src/pages/landing-page/landing-buttons/landing-butto
 import GraphSidebarMobile from 'src/pages/graph-page/graph-sidebar/graph-sidebar-mobile/graph-sidebar-mobile.component';
 import GraphSidebarDesktop from 'src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 import Map from 'src/pages/map/map.component';
+import Thermometer from 'src/components/thermometer/thermometer.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import HStack from 'src/components/hstack/hstack.component';
+import VStack from 'src/components/vstack/vstack.component';
+import ResolutionSelector from 'src/components/resolution-selector/resolution-selector.component';
+import LatencyDisplay from 'src/components/latency-display/latency-display';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
+import { GraphComponent } from 'src/components/graph/graph.component';
+import { InfoGraph } from 'src/components/info-graph/info-graph.component';
+import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
 
 @NgModule({
   declarations: [
@@ -63,25 +71,33 @@ import Map from 'src/pages/map/map.component';
     LandingButtons,
     Map,
     InfoBackgroundComponent,
-    CircularPercentageComponent
+    CircularPercentageComponent,
+    Thermometer,
+    VStack,
+    HStack,
+    ResolutionSelector,
+    LatencyDisplay,
+    GraphComponent,
+    InfoGraph,
+    GraphDialog
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
-    MatGridListModule,
-    MatCardModule,
-    MatMenuModule,
-    MatIconModule,
-    MatButtonModule,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatListModule,
-    MatDialogModule,
     CarouselModule,
-    NgApexchartsModule
+    NgApexchartsModule,
+    FlexLayoutModule,
+    NgApexchartsModule,
+    ToastModule,
+    OrderListModule,
+    ProgressSpinnerModule,
+    MatIconModule,
+    MatGridListModule,
+    DynamicDialogModule,
+    BrowserAnimationsModule,
+    ButtonModule
   ],
-  providers: [],
+  providers: [DialogService, MessageService],
   bootstrap: [AppContext]
 })
 export class AppModule {}

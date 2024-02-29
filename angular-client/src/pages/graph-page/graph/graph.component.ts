@@ -11,7 +11,7 @@ import {
   ApexFill
 } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
-import { DataValue } from 'src/utils/socket.utils';
+import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -22,6 +22,7 @@ type ChartOptions = {
   grid: ApexGrid;
   tooltip: ApexTooltip;
   fill: ApexFill;
+  stroke: ApexStroke;
 };
 
 @Component({
@@ -30,26 +31,37 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class Graph implements OnInit {
-  @Input() valuesSubject!: BehaviorSubject<DataValue[]>;
+  @Input() valuesSubject!: BehaviorSubject<GraphData[]>;
   options!: ChartOptions;
   chart!: ApexCharts;
+  previousDataLength: number = 0;
+  series: ApexAxisChartSeries = [
+    {
+      name: 'Data Series',
+      data: []
+    }
+  ];
 
-  updateChart = (values: DataValue[]) => {
-    const mappedValues = values.map((value: DataValue) => [+value.time, +value.value]);
-
-    const newSeries = [
-      {
-        name: 'My-series',
-        data: mappedValues
-      }
-    ];
-
-    this.chart.updateSeries(newSeries);
+  updateChart = () => {
+    if (this.previousDataLength !== this.series[0].data.length) {
+      this.previousDataLength = this.series[0].data.length;
+      this.chart.updateSeries(this.series);
+    }
+    setTimeout(() => {
+      this.updateChart();
+    }, 1000);
   };
 
   ngOnInit(): void {
-    this.valuesSubject.subscribe((values: DataValue[]) => {
-      this.updateChart(values);
+    this.valuesSubject.subscribe((values: GraphData[]) => {
+      const mappedValues = values.map((value: GraphData) => [value.x, value.y]);
+      const newSeries = [
+        {
+          name: 'Data Series',
+          data: mappedValues
+        }
+      ];
+      this.series = newSeries;
     });
 
     const chartContainer = document.getElementById('chart-container');
@@ -62,14 +74,24 @@ export default class Graph implements OnInit {
       series: [],
       chart: {
         id: 'graph',
-        type: 'area',
+        type: 'line',
         height: '100%',
         zoom: {
           autoScaleYaxis: true
+        },
+        animations: {
+          enabled: true,
+          easing: 'linear',
+          dynamicAnimation: {
+            speed: 1000
+          }
         }
       },
       dataLabels: {
         enabled: false
+      },
+      stroke: {
+        curve: 'straight'
       },
       markers: {
         size: 0
@@ -85,7 +107,7 @@ export default class Graph implements OnInit {
         }
       },
       fill: {
-        type: 'gradient',
+        type: 'linear',
         gradient: {
           shadeIntensity: 1,
           opacityFrom: 0.7,
@@ -103,6 +125,7 @@ export default class Graph implements OnInit {
       this.chart = new ApexCharts(chartContainer, this.options);
 
       this.chart.render();
+      this.updateChart();
     }, 0);
   }
 }

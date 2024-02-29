@@ -8,7 +8,7 @@ const routes: Routes = [
   { path: 'landing', component: LandingPage },
   { path: 'graph/:realTime/:runId', component: GraphPage },
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
-  { path: 'map', component: Map }
+  { path: 'map/:realTime/:runId', component: Map }
 ];
 
 @NgModule({

@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { getDataByDataTypeName } from 'src/api/data.api';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
 import { getRunById } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, Node, Run } from 'src/utils/types.utils';
+import { DataType, GraphData, Node, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-page',
@@ -27,12 +27,15 @@ export default class GraphPage implements OnInit {
   run?: Run;
   runIsLoading = true;
 
+  previousDataType?: DataType;
+
   selectedDataType: Subject<DataType> = new Subject<DataType>();
-  selectedDataTypeValuesSubject: BehaviorSubject<DataValue[]> = new BehaviorSubject<DataValue[]>([]);
+  selectedDataTypeValuesSubject: BehaviorSubject<GraphData[]> = new BehaviorSubject<GraphData[]>([]);
   currentValue: Subject<DataValue | undefined> = new Subject<DataValue | undefined>();
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
+  subscription?: Subscription;
 
   constructor(
     private serverService: APIService,
@@ -49,39 +52,38 @@ export default class GraphPage implements OnInit {
       this.selectedDataType.next(dataType);
       this.selectedDataTypeValuesSubject.next([]);
       if (this.realTime) {
-        const key = JSON.stringify({
-          name: dataType.name,
-          unit: dataType.unit
-        });
+        if (this.subscription) this.subscription.unsubscribe();
+        const key = dataType.name;
         const valuesSubject = this.storage.get(key);
-        if (valuesSubject) {
-          valuesSubject.subscribe((value: DataValue) => {
-            let nextValue;
-            if (this.selectedDataTypeValuesSubject.value.length > 30) {
-              nextValue = this.selectedDataTypeValuesSubject.value.slice(1).concat(value);
-              this.selectedDataTypeValuesSubject.next(nextValue);
-            } else {
-              nextValue = this.selectedDataTypeValuesSubject.value.concat(value);
-            }
-            this.currentValue.next(value);
-            this.selectedDataTypeValuesSubject.next(nextValue);
-          });
-        }
-      } else {
+        this.subscription = valuesSubject.subscribe((value: DataValue) => {
+          /* Take only data from the last minute */
+          const now = new Date();
+          const lastMinute = new Date(now.getTime() - 60000);
+          const storedValues = this.selectedDataTypeValuesSubject.getValue();
+          storedValues.push({ x: +value.time, y: +value.values[0] });
+          const nextValue = storedValues.filter((v) => new Date(v.x) > lastMinute);
+
+          this.currentValue.next(value);
+          this.selectedDataTypeValuesSubject.next(nextValue);
+        });
+      } else if (this.runId) {
         this.selectedDataTypeValuesIsLoading = true;
         this.selectedDataTypeValuesIsError = false;
         this.selectedDataTypeValuesError = undefined;
 
-        const dataQueryResponse = this.serverService.query<DataValue[]>(() => getDataByDataTypeName(dataType.name));
+        const dataQueryResponse = this.serverService.query<DataValue[]>(() =>
+          getDataByDataTypeNameAndRunId(dataType.name, this.runId!)
+        );
         dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
           this.selectedDataTypeValuesIsLoading = isLoading;
         });
         dataQueryResponse.error.subscribe((error: Error) => {
-          this.selectedDataTypeValuesIsError = true;
           this.selectedDataTypeValuesError = error;
+          this.selectedDataTypeValuesIsError = true;
         });
         dataQueryResponse.data.subscribe((data: DataValue[]) => {
-          this.selectedDataTypeValuesSubject.next(data);
+          console.log(data);
+          this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
           this.currentValue.next(data.pop());
         });
       }

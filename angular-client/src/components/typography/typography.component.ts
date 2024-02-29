@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import Theme from 'src/services/theme.service';
-import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
+import { StyleVariant } from 'src/utils/enumerations/style-variant';
 
 /**
  * Custom typography component that allows for the use of different styles of text.
@@ -17,29 +17,35 @@ import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
 })
 export default class Typography implements OnInit {
   @Input() variant!: StyleVariant;
-  @Input() content?: string | null;
+  @Input() content?: string | string[] | null;
   @Input() additionalStyles?: string;
   style!: string;
 
   ngOnInit(): void {
     switch (this.variant) {
       case 'header':
-        this.style = Theme.HEADER;
+        this.style = Theme.header;
         break;
       case 'xx-large-title':
-        this.style = Theme.XXLARGEHEADER;
+        this.style = Theme.xxLargeHeader;
         break;
       case 'large-header':
-        this.style = Theme.LARGEHEADER;
+        this.style = Theme.largeHeader;
         break;
       case 'subheader':
-        this.style = Theme.SUBHEADER;
+        this.style = Theme.subheader;
         break;
       case 'info-title':
-        this.style = Theme.INFOTITLE;
+        this.style = Theme.infoTitle;
         break;
       case 'info-subtitle':
-        this.style = Theme.INFOSUBTITLE;
+        this.style = Theme.infoSubtitle;
+        break;
+      case 'value':
+        this.style = Theme.value;
+        break;
+      case 'info-value':
+        this.style = Theme.infoValue;
         break;
     }
 

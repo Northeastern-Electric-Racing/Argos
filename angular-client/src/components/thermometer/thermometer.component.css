@@ -1,0 +1,44 @@
+:host {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.glass {
+  position: absolute;
+  top: 0;
+  width: 60%;
+  height: 90%;
+  border-radius: 25px 25px 0 0;
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.mercury {
+  position: absolute;
+  bottom: 10%;
+  width: 40%;
+  border-radius: 5px 5px 0 0;
+  height: var(--mercury-height, 75%);
+  background-color: var(--mercury-color, #14ff00);
+}
+
+.bulb-container {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 40%;
+  background-color: #ffffff;
+  border-radius: 50% 50% 50% 50%;
+}
+
+.bulb {
+  position: absolute;
+  bottom: 5%;
+  width: 80%;
+  height: 30%;
+  background-color: var(--mercury-color, #14ff00);
+  border-radius: 50% 50% 50% 50%;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
+}
