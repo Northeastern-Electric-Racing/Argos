@@ -4,7 +4,7 @@ services:
   odyssey-timescale:
     container_name: odyssey-timescale
     image: timescale/timescaledb:2.13.1-pg15
-    platform: linux/amd64
+    platform: linux/arm64
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
@@ -42,7 +42,7 @@ services:
       target: production
       dockerfile: Dockerfile
     ports:
-      - 4200:4200
+      - 4200:80
     networks:
       - shared-network
     depends_on:

@@ -1,16 +1,16 @@
-FROM node:18 AS Production
+# Use official nginx image as the base image
+FROM nginx:latest as Production
 
-ENV NODE_ENV=production
+# Set the working directory
+WORKDIR /usr/local/app
 
-WORKDIR /usr/src/client
+# Add the build file
+COPY ./dist /usr/local/app
 
-COPY package.json . 
-COPY package-lock.json .
+# Copy the build output to replace the default nginx contents.
 
-RUN npm install
+RUN mv /usr/local/app/angular-client/* /usr/share/nginx/html
 
-COPY . .
+EXPOSE 80
 
-RUN npm run build
-
-CMD ["sh", "-c", "npm run start:production"]
+CMD ["nginx", "-g", "daemon off;"]

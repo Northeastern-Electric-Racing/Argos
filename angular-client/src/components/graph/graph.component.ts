@@ -10,13 +10,15 @@ import {
   ApexTooltip,
   ApexFill
 } from 'ng-apexcharts';
-import { BehaviorSubject } from 'rxjs';
+import { DialogService } from 'primeng/dynamicdialog';
+import { GraphDialog } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
   xaxis: ApexXAxis;
+  yaxis: ApexYAxis;
   dataLabels: ApexDataLabels;
   markers: ApexMarkers;
   grid: ApexGrid;
@@ -26,22 +28,40 @@ type ChartOptions = {
 };
 
 @Component({
-  selector: 'graph',
+  selector: 'graph-component',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css']
+  styleUrls: ['./graph.component.css'],
+  providers: [DialogService]
 })
-export default class Graph implements OnInit {
-  @Input() valuesSubject!: BehaviorSubject<GraphData[]>;
+export class GraphComponent implements OnInit {
+  @Input() data!: GraphData[];
+  @Input() color!: string; // Must be hex
+  @Input() title?: string;
+  @Input() graphContainerId!: string;
   options!: ChartOptions;
   chart!: ApexCharts;
   series: ApexAxisChartSeries = [
     {
-      name: 'Data Series',
+      name: this.title,
       data: []
     }
   ];
 
+  constructor(public dialogService: DialogService) {}
+
+  openDialog = () => {
+    this.dialogService.open(GraphDialog, {
+      header: this.title,
+      data: {
+        data: this.data,
+        color: this.color,
+        title: this.title
+      }
+    });
+  };
+
   updateChart = () => {
+    this.series[0].data = this.data;
     this.chart.updateSeries(this.series);
     setTimeout(() => {
       this.updateChart();
@@ -49,23 +69,12 @@ export default class Graph implements OnInit {
   };
 
   ngOnInit(): void {
-    this.valuesSubject.subscribe((values: GraphData[]) => {
-      const mappedValues = values.map((value: GraphData) => [value.x, value.y]);
-
-      const newSeries = [
-        {
-          name: 'Data Series',
-          data: mappedValues
-        }
-      ];
-      this.series = newSeries;
-    });
-
-    const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) {
-      console.log('Something went very wrong');
-      return;
-    }
+    this.series = [
+      {
+        name: this.title,
+        data: this.data
+      }
+    ];
 
     this.options = {
       series: [],
@@ -82,22 +91,51 @@ export default class Graph implements OnInit {
           dynamicAnimation: {
             speed: 1000
           }
+        },
+        toolbar: {
+          show: false
         }
+        // background: '#5A5A5A'
       },
       dataLabels: {
         enabled: false
       },
       stroke: {
-        curve: 'straight'
+        curve: 'straight',
+        colors: [this.color]
       },
       markers: {
         size: 0
       },
       xaxis: {
-        type: 'datetime',
-        tickAmount: 6
+        type: 'category',
+        tickAmount: 2,
+        labels: {
+          show: false,
+          style: {
+            colors: '#FFFFFF'
+          },
+          formatter: (value) => {
+            return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
+          }
+        },
+        axisBorder: {
+          show: false
+        },
+        axisTicks: {
+          show: false
+        }
+      },
+      yaxis: {
+        tickAmount: 2,
+        labels: {
+          style: {
+            colors: '#FFFFFF'
+          }
+        }
       },
       tooltip: {
+        theme: 'dark',
         x: {
           //format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'
@@ -119,10 +157,16 @@ export default class Graph implements OnInit {
 
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
+      const chartContainer = document.getElementById(this.graphContainerId);
+      if (!chartContainer) {
+        console.log('Container with id ' + this.graphContainerId + ' not found');
+        return;
+      }
+
       this.chart = new ApexCharts(chartContainer, this.options);
 
       this.chart.render();
       this.updateChart();
-    }, 0);
+    }, 100);
   }
 }
