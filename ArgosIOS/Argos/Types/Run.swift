@@ -17,6 +17,15 @@ struct Run: Codable {
     var systemName: String?
     var time: String
     var dateTime: Date {
-        return DateFormatter().date(from: time) ?? Date.distantPast
+        let dateFormatter = DateFormatter()
+
+        // Set the date format to match your string
+        dateFormatter.dateFormat = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z (zzz)"
+
+        // Set the locale to English (United States) to ensure the month and day names are parsed correctly
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        
+        return dateFormatter.date(from: self.time) ?? Date()
     }
 }

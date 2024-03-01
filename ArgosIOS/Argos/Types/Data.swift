@@ -14,10 +14,7 @@ struct ArgosData : Codable {
     var id: String
     var values: [String]
     var dataTypeName: String
-    var time: String
-    var timestamp: Int {
-        return Int((DateFormatter().date(from: time) ?? Date.distantPast).timeIntervalSince1970)
-    }
+    var time: Int
     var runId: Int
     
     init(from decoder: Decoder) throws {
@@ -25,7 +22,7 @@ struct ArgosData : Codable {
         self.id = try container.decode(String.self, forKey: .id)
         self.values = try container.decode([String].self, forKey: .values)
         self.dataTypeName = try container.decode(String.self, forKey: .dataTypeName)
-        self.time = try container.decode(String.self, forKey: .time)
+        self.time = try container.decode(Int.self, forKey: .time)
         self.runId = try container.decode(Int.self, forKey: .runId)
     }
 }
