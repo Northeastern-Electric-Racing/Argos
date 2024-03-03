@@ -22,7 +22,6 @@ export default class SocketService {
    */
   receiveData = (storage: Storage) => {
     this.socket.on('message', (message: string) => {
-      console.log('received message:', message);
       // if (Date.now() - this.lastTimestamp < storage.getResolution()) return;
       this.lastTimestamp = Date.now();
       try {

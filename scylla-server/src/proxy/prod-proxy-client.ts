@@ -39,7 +39,7 @@ export default class ProdProxyClient implements ProxyClient {
    */
   constructor(mqttClient: MqttClient) {
     this.connection = mqttClient;
-    this.createNewRun = false;
+    this.createNewRun = true;
     this.currentRun = undefined;
     this.proxyServers = [];
   }
@@ -56,7 +56,7 @@ export default class ProdProxyClient implements ProxyClient {
    * Handles disconnecting from Siren
    */
   private handleClose = () => {
-    this.createNewRun = false;
+    this.createNewRun = true;
     console.log('Disconnected from Siren');
   };
 
@@ -64,9 +64,13 @@ export default class ProdProxyClient implements ProxyClient {
    * Handles connecting to Siren
    * @param packet The packet sent when the connection is opened
    */
-  private handleOpen = (packet: IConnackPacket) => {
+  private handleOpen = async (packet: IConnackPacket) => {
     console.log('Connected to Siren', packet.properties);
-    this.createNewRun = true;
+    if (this.createNewRun) {
+      this.createNewRun = false;
+      const run = await RunService.createRun(Date.now());
+      this.currentRun = run;
+    }
     this.subscribeToTopics([Topic.ALL]);
   };
 
@@ -78,7 +82,6 @@ export default class ProdProxyClient implements ProxyClient {
    * @param message The message received from Siren
    */
   private handleMessage = async (topic: string, payload: Buffer, packet: IPublishPacket) => {
-    console.log(topic, payload.toString());
     try {
       const data = ServerData.v1.ServerData.deserializeBinary(payload).toObject();
       /* Infer node name from topics first segment */
@@ -86,14 +89,12 @@ export default class ProdProxyClient implements ProxyClient {
       /* Infer data type name from topic after node */
       const dataType = topic.split('/').slice(1).join('-');
 
-      console.log(packet);
       const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
 
       if (!unix_time) {
         throw new Error('No ts property in packet');
       }
 
-      console.log('Received Data: ', data);
       if (data.unit !== undefined && data.values !== undefined && data.values.length > 0) {
         const serverMessage: ServerMessage = {
           node,
@@ -122,14 +123,6 @@ export default class ProdProxyClient implements ProxyClient {
    * @param data The data received from Siren
    */
   private handleData = async (data: ServerMessage) => {
-    // if first time data recieved since connecting to car
-    // then create new run
-    console.log('handling data', data);
-    if (this.createNewRun) {
-      this.currentRun = await RunService.createRun(data.unix_time);
-      console.log('created new run');
-      this.createNewRun = false;
-    }
     // upsert the node
     const node = await NodeService.upsertNode(data.node);
     //upsert the data type
@@ -192,8 +185,6 @@ export default class ProdProxyClient implements ProxyClient {
       unit: serverdata.unit,
       timestamp: data.unix_time
     };
-
-    console.log('clientData', clientData);
 
     if (systemName) {
       await SystemService.upsertSystem(systemName, this.currentRun.id);

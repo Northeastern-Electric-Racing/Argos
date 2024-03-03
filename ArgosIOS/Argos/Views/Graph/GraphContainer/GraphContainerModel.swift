@@ -55,8 +55,8 @@ class GraphContainerModel: LoadableObject {
                     }
                     .store(in: &self.cancellables)
                 self.driver = run.driverName ?? ""
-                self.driver = run.locationName ?? ""
-                self.driver = run.systemName ?? ""
+                self.location = run.locationName ?? ""
+                self.system = run.systemName ?? ""
                 self.cachedNodes = nodes
                 self.load(self.cachedProps)
             }
@@ -78,7 +78,7 @@ class GraphContainerModel: LoadableObject {
             do {
                 let currentData = try await APIHandler.getDataByDataTypeAndRunId(name: dataType.name, runId: self.runId)
                 DispatchQueue.main.async {
-                    self.currentData = currentData.map({.init(values: $0.values, time: $0.timestamp)})
+                    self.currentData = currentData.map({.init(values: $0.values, time: $0.time)})
                     self.load(self.cachedProps)
                 }
             } catch {
@@ -91,6 +91,7 @@ class GraphContainerModel: LoadableObject {
         guard let first = value.values.first, let dataPoint = Float(first) else {
             throw TransformerError.failedToConvertDataValueToGraphData
         }
-        return .init(time: value.time, value: dataPoint)
+        print(value)
+        return .init(time: value.time / 1000, value: dataPoint)
     }
 }

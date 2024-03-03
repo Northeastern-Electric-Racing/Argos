@@ -34,6 +34,7 @@ export default class Graph implements OnInit {
   @Input() valuesSubject!: BehaviorSubject<GraphData[]>;
   options!: ChartOptions;
   chart!: ApexCharts;
+  previousDataLength: number = 0;
   series: ApexAxisChartSeries = [
     {
       name: 'Data Series',
@@ -42,7 +43,10 @@ export default class Graph implements OnInit {
   ];
 
   updateChart = () => {
-    this.chart.updateSeries(this.series);
+    if (this.previousDataLength !== this.series[0].data.length) {
+      this.previousDataLength = this.series[0].data.length;
+      this.chart.updateSeries(this.series);
+    }
     setTimeout(() => {
       this.updateChart();
     }, 1000);
@@ -51,7 +55,6 @@ export default class Graph implements OnInit {
   ngOnInit(): void {
     this.valuesSubject.subscribe((values: GraphData[]) => {
       const mappedValues = values.map((value: GraphData) => [value.x, value.y]);
-
       const newSeries = [
         {
           name: 'Data Series',

@@ -1,0 +1,41 @@
+<info-background>
+  <div
+    class="container"
+    [style]="{
+      background:
+        'conic-gradient(from 180deg, ' +
+        ringColor +
+        ' ' +
+        filledAngle +
+        'deg, black ' +
+        filledAngle +
+        'deg ' +
+        emptyAngle +
+        'deg)',
+      height: dimension + 'px',
+      width: dimension + 'px'
+    }"
+  >
+    <div
+      class="inner"
+      [style]="{
+        'background-color': backgroundColor,
+        height: innerCircleDimension + 'px',
+        width: innerCircleDimension + 'px'
+      }"
+    >
+      <div class="content">
+        <typography
+          variant="header"
+          content="{{ percentage }}"
+          additionalStyles="fontSize: {{ percentageFontSize }}px; margin: 0;"
+        />
+        <typography
+          variant="info-subtitle"
+          content="%"
+          additionalStyles="fontSize: {{ percentageSignFontSize }}px; margin-bottom: {{ percentageSignOffset }}px"
+        />
+      </div>
+    </div>
+  </div>
+</info-background>
