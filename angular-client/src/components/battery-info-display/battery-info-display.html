@@ -1,29 +1,29 @@
 <info-background title="Battery" icon="battery_charging_full">
- <br/>
+  <br />
   <hstack>
     <vstack>
       <hstack>
-        <typography variant="info-value" content="70" />
-        <battery [percentage]="70" [height]="60" [width]="30" />
+        <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
+        <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
       </hstack>
-      <typography variant="subheader" content="Chge State" />
+      <typography variant="subheader" content="Charge State" />
     </vstack>
+    <div class="vertical-line"></div>
     <vstack>
       <hstack>
-        <typography variant="info-value" content="30" />
+        <typography variant="info-value" [content]="packTemp.toString() + '°'" />
         <div class="thermometer-container">
-          <!--make sure value is changed with the V!-->
-          <thermometer [temperature]="30" [min]="-15" [max]="30" />
+          <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />
         </div>
       </hstack>
       <typography variant="subheader" content="Pack Temperature" />
     </vstack>
+    <div class="vertical-line"></div>
     <vstack>
       <hstack>
-        <typography variant="info-value" content="12V" />
+        <typography variant="info-value" [content]="voltage.toString() + 'V'" />
       </hstack>
       <typography variant="subheader" content="Voltage" />
-      <!--make sure value is changed with the V!-->
     </vstack>
   </hstack>
 </info-background>

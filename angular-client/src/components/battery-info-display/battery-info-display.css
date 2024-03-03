@@ -2,6 +2,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 70px;
-  width: 30px;
+  height: 74px;
+  width: 28px;
+}
+
+.vertical-line {
+  width: 2px;
+  height: 100%;
+  background-color: #727272;
 }
