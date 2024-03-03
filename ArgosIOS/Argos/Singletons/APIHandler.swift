@@ -18,7 +18,7 @@ class APIHandler {
         let httpResponse = (response as! HTTPURLResponse)
         let statusCode = httpResponse.statusCode
         
-        guard (statusCode == 200) else {
+        guard statusCode == 200 else {
             let error = try JSONDecoder().decode(HttpError.self, from: data)
             throw error
         }
@@ -29,7 +29,7 @@ class APIHandler {
      * @param urlEndpoint The route endpoint to ping for data
      * @param completion The completion handler to call when the data is retrieved
      */
-    private static func queryData <T : Codable>(route: Route) async throws -> T {
+    private static func queryData<T: Codable>(route: Route) async throws -> T {
         let request = route.url
         let (data, response) = try await URLSession.shared.data(from: request)
         
@@ -46,7 +46,7 @@ class APIHandler {
      - parameter data: The data you are encoding into the request body
      - returns string containing the success statement
      */
-    private static func mutateData <T : Codable>(route: Route, data: T) async throws -> String {
+    private static func mutateData<T: Codable>(route: Route, data: T) async throws -> String {
         let url = route.url
         
         let encoder = JSONEncoder()
@@ -65,7 +65,7 @@ class APIHandler {
      * API call to get all the nodes from the server
      */
     public static func getAllNodes() async throws -> [Node] {
-        let nodes : [Node] = try await Self.queryData(route: .allNodes)
+        let nodes: [Node] = try await Self.queryData(route: .allNodes)
         return nodes
     }
     
@@ -73,10 +73,9 @@ class APIHandler {
      * API Call to get a run by the given id
      - parameter id: The id of the run to fetch
      */
-    public static func getRunById (id: Int) async throws -> Run {
+    public static func getRunById(id: Int) async throws -> Run {
         let run: Run = try await Self.queryData(route: .runById(id: id))
         return run
-                                            
     }
     
     /**
