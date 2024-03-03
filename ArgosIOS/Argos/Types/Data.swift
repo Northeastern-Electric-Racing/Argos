@@ -10,13 +10,13 @@ import Foundation
 /**
  * Format of a piece of data
  */
-struct ArgosData : Codable {
+struct ArgosData: Codable {
     var id: String
     var values: [String]
     var dataTypeName: String
     var time: Int
     var runId: Int
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)

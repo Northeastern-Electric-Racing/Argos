@@ -10,13 +10,13 @@ import SwiftUI
 struct CarouselContent: View {
     var run: Run
     var selectRun: () -> Void
-    
+
     var body: some View {
         VStack {
             HStack(alignment: .lastTextBaseline) {
                 ArgosHeader("Run #\(self.run.id)")
                     .frame(alignment: .leading)
-                
+
                 ArgosLabel(self.formatDate())
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .multilineTextAlignment(.trailing)
@@ -34,7 +34,7 @@ struct CarouselContent: View {
                 .frame(maxWidth: .infinity)
         }
     }
-    
+
     private func formatDate() -> String {
         return self.run.dateTime.formatted(date: .abbreviated, time: .shortened)
     }

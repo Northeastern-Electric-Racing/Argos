@@ -15,7 +15,7 @@ struct LandingView: View {
     @ObservedObject private var viewModel = LandingViewModel()
 
     var body: some View {
-        AsyncContentView(source: self.viewModel) { props in
+        AsyncContentView(source: self.viewModel) { _ in
             NavigationStack(path: self.$viewModel.path) {
                 VStack {
                     if self.socketClient.isConnected {

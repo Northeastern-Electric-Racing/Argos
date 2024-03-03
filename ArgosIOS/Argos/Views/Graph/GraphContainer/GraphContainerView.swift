@@ -11,11 +11,11 @@ struct GraphContainer: View, Equatable {
     static func == (lhs: GraphContainer, rhs: GraphContainer) -> Bool {
         lhs.viewModel.runId == rhs.viewModel.runId
     }
-    
+
     @ObservedObject var viewModel: GraphContainerModel
-    
+
     @EnvironmentObject var errorHandling: ErrorHandling
-    
+
     var body: some View {
         AsyncContentView(source: self.viewModel) { props in
             VStack {
@@ -24,9 +24,9 @@ struct GraphContainer: View, Equatable {
                 ZStack {
                     GraphCaption(dataType: self.$viewModel.selectedDataType, mostRecentvalue: self.viewModel.currentData.last?.values[0], driver: self.viewModel.driver, location: self.viewModel.location, system: self.viewModel.system)
                 }
-                .overlay(GraphSelectionPopUp(nodes: props.nodes, selectDataType: {self.viewModel.setSelectedDataType($0)})
+                .overlay(GraphSelectionPopUp(nodes: props.nodes, selectDataType: { self.viewModel.setSelectedDataType($0) })
                     .frame(maxWidth: .infinity, alignment: .bottomLeading),
-                         alignment: .bottom)
+                    alignment: .bottom)
             }
             .navigationTitle(self.viewModel.realTime ? "Real Time" : "Historical")
         }

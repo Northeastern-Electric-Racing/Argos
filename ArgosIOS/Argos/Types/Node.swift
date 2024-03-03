@@ -8,7 +8,7 @@
 import Foundation
 
 /**
- * Format of a Node 
+ * Format of a Node
  */
 struct Node: Codable {
     var name: String

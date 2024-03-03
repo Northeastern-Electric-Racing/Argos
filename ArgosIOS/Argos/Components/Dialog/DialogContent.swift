@@ -9,7 +9,7 @@ import SwiftUI
 
 enum DialogContent: View {
     case carousel(runs: [Run], selectRun: (_ run: Run?) -> Void, isPresented: Binding<Bool>)
-    
+
     var body: some View {
         switch self {
         case .carousel(let runs, let selectRun, let isPresented):

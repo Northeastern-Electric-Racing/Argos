@@ -10,7 +10,7 @@ import SwiftUI
 struct ArgosButton: View {
     var title: String
     var action: () -> Void
-    
+
     var body: some View {
         Button(action: self.action) {
             ArgosLabel(self.title)

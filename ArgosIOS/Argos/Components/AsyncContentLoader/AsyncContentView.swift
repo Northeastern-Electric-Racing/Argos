@@ -10,9 +10,9 @@ import SwiftUI
 struct AsyncContentView<Source: LoadableObject, Content: View>: View {
     @ObservedObject var source: Source
     var content: (Source.Output) -> Content
-    
+
     @EnvironmentObject private var errorHandling: ErrorHandling
-    
+
     var body: some View {
         Group {
             switch self.source.state {
@@ -25,7 +25,6 @@ struct AsyncContentView<Source: LoadableObject, Content: View>: View {
                     }
             case .loaded(let output):
                 self.content(output)
-                
             }
         }
         .task {
