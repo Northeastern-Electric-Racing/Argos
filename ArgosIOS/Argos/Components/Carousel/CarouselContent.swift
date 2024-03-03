@@ -27,19 +27,16 @@ struct CarouselContent: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             HStack {
-                ChipView(systemImage: "wrench.and.screwdriver.fill", titleKey: run.systemName ?? "")
+                ChipView(systemImage: "wrench.and.screwdriver.fill", titleKey: self.run.systemName ?? "")
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            ArgosButton(title: "Select Run", action: selectRun)
+            ArgosButton(title: "Select Run", action: self.selectRun)
                 .frame(maxWidth: .infinity)
-            
         }
-        .padding()
     }
     
     private func formatDate() -> String {
         return self.run.dateTime.formatted(date: .abbreviated, time: .shortened)
-        
     }
 }
 

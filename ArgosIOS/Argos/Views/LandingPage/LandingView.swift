@@ -10,7 +10,7 @@ import SwiftUI
 
 struct LandingView: View {
     @EnvironmentObject private var errorHandling: ErrorHandling
-    
+
     @ObservedObject private var socketClient = SocketClient.shared
     @ObservedObject private var viewModel = LandingViewModel()
 
@@ -32,16 +32,15 @@ struct LandingView: View {
                     }
                     HStack {
                         ArgosButton(title: "Historical", action: {
-                            self.viewModel.dialogPresentation.show(content: .carousel(runs: props.runs, selectRun: self.viewModel.selectRun, isPresented: self.$viewModel.dialogPresentation.isPresented))
+                            self.viewModel.onHistoricalButtonClicked()
                         })
-    
+
                         ArgosButton(title: "More Details", action: {
                             self.viewModel.onMoreDetailsClicked()
                         })
-                        
                     }
                     ArgosButton(title: "Map View", action: {
-                        self.viewModel.onMapViewClicked()
+                        self.viewModel.onMapSelected()
                     })
                 }
                 .padding()
@@ -50,19 +49,19 @@ struct LandingView: View {
                 .navigationDestination(for: HomeNavigation.self) { destination in
                     switch destination {
                     case .map:
-                        MapView()
-                            .equatable()
+                        if let selectedRunId = viewModel.selectedRunId {
+                            MapView(viewModel: .init(realTime: self.viewModel.realTimeSelected, runId: selectedRunId))
+                                .equatable()
+                        }
                     case .graph:
                         if let selectedRunId = self.viewModel.selectedRunId {
                             GraphContainer(viewModel: .init(runId: selectedRunId, realTime: self.viewModel.realTimeSelected))
                         }
                     }
-                    
                 }
             }
         }
     }
-    
 }
 
 #Preview {
