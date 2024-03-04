@@ -6,9 +6,9 @@
         <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
         <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
       </hstack>
-      <typography variant="subheader" content="Charge State" />
+      <typography variant="info-subtitle" content="Charge State" />
     </vstack>
-    <div class="vertical-line"></div>
+    <divider />
     <vstack>
       <hstack>
         <typography variant="info-value" [content]="packTemp.toString() + '°'" />
@@ -16,14 +16,14 @@
           <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />
         </div>
       </hstack>
-      <typography variant="subheader" content="Pack Temperature" />
+      <typography variant="info-subtitle" content="Pack Temperature" />
     </vstack>
-    <div class="vertical-line"></div>
+    <divider />
     <vstack>
       <hstack>
         <typography variant="info-value" [content]="voltage.toString() + 'V'" />
       </hstack>
-      <typography variant="subheader" content="Voltage" />
+      <typography variant="info-subtitle" content="Voltage" />
     </vstack>
   </hstack>
 </info-background>

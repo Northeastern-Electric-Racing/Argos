@@ -46,6 +46,7 @@ import { BatteryInfoDisplay } from 'src/components/battery-info-display/battery-
 import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
+import { Divider } from 'src/components/divider/divider';
 
 @NgModule({
   declarations: [
@@ -81,7 +82,8 @@ import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component'
     BatteryInfoDisplay,
     GraphComponent,
     InfoGraph,
-    GraphDialog
+    GraphDialog,
+    Divider,
   ],
   imports: [
     BrowserModule,
