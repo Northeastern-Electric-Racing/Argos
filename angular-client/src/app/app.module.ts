@@ -83,7 +83,7 @@ import { Divider } from 'src/components/divider/divider';
     GraphComponent,
     InfoGraph,
     GraphDialog,
-    Divider,
+    Divider
   ],
   imports: [
     BrowserModule,
