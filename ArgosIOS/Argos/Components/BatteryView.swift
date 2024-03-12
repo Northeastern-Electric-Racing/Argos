@@ -11,11 +11,11 @@ struct BatteryView: View {
     let fill: Color
     let outline: Color
     let direction: Direction
-    
+
     var rotation: Double {
         return self.direction == .vertical ? -90 : 0
     }
-    
+
     var body: some View {
         ZStack {
             Image(systemName: "battery.0")
@@ -26,7 +26,7 @@ struct BatteryView: View {
                 .background(
                     Rectangle()
                         .fill(self.fill)
-                        .scaleEffect(x: self.progress,  y: 1, anchor: .leading)
+                        .scaleEffect(x: self.progress, y: 1, anchor: .leading)
                 )
                 .mask(
                     Image(systemName: "battery.100")
@@ -43,5 +43,4 @@ struct BatteryView: View {
 
 #Preview {
     BatteryView(progress: .constant(0.5), fill: .green, outline: .secondary, direction: .vertical)
-    
 }

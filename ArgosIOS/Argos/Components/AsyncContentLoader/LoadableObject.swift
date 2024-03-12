@@ -21,7 +21,7 @@ extension LoadableObject {
             }
         }
     }
-    
+
     func load(_ output: Output) {
         DispatchQueue.main.async {
             withAnimation {
@@ -29,7 +29,7 @@ extension LoadableObject {
             }
         }
     }
-    
+
     func transitionState(_ newState: LoadingState<Output>) {
         DispatchQueue.main.async {
             withAnimation {

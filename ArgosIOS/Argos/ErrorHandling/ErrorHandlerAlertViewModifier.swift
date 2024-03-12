@@ -10,13 +10,13 @@ import SwiftUI
 
 struct ErrorHandlerAlertViewModifier: ViewModifier {
     @StateObject var errorHandling = ErrorHandling()
-    
+
     func body(content: Content) -> some View {
         content
             .environmentObject(errorHandling)
-        // Applying the alert for error handling using a background element
-        // is a workaround, if the alert would be applied directly,
-        // other .alert modifiers inside of content would not work anymore
+            // Applying the alert for error handling using a background element
+            // is a workaround, if the alert would be applied directly,
+            // other .alert modifiers inside of content would not work anymore
             .background(
                 EmptyView()
                     .alert(item: $errorHandling.currentAlert) { currentAlert in
@@ -37,4 +37,3 @@ extension View {
         modifier(ErrorHandlerAlertViewModifier())
     }
 }
-

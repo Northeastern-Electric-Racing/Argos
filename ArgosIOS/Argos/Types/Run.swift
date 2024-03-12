@@ -8,7 +8,7 @@
 import Foundation
 
 /**
- * Format of a run 
+ * Format of a run
  */
 struct Run: Codable {
     var id: Int
@@ -24,8 +24,7 @@ struct Run: Codable {
 
         // Set the locale to English (United States) to ensure the month and day names are parsed correctly
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        
-        
+
         return dateFormatter.date(from: self.time) ?? Date()
     }
 }

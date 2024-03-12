@@ -5,8 +5,8 @@
 //  Created by Peyton McKee on 12/20/23.
 //
 
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct GraphData {
     var time: Int
@@ -15,11 +15,11 @@ struct GraphData {
 
 struct GraphView: View {
     var data: [GraphData]
-    
+
     var body: some View {
         Chart(Array(self.data.enumerated()), id: \.0) {
-            index, data in
-            LineMark (
+            _, data in
+            LineMark(
                 x: .value("Frequency", Date(timeIntervalSince1970: Double(data.time))),
                 y: .value("Magnitude", data.value)
             )
@@ -34,8 +34,8 @@ struct GraphView: View {
         }
         .chartXAxis {
             AxisMarks(position: .bottom) { _ in
-                 AxisGridLine().foregroundStyle(.clear)
-                 AxisTick().foregroundStyle(.clear)
+                AxisGridLine().foregroundStyle(.clear)
+                AxisTick().foregroundStyle(.clear)
                 AxisValueLabel(format: .dateTime)
             }
         }

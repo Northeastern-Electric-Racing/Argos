@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ThermometerView: View {
-    
     var current: Double
     let minimum: Float
     let maximum: Float
@@ -17,8 +16,8 @@ struct ThermometerView: View {
     var body: some View {
         VStack(spacing: 20) {
             ArgosHeader(self.label)
-            
-            Gauge(value: Float(self.current), in: self.minimum...self.maximum) {
+
+            Gauge(value: Float(self.current), in: self.minimum ... self.maximum) {
                 Image(systemName: "thermometer")
                     .font(.caption)
             } currentValueLabel: {

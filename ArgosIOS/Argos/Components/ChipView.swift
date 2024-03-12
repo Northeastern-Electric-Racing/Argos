@@ -10,10 +10,10 @@ import SwiftUI
 struct ChipView: View {
     let systemImage: String
     let titleKey: String
-    
+
     var body: some View {
         HStack(spacing: 4) {
-            Image.init(systemName: self.systemImage).font(.body)
+            Image(systemName: self.systemImage).font(.body)
             ArgosLabel(self.titleKey).lineLimit(1)
         }
         .padding(.vertical, 4)
