@@ -1,6 +1,6 @@
 .divider-line {
-  width: 10px;
-  height: 100%;
-  border-width: 5px;
-  border-color: #dbd1d1;
+  border-width: 1px;
+  border-style: solid;
+  height: 110px;
+  border-color: #f3f1f1;
 }
