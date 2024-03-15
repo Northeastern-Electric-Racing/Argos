@@ -12,6 +12,7 @@ export class BatteryInfoDisplay {
   voltage: number = 0;
   packTemp: number = 0;
   stateOfCharge: number = 0;
+  height: number = 100;
 
   constructor(private storage: Storage) {}
 

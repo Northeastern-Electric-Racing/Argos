@@ -6,5 +6,5 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./divider.css']
 })
 export class Divider {
-  @Input() height: number = 0;
+  @Input() height: number = 100;
 }

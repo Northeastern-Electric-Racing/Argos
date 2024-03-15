@@ -8,7 +8,7 @@
       </hstack>
       <typography variant="info-subtitle" content="Charge State" />
     </vstack>
-    <divider></divider>
+    <divider [height]="150"></divider>
     <vstack>
       <hstack>
         <typography variant="info-value" [content]="packTemp.toString() + '°'" />
@@ -18,7 +18,7 @@
       </hstack>
       <typography variant="info-subtitle" content="Pack Temperature" />
     </vstack>
-    <divider></divider>
+    <divider style="height: {{height}};"></divider>
     <vstack>
       <hstack>
         <typography variant="info-value" [content]="voltage.toString() + 'V'" />
