@@ -1,0 +1,18 @@
+<div
+  class="gauge-container"
+  [ngStyle]="{ width: widthpx, height: heightpx, 'padding-top': paddingTop, 'padding-left': paddingLeft }"
+>
+  <ngx-gauge
+    type="semi"
+    [value]="current"
+    [append]="unit"
+    [min]="min"
+    [max]="max"
+    [foregroundColor]="color"
+    backgroundColor="#1d1d1d"
+    [thick]="15"
+    [size]="size"
+    [ngStyle]="{ color: 'aliceblue' }"
+  >
+  </ngx-gauge>
+</div>

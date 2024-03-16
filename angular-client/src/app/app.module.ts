@@ -45,6 +45,8 @@ import { MessageService } from 'primeng/api';
 import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
+import { NgxGaugeModule } from 'ngx-gauge';
+import HalfGauge from 'src/components/half-gauge/half-gauge.component';
 
 @NgModule({
   declarations: [
@@ -79,7 +81,8 @@ import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component'
     LatencyDisplay,
     GraphComponent,
     InfoGraph,
-    GraphDialog
+    GraphDialog,
+    HalfGauge
   ],
   imports: [
     BrowserModule,
@@ -95,7 +98,8 @@ import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component'
     MatGridListModule,
     DynamicDialogModule,
     BrowserAnimationsModule,
-    ButtonModule
+    ButtonModule,
+    NgxGaugeModule
   ],
   providers: [DialogService, MessageService],
   bootstrap: [AppContext]

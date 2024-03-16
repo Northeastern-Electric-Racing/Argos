@@ -25,6 +25,7 @@
     <latency-display [latency]="99" [lowVal]="0" [medVal]="50" [highVal]="100"></latency-display>
   </hstack>
   <landing-buttons />
+  <half-gauge [current]="50" [max]="100" [min]="0" unit="km/s" color="red" />
   <info-graph
     [data]="[
       { x: 0, y: 0 },
