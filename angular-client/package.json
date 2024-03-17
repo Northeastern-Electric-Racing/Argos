@@ -30,7 +30,7 @@
     "apexcharts": "^3.44.0",
     "mapbox-gl": "^3.1.0",
     "ng-apexcharts": "^1.8.0",
-    "ngx-gauge": "^9.0.0",
+    "ngx-gauge": "^8.0.0",
     "primeng": "^16.9.1",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.7.2",
