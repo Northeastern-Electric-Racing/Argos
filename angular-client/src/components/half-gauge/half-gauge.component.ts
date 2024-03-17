@@ -11,13 +11,27 @@ export default class HalfGauge {
   @Input() max: number = 100;
   @Input() unit: string = 'm/s';
   @Input() color: string = 'red';
+  @Input() size: number = 200;
 
-  size = 200;
-  widthpx = this.size * 1.2 + 'px';
-  heightpx = this.size * 0.8 + 'px';
-  paddingTop = this.size * 0.2 + 'px';
-  paddingLeft = this.size * 0.1 + 'px';
+  // default
+  widthpx: string = '200px';
+  heightpx: string = '200px';
+  paddingTop: string = '20px';
+  paddingLeft: string = '10px';
+  thickness: number = 15;
 
+  //scaling off inputted size
+  ngOnInit() {
+    this.widthpx = this.size * 1.2 + 'px';
+    this.heightpx = this.size * 0.8 + 'px';
+    this.paddingTop = this.size * 0.2 + 'px';
+    this.paddingLeft = this.size * 0.1 + 'px';
+    this.thickness = this.size * 0.1;
+  }
+
+  // scaling based off size
+
+  // gauge props
   gaugeType = 'semi';
   gaugeValue = this.current;
   gaugeAppendText = this.unit;
