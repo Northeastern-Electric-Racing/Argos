@@ -42,9 +42,11 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { BatteryInfoDisplay } from 'src/components/battery-info-display/battery-info-display';
 import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
+import { Divider } from 'src/components/divider/divider';
 
 @NgModule({
   declarations: [
@@ -77,9 +79,11 @@ import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component'
     HStack,
     ResolutionSelector,
     LatencyDisplay,
+    BatteryInfoDisplay,
     GraphComponent,
     InfoGraph,
-    GraphDialog
+    GraphDialog,
+    Divider
   ],
   imports: [
     BrowserModule,
