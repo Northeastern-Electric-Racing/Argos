@@ -47,6 +47,7 @@ import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
 import { Divider } from 'src/components/divider/divider';
+import { DriverComponent } from 'src/components/driver-component/driver-component';
 
 @NgModule({
   declarations: [
@@ -83,7 +84,8 @@ import { Divider } from 'src/components/divider/divider';
     GraphComponent,
     InfoGraph,
     GraphDialog,
-    Divider
+    Divider,
+    DriverComponent
   ],
   imports: [
     BrowserModule,
