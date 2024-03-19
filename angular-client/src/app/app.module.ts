@@ -52,7 +52,6 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { Divider } from 'src/components/divider/divider';
 
-
 @NgModule({
   declarations: [
     AppContext,
