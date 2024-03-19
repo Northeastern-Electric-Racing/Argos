@@ -7,5 +7,6 @@ export enum IdentifierDataType {
   STATE_OF_CHARGE = 'Pack SOC',
   POINTS = 'Points',
   LATENCY = 'Latency',
-  STEERING_ANGLE = 'Steering Angle'
+  STEERING_ANGLE = 'Steering Angle',
+  VOLTAGE = 'Voltage'
 }

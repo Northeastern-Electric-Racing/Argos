@@ -32,6 +32,7 @@ class SocketClient: ObservableObject {
         self.socket.connect(timeoutAfter: 10, withHandler: {
             self.isConnected = false
             print("Could Not connect to Server")
+            self.connect()
         })
     }
     

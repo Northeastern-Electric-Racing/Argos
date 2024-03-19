@@ -5,8 +5,8 @@
 //  Created by Peyton McKee on 1/16/24.
 //
 
-import SwiftUI
 import Combine
+import SwiftUI
 
 struct LandingViewProps {
     var runs: [Run]
@@ -21,7 +21,7 @@ class LandingViewModel: LoadableObject {
     @Published var packTemp: Double = 0
     @Published var motorTemp: Double = 0
     
-    @Published var dialogPresentation = DialogPresentation()
+    @ObservedObject var dialogPresentation = DialogPresentation()
     @Published var selectedRunId: Int?
     @Published var realTimeSelected = false
     
@@ -36,14 +36,16 @@ class LandingViewModel: LoadableObject {
     }
     
     func load() async {
+        self.socketClient.connect()
+
         do {
             let runs = try await APIHandler.getAllRuns()
+
             DispatchQueue.main.async {
                 self.runs = runs
-                self.socketClient.connect()
                 self.socketClient.$values
                     .sink { [weak self] values in
-                        guard let self = self else {return}
+                        guard let self = self else { return }
                         if let first = values[DataTypeName.stateOfCharge.rawValue]?.values.first, let stateOfCharge = Float(first) {
                             self.stateOfCharge = Double(stateOfCharge / 100)
                         }
@@ -62,11 +64,40 @@ class LandingViewModel: LoadableObject {
         }
     }
     
-    func selectRun(_ run: Run) {
-        self.selectedRunId = run.id
+    func onHistoricalButtonClicked() {
+        self.showRunSelector(self.selectRun(_:))
+    }
+    
+    private func showRunSelector(_ onRunSelected: @escaping (_ run: Run?) -> Void) {
+        if self.runs.isEmpty {
+            self.transitionState(.loading)
+            Task {
+                let runs = try? await APIHandler.getAllRuns()
+                DispatchQueue.main.async {
+                    self.runs = runs ?? []
+                    self.dialogPresentation.show(content: .carousel(runs: self.runs, selectRun: onRunSelected, isPresented: self.$dialogPresentation.isPresented))
+                    self.load(.init(runs: self.runs))
+                }
+            }
+        } else {
+            self.dialogPresentation.show(content: .carousel(runs: self.runs, selectRun: onRunSelected, isPresented: self.$dialogPresentation.isPresented))
+            self.load(.init(runs: self.runs))
+        }
+    }
+    
+    func onMapSelected() {
+        self.showRunSelector(self.selectRunForMap(_:))
+    }
+    
+    func selectRun(_ run: Run?) {
         self.dialogPresentation.show(content: nil)
-        self.realTimeSelected = false
-        self.path.append(.graph)
+        if let run = run {
+            self.selectedRunId = run.id
+            self.realTimeSelected = false
+            self.path.append(.graph)
+        } else {
+            self.onMoreDetailsClicked()
+        }
     }
     
     func onMoreDetailsClicked() {
@@ -79,7 +110,18 @@ class LandingViewModel: LoadableObject {
         self.path.append(.graph)
     }
     
-    func onMapViewClicked() {
-        self.path.append(.map)
+    func selectRunForMap(_ run: Run?) {
+        self.dialogPresentation.show(content: nil)
+        if let run = run {
+            self.selectedRunId = run.id
+            self.realTimeSelected = false
+            self.path.append(.map)
+        } else if let runId = self.socketClient.runId {
+            self.selectedRunId = runId
+            self.realTimeSelected = true
+            self.path.append(.map)
+        } else {
+            self.fail(ConfigureError.runIdNotSet, self.cachedProps)
+        }
     }
 }

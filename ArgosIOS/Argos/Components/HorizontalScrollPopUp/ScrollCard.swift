@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-struct ScrollCard : View {
+struct ScrollCard: View {
     var title: String
     var inputAdornmentSystemName: Binding<String>? = nil
     var onSelect: () -> Void
-    
+
     var body: some View {
         HStack {
             if let inputAdornmentSystemName = self.inputAdornmentSystemName {
                 Image(systemName: inputAdornmentSystemName.wrappedValue)
             }
-            
+
             ArgosHeader(self.title)
                 .onTapGesture {
                     onSelect()

@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct HorizontalExpandingScrollView : View {
+struct HorizontalExpandingScrollView: View {
     @State var items: [ScrollViewItem]
-    
+
     var body: some View {
         ScrollView(.horizontal) {
             HStack {
