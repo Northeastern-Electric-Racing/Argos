@@ -1,0 +1,29 @@
+<info-background title="Battery" icon="battery_charging_full">
+  <br />
+  <hstack>
+    <vstack>
+      <hstack>
+        <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
+        <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
+      </hstack>
+      <typography variant="info-subtitle" content="Charge State" />
+    </vstack>
+    <divider></divider>
+    <vstack>
+      <hstack>
+        <typography variant="info-value" [content]="packTemp.toString() + '°'" />
+        <div class="thermometer-container">
+          <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />
+        </div>
+      </hstack>
+      <typography variant="info-subtitle" content="Pack Temperature" />
+    </vstack>
+    <divider></divider>
+    <vstack>
+      <hstack>
+        <typography variant="info-value" [content]="voltage.toString() + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" content="Voltage" />
+    </vstack>
+  </hstack>
+</info-background>

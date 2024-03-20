@@ -22,7 +22,10 @@
       </hstack>
     </vstack>
     <battery [percentage]="stateOfCharge" [height]="400" [width]="200" />
-    <latency-display [latency]="99" [lowVal]="0" [medVal]="50" [highVal]="100"></latency-display>
+    <vstack>
+      <latency-display [latency]="99" [lowVal]="0" [medVal]="50" [highVal]="100"></latency-display>
+      <battery-info-display></battery-info-display>
+    </vstack>
   </hstack>
   <landing-buttons />
   <half-gauge [current]="34" [max]="100" [min]="0" unit="m/s" color="#ff0000" [size]="300" />
