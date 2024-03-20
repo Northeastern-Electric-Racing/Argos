@@ -45,6 +45,7 @@ import { MessageService } from 'primeng/api';
 import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
+import ServerStatus from 'src/components/server-status/server-status';
 
 @NgModule({
   declarations: [
@@ -79,7 +80,8 @@ import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component'
     LatencyDisplay,
     GraphComponent,
     InfoGraph,
-    GraphDialog
+    GraphDialog,
+    ServerStatus
   ],
   imports: [
     BrowserModule,
