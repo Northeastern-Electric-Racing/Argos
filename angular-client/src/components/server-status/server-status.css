@@ -4,21 +4,20 @@
   padding: 10px;
   border-radius: 5px;
   color: white;
-  flex-direction: column; /* Stack children vertically */
+  flex-direction: column;
 }
 
 .server-status-dot {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background-color: inherit; /* Color is set dynamically */
-  margin-bottom: 9px; /* Space between the dot and the text */
+  background-color: inherit;
+  margin-bottom: 9px;
 }
 
-/* Assuming typography component renders to a span with class 'typography' */
 .server-status-body .status-indicator .typography {
-  font-size: 0.75rem; /* Adjust this value as needed */
-  text-align: center; /* Center the text */
-  color: #fff; /* White text color */
-  font-weight: normal; /* Adjust weight as needed */
+  font-size: 0.75rem;
+  text-align: center;
+  color: #fff;
+  font-weight: normal;
 }
