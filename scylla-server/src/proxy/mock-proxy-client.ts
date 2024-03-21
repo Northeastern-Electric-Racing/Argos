@@ -1,7 +1,7 @@
 import ProxyServer from './proxy-server';
 import { ClientData } from '../utils/message.utils';
 import { Unit } from '../odyssey-base/src/types/unit';
-import { MockData, DataType } from '../utils/data.utils';
+import { MockData, DataType, MockStringData } from '../utils/data.utils';
 import ProxyClient from './proxy-client';
 
 /**
@@ -31,6 +31,7 @@ const baseMockData: MockData[] = [
     min: 0,
     max: 100
   },
+
   {
     name: DataType.Accel,
     unit: Unit.G,
@@ -38,6 +39,7 @@ const baseMockData: MockData[] = [
     min: -6,
     max: 6
   },
+
   {
     name: DataType.Points,
     unit: Unit.COORD,
@@ -48,17 +50,30 @@ const baseMockData: MockData[] = [
 ];
 
 /**
+ * base case for class constructor, somewhat arbitrary string values
+ */
+const stringData: MockStringData[] = [
+  {
+    name: DataType.Driver,
+    vals: ['Bananaman', 'Superman', 'Spiderman', 'Batman', 'Ironman']
+  }
+];
+
+
+/**
  * generates random ClientMessages
  */
 export default class MockProxyClient implements ProxyClient {
   proxyServers: ProxyServer[];
   currentRunId: number;
   mockData: MockData[];
+  mockStringData: MockStringData[];
 
-  constructor(runId: number = 1, mockData: MockData[] = baseMockData) {
+  constructor(runId: number = 1, mockData: MockData[] = baseMockData, mockStringData: MockStringData[] = stringData) {
     this.proxyServers = [];
     this.currentRunId = runId;
     this.mockData = mockData;
+    this.mockStringData = mockStringData;
   }
 
   /**
