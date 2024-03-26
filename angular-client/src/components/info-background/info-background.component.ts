@@ -11,8 +11,8 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./info-background.component.css']
 })
 export class InfoBackgroundComponent {
-  @Input() icon!: string;
-  @Input() svgIcon!: string;
+  @Input() icon?: string;
+  @Input() svgIcon?: string;
   @Input() title!: string;
   @Input() onClick!: () => void;
 }
