@@ -46,6 +46,10 @@ import { BatteryInfoDisplay } from 'src/components/battery-info-display/battery-
 import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
+import { SteeringAngleDisplay } from 'src/components/steering-angle-display/steering-angle-display.component';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
 import HalfGauge from 'src/components/half-gauge/half-gauge.component';
 import { Divider } from 'src/components/divider/divider';
 
@@ -84,6 +88,7 @@ import { Divider } from 'src/components/divider/divider';
     GraphComponent,
     InfoGraph,
     GraphDialog,
+    SteeringAngleDisplay,
     HalfGauge,
     Divider
   ],
@@ -101,9 +106,21 @@ import { Divider } from 'src/components/divider/divider';
     MatGridListModule,
     DynamicDialogModule,
     BrowserAnimationsModule,
-    ButtonModule
+    ButtonModule,
+    HttpClientModule,
+    MatIconModule
   ],
   providers: [DialogService, MessageService],
   bootstrap: [AppContext]
 })
-export class AppModule {}
+export class AppModule {
+  constructor(
+    private matIconRegistry: MatIconRegistry,
+    private domSanitizer: DomSanitizer
+  ) {
+    this.matIconRegistry.addSvgIcon(
+      'steering_wheel',
+      this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/search_hands_free.svg')
+    );
+  }
+}
