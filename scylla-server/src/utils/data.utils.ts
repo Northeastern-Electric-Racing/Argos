@@ -19,5 +19,6 @@ export type MockData = {
 //the format for mock data on mock proxy client for string values
 export type MockStringData = {
   name: DataType;
+  units: string;
   vals: string[];
 };

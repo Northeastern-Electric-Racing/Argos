@@ -52,13 +52,19 @@ const baseMockData: MockData[] = [
 /**
  * base case for class constructor, somewhat arbitrary string values
  */
-const stringData: MockStringData[] = [
+const baseStringData: MockStringData [] = [
   {
     name: DataType.Driver,
-    vals: ['Bananaman', 'Superman', 'Spiderman', 'Batman', 'Ironman']
+    units: Unit.STRING,
+    vals: ['Fergus']
+  },
+
+  {
+    name: DataType.Driver,
+    units: Unit.STRING,
+    vals: ['Max']
   }
 ];
-
 
 /**
  * generates random ClientMessages
@@ -69,12 +75,14 @@ export default class MockProxyClient implements ProxyClient {
   mockData: MockData[];
   mockStringData: MockStringData[];
 
-  constructor(runId: number = 1, mockData: MockData[] = baseMockData, mockStringData: MockStringData[] = stringData) {
+  constructor(runId: number = 1, mockData: MockData[] = baseMockData, mockStringData: MockStringData[] = baseStringData) {
     this.proxyServers = [];
     this.currentRunId = runId;
     this.mockData = mockData;
     this.mockStringData = mockStringData;
   }
+
+  fakeStringData = ["Batman", "Kenobi", "Jar-jar Binks"]
 
   /**
    * generates a random index of an array given the size
@@ -95,31 +103,54 @@ export default class MockProxyClient implements ProxyClient {
 
   //modified to now allow an array of data instead of a singular value
   public loop = async () => {
-    let data: MockData;
+    let numericalData: MockData;
+    let stringData: MockStringData;
     let index: number;
+    let index2: number;
+    let index3: number;
+  
+    const randomNumber = Math.random()
 
     while (true) {
-      index = this.getRandomIndex(this.mockData.length);
-      data = this.mockData[index];
+      if (randomNumber === 0) {
+        index = this.getRandomIndex(this.mockData.length);
+        numericalData = this.mockData[index];
 
-      for (const val in data.vals) {
-        if (data.vals.hasOwnProperty(val)) {
-          let newVal = data.vals[val] + Math.random() * 2 - 1;
-          newVal = Math.max(data.min, Math.min(data.max, newVal));
-          data.vals[val] = newVal;
+        for (const val in numericalData.vals) {
+          if (numericalData.vals.hasOwnProperty(val)) {
+            let newVal = numericalData.vals[val] + Math.random() * 2 - 1;
+            newVal = Math.max(numericalData.min, Math.min(numericalData.max, newVal));
+            numericalData.vals[val] = newVal;
+          }
         }
+
+        const clientData: ClientData = {
+          runId: this.currentRunId,
+          name: numericalData.name,
+          unit: numericalData.unit,
+          values: numericalData.vals.map((val) => val.toString()),
+          timestamp: Date.now()
+        };
+
+        this.proxyServers.forEach((server) => server.sendMessage(clientData));
+        await this.eventLoopQueue();
+        } else if (randomNumber === 1) {
+          index2 = this.getRandomIndex(this.mockStringData.length);
+          stringData = this.mockStringData[index2];
+          index3 = this.getRandomIndex(this.fakeStringData.length);
+          stringData.vals[0] = this.fakeStringData[index3];
+
+
+          const clientData: ClientData = {
+            runId: this.currentRunId,
+            name: stringData.name,
+            unit: stringData.units,
+            values: stringData.vals,
+            timestamp: Date.now()
+          };
+          this.proxyServers.forEach((server) => server.sendMessage(clientData));
+          await this.eventLoopQueue();
       }
-
-      const clientData: ClientData = {
-        runId: this.currentRunId,
-        name: data.name,
-        unit: data.unit,
-        values: data.vals.map((val) => val.toString()),
-        timestamp: Date.now()
-      };
-
-      this.proxyServers.forEach((server) => server.sendMessage(clientData));
-      await this.eventLoopQueue();
     }
   };
 
@@ -134,7 +165,6 @@ export default class MockProxyClient implements ProxyClient {
    * adds a proxy server object
    * @param proxyServer
    */
-
   public addProxyServer = (proxyServer: ProxyServer) => {
     this.proxyServers.push(proxyServer);
   };
