@@ -16,8 +16,6 @@ export type ChartOptions = {
   styleUrls: ['pie-chart.component.css']
 })
 export default class PieChart {
-  @ViewChild('chart')
-  chart!: ChartComponent;
   public chartOptions!: Partial<ChartOptions> | any;
   @Input() data: { value: number; name: string }[] = [
     { value: 24, name: 'Motor' },

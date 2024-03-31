@@ -16,8 +16,6 @@ export type ChartOptions = {
   styleUrls: ['half-gauge.component.css']
 })
 export default class HalfGauge {
-  @ViewChild('chart')
-  chart!: ChartComponent;
   public chartOptions!: Partial<ChartOptions> | any;
   @Input() current: number = 50;
   @Input() min: number = 0;
