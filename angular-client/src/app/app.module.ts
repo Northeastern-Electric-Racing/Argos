@@ -52,6 +52,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import HalfGauge from 'src/components/half-gauge/half-gauge.component';
 import { Divider } from 'src/components/divider/divider';
+import PieChart from 'src/components/pie-chart/pie-chart.component';
 
 @NgModule({
   declarations: [
@@ -90,7 +91,8 @@ import { Divider } from 'src/components/divider/divider';
     GraphDialog,
     SteeringAngleDisplay,
     HalfGauge,
-    Divider
+    Divider,
+    PieChart
   ],
   imports: [
     BrowserModule,

@@ -1,6 +1,6 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
-import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, ChartComponent } from 'ng-apexcharts';
+import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill } from 'ng-apexcharts';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -16,8 +16,6 @@ export type ChartOptions = {
   styleUrls: ['half-gauge.component.css']
 })
 export default class HalfGauge {
-  @ViewChild('chart')
-  chart!: ChartComponent;
   public chartOptions!: Partial<ChartOptions> | any;
   @Input() current: number = 50;
   @Input() min: number = 0;
