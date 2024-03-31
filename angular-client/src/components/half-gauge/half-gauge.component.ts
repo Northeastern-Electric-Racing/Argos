@@ -1,6 +1,6 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
-import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, ChartComponent } from 'ng-apexcharts';
+import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill } from 'ng-apexcharts';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
