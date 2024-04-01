@@ -16,5 +16,8 @@ export class DriverComponent {
         this.storage.get(IdentifierDataType.DRIVER).subscribe((value) => {
             [this.driver] = value.values;
         });
+        console.log(this.driver);
     }
+    
 }
+
