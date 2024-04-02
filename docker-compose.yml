@@ -6,30 +6,26 @@ services:
     image: timescale/timescaledb:2.13.1-pg15
     platform: linux/arm64
     restart: unless-stopped
+    network_mode: host
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - 5432:5432
     expose:
       - 5432
-    networks:
-      - shared-network
     tty: true
 
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
     image: mckeep/scylla-server-prod:1.0.0
+    network_mode: host
     build:
-      context: scylla-server
+      context: ./scylla-server
       target: production
       dockerfile: Dockerfile
     ports:
       - 8000:8000
-    expose: 
-      - 8000
-    networks:
-      - shared-network
     depends_on:
       - odyssey-timescale
 
@@ -37,17 +33,13 @@ services:
     container_name: client
     restart: unless-stopped
     image: mckeep/client-prod:1.0.0
+    network_mode: host
     build:
-      context: angular-client
+      context: ./angular-client
       target: production
       dockerfile: Dockerfile
     ports:
       - 4200:80
-    networks:
-      - shared-network
     depends_on:
       - scylla-server
 
-networks:
-  shared-network:
-    driver: bridge

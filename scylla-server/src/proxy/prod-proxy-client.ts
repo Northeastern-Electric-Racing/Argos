@@ -1,4 +1,3 @@
-// Ignoring this because it wont build on github for some reason
 import { ErrorWithReasonCode, IConnackPacket, IPublishPacket, MqttClient } from 'mqtt/*';
 import { Topic } from '../odyssey-base/src/types/topic';
 import { run } from '@prisma/client';
@@ -15,6 +14,7 @@ import { serverdata as ServerData } from '../odyssey-base/src/generated/serverda
 import ProxyClient from './proxy-client';
 import ProxyServer from './proxy-server';
 import { DataTypeName } from '../utils/data-type-name.utils';
+import prisma from '../odyssey-base/src/prisma/prisma-client';
 
 /**
  * Handler for receiving messages from Siren
@@ -32,6 +32,13 @@ export default class ProdProxyClient implements ProxyClient {
   recentRadius: number | undefined;
   recentLocationName: string | undefined;
   newLocation: boolean = true;
+  topicTimerMap: Map<string, number> = new Map();
+  refreshRate: number = 1;
+  batches: Map<string, ServerMessage[]> = new Map();
+  upsertedNodes: Set<string> = new Set();
+  upsertedDataTypes: Set<string> = new Set();
+  lastBatchUpload: number = Date.now();
+  batchUploadInterval: number = 10000;
 
   /**
    * Constructor
@@ -48,23 +55,23 @@ export default class ProdProxyClient implements ProxyClient {
    * Sends a subscription message to Siren
    * @param topics The topics to subscribe to
    */
-  private subscribeToTopics = (topics: Topic[]) => {
+  private subscribeToTopics(topics: Topic[]) {
     this.connection.subscribe(topics.map((topic) => topic.valueOf()));
-  };
+  }
 
   /**
    * Handles disconnecting from Siren
    */
-  private handleClose = () => {
+  private handleClose() {
     this.createNewRun = true;
     console.log('Disconnected from Siren');
-  };
+  }
 
   /**
    * Handles connecting to Siren
    * @param packet The packet sent when the connection is opened
    */
-  private handleOpen = async (packet: IConnackPacket) => {
+  private async handleOpen(packet: IConnackPacket) {
     console.log('Connected to Siren', packet.properties);
     if (this.createNewRun) {
       this.createNewRun = false;
@@ -72,7 +79,7 @@ export default class ProdProxyClient implements ProxyClient {
       this.currentRun = run;
     }
     this.subscribeToTopics([Topic.ALL]);
-  };
+  }
 
   /**
    * Handles messages received from Siren
@@ -81,8 +88,19 @@ export default class ProdProxyClient implements ProxyClient {
    * @param topic The topic the message was received on
    * @param message The message received from Siren
    */
-  private handleMessage = async (topic: string, payload: Buffer, packet: IPublishPacket) => {
+  private async handleMessage(topic: string, payload: Buffer, packet: IPublishPacket) {
+    if (this.topicTimerMap.has(topic)) {
+      if (Date.now() - this.topicTimerMap.get(topic)! < this.refreshRate) {
+        return;
+      }
+    }
+
+    this.topicTimerMap.set(topic, Date.now());
     try {
+      if (Date.now() - this.lastBatchUpload > this.batchUploadInterval) {
+        this.lastBatchUpload = Date.now();
+        await this.batchesUpload(this.batches, this.currentRun!.id);
+      }
       const data = ServerData.v1.ServerData.deserializeBinary(payload).toObject();
       /* Infer node name from topics first segment */
       const [node] = topic.split('/');
@@ -114,7 +132,7 @@ export default class ProdProxyClient implements ProxyClient {
         this.handleError(error);
       }
     }
-  };
+  }
 
   /**
    * Handles receiving data from the car and:
@@ -122,12 +140,7 @@ export default class ProdProxyClient implements ProxyClient {
    * 2. Sends the data to the client
    * @param data The data received from Siren
    */
-  private handleData = async (data: ServerMessage) => {
-    // upsert the node
-    const node = await NodeService.upsertNode(data.node);
-    //upsert the data type
-    await DataTypeService.upsertDataType(data.dataType, data.data.unit, node.name);
-
+  private async handleData(data: ServerMessage) {
     // start upserting data
     if (!this.currentRun) {
       console.log('no current run');
@@ -165,16 +178,12 @@ export default class ProdProxyClient implements ProxyClient {
         this.recentRadius = parseFloat(serverdata.values[0]);
         break;
       default:
-        await DataTypeService.upsertDataType(data.dataType, serverdata.unit, node.name);
-        await DataService.addData(
-          new ServerData.v1.ServerData({
-            values: serverdata.values,
-            unit: serverdata.unit
-          }),
-          data.unix_time,
+        this.batches.set(
           data.dataType,
-          this.currentRun.id
+          this.batches.get(data.dataType) ? this.batches.get(data.dataType)!.concat(data) : [data]
         );
+
+        break;
     }
 
     // transform serverdata into client data to send to ProxyServer
@@ -208,7 +217,7 @@ export default class ProdProxyClient implements ProxyClient {
     }
 
     this.proxyServers.forEach((server) => server.sendMessage(clientData));
-  };
+  }
 
   /**
    * Handles errors that occur
@@ -222,15 +231,59 @@ export default class ProdProxyClient implements ProxyClient {
    * Configures the proxy client for connecting and disconnecting to/from Siren,
    * sending and receiving messages, and handling errors
    */
-  public configure = () => {
+  public configure() {
     console.log('configuring');
-    this.connection.on('message', this.handleMessage);
-    this.connection.on('connect', this.handleOpen);
-    this.connection.on('error', this.handleError);
-    this.connection.on('close', this.handleClose);
-  };
+    this.connection.on('message', this.handleMessage.bind(this));
+    this.connection.on('connect', this.handleOpen.bind(this));
+    this.connection.on('error', this.handleError.bind(this));
+    this.connection.on('close', this.handleClose.bind(this));
+  }
 
-  public addProxyServer = (proxyServer: ProxyServer) => {
+  public addProxyServer(proxyServer: ProxyServer) {
     this.proxyServers.push(proxyServer);
-  };
+  }
+
+  private async batchesUpload(batches: Map<string, ServerMessage[]>, runId: number) {
+    for (const [key, value] of batches) {
+      console.log('Uploading batch for key: ', key, ' with length: ', value.length);
+      if (value.length === 0) {
+        continue;
+      }
+
+      const [first] = value;
+
+      if (!this.upsertedNodes.has(first.node)) {
+        await NodeService.upsertNode(first.node);
+        this.upsertedNodes.add(first.node);
+      }
+
+      if (!this.upsertedDataTypes.has(first.dataType)) {
+        await DataTypeService.upsertDataType(first.dataType, first.data.unit, first.node);
+        this.upsertedDataTypes.add(first.dataType);
+      }
+
+      await prisma.data.createMany({
+        data: value.map((message) => {
+          return {
+            values: message.data.values.map(parseFloat),
+            time: new Date(message.unix_time),
+            dataTypeName: message.dataType,
+            runId
+          };
+        })
+      });
+
+      console.log('Batch uploaded for key: ', key);
+
+      batches.set(key, []);
+    }
+  }
+
+  /**
+   * Removes a proxy server from the list of proxy servers
+   * @param proxyServer The proxy server to remove
+   */
+  public removeProxyServer(proxyServer: ProxyServer) {
+    this.proxyServers = this.proxyServers.filter((server) => server !== proxyServer);
+  }
 }
