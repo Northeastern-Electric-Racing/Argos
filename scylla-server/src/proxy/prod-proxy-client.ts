@@ -3,7 +3,6 @@ import { Topic } from '../odyssey-base/src/types/topic';
 import { run } from '@prisma/client';
 import NodeService from '../odyssey-base/src/services/nodes.services';
 import RunService from '../odyssey-base/src/services/runs.services';
-import DataService from '../odyssey-base/src/services/data.services';
 import DataTypeService from '../odyssey-base/src/services/dataTypes.services';
 import LocationService from '../odyssey-base/src/services/locations.services';
 import DriverService from '../odyssey-base/src/services/driver.services';
