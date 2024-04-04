@@ -9,7 +9,7 @@ export enum DataType {
   System = 'System',
   Location = 'Location',
   Voltage = 'Voltage',
-  Radius = 'Radius',
+  Radius = 'Radius'
 }
 
 //the format of mock data on mock proxy client for numerical values

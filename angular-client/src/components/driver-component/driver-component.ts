@@ -8,16 +8,13 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
   styleUrls: ['./driver-component.css']
 })
 export class DriverComponent {
+  driver: string = '';
 
-    driver: string = '';
-
-    constructor(private storage: Storage) {}
-    ngOnInit() {
-        this.storage.get(IdentifierDataType.DRIVER).subscribe((value) => {
-            [this.driver] = value.values;
-        });
-        console.log(this.driver);
-    }
-    
+  constructor(private storage: Storage) {}
+  ngOnInit() {
+    this.storage.get(IdentifierDataType.DRIVER).subscribe((value) => {
+      [this.driver] = value.values;
+    });
+    console.log(this.driver);
+  }
 }
-
