@@ -52,7 +52,7 @@ const baseMockData: MockData[] = [
 /**
  * base case for class constructor, somewhat arbitrary string values
  */
-const baseStringData: MockStringData [] = [
+const baseStringData: MockStringData[] = [
   {
     name: DataType.Driver,
     units: Unit.STRING,
@@ -82,7 +82,7 @@ export default class MockProxyClient implements ProxyClient {
     this.mockStringData = mockStringData;
   }
 
-  fakeStringData = ["Batman", "Kenobi", "Jar-jar Binks"]
+  fakeStringData = ['Batman', 'Kenobi', 'Jar-jar Binks'];
 
   /**
    * generates a random index of an array given the size
@@ -108,10 +108,10 @@ export default class MockProxyClient implements ProxyClient {
     let index: number;
     let index2: number;
     let index3: number;
-  
-    const randomNumber = Math.random()
 
     while (true) {
+      const randomNumber = parseInt((Math.random() * 10).toFixed(0)) % 2;
+
       if (randomNumber === 0) {
         index = this.getRandomIndex(this.mockData.length);
         numericalData = this.mockData[index];
@@ -134,22 +134,21 @@ export default class MockProxyClient implements ProxyClient {
 
         this.proxyServers.forEach((server) => server.sendMessage(clientData));
         await this.eventLoopQueue();
-        } else if (randomNumber === 1) {
-          index2 = this.getRandomIndex(this.mockStringData.length);
-          stringData = this.mockStringData[index2];
-          index3 = this.getRandomIndex(this.fakeStringData.length);
-          stringData.vals[0] = this.fakeStringData[index3];
+      } else {
+        index2 = this.getRandomIndex(this.mockStringData.length);
+        stringData = this.mockStringData[index2];
+        index3 = this.getRandomIndex(this.fakeStringData.length);
+        stringData.vals[0] = this.fakeStringData[index3];
 
-
-          const clientData: ClientData = {
-            runId: this.currentRunId,
-            name: stringData.name,
-            unit: stringData.units,
-            values: stringData.vals,
-            timestamp: Date.now()
-          };
-          this.proxyServers.forEach((server) => server.sendMessage(clientData));
-          await this.eventLoopQueue();
+        const clientData: ClientData = {
+          runId: this.currentRunId,
+          name: stringData.name,
+          unit: stringData.units,
+          values: stringData.vals,
+          timestamp: Date.now()
+        };
+        this.proxyServers.forEach((server) => server.sendMessage(clientData));
+        await this.eventLoopQueue();
       }
     }
   };
