@@ -46,6 +46,13 @@ const baseMockData: MockData[] = [
     vals: [0, 0],
     min: -90,
     max: 90
+  },
+  {
+    name: DataType.SteeringAngle,
+    unit: Unit.DEGREES,
+    vals: [0],
+    min: 0,
+    max: 360
   }
 ];
 

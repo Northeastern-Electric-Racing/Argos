@@ -3,8 +3,7 @@ export enum DataType {
   MotorTemp = 'Motor Temp',
   PackSOC = 'Pack SOC',
   Accel = 'Acceleration',
-  Points = 'Points',
-  Driver = 'Driver'
+  Points = 'Points'
 }
 
 //the format of mock data on mock proxy client for numerical values
