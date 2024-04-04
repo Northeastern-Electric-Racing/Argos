@@ -1,5 +1,5 @@
 export enum IdentifierDataType {
-  DRIVER = 'driver',
+  DRIVER = 'Driver',
   LOCATION = 'location',
   SYSTEM = 'system',
   PACK_TEMP = 'Pack Temp',
