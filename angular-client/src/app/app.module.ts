@@ -54,6 +54,7 @@ import HalfGauge from 'src/components/half-gauge/half-gauge.component';
 import { Divider } from 'src/components/divider/divider';
 import { DriverComponent } from 'src/components/driver-component/driver-component';
 import PieChart from 'src/components/pie-chart/pie-chart.component';
+import RasberryPi from 'src/components/rasberry-pi/rasberry-pi.component';
 
 @NgModule({
   declarations: [
@@ -95,7 +96,8 @@ import PieChart from 'src/components/pie-chart/pie-chart.component';
     SteeringAngleDisplay,
     HalfGauge,
     Divider,
-    PieChart
+    PieChart,
+    RasberryPi
   ],
   imports: [
     BrowserModule,
