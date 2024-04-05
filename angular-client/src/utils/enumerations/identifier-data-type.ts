@@ -9,9 +9,9 @@ export enum IdentifierDataType {
     LATENCY = 'Latency',
     STEERING_ANGLE = 'Steering Angle',
     VOLTAGE = 'Voltage',
-    CPUUSAGE = 'CPU Usage',
-    CPUTEMP = "CPUTemp",
-    RAMUSAGE = "RAM Usage",
-    WIFI_RSSI = "WIFI_RSSI",
+    CPU_USAGE = 'CPU Usage',
+    CPU_TEMP = "CPU Temp",
+    RAM_USAGE = "RAM Usage",
+    WIFI_RSSI = "WIFI RSSI",
     MCS = "MCS"
 }

@@ -1,7 +1,7 @@
 <info-background icon="memory" title="Rasberry Pi">
   <hstack>
     <div>
-      <circular-percentage [percentage]="44" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
+      <circular-percentage [percentage]="cpuUsage" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
     
     <div style="display: flex; justify-content: center; align-items: center;">
         <typography variant="info-subtitle" content="CPU Usage"/>
@@ -22,7 +22,7 @@
     <divider></divider>
 
     <div>
-      <circular-percentage [percentage]="65" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
+      <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
       <div style="display: flex; justify-content: center; align-items: center;">
         <typography variant="info-subtitle" content="RAM Usage"/>
     </div>
@@ -31,8 +31,18 @@
     <divider></divider>
 
     <vstack>
-      <typography variant="info-value" content="10" />
+      <hstack>
+        <typography variant="info-value" [content]="wifiRSSI.toString() + 'dBm'" />
+      </hstack>
+      <typography variant="info-subtitle" content="RAM Usage" />
+    </vstack>
+    <divider></divider>
+
+    <vstack>
+      <typography variant="info-value" [content]="mcs.toString()" />
       <typography variant="info-subtitle" content="MCS" />
     </vstack>
+
+
   </hstack>
 </info-background>

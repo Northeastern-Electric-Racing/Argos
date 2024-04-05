@@ -53,6 +53,49 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 360
+  },
+  {
+    name: DataType.Voltage,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.CPUUsage,
+    unit: Unit.PERCENT,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.CPUTemp,
+    unit: Unit.CELSIUS,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.RAMUsage,
+    unit: Unit.PERCENT,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.WIFIRSSI,
+    unit: Unit.DBM,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.MCS,
+    unit: Unit.PERCENT,
+    vals: [0],
+    min: 0,
+    max: 100
+  
   }
 ];
 

@@ -9,7 +9,12 @@ export enum DataType {
   System = 'System',
   Location = 'Location',
   Voltage = 'Voltage',
-  Radius = 'Radius'
+  Radius = 'Radius',
+  CPUUsage = 'CPU Usage',
+  CPUTemp = 'CPU Temp',
+  RAMUsage = 'Ram Usage',
+  WIFIRSSI = 'WIFIRSSI',
+  MCS = 'MCS',
 }
 
 //the format of mock data on mock proxy client for numerical values
