@@ -1,5 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import Storage from 'src/services/storage.service';
+import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
+import { floatPipe } from 'src/utils/pipes.utils';
 
 @Component({
   selector: 'rasberry-pi',
@@ -7,13 +9,32 @@ import Storage from 'src/services/storage.service';
   styleUrls: ['./rasberry-pi.component.css']
 })
 export default class RasberryPi {
-    cpuUsage!: number;
+    cpuUsage: number = 0;
+    cpuTemp: number = 0;
+    ramUsage: number = 0;
+    wifiRSSI: number = 0;
+    mcs: number = 0;
+
+    colorRed = '#FF0000';
+    colorPurple = '#800080';
 
     constructor(private storage:Storage) {}
 
-    /* ngOnInit() {
-        this.storage.getIdentifierData('cpuUsage').subscribe((value) => {
-            [this.cpuUsage] = value.values;
+     ngOnInit() {
+        this.storage.get(IdentifierDataType.CPUUSAGE).subscribe((value) => {
+            this.cpuUsage = floatPipe(value.values[0]);
         });
-    } */
+        this.storage.get(IdentifierDataType.CPUTEMP).subscribe((value) => {
+            this.cpuTemp = floatPipe(value.values[0]);
+        });
+        this.storage.get(IdentifierDataType.RAMUSAGE).subscribe((value) => {
+            this.ramUsage = floatPipe(value.values[0]);
+        });
+        this.storage.get(IdentifierDataType.WIFI_RSSI).subscribe((value) => {
+            this.wifiRSSI = floatPipe(value.values[0]);
+        });
+        this.storage.get(IdentifierDataType.MCS).subscribe((value) => {
+            this.mcs = floatPipe(value.values[0]);
+        });
+    } 
 }

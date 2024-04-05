@@ -1,13 +1,38 @@
 <info-background icon="memory" title="Rasberry Pi">
-  <circular-percentage [percentage]="100" [dimension]="2"></circular-percentage>
-    <typography variant="info-value" [content]="cpuUsage.toString() + '%'" />
-<divider></divider>
-  <!-- <thermometer [temperature]="cpuTemp" [min]="0" [max]="100" />
-     <typography variant="info-value" [content]="cpuTemp.toString() + '°'" />
-    <typography variant="info-header" content="CPU Temp" />
-  <circular-percentage [percentage]="ramUsage" [size]="200" [color]="color"></circular-percentage>
-  <typography variant="info-value" [content]="ramUsage.toString() + '%'" />
-  <typography variant="info-header" content="RAM Usage" />
-  <Wifi</Wifi>!-->
-  <typography variant="info-subtitle" content="MCS" />
+  <hstack>
+    <div>
+      <circular-percentage [percentage]="44" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
+    
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <typography variant="info-subtitle" content="CPU Usage"/>
+    </div>
+    </div>
+    <divider></divider>
+
+    <vstack>
+      <hstack>
+        <typography variant="info-value" [content]="cpuTemp.toString() + '°'" />
+        <div class="thermometer-container">
+          <thermometer [temperature]="cpuTemp" [min]="-15" [max]="30" />
+        </div>
+      </hstack>
+      <typography variant="info-subtitle" content="CPU Temp" />
+    </vstack>
+
+    <divider></divider>
+
+    <div>
+      <circular-percentage [percentage]="65" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <typography variant="info-subtitle" content="RAM Usage"/>
+    </div>
+    </div>
+
+    <divider></divider>
+
+    <vstack>
+      <typography variant="info-value" content="10" />
+      <typography variant="info-subtitle" content="MCS" />
+    </vstack>
+  </hstack>
 </info-background>
