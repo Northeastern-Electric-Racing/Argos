@@ -54,6 +54,7 @@ import HalfGauge from 'src/components/half-gauge/half-gauge.component';
 import { Divider } from 'src/components/divider/divider';
 import { DriverComponent } from 'src/components/driver-component/driver-component';
 import PieChart from 'src/components/pie-chart/pie-chart.component';
+import { AccelerationGraphs } from 'src/components/acceleration-graphs/acceleration-graphs.component';
 
 @NgModule({
   declarations: [
@@ -95,7 +96,8 @@ import PieChart from 'src/components/pie-chart/pie-chart.component';
     SteeringAngleDisplay,
     HalfGauge,
     Divider,
-    PieChart
+    PieChart,
+    AccelerationGraphs
   ],
   imports: [
     BrowserModule,
