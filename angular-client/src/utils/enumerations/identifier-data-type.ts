@@ -8,5 +8,6 @@ export enum IdentifierDataType {
   POINTS = 'Points',
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
-  VOLTAGE = 'Voltage'
+  VOLTAGE = 'Voltage',
+  ACCELERATION = 'Acceleration'
 }
