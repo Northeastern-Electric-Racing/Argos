@@ -12,7 +12,7 @@ import { ServerMessage } from '../odyssey-base/src/types/message.types';
 import { serverdata as ServerData } from '../odyssey-base/src/generated/serverdata/v1/serverdata';
 import ProxyClient from './proxy-client';
 import ProxyServer from './proxy-server';
-import { DataTypeName } from '../utils/data-type-name.utils';
+import { DataType } from '../utils/data.utils';
 import prisma from '../odyssey-base/src/prisma/prisma-client';
 
 /**
@@ -153,13 +153,13 @@ export default class ProdProxyClient implements ProxyClient {
     // iterating and upserting
     const serverdata = data.data;
     switch (data.dataType) {
-      case DataTypeName.driverUser:
+      case DataType.Driver:
         [driverName] = serverdata.values;
         break;
-      case DataTypeName.systemName:
+      case DataType.System:
         [systemName] = serverdata.values;
         break;
-      case DataTypeName.locationName:
+      case DataType.Location:
         if (this.recentLocationName) {
           if (this.recentLocationName !== serverdata.values[0]) {
             this.newLocation = true;
@@ -169,11 +169,11 @@ export default class ProdProxyClient implements ProxyClient {
           this.newLocation = true;
         }
         break;
-      case DataTypeName.points:
+      case DataType.Points:
         this.recentLatitude = parseFloat(serverdata.values[0]);
         this.recentLongitude = parseFloat(serverdata.values[1]);
         break;
-      case DataTypeName.radius:
+      case DataType.Radius:
         this.recentRadius = parseFloat(serverdata.values[0]);
         break;
       default:
