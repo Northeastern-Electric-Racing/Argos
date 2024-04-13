@@ -13,5 +13,6 @@ export enum IdentifierDataType {
   CPU_TEMP = 'CPU Temp',
   RAM_USAGE = 'RAM Usage',
   WIFI_RSSI = 'WIFI RSSI',
-  MCS = 'MCS'
+  MCS = 'MCS',
+  ACCELERATION = 'Acceleration'
 }

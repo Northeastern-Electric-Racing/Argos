@@ -7,7 +7,7 @@ WORKDIR /usr/src/api
 COPY package.json . 
 COPY package-lock.json .
 
-RUN npm install
+RUN npm ci --only=production
 
 COPY . .
 
@@ -19,6 +19,8 @@ RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey
 RUN npm run prisma:generate
 RUN npm run build
 # RUN echo "SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/timescaledb" >> .env
+
+EXPOSE 8000
 
 CMD ["sh", "-c", "npm run prisma:migrate:prod && \
     npm run start:production"]

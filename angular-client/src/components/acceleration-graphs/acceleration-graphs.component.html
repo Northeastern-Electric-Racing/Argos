@@ -1,0 +1,43 @@
+<info-background title="Acceleration" icon="speed" backgroundColor="#2c2c2c">
+  <div class="row" id="row1">
+    <div class="graph-container">
+      <graph-component [data]="xData" color="#4d9ac9" title="X Acceleration" graphContainerId="xGraph" />
+      <typography variant="info-subtitle" content="X Acceleration" additionalStyles="margin-top: 10px" />
+    </div>
+    <div class="right-panel">
+      <div class="vBar"></div>
+      <div class="max-container">
+        <div class="max">
+          <typography variant="header" content="{{ xMax }}" additionalStyles="fontSize: 50px; padding: 0px; margin: 0px;" />
+          <typography
+            variant="info-subtitle"
+            content="g"
+            additionalStyles="fontSize: 20px; margin-bottom: 10px; color: #797a7a"
+          />
+        </div>
+        <typography variant="info-subtitle" content="Peak X Accel." additionalStyles="" />
+      </div>
+    </div>
+  </div>
+  <div class="hBar"></div>
+  <div class="row">
+    <div class="graph-container">
+      <graph-component [data]="yData" color="#17ff00" title="Y Acceleration" graphContainerId="yGraph" />
+      <typography variant="info-subtitle" content="Y Acceleration" additionalStyles="margin-top: 10px" />
+    </div>
+    <div class="right-panel">
+      <div class="vBar"></div>
+      <div class="max-container">
+        <div class="max">
+          <typography variant="header" content="{{ yMax }}" additionalStyles="fontSize: 50px; padding: 0px; margin: 0px;" />
+          <typography
+            variant="info-subtitle"
+            content="g"
+            additionalStyles="fontSize: 20px; margin-bottom: 10px; color: #797a7a"
+          />
+        </div>
+        <typography variant="info-subtitle" content="Peak Y Accel." additionalStyles="" />
+      </div>
+    </div>
+  </div>
+</info-background>

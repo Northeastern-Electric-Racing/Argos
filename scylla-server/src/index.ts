@@ -60,7 +60,6 @@ if (process.env.PROD === 'true') {
   const host = process.env.PROD_SIREN_HOST_URL;
   const mqttPort = '1883';
   const clientId = `Scylla-Server`;
-  console.log('host', host);
 
   const connectUrl = `mqtt://${host}:${mqttPort}`;
 
@@ -85,5 +84,8 @@ serverSocket.on('connection', (socket: Socket) => {
   const serverProxy = new ProxyServer(socket);
 
   serverProxy.configure();
+  serverProxy.socket.on('disconnect', () => {
+    proxyClient.removeProxyServer(serverProxy);
+  });
   proxyClient.addProxyServer(serverProxy);
 });

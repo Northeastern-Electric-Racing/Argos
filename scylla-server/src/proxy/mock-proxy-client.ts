@@ -216,4 +216,12 @@ export default class MockProxyClient implements ProxyClient {
   public addProxyServer = (proxyServer: ProxyServer) => {
     this.proxyServers.push(proxyServer);
   };
+
+  /**
+   * removes a proxy server object
+   * @param proxyServer
+   */
+  public removeProxyServer = (proxyServer: ProxyServer) => {
+    this.proxyServers = this.proxyServers.filter((server) => server !== proxyServer);
+  };
 }

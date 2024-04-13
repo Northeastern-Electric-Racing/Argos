@@ -55,6 +55,7 @@ import { Divider } from 'src/components/divider/divider';
 import { DriverComponent } from 'src/components/driver-component/driver-component';
 import PieChart from 'src/components/pie-chart/pie-chart.component';
 import RasberryPi from 'src/components/rasberry-pi/rasberry-pi.component';
+import { AccelerationGraphs } from 'src/components/acceleration-graphs/acceleration-graphs.component';
 
 @NgModule({
   declarations: [
@@ -97,7 +98,8 @@ import RasberryPi from 'src/components/rasberry-pi/rasberry-pi.component';
     HalfGauge,
     Divider,
     PieChart,
-    RasberryPi
+    RasberryPi,
+    AccelerationGraphs
   ],
   imports: [
     BrowserModule,
