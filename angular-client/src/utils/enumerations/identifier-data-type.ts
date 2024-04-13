@@ -18,5 +18,7 @@ export enum IdentifierDataType {
   RAM_USAGE = 'RAM Usage',
   WIFI_RSSI = 'WIFI RSSI',
   MCS = 'MCS',
-  ACCELERATION = 'Acceleration'
+  ACCELERATION = 'Acceleration',
+  CHARGE_CURRENT_LIMIT = 'Charge Current Limit',
+  DISCHARGE_CURRENT_LIMIT = 'Discharge Current Limit'
 }

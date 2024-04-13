@@ -50,6 +50,9 @@ export default class Typography implements OnInit {
       case 'info-unit':
         this.style = Theme.infoUnit;
         break;
+      case 'sidebar-label':
+        this.style = Theme.sidebarLabel;
+        break;
     }
 
     if (this.additionalStyles) {

@@ -1,0 +1,10 @@
+<p-sidebar [(visible)]="sidebarVisible">
+  <ng-template pTemplate="header">
+    <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+  </ng-template>
+  <ng-template pTemplate="headless">
+    <sidebar-chip icon="home" value="Home" (click)="navigateTo('/landing')" />
+    <sidebar-chip icon="bar_chart" value="Graph" (click)="navigateTo('/graph')" />
+    <sidebar-chip icon="map" value="Map" (click)="navigateTo('/map')" />
+  </ng-template>
+</p-sidebar>

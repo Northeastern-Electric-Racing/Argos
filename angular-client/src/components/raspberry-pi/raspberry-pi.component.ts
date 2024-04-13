@@ -4,9 +4,9 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
 import { floatPipe } from 'src/utils/pipes.utils';
 
 @Component({
-  selector: 'rasberry-pi',
-  templateUrl: './rasberry-pi.component.html',
-  styleUrls: ['./rasberry-pi.component.css']
+  selector: 'raspberry-pi',
+  templateUrl: './raspberry-pi.component.html',
+  styleUrls: ['./raspberry-pi.component.css']
 })
 export default class RasberryPi {
   cpuUsage: number = 0;

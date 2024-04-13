@@ -1,15 +1,15 @@
 <info-background title="Battery" icon="battery_charging_full">
-  <br />
-  <hstack>
-    <vstack>
+  <hstack style="width: 100%; height: 100%">
+    <vstack style="width: 20%">
       <hstack>
         <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
         <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
       </hstack>
       <typography variant="info-subtitle" content="Charge State" />
     </vstack>
+
     <divider></divider>
-    <vstack>
+    <vstack style="width: 20%">
       <hstack>
         <typography variant="info-value" [content]="packTemp.toString() + '°'" />
         <div class="thermometer-container">
@@ -18,12 +18,29 @@
       </hstack>
       <typography variant="info-subtitle" content="Pack Temperature" />
     </vstack>
+
     <divider></divider>
-    <vstack>
+    <vstack style="width: 20%">
       <hstack>
         <typography variant="info-value" [content]="voltage.toString() + 'V'" />
       </hstack>
       <typography variant="info-subtitle" content="Voltage" />
+    </vstack>
+
+    <divider></divider>
+    <vstack style="width: 20%">
+      <hstack>
+        <typography variant="info-value" [content]="chargeCurrentLimit.toString() + 'A'" />
+      </hstack>
+      <typography variant="info-subtitle" content="CCL" />
+    </vstack>
+
+    <divider></divider>
+    <vstack style="width: 20%">
+      <hstack>
+        <typography variant="info-value" [content]="dischargeCurrentLimit.toString() + 'A'" />
+      </hstack>
+      <typography variant="info-subtitle" content="DCL" />
     </vstack>
   </hstack>
 </info-background>

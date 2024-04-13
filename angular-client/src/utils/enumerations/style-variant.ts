@@ -10,4 +10,5 @@ export type StyleVariant =
   | 'info-subtitle'
   | 'value'
   | 'info-value'
-  | 'info-unit';
+  | 'info-unit'
+  | 'sidebar-label';

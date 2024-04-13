@@ -1,6 +1,6 @@
 <div class="background">
   <div>
-    <resolution-selector />
+    <run-selector style="text-align: center;" [selectRun]="onRunSelected" />
     <div *ngFor="let node of nodesWithVisibilityToggle" style="height: 100%">
       <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)" [dropDown]="true" />
       <div *ngIf="node.dataTypesAreVisible" @toggleExpand>

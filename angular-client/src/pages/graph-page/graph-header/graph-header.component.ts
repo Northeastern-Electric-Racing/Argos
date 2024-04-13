@@ -10,6 +10,5 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./graph-header.component.css']
 })
 export default class GraphHeader {
-  @Input() realTime?: boolean;
   @Input() runId?: number;
 }

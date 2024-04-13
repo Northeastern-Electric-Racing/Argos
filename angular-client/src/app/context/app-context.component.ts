@@ -15,7 +15,9 @@ export default class AppContext implements OnInit {
   socket = io(environment.url);
   socketService = new SocketService(this.socket);
 
-  constructor(private storage: Storage) {}
+  constructor(
+    private storage: Storage,
+  ) {}
 
   ngOnInit(): void {
     this.socketService.receiveData(this.storage);

@@ -5,6 +5,6 @@
     </a>
   </div>
   <div header-right>
-    <typography variant="large-header" [content]="realTime ? 'Real Time' : 'Run #' + runId" />
+    <typography variant="large-header" [content]="!runId ? 'Real Time' : 'Run #' + runId" />
   </div>
 </header>

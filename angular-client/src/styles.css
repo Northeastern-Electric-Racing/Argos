@@ -33,3 +33,9 @@ body {
   color: white !important;
   border-radius: 0px 0px 20px 20px !important;
 }
+
+.p-sidebar {
+  background-color: #ef4345 !important;
+  color: white !important;
+  width: 200px !important;
+}
