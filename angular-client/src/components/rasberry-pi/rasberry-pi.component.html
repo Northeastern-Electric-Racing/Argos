@@ -1,0 +1,50 @@
+<info-background icon="memory" title="Rasberry Pi">
+  <hstack>
+    <div>
+      <circular-percentage [percentage]="cpuUsage" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
+
+      <div style="display: flex; justify-content: center; align-items: center">
+        <typography variant="info-subtitle" content="CPU Usage" />
+      </div>
+    </div>
+    <divider></divider>
+
+    <vstack>
+      <hstack>
+        <typography variant="info-value" [content]="cpuTemp.toString() + '°'" />
+        <div class="thermometer-container">
+          <thermometer [temperature]="cpuTemp" [min]="-15" [max]="30" />
+        </div>
+      </hstack>
+      <typography variant="info-subtitle" content="CPU Temp" />
+    </vstack>
+
+    <divider></divider>
+
+    <div>
+      <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
+      <div style="display: flex; justify-content: center; align-items: center">
+        <typography variant="info-subtitle" content="RAM Usage" />
+      </div>
+    </div>
+
+    <divider></divider>
+
+    <vstack>
+      <hstack>
+        <typography variant="info-value" [content]="wifiRSSI.toString()" />
+        <div>
+          <mat-icon>wifi</mat-icon>
+          <span class="wifi-dbm-unit">dBM</span>
+        </div>
+      </hstack>
+      <typography variant="info-subtitle" content="Wi-Fi RSSI" />
+    </vstack>
+    <divider></divider>
+
+    <vstack>
+      <typography variant="info-value" [content]="mcs.toString()" />
+      <typography variant="info-subtitle" content="MCS" />
+    </vstack>
+  </hstack>
+</info-background>
