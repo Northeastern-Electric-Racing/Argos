@@ -33,7 +33,7 @@ const baseMockData: MockData[] = [
   },
 
   {
-    name: DataType.Accel,
+    name: DataType.XYZAccel,
     unit: Unit.G,
     vals: [0, 0, 0],
     min: -6,
@@ -92,6 +92,48 @@ const baseMockData: MockData[] = [
   {
     name: DataType.MCS,
     unit: Unit.PERCENT,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.Acceleration,
+    unit: Unit.METERS_PER_SECOND_SQUARED,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.CCL,
+    unit: Unit.AMPERAGE,
+    vals: [0],
+    min: 0,
+    max: 300
+  },
+  {
+    name: DataType.DCL,
+    unit: Unit.AMPERAGE,
+    vals: [0],
+    min: 0,
+    max: 300
+  },
+  {
+    name: DataType.Brake_Pressure,
+    unit: Unit.PSI,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.Torque,
+    unit: Unit.NEWTON_METERS,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.SPEED,
+    unit: Unit.METERS_PER_SECOND,
     vals: [0],
     min: 0,
     max: 100
