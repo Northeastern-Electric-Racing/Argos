@@ -20,7 +20,6 @@ export class CircularPercentageComponent {
   //values needed for styling and scaling
   backgroundColor: string = Theme.infoBackground;
   innerCircleDimension: number = 0;
-  filledAngle: number = 0;
   emptyAngle: number = 360;
   percentageFontSize: number = 0;
   percentageSignFontSize: number = 0;
@@ -29,10 +28,12 @@ export class CircularPercentageComponent {
   //assigns values needed for styling and scaling
   ngOnInit() {
     this.innerCircleDimension = this.dimension * 0.87;
-    this.filledAngle = (this.percentage / 100) * 360;
-    this.emptyAngle = 360 - this.filledAngle;
     this.percentageFontSize = this.dimension * 0.39;
     this.percentageSignFontSize = this.dimension * 0.17;
     this.percentageSignOffset = this.dimension * 0.02;
+  }
+
+  getFilledAngle(percentage: number): number {
+    return (percentage / 100) * 360;
   }
 }
