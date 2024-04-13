@@ -41,9 +41,7 @@ export class RunSelector implements OnInit {
   openDialog = () => {
     this.ref = this.dialogService.open(Carousel, {
       width: '550px',
-      data: { runs: this.runs,
-              selectRun: this.selectRun
-       },
+      data: { runs: this.runs, selectRun: this.selectRun },
       header: 'Select a run to view'
     });
   };
