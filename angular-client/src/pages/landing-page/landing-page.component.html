@@ -1,6 +1,5 @@
-<div class="image-container">
-  <landing-header [driver]="currentDriver" [location]="currentLocation" [system]="currentSystem" />
-  <driver-component></driver-component>
+<div class="image-container" style="margin-right: 16px; margin-left: 16px">
+  <!-- <landing-header [driver]="currentDriver" [location]="currentLocation" [system]="currentSystem" />
   <hstack spacing="100px">
     <vstack>
       <hstack spacing="30px">
@@ -23,33 +22,54 @@
       </hstack>
     </vstack>
     <battery [percentage]="stateOfCharge" [height]="400" [width]="200" />
-    <vstack>
-      <latency-display [latency]="99" [lowVal]="0" [medVal]="50" [highVal]="100"></latency-display>
-      <battery-info-display></battery-info-display>
-    </vstack>
-  </hstack>
-  <landing-buttons />
-  <hstack>
-    <half-gauge [current]="34" [max]="100" [min]="0" unit="m/s" color="#ff0000" [size]="400" />
-    <pie-chart [size]="600" />
-  </hstack>
-  <info-graph
-    [data]="[
-      { x: 0, y: 0 },
-      { x: 1, y: 10 },
-      { x: 2, y: 20 },
-      { x: 3, y: 30 },
-      { x: 4, y: 40 },
-      { x: 5, y: 50 },
-      { x: 6, y: 60 },
-      { x: 7, y: 70 },
-      { x: 8, y: 80 },
-      { x: 9, y: 90 },
-      { x: 10, y: 100 }
-    ]"
-    icon="bar_chart"
-    title="Joe mama"
-    color="#FF0000"
-    graphContainerId="graph1"
-  />
+  </hstack> -->
+  <!-- <landing-buttons /> -->
+  <vstack style="width: 100%" spacing="40px">
+    <hstack style="width: 100%">
+      <vstack style="width: 50%">
+        <typography variant="xx-large-title" [content]="time | date: 'HH:mm:ss'" />
+        <driver-component style="width: 100%" />
+      </vstack>
+
+      <vstack style="width: 50%">
+        <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
+
+        <hstack style="width: 100%">
+          <viewer-display style="height: 200px; width: 33%" />
+          <latency-display style="height: 200px; width: 33%" />
+          <connection-display style="height: 200px; width: 33%" />
+        </hstack>
+      </vstack>
+    </hstack>
+    <hstack style="width: 100%;">
+      <vstack style="width: 50%;" spacing="20px">
+        <speed-over-time-display style="width: 100%;" />
+        <acceleration-over-time-display style="width: 100%;" />
+      </vstack>
+
+      <acceleration-graphs style="width: 60%; height: 550px;" />
+    </hstack>
+
+    <hstack style="width: 100%;">
+      <map-info-display style="width: 50%;" />
+
+      <vstack style="width: 50%;">
+        <hstack>
+          <transmission-display />
+          <torque-display />
+        </hstack>
+        <!-- <motor-display /> -->
+      </vstack>
+    </hstack>
+
+    <hstack>
+      <!-- <raspbery-pi-display /> -->
+      <brake-pressure-display />
+    </hstack>
+
+    <hstack>
+      <steering-angle-display />
+      <battery-info-display />
+    </hstack>
+  </vstack>
 </div>

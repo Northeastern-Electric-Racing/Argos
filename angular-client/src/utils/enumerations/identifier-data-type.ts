@@ -9,5 +9,9 @@ export enum IdentifierDataType {
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
   VOLTAGE = 'Voltage',
-  ACCELERATION = 'Acceleration'
+  ACCELERATION = 'Acceleration',
+  VIEWERS = 'Viewers',
+  SPEED = 'Speed',
+  TORQUE = 'Torque',
+  BRAKE_PRESSURE = 'Brake Pressure'
 }

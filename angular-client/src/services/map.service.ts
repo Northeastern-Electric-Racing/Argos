@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as mapboxgl from 'mapbox-gl';
 import { environment } from 'src/environment/environment';
+import { DataValue } from 'src/utils/socket.utils';
 import { Coordinate } from 'src/utils/types.utils';
 
 @Injectable({
@@ -9,9 +10,9 @@ import { Coordinate } from 'src/utils/types.utils';
 export class MapService {
   map!: mapboxgl.Map;
 
-  buildMap = () => {
+  buildMap = (contianer: string) => {
     this.map = new mapboxgl.Map({
-      container: 'map',
+      container: contianer,
       zoom: 0,
       center: [0, 0],
       accessToken: environment.mapbox.accessToken
@@ -86,4 +87,8 @@ export class MapService {
       });
     });
   };
+
+  transformDataToCoordinate(data: DataValue): Coordinate {
+    return { lat: parseFloat(data.values[1]), lng: parseFloat(data.values[0]) };
+  }
 }

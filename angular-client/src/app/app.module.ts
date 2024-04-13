@@ -55,6 +55,15 @@ import { Divider } from 'src/components/divider/divider';
 import { DriverComponent } from 'src/components/driver-component/driver-component';
 import PieChart from 'src/components/pie-chart/pie-chart.component';
 import { AccelerationGraphs } from 'src/components/acceleration-graphs/acceleration-graphs.component';
+import ViewerDisplay from 'src/components/viewer-display/viewer-display.component';
+import ConnectionDisplay from 'src/components/connection-display/connection-display.component';
+import SpeedDisplay from 'src/components/speed-display/speed-display.component';
+import SpeedOverTimeDisplay from 'src/components/speed-over-time-display/speed-over-time-display.component';
+import TorqueDisplay from 'src/components/torque-display/torque-display.component';
+import TransmissionDisplay from 'src/components/transmission-display/transmission-display.component';
+import MapInfoDisplay from 'src/components/map-info-display/map-info-display.component';
+import AccelerationOverTimeDisplay from 'src/components/acceleration-over-time-display/acceleration-over-time-display.component';
+import BrakePressureDisplay from 'src/components/brake-pressure-display/brake-pressure-display.component';
 
 @NgModule({
   declarations: [
@@ -97,7 +106,16 @@ import { AccelerationGraphs } from 'src/components/acceleration-graphs/accelerat
     HalfGauge,
     Divider,
     PieChart,
-    AccelerationGraphs
+    AccelerationGraphs,
+    ViewerDisplay,
+    ConnectionDisplay,
+    SpeedDisplay,
+    SpeedOverTimeDisplay,
+    TorqueDisplay,
+    TransmissionDisplay,
+    MapInfoDisplay,
+    AccelerationOverTimeDisplay,
+    BrakePressureDisplay
   ],
   imports: [
     BrowserModule,

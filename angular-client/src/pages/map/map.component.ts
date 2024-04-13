@@ -6,7 +6,6 @@ import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { ActivatedRoute } from '@angular/router';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import Storage from 'src/services/storage.service';
-import { Coordinate } from 'src/utils/types.utils';
 
 @Component({
   selector: 'map',
@@ -33,10 +32,10 @@ export default class Map implements OnInit {
       this.isLoading = false;
       //Allow page to render before building map
       setTimeout(() => {
-        this.map.buildMap();
+        this.map.buildMap('map');
         this.map.addPolyline([]);
         this.storage.get(IdentifierDataType.POINTS).subscribe((value) => {
-          this.map.addCoordinateToPolyline(this.transformDataToCoordinate(value));
+          this.map.addCoordinateToPolyline(this.map.transformDataToCoordinate(value));
         });
       }, 100);
     } else {
@@ -47,18 +46,14 @@ export default class Map implements OnInit {
         this.isLoading = false;
         //Allow page to render before building map
         setTimeout(() => {
-          this.map.buildMap();
-          this.map.addPolyline(points.map(this.transformDataToCoordinate));
+          this.map.buildMap('map');
+          this.map.addPolyline(points.map(this.map.transformDataToCoordinate));
         }, 100);
       });
       queryResponse.isLoading.subscribe((isLoading) => (this.isLoading = isLoading));
       queryResponse.isError.subscribe((isError) => (this.isError = isError));
       queryResponse.error.subscribe((error) => (this.error = error));
     }
-  }
-
-  private transformDataToCoordinate(data: DataValue): Coordinate {
-    return { lat: parseFloat(data.values[1]), lng: parseFloat(data.values[0]) };
   }
 
   private parseParams() {

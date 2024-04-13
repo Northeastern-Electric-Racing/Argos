@@ -39,6 +39,10 @@ export default class SocketService {
         if (error instanceof Error) this.sendError(error.message);
       }
     });
+
+    this.socket.on('disconnect', () => {
+      storage.setCurrentRunId(undefined);
+    });
   };
 
   /**

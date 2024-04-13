@@ -47,6 +47,9 @@ export default class Typography implements OnInit {
       case 'info-value':
         this.style = Theme.infoValue;
         break;
+      case 'info-unit':
+        this.style = Theme.infoUnit;
+        break;
     }
 
     if (this.additionalStyles) {

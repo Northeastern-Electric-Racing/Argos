@@ -43,7 +43,6 @@ export class AccelerationGraphs implements OnInit {
       //limits the data storage to 400 to prevent lag
       if (this.xData.length > 400) {
         this.xData = this.xData.slice(1);
-        console.log('hi');
       }
 
       if (this.yData.length > 400) {
