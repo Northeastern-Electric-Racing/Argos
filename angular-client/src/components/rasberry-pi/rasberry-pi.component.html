@@ -32,9 +32,13 @@
 
     <vstack>
       <hstack>
-        <typography variant="info-value" [content]="wifiRSSI.toString() + 'dBm'" />
+        <typography variant="info-value" [content]="wifiRSSI.toString()" />
+        <div>
+          <mat-icon>wifi</mat-icon>
+          <span class="wifi-dbm-unit">dBM</span>
+        </div>
       </hstack>
-      <typography variant="info-subtitle" content="RAM Usage" />
+      <typography variant="info-subtitle" content="Wi-Fi RSSI" />
     </vstack>
     <divider></divider>
 

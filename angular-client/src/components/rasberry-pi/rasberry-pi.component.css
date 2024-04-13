@@ -5,3 +5,14 @@
   height: 74px;
   width: 28px;
 }
+
+.wifi-dbm-unit {
+  font-size: 18px;
+  color: gray;
+  padding-top: 22px;
+}
+
+.mat-icon {
+  font-size: 26px;
+  color: rgb(21, 142, 255);
+}
