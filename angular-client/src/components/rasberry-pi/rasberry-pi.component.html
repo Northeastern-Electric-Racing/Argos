@@ -2,10 +2,10 @@
   <hstack>
     <div>
       <circular-percentage [percentage]="cpuUsage" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
-    
-    <div style="display: flex; justify-content: center; align-items: center;">
-        <typography variant="info-subtitle" content="CPU Usage"/>
-    </div>
+
+      <div style="display: flex; justify-content: center; align-items: center">
+        <typography variant="info-subtitle" content="CPU Usage" />
+      </div>
     </div>
     <divider></divider>
 
@@ -23,9 +23,9 @@
 
     <div>
       <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
-      <div style="display: flex; justify-content: center; align-items: center;">
-        <typography variant="info-subtitle" content="RAM Usage"/>
-    </div>
+      <div style="display: flex; justify-content: center; align-items: center">
+        <typography variant="info-subtitle" content="RAM Usage" />
+      </div>
     </div>
 
     <divider></divider>
@@ -42,7 +42,5 @@
       <typography variant="info-value" [content]="mcs.toString()" />
       <typography variant="info-subtitle" content="MCS" />
     </vstack>
-
-
   </hstack>
 </info-background>

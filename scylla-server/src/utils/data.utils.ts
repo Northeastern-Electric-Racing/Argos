@@ -14,7 +14,7 @@ export enum DataType {
   CPUTemp = 'CPU Temp',
   RAMUsage = 'Ram Usage',
   WIFIRSSI = 'WIFIRSSI',
-  MCS = 'MCS',
+  MCS = 'MCS'
 }
 
 //the format of mock data on mock proxy client for numerical values

@@ -95,7 +95,6 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 100
-  
   }
 ];
 
