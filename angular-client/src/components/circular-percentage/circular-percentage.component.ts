@@ -15,6 +15,7 @@ export class CircularPercentageComponent {
   @Input() dimension!: number;
   @Input() ringColor!: string;
   @Input() percentage!: number;
+  @Input() spacing!: number;
 
   //values needed for styling and scaling
   backgroundColor: string = Theme.infoBackground;

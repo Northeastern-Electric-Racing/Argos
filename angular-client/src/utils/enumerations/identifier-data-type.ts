@@ -9,9 +9,14 @@ export enum IdentifierDataType {
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
   VOLTAGE = 'Voltage',
-  ACCELERATION = 'Acceleration',
   VIEWERS = 'Viewers',
   SPEED = 'Speed',
   TORQUE = 'Torque',
-  BRAKE_PRESSURE = 'Brake Pressure'
+  BRAKE_PRESSURE = 'Brake Pressure',
+  CPU_USAGE = 'CPU Usage',
+  CPU_TEMP = 'CPU Temp',
+  RAM_USAGE = 'RAM Usage',
+  WIFI_RSSI = 'WIFI RSSI',
+  MCS = 'MCS',
+  ACCELERATION = 'Acceleration'
 }
