@@ -15,7 +15,7 @@ export default class Theme {
   static readonly infoSubtitle: string = this.font + 'fontSize: 16px; color: #cacaca; margin: 0;';
   static readonly value: string = this.boldedText + 'fontSize: 85px; margin: 0; padding: 0;';
   static readonly infoValue: string = this.boldedText + 'fontSize: 50px; margin: 0; align-self: center;';
-
+  static readonly unit: string = this.textStyle + 'font-size: 24px; color: gray;';
   static readonly battteryLow: string = '#f50905';
   static readonly battteryMed: string = '#FFEA00';
   static readonly battteryHigh: string = '#1ae824';
