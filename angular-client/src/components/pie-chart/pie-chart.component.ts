@@ -24,6 +24,7 @@ export default class PieChart {
   ];
   // valid sizes range from like 200 to 1000, anything smaller or bigger is kind of ridiculous
   @Input() size: number = 300;
+  @Input() backgroundColor: string = '#414141';
 
   ngOnInit() {
     const labels = this.data.map((item) => {
@@ -35,15 +36,31 @@ export default class PieChart {
 
     this.chartOptions = {
       series,
+      plotOptions: {
+        pie: {
+          dataLabels: {
+            offset: -10
+          }
+        }
+      },
       colors: ['#ce2727', '#2799ce', '#3cba40', '#ba3cb4', '#efce29'],
       chart: {
         width: this.size,
         type: 'pie',
-        background: '#2c2c2c',
+        background: this.backgroundColor,
         redrawOnParentResize: true,
         foreColor: '#ffffff'
       },
+      dataLabels: {
+        style: {
+          offset: -10,
+          fontSize: this.size / 20 + 'px'
+        }
+      },
       labels,
+      legend: {
+        offsetX: 10
+      },
       responsive: [
         {
           breakpoint: 480,

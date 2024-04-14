@@ -56,6 +56,7 @@ import { DriverComponent } from 'src/components/driver-component/driver-componen
 import PieChart from 'src/components/pie-chart/pie-chart.component';
 import RasberryPi from 'src/components/rasberry-pi/rasberry-pi.component';
 import { AccelerationGraphs } from 'src/components/acceleration-graphs/acceleration-graphs.component';
+import MotorInfo from 'src/components/motor-info/motor-info.component';
 
 @NgModule({
   declarations: [
@@ -99,7 +100,8 @@ import { AccelerationGraphs } from 'src/components/acceleration-graphs/accelerat
     Divider,
     PieChart,
     RasberryPi,
-    AccelerationGraphs
+    AccelerationGraphs,
+    MotorInfo
   ],
   imports: [
     BrowserModule,
