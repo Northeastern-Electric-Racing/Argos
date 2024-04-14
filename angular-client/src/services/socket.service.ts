@@ -32,7 +32,7 @@ export default class SocketService {
 
         /* Create key based on name and unit for hashmap */
         const key = data.name;
-
+        console.log(key);
         const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
       } catch (error) {

@@ -21,16 +21,16 @@ export default class RasberryPi {
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.storage.get(IdentifierDataType.CPU_USAGE).subscribe((value) => {
+    this.storage.get(IdentifierDataType.CPUUsage).subscribe((value) => {
       this.cpuUsage = floatPipe(value.values[0]);
     });
-    this.storage.get(IdentifierDataType.CPU_TEMP).subscribe((value) => {
+    this.storage.get(IdentifierDataType.CPUTemp).subscribe((value) => {
       this.cpuTemp = floatPipe(value.values[0]);
     });
-    this.storage.get(IdentifierDataType.RAM_USAGE).subscribe((value) => {
-      this.ramUsage = floatPipe(value.values[0]);
+    this.storage.get(IdentifierDataType.RAMUsage).subscribe((value) => {
+      this.ramUsage = floatPipe(value.values[0]) / 8000;
     });
-    this.storage.get(IdentifierDataType.WIFI_RSSI).subscribe((value) => {
+    this.storage.get(IdentifierDataType.WIFIRSSI).subscribe((value) => {
       this.wifiRSSI = floatPipe(value.values[0]);
     });
     this.storage.get(IdentifierDataType.MCS).subscribe((value) => {
