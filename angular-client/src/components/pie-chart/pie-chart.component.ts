@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, Renderer2 } from '@angular/core';
 
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill } from 'ng-apexcharts';
 
@@ -17,16 +17,23 @@ export type ChartOptions = {
 })
 export default class PieChart {
   public chartOptions!: Partial<ChartOptions> | any;
-  @Input() data: { value: number; name: string }[] = [
-    { value: 24, name: 'Motor' },
-    { value: 58, name: 'Cooling' },
-    { value: 93, name: 'Bungus' }
-  ];
-  // valid sizes range from like 200 to 1000, anything smaller or bigger is kind of ridiculous
-  @Input() size: number = 300;
+  @Input() data: { value: number; name: string }[] = [];
   @Input() backgroundColor: string = '#414141';
+  currentWidth: number = 0;
+
+  constructor(
+    private renderer: Renderer2,
+    private el: ElementRef
+  ) {}
 
   ngOnInit() {
+    this.setChartWidth();
+    setTimeout(() => {
+      this.setChartOptions();
+    });
+  }
+
+  setChartOptions() {
     const labels = this.data.map((item) => {
       return item.name;
     });
@@ -45,7 +52,7 @@ export default class PieChart {
       },
       colors: ['#ce2727', '#2799ce', '#3cba40', '#ba3cb4', '#efce29'],
       chart: {
-        width: this.size,
+        width: '100%',
         type: 'pie',
         background: this.backgroundColor,
         redrawOnParentResize: true,
@@ -53,27 +60,18 @@ export default class PieChart {
       },
       dataLabels: {
         style: {
-          offset: -10,
-          fontSize: this.size / 20 + 'px'
+          offset: -10
         }
       },
       labels,
       legend: {
         offsetX: 10
-      },
-      responsive: [
-        {
-          breakpoint: 480,
-          options: {
-            chart: {
-              width: 200
-            },
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      ]
+      }
     };
+  }
+
+  private setChartWidth() {
+    const containerWidth = this.el.nativeElement.offsetWidth;
+    this.renderer.setStyle(this.el.nativeElement.querySelector('apx-chart'), 'width', containerWidth + 'px');
   }
 }

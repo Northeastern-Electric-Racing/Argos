@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 
@@ -14,6 +14,8 @@ export default class LandingPage implements OnInit {
   time = new Date();
   location: string = 'No Location Set';
   constructor(private storage: Storage) {}
+  mobileThreshold = 1000;
+  isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
     setInterval(() => {
@@ -23,5 +25,10 @@ export default class LandingPage implements OnInit {
     this.storage.get(IdentifierDataType.LOCATION).subscribe((value) => {
       [this.location] = value.values || ['No Location Set'];
     });
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

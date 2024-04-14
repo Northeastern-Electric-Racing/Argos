@@ -11,11 +11,10 @@ import { floatPipe } from 'src/utils/pipes.utils';
   styleUrls: ['./motor-info.component.css']
 })
 export default class MotorInfo {
-  motorUsage: number = 70;
-  coolUsage: number = 30;
-  motorTemp: number = 5;
+  motorUsage: number = 100;
+  coolUsage: number = 0;
+  motorTemp: number = 0;
 
-  totalUsage: number = 100;
   piechartData: { value: number; name: string }[] = [];
 
   constructor(private storage: Storage) {}
@@ -29,10 +28,13 @@ export default class MotorInfo {
     this.storage.get(IdentifierDataType.COOL_USAGE).subscribe((value) => {
       this.coolUsage = floatPipe(value.values[0]);
     });
-    this.totalUsage = this.motorUsage + this.coolUsage;
     this.piechartData = [
       { value: this.motorUsage, name: 'Motor' },
       { value: this.coolUsage, name: 'Cooling' }
     ];
+  }
+
+  getTotalUsage(values: number[]) {
+    return values.reduce((acc, value) => acc + value, 0);
   }
 }

@@ -28,7 +28,7 @@ export default class RasberryPi {
       this.cpuTemp = floatPipe(value.values[0]);
     });
     this.storage.get(IdentifierDataType.RAMUsage).subscribe((value) => {
-      this.ramUsage = floatPipe(value.values[0]) / 8000;
+      this.ramUsage = Math.round((1 - floatPipe(value.values[0]) / 8000) * 100);
     });
     this.storage.get(IdentifierDataType.WIFIRSSI).subscribe((value) => {
       this.wifiRSSI = floatPipe(value.values[0]);

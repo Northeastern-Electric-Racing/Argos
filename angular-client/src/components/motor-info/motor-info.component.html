@@ -1,5 +1,5 @@
 <info-background icon="electric_car" title="Motor">
-  <hstack>
+  <hstack style="width: 100%; height: 100%">
     <vstack style="padding-left: 20px">
       <hstack spacing="5px">
         <typography variant="info-value" [content]="motorTemp.toString() + '°'" />
@@ -10,18 +10,18 @@
       <typography variant="info-subtitle" content="Motor Temp" />
     </vstack>
 
-    <div class="divider-line" style="height: 150px"></div>
+    <divider></divider>
 
-    <vstack spacing="0px">
+    <vstack >
       <hstack spacing="0px">
-        <vstack spacing="0px">
+        <vstack spacing="0px" >
           <div class="usage-container">
-            <typography variant="info-value" [content]="totalUsage.toString()" />
-            <typography variant="unit" [content]="'kWh'" />
+            <typography variant="info-value" [content]="getTotalUsage([motorUsage, coolUsage]).toString()" />
+            <typography variant="info-unit" [content]="'kWh'" />
           </div>
           <span class="subsubtitle">Total Consumption</span>
         </vstack>
-        <pie-chart [data]="piechartData" />
+        <pie-chart style="width: 100%" [data]="piechartData" />
       </hstack>
       <div style="display: flex; justify-content: center; align-items: center">
         <typography variant="info-subtitle" content="Motor Power Consumption" />
