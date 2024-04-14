@@ -67,6 +67,7 @@ import { SidebarModule } from 'primeng/sidebar';
 import AppSidebar from './app-sidebar/app-sidebar.component';
 import SidebarChip from 'src/components/sidebar-chip/sidebar-chip.component';
 import SidebarToggle from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import MotorInfo from 'src/components/motor-info/motor-info.component';
 
 @NgModule({
   declarations: [
@@ -121,7 +122,8 @@ import SidebarToggle from 'src/components/sidebar-toggle/sidebar-toggle.componen
     AccelerationGraphs,
     AppSidebar,
     SidebarChip,
-    SidebarToggle
+    SidebarToggle,
+    MotorInfo
   ],
   imports: [
     BrowserModule,
