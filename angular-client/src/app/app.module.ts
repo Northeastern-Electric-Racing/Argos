@@ -67,6 +67,8 @@ import { SidebarModule } from 'primeng/sidebar';
 import AppSidebar from './app-sidebar/app-sidebar.component';
 import SidebarChip from 'src/components/sidebar-chip/sidebar-chip.component';
 import SidebarToggle from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import MotorInfo from 'src/components/motor-info/motor-info.component';
+import LandingPageMobile from 'src/pages/landing-page/landing-page-mobile/landing-page-mobile.component';
 import HandlingPage from 'src/pages/handling/handling-page.component';
 import RideHeightTime from 'src/components/handling-graphs/ride-height-time/ride-height-time.component';
 import SteerPosVsTime from 'src/components/handling-graphs/steerPos-vs-time/steerPos-vs-time.component';
@@ -129,6 +131,8 @@ import { SteerPosVsAccel } from 'src/components/handling-graphs/steerPos-vs-acce
     AppSidebar,
     SidebarChip,
     SidebarToggle,
+    MotorInfo,
+    LandingPageMobile,
     HandlingPage,
     RideHeightTime,
     SteerPosVsTime,
