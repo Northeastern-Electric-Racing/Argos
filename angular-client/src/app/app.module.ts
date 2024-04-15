@@ -69,6 +69,10 @@ import SidebarChip from 'src/components/sidebar-chip/sidebar-chip.component';
 import SidebarToggle from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import MotorInfo from 'src/components/motor-info/motor-info.component';
 import LandingPageMobile from 'src/pages/landing-page/landing-page-mobile/landing-page-mobile.component';
+import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop-content/raspberry-pi-desktop.component';
+import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
+import BatteryInfoDesktop from 'src/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
+import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
 
 @NgModule({
   declarations: [
@@ -125,7 +129,11 @@ import LandingPageMobile from 'src/pages/landing-page/landing-page-mobile/landin
     SidebarChip,
     SidebarToggle,
     MotorInfo,
-    LandingPageMobile
+    LandingPageMobile,
+    RaspberryPiDesktop,
+    RaspberryPiMobile,
+    BatteryInfoDesktop,
+    BatteryInfoMobile
   ],
   imports: [
     BrowserModule,

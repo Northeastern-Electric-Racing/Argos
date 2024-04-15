@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -15,8 +15,8 @@ export default class RasberryPi {
   wifiRSSI: number = 0;
   mcs: number = 0;
 
-  colorRed = '#FF0000';
-  colorPurple = '#800080';
+  mobileThreshold = 650;
+  isMobile = window.innerWidth < this.mobileThreshold;
 
   constructor(private storage: Storage) {}
 
@@ -36,5 +36,10 @@ export default class RasberryPi {
     this.storage.get(IdentifierDataType.MCS).subscribe((value) => {
       this.mcs = floatPipe(value.values[0]);
     });
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

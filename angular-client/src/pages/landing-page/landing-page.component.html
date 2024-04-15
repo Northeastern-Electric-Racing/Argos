@@ -1,5 +1,5 @@
 <div class="image-container" style="margin-right: 16px; margin-left: 16px">
-  <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px;" />
+  <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px" />
 
   <landing-page-mobile style="width: 100%" *ngIf="isMobile; else isDesktop" [time]="time" />
   <ng-template #isDesktop>
@@ -41,8 +41,8 @@
         </vstack>
       </hstack>
 
-      <hstack style="width: 100%; height: 250px">
-        <raspberry-pi style="width: 80%; height: 250px" />
+      <hstack style="width: 100%">
+        <raspberry-pi style="width: 80%" />
         <brake-pressure-display style="height: 250px; width: 20%" />
       </hstack>
 

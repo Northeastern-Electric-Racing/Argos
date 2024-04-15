@@ -1,50 +1,20 @@
 <info-background icon="memory" title="Rasberry Pi">
-  <hstack style="width: 100%; height: 100%">
-    <vstack style="width: 20%">
-      <circular-percentage [percentage]="cpuUsage" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
-
-      <typography variant="info-subtitle" content="CPU Usage" />
-    </vstack>
-    <divider></divider>
-
-    <vstack style="width: 20%">
-      <hstack>
-        <typography variant="info-value" [content]="cpuTemp.toString() + '°'" />
-        <div class="thermometer-container">
-          <thermometer [temperature]="cpuTemp" [min]="-15" [max]="30" />
-        </div>
-      </hstack>
-      <typography variant="info-subtitle" content="CPU Temp" />
-    </vstack>
-
-    <divider></divider>
-
-    <vstack style="width: 20%">
-      <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
-      <div style="display: flex; justify-content: center; align-items: center">
-        <typography variant="info-subtitle" content="RAM Usage" />
-      </div>
-    </vstack>
-
-    <divider></divider>
-
-    <vstack style="width: 20%">
-      <hstack style="height: 110px">
-        <typography variant="info-value" [content]="wifiRSSI.toString()" />
-        <div>
-          <mat-icon>wifi</mat-icon>
-          <span class="wifi-dbm-unit">dBM</span>
-        </div>
-      </hstack>
-      <typography variant="info-subtitle" content="Wi-Fi RSSI" />
-    </vstack>
-    <divider></divider>
-
-    <vstack style="width: 20%">
-      <hstack style="height: 110px">
-        <typography variant="info-value" [content]="mcs.toString()" />
-      </hstack>
-      <typography variant="info-subtitle" content="MCS" />
-    </vstack>
-  </hstack>
+  <raspberry-pi-mobile
+    *ngIf="isMobile; else isDesktop"
+    style="width: 100%"
+    [cpuTemp]="cpuTemp"
+    [cpuUsage]="cpuUsage"
+    [ramUsage]="ramUsage"
+    [wifiRSSI]="wifiRSSI"
+    [mcs]="mcs"
+  ></raspberry-pi-mobile>
+  <ng-template #isDesktop>
+    <raspberry-pi-desktop
+      style="width: 100%"
+      [cpuUsage]="cpuUsage"
+      [ramUsage]="ramUsage"
+      [wifiRSSI]="wifiRSSI"
+      [mcs]="mcs"
+    ></raspberry-pi-desktop>
+  </ng-template>
 </info-background>
