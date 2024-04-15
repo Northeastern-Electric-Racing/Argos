@@ -11,5 +11,4 @@ export default class BatteryInfoDesktop {
   @Input() stateOfCharge: number = 0;
   @Input() chargeCurrentLimit: number = 0;
   @Input() dischargeCurrentLimit: number = 0;
-
 }

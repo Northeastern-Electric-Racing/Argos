@@ -6,5 +6,5 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./landing-page-mobile.component.css']
 })
 export default class LandingPageMobile {
-   @Input() time!: Date
+  @Input() time!: Date;
 }
