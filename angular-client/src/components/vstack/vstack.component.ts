@@ -6,5 +6,6 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./vstack.component.css']
 })
 export default class VStack {
-  @Input() spacing: string = '20px';
+  @Input() spacing: string = '5px';
+  @Input() align: string = 'center';
 }

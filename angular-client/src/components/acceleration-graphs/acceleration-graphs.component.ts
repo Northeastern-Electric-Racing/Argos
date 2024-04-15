@@ -22,14 +22,16 @@ export class AccelerationGraphs implements OnInit {
   xMax: number = 0;
   yMax: number = 0;
 
+  maxDataPoints = 400;
+
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.storage.get(IdentifierDataType.ACCELERATION).subscribe((value) => {
+    this.storage.get(IdentifierDataType.XYZAccel).subscribe((value) => {
       const x1 = decimalPipe(value.values[0]);
       const y1 = decimalPipe(value.values[1]);
       const time = decimalPipe(value.time);
-
+      console.log(value.values);
       this.xData.push({
         x: time,
         y: x1
@@ -41,12 +43,11 @@ export class AccelerationGraphs implements OnInit {
       });
 
       //limits the data storage to 400 to prevent lag
-      if (this.xData.length > 400) {
+      if (this.xData.length > this.maxDataPoints) {
         this.xData = this.xData.slice(1);
-        console.log('hi');
       }
 
-      if (this.yData.length > 400) {
+      if (this.yData.length > this.maxDataPoints) {
         this.yData = this.yData.slice(1);
       }
 

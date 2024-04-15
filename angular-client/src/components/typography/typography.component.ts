@@ -44,11 +44,20 @@ export default class Typography implements OnInit {
       case 'value':
         this.style = Theme.value;
         break;
+      case 'info-value-mobile':
+        this.style = Theme.infoValueMobile;
+        break;
       case 'info-value':
         this.style = Theme.infoValue;
         break;
-      case 'unit':
-        this.style = Theme.unit;
+      case 'info-unit':
+        this.style = Theme.infoUnit;
+        break;
+      case 'sidebar-label':
+        this.style = Theme.sidebarLabel;
+        break;
+      case 'x-large-title':
+        this.style = Theme.xLargeHeader;
         break;
     }
 

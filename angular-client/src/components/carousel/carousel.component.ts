@@ -17,6 +17,9 @@ export class Carousel {
   runs: Run[];
   currentIndex: number = 0;
   previousIndex: number = 0;
+  selectRun: (run: Run) => void = () => {
+    this.dialogRef.close();
+  };
 
   responsiveOptions: any[] | undefined;
 
@@ -26,6 +29,10 @@ export class Carousel {
     public router: Router
   ) {
     this.runs = config.data.runs;
+    this.selectRun = (run: Run) => {
+      this.dialogRef.close();
+      config.data.selectRun(run);
+    };
   }
 
   updateIndex(nexIndex: number) {
@@ -53,10 +60,5 @@ export class Carousel {
   datePipe = (date: Date) => {
     date = new Date(date);
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}`;
-  };
-
-  selectRun = (run: Run, index: number) => {
-    this.router.navigate([`graph/false/${run.id}`]);
-    this.dialogRef.close();
   };
 }

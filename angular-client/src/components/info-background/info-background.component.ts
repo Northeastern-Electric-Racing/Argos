@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import Theme from 'src/services/theme.service';
 
 /**
  * Component that is essentially the template/background for
@@ -13,7 +14,7 @@ import { Component, Input } from '@angular/core';
 export class InfoBackgroundComponent {
   @Input() icon?: string;
   @Input() svgIcon?: string;
-  @Input() backgroundColor?: string = '#414141';
+  @Input() backgroundColor?: string = Theme.infoBackground;
   @Input() title!: string;
   @Input() onClick!: () => void;
 }

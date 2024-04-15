@@ -2,7 +2,7 @@ export enum DataType {
   PackTemp = 'Pack Temp',
   MotorTemp = 'Motor Temp',
   PackSOC = 'Pack SOC',
-  Accel = 'Acceleration',
+  XYZAccel = 'XYZAcceleration',
   Points = 'Points',
   Driver = 'Driver',
   SteeringAngle = 'Steering Angle',
@@ -10,11 +10,17 @@ export enum DataType {
   Location = 'Location',
   Voltage = 'Voltage',
   Radius = 'Radius',
-  CPUUsage = 'CPU Usage',
-  CPUTemp = 'CPU Temp',
-  RAMUsage = 'Ram Usage',
-  WIFIRSSI = 'WIFIRSSI',
-  MCS = 'MCS'
+  CPUUsage = 'OnBoard-CpuUsage',
+  CPUTemp = 'OnBoard-CpuTemp',
+  RAMUsage = 'OnBoard-MemAvailable',
+  WIFIRSSI = 'HaLow-RSSI',
+  MCS = 'HaLow-ApMCS',
+  Acceleration = 'Acceleration',
+  CCL = 'Charge Current Limit',
+  DCL = 'Discharge Current Limit',
+  Brake_Pressure = 'Brake Pressure',
+  Torque = 'Torque',
+  SPEED = 'Speed'
 }
 
 //the format of mock data on mock proxy client for numerical values

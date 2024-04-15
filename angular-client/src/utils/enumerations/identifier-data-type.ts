@@ -11,10 +11,17 @@ export enum IdentifierDataType {
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
   VOLTAGE = 'Voltage',
-  CPU_USAGE = 'CPU Usage',
-  CPU_TEMP = 'CPU Temp',
-  RAM_USAGE = 'RAM Usage',
-  WIFI_RSSI = 'WIFI RSSI',
-  MCS = 'MCS',
-  ACCELERATION = 'Acceleration'
+  VIEWERS = 'Viewers',
+  SPEED = 'Speed',
+  TORQUE = 'Torque',
+  BRAKE_PRESSURE = 'Brake Pressure',
+  CPUUsage = 'OnBoard-CpuUsage',
+  CPUTemp = 'OnBoard-CpuTemp',
+  RAMUsage = 'OnBoard-MemAvailable',
+  WIFIRSSI = 'HaLow-RSSI',
+  MCS = 'HaLow-ApMCS',
+  ACCELERATION = 'Acceleration',
+  CHARGE_CURRENT_LIMIT = 'Charge Current Limit',
+  DISCHARGE_CURRENT_LIMIT = 'Discharge Current Limit',
+  XYZAccel = 'XYZAcceleration'
 }

@@ -1,7 +1,7 @@
 <div class="container" (click)="onClick()" [style]="{ 'background-color': backgroundColor }">
   <div *ngIf="title" class="title">
-    <mat-icon *ngIf="icon" aria-hidden="false" fontIcon="{{ icon }}"></mat-icon>
-    <mat-icon *ngIf="svgIcon" aria-hidden="false" svgIcon="{{ svgIcon }}"></mat-icon>
+    <mat-icon *ngIf="icon" aria-hidden="false" [fontIcon]="icon"></mat-icon>
+    <mat-icon *ngIf="svgIcon" aria-hidden="false" [svgIcon]="svgIcon"></mat-icon>
     <typography variant="info-title" content="{{ title }}" />
   </div>
   <typography *ngIf="onClick" variant="info-subtitle" content="Click for more details" />

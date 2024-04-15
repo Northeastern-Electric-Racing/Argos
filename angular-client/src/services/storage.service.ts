@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { DataValue, StorageMap } from 'src/utils/socket.utils';
 
 /**
@@ -8,7 +8,8 @@ import { DataValue, StorageMap } from 'src/utils/socket.utils';
 @Injectable({ providedIn: 'root' })
 export default class Storage {
   private storage: StorageMap;
-  private currentRunId?: number;
+  private currentRunId = new BehaviorSubject<number | undefined>(undefined);
+
   private resolution: number = 100;
 
   constructor() {
@@ -29,12 +30,12 @@ export default class Storage {
     subject.next(value);
   };
 
-  public getCurrentRunId = (): number | undefined => {
+  public getCurrentRunId = () => {
     return this.currentRunId;
   };
 
-  public setCurrentRunId = (runId: number) => {
-    this.currentRunId = runId;
+  public setCurrentRunId = (runId?: number) => {
+    this.currentRunId.next(runId);
   };
 
   public setResolution = (resolution: number) => {

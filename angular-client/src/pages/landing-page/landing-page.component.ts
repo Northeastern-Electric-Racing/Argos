@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
-import { floatPipe } from 'src/utils/pipes.utils';
 
 /**
  * Container for the landing page, obtains data from the storage service.
@@ -12,38 +11,24 @@ import { floatPipe } from 'src/utils/pipes.utils';
   templateUrl: './landing-page.component.html'
 })
 export default class LandingPage implements OnInit {
-  currentDriver: string = 'No Driver Selected';
-  currentLocation: string = 'No Location Selected';
-  currentSystem: string = 'No System Selected';
-  packTemp: number = 0;
-  motorTemp: number = 0;
-  stateOfCharge: number = 0;
-  latency: number = 0;
-
+  time = new Date();
+  location: string = 'No Location Set';
   constructor(private storage: Storage) {}
+  mobileThreshold = 1000;
+  isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
-    this.storage.get(IdentifierDataType.DRIVER).subscribe((value) => {
-      [this.currentDriver] = value.values;
-    });
-    this.storage.get(IdentifierDataType.LOCATION).subscribe((value) => {
-      [this.currentLocation] = value.values;
-    });
-    this.storage.get(IdentifierDataType.SYSTEM).subscribe((value) => {
-      [this.currentSystem] = value.values;
-    });
+    setInterval(() => {
+      this.time = new Date();
+    }, 1000);
 
-    this.storage.get(IdentifierDataType.PACK_TEMP).subscribe((value) => {
-      this.packTemp = floatPipe(value.values[0]);
+    this.storage.get(IdentifierDataType.LOCATION).subscribe((value) => {
+      [this.location] = value.values || ['No Location Set'];
     });
-    this.storage.get(IdentifierDataType.MOTOR_TEMP).subscribe((value) => {
-      this.motorTemp = floatPipe(value.values[0]);
-    });
-    this.storage.get(IdentifierDataType.STATE_OF_CHARGE).subscribe((value) => {
-      this.stateOfCharge = floatPipe(value.values[0]);
-    });
-    this.storage.get(IdentifierDataType.LATENCY).subscribe((value) => {
-      this.latency = floatPipe(value.values[0]);
-    });
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

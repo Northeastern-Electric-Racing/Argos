@@ -1,13 +1,14 @@
 import { Socket } from 'socket.io-client';
 import { DataValue, ServerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
+import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 
 /**
  * Service for interacting with the socket
  */
 export default class SocketService {
   private socket: Socket;
-  private lastTimestamp: number = 0;
+  private lastLatencyTimestamp: number = 0;
 
   /**
    * Constructor
@@ -22,8 +23,6 @@ export default class SocketService {
    */
   receiveData = (storage: Storage) => {
     this.socket.on('message', (message: string) => {
-      // if (Date.now() - this.lastTimestamp < storage.getResolution()) return;
-      this.lastTimestamp = Date.now();
       try {
         /* Parse the message and store it in the storage service */
 
@@ -32,12 +31,26 @@ export default class SocketService {
 
         /* Create key based on name and unit for hashmap */
         const key = data.name;
-
+        console.log(key);
         const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
+        if (Date.now() - this.lastLatencyTimestamp > 1000) {
+          console.log(Date.now(), data.timestamp);
+          const latency = Date.now() - data.timestamp;
+          storage.addValue(IdentifierDataType.LATENCY, {
+            values: [latency.toString()],
+            time: data.timestamp.toString(),
+            unit: 'ms'
+          });
+          this.lastLatencyTimestamp = Date.now();
+        }
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
+    });
+
+    this.socket.on('disconnect', () => {
+      storage.setCurrentRunId(undefined);
     });
   };
 

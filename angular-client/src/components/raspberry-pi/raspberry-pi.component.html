@@ -1,0 +1,20 @@
+<info-background icon="memory" title="Rasberry Pi">
+  <raspberry-pi-mobile
+    *ngIf="isMobile; else isDesktop"
+    style="width: 100%"
+    [cpuTemp]="cpuTemp"
+    [cpuUsage]="cpuUsage"
+    [ramUsage]="ramUsage"
+    [wifiRSSI]="wifiRSSI"
+    [mcs]="mcs"
+  ></raspberry-pi-mobile>
+  <ng-template #isDesktop>
+    <raspberry-pi-desktop
+      style="width: 100%"
+      [cpuUsage]="cpuUsage"
+      [ramUsage]="ramUsage"
+      [wifiRSSI]="wifiRSSI"
+      [mcs]="mcs"
+    ></raspberry-pi-desktop>
+  </ng-template>
+</info-background>

@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
-import { getRunById } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -15,9 +14,7 @@ import { DataType, GraphData, Node, Run } from 'src/utils/types.utils';
   styleUrls: ['./graph-page.component.css']
 })
 export default class GraphPage implements OnInit {
-  paramsError?: Error;
-  runId?: number;
-  realTime!: boolean;
+  realTime: boolean = true;
 
   nodes?: Node[];
   nodesIsLoading = true;
@@ -25,7 +22,6 @@ export default class GraphPage implements OnInit {
   nodesError?: Error;
 
   run?: Run;
-  runIsLoading = true;
 
   previousDataType?: DataType;
 
@@ -40,13 +36,11 @@ export default class GraphPage implements OnInit {
   constructor(
     private serverService: APIService,
     private storage: Storage,
-    private route: ActivatedRoute
+    private toastService: MessageService
   ) {}
 
   ngOnInit(): void {
-    this.parseParams();
     this.queryNodes();
-    this.queryRuns();
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
@@ -66,13 +60,13 @@ export default class GraphPage implements OnInit {
           this.currentValue.next(value);
           this.selectedDataTypeValuesSubject.next(nextValue);
         });
-      } else if (this.runId) {
+      } else if (this.run !== undefined) {
         this.selectedDataTypeValuesIsLoading = true;
         this.selectedDataTypeValuesIsError = false;
         this.selectedDataTypeValuesError = undefined;
 
         const dataQueryResponse = this.serverService.query<DataValue[]>(() =>
-          getDataByDataTypeNameAndRunId(dataType.name, this.runId!)
+          getDataByDataTypeNameAndRunId(dataType.name, this.run!.id)
         );
         dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
           this.selectedDataTypeValuesIsLoading = isLoading;
@@ -86,9 +80,24 @@ export default class GraphPage implements OnInit {
           this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
           this.currentValue.next(data.pop());
         });
+      } else {
+        this.toastService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No run selected Please select a run. Choose most recent for real time.'
+        });
       }
     };
   }
+
+  onRunSelected = (run: Run) => {
+    this.run = run;
+    this.realTime = run.id === this.storage.getCurrentRunId().value;
+    this.selectedDataTypeValuesSubject.next([]);
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
+  };
 
   /**
    * Queries the nodes from the server.
@@ -105,48 +114,6 @@ export default class GraphPage implements OnInit {
     nodeQueryResponse.data.subscribe((data: Node[]) => {
       this.nodes = data;
     });
-  }
-
-  /**
-   * Queries the runs from the server.
-   */
-  private queryRuns() {
-    if (!this.runId) {
-      return;
-    }
-    const runQueryResponse = this.serverService.query<Run>(() => getRunById(this.runId!));
-
-    runQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.runIsLoading = isLoading;
-    });
-
-    runQueryResponse.data.subscribe((run) => {
-      this.run = run;
-    });
-  }
-
-  private parseParams() {
-    const realTime = this.route.snapshot.paramMap.get('realTime');
-    if (realTime) this.realTime = realTime === 'true';
-    else {
-      this.paramsError = new Error('No real time value provided');
-      return;
-    }
-    const runId = this.route.snapshot.paramMap.get('runId');
-    if (runId) {
-      if (runId === 'undefined' && this.realTime) {
-        this.paramsError = new Error('No Real Time Data Available');
-        return;
-      }
-      this.runId = parseInt(runId);
-      if (isNaN(this.runId)) {
-        this.paramsError = new Error('Run Id must be a number');
-        return;
-      }
-    } else {
-      this.paramsError = new Error('No run id provided');
-      return;
-    }
   }
 
   /**
