@@ -14,7 +14,7 @@ export class BatteryInfoDisplay {
   stateOfCharge: number = 0;
   chargeCurrentLimit: number = 0;
   dischargeCurrentLimit: number = 0;
-  mobileThreshold = 600;
+  mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   constructor(private storage: Storage) {}

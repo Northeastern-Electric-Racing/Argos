@@ -1,7 +1,7 @@
 <hstack style="width: 100%; height: 100%" spacing="10px">
   <vstack style="width: 33%">
     <hstack>
-      <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
+      <typography variant="info-value-mobile" [content]="stateOfCharge.toString() + '%'" />
       <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
     </hstack>
     <typography variant="info-subtitle" content="Charge State" />
@@ -10,7 +10,7 @@
   <divider style="height: 100px"></divider>
   <vstack style="width: 33%">
     <hstack>
-      <typography variant="info-value" [content]="packTemp.toString() + '°'" />
+      <typography variant="info-value-mobile" [content]="packTemp.toString() + '°'" />
       <div class="thermometer-container">
         <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />
       </div>

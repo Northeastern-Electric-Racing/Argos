@@ -15,7 +15,7 @@ export default class RasberryPi {
   wifiRSSI: number = 0;
   mcs: number = 0;
 
-  mobileThreshold = 650;
+  mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   constructor(private storage: Storage) {}
