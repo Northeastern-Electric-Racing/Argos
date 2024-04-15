@@ -1,0 +1,24 @@
+<div class="image-container" style="margin-right: 16px; margin-left: 16px">
+  <vstack spacing="20px">
+    <hstack style="width: 100%" spacing="1000px">
+      <hstack spacing="20px">
+        <sidebar-toggle />
+        <typography style="width: 100%; text-align: center" variant="large-header" [content]="time | date: 'HH:mm:ss'" />
+      </hstack>
+      <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
+    </hstack>
+
+    <hstack>
+      <long-vs-lat></long-vs-lat>
+      <gas-brake-pos></gas-brake-pos>
+      <ride-height-time></ride-height-time>
+    </hstack>
+
+    <hstack>
+      <shot-vs-time></shot-vs-time>
+      <steerPos-vs-time></steerPos-vs-time>
+      <steerPos-vs-accel></steerPos-vs-accel>
+    </hstack>
+  </vstack>
+  <p>bruh</p>
+</div>

@@ -67,6 +67,13 @@ import { SidebarModule } from 'primeng/sidebar';
 import AppSidebar from './app-sidebar/app-sidebar.component';
 import SidebarChip from 'src/components/sidebar-chip/sidebar-chip.component';
 import SidebarToggle from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import HandlingPage from 'src/pages/handling/handling-page.component';
+import RideHeightTime from 'src/components/handling-graphs/ride-height-time/ride-height-time.component';
+import SteerPosVsTime from 'src/components/handling-graphs/steerPos-vs-time/steerPos-vs-time.component';
+import ShotVsTime from 'src/components/handling-graphs/shot-vs-time/shot-vs-time.component';
+import { LongVsLat } from 'src/components/handling-graphs/long-vs-lat/long-vs-lat.component';
+import GasBrakePos from 'src/components/handling-graphs/gas-brake-pos/gas-brake-pos.component';
+import { SteerPosVsAccel } from 'src/components/handling-graphs/steerPos-vs-accel/steerPos-vs-accel.component';
 
 @NgModule({
   declarations: [
@@ -121,7 +128,14 @@ import SidebarToggle from 'src/components/sidebar-toggle/sidebar-toggle.componen
     AccelerationGraphs,
     AppSidebar,
     SidebarChip,
-    SidebarToggle
+    SidebarToggle,
+    HandlingPage,
+    RideHeightTime,
+    SteerPosVsTime,
+    ShotVsTime,
+    LongVsLat,
+    GasBrakePos,
+    SteerPosVsAccel
   ],
   imports: [
     BrowserModule,

@@ -21,5 +21,9 @@ export enum IdentifierDataType {
   ACCELERATION = 'Acceleration',
   CHARGE_CURRENT_LIMIT = 'Charge Current Limit',
   DISCHARGE_CURRENT_LIMIT = 'Discharge Current Limit',
-  XYZAccel = 'XYZAcceleration'
+  XYZAccel = 'XYZAcceleration',
+  RIDEHEIGHT = 'Ride Height',
+  SHOT = 'Shot Compressor',
+  GASPOS = 'Gas Pedal Position',
+  BRAKEPOS = 'Brake Pedal Position'
 }
