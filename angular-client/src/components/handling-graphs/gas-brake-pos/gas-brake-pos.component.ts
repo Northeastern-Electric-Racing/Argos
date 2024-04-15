@@ -16,7 +16,7 @@ export default class GasBrakePos implements OnInit {
   // currently info-graph and graph component hardcoded to do only single line, line charts.
   // instead of having GraphData as x,y then setting series = {name: blah, data = data} inside graphcomponent
   // i think have option for incoming graph component data be an additional type called SeriesData that is series form
-  // {name: blah, data = data}[] and then act accordingly based off given type
+  // {name: blah, data = data}[] and then act accordingly based off given type.
   data: { name: string; data: GraphData[] }[] = [];
   maxDataPoints = 200;
 
