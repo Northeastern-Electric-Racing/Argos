@@ -76,6 +76,7 @@ import ShotVsTime from 'src/components/handling-graphs/shot-vs-time/shot-vs-time
 import { LongVsLat } from 'src/components/handling-graphs/long-vs-lat/long-vs-lat.component';
 import GasBrakePos from 'src/components/handling-graphs/gas-brake-pos/gas-brake-pos.component';
 import { SteerPosVsAccel } from 'src/components/handling-graphs/steerPos-vs-accel/steerPos-vs-accel.component';
+import { HandlingPaginator } from 'src/components/handling-paginator/handling-paginator.component';
 
 @NgModule({
   declarations: [
@@ -139,7 +140,8 @@ import { SteerPosVsAccel } from 'src/components/handling-graphs/steerPos-vs-acce
     ShotVsTime,
     LongVsLat,
     GasBrakePos,
-    SteerPosVsAccel
+    SteerPosVsAccel,
+    HandlingPaginator
   ],
   imports: [
     BrowserModule,

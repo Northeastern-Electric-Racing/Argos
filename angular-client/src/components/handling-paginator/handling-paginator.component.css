@@ -1,0 +1,15 @@
+.handling-paginator {
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.handling-paginator:hover {
+  border: 2px solid white;
+}

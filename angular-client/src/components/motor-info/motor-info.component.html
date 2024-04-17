@@ -9,12 +9,10 @@
       </hstack>
       <typography variant="info-subtitle" content="Motor Temp" />
     </vstack>
-
     <divider></divider>
-
-    <vstack >
+    <vstack>
       <hstack spacing="0px">
-        <vstack spacing="0px" >
+        <vstack spacing="0px">
           <div class="usage-container">
             <typography variant="info-value" [content]="getTotalUsage([motorUsage, coolUsage]).toString()" />
             <typography variant="info-unit" [content]="'kWh'" />
