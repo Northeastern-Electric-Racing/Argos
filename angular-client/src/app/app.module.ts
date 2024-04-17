@@ -77,6 +77,10 @@ import { LongVsLat } from 'src/components/handling-graphs/long-vs-lat/long-vs-la
 import GasBrakePos from 'src/components/handling-graphs/gas-brake-pos/gas-brake-pos.component';
 import { SteerPosVsAccel } from 'src/components/handling-graphs/steerPos-vs-accel/steerPos-vs-accel.component';
 import { HandlingPaginator } from 'src/components/handling-paginator/handling-paginator.component';
+import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop-content/raspberry-pi-desktop.component';
+import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
+import BatteryInfoDesktop from 'src/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
+import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
 
 @NgModule({
   declarations: [
@@ -141,7 +145,11 @@ import { HandlingPaginator } from 'src/components/handling-paginator/handling-pa
     LongVsLat,
     GasBrakePos,
     SteerPosVsAccel,
-    HandlingPaginator
+    HandlingPaginator,
+    RaspberryPiDesktop,
+    RaspberryPiMobile,
+    BatteryInfoDesktop,
+    BatteryInfoMobile
   ],
   imports: [
     BrowserModule,

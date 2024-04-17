@@ -1,6 +1,7 @@
 import { Component, ElementRef, Input, Renderer2 } from '@angular/core';
 
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill } from 'ng-apexcharts';
+import Theme from 'src/services/theme.service';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -18,7 +19,7 @@ export type ChartOptions = {
 export default class PieChart {
   public chartOptions!: Partial<ChartOptions> | any;
   @Input() data: { value: number; name: string }[] = [];
-  @Input() backgroundColor: string = '#414141';
+  @Input() backgroundColor: string = Theme.infoBackground;
   currentWidth: number = 0;
 
   constructor(

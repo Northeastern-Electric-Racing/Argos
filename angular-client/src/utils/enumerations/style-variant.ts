@@ -9,6 +9,8 @@ export type StyleVariant =
   | 'info-title'
   | 'info-subtitle'
   | 'value'
+  | 'info-value-mobile'
   | 'info-value'
   | 'info-unit'
-  | 'sidebar-label';
+  | 'sidebar-label'
+  | 'x-large-title';
