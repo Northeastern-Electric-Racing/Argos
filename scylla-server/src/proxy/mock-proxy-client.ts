@@ -31,7 +31,6 @@ const baseMockData: MockData[] = [
     min: 0,
     max: 100
   },
-
   {
     name: DataType.XYZAccel,
     unit: Unit.G,

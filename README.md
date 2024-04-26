@@ -22,15 +22,16 @@ cd into the scylla-server, and run the following commands:
 
 `npm install`
 
-If it's your first time setting up the repo locally, run:
-
-Add the database source url to your .env variable
+Add this database source url to your .env variable:
+`SOURCE_DATABASE_URL="postgresql://postgres:password@localhost:5432/timescaledb"`
 
 If connecting to Siren, set PROD=true in your .env variabe and add the PROD_SIREN_HOST_URL to your .env file as well, this is the host name for connecting to the mqtt server. 
 
 run `docker-compose up` to pull the images from docker hub and start them. 
 
 You can then go into docker desktop and stop the server and the client but leave the timescale database running. 
+
+You can also run `docker-compose up odyssey-timescale` to only start the database
 
 then run:
 
@@ -40,7 +41,7 @@ then run:
 
 Then to actually run the server run:
 
-`npm run start`
+`npm start`
 
 ### Running the Project in Prod Mode
 
