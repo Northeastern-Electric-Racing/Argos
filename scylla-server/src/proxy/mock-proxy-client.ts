@@ -9,7 +9,7 @@ import ProxyClient from './proxy-client';
  */
 const baseMockData: MockData[] = [
   {
-    name: DataType.PackTemp,
+    name: DataType.PACK_TEMP,
     unit: Unit.CELSIUS,
     vals: [0],
     min: -20,
@@ -17,7 +17,7 @@ const baseMockData: MockData[] = [
   },
 
   {
-    name: DataType.MotorTemp,
+    name: DataType.MOTOR_TEMP,
     unit: Unit.CELSIUS,
     vals: [0],
     min: -20,
@@ -25,7 +25,7 @@ const baseMockData: MockData[] = [
   },
 
   {
-    name: DataType.PackSOC,
+    name: DataType.STATE_OF_CHARGE,
     unit: Unit.PERCENT,
     vals: [0],
     min: 0,
@@ -40,21 +40,21 @@ const baseMockData: MockData[] = [
   },
 
   {
-    name: DataType.Points,
+    name: DataType.POINTS,
     unit: Unit.COORD,
     vals: [0, 0],
     min: -90,
     max: 90
   },
   {
-    name: DataType.SteeringAngle,
+    name: DataType.STEERING_ANGLE,
     unit: Unit.DEGREES,
     vals: [0],
     min: 0,
     max: 360
   },
   {
-    name: DataType.Voltage,
+    name: DataType.VOLTAGE,
     unit: Unit.VOLTS,
     vals: [0],
     min: 0,
@@ -96,35 +96,35 @@ const baseMockData: MockData[] = [
     max: 100
   },
   {
-    name: DataType.Acceleration,
+    name: DataType.ACCELERATION,
     unit: Unit.METERS_PER_SECOND_SQUARED,
     vals: [0],
     min: 0,
     max: 100
   },
   {
-    name: DataType.CCL,
+    name: DataType.CHARGE_CURRENT_LIMIT,
     unit: Unit.AMPERAGE,
     vals: [0],
     min: 0,
     max: 300
   },
   {
-    name: DataType.DCL,
+    name: DataType.DISCHARGE_CURRENT_LIMIT,
     unit: Unit.AMPERAGE,
     vals: [0],
     min: 0,
     max: 300
   },
   {
-    name: DataType.Brake_Pressure,
+    name: DataType.BRAKE_PRESSURE,
     unit: Unit.PSI,
     vals: [0],
     min: 0,
     max: 100
   },
   {
-    name: DataType.Torque,
+    name: DataType.TORQUE,
     unit: Unit.NEWTON_METERS,
     vals: [0],
     min: 0,
@@ -144,13 +144,13 @@ const baseMockData: MockData[] = [
  */
 const baseStringData: MockStringData[] = [
   {
-    name: DataType.Driver,
+    name: DataType.DRIVER,
     units: Unit.STRING,
     vals: ['Fergus']
   },
 
   {
-    name: DataType.Driver,
+    name: DataType.LOCATION,
     units: Unit.STRING,
     vals: ['Max']
   }

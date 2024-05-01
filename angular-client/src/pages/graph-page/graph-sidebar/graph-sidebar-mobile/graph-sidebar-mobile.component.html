@@ -5,6 +5,7 @@
     content="Select Data Type"
   />
   <div *ngIf="showSelection" class="container" @toggleSidebar>
+    <run-selector style="text-align: center" [selectRun]="onRunSelected" />
     <div *ngFor="let node of nodesWithVisibilityToggle" class="subcontainer">
       <sidebar-card
         [title]="node.name"

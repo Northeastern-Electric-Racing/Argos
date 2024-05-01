@@ -31,11 +31,11 @@ export default class SocketService {
 
         /* Create key based on name and unit for hashmap */
         const key = data.name;
-        console.log(key);
+        // console.log(key);
         const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
         if (Date.now() - this.lastLatencyTimestamp > 1000) {
-          console.log(Date.now(), data.timestamp);
+          // console.log(Date.now(), data.timestamp);
           const latency = Date.now() - data.timestamp;
           storage.addValue(IdentifierDataType.LATENCY, {
             values: [latency.toString()],

@@ -31,7 +31,6 @@ export class AccelerationGraphs implements OnInit {
       const x1 = decimalPipe(value.values[0]);
       const y1 = decimalPipe(value.values[1]);
       const time = decimalPipe(value.time);
-      console.log(value.values);
       this.xData.push({
         x: time,
         y: x1

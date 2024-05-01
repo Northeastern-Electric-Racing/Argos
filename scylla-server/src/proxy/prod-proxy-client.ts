@@ -32,7 +32,7 @@ export default class ProdProxyClient implements ProxyClient {
   recentLocationName: string | undefined;
   newLocation: boolean = true;
   topicTimerMap: Map<string, number> = new Map();
-  refreshRate: number = 0;
+  refreshRate: number = 100;
   batches: Map<string, ServerMessage[]> = new Map();
   upsertedNodes: Set<string> = new Set();
   upsertedDataTypes: Set<string> = new Set();
@@ -158,13 +158,13 @@ export default class ProdProxyClient implements ProxyClient {
     // iterating and upserting
     const serverdata = data.data;
     switch (data.dataType) {
-      case DataType.Driver:
+      case DataType.DRIVER:
         [driverName] = serverdata.values;
         break;
-      case DataType.System:
+      case DataType.SYSTEM:
         [systemName] = serverdata.values;
         break;
-      case DataType.Location:
+      case DataType.LOCATION:
         if (this.recentLocationName) {
           if (this.recentLocationName !== serverdata.values[0]) {
             this.newLocation = true;
@@ -174,11 +174,11 @@ export default class ProdProxyClient implements ProxyClient {
           this.newLocation = true;
         }
         break;
-      case DataType.Points:
+      case DataType.POINTS:
         this.recentLatitude = parseFloat(serverdata.values[0]);
         this.recentLongitude = parseFloat(serverdata.values[1]);
         break;
-      case DataType.Radius:
+      case DataType.RADIUS:
         this.recentRadius = parseFloat(serverdata.values[0]);
         break;
       default:

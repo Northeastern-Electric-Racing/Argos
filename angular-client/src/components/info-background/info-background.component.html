@@ -4,6 +4,11 @@
     <mat-icon *ngIf="svgIcon" aria-hidden="false" [svgIcon]="svgIcon"></mat-icon>
     <typography variant="info-title" content="{{ title }}" />
   </div>
-  <typography *ngIf="onClick" variant="info-subtitle" content="Click for more details" />
+  <typography
+    *ngIf="onClick"
+    additionalStyles="text-align: left;"
+    variant="info-subtitle"
+    content="Click for more details"
+  />
   <ng-content></ng-content>
 </div>
