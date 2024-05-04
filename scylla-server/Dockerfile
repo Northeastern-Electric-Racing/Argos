@@ -14,7 +14,7 @@ COPY . .
 # Initialize for git submodules
 RUN git init
 RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey-Base.git ./src/odyssey-base && \
-    git submodule update --init --recursive
+    git submodule update --init --recursive --remote
 
 RUN npm run prisma:generate
 RUN npm run build
