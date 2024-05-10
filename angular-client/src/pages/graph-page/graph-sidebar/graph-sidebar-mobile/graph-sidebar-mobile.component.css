@@ -3,6 +3,7 @@
   flex-flow: row;
   justify-content: flex-start;
   width: fit-content;
+  align-items: center;
 }
 
 .subcontainer {

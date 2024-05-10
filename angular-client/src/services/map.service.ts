@@ -89,6 +89,6 @@ export class MapService {
   };
 
   transformDataToCoordinate(data: DataValue): Coordinate {
-    return { lat: parseFloat(data.values[1]), lng: parseFloat(data.values[0]) };
+    return { lat: parseFloat(data.values[0]), lng: parseFloat(data.values[1]) };
   }
 }

@@ -32,7 +32,7 @@ export default class ProdProxyClient implements ProxyClient {
   recentLocationName: string | undefined;
   newLocation: boolean = true;
   topicTimerMap: Map<string, number> = new Map();
-  refreshRate: number = 1;
+  refreshRate: number = 100;
   batches: Map<string, ServerMessage[]> = new Map();
   upsertedNodes: Set<string> = new Set();
   upsertedDataTypes: Set<string> = new Set();
@@ -106,10 +106,15 @@ export default class ProdProxyClient implements ProxyClient {
       /* Infer data type name from topic after node */
       const dataType = topic.split('/').slice(1).join('-');
 
-      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
+      let unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
 
       if (!unix_time) {
-        throw new Error('No ts property in packet');
+        unix_time = Date.now().toString();
+      }
+
+      if (parseInt(unix_time as string) < 956040526) {
+        //2000
+        throw new Error('timestamp is less than the year 2000');
       }
 
       if (data.unit !== undefined && data.values !== undefined && data.values.length > 0) {
@@ -153,13 +158,13 @@ export default class ProdProxyClient implements ProxyClient {
     // iterating and upserting
     const serverdata = data.data;
     switch (data.dataType) {
-      case DataType.Driver:
+      case DataType.DRIVER:
         [driverName] = serverdata.values;
         break;
-      case DataType.System:
+      case DataType.SYSTEM:
         [systemName] = serverdata.values;
         break;
-      case DataType.Location:
+      case DataType.LOCATION:
         if (this.recentLocationName) {
           if (this.recentLocationName !== serverdata.values[0]) {
             this.newLocation = true;
@@ -169,11 +174,15 @@ export default class ProdProxyClient implements ProxyClient {
           this.newLocation = true;
         }
         break;
-      case DataType.Points:
+      case DataType.POINTS:
         this.recentLatitude = parseFloat(serverdata.values[0]);
         this.recentLongitude = parseFloat(serverdata.values[1]);
+        this.batches.set(
+          data.dataType,
+          this.batches.get(data.dataType) ? this.batches.get(data.dataType)!.concat(data) : [data]
+        );
         break;
-      case DataType.Radius:
+      case DataType.RADIUS:
         this.recentRadius = parseFloat(serverdata.values[0]);
         break;
       default:
@@ -245,36 +254,41 @@ export default class ProdProxyClient implements ProxyClient {
   private async batchesUpload(batches: Map<string, ServerMessage[]>, runId: number) {
     for (const [key, value] of batches) {
       console.log('Uploading batch for key: ', key, ' with length: ', value.length);
-      if (value.length === 0) {
-        continue;
+      try {
+        if (value.length === 0) {
+          continue;
+        }
+
+        const [first] = value;
+
+        if (!this.upsertedNodes.has(first.node)) {
+          await NodeService.upsertNode(first.node);
+          this.upsertedNodes.add(first.node);
+        }
+
+        if (!this.upsertedDataTypes.has(first.dataType)) {
+          await DataTypeService.upsertDataType(first.dataType, first.data.unit, first.node);
+          this.upsertedDataTypes.add(first.dataType);
+        }
+
+        await prisma.data.createMany({
+          data: value.map((message) => {
+            return {
+              values: message.data.values.map(parseFloat),
+              time: new Date(message.unix_time),
+              dataTypeName: message.dataType,
+              runId
+            };
+          })
+        });
+
+        console.log('Batch uploaded for key: ', key);
+
+        batches.set(key, []);
+      } catch (error) {
+        console.log('Error uploading batch: ', error);
+        batches.set(key, []);
       }
-
-      const [first] = value;
-
-      if (!this.upsertedNodes.has(first.node)) {
-        await NodeService.upsertNode(first.node);
-        this.upsertedNodes.add(first.node);
-      }
-
-      if (!this.upsertedDataTypes.has(first.dataType)) {
-        await DataTypeService.upsertDataType(first.dataType, first.data.unit, first.node);
-        this.upsertedDataTypes.add(first.dataType);
-      }
-
-      await prisma.data.createMany({
-        data: value.map((message) => {
-          return {
-            values: message.data.values.map(parseFloat),
-            time: new Date(message.unix_time),
-            dataTypeName: message.dataType,
-            runId
-          };
-        })
-      });
-
-      console.log('Batch uploaded for key: ', key);
-
-      batches.set(key, []);
     }
   }
 
