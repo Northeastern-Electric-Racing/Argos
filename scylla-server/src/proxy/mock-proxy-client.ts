@@ -138,28 +138,28 @@ const baseMockData: MockData[] = [
     max: 100
   },
   {
-    name: DataType.Shot,
+    name: DataType.SHOT,
     unit: Unit.PSI,
     vals: [0],
     min: 0,
     max: 200
   },
   {
-    name: DataType.RideHeight,
+    name: DataType.RIDEHEIGHT,
     unit: Unit.STRING,
     vals: [0],
     min: 0,
     max: 20
   },
   {
-    name: DataType.BrakePos,
+    name: DataType.BRAKEPOS,
     unit: Unit.PERCENT,
     vals: [0],
     min: 0,
     max: 100
   },
   {
-    name: DataType.GasPos,
+    name: DataType.GASPOS,
     unit: Unit.PERCENT,
     vals: [0],
     min: 0,
