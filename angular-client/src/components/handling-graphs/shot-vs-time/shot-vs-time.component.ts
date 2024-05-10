@@ -15,7 +15,7 @@ export default class ShotVsTime implements OnInit {
   constructor(private storage: Storage) {}
   ngOnInit() {
     this.storage.get(IdentifierDataType.SHOT).subscribe((value) => {
-      this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
+      this.data.push({ x: Number(value.time), y: parseInt(value.values[0]) });
       if (this.data.length > 100) {
         this.data.shift();
       }

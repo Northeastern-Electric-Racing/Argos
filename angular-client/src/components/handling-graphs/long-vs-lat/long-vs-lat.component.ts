@@ -19,7 +19,7 @@ export class LongVsLat implements OnInit {
   xMax: number = 0;
   yMax: number = 0;
 
-  maxDataPoints = 200;
+  maxDataPoints = 50;
 
   constructor(private storage: Storage) {}
 

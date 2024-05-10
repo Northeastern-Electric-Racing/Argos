@@ -20,7 +20,11 @@ export enum DataType {
   DCL = 'Discharge Current Limit',
   Brake_Pressure = 'Brake Pressure',
   Torque = 'Torque',
-  SPEED = 'Speed'
+  SPEED = 'Speed',
+  RideHeight = 'Ride Height',
+  Shot = 'Shot Compressor',
+  GasPos = 'Gas Pedal Position',
+  BrakePos = 'Brake Pedal Position'
 }
 
 //the format of mock data on mock proxy client for numerical values

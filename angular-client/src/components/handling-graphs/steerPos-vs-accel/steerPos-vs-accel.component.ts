@@ -26,19 +26,18 @@ export class SteerPosVsAccel implements OnInit {
   ngOnInit() {
     this.storage.get(IdentifierDataType.XYZAccel).subscribe((value) => {
       this.long = decimalPipe(value.values[1]);
-    });
-    this.storage.get(IdentifierDataType.STEERING_ANGLE).subscribe((value) => {
-      this.steer = decimalPipe(value.values[0]);
-    });
+      this.storage.get(IdentifierDataType.STEERING_ANGLE).subscribe((value) => {
+        this.steer = parseInt(value.values[0]);
+      });
+      this.data.push({
+        x: this.long,
+        y: this.steer
+      });
 
-    this.data.push({
-      x: this.long,
-      y: this.steer
+      //limits the data storage to 200 to prevent lag
+      if (this.data.length > this.maxDataPoints) {
+        this.data = this.data.slice(1);
+      }
     });
-
-    //limits the data storage to 200 to prevent lag
-    if (this.data.length > this.maxDataPoints) {
-      this.data = this.data.slice(1);
-    }
   }
 }
