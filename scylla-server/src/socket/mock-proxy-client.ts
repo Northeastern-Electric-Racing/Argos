@@ -172,7 +172,7 @@ export default class MockProxyClient implements ProxyClient {
     this.mockStringData = mockStringData;
   }
 
-  fakeStringData = ['Batman', 'Kenobi', 'Jar-jar Binks'];
+  fakeStringData = ['Fergus'];
 
   /**
    * generates a random index of an array given the size
