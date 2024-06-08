@@ -73,6 +73,7 @@ import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop
 import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
 import BatteryInfoDesktop from 'src/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
+import CharybdisPage from 'src/pages/charybdis-page/charybdis-page.component';
 
 @NgModule({
   declarations: [
@@ -133,7 +134,8 @@ import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-
     RaspberryPiDesktop,
     RaspberryPiMobile,
     BatteryInfoDesktop,
-    BatteryInfoMobile
+    BatteryInfoMobile,
+    CharybdisPage
   ],
   imports: [
     BrowserModule,

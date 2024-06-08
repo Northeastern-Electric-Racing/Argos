@@ -6,7 +6,6 @@ services:
     image: timescale/timescaledb:2.13.1-pg15
     platform: linux/arm64
     restart: unless-stopped
-    network_mode: host
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:

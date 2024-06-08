@@ -12,7 +12,7 @@ import Storage from 'src/services/storage.service';
   templateUrl: './app-context.component.html'
 })
 export default class AppContext implements OnInit {
-  socket = io((environment as any).url || 'localhost:8000');
+  socket = io((environment as any).url || 'http://localhost:8000');
   socketService = new SocketService(this.socket);
 
   constructor(private storage: Storage) {}
