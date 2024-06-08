@@ -106,10 +106,10 @@ export default class ProdProxyClient implements ProxyClient {
       /* Infer data type name from topic after node */
       const dataType = topic.split('/').slice(1).join('-');
 
-      const unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
+      let unix_time = packet.properties?.userProperties ? packet.properties.userProperties['ts'] : undefined;
 
       if (!unix_time) {
-        throw new Error('No ts property in packet');
+        unix_time = Date.now().toString();
       }
 
       if (parseInt(unix_time as string) < 956040526) {
@@ -177,6 +177,10 @@ export default class ProdProxyClient implements ProxyClient {
       case DataType.POINTS:
         this.recentLatitude = parseFloat(serverdata.values[0]);
         this.recentLongitude = parseFloat(serverdata.values[1]);
+        this.batches.set(
+          data.dataType,
+          this.batches.get(data.dataType) ? this.batches.get(data.dataType)!.concat(data) : [data]
+        );
         break;
       case DataType.RADIUS:
         this.recentRadius = parseFloat(serverdata.values[0]);
