@@ -5,20 +5,15 @@ services:
     container_name: odyssey-timescale
     image: timescale/timescaledb:2.13.1-pg15
     restart: unless-stopped
-    network_mode: host
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - 5432:5432
     expose:
       - 5432
-    tty: true
 
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
     image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-scylla-server
-    network_mode: host
     build:
       context: ./scylla-server
       target: production
@@ -27,18 +22,25 @@ services:
       - 8000:8000
     depends_on:
       - odyssey-timescale
+    environment:
+      - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/timescaledb
+      - PROD_SIREN_HOST_URL=host.docker.internal
+      - PROD=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   client:
     container_name: client
     restart: unless-stopped
     image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-angular-client
-    network_mode: host
     build:
       context: ./angular-client
       target: production
       dockerfile: Dockerfile
     ports:
-      - 4200:80
+      - 80:80
     depends_on:
       - scylla-server
+  
+
 
