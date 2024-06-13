@@ -49,10 +49,6 @@ I've setup a docker-compose file, so that you can easily run both these containe
 
 This will build the docker images that will be run:
 
-In order to build the angular-client, you will have to enter the angular-client directory and run `npm run build` in order to generate the dist file that the nginx server that hosts the application on the router uses. 
-
-Then: 
-
 `docker-compose build`
 
 If changes are made to either the client or scylla you will need to rebuild and push to hub in order to pull on the router. You may not have permissions to push to the hub, contact head of application software to gain permission.

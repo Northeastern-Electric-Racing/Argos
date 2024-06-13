@@ -4,7 +4,6 @@ services:
   odyssey-timescale:
     container_name: odyssey-timescale
     image: timescale/timescaledb:2.13.1-pg15
-    platform: linux/arm64
     restart: unless-stopped
     network_mode: host
     environment:
