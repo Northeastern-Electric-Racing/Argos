@@ -17,7 +17,7 @@ services:
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
-    image: mckeep/scylla-server-prod:1.0.0
+    image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-scylla-server
     network_mode: host
     build:
       context: ./scylla-server
@@ -31,7 +31,7 @@ services:
   client:
     container_name: client
     restart: unless-stopped
-    image: mckeep/client-prod:1.0.0
+    image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-angular-client
     network_mode: host
     build:
       context: ./angular-client
