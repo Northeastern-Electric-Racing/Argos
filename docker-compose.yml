@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
+    ports: # needs to be published for charybdis, which runs outside of docker
+      - 5432:5432
     expose:
       - 5432
 
