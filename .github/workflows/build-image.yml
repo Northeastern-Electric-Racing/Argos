@@ -47,7 +47,7 @@ jobs:
           context: ./angular-client
           push: true
           target: production
-          platforms: linux/amd64;linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       - name: Build and push Docker image for scylla server
@@ -56,6 +56,6 @@ jobs:
           context: ./scylla-server
           push: true
           target: production
-          platforms: linux/amd64;linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
