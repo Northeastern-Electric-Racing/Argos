@@ -58,6 +58,10 @@ jobs:
           # cache-to: type=gha,mode=max,scope=global
           # https://github.com/docker/build-push-action/issues/820
           provenance: false
+          build-args: |
+            PROD=true
+            BACKEND_URL=http://192.168.100.1:8000
+            MAP_ACCESS_TOKEN=pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
       - name: Build and push Docker image for scylla server
         uses: docker/build-push-action@v5.4.0
         with:
