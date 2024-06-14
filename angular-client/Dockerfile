@@ -1,4 +1,7 @@
 # build the node application, required for serving step
+ARG PROD
+ARG BACKEND_URL
+ARG MAP_ACCESS_TOKEN
 FROM node:alpine AS Build
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
