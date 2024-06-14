@@ -10,13 +10,13 @@ ARG BACKEND_URL
 ARG MAP_ACCESS_TOKEN
 
 # Create the environment.ts file with the required content
-RUN echo "export const environment = {" > src/environments/environment.ts \
-    && echo "  production: ${PROD}," >> src/environments/environment.ts \
-    && echo "  url: '${BACKEND_URL}'," >> src/environments/environment.ts \
-    && echo "  mapbox: {" >> src/environments/environment.ts \
-    && echo "    accessToken: '${MAP_ACCESS_TOKEN}'" >> src/environments/environment.ts \
-    && echo "  }" >> src/environments/environment.ts \
-    && echo "};" >> src/environments/environment.ts
+RUN echo "export const environment = {" > src/environment/environment.ts \
+    && echo "  production: ${PROD}," >> src/environment/environment.ts \
+    && echo "  url: '${BACKEND_URL}'," >> src/environment/environment.ts \
+    && echo "  mapbox: {" >> src/environment/environment.ts \
+    && echo "    accessToken: '${MAP_ACCESS_TOKEN}'" >> src/environment/environment.ts \
+    && echo "  }" >> src/environment/environment.ts \
+    && echo "};" >> src/environment/environment.ts
 
 RUN npm run build
 
