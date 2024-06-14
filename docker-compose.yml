@@ -37,6 +37,10 @@ services:
     image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-angular-client
     build:
       context: ./angular-client
+      args:
+        PROD: true
+        BACKEND_URL: http://192.168.100.1:8000
+        MAP_ACCESS_TOKEN: pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
       target: production
       dockerfile: Dockerfile
     ports:

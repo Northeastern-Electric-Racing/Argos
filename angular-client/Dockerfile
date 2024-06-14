@@ -4,6 +4,20 @@ WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
+
+ARG PROD
+ARG BACKEND_URL
+ARG MAP_ACCESS_TOKEN
+
+# Create the environment.ts file with the required content
+RUN echo "export const environment = {" > src/environments/environment.ts \
+    && echo "  production: ${PROD}," >> src/environments/environment.ts \
+    && echo "  url: '${BACKEND_URL}'," >> src/environments/environment.ts \
+    && echo "  mapbox: {" >> src/environments/environment.ts \
+    && echo "    accessToken: '${MAP_ACCESS_TOKEN}'" >> src/environments/environment.ts \
+    && echo "  }" >> src/environments/environment.ts \
+    && echo "};" >> src/environments/environment.ts
+
 RUN npm run build
 
 # Use official nginx image as the base image
