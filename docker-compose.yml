@@ -11,6 +11,11 @@ services:
       - 5432:5432
     expose:
       - 5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    cpu_shares: 1024
+    mem_limit: 3gb
+    stop_grace_period: 1m
 
   scylla-server:
     container_name: scylla-server
@@ -24,12 +29,17 @@ services:
       - 8000:8000
     depends_on:
       - odyssey-timescale
+      - siren
     environment:
       - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/timescaledb
-      - PROD_SIREN_HOST_URL=host.docker.internal
+      - PROD_SIREN_HOST_URL=siren
       - PROD=true
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway" # for external siren
+    cpu_shares: 1024
+    mem_limit: 2gb
+    stop_grace_period: 10s
+
 
   client:
     container_name: client
@@ -47,6 +57,32 @@ services:
       - 80:80
     depends_on:
       - scylla-server
+    cpu_shares: 512
+    mem_limit: 1gb
+
+  siren:
+    container_name: siren
+    restart: unless-stopped
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+      - 9001:9001 # why?
+    expose:
+      - 1883
+    volumes:
+      - ./siren-base/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    cpu_shares: 2048
+    mem_limit: 2gb
+    oom_kill_disable: true
+
+    
+
+
+  
+
+
+volumes:
+  db-data:
   
 
 
