@@ -75,11 +75,6 @@ services:
     mem_limit: 2gb
     oom_kill_disable: true
 
-    
-
-
-  
-
 
 volumes:
   db-data:
