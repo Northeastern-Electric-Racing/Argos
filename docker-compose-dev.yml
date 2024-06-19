@@ -1,0 +1,79 @@
+services:
+  odyssey-timescale:
+    container_name: odyssey-timescale
+    image: timescale/timescaledb:2.13.1-pg15
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports: # needs to be published for charybdis, which runs outside of docker
+      - 5432:5432
+    expose:
+      - 5432
+    cpu_shares: 1024
+    mem_limit: 3gb
+    cpuset: 0-3
+    stop_grace_period: 1m
+
+  scylla-server:
+    container_name: scylla-server
+    restart: unless-stopped
+    # image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-scylla-server
+    build:
+      context: ./scylla-server
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    depends_on:
+      - odyssey-timescale
+      - siren
+    environment:
+      - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/timescaledb
+      - PROD_SIREN_HOST_URL=siren
+      - PROD=true
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway" # for external siren
+    cpu_shares: 1024
+    cpuset: 0-3
+    mem_limit: 2gb
+    stop_grace_period: 10s
+
+
+  client:
+    container_name: client
+    restart: unless-stopped
+    # image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-angular-client
+    build:
+      context: ./angular-client
+      args:
+        PROD: "true"
+        BACKEND_URL: http://localhost:8000
+        MAP_ACCESS_TOKEN: pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - scylla-server
+    cpu_shares: 512
+    cpuset: 0-3
+    mem_limit: 1gb
+
+  siren:
+    container_name: siren
+    restart: unless-stopped
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+      - 9001:9001 # why?
+    expose:
+      - 1883
+    volumes:
+      - ./siren-base/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    cpu_shares: 2048
+    cpuset: 0-3
+    mem_limit: 2gb
+    oom_kill_disable: true
+  
+
+
