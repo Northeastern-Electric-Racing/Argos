@@ -2,9 +2,6 @@
 name: Create and publish a Docker image
 
 on:
-  push:
-    branches:
-      - ghcr-action
   workflow_dispatch:
 
 
