@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   odyssey-timescale:
     container_name: odyssey-timescale
@@ -11,16 +9,15 @@ services:
       - 5432:5432
     expose:
       - 5432
-    volumes:
-      - db-data:/var/lib/postgresql/data
     cpu_shares: 1024
     mem_limit: 3gb
+    cpuset: 0-3
     stop_grace_period: 1m
 
   scylla-server:
     container_name: scylla-server
     restart: unless-stopped
-    image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-scylla-server
+    # image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-scylla-server
     build:
       context: ./scylla-server
       target: production
@@ -37,6 +34,7 @@ services:
     # extra_hosts:
     #   - "host.docker.internal:host-gateway" # for external siren
     cpu_shares: 1024
+    cpuset: 0-3
     mem_limit: 2gb
     stop_grace_period: 10s
 
@@ -44,12 +42,12 @@ services:
   client:
     container_name: client
     restart: unless-stopped
-    image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-angular-client
+    # image: ghcr.io/northeastern-electric-racing/argos:ghcr-action-angular-client
     build:
       context: ./angular-client
       args:
         PROD: "true"
-        BACKEND_URL: http://192.168.100.1:8000
+        BACKEND_URL: http://localhost:8000
         MAP_ACCESS_TOKEN: pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
       target: production
       dockerfile: Dockerfile
@@ -58,6 +56,7 @@ services:
     depends_on:
       - scylla-server
     cpu_shares: 512
+    cpuset: 0-3
     mem_limit: 1gb
 
   siren:
@@ -72,12 +71,9 @@ services:
     volumes:
       - ./siren-base/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
     cpu_shares: 2048
+    cpuset: 0-3
     mem_limit: 2gb
     oom_kill_disable: true
-
-
-volumes:
-  db-data:
   
 
 

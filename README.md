@@ -45,40 +45,31 @@ Then to actually run the server run:
 
 ### Running the Project in Prod Mode
 
-I've setup a docker-compose file, so that you can easily run both these containers with a few commands:
+There is a `docker-compose-dev.yml` file for a dev which varies from the router deployment:
+- It matches the number of CPUs as the router to roughly simulate router CPU (your CPU is still faster)
+- You must build it locally first!
+- It does not persist the database between `down` commands
+
+Note that both compose files limit memory to the same amount.  However, the disk I/O of the router is **much** slower than yours.
+
 
 This will build the docker images that will be run:
 
-In order to build the angular-client, you will have to enter the angular-client directory and run `npm run build` in order to generate the dist file that the nginx server that hosts the application on the router uses. 
-
-Then: 
-
-`docker-compose build`
-
-If changes are made to either the client or scylla you will need to rebuild and push to hub in order to pull on the router. You may not have permissions to push to the hub, contact head of application software to gain permission.
+`docker-compose -f ./docker-compose-dev.yml build`
 
 This will run the two docker images and output all the outputs from both of them to the terminal:
-
-If you are on x86_64 you will have to change platform: linux/arm64 to linux/amd64 in order to properly pull the timescaledb
 
 `docker-compose up`
 
 This will start the containers, if the container is not already an image through docker-compose build, it will attempt to pull the images from docker hub. 
 
-Scylla will not be able to communicate with timescale with this configuration. If deploying to router you will have to change the docker-compose file to not use a shared network, instead add `network_mode: host`
-instead of 
-```
-networks: 
-   - shared-network
-```
+### Running on the Openwrt router
 
-This will allow the docker containers to communicate on the openwrt router using the host network. However on mac and windows since docker runs in a vm you will be unable to connect to these containers, you will have to use a shared-network for the timescaledb and then run scylla and the client manually from your machine. 
+The `docker-compose.yml` file is made for the router.  When you push a commit it automatically gets built for the router in 20-30 minutes.
+To use a non-standard branch edit the docker-compose.yml file to the name of the tag specified by the name [here](https://github.com/Northeastern-Electric-Racing/Argos/pkgs/container/argos).
+Then do `docker compose down` and `docker compose pull` and `docker compose up -d`.
 
-### If running on the router
-
-If updating code you will need to go to the openwrt and remove the docker container and image for the image you are updating
-
-you will only need to copy the docker-compose file from this repository to the router (make sure to change the network mode to be host and not use shared network (see above)) then run `docker-compose up`. Make sure you've pushed the most up to date image to docker hub, if you havn't it will pull the old images. 
+**The database is stored in a volume called `argos_db-data`, delete the volume to start the database fresh!**
 
 ### Codegen Protobuf Types
 
@@ -89,3 +80,7 @@ you will only need to copy the docker-compose file from this repository to the r
 
 #### Codegen
 `npm run build:proto`
+
+### Siren
+The configuration for the Mosquitto MQTT server on the router is in the siren-base folder.
+Note that the configuration is used in the docker compose file, but the configuration on the TPU is stored in [Odysseus.](https://github.com/Northeastern-Electric-Racing/Odysseus/tree/cb12fb3240d5fd58adfeae26262e158ad6dd889b/odysseus_tree/overlays/rootfs_overlay_tpu/etc/mosquitto)
