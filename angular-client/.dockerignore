@@ -1,0 +1,9 @@
+# Ignore existing environment.ts file
+src/environments/environment.ts
+
+# Ignore other files/directories you don't want in the Docker image
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md
