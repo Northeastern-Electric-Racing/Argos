@@ -4,9 +4,13 @@ The express backend for Argos. Handles storing Telemetry data from MQTT into a T
 
 ## Local Development
 
+IMPORTANT - Before doing anything make sure you've run:
+
+`git submodule update --init`
+
 Make sure you're in the `scylla-server` directory.
 
-Use the following .env file for local development:
+Create a file named .env in the scylla-server directory with the following content for local development:
 ```
 SOURCE_DATABASE_URL="postgresql://postgres:password@localhost:5432/timescaledb"
 ```
@@ -19,7 +23,7 @@ To install dependencies run:
 
 To setup the database in docker run: 
 
-`docker-compose up odyssey-timescale`
+`docker-compose up -d odyssey-timescale`
 
 Then:
 
