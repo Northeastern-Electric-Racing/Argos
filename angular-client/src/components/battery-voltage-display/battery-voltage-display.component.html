@@ -1,0 +1,32 @@
+<info-background icon="OfflineBolt" title="Voltage">
+  <hstack>
+    <vstack style="width: 20%">
+      <hstack>
+        <typography variant="info-value" [content]="avgVoltage.toString() + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" content="Avergae Voltage" />
+    </vstack>
+
+    <!--temp fix for divider setting pixel height: is only way for divider to show-->
+    <divider style="height: 100px"></divider>
+
+    <vstack style="width: 20%">
+      <hstack>
+        <typography variant="info-value" [content]="minVolts.toString() + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" content="Min. Voltage" />
+    </vstack>
+
+    <!--temp fix for divider setting pixel height: is only way for divider to show-->
+    <divider style="height: 100px"></divider>
+
+    <vstack style="width: 20%">
+      <hstack>
+        <typography variant="info-value" [content]="maxVolts.toString() + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" content="Max. Voltage" />
+    </vstack>
+    <!--(temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
+    <battery-voltage-graph style="width: 40%; padding-bottom: 5vh" *ngIf="isDesktop"></battery-voltage-graph>
+  </hstack>
+</info-background>

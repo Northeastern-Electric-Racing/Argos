@@ -1,0 +1,12 @@
+<info-background title="State of Charge" icon="battery_charging_full">
+  <hstack>
+    <hstack style="width: 40%">
+      <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
+      <div class="battery-display-body">
+        <typography variant="info-value" [content]="stateOfCharge.toString()" />
+        <typography variant="info-unit" content="%" />
+      </div>
+    </hstack>
+    <charge-state-graph style="width: 60%"></charge-state-graph>
+  </hstack>
+</info-background>

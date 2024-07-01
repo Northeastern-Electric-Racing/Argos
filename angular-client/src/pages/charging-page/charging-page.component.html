@@ -1,0 +1,36 @@
+<div class="image-container" style="margin-right: 16px; margin-left: 16px">
+  <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px" />
+
+  <charging-page-mobile style="width: 100%" *ngIf="isMobile; else isDesktop" [time]="time" />
+  <ng-template #isDesktop>
+    <vstack style="width: 100%" spacing="20px">
+      <hstack style="width: 100%">
+        <vstack style="width: 50%">
+          <typography style="width: 100%; text-align: center" variant="xx-large-title" [content]="time | date: 'HH:mm:ss'" />
+        </vstack>
+        <vstack style="width: 50%">
+          <typography variant="large-header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
+        </vstack>
+      </hstack>
+
+      <hstack style="width: 100%">
+        <charge-state-display style="width: 40%" />
+        <hstack style="width: 60%">
+          <charging-switch style="height: 200px; width: 33%" />
+          <latency-display style="height: 200px; width: 33%" />
+          <battery-status-display style="height: 200px; width: 33%" />
+        </hstack>
+      </hstack>
+
+      <hstack style="width: 100%">
+        <pack-temp style="width: 20%; height: 20vh" />
+        <battery-voltage-display style="width: 80%; height: 20vh" />
+      </hstack>
+
+      <hstack style="width: 100%">
+        <current-display style="width: 60%" />
+        <fault-display style="width: 40%" />
+      </hstack>
+    </vstack>
+  </ng-template>
+</div>

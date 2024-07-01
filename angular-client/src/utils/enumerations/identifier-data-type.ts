@@ -11,6 +11,8 @@ export enum IdentifierDataType {
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
   VOLTAGE = 'Status-Voltage_Average',
+  AMPS = 'AMPS', // identifier will be changed later to match MQTT?
+  FAULT = 'FAULT_CODE', // identifier needs to be changed to match MQTT?
   VIEWERS = 'Viewers',
   SPEED = 'State-Speed',
   TORQUE = 'Torque',

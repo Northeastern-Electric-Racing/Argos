@@ -1,0 +1,7 @@
+.fault-text-body {
+  height: 80%;
+  display: flex;
+  align-items: left;
+  justify-content: left;
+  padding-left: 10%;
+}

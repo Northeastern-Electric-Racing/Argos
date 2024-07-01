@@ -5,6 +5,8 @@ import { CarouselModule } from 'primeng/carousel';
 import { ToastModule } from 'primeng/toast';
 import { OrderListModule } from 'primeng/orderlist';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
+import ChargingPage from 'src/pages/charging-page/charging-page.component';
+import ChargingPageMobile from 'src/pages/charging-page/charging-page-mobile/charging-page-mobile.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
 import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
 import AppContext from './context/app-context.component';
@@ -73,11 +75,25 @@ import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop
 import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
 import BatteryInfoDesktop from 'src/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
+import BatteryStatusDisplay from 'src/components/battery-status-display/battery-status-display.component';
+import ChargeStateDisplay from 'src/components/charge-state-display/charge-state-display.component';
+import ChargeStateGraph from 'src/components/charge-state-graph/charge-state-graph.component';
+import PackTemp from 'src/components/pack-temp/pack-temp.component';
+import BatteryVoltageDisplay from 'src/components/battery-voltage-display/battery-voltage-display.component';
+import BatteryVoltageGraph from 'src/components/battery-voltage-graph/battery-voltage-graph.component';
+import CurrentDisplay from 'src/components/current-display/current-display.component';
+import FaultDisplay from 'src/components/fault-display/fault-display.component';
+import CurrentGraph from 'src/components/current-graph/current-graph.component';
+import { ColumnGraphComponent } from 'src/components/column-graph/column-graph.component';
+import { SwitchComponent } from 'src/components/switch/switch.component';
+import ChargingSwitch from 'src/components/charging-switch/charging-switch.component';
 
 @NgModule({
   declarations: [
     AppContext,
     LandingPage,
+    ChargingPage,
+    ChargingPageMobile,
     GraphPage,
     GraphSidebar,
     GraphSidebarMobile,
@@ -133,7 +149,19 @@ import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-
     RaspberryPiDesktop,
     RaspberryPiMobile,
     BatteryInfoDesktop,
-    BatteryInfoMobile
+    BatteryInfoMobile,
+    BatteryStatusDisplay,
+    ChargeStateDisplay,
+    ChargeStateGraph,
+    PackTemp,
+    BatteryVoltageGraph,
+    BatteryVoltageDisplay,
+    CurrentDisplay,
+    FaultDisplay,
+    CurrentGraph,
+    ColumnGraphComponent,
+    SwitchComponent,
+    ChargingSwitch
   ],
   imports: [
     BrowserModule,

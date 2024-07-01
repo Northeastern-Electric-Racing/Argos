@@ -11,6 +11,7 @@ export enum DataType {
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
   VOLTAGE = 'Status-Voltage_Average',
+  AMPS = 'AMPS',
   VIEWERS = 'Viewers',
   SPEED = 'State-Speed',
   TORQUE = 'Torque',

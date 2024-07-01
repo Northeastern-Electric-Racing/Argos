@@ -1,0 +1,31 @@
+.switch {
+  width: 100%;
+  height: 50%;
+  border-radius: 10vw;
+  background-color: #808080;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+.switch-inner {
+  width: 30%;
+  height: 70%;
+  border-radius: 50%;
+  background-color: #161616;
+  position: relative;
+  margin-left: 5%;
+}
+
+.switch.on {
+  background-color: #ccc;
+  justify-content: flex-end;
+}
+
+.switch-inner.on {
+  margin-right: 5%;
+}
