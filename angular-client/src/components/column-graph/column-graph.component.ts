@@ -1,15 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import * as ApexCharts from 'apexcharts';
-import {
-  ApexAxisChartSeries,
-  ApexXAxis,
-  ApexDataLabels,
-  ApexChart,
-  ApexMarkers,
-  ApexGrid,
-  ApexTooltip,
-  ApexFill
-} from 'ng-apexcharts';
+import { ApexAxisChartSeries, ApexChart } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialog } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
@@ -19,6 +10,7 @@ type ChartOptions = {
   chart: ApexChart;
 };
 
+// !!!!!! THIS COMPONENT IS YET TO BE PROPERLY IMPLEMENTED (so mid rn, max mid, so mid it's just bad)!!!!!!
 @Component({
   selector: 'column-graph-component',
   templateUrl: './column-graph.component.html',
