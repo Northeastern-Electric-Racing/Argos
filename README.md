@@ -1,47 +1,21 @@
-## Argos
+# Argos
 
 ### Initializing Submodule
 
 To initialize the odyssey submodule run `git submodule update --init`
 
-### Running the Project in Dev Mode
+## Local Development
 
-To run the project locally for development, you'll want to run the client and the server separately.
+Setup angular-client and scylla-server:
 
-Client:
+[Angular Client](./angular-client/README.md)\
+[Scylla Server](./scylla-server/README.md)
 
-cd into the client directory, and run the following commands:
-
-`npm install`
+Once you've sucessfully setup Scylla and the Client, you can either run them separately, or run the following command to run them concurrently (the outputs from both will be output to the same terminal):
 
 `npm run start`
 
-Server:
-
-cd into the scylla-server, and run the following commands:
-
-`npm install`
-
-Add this database source url to your .env variable:
-`SOURCE_DATABASE_URL="postgresql://postgres:password@localhost:5432/timescaledb"`
-
-If connecting to Siren, set PROD=true in your .env variabe and add the PROD_SIREN_HOST_URL to your .env file as well, this is the host name for connecting to the mqtt server. 
-
-run `docker-compose up` to pull the images from docker hub and start them. 
-
-You can then go into docker desktop and stop the server and the client but leave the timescale database running. 
-
-You can also run `docker-compose up odyssey-timescale` to only start the database
-
-then run:
-
-`npm run prisma:generate`
-
-`npm run prisma:migrate`
-
-Then to actually run the server run:
-
-`npm start`
+## Production
 
 ### Running the Project in Prod Mode
 
@@ -52,16 +26,15 @@ There is a `docker-compose-dev.yml` file for a dev which varies from the router 
 
 Note that both compose files limit memory to the same amount.  However, the disk I/O of the router is **much** slower than yours.
 
-
 This will build the docker images that will be run:
 
 `docker-compose -f ./docker-compose-dev.yml build`
 
-This will run the two docker images and output all the outputs from both of them to the terminal:
+This will start the containers and output all the outputs from both of them to the terminal. If the container is not already an image through docker-compose build, it will attempt to pull the images from docker hub. 
 
 `docker-compose up`
 
-This will start the containers, if the container is not already an image through docker-compose build, it will attempt to pull the images from docker hub. 
+If changes are made to either the client or scylla you will need to rebuild and push to docker hub then pull on the router. Contact the current Argos lead or Chief Software Engineer to get access to the docker hub.
 
 ### Running on the Openwrt router
 
@@ -71,7 +44,7 @@ Then do `docker compose down` and `docker compose pull` and `docker compose up -
 
 **The database is stored in a volume called `argos_db-data`, delete the volume to start the database fresh!**
 
-### Codegen Protobuf Types
+## Codegen Protobuf Types
 
 ##### Mac
 

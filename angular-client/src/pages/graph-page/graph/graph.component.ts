@@ -11,12 +11,14 @@ import {
   ApexFill
 } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
+import { convertUTCtoLocal } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
   xaxis: ApexXAxis;
+  yaxis: ApexYAxis;
   dataLabels: ApexDataLabels;
   markers: ApexMarkers;
   grid: ApexGrid;
@@ -54,7 +56,7 @@ export default class Graph implements OnInit {
 
   ngOnInit(): void {
     this.valuesSubject.subscribe((values: GraphData[]) => {
-      const mappedValues = values.map((value: GraphData) => [value.x, value.y]);
+      const mappedValues = values.map((value: GraphData) => [convertUTCtoLocal(value.x), value.y]);
       const newSeries = [
         {
           name: 'Data Series',
@@ -98,7 +100,19 @@ export default class Graph implements OnInit {
       },
       xaxis: {
         type: 'datetime',
-        tickAmount: 6
+        tickAmount: 6,
+        labels: {
+          style: {
+            colors: '#fff'
+          }
+        }
+      },
+      yaxis: {
+        labels: {
+          style: {
+            colors: '#fff'
+          }
+        }
       },
       tooltip: {
         x: {

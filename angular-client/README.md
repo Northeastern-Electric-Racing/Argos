@@ -1,10 +1,32 @@
 # AngularClient
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.4.
+The Angular Frontend for Argos.
 
-## Development server
+## Local Development
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Make sure you're in the `angular-client` directory.
+
+Set environment/environment.ts to the following for local development:
+```
+export const environment = {
+  production: false,
+  mapbox: {
+    accessToken: 'pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw'
+  }
+};
+
+```
+
+To install dependencies run:
+
+`npm install`
+
+To run the client in development mode run:
+
+`npm run start`
+
+Navigate to `http://localhost:4200/` to ensure the website is running, and you're done! The application will automatically reload if you change any of the source files.
+
 
 ## Code scaffolding
 
@@ -12,16 +34,6 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
-## Running unit tests
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
