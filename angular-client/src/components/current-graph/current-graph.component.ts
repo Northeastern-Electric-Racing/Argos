@@ -16,7 +16,7 @@ export default class CurrentGraph implements OnInit {
   ngOnInit() {
     this.storage.get(IdentifierDataType.VOLTAGE).subscribe((value) => {
       this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-      if (this.data.length > 5) {
+      if (this.data.length >= 100) {
         this.data.shift();
       }
     });
