@@ -25,5 +25,6 @@ export enum IdentifierDataType {
   ACCELERATION = 'Acceleration',
   CHARGE_CURRENT_LIMIT = 'Pack-CCL',
   DISCHARGE_CURRENT_LIMIT = 'Pack-DCL',
-  XYZAccel = 'XYZAcceleration'
+  XYZAccel = 'XYZAcceleration',
+  STATUS = 'Status'
 }

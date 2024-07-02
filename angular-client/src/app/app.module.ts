@@ -84,7 +84,6 @@ import BatteryVoltageGraph from 'src/components/battery-voltage-graph/battery-vo
 import CurrentDisplay from 'src/components/current-display/current-display.component';
 import FaultDisplay from 'src/components/fault-display/fault-display.component';
 import CurrentGraph from 'src/components/current-graph/current-graph.component';
-import { ColumnGraphComponent } from 'src/components/column-graph/column-graph.component';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import ChargingSwitch from 'src/components/charging-switch/charging-switch.component';
 
@@ -159,7 +158,6 @@ import ChargingSwitch from 'src/components/charging-switch/charging-switch.compo
     CurrentDisplay,
     FaultDisplay,
     CurrentGraph,
-    ColumnGraphComponent,
     SwitchComponent,
     ChargingSwitch
   ],

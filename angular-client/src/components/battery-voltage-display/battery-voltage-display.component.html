@@ -7,7 +7,7 @@
       <typography variant="info-subtitle" content="Avergae Voltage" />
     </vstack>
 
-    <!--temp fix for divider setting pixel height: is only way for divider to show-->
+    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
     <divider style="height: 100px"></divider>
 
     <vstack style="width: 20%">
@@ -17,7 +17,7 @@
       <typography variant="info-subtitle" content="Min. Voltage" />
     </vstack>
 
-    <!--temp fix for divider setting pixel height: is only way for divider to show-->
+    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
     <divider style="height: 100px"></divider>
 
     <vstack style="width: 20%">
@@ -26,7 +26,9 @@
       </hstack>
       <typography variant="info-subtitle" content="Max. Voltage" />
     </vstack>
-    <!--(temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
+    <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
+    <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
+    or just don't enforce -->
     <battery-voltage-graph style="width: 40%; padding-bottom: 5vh" *ngIf="isDesktop"></battery-voltage-graph>
   </hstack>
 </info-background>

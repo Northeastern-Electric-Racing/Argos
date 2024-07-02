@@ -25,7 +25,9 @@ export enum DataType {
   CHARGE_CURRENT_LIMIT = 'Pack-CCL',
   DISCHARGE_CURRENT_LIMIT = 'Pack-DCL',
   XYZAccel = 'XYZAcceleration',
-  RADIUS = 'Radius'
+  RADIUS = 'Radius',
+  STATUS = 'Status',
+  FAULTS = 'Faults'
 }
 
 //the format of mock data on mock proxy client for numerical values

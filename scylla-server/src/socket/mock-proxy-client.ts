@@ -136,6 +136,22 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 100
+  },
+  // TODO: check with everyone on best name for this data type (/ if we should use the ones from OG landing page (CCL and DCL I believe))
+  {
+    name: DataType.AMPS,
+    unit: Unit.AMPERAGE,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  // TODO: for some reason this is seeding properly, haven't looked into y, simple fix prob
+  {
+    name: DataType.FAULTS,
+    unit: Unit.HEX,
+    vals: [0],
+    min: 0x1,
+    max: 0x2000
   }
 ];
 
@@ -153,6 +169,12 @@ const baseStringData: MockStringData[] = [
     name: DataType.LOCATION,
     units: Unit.STRING,
     vals: ['Max']
+  },
+  // TODO: need to check with Jack on how status is going to be interpreted (string or numerical)
+  {
+    name: DataType.STATUS,
+    units: Unit.STRING,
+    vals: ['BALANCING']
   }
 ];
 
@@ -172,6 +194,8 @@ export default class MockProxyClient implements ProxyClient {
     this.mockStringData = mockStringData;
   }
 
+  // TODO: gotta make this string data (string UNITS) mocked more easily (that is why the location
+  // is always Fergus despite above)
   fakeStringData = ['Fergus'];
 
   /**
