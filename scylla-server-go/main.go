@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"scylla-server/prisma"
 	"time"
 )
@@ -8,8 +9,12 @@ import (
 func main() {
 	client, _ := prisma.PrismaClient()
 
-	time.Sleep(10 * time.Second)
+	defer func() {
+		if err := client.Prisma.Disconnect(); err != nil {
+			log.Fatal("could not disconnect: %w", err)
+		}
+	}()
 
-	client.Prisma.Disconnect()
+	time.Sleep(10 * time.Second)
 
 }
