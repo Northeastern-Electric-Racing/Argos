@@ -3,6 +3,7 @@ package data_controller
 import (
 	"errors"
 	"scylla-server/prisma/db"
+	"scylla-server/services/data_service"
 	"scylla-server/transformers/data_transformer"
 	"strconv"
 
@@ -17,7 +18,8 @@ func GetDataByDataTypeNameAndRunId(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(400, "Could not parse run ID")
 	}
-	dataByDataTypeName, err := data_transformer.GetDataByDataTypeNameAndRunId(dataTypeName, runId_int)
+
+	dataByDataTypeName, err := data_service.GetDataByDataTypeNameAndRunId(dataTypeName, runId_int)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return fiber.NewError(404, err.Error())
@@ -25,5 +27,7 @@ func GetDataByDataTypeNameAndRunId(c *fiber.Ctx) error {
 		return fiber.NewError(503, err.Error())
 	}
 
-	return c.Status(200).JSON(dataByDataTypeName)
+	data_json := data_transformer.Data_Transform(&dataByDataTypeName)
+
+	return c.Status(200).JSON(data_json)
 }

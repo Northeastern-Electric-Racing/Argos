@@ -2,24 +2,20 @@ package data_transformer
 
 import (
 	"scylla-server/prisma/db"
-	"scylla-server/services/data_service"
+	"sort"
 	"strconv"
 
 	"github.com/samber/lo"
 )
 
 type TransformerData struct {
-	Time   int64
-	Values []string
+	Time   int64    `json:"time"`
+	Values []string `json:"values"`
 }
 
-func GetDataByDataTypeNameAndRunId(dataTypeName string, runId int) ([]TransformerData, error) {
-	dataByDataTypeName, err := data_service.GetDataByDataTypeNameAndRunId(dataTypeName, runId)
-	if err != nil {
-		return nil, err
-	}
+func Data_Transform(dataByDataTypeName *[]db.DataModel) []TransformerData {
 
-	data_transformed := lo.Map(dataByDataTypeName, func(d db.DataModel, _ int) TransformerData {
+	data_transformed := lo.Map(*dataByDataTypeName, func(d db.DataModel, _ int) TransformerData {
 		return TransformerData{
 			Time: d.Time.UnixMilli(),
 			Values: lo.Map(d.Values, func(v float64, _ int) string {
@@ -28,6 +24,10 @@ func GetDataByDataTypeNameAndRunId(dataTypeName string, runId int) ([]Transforme
 		}
 	})
 
-	return data_transformed, nil
+	sort.Slice(data_transformed, func(i, j int) bool {
+		return data_transformed[i].Time < data_transformed[j].Time
+	})
+
+	return data_transformed
 
 }
