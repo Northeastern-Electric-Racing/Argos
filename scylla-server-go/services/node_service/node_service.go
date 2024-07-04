@@ -7,26 +7,36 @@ import (
 	"scylla-server/prisma/db"
 )
 
-func GetAllNodes() []db.NodeModel {
+// Returns a list of nodes, empty if no nodes exist
+//
+// If an error occurs nil nodes is returned and the db error
+func GetAllNodes() ([]db.NodeModel, error) {
 	client, ctx := prisma.PrismaClient()
 
 	data, err := client.Node.FindMany(db.Node.DataTypes.Every()).Exec(ctx)
-	log.Printf("Err %q\n", err.Error())
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return []db.NodeModel{}, nil
+		} else {
+			log.Printf("Err %q\n", err.Error())
+			return nil, err
+		}
+	}
 
-	return data
+	return data, nil
 }
 
-func UpsertNode(nodeName string) *db.NodeModel {
+// Upserts a node with the name nodeName, returns the upserted node
+//
+// Returns nil node and the error if the node does not exist
+func UpsertNode(nodeName string) (*db.NodeModel, error) {
 	client, ctx := prisma.PrismaClient()
 
-	node, err := client.Node.FindUnique(db.Node.Name.Equals(nodeName)).Exec(ctx)
-	log.Printf("Err %q\n", err.Error())
-
-	if err != nil && errors.Is(err, db.ErrNotFound) {
-		node, err := client.Node.CreateOne(db.Node.Name.Set(nodeName)).Exec(ctx)
+	node, err := client.Node.UpsertOne(db.Node.Name.Equals(nodeName)).Create(db.Node.Name.Set(nodeName)).Update(db.Node.Name.Set(nodeName)).Exec(ctx)
+	if err != nil {
 		log.Printf("Err %q\n", err.Error())
-		return node
+		return nil, err
 	}
-	return node
 
+	return node, nil
 }
