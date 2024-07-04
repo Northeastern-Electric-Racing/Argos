@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package serverdata.v1;
+
+option go_package = "/serverdata";
+
+message ServerData {
+   repeated string values = 1;
+   string unit = 2;
+}

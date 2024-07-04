@@ -1,0 +1,64 @@
+generator db {
+  provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+
+datasource db {
+    provider = "postgresql"
+    url      = env("SOURCE_DATABASE_URL")
+}
+
+model run {
+    id           Int       @id @unique @default(autoincrement())
+    locationName String?
+    location     location? @relation(fields: [locationName], references: [name])
+    driverName   String?
+    driver       driver?   @relation(fields: [driverName], references: [username])
+    systemName   String?
+    system       system?   @relation(fields: [systemName], references: [name])
+    data         data[]
+    time         DateTime  @db.Timestamptz()
+}
+
+model location {
+    name      String @id @unique
+    latitude  Float
+    longitude Float
+    radius    Float
+    runs      run[]
+}
+
+model driver {
+    username String @id @unique
+    runs     run[]
+}
+
+model system {
+    name String @id @unique
+    runs run[]
+}
+
+model data {
+    id           String   @default(uuid())
+    values       Float[]
+    dataTypeName String
+    dataType     dataType @relation(fields: [dataTypeName], references: [name])
+    time         DateTime @db.Timestamptz()
+    runId        Int
+    run          run      @relation(fields: [runId], references: [id])
+
+    @@unique([id, time])
+}
+
+model dataType {
+    name     String @id @unique
+    unit     String
+    data     data[]
+    node     node   @relation(fields: [nodeName], references: [name])
+    nodeName String
+}
+
+model node {
+    name      String     @id @unique
+    dataTypes dataType[]
+}
