@@ -2,6 +2,7 @@ package routes
 
 import (
 	"scylla-server/controllers/data_controller"
+	"scylla-server/routes/groups"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -9,6 +10,6 @@ import (
 func CreateRoutes(app *fiber.App) {
 
 	// route for all data requests
-	dataRoute := app.Group("/data")
-	dataRoute.Get("/:dataTypeName/:runId", data_controller.GetDataByDataTypeNameAndRunId)
+	groups.CreateDataRoute(app)
+
 }
