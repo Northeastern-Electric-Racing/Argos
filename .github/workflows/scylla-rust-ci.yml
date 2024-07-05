@@ -1,0 +1,31 @@
+name: Scylla Rust CI
+
+on:
+   push:
+      branches:
+         - main
+         - Develop
+   pull_request:
+      branches:
+         - main
+         - Develop
+
+jobs:
+   build:
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Setup Rust
+           uses: actions/checkout@v3
+           with:
+            submodules: recursive
+         - name: Install cargo-audit
+           run: cargo install cargo-audit
+         - name: Build
+           run: cargo build --verbose
+         - name: Test
+           run: cargo test --verbose
+         - name: Clippy
+           run: cargo clippy --verbose -- -D warnings
+         - name: Audit
+           run: cargo audit

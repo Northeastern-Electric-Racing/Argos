@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package serverdata.v1;
+
+message ServerData {
+   repeated string value = 1;
+   string unit = 2;
+}
