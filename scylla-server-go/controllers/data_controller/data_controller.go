@@ -1,8 +1,6 @@
 package data_controller
 
 import (
-	"errors"
-	"scylla-server/prisma/db"
 	"scylla-server/services/data_service"
 	"scylla-server/transformers/data_transformer"
 	"strconv"
@@ -21,10 +19,7 @@ func GetDataByDataTypeNameAndRunId(c *fiber.Ctx) error {
 
 	dataByDataTypeName, err := data_service.GetDataByDataTypeNameAndRunId(dataTypeName, runId_int)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			return fiber.NewError(404, err.Error())
-		}
-		return fiber.NewError(503, err.Error())
+		panic(err)
 	}
 
 	data_json := data_transformer.Data_Transform(&dataByDataTypeName)

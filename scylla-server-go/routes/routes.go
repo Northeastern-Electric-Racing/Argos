@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"scylla-server/controllers/data_controller"
 	"scylla-server/routes/groups"
 
 	"github.com/gofiber/fiber/v2"
