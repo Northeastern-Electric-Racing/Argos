@@ -10,12 +10,7 @@
     </mat-toolbar>
     <div class="topic-list">
       <div *ngFor="let node of nodesWithVisibilityToggle">
-        <sidebar-card
-          [title]="node.name"
-          (click)="toggleDataTypeVisibility(node)"
-          [dataValue]="node.dataTypes.length.toString() + ' ' + 'Topics'"
-          [dropDown]="true"
-        />
+        <sidebar-card [title]="node.name" (click)="toggleDataTypeVisibility(node)" [dropDown]="true" />
         <div *ngIf="node.dataTypesAreVisible" @toggleExpand>
           <div *ngFor="let dataType of node.dataTypes" style="display: flex; justify-content: center">
             <sidebar-card
