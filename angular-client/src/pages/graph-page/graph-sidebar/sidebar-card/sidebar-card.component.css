@@ -1,5 +1,5 @@
 .card {
-  background-color: #2f2f2f;
+  background-color: #101010;
   border-radius: 5px;
   margin: 8px;
   height: 40px;
@@ -21,7 +21,7 @@
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .icon {
@@ -35,6 +35,6 @@
 
   &.selected {
     /* Animate rotation */
-    transform: rotate(-90deg);
+    transform: rotate(90deg);
   }
 }

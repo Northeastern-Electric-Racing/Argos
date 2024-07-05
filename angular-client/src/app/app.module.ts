@@ -6,7 +6,7 @@ import { ToastModule } from 'primeng/toast';
 import { OrderListModule } from 'primeng/orderlist';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
-import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
+import SidebarCard from 'src/pages/graph-page/graph-sidebar/sidebar-card/sidebar-card.component';
 import AppContext from './context/app-context.component';
 import GraphPage from 'src/pages/graph-page/graph-page.component';
 import Typography from 'src/components/typography/typography.component';
@@ -73,6 +73,9 @@ import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop
 import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
 import BatteryInfoDesktop from 'src/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
 
 @NgModule({
   declarations: [
@@ -152,7 +155,10 @@ import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-
     ButtonModule,
     HttpClientModule,
     MatIconModule,
-    SidebarModule
+    SidebarModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatInputModule
   ],
   providers: [DialogService, MessageService],
   bootstrap: [AppContext]

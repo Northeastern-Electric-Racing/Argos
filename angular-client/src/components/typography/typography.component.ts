@@ -26,6 +26,9 @@ export default class Typography implements OnInit {
       case 'header':
         this.style = Theme.header;
         break;
+      case 'secondary-header':
+        this.style = Theme.secondaryHeader;
+        break;
       case 'xx-large-title':
         this.style = Theme.xxLargeHeader;
         break;

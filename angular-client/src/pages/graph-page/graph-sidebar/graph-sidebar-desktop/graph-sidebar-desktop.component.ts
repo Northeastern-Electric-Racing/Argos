@@ -1,6 +1,9 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input, OnInit } from '@angular/core';
 import { DataType, Node, NodeWithVisibilityToggle, Run } from 'src/utils/types.utils';
+import Storage from 'src/services/storage.service';
+import { DataValue } from 'src/utils/socket.utils';
+import { decimalPipe } from 'src/utils/pipes.utils';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -48,16 +51,31 @@ export default class GraphSidebarDesktop implements OnInit {
   @Input() selectDataType!: (dataType: DataType) => void;
   @Input() onRunSelected!: (run: Run) => void;
 
+  dataValuesMap!: Map<string, string>;
+
+  constructor(private storage: Storage) {}
   /**
    * Initializes the nodes with the visibility toggle.
    */
   ngOnInit(): void {
+    this.dataValuesMap = new Map();
     this.nodesWithVisibilityToggle = this.nodes.map((node: Node) => {
       return {
         ...node,
         dataTypesAreVisible: false
       };
     });
+    for (const node of this.nodes) {
+      for (const dataType of node.dataTypes) {
+        this.dataValuesMap.set(dataType.name, '');
+        this.storage.get(dataType.name).subscribe((value) => {
+          if (value) {
+            const displayValue = decimalPipe(value.values[0], 3).toString() + ' ' + value.unit;
+            this.dataValuesMap.set(dataType.name, displayValue);
+          }
+        });
+      }
+    }
   }
 
   /**

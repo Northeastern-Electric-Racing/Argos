@@ -3,6 +3,7 @@
  */
 export type StyleVariant =
   | 'header'
+  | 'secondary-header'
   | 'subheader'
   | 'xx-large-title'
   | 'large-header'
