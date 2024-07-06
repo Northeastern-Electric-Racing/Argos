@@ -2650,6 +2650,7 @@ dependencies = [
  "protobuf-codegen",
  "serde",
  "tokio",
+ "tower",
 ]
 
 [[package]]
