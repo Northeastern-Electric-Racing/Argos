@@ -10,6 +10,12 @@ on:
          - main
          - develop
 
+
+defaults:
+    run:
+        working-directory: scylla-server-rust
+
+
 jobs:
    build:
       runs-on: ubuntu-latest
