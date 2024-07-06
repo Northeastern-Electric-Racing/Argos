@@ -10,6 +10,7 @@ protobuf-codegen = "3.3.0"
 protobuf = "3.3.0"
 tokio = { version = "1.38.0", features = ["full"] }
 axum = "0.7.5"
+tower = { version = "0.4.13", features = ["timeout"] }
 
 [workspace]
 members = ["prisma-cli"]
