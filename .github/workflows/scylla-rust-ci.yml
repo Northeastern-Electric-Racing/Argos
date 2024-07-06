@@ -27,6 +27,8 @@ jobs:
             submodules: recursive
          - name: Install cargo-audit
            run: cargo install cargo-audit
+         - name: Generate prisma
+           run: cargo prisma generate
          - name: Build
            run: cargo build --verbose
          - name: Test
