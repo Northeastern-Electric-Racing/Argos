@@ -3,9 +3,9 @@ mod test_utils;
 
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
-    controllers::data_type_controller::PublicDataType,
     prisma,
     services::{data_type_service, node_service},
+    transformers::data_type_transformer::PublicDataType,
 };
 use test_utils::cleanup_and_prepare;
 

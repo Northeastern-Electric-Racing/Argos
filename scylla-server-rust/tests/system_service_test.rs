@@ -1,8 +1,8 @@
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
-    controllers::system_controller::PublicSystem,
     prisma,
     services::{run_service, system_service},
+    transformers::system_transformer::PublicSystem,
 };
 use test_utils::cleanup_and_prepare;
 

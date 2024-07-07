@@ -1,23 +1,9 @@
 use axum::{extract::State, Json};
-use serde::Serialize;
 
-use crate::{error::ScyllaError, prisma, services::data_type_service, Database};
-
-/// The struct defining the data type format sent to the client
-#[derive(Serialize, Debug, PartialEq)]
-pub struct PublicDataType {
-    pub name: String,
-    pub unit: String,
-}
-
-impl From<&prisma::data_type::Data> for PublicDataType {
-    fn from(value: &prisma::data_type::Data) -> Self {
-        PublicDataType {
-            name: value.name.clone(),
-            unit: value.unit.clone(),
-        }
-    }
-}
+use crate::{
+    error::ScyllaError, services::data_type_service,
+    transformers::data_type_transformer::PublicDataType, Database,
+};
 
 pub async fn get_all_data_types(
     State(db): State<Database>,
