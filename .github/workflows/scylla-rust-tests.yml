@@ -7,7 +7,6 @@ on:
       - develop
     paths:
          - 'scylla-server-rust/**'
-         - '.github/**'
   pull_request:
     branches:
       - main
@@ -15,7 +14,6 @@ on:
       - 'feature/**'
     paths:
       - 'scylla-server-rust/**'
-      - '.github/**'
 
 env:
     SOURCE_DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/timescaledb cargo run

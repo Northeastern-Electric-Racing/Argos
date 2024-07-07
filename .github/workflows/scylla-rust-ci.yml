@@ -7,7 +7,6 @@ on:
          - develop
       paths:
          - 'scylla-server-rust/**'
-         - '.github/**'
    pull_request:
       branches:
          - main
@@ -15,7 +14,6 @@ on:
          - 'feature/**'
       paths:
          - 'scylla-server-rust/**'
-         - '.github/**'
 
 
 defaults:
