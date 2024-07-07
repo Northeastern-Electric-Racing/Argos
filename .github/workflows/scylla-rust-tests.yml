@@ -30,6 +30,7 @@ jobs:
         working-directory: scylla-server-rust
       - name: Deploy prisma
         run: cargo prisma migrate deploy
+        working-directory: scylla-server-rust
       - name: Run tests
         working-directory: scylla-server-rust
         run: cargo test -- --test-threads=1
