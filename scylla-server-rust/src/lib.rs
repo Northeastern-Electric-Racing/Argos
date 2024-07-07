@@ -1,4 +1,4 @@
-pub mod controller;
+pub mod controllers;
 pub mod error;
 pub mod services;
 

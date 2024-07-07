@@ -6,8 +6,9 @@ use serde::Serialize;
 
 use crate::{error::ScyllaError, prisma, services::run_service, Database};
 
+/// The struct defining the run format sent to the client
 #[derive(Serialize, Debug, PartialEq)]
-pub struct RunSend {
+pub struct PublicRun {
     pub id: i32,
     #[serde(rename = "locationName")]
     pub location_name: String,
@@ -18,9 +19,9 @@ pub struct RunSend {
     pub time: i64,
 }
 
-impl From<&prisma::run::Data> for RunSend {
+impl From<&prisma::run::Data> for PublicRun {
     fn from(value: &prisma::run::Data) -> Self {
-        RunSend {
+        PublicRun {
             id: value.id,
             location_name: value.location_name.clone().unwrap_or_default(),
             driver_name: value.driver_name.clone().unwrap_or_default(),
@@ -30,33 +31,27 @@ impl From<&prisma::run::Data> for RunSend {
     }
 }
 
-pub async fn get_all_runs(State(db): State<Database>) -> Result<Json<Vec<RunSend>>, ScyllaError> {
-    let data = run_service::get_all_runs(&db).await?;
+pub async fn get_all_runs(State(db): State<Database>) -> Result<Json<Vec<PublicRun>>, ScyllaError> {
+    let run_data = run_service::get_all_runs(&db).await?;
 
-    let transformed_data: Vec<RunSend> = data.iter().map(RunSend::from).collect();
+    let transformed_run_data: Vec<PublicRun> = run_data.iter().map(PublicRun::from).collect();
 
-    Ok(Json::from(transformed_data))
+    Ok(Json::from(transformed_run_data))
 }
 
 pub async fn get_run_by_id(
     State(db): State<Database>,
     Path(run_id): Path<i32>,
-) -> Result<Json<RunSend>, ScyllaError> {
-    let data = run_service::get_run_by_id(&db, run_id).await?;
+) -> Result<Json<PublicRun>, ScyllaError> {
+    let run_data = run_service::get_run_by_id(&db, run_id).await?;
 
-    if data.is_none() {
+    if run_data.is_none() {
         return Err(ScyllaError::NotFound);
     }
 
-    let data_new = data.unwrap();
+    let run_data_safe = run_data.unwrap();
 
-    let transformed_data = RunSend {
-        id: data_new.id,
-        location_name: data_new.location_name.unwrap_or_default(),
-        driver_name: data_new.driver_name.unwrap_or_default(),
-        system_name: data_new.system_name.unwrap_or_default(),
-        time: data_new.time.timestamp_millis(),
-    };
+    let transformed_run_data = PublicRun::from(&run_data_safe);
 
-    Ok(Json::from(transformed_data))
+    Ok(Json::from(transformed_run_data))
 }

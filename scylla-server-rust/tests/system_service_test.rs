@@ -1,6 +1,6 @@
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
-    controller::system_controller::SystemSend,
+    controllers::system_controller::PublicSystem,
     prisma,
     services::{run_service, system_service},
 };
@@ -9,7 +9,7 @@ use test_utils::cleanup_and_prepare;
 #[path = "test_utils.rs"]
 mod test_utils;
 
-const DATA_TYPE_NAME: &str = "test";
+const TEST_KEYWORD: &str = "test";
 
 #[tokio::test]
 async fn test_upsert_system_create() -> Result<(), QueryError> {
@@ -17,19 +17,19 @@ async fn test_upsert_system_create() -> Result<(), QueryError> {
 
     let res_c = system_service::upsert_system(
         &db,
-        DATA_TYPE_NAME.to_owned(),
+        TEST_KEYWORD.to_owned(),
         run_service::create_run(&db, 101).await?.id,
     )
     .await?;
 
     let res = db
         .system()
-        .find_unique(prisma::system::name::equals(DATA_TYPE_NAME.to_owned()))
+        .find_unique(prisma::system::name::equals(TEST_KEYWORD.to_owned()))
         .exec()
         .await?
         .expect("System should exist, was just upserted!");
 
-    assert_eq!(SystemSend::from(&res_c), SystemSend::from(&res));
+    assert_eq!(PublicSystem::from(&res_c), PublicSystem::from(&res));
 
     Ok(())
 }
@@ -50,7 +50,7 @@ async fn test_get_upsert_system() -> Result<(), QueryError> {
 
     system_service::upsert_system(
         &db,
-        DATA_TYPE_NAME.to_owned(),
+        TEST_KEYWORD.to_owned(),
         run_service::create_run(&db, 101).await?.id,
     )
     .await?;
@@ -58,7 +58,7 @@ async fn test_get_upsert_system() -> Result<(), QueryError> {
     let sys = system_service::get_all_systems(&db).await?;
 
     sys.iter()
-        .find(|&f| f.name == DATA_TYPE_NAME.to_owned())
+        .find(|&f| f.name == TEST_KEYWORD.to_owned())
         .expect("System of the added name should exist in the list of systems");
 
     Ok(())
