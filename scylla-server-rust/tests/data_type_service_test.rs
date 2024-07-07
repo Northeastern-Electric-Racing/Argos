@@ -32,7 +32,8 @@ async fn test_datatype_fail_upsert_no_node() -> Result<(), QueryError> {
         "hello wurld".to_owned(),
         TEST_KEYWORD.to_owned(),
     )
-    .await?;
+    .await
+    .expect_err("Test should fail, no node exists");
 
     Ok(())
 }
