@@ -5,7 +5,9 @@ on:
     branches:
       - main
       - develop
-    paths: ['scylla-server-rust/**', '.github/***']
+    paths:
+         - 'scylla-server-rust/**'
+         - '.github/**'
   pull_request:
     branches:
       - main
