@@ -126,4 +126,3 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
 
     Ok(())
 }
-
