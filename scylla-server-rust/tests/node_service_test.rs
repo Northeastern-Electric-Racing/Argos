@@ -5,16 +5,16 @@ use test_utils::cleanup_and_prepare;
 #[path = "test_utils.rs"]
 mod test_utils;
 
-const DATA_TYPE_NAME: &str = "test";
+const TEST_KEYWORD: &str = "test";
 
 #[tokio::test]
 async fn test_upsert_node() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
-    node_service::upsert_node(&db, DATA_TYPE_NAME.to_owned()).await?;
+    node_service::upsert_node(&db, TEST_KEYWORD.to_owned()).await?;
 
     db.node()
-        .find_unique(prisma::node::name::equals(DATA_TYPE_NAME.to_owned()))
+        .find_unique(prisma::node::name::equals(TEST_KEYWORD.to_owned()))
         .exec()
         .await?
         .expect("There should be a node, one was just upserted");
@@ -37,8 +37,8 @@ async fn test_upsert_node_twice() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     let all_nodes = node_service::get_all_nodes(&db).await?;
-    node_service::upsert_node(&db, DATA_TYPE_NAME.to_owned()).await?;
-    node_service::upsert_node(&db, DATA_TYPE_NAME.to_owned()).await?;
+    node_service::upsert_node(&db, TEST_KEYWORD.to_owned()).await?;
+    node_service::upsert_node(&db, TEST_KEYWORD.to_owned()).await?;
     let all_nodes_after = node_service::get_all_nodes(&db).await?;
 
     assert_eq!(all_nodes.len(), all_nodes_after.len() - 1);

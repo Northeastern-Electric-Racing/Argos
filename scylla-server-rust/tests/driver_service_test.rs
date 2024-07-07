@@ -5,7 +5,7 @@ use test_utils::cleanup_and_prepare;
 #[path = "test_utils.rs"]
 mod test_utils;
 
-const DATA_TYPE_NAME: &str = "test";
+const TEST_KEYWORD: &str = "test";
 
 #[tokio::test]
 async fn test_get_all_drivers() -> Result<(), QueryError> {
@@ -23,7 +23,7 @@ async fn test_create_driver() -> Result<(), QueryError> {
 
     driver_service::upsert_driver(
         &db,
-        DATA_TYPE_NAME.to_owned(),
+        TEST_KEYWORD.to_owned(),
         run_service::create_run(&db, 10001).await?.id,
     )
     .await?;

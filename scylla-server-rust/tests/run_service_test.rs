@@ -1,11 +1,9 @@
 use prisma_client_rust::QueryError;
-use scylla_server_rust::{controller::run_controller::RunSend, services::run_service};
+use scylla_server_rust::{controllers::run_controller::PublicRun, services::run_service};
 use test_utils::cleanup_and_prepare;
 
 #[path = "test_utils.rs"]
 mod test_utils;
-
-//const DATA_TYPE_NAME: &str = "test";
 
 #[tokio::test]
 async fn test_get_all_runs() -> Result<(), QueryError> {
@@ -29,7 +27,7 @@ async fn test_get_run_by_id() -> Result<(), QueryError> {
         .await?
         .expect("Run should exist was upserted ");
 
-    assert_eq!(RunSend::from(&run_c), RunSend::from(&run));
+    assert_eq!(PublicRun::from(&run_c), PublicRun::from(&run));
 
     Ok(())
 }

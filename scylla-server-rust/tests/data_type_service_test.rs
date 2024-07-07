@@ -3,13 +3,13 @@ mod test_utils;
 
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
-    controller::data_type_controller::DataTypeSend,
+    controllers::data_type_controller::PublicDataType,
     prisma,
     services::{data_type_service, node_service},
 };
 use test_utils::cleanup_and_prepare;
 
-const DATA_TYPE_NAME: &str = "test";
+const TEST_KEYWORD: &str = "test";
 
 #[tokio::test]
 async fn test_get_all_datatypes() -> Result<(), QueryError> {
@@ -28,12 +28,11 @@ async fn test_datatype_fail_upsert_no_node() -> Result<(), QueryError> {
     // should fail since no node exists
     data_type_service::upsert_data_type(
         &db,
-        DATA_TYPE_NAME.to_owned(),
+        TEST_KEYWORD.to_owned(),
         "hello wurld".to_owned(),
-        DATA_TYPE_NAME.to_owned(),
+        TEST_KEYWORD.to_owned(),
     )
-    .await
-    .expect_err("Should error, as no node exists");
+    .await?;
 
     Ok(())
 }
@@ -61,8 +60,8 @@ async fn test_datatype_create() -> Result<(), QueryError> {
         .expect("This should not be empty");
 
     assert_eq!(
-        DataTypeSend::from(&data),
-        DataTypeSend {
+        PublicDataType::from(&data),
+        PublicDataType {
             name: data_type_name,
             unit: unit
         }

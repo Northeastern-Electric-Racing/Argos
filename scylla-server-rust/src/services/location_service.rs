@@ -5,10 +5,21 @@ use crate::{
     Database,
 };
 
+/// Gets all locations
+/// * `db` - The prisma client to make the call to
+/// returns: A result containing the data or the QueryError propogated by the db
 pub async fn get_all_locations(db: &Database) -> Result<Vec<prisma::location::Data>, QueryError> {
     db.location().find_many(vec![]).exec().await
 }
 
+/// Upserts a location, either creating or updating one depending on its existence
+/// * `db` - The prisma client to make the call to
+/// * `name` - The name of the location to upsert
+/// * `latitude` - The latitude of the location
+/// * `longitude` - The longitude of the location
+/// * `radius` - The radius of the locations bounds
+/// * `run_id` - The run at the location, must already exist!
+/// returns: A result containing the data or the QueryError propogated by the db
 pub async fn upsert_location(
     db: &Database,
     name: String,
