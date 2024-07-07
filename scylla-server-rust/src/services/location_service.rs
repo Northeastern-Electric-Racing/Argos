@@ -5,12 +5,12 @@ use crate::{
     Database,
 };
 
-pub async fn get_all_locations(db: Database) -> Result<Vec<prisma::location::Data>, QueryError> {
+pub async fn get_all_locations(db: &Database) -> Result<Vec<prisma::location::Data>, QueryError> {
     db.location().find_many(vec![]).exec().await
 }
 
 pub async fn upsert_location(
-    db: Database,
+    db: &Database,
     name: String,
     latitude: f64,
     longitude: f64,

@@ -1,0 +1,35 @@
+use prisma_client_rust::QueryError;
+use scylla_server_rust::{controller::run_controller::RunSend, services::run_service};
+use test_utils::cleanup_and_prepare;
+
+#[path = "test_utils.rs"]
+mod test_utils;
+
+//const DATA_TYPE_NAME: &str = "test";
+
+#[tokio::test]
+async fn test_get_all_runs() -> Result<(), QueryError> {
+    let db = cleanup_and_prepare().await?;
+
+    // ensure runs is empty
+    assert!(run_service::get_all_runs(&db).await?.is_empty());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_run_by_id() -> Result<(), QueryError> {
+    let db = cleanup_and_prepare().await?;
+
+    // add a run
+    let run_c = run_service::create_run(&db, 1).await?;
+
+    // get that run
+    let run = run_service::get_run_by_id(&db, run_c.id)
+        .await?
+        .expect("Run should exist was upserted ");
+
+    assert_eq!(RunSend::from(&run_c), RunSend::from(&run));
+
+    Ok(())
+}
