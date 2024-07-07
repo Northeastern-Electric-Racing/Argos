@@ -4,15 +4,12 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - 'angular-client/**'
   pull_request:
     branches:
       - main
       - develop
       - 'feature/**'
-    paths:
-      - 'angular-client/**'
+
 
 jobs:
   run-prettier-check:

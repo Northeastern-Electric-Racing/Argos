@@ -5,15 +5,11 @@ on:
       branches:
          - main
          - develop
-      paths:
-         - 'scylla-server-rust/**'
    pull_request:
       branches:
          - main
          - develop
          - 'feature/**'
-      paths:
-         - 'scylla-server-rust/**'
 
 
 defaults:
