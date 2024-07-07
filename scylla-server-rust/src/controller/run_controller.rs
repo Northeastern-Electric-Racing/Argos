@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::{error::ScyllaError, prisma, services::run_service, Database};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct RunSend {
     pub id: i32,
     #[serde(rename = "locationName")]
@@ -31,7 +31,7 @@ impl From<&prisma::run::Data> for RunSend {
 }
 
 pub async fn get_all_runs(State(db): State<Database>) -> Result<Json<Vec<RunSend>>, ScyllaError> {
-    let data = run_service::get_all_runs(db).await?;
+    let data = run_service::get_all_runs(&db).await?;
 
     let transformed_data: Vec<RunSend> = data.iter().map(RunSend::from).collect();
 
@@ -42,7 +42,7 @@ pub async fn get_run_by_id(
     State(db): State<Database>,
     Path(run_id): Path<i32>,
 ) -> Result<Json<RunSend>, ScyllaError> {
-    let data = run_service::get_run_by_id(db, run_id).await?;
+    let data = run_service::get_run_by_id(&db, run_id).await?;
 
     if data.is_none() {
         return Err(ScyllaError::NotFound);

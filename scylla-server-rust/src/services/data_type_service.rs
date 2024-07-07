@@ -2,12 +2,12 @@ use prisma_client_rust::QueryError;
 
 use crate::{prisma, Database};
 
-pub async fn get_all_data_types(db: Database) -> Result<Vec<prisma::data_type::Data>, QueryError> {
+pub async fn get_all_data_types(db: &Database) -> Result<Vec<prisma::data_type::Data>, QueryError> {
     db.data_type().find_many(vec![]).exec().await
 }
 
 pub async fn upsert_data_type(
-    db: Database,
+    db: &Database,
     data_type_name: String,
     unit: String,
     node_name: String,

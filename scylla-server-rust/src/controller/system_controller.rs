@@ -5,7 +5,7 @@ use crate::{error::ScyllaError, prisma, services::system_service, Database};
 
 use super::run_controller::{self, RunSend};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct SystemSend {
     pub name: String,
     pub runs: Vec<run_controller::RunSend>,
@@ -29,7 +29,7 @@ impl From<&prisma::system::Data> for SystemSend {
 pub async fn get_all_systems(
     State(db): State<Database>,
 ) -> Result<Json<Vec<SystemSend>>, ScyllaError> {
-    let data = system_service::get_all_systems(db).await?;
+    let data = system_service::get_all_systems(&db).await?;
 
     let transformed_data: Vec<SystemSend> = data.iter().map(SystemSend::from).collect();
 

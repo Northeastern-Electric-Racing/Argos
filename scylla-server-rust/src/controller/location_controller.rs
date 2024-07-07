@@ -5,7 +5,7 @@ use crate::{error::ScyllaError, prisma, services::location_service, Database};
 
 use super::run_controller::{self, RunSend};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct LocationSend {
     pub name: String,
     pub latitude: f64,
@@ -35,7 +35,7 @@ impl From<&prisma::location::Data> for LocationSend {
 pub async fn get_all_locations(
     State(db): State<Database>,
 ) -> Result<Json<Vec<LocationSend>>, ScyllaError> {
-    let data = location_service::get_all_locations(db).await?;
+    let data = location_service::get_all_locations(&db).await?;
 
     let transformed_data: Vec<LocationSend> = data.iter().map(LocationSend::from).collect();
 
