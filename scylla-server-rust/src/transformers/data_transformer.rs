@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::prisma;
 
-/// The struct defining the data format sent to the client 
+/// The struct defining the data format sent to the client
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PublicData {
     pub time: i64,
