@@ -9,6 +9,7 @@ on:
       - main
       - develop
       - 'feature/**'
+
 jobs:
   run-linting-check:
     runs-on: ubuntu-latest
@@ -24,6 +25,6 @@ jobs:
           node-version: 16.17.1
           cache: 'npm'
       - name: Install modules
-        run: npm install && npm run prisma:generate
+        run: npm install
       - name: Run linting check
         run: npm run lint --max-warnings=0

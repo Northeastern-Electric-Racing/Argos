@@ -1,0 +1,25 @@
+[package]
+name = "scylla-server-rust"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+prisma-client-rust = {git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", default-features = false,features = ["postgresql", "migrations"] }
+serde = "1.0.203"
+protobuf-codegen = "3.3.0"
+protobuf = "3.3.0"
+tokio = { version = "1.38.0", features = ["full"] }
+axum = "0.7.5"
+tower = { version = "0.4.13", features = ["timeout"] }
+tower-http = { version = "0.5.2", features = ["cors"] }
+
+[workspace]
+members = ["prisma-cli"]
+
+[build-dependencies]
+protobuf-codegen = "3.3.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
