@@ -4,11 +4,18 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'angular-client/**'
+      - '.github/**'
   pull_request:
     branches:
       - main
       - develop
       - 'feature/**'
+    paths:
+      - 'angular-client/**'
+      - '.github/**'
+
 jobs:
   run-prettier-check:
     runs-on: ubuntu-latest
