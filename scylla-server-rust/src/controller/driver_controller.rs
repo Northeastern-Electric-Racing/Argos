@@ -5,7 +5,7 @@ use crate::{error::ScyllaError, prisma, services::driver_service, Database};
 
 use super::run_controller::{self, RunSend};
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq)]
 pub struct DriverSend {
     username: String,
     runs: Vec<run_controller::RunSend>,
@@ -29,7 +29,7 @@ impl From<&prisma::driver::Data> for DriverSend {
 pub async fn get_all_drivers(
     State(db): State<Database>,
 ) -> Result<Json<Vec<DriverSend>>, ScyllaError> {
-    let data = driver_service::get_all_drivers(db).await?;
+    let data = driver_service::get_all_drivers(&db).await?;
 
     let transformed_data: Vec<DriverSend> = data.iter().map(DriverSend::from).collect();
 

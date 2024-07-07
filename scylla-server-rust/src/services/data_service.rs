@@ -8,7 +8,7 @@ use crate::{
 
 /// Get a datapoint
 pub async fn get_data(
-    db: Database,
+    db: &Database,
     data_type_name: String,
     run_id: i32,
 ) -> Result<Vec<prisma::data::Data>, QueryError> {
@@ -23,7 +23,7 @@ pub async fn get_data(
 
 /// Add a datapoint
 pub async fn add_data(
-    db: Database,
+    db: &Database,
     serverdata: ServerData,
     unix_time: i64,
     data_type_name: String,

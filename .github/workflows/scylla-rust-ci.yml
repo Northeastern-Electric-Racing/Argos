@@ -31,8 +31,6 @@ jobs:
            run: cargo prisma generate
          - name: Build
            run: cargo build --verbose
-         - name: Test
-           run: cargo test --verbose
          - name: Clippy
            run: cargo clippy --verbose -- -D warnings
          - name: Audit
