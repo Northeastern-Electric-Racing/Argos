@@ -13,7 +13,7 @@
         <sidebar-card
           [title]="node.name"
           (click)="toggleDataTypeVisibility(node)"
-          [dataValue]="node.dataTypes.length.toString() + ' ' + 'Topics'"
+          [dataValue]="node.dataTypes.length === 1 ? '1 Topic' : node.dataTypes.length.toString() + ' ' + 'Topics'"
           [dropDown]="true"
         />
         <div *ngIf="node.dataTypesAreVisible" @toggleExpand>

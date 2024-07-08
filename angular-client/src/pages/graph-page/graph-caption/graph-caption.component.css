@@ -19,3 +19,9 @@
 .right-info {
   text-align: right;
 }
+
+.caption-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

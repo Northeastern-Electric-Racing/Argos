@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType } from 'src/utils/types.utils';
+import { DataType, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-caption',
@@ -14,6 +14,7 @@ export default class GraphInfo {
   @Input() currentDriver?: string;
   @Input() currentSystem?: string;
   @Input() currentLocation?: string;
+  @Input() onRunSelected!: (run: Run) => void;
   dataTypeName?: string | string[];
   dataTypeUnit?: string | string[];
   value?: string | number;

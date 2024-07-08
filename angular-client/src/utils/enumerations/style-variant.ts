@@ -6,6 +6,7 @@ export type StyleVariant =
   | 'secondary-header'
   | 'subheader'
   | 'xx-large-title'
+  | 'large-secondary-header'
   | 'large-header'
   | 'info-title'
   | 'info-subtitle'

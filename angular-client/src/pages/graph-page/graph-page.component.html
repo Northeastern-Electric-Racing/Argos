@@ -10,12 +10,7 @@
   <div class="container">
     <graph-header class="graph-header" [runId]="run?.id" />
     <div class="content-div">
-      <graph-sidebar
-        [nodes]="nodes!"
-        [selectDataType]="setSelectedDataType"
-        class="desktop-sidebar"
-        [onRunSelected]="onRunSelected"
-      />
+      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
       <div class="right-container">
         <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
         <graph-caption
@@ -24,6 +19,7 @@
           [currentDriver]="run?.driverName"
           [currentSystem]="run?.systemName"
           [currentLocation]="run?.locationName"
+          [onRunSelected]="onRunSelected"
           class="graph-caption"
         />
       </div>
