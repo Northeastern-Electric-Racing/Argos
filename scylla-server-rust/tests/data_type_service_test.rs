@@ -16,7 +16,9 @@ async fn test_get_all_datatypes() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     // ensure datatypes is empty
-    assert!(data_type_service::get_all_data_types(&db).await?.is_empty());
+    assert!(data_type_service::get_all_data_types(&db, true)
+        .await?
+        .is_empty());
 
     Ok(())
 }

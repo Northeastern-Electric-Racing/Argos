@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::prisma;
+use crate::{prisma, socket::socket_handler::ClientData};
 
 /// The struct defining the data format sent to the client
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -15,6 +15,16 @@ impl From<&prisma::data::Data> for PublicData {
         PublicData {
             values: value.values.iter().map(|f| f.to_string()).collect(),
             time: value.time.timestamp_millis(),
+        }
+    }
+}
+
+/// convert from the client (socket) type to the client type, for debugging and testing only probably
+impl From<ClientData> for PublicData {
+    fn from(value: ClientData) -> Self {
+        PublicData {
+            time: value.timestamp,
+            values: value.values,
         }
     }
 }

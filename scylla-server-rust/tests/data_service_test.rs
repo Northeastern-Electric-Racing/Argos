@@ -2,10 +2,9 @@
 mod test_utils;
 
 use prisma_client_rust::QueryError;
-use protobuf::SpecialFields;
 use scylla_server_rust::{
-    serverdata::ServerData,
     services::{data_service, data_type_service, node_service, run_service},
+    socket::socket_handler::ClientData,
     transformers::data_transformer::PublicData,
 };
 use test_utils::cleanup_and_prepare;
@@ -25,7 +24,7 @@ async fn test_data_service() -> Result<(), QueryError> {
         TEST_KEYWORD.to_owned(),
     )
     .await?;
-    data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0).await?;
+    data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0, true, true).await?;
 
     Ok(())
 }
@@ -46,14 +45,13 @@ async fn test_data_add() -> Result<(), QueryError> {
 
     let data = data_service::add_data(
         &db,
-        ServerData {
-            value: vec!["0".to_owned()],
+        ClientData {
+            values: vec!["0".to_owned()],
             unit: "A".to_owned(),
-            special_fields: SpecialFields::new(),
+            run_id: run_data.id,
+            name: TEST_KEYWORD.to_owned(),
+            timestamp: 1000,
         },
-        1000,
-        TEST_KEYWORD.to_owned(),
-        run_data.id,
     )
     .await?;
 
@@ -73,7 +71,7 @@ async fn test_data_fetch_empty() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     // should be empty, nothing was added to run
-    let data = data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0).await?;
+    let data = data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0, true, true).await?;
 
     assert!(data.is_empty());
 
@@ -87,14 +85,13 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
     // should err out as data type name doesnt exist yet
     data_service::add_data(
         &db,
-        ServerData {
-            value: vec!["0".to_owned()],
+        ClientData {
+            values: vec!["0".to_owned()],
             unit: "A".to_owned(),
-            special_fields: SpecialFields::new(),
+            run_id: 0,
+            name: TEST_KEYWORD.to_owned(),
+            timestamp: 1000,
         },
-        1000,
-        TEST_KEYWORD.to_owned(),
-        0,
     )
     .await
     .expect_err("Should have errored, datatype doesnt exist!");
@@ -113,14 +110,13 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
     // now shouldnt fail as it and node does exist
     data_service::add_data(
         &db,
-        ServerData {
-            value: vec!["0".to_owned()],
+        ClientData {
+            values: vec!["0".to_owned()],
             unit: "A".to_owned(),
-            special_fields: SpecialFields::new(),
+            run_id: 0,
+            name: TEST_KEYWORD.to_owned(),
+            timestamp: 1000,
         },
-        1000,
-        TEST_KEYWORD.to_owned(),
-        0,
     )
     .await?;
 

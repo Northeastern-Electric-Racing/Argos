@@ -6,7 +6,11 @@ use crate::{prisma, Database};
 /// * `db` - The prisma client to make the call to
 /// returns: A result containing the data or the QueryError propogated by the db
 pub async fn get_all_nodes(db: &Database) -> Result<Vec<prisma::node::Data>, QueryError> {
-    db.node().find_many(vec![]).exec().await
+    db.node()
+        .find_many(vec![])
+        .with(prisma::node::data_types::fetch(vec![]))
+        .exec()
+        .await
 }
 
 /// Upserts a node, either creating or updating one depending on its existence
