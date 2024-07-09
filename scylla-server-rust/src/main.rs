@@ -7,13 +7,34 @@ use scylla_server_rust::{
         run_controller, system_controller,
     },
     prisma::PrismaClient,
+    socket::{
+        mqtt_reciever::{recieve_mqtt, MqttReciever},
+        socket_handler,
+    },
     Database,
 };
+use socketioxide::SocketIo;
+use tokio::sync::mpsc;
+use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
-    let client: Database = Arc::new(PrismaClient::_builder().build().await.unwrap());
+    let db: Database = Arc::new(PrismaClient::_builder().build().await.unwrap());
+
+    let (socket_layer, io) = SocketIo::new_layer();
+
+    // channel to pass the mqtt data
+    // TODO tune buffer size
+    let (tx, rx) = mpsc::channel::<socket_handler::ClientData>(32);
+
+    // spawn the socket handler
+    tokio::spawn(socket_handler::handle_socket(io, rx));
+
+    // create and spawn the mock handler
+    let recv = MqttReciever::new(tx, "localhost:1883", db.clone()).await;
+    recv.siren_connect().await;
+    tokio::spawn(recieve_mqtt(recv));
 
     let app = Router::new()
         // get all data with the name dataTypeName and runID as specified
@@ -36,6 +57,7 @@ async fn main() {
         .route("/runs/:id", get(run_controller::get_run_by_id))
         // get all systems
         .route("/systems", get(system_controller::get_all_systems))
+        // for CORS handling
         .layer(
             CorsLayer::new()
                 // allow `GET`
@@ -43,7 +65,13 @@ async fn main() {
                 // allow requests from any origin
                 .allow_origin(Any),
         )
-        .with_state(client);
+        // for socketio integration
+        .layer(
+            ServiceBuilder::new()
+                .layer(CorsLayer::permissive())
+                .layer(socket_layer),
+        )
+        .with_state(db.clone());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
     axum::serve(listener, app).await.unwrap();

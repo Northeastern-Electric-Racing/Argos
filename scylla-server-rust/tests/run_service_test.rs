@@ -10,7 +10,9 @@ async fn test_get_all_runs() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     // ensure runs is empty
-    assert!(run_service::get_all_runs(&db).await?.is_empty());
+    assert!(run_service::get_all_runs(&db, true, true, true)
+        .await?
+        .is_empty());
 
     Ok(())
 }
@@ -23,7 +25,7 @@ async fn test_get_run_by_id() -> Result<(), QueryError> {
     let run_c = run_service::create_run(&db, 1).await?;
 
     // get that run
-    let run = run_service::get_run_by_id(&db, run_c.id)
+    let run = run_service::get_run_by_id(&db, true, true, true, run_c.id)
         .await?
         .expect("Run should exist was upserted ");
 
