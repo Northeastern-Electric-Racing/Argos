@@ -9,23 +9,58 @@ use crate::{
 
 /// Gets all runs
 /// * `db` - The prisma client to make the call to
+/// * `fetch_loc` - Whether to fetch the location data
+/// * `fetch_driver` - Whether to fetch the driver data
+/// * `fetch_system` - Whether to fetch the system data
 /// returns: A result containing the data or the QueryError propogated by the db
-pub async fn get_all_runs(db: &Database) -> Result<Vec<prisma::run::Data>, QueryError> {
-    db.run().find_many(vec![]).exec().await
+pub async fn get_all_runs(
+    db: &Database,
+    fetch_loc: bool,
+    fetch_driver: bool,
+    fetch_system: bool,
+) -> Result<Vec<prisma::run::Data>, QueryError> {
+    let mut find_q = db.run().find_many(vec![]);
+
+    if fetch_loc {
+        find_q = find_q.with(prisma::run::location::fetch());
+    }
+    if fetch_driver {
+        find_q = find_q.with(prisma::run::driver::fetch());
+    }
+    if fetch_system {
+        find_q = find_q.with(prisma::run::system::fetch());
+    }
+
+    find_q.exec().await
 }
 
 /// Gets a single run by its id
 /// * `db` - The prisma client to make the call to
+/// * `fetch_loc` - Whether to fetch the location data
+/// * `fetch_driver` - Whether to fetch the driver data
+/// * `fetch_system` - Whether to fetch the system data
 /// * `run_id` - The id of the run to search for
 /// returns: A result containing the data (or None if the `run_id` was not a valid run) or the QueryError propogated by the db
 pub async fn get_run_by_id(
     db: &Database,
+    fetch_loc: bool,
+    fetch_driver: bool,
+    fetch_system: bool,
     run_id: i32,
 ) -> Result<Option<prisma::run::Data>, QueryError> {
-    db.run()
-        .find_unique(prisma::run::id::equals(run_id))
-        .exec()
-        .await
+    let mut find_q = db.run().find_unique(prisma::run::id::equals(run_id));
+
+    if fetch_loc {
+        find_q = find_q.with(prisma::run::location::fetch());
+    }
+    if fetch_driver {
+        find_q = find_q.with(prisma::run::driver::fetch());
+    }
+    if fetch_system {
+        find_q = find_q.with(prisma::run::system::fetch());
+    }
+
+    find_q.exec().await
 }
 
 /// Creates a run
