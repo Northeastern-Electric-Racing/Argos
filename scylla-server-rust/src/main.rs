@@ -32,9 +32,8 @@ async fn main() {
     tokio::spawn(socket_handler::handle_socket(io, rx));
 
     // create and spawn the mock handler
-    let recv = MqttReciever::new(tx, "localhost:1883", db.clone()).await;
-    recv.siren_connect().await;
-    tokio::spawn(recieve_mqtt(recv));
+    let (recv, opts) = MqttReciever::new(tx, "localhost:1883", db.clone()).await;
+    tokio::spawn(recieve_mqtt(recv, opts));
 
     let app = Router::new()
         // get all data with the name dataTypeName and runID as specified
