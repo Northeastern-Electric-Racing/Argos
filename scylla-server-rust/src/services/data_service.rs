@@ -1,6 +1,6 @@
 use prisma_client_rust::{chrono::DateTime, QueryError};
 
-use crate::{prisma, socket::socket_handler::ClientData, Database};
+use crate::{prisma, reciever::ClientData, Database};
 
 /// Get datapoints that mach criteria
 /// * `db` - The prisma client to make the call to
@@ -55,9 +55,35 @@ pub async fn add_data(
                 client_data
                     .values
                     .iter()
-                    .map(|f| f.parse::<f64>().unwrap())
+                    .map(|f| f.parse::<f64>().unwrap_or_default())
                     .collect(),
             )],
+        )
+        .exec()
+        .await
+}
+
+pub async fn add_many(db: &Database, client_data: Vec<ClientData>) -> Result<i64, QueryError> {
+    db.data()
+        .create_many(
+            client_data
+                .iter()
+                .map(|f| {
+                    prisma::data::create_unchecked(
+                        f.name.to_string(),
+                        DateTime::from_timestamp_millis(f.timestamp)
+                            .unwrap()
+                            .fixed_offset(),
+                        f.run_id,
+                        vec![prisma::data::values::set(
+                            f.values
+                                .iter()
+                                .map(|f| f.parse::<f64>().unwrap_or_default())
+                                .collect(),
+                        )],
+                    )
+                })
+                .collect(),
         )
         .exec()
         .await

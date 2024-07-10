@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::{prisma, socket::socket_handler::ClientData};
+use crate::{prisma, reciever::ClientData};
 
 /// The struct defining the data format sent to the client
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]

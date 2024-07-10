@@ -7,33 +7,56 @@ use scylla_server_rust::{
         run_controller, system_controller,
     },
     prisma::PrismaClient,
-    socket::{
-        mqtt_reciever::{recieve_mqtt, MqttReciever},
-        socket_handler,
-    },
+    reciever::{db_handler, mqtt_reciever::MqttReciever, socket_handler, ClientData},
     Database,
 };
 use socketioxide::SocketIo;
-use tokio::sync::mpsc;
+use tokio::{
+    signal,
+    sync::{broadcast as Broadcaster, mpsc},
+};
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
+    // create the database stuff
     let db: Database = Arc::new(PrismaClient::_builder().build().await.unwrap());
 
+    // create the socket stuff
     let (socket_layer, io) = SocketIo::new_layer();
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (tx, rx) = mpsc::channel::<socket_handler::ClientData>(32);
+    let (tx, rx) = Broadcaster::channel::<ClientData>(1000);
+    let rx2 = tx.subscribe();
+
+    // channel to pass the processed data to the db thread
+    // TODO tune buffer size
+    let (tx_proc, rx_proc) = mpsc::channel::<Vec<ClientData>>(1000000);
 
     // spawn the socket handler
     tokio::spawn(socket_handler::handle_socket(io, rx));
 
-    // create and spawn the mock handler
-    let (recv, opts) = MqttReciever::new(tx, "localhost:1883", db.clone()).await;
-    tokio::spawn(recieve_mqtt(recv, opts));
+    // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
+    // create a task tracker and cancellation token
+    let task_tracker = TaskTracker::new();
+    let token = CancellationToken::new();
+    // spawn the database handler
+    task_tracker.spawn(
+        db_handler::DbHandler::new(rx2, Arc::clone(&db)).handling_loop(tx_proc, token.clone()),
+    );
+    // spawm the database inserter
+    task_tracker.spawn(db_handler::DbHandler::batching_loop(
+        rx_proc,
+        Arc::clone(&db),
+        token.clone(),
+    ));
+
+    // create and spawn the mqtt reciever
+    let (recv, eloop) = MqttReciever::new(tx, "localhost:1883", db.clone()).await;
+    tokio::spawn(recv.recieve_mqtt(eloop));
 
     let app = Router::new()
         // get all data with the name dataTypeName and runID as specified
@@ -73,5 +96,21 @@ async fn main() {
         .with_state(db.clone());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let axum_token = token.clone();
+    tokio::spawn(async {
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async move {
+                _ = axum_token.cancelled().await;
+            })
+            .await
+            .expect("Failed shutdown init for axum");
+    });
+
+    task_tracker.close();
+    // listen for ctrl_c, then cancel, close, and await for all tasks in the tracker.  Other tasks cancel vai the default tokio system
+    signal::ctrl_c()
+        .await
+        .expect("Could not read cancellation trigger (ctr+c)");
+    token.cancel();
+    task_tracker.wait().await;
 }

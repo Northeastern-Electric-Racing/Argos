@@ -14,6 +14,7 @@ pub enum ScyllaError {
 
 impl From<QueryError> for ScyllaError {
     fn from(error: QueryError) -> Self {
+        println!("Query error: {:?}", error);
         match error {
             e if e.is_prisma_error::<RecordNotFound>() => ScyllaError::NotFound,
             e => ScyllaError::PrismaError(e),

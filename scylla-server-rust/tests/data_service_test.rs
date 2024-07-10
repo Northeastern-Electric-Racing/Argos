@@ -3,8 +3,8 @@ mod test_utils;
 
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
+    reciever::ClientData,
     services::{data_service, data_type_service, node_service, run_service},
-    socket::socket_handler::ClientData,
     transformers::data_transformer::PublicData,
 };
 use test_utils::cleanup_and_prepare;
@@ -51,6 +51,7 @@ async fn test_data_add() -> Result<(), QueryError> {
             run_id: run_data.id,
             name: TEST_KEYWORD.to_owned(),
             timestamp: 1000,
+            node: "Irrelevant".to_string(),
         },
     )
     .await?;
@@ -91,6 +92,7 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
             run_id: 0,
             name: TEST_KEYWORD.to_owned(),
             timestamp: 1000,
+            node: "Irrelevant".to_string(),
         },
     )
     .await
@@ -116,6 +118,7 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
             run_id: 0,
             name: TEST_KEYWORD.to_owned(),
             timestamp: 1000,
+            node: "Irrelevant".to_string(),
         },
     )
     .await?;
