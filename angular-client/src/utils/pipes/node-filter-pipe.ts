@@ -10,10 +10,12 @@ export class NodeFilterPipe implements PipeTransform {
 
     return data
       ? filterValue
-        ? data.filter((item) =>
-            item.dataTypes
-              .map((dataType) => dataType.name.toLowerCase())
-              .some((dataTypeName) => dataTypeName.includes(filterValue))
+        ? data.filter(
+            (item) =>
+              item.name.toLowerCase().includes(filterValue) ||
+              item.dataTypes
+                .map((dataType) => dataType.name.toLowerCase())
+                .some((dataTypeName) => dataTypeName.includes(filterValue))
           )
         : data
       : [];

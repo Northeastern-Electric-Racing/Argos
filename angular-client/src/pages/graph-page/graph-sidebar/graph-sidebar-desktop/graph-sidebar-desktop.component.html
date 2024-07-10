@@ -20,7 +20,7 @@
         />
         <div *ngIf="node.dataTypesAreVisible" @toggleExpand>
           <div
-            *ngFor="let dataType of node.dataTypesObservable | async | dataTypeFilter: 'name' : searchFilter"
+            *ngFor="let dataType of node.dataTypesObservable | async | dataTypeFilter: 'name' : searchFilter : node.name"
             style="display: flex; justify-content: center"
           >
             <sidebar-card
