@@ -3,6 +3,8 @@ import { Component, Input, OnInit } from '@angular/core';
 import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
+import { FormControl, FormGroup } from '@angular/forms';
+import { debounceTime, Observable, of, Subscription } from 'rxjs';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -46,8 +48,14 @@ import { decimalPipe } from 'src/utils/pipes.utils';
 })
 export default class GraphSidebarDesktop implements OnInit {
   @Input() nodes!: Node[];
-  nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
   @Input() selectDataType!: (dataType: DataType) => void;
+  nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
+
+  filterForm: FormGroup = new FormGroup({
+    searchFilter: new FormControl<string>('')
+  });
+  filterFormSubsription!: Subscription;
+  searchFilter: string = '';
 
   dataValuesMap: Map<string, string> = new Map();
 
@@ -56,12 +64,21 @@ export default class GraphSidebarDesktop implements OnInit {
    * Initializes the nodes with the visibility toggle.
    */
   ngOnInit(): void {
-    this.nodesWithVisibilityToggle = this.nodes.map((node: Node) => {
-      return {
-        ...node,
-        dataTypesAreVisible: false
-      };
+    this.nodesWithVisibilityToggle = of(
+      this.nodes.map((node: Node) => {
+        return {
+          ...node,
+          dataTypesAreVisible: false
+        };
+      })
+    );
+
+    // Callback to update search regex (debounced at 300 ms)
+    this.filterFormSubsription = this.filterForm.valueChanges.pipe(debounceTime(300)).subscribe((changes) => {
+      this.searchFilter = changes.searchFilter;
     });
+
+    // Track values for all datatypes
     for (const node of this.nodes) {
       for (const dataType of node.dataTypes) {
         this.dataValuesMap.set(dataType.name, '');
@@ -73,6 +90,10 @@ export default class GraphSidebarDesktop implements OnInit {
         });
       }
     }
+  }
+
+  ngOnDestroy(): void {
+    this.filterFormSubsription.unsubscribe();
   }
 
   /**

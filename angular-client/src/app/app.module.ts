@@ -76,6 +76,8 @@ import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
+import { ReactiveFormsModule } from '@angular/forms';
+import { NodeFilterPipe } from 'src/utils/pipes/node-filter-pipe';
 
 @NgModule({
   declarations: [
@@ -136,7 +138,8 @@ import { MatInputModule } from '@angular/material/input';
     RaspberryPiDesktop,
     RaspberryPiMobile,
     BatteryInfoDesktop,
-    BatteryInfoMobile
+    BatteryInfoMobile,
+    NodeFilterPipe
   ],
   imports: [
     BrowserModule,
@@ -158,7 +161,8 @@ import { MatInputModule } from '@angular/material/input';
     SidebarModule,
     MatToolbarModule,
     MatButtonModule,
-    MatInputModule
+    MatInputModule,
+    ReactiveFormsModule
   ],
   providers: [DialogService, MessageService],
   bootstrap: [AppContext]

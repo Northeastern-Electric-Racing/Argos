@@ -5,11 +5,13 @@
         <button mat-icon-button style="padding: 6px; width: 36px; height: 36px" disabled>
           <mat-icon style="padding: 0px; color: #808080">search</mat-icon>
         </button>
-        <input class="search-control" type="text" placeholder="Search Topic" #searchbar />
+        <form [formGroup]="filterForm">
+          <input matInput class="search-control" type="text" placeholder="Search Topic" formControlName="searchFilter" />
+        </form>
       </mat-toolbar-row>
     </mat-toolbar>
     <div class="topic-list">
-      <div *ngFor="let node of nodesWithVisibilityToggle">
+      <div *ngFor="let node of nodesWithVisibilityToggle | async | nodeFilter: 'name' : searchFilter">
         <sidebar-card
           [title]="node.name"
           (click)="toggleDataTypeVisibility(node)"
