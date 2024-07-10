@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input, OnInit } from '@angular/core';
-import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+import { DataType, Node, NodeWithVisibilityToggle, NodeWithVisibilityToggleObservable } from 'src/utils/types.utils';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { FormControl, FormGroup } from '@angular/forms';
@@ -49,7 +49,7 @@ import { debounceTime, Observable, of, Subscription } from 'rxjs';
 export default class GraphSidebarDesktop implements OnInit {
   @Input() nodes!: Node[];
   @Input() selectDataType!: (dataType: DataType) => void;
-  nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
+  nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggleObservable[]>;
 
   filterForm: FormGroup = new FormGroup({
     searchFilter: new FormControl<string>('')
@@ -68,6 +68,7 @@ export default class GraphSidebarDesktop implements OnInit {
       this.nodes.map((node: Node) => {
         return {
           ...node,
+          dataTypesObservable: of(node.dataTypes),
           dataTypesAreVisible: false
         };
       })

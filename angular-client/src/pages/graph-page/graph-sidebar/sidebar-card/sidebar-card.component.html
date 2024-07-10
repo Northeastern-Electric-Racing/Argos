@@ -7,5 +7,7 @@
     />
     <typography variant="secondary-header" additionalStyles="marginRight: 5px;" [content]="dataValue" />
   </div>
-  <mat-icon [id]="iconId" *ngIf="dropDown" class="icon">arrow_right</mat-icon>
+  <mat-icon [id]="iconId" *ngIf="dropDown" class="icon" [ngStyle]="{ transform: open ? 'rotate(90deg)' : undefined }"
+    >arrow_right</mat-icon
+  >
 </div>

@@ -32,9 +32,4 @@
   bottom: 0;
   margin: auto;
   transition: transform 0.3s;
-
-  &.selected {
-    /* Animate rotation */
-    transform: rotate(90deg);
-  }
 }

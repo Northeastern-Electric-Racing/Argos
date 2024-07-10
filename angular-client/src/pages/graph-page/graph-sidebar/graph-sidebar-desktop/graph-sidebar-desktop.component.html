@@ -15,11 +15,14 @@
         <sidebar-card
           [title]="node.name"
           (click)="toggleDataTypeVisibility(node)"
-          [dataValue]="node.dataTypes.length === 1 ? '1 Topic' : node.dataTypes.length.toString() + ' ' + 'Topics'"
           [dropDown]="true"
+          [open]="node.dataTypesAreVisible"
         />
         <div *ngIf="node.dataTypesAreVisible" @toggleExpand>
-          <div *ngFor="let dataType of node.dataTypes" style="display: flex; justify-content: center">
+          <div
+            *ngFor="let dataType of node.dataTypesObservable | async | dataTypeFilter: 'name' : searchFilter"
+            style="display: flex; justify-content: center"
+          >
             <sidebar-card
               style="width: 95%; margin-left: 30px"
               [title]="dataType.name"

@@ -78,6 +78,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter-pipe';
+import { DataTypeFilterPipe } from 'src/utils/pipes/data-type-filter-pipe';
 
 @NgModule({
   declarations: [
@@ -139,7 +140,8 @@ import { NodeFilterPipe } from 'src/utils/pipes/node-filter-pipe';
     RaspberryPiMobile,
     BatteryInfoDesktop,
     BatteryInfoMobile,
-    NodeFilterPipe
+    NodeFilterPipe,
+    DataTypeFilterPipe
   ],
   imports: [
     BrowserModule,
