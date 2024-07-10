@@ -1,7 +1,7 @@
 pub mod controllers;
 pub mod error;
+pub mod reciever;
 pub mod services;
-pub mod socket;
 pub mod transformers;
 
 #[allow(clippy::all)]
