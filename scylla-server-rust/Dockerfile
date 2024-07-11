@@ -4,5 +4,5 @@ WORKDIR /usr/src/myapp
 
 COPY . . 
 RUN cargo prisma generate
-RUN cargo build --release
-CMD ["sh", "-c", "cargo prisma migrate deploy && /usr/src/myapp/target/release/scylla-server-rust"]
+RUN cargo build --release --locked
+ENTRYPOINT ["./docker_run.sh"]
