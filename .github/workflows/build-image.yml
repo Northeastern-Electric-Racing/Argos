@@ -64,7 +64,6 @@ jobs:
         with:
           context: ./scylla-server-rust
           push: true
-          target: production
           platforms: linux/arm64,linux/amd64
           tags: ${{ steps.meta.outputs.tags }}-scylla-server-rust # argos-scylla-server
           labels: ${{ steps.meta.outputs.labels }}
