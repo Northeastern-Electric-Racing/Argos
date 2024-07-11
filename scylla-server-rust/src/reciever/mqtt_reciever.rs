@@ -29,7 +29,7 @@ impl MqttReciever {
     /// Returns the instance and the event loop, which can be passed into the recieve_mqtt func to begin recieiving
     pub async fn new(
         channel: Sender<ClientData>,
-        mqtt_path: &str,
+        mqtt_path: String,
         db: Database,
     ) -> (MqttReciever, EventLoop) {
         // create the mqtt client and configure it
@@ -62,8 +62,7 @@ impl MqttReciever {
         let (client, connect) = AsyncClient::new(create_opts, 1000);
 
         client
-            .subscribe("#", rumqttc::v5::mqttbytes::QoS::ExactlyOnce)
-            .await
+            .try_subscribe("#", rumqttc::v5::mqttbytes::QoS::ExactlyOnce)
             .expect("Could not subscribe to Siren");
 
         (
@@ -100,13 +99,8 @@ impl MqttReciever {
     /// * `msg` - The mqtt message to parse
     /// returns the ClientData, or the Err of something that can be debug printed
     async fn parse_msg(&self, msg: Publish) -> Result<ClientData, impl fmt::Debug> {
-        let data = serverdata::ServerData::parse_from_bytes(&msg.payload).map_err(|f| {
-            format!(
-                "Could not parse message topic:{:?} error: {}",
-                msg.topic,
-                f
-            )
-        })?;
+        let data = serverdata::ServerData::parse_from_bytes(&msg.payload)
+            .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
 
         let split = std::str::from_utf8(&msg.topic)
             .unwrap_or_else(|_| panic!("Could not parse topic: {:?}", msg.topic))
@@ -156,9 +150,8 @@ impl MqttReciever {
     /// Send a message to the channel, printing and IGNORING any error that may occur
     /// * `client_data` - The cliet data to send over the broadcast
     async fn send_msg(&self, client_data: ClientData) {
-        let _ = self
-            .channel
-            .send(client_data)
-            .inspect_err(|f| println!("Error sending through channel: {:?}", f));
+        if let Err(err) = self.channel.send(client_data) {
+            println!("Error sending through channel: {:?}", err)
+        }
     }
 }

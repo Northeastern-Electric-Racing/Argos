@@ -19,3 +19,12 @@ pub struct ClientData {
     #[serde(skip_serializing)]
     pub node: String,
 }
+
+/// A final location packet
+/// This has the purpose of representing the struct for the service layer to unpack for insertion, and therefore is not serialized
+struct LocationData {
+    location_name: String,
+    lat: f64,
+    long: f64,
+    radius: f64,
+}
