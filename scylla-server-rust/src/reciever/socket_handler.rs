@@ -11,7 +11,7 @@ pub async fn handle_socket(io: SocketIo, mut channel: Receiver<ClientData>) {
 
     // await a new message to send to client
     while let Ok(cmd) = channel.recv().await {
-        match io.emit("message", serde_json::to_string(&cmd).unwrap()) {
+        match io.emit("message", serde_json::to_string(&cmd).expect("Could not serialize ClientData")) {
             Ok(_) => (),
             Err(err) => println!("Socket: Broadcast error: {}", err),
         }

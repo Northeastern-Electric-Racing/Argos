@@ -59,14 +59,14 @@ jobs:
             PROD=true
             BACKEND_URL=http://192.168.100.1:8000
             MAP_ACCESS_TOKEN=pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
-      - name: Build and push Docker image for scylla server
+      - name: Build and push Docker image for scylla server rust
         uses: docker/build-push-action@v5.4.0
         with:
-          context: ./scylla-server
+          context: ./scylla-server-rust
           push: true
           target: production
           platforms: linux/arm64,linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}-scylla-server # argos-scylla-server
+          tags: ${{ steps.meta.outputs.tags }}-scylla-server-rust # argos-scylla-server
           labels: ${{ steps.meta.outputs.labels }}
           # for caching
           # cache-from: type=gha
