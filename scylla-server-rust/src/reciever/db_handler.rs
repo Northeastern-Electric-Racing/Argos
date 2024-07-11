@@ -13,21 +13,16 @@ use crate::{
     Database,
 };
 
+/// The upload interval for batch uploads
 const UPLOAD_INTERVAL: u64 = 5000;
 
-use super::ClientData;
+use super::{ClientData, LocationData};
 
+/// A struct defining an in progress location packet
 struct LocLock {
     location_name: Option<String>,
     points: Option<(f64, f64)>,
     radius: Option<f64>,
-}
-
-struct Loc {
-    location_name: String,
-    lat: f64,
-    long: f64,
-    radius: f64,
 }
 
 impl LocLock {
@@ -39,22 +34,26 @@ impl LocLock {
         }
     }
 
+    /// Add the location name to the packet
     pub fn add_loc_name(&mut self, loc_name: String) {
         self.location_name = Some(loc_name);
     }
 
+    /// Add points to the packet
     pub fn add_points(&mut self, lat: f64, long: f64) {
         self.points = Some((lat, long));
     }
 
+    /// Add a radius to the packet
     pub fn add_radius(&mut self, radius: f64) {
         self.radius = Some(radius);
     }
 
-    pub fn finalize(&mut self) -> Option<Loc> {
+    /// Attempt to finalize the packet, returning a location data and clearing this object or None if still in progress
+    pub fn finalize(&mut self) -> Option<LocationData> {
         if self.location_name.is_some() && self.points.is_some() && self.radius.is_some() {
             self.clear();
-            return Some(Loc {
+            return Some(LocationData {
                 location_name: self.location_name.clone().unwrap(),
                 lat: self.points.unwrap().0,
                 long: self.points.unwrap().1,
@@ -64,6 +63,7 @@ impl LocLock {
         None
     }
 
+    /// Clear the internal state
     fn clear(&mut self) {
         self.location_name = None;
         self.points = None;
@@ -71,12 +71,20 @@ impl LocLock {
     }
 }
 
+/// A few threads to manage the processing and inserting of special types,
+/// upserting of metadata for data, and batch uploading the database
 pub struct DbHandler {
+    /// The list of nodes seen by this instance, used for when to upsert
     node_list: Vec<String>,
+    /// The list of data types seen by this instance, used for when to upsert
     datatype_list: Vec<String>,
+    /// The broadcast channel which provides serial datapoints for processing
     reciever: BroadcastReceiver<ClientData>,
+    /// The database
     db: Database,
+    /// An internal state of an in progress location packet
     loc_lock: LocLock,
+    /// Whether the location has been modified this loop
     is_loc: bool,
 }
 
@@ -94,6 +102,9 @@ impl DbHandler {
         }
     }
 
+    /// This loop handles batch uploading, and has no internal state or requirements
+    /// It uses the queue from data queue to insert to the database specified
+    /// On cancellation, will await one final queue message to cleanup anything remaining in the channel
     pub async fn batching_loop(
         mut data_queue: Receiver<Vec<ClientData>>,
         database: Database,
@@ -119,6 +130,11 @@ impl DbHandler {
         }
     }
 
+    /// A loop which uses self and a sender channel to process data
+    /// If the data is special, i.e. coordinates, driver, etc. it will store it in its special location of the db immediately
+    /// For all data points it will add the to the data_channel for batch uploading logic when a certain time has elapsed
+    /// Before this time the data is stored in an internal queue.
+    /// On cancellation, the messages currently in the queue will be sent as a final flush of any remaining messages recieved before cancellation
     pub async fn handling_loop(
         mut self,
         data_channel: Sender<Vec<ClientData>>,
@@ -136,8 +152,9 @@ impl DbHandler {
                 },
                 Ok(msg) = self.reciever.recv() => {
 
+                    // If the time is greater than upload interval, push to batch upload thread and clear queue
                     if tokio::time::Instant::now().duration_since(last_time)
-                    > Duration::from_millis(UPLOAD_INTERVAL)
+                    > Duration::from_millis(UPLOAD_INTERVAL) && !data_queue.is_empty()
                 {
                     data_channel.send(data_queue.clone()).await.expect("Could not comm data to db thread");
                     data_queue.clear();
@@ -166,10 +183,10 @@ impl DbHandler {
                     self.datatype_list.push(msg.name.clone());
                 }
 
-                // if data has some special meanings, push them to the database immediately, otherwise enter batching logic
+                // if data has some special meanings, push them to the database immediately, notably no matter what also enter batching logic
                 match msg.name.as_str() {
                     "Driver" => {
-                        let _ = driver_service::upsert_driver(
+                        if let Err(err) = driver_service::upsert_driver(
                             &self.db,
                             msg.values
                                 .first()
@@ -177,7 +194,9 @@ impl DbHandler {
                                 .to_string(),
                             msg.run_id,
                         )
-                        .await;
+                        .await {
+                            println!("Driver upsert error: {:?}", err);
+                        }
                     }
                     "location" => {
                         self.loc_lock.add_loc_name(
@@ -189,7 +208,7 @@ impl DbHandler {
                         self.is_loc = true;
                     }
                     "system" => {
-                        let _ = system_service::upsert_system(
+                        if let Err(err) = system_service::upsert_system(
                             &self.db,
                             msg.values
                                 .first()
@@ -197,7 +216,9 @@ impl DbHandler {
                                 .to_string(),
                             msg.run_id,
                         )
-                        .await;
+                        .await {
+                            println!("System upsert error: {:?}", err);
+                        }
                     }
                     "GPS-Location" => {
                         self.loc_lock.add_points(
@@ -224,13 +245,12 @@ impl DbHandler {
                         );
                         self.is_loc = true;
                     }
-                    _ => {
-                        data_queue.push(msg.clone());
-                    }
+                    _ => {}
                 }
+                // if location has been modified, push a new location of the loc lock object returns Some
                 if self.is_loc {
                     if let Some(loc) = self.loc_lock.finalize() {
-                        let _ = location_service::upsert_location(
+                        if let Err(err) = location_service::upsert_location(
                             &self.db,
                             loc.location_name,
                             loc.lat,
@@ -238,9 +258,15 @@ impl DbHandler {
                             loc.radius,
                             msg.run_id,
                         )
-                        .await;
+                        .await {
+                            println!("Location upsert error: {:?}", err);
+                        }
                     }
+                    self.is_loc = false;
                 }
+
+                // no matter what, batch upload the message
+                data_queue.push(msg);
                 }
             }
         }

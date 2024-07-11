@@ -17,6 +17,27 @@ services:
     mem_limit: 3gb
     stop_grace_period: 1m
 
+  scylla-server-rust:
+    container_name: scylla-server-rust
+    image: ghcr.io/northeastern-electric-racing/argos:Develop-scylla-server-rust
+    build:
+        context: ./scylla-server-rust
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    depends_on:
+      - odyssey-timescale
+      - siren
+    environment:
+        - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/timescaledb
+        - PROD_SIREN_HOST_URL=siren:1883
+        - PROD_SCYLLA=true
+    cpu_shares: 1024
+    mem_limit: 2gb
+    stop_grace_period: 10s
+
+
+
   client:
     container_name: client
     restart: unless-stopped
@@ -25,7 +46,7 @@ services:
       context: ./angular-client
       args:
         PROD: "true"
-        BACKEND_URL: http://192.168.100.1:8000
+        BACKEND_URL: http://localhost:8000
         MAP_ACCESS_TOKEN: pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
       target: production
       dockerfile: Dockerfile
@@ -33,6 +54,21 @@ services:
       - 80:80
     cpu_shares: 512
     mem_limit: 1gb
+
+  siren:
+    container_name: siren
+    restart: unless-stopped
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+      - 9001:9001 # why?
+    expose:
+      - 1883
+    volumes:
+      - ./siren-base/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    cpu_shares: 2048
+    mem_limit: 2gb
+    oom_kill_disable: true
 
 
 

@@ -22,7 +22,7 @@ use tower_http::cors::{Any, CorsLayer};
 #[tokio::main]
 async fn main() {
     // create the database stuff
-    let db: Database = Arc::new(PrismaClient::_builder().build().await.unwrap());
+    let db: Database = Arc::new(PrismaClient::_builder().build().await.expect("Could not build prisma DB"));
 
     // create the socket stuff
     let (socket_layer, io) = SocketIo::new_layer();
@@ -55,7 +55,12 @@ async fn main() {
     ));
 
     // create and spawn the mqtt reciever
-    let (recv, eloop) = MqttReciever::new(tx, "localhost:1883", db.clone()).await;
+    let (recv, eloop) = MqttReciever::new(
+        tx,
+        std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
+        db.clone(),
+    )
+    .await;
     tokio::spawn(recv.recieve_mqtt(eloop));
 
     let app = Router::new()
@@ -95,7 +100,7 @@ async fn main() {
         )
         .with_state(db.clone());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.expect("Could not bind to 8000!");
     let axum_token = token.clone();
     tokio::spawn(async {
         axum::serve(listener, app)
