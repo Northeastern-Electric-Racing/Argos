@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
+import { floatPipe } from 'src/utils/pipes.utils';
 
 @Component({
   selector: 'battery-status-display',
@@ -8,20 +9,20 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
   styleUrls: ['./battery-status-display.component.css']
 })
 export default class BatteryStatusDisplay {
-  chargeString!: string;
+  isBalancing: boolean = false;
   constructor(private storage: Storage) {}
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.STATUS).subscribe((value) => {
-      [this.chargeString] = value.values || ['NOT CONNECTED'];
+      this.isBalancing = floatPipe(value.values[0]) === 1;
     });
   }
 
   getBatteryStatus(connected: boolean) {
-    return connected ? 'Connected' : 'Disconnected';
+    return connected ? 'BALANCING' : 'NOT BALANCING';
   }
 
-  getStatusColor(chargeString: string) {
-    return chargeString === 'BALANCING' ? 'green' : 'red';
+  getStatusColor(isBalancing: boolean) {
+    return isBalancing ? 'green' : 'red';
   }
 }

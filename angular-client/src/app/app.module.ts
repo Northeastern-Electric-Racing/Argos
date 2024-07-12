@@ -76,16 +76,23 @@ import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-c
 import BatteryInfoDesktop from 'src/components/battery/battery-info-display/battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobile from 'src/components/battery/battery-info-display/battery-info-mobile/battery-info-mobile.component';
 import BatteryStatusDisplay from 'src/components/battery/battery-status-display/battery-status-display.component';
-import ChargeStateDisplay from 'src/components/battery/charge-state/charge-state-display/charge-state-display.component';
-import ChargeStateGraph from 'src/components/battery/charge-state/charge-state-graph/charge-state-graph.component';
+import StateOfChargeDisplay from 'src/components/battery/state-of-charge/state-of-charge-display/state-of-charge-display.component';
+import StateOfChargeGraph from 'src/components/battery/state-of-charge/state-of-charge-graph/state-of-charge-graph.component';
 import PackTemp from 'src/components/battery/pack-temp/pack-temp.component';
-import BatteryVoltageDisplay from 'src/components/battery/battery-voltage/battery-voltage-display/battery-voltage-display.component';
-import BatteryVoltageGraph from 'src/components/battery/battery-voltage/battery-voltage-graph/battery-voltage-graph.component';
+import CellTempDisplay from 'src/components/battery/cell-temp/cell-temp-display/cell-temp-display.component';
+import CellTempGraph from 'src/components/battery/cell-temp/cell-temp-graph/cell-temp-graph.component';
 import CurrentDisplay from 'src/components/battery/battery-current/current-display/current-display.component';
 import FaultDisplay from 'src/components/battery/fault-display/fault-display.component';
 import CurrentGraph from 'src/components/battery/battery-current/current-graph/current-graph.component';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import ChargingSwitch from 'src/components/battery/charging-switch/charging-switch.component';
+import BMSModeDisplay from 'src/components/battery/BMS-mode/BMS-mode-display.component';
+import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
+import HighLowCellDisplay from 'src/components/battery/high-low-cell/high-low-cell-display/high-low-cell-display.component';
+import HighLowCellGraph from 'src/components/battery/high-low-cell/high-low-cell-graph/high-low-cell-graph.component';
+import PackVoltageGraph from 'src/components/battery/pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
+import PackVoltageDisplay from 'src/components/battery/pack-voltage/pack-voltage-display/pack-voltage-display.component';
+import ChargingStateComponent from 'src/components/battery/charging-state/charging-state.component';
 
 @NgModule({
   declarations: [
@@ -150,16 +157,23 @@ import ChargingSwitch from 'src/components/battery/charging-switch/charging-swit
     BatteryInfoDesktop,
     BatteryInfoMobile,
     BatteryStatusDisplay,
-    ChargeStateDisplay,
-    ChargeStateGraph,
+    StateOfChargeDisplay,
+    StateOfChargeGraph,
     PackTemp,
-    BatteryVoltageGraph,
-    BatteryVoltageDisplay,
+    CellTempDisplay,
+    CellTempGraph,
     CurrentDisplay,
     FaultDisplay,
     CurrentGraph,
     SwitchComponent,
-    ChargingSwitch
+    ChargingSwitch,
+    BMSModeDisplay,
+    DoubleLineGraphComponent,
+    HighLowCellDisplay,
+    HighLowCellGraph,
+    PackVoltageGraph,
+    PackVoltageDisplay,
+    ChargingStateComponent
   ],
   imports: [
     BrowserModule,

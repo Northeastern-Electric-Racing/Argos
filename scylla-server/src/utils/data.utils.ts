@@ -11,7 +11,12 @@ export enum DataType {
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
   VOLTAGE = 'Status-Voltage_Average',
-  AMPS = 'AMPS',
+  CURRENT = 'Pack-Current',
+  COMM_TIMEOUT_FAULT = 'Charger-Box-F_CommTimeout',
+  HARDWARE_FAILURE_FAULT = 'Charger-Box-F_HardwareFailure',
+  OVER_TEMP_FAULT = 'Charger-Box-F_OverTemp',
+  VOLTAGE_WRONG_FAULT = 'Charger-Box-F_OverVoltage',
+  WRONG_BAT_CONNECT_FAULT = 'Charger-Box-F_WrongBatConnect',
   VIEWERS = 'Viewers',
   SPEED = 'State-Speed',
   TORQUE = 'Torque',
@@ -25,9 +30,15 @@ export enum DataType {
   CHARGE_CURRENT_LIMIT = 'Pack-CCL',
   DISCHARGE_CURRENT_LIMIT = 'Pack-DCL',
   XYZAccel = 'XYZAcceleration',
-  RADIUS = 'Radius',
-  STATUS = 'Status',
-  FAULTS = 'Faults'
+  STATUS = 'Status-Balancing',
+  BMS_MODE = 'Status-Faults',
+  VOLTS_HIGH = 'Cells-Volts_High_Value',
+  VOLTS_LOW = 'Cells-Volts_Low_Value',
+  CHARGING = 'Status-State',
+  PACK_VOLTAGE = 'Pack-Voltage',
+  CELL_TEMP_HIGH = 'Cells-Temp_High_Value',
+  CELL_TEMP_AVG = 'Cells-Temp_Avg_Value',
+  RADIUS = 'Radius'
 }
 
 //the format of mock data on mock proxy client for numerical values

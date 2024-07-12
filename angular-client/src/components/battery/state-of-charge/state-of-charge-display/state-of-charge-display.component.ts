@@ -4,11 +4,11 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
 import { floatPipe } from 'src/utils/pipes.utils';
 
 @Component({
-  selector: 'charge-state-display',
-  templateUrl: './charge-state-display.component.html',
-  styleUrls: ['./charge-state-display.component.css']
+  selector: 'state-of-charge-display',
+  templateUrl: './state-of-charge-display.component.html',
+  styleUrls: ['./state-of-charge-display.component.css']
 })
-export default class ChargeStateDisplay {
+export default class StateOfChargeDisplay {
   stateOfCharge: number = 0;
   constructor(private storage: Storage) {}
 

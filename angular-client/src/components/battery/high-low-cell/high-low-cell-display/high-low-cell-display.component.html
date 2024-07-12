@@ -1,0 +1,32 @@
+<info-background icon="electric_meter" title="Cell Voltage">
+  <hstack spacing="30px">
+    <vstack style="width: 15%">
+      <hstack>
+        <typography variant="info-value" [content]="delta.toString() + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" content="Delta" />
+    </vstack>
+
+    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+    <divider style="height: 100px"></divider>
+
+    <vstack style="width: 10%">
+      <typography variant="info-value" [content]="lowCellVolts.toString() + 'V'" additionalStyles="" />
+      <typography variant="info-subtitle" content="Low Cell" />
+    </vstack>
+
+    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+    <divider style="height: 100px"></divider>
+
+    <vstack style="width: 10%">
+      <hstack>
+        <typography variant="info-value" [content]="highCellVolts.toString() + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" content="High Cell" />
+    </vstack>
+    <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
+    <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
+      or just don't enforce -->
+    <high-low-cell-graph style="width: 70%; padding-bottom: 5vh"></high-low-cell-graph>
+  </hstack>
+</info-background>

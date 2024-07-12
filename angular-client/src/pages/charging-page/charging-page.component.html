@@ -8,28 +8,33 @@
         <vstack style="width: 50%">
           <typography style="width: 100%; text-align: center" variant="xx-large-title" [content]="time | date: 'HH:mm:ss'" />
         </vstack>
-        <vstack style="width: 50%">
+        <vstack style="width: 40%">
           <typography variant="large-header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
         </vstack>
+        <latency-display style="width: 10%" />
       </hstack>
 
       <hstack style="width: 100%">
-        <charge-state-display style="width: 40%" />
-        <hstack style="width: 60%">
-          <charging-switch style="height: 200px; width: 33%" />
-          <latency-display style="height: 200px; width: 33%" />
-          <battery-status-display style="height: 200px; width: 33%" />
+        <state-of-charge-display style="width: 20%; height: 20vh" />
+        <charging-state style="width: 40%; height: 20vh" />
+        <hstack style="width: 40%">
+          <battery-status-display style="width: 100%; height: 20vh" />
+          <BMS-mode-display style="width: 100%; height: 20vh" />
         </hstack>
       </hstack>
 
       <hstack style="width: 100%">
-        <pack-temp style="width: 20%; height: 20vh" />
-        <battery-voltage-display style="width: 80%; height: 20vh" />
+        <fault-display style="width: 20%; height: 405px" />
+        <vstack style="width: 80%; height: 400px">
+          <cell-temp-display style="width: 100%; height: 200px" />
+          <high-low-cell-display style="width: 100%; height: 200px" />
+        </vstack>
       </hstack>
 
       <hstack style="width: 100%">
-        <current-display style="width: 60%; height: 20vh" />
-        <fault-display style="width: 40%; height: 20vh" />
+        <current-display style="height: 200px; width: 15%" />
+        <pack-temp style="height: 200px; width: 15%" />
+        <pack-voltage-display style="height: 200px; width: 70%" />
       </hstack>
     </vstack>
   </ng-template>

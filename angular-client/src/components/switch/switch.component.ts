@@ -7,8 +7,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 })
 export class SwitchComponent {
   @Input() isOn: boolean = false;
-  @Input() offString: string = 'DISABLED';
-  @Input() onString: string = 'ENABLED';
+  @Input() offString: string = 'PAUSED';
+  @Input() onString: string = 'ALLOWED';
   chargingString: string = this.offString;
   @Output() toggle = new EventEmitter<boolean>();
 

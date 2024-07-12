@@ -13,7 +13,7 @@ export default class CurrentDisplay {
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.storage.get(IdentifierDataType.AMPS).subscribe((value) => {
+    this.storage.get(IdentifierDataType.CURRENT).subscribe((value) => {
       this.amps = floatPipe(value.values[0]);
     });
   }

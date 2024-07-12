@@ -1,9 +1,6 @@
 <info-background title="Current" icon="bolt">
-  <hstack style="width: 40%">
-    <div class="battery-display-body">
-      <typography variant="info-value" [content]="amps.toString()" />
-      <typography variant="info-unit" content="amps" />
-    </div>
-    <current-graph style="width: 60%; padding-bottom: 5vh"></current-graph>
-  </hstack>
+  <div style="display: flex; justify-content: center; align-items: center; height: 80%">
+    <typography variant="info-value" [content]="amps.toString()" />
+    <typography variant="info-unit" content="amps" />
+  </div>
 </info-background>

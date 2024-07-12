@@ -1,0 +1,8 @@
+<info-background icon="electrical_services" title="Charging">
+  <hstack style="align-items: center">
+    <div class="connection-dot" [style.background-color]="getStateColor(isCharging)"></div>
+    <div class="typography-centered" style="padding-top: 15px">
+      <typography variant="info-title" [content]="getChargingState(isCharging) + ' FOR: ' + getTimerInfo()" />
+    </div>
+  </hstack>
+</info-background>

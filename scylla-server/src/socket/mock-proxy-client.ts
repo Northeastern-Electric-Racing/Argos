@@ -137,21 +137,96 @@ const baseMockData: MockData[] = [
     min: 0,
     max: 100
   },
-  // TODO: check with everyone on best name for this data type (/ if we should use the ones from OG landing page (CCL and DCL I believe))
   {
-    name: DataType.AMPS,
+    name: DataType.CURRENT,
     unit: Unit.AMPERAGE,
     vals: [0],
     min: 0,
     max: 100
   },
-  // TODO: for some reason this is seeding properly, haven't looked into y, simple fix prob
   {
-    name: DataType.FAULTS,
-    unit: Unit.HEX,
+    name: DataType.BMS_MODE,
+    unit: Unit.STRING,
     vals: [0],
-    min: 0x1,
-    max: 0x2000
+    min: 1,
+    max: 3
+  },
+  {
+    name: DataType.VOLTS_HIGH,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.VOLTS_LOW,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.PACK_VOLTAGE,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.CELL_TEMP_HIGH,
+    unit: Unit.CELSIUS,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.CELL_TEMP_AVG,
+    unit: Unit.CELSIUS,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.COMM_TIMEOUT_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.HARDWARE_FAILURE_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.OVER_TEMP_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.VOLTAGE_WRONG_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.WRONG_BAT_CONNECT_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.CHARGING,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
   }
 ];
 
@@ -169,12 +244,6 @@ const baseStringData: MockStringData[] = [
     name: DataType.LOCATION,
     units: Unit.STRING,
     vals: ['Max']
-  },
-  // TODO: need to check with Jack on how status is going to be interpreted (string or numerical)
-  {
-    name: DataType.STATUS,
-    units: Unit.STRING,
-    vals: ['BALANCING']
   }
 ];
 
