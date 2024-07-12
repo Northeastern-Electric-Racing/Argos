@@ -9,6 +9,6 @@
   font-size: 18px;
   cursor: pointer;
   height: 50px;
-  margin-bottom: 16px;
   display: inline-block;
+  font-weight: bold;
 }

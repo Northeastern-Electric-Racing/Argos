@@ -56,7 +56,7 @@ export default class Graph implements OnInit {
 
   ngOnInit(): void {
     this.valuesSubject.subscribe((values: GraphData[]) => {
-      const mappedValues = values.map((value: GraphData) => [convertUTCtoLocal(value.x), value.y]);
+      const mappedValues = values.map((value: GraphData) => [convertUTCtoLocal(value.x), +value.y.toFixed(3)]);
       const newSeries = [
         {
           name: 'Data Series',

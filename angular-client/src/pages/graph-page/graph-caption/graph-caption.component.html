@@ -1,28 +1,33 @@
-<div class="info-container">
-  <div class="left-info">
-    <div *ngIf="dataTypeName && dataTypeUnit; else elseBlock">
-      <div class="caption-header">
-        <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
-        <typography
-          variant="large-secondary-header"
-          [content]="value + ' ' + dataTypeUnit"
-          additionalStyles="margin: 6px 0px 0px 20px"
-        />
+<div class="caption-container">
+  <div class="info-container">
+    <div class="left-info">
+      <div *ngIf="dataTypeName && dataTypeUnit; else elseBlock">
+        <div>
+          <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
+          <typography
+            variant="large-secondary-header"
+            [content]="value + ' ' + dataTypeUnit"
+            additionalStyles="margin: 6px 0px 0px 0px"
+          />
+        </div>
       </div>
-      <run-selector [selectRun]="onRunSelected" />
+      <ng-template #elseBlock>
+        <typography variant="large-header" content="No Data Selected" additionalStyles="margin: 12px 0px" />
+      </ng-template>
     </div>
-    <ng-template #elseBlock>
-      <typography variant="large-header" content="No Data Selected" additionalStyles="margin: 12px 0px" />
-      <run-selector [selectRun]="onRunSelected" />
-    </ng-template>
+    <div class="right-info">
+      <div class="driver-info">
+        <typography variant="header" [content]="currentDriver ?? 'No Driver Selected'" />
+      </div>
+      <div class="system-info">
+        <typography variant="subheader" [content]="currentSystem ?? 'No System Selected'" />
+        <typography variant="subheader" [content]="currentLocation ?? 'No Location Selected'" />
+      </div>
+    </div>
   </div>
-  <div class="right-info">
-    <div class="driver-info">
-      <typography variant="header" [content]="currentDriver ?? 'No Driver Selected'" />
-    </div>
-    <div class="system-info">
-      <typography variant="subheader" [content]="currentSystem ?? 'No System Selected'" />
-      <typography variant="subheader" [content]="currentLocation ?? 'No Location Selected'" />
-    </div>
+  <div class="buttons-container">
+    <run-selector [selectRun]="onRunSelected" />
+    <run-selector [selectRun]="onRunSelected" />
+    <run-selector [selectRun]="onRunSelected" />
   </div>
 </div>

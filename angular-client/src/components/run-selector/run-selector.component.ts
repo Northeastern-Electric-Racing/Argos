@@ -35,7 +35,7 @@ export class RunSelector implements OnInit {
       this.runs = data;
     });
 
-    this.label = 'Select a run';
+    this.label = 'Select Run';
   }
 
   openDialog = () => {
