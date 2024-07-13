@@ -1,8 +1,12 @@
-<div class="card" [id]="title" (click)="selectCard()">
+<div class="card" [id]="title" [style]="dropDown ? 'marginBottom: 0px;' : 'margin: 0px;'" (click)="selectCard()">
   <div class="text-container">
     <typography
       variant="header"
-      [additionalStyles]="dropDown ? 'marginLeft: 35px;' : 'marginLeft: 5px;'"
+      [additionalStyles]="
+        dropDown
+          ? 'marginLeft: 35px; marginBottom: 10px; marginTop: 10px; fontSize: 18px'
+          : 'marginLeft: 30px; fontSize: 18px'
+      "
       [content]="title"
     />
     <typography variant="secondary-header" additionalStyles="marginRight: 5px;" [content]="dataValue" />

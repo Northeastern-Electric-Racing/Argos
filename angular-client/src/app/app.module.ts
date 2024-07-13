@@ -18,7 +18,7 @@ import { BatteryPercentageComponent } from 'src/components/battery/battery.compo
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { CircularPercentageComponent } from 'src/components/circular-percentage/circular-percentage.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
-import { RunSelector } from 'src/components/run-selector/run-selector.component';
+import { RunSelector } from 'src/pages/graph-page/graph-caption/run-selector/run-selector.component';
 import { Carousel } from 'src/components/carousel/carousel.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import GraphInfo from 'src/pages/graph-page/graph-caption/graph-caption.component';

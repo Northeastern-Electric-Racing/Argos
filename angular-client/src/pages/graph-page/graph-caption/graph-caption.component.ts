@@ -29,4 +29,8 @@ export default class GraphInfo {
       this.value = value ? parseFloat(value).toFixed(2) : 'No Values';
     });
   }
+
+  clearGraph(): void {}
+
+  clearRun(): void {}
 }

@@ -27,7 +27,15 @@
   </div>
   <div class="buttons-container">
     <run-selector [selectRun]="onRunSelected" />
-    <run-selector [selectRun]="onRunSelected" />
-    <run-selector [selectRun]="onRunSelected" />
+    <argos-button
+      [onClick]="clearGraph"
+      label="Clear Graph"
+      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+    ></argos-button>
+    <argos-button
+      [onClick]="clearRun"
+      label="Clear Run"
+      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+    ></argos-button>
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
-import { Carousel } from '../carousel/carousel.component';
+import { Carousel } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
