@@ -2,7 +2,6 @@ use tokio::sync::mpsc::Receiver;
 
 use tokio::{sync::mpsc::Sender, time::Duration};
 
-use tokio::sync::broadcast::Receiver as BroadcastReceiver;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
@@ -79,7 +78,7 @@ pub struct DbHandler {
     /// The list of data types seen by this instance, used for when to upsert
     datatype_list: Vec<String>,
     /// The broadcast channel which provides serial datapoints for processing
-    reciever: BroadcastReceiver<ClientData>,
+    reciever: Receiver<ClientData>,
     /// The database
     db: Database,
     /// An internal state of an in progress location packet
@@ -91,7 +90,7 @@ pub struct DbHandler {
 impl DbHandler {
     /// Make a new db handler
     /// * `recv` - the broadcast reciver of which clientdata will be sent
-    pub fn new(reciever: BroadcastReceiver<ClientData>, db: Database) -> DbHandler {
+    pub fn new(reciever: Receiver<ClientData>, db: Database) -> DbHandler {
         DbHandler {
             node_list: vec![],
             datatype_list: vec![],
@@ -150,7 +149,7 @@ impl DbHandler {
                     data_queue.clear();
                     break;
                 },
-                Ok(msg) = self.reciever.recv() => {
+                Some(msg) = self.reciever.recv() => {
 
                     // If the time is greater than upload interval, push to batch upload thread and clear queue
                     if tokio::time::Instant::now().duration_since(last_time)
