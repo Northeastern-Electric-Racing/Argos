@@ -1,7 +1,7 @@
 <div class="caption-container">
   <div class="info-container">
     <div class="left-info">
-      <div *ngIf="dataTypeName && dataTypeUnit; else elseBlock">
+      <div *ngIf="dataTypeName; else elseBlock">
         <div>
           <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
           <typography
