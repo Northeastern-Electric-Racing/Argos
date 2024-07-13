@@ -112,9 +112,10 @@ export default class ProdProxyClient implements ProxyClient {
         unix_time = Date.now().toString();
       }
 
-      if (parseInt(unix_time as string) < 956040526) {
+      if (parseInt(unix_time as string) < 1594652297000) {
         //2000
-        throw new Error('timestamp is less than the year 2000');
+        console.log('timestamp is less than the year 2000');
+        unix_time = new Date().getTime().toString();
       }
 
       if (data.unit !== undefined && data.values !== undefined && data.values.length > 0) {
