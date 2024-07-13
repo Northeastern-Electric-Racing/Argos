@@ -72,8 +72,8 @@ pub async fn add_many(db: &Database, client_data: Vec<ClientData>) -> Result<i64
                     prisma::data::create_unchecked(
                         f.name.to_string(),
                         DateTime::from_timestamp_millis(f.timestamp)
-                        .expect("Could not parse timestamp")
-                        .fixed_offset(),
+                            .expect("Could not parse timestamp")
+                            .fixed_offset(),
                         f.run_id,
                         vec![prisma::data::values::set(
                             f.values

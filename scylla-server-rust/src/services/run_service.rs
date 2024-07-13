@@ -71,8 +71,8 @@ pub async fn create_run(db: &Database, timestamp: i64) -> Result<prisma::run::Da
     db.run()
         .create(
             DateTime::from_timestamp_millis(timestamp)
-            .expect("Could not parse timestamp")
-            .fixed_offset(),
+                .expect("Could not parse timestamp")
+                .fixed_offset(),
             vec![],
         )
         .exec()
@@ -92,8 +92,8 @@ pub async fn create_run_with_id(
     db.run()
         .create(
             DateTime::from_timestamp_millis(timestamp)
-            .expect("Could not parse timestamp")
-            .fixed_offset(),
+                .expect("Could not parse timestamp")
+                .fixed_offset(),
             vec![prisma::run::id::set(run_id)],
         )
         .exec()
