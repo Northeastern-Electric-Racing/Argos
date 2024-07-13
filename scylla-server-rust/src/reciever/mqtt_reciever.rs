@@ -1,13 +1,14 @@
 use core::fmt;
 use std::time::Duration;
 
-use prisma_client_rust::chrono;
+use prisma_client_rust::{chrono, serde_json};
 use protobuf::Message;
 use rumqttc::v5::{
     mqttbytes::v5::{LastWill, Packet, Publish},
     AsyncClient, Event, EventLoop, MqttOptions,
 };
-use tokio::sync::broadcast::Sender;
+use socketioxide::SocketIo;
+use tokio::sync::mpsc::Sender;
 
 use crate::{serverdata, services::run_service, Database};
 
@@ -17,13 +18,15 @@ use std::borrow::Cow;
 pub struct MqttReciever {
     channel: Sender<ClientData>,
     curr_run: i32,
+    io: SocketIo,
 }
 
 impl MqttReciever {
-    /// Creates a new mqtt reciever
-    /// * `channel` - The mpsc channel to send the socket.io data to
+    /// Creates a new mqtt reciever and socketio sender
+    /// * `channel` - The mpsc channel to send the database data to
     /// * `mqtt_path` - The mqtt URI, including port, (without the mqtt://) to subscribe to
     /// * `db` - The database to store the data in
+    /// * `io` - The socketio layer to send the data to
     ///
     /// This is async as it creates the initial run and gets the ID, as well as connecting to and subbing Siren
     /// Returns the instance and the event loop, which can be passed into the recieve_mqtt func to begin recieiving
@@ -31,6 +34,7 @@ impl MqttReciever {
         channel: Sender<ClientData>,
         mqtt_path: String,
         db: Database,
+        io: SocketIo,
     ) -> (MqttReciever, EventLoop) {
         // create the mqtt client and configure it
         let mut create_opts = MqttOptions::new(
@@ -69,6 +73,7 @@ impl MqttReciever {
             MqttReciever {
                 channel,
                 curr_run: curr_run.id,
+                io,
             },
             connect,
         )
@@ -150,8 +155,15 @@ impl MqttReciever {
     /// Send a message to the channel, printing and IGNORING any error that may occur
     /// * `client_data` - The cliet data to send over the broadcast
     async fn send_msg(&self, client_data: ClientData) {
-        if let Err(err) = self.channel.send(client_data) {
+        if let Err(err) = self.channel.send(client_data.clone()).await {
             println!("Error sending through channel: {:?}", err)
+        }
+        match self.io.emit(
+            "message",
+            serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
+        ) {
+            Ok(_) => (),
+            Err(err) => println!("Socket: Broadcast error: {}", err),
         }
     }
 }

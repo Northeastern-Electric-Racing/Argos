@@ -1,7 +1,6 @@
 pub mod db_handler;
 pub mod mock_reciever;
 pub mod mqtt_reciever;
-pub mod socket_handler;
 
 /// Represents the client data
 /// This has the dual purposes of

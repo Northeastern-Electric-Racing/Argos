@@ -7,37 +7,40 @@ use scylla_server_rust::{
         run_controller, system_controller,
     },
     prisma::PrismaClient,
-    reciever::{db_handler, mqtt_reciever::MqttReciever, socket_handler, ClientData},
+    reciever::{db_handler, mqtt_reciever::MqttReciever, ClientData},
     Database,
 };
-use socketioxide::SocketIo;
-use tokio::{
-    signal,
-    sync::{broadcast as Broadcaster, mpsc},
-};
+use socketioxide::{extract::SocketRef, SocketIo};
+use tokio::{signal, sync::mpsc};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
+    println!("Initializing scylla server...");
+
     // create the database stuff
-    let db: Database = Arc::new(PrismaClient::_builder().build().await.expect("Could not build prisma DB"));
+    let db: Database = Arc::new(
+        PrismaClient::_builder()
+            .build()
+            .await
+            .expect("Could not build prisma DB"),
+    );
 
     // create the socket stuff
     let (socket_layer, io) = SocketIo::new_layer();
+    io.ns("/", |s: SocketRef| {
+        s.on_disconnect(|_: SocketRef| println!("Socket: Client disconnected from socket"))
+    });
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (tx, rx) = Broadcaster::channel::<ClientData>(1000);
-    let rx2 = tx.subscribe();
+    let (tx, rx) = mpsc::channel::<ClientData>(1000);
 
     // channel to pass the processed data to the db thread
     // TODO tune buffer size
     let (tx_proc, rx_proc) = mpsc::channel::<Vec<ClientData>>(1000000);
-
-    // spawn the socket handler
-    tokio::spawn(socket_handler::handle_socket(io, rx));
 
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
@@ -45,7 +48,7 @@ async fn main() {
     let token = CancellationToken::new();
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(rx2, Arc::clone(&db)).handling_loop(tx_proc, token.clone()),
+        db_handler::DbHandler::new(rx, Arc::clone(&db)).handling_loop(tx_proc, token.clone()),
     );
     // spawm the database inserter
     task_tracker.spawn(db_handler::DbHandler::batching_loop(
@@ -59,6 +62,7 @@ async fn main() {
         tx,
         std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
         db.clone(),
+        io,
     )
     .await;
     tokio::spawn(recv.recieve_mqtt(eloop));
@@ -100,7 +104,9 @@ async fn main() {
         )
         .with_state(db.clone());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.expect("Could not bind to 8000!");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000")
+        .await
+        .expect("Could not bind to 8000!");
     let axum_token = token.clone();
     tokio::spawn(async {
         axum::serve(listener, app)
@@ -112,6 +118,10 @@ async fn main() {
     });
 
     task_tracker.close();
+
+    println!("Initialization complete, ready...");
+    println!("Use Ctrl+C or SIGINT to exit cleanly!");
+
     // listen for ctrl_c, then cancel, close, and await for all tasks in the tracker.  Other tasks cancel vai the default tokio system
     signal::ctrl_c()
         .await
