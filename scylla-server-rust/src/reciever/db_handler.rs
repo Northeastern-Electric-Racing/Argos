@@ -3,6 +3,7 @@ use tokio::sync::mpsc::Receiver;
 use tokio::{sync::mpsc::Sender, time::Duration};
 
 use tokio_util::sync::CancellationToken;
+use tracing::{debug, info, instrument, trace, warn, Level};
 
 use crate::{
     services::{
@@ -85,6 +86,10 @@ pub struct DbHandler {
     loc_lock: LocLock,
     /// Whether the location has been modified this loop
     is_loc: bool,
+    /// the queue of data
+    data_queue: Vec<ClientData>,
+    /// the time since last batch
+    last_time: tokio::time::Instant,
 }
 
 impl DbHandler {
@@ -98,6 +103,8 @@ impl DbHandler {
             db,
             loc_lock: LocLock::new(),
             is_loc: false,
+            data_queue: vec![],
+            last_time: tokio::time::Instant::now(),
         }
     }
 
@@ -112,21 +119,34 @@ impl DbHandler {
         loop {
             tokio::select! {
                 _ = cancel_token.cancelled() => {
-                    let final_msgs = data_queue.recv().await.expect("DB send could not shutdown cleanly!");
-                    println!(
+                    if let  Some(final_msgs) = data_queue.recv().await {
+                    info!(
                         "Final Batch uploaded: {:?}",
                         data_service::add_many(&database, final_msgs).await
                     );
+                } else {
+                    info!("No messages to cleanup.")
+                }
                     break;
                 },
-                Some(msg) = data_queue.recv() => {
-                    println!(
-                        "Batch uploaded: {:?}",
-                        data_service::add_many(&database, msg).await
+                Some(msgs) = data_queue.recv() => {
+                    Self::batch_upload(msgs, &database).await;
+                    trace!(
+                        "DB send: {} of {}",
+                        data_queue.len(),
+                        data_queue.max_capacity()
                     );
                 }
             }
         }
+    }
+
+    #[instrument(level = Level::DEBUG)]
+    async fn batch_upload(msg: Vec<ClientData>, db: &Database) {
+        info!(
+            "Batch uploaded: {:?}",
+            data_service::add_many(db, msg).await
+        );
     }
 
     /// A loop which uses self and a sender channel to process data
@@ -139,135 +159,159 @@ impl DbHandler {
         data_channel: Sender<Vec<ClientData>>,
         cancel_token: CancellationToken,
     ) {
-        let mut data_queue: Vec<ClientData> = vec![];
-        let mut last_time = tokio::time::Instant::now();
         loop {
             tokio::select! {
                 _ = cancel_token.cancelled() => {
-                    println!("Pushing final messages to queue");
-                    data_channel.send(data_queue.clone()).await.expect("Could not comm data to db thread, shutdown");
-                    data_queue.clear();
+                    debug!("Pushing final messages to queue");
+                    data_channel.send(self.data_queue.clone()).await.expect("Could not comm data to db thread, shutdown");
+                    self.data_queue.clear();
                     break;
                 },
                 Some(msg) = self.reciever.recv() => {
-
-                    // If the time is greater than upload interval, push to batch upload thread and clear queue
-                    if tokio::time::Instant::now().duration_since(last_time)
-                    > Duration::from_millis(UPLOAD_INTERVAL) && !data_queue.is_empty()
-                {
-                    data_channel.send(data_queue.clone()).await.expect("Could not comm data to db thread");
-                    data_queue.clear();
-                    last_time = tokio::time::Instant::now();
-                }
-
-                // upsert if not present, a sort of cache of upserted types really
-                if !self.node_list.contains(&msg.node) {
-                    println!("Upserting node: {}", msg.node);
-                    if let Err(msg) = node_service::upsert_node(&self.db, msg.node.clone()).await {
-                        println!("DB error node upsert: {:?}", msg);
-                    }
-                    self.node_list.push(msg.node.clone());
-                }
-                if !self.datatype_list.contains(&msg.name) {
-                    println!("Upserting data type: {}", msg.name);
-                    if let Err(msg) = data_type_service::upsert_data_type(
-                        &self.db,
-                        msg.name.clone(),
-                        msg.unit.clone(),
-                        msg.node.clone(),
-                    )
-                    .await {
-                        println!("DB error datatype upsert: {:?}", msg);
-                    }
-                    self.datatype_list.push(msg.name.clone());
-                }
-
-                // if data has some special meanings, push them to the database immediately, notably no matter what also enter batching logic
-                match msg.name.as_str() {
-                    "Driver" => {
-                        if let Err(err) = driver_service::upsert_driver(
-                            &self.db,
-                            msg.values
-                                .first()
-                                .unwrap_or(&"PizzaTheHut".to_string())
-                                .to_string(),
-                            msg.run_id,
-                        )
-                        .await {
-                            println!("Driver upsert error: {:?}", err);
-                        }
-                    }
-                    "location" => {
-                        self.loc_lock.add_loc_name(
-                            msg.values
-                                .first()
-                                .unwrap_or(&"PizzaTheHut".to_string())
-                                .to_string(),
-                        );
-                        self.is_loc = true;
-                    }
-                    "system" => {
-                        if let Err(err) = system_service::upsert_system(
-                            &self.db,
-                            msg.values
-                                .first()
-                                .unwrap_or(&"PizzaTheHut".to_string())
-                                .to_string(),
-                            msg.run_id,
-                        )
-                        .await {
-                            println!("System upsert error: {:?}", err);
-                        }
-                    }
-                    "GPS-Location" => {
-                        self.loc_lock.add_points(
-                            msg.values
-                                .first()
-                                .unwrap_or(&"PizzaTheHut".to_string())
-                                .parse::<f64>()
-                                .unwrap_or_default(),
-                            msg.values
-                                .get(1)
-                                .unwrap_or(&"PizzaTheHut".to_string())
-                                .parse::<f64>()
-                                .unwrap_or_default(),
-                        );
-                        self.is_loc = true;
-                    }
-                    "Radius" => {
-                        self.loc_lock.add_radius(
-                            msg.values
-                                .first()
-                                .unwrap_or(&"PizzaTheHut".to_string())
-                                .parse::<f64>()
-                                .unwrap_or_default(),
-                        );
-                        self.is_loc = true;
-                    }
-                    _ => {}
-                }
-                // if location has been modified, push a new location of the loc lock object returns Some
-                if self.is_loc {
-                    if let Some(loc) = self.loc_lock.finalize() {
-                        if let Err(err) = location_service::upsert_location(
-                            &self.db,
-                            loc.location_name,
-                            loc.lat,
-                            loc.long,
-                            loc.radius,
-                            msg.run_id,
-                        )
-                        .await {
-                            println!("Location upsert error: {:?}", err);
-                        }
-                    }
-                    self.is_loc = false;
-                }
-
-                // no matter what, batch upload the message
-                data_queue.push(msg);
+                    self.handle_msg(msg, &data_channel).await;
                 }
             }
         }
+    }
+
+    #[instrument(skip(self), level = Level::TRACE)]
+    async fn handle_msg(&mut self, msg: ClientData, data_channel: &Sender<Vec<ClientData>>) {
+        debug!(
+            "Mqtt dispatcher: {} of {}",
+            self.reciever.len(),
+            self.reciever.max_capacity()
+        );
+
+        // If the time is greater than upload interval, push to batch upload thread and clear queue
+        if tokio::time::Instant::now().duration_since(self.last_time)
+            > Duration::from_millis(UPLOAD_INTERVAL)
+            && !self.data_queue.is_empty()
+        {
+            data_channel
+                .send(self.data_queue.clone())
+                .await
+                .expect("Could not comm data to db thread");
+            self.data_queue.clear();
+            self.last_time = tokio::time::Instant::now();
+        }
+
+        // upsert if not present, a sort of cache of upserted types really
+        if !self.node_list.contains(&msg.node) {
+            info!("Upserting node: {}", msg.node);
+            if let Err(msg) = node_service::upsert_node(&self.db, msg.node.clone()).await {
+                warn!("DB error node upsert: {:?}", msg);
+            }
+            self.node_list.push(msg.node.clone());
+        }
+        if !self.datatype_list.contains(&msg.name) {
+            info!("Upserting data type: {}", msg.name);
+            if let Err(msg) = data_type_service::upsert_data_type(
+                &self.db,
+                msg.name.clone(),
+                msg.unit.clone(),
+                msg.node.clone(),
+            )
+            .await
+            {
+                warn!("DB error datatype upsert: {:?}", msg);
+            }
+            self.datatype_list.push(msg.name.clone());
+        }
+
+        // if data has some special meanings, push them to the database immediately, notably no matter what also enter batching logic
+        match msg.name.as_str() {
+            "Driver" => {
+                debug!("Upserting driver: {:?}", msg.values);
+                if let Err(err) = driver_service::upsert_driver(
+                    &self.db,
+                    msg.values
+                        .first()
+                        .unwrap_or(&"PizzaTheHut".to_string())
+                        .to_string(),
+                    msg.run_id,
+                )
+                .await
+                {
+                    warn!("Driver upsert error: {:?}", err);
+                }
+            }
+            "location" => {
+                debug!("Upserting location name: {:?}", msg.values);
+                self.loc_lock.add_loc_name(
+                    msg.values
+                        .first()
+                        .unwrap_or(&"PizzaTheHut".to_string())
+                        .to_string(),
+                );
+                self.is_loc = true;
+            }
+            "system" => {
+                debug!("Upserting system: {:?}", msg.values);
+                if let Err(err) = system_service::upsert_system(
+                    &self.db,
+                    msg.values
+                        .first()
+                        .unwrap_or(&"PizzaTheHut".to_string())
+                        .to_string(),
+                    msg.run_id,
+                )
+                .await
+                {
+                    warn!("System upsert error: {:?}", err);
+                }
+            }
+            "GPS-Location" => {
+                debug!("Upserting location points: {:?}", msg.values);
+                self.loc_lock.add_points(
+                    msg.values
+                        .first()
+                        .unwrap_or(&"PizzaTheHut".to_string())
+                        .parse::<f64>()
+                        .unwrap_or_default(),
+                    msg.values
+                        .get(1)
+                        .unwrap_or(&"PizzaTheHut".to_string())
+                        .parse::<f64>()
+                        .unwrap_or_default(),
+                );
+                self.is_loc = true;
+            }
+            "Radius" => {
+                debug!("Upserting location radius: {:?}", msg.values);
+                self.loc_lock.add_radius(
+                    msg.values
+                        .first()
+                        .unwrap_or(&"PizzaTheHut".to_string())
+                        .parse::<f64>()
+                        .unwrap_or_default(),
+                );
+                self.is_loc = true;
+            }
+            _ => {}
+        }
+        // if location has been modified, push a new location of the loc lock object returns Some
+        if self.is_loc {
+            trace!("Checking location status...");
+            if let Some(loc) = self.loc_lock.finalize() {
+                debug!("Upserting location: {:?}", loc);
+                if let Err(err) = location_service::upsert_location(
+                    &self.db,
+                    loc.location_name,
+                    loc.lat,
+                    loc.long,
+                    loc.radius,
+                    msg.run_id,
+                )
+                .await
+                {
+                    warn!("Location upsert error: {:?}", err);
+                }
+            }
+            self.is_loc = false;
+        }
+
+        // no matter what, batch upload the message
+        trace!("Pushing msg to queue: {:?}", msg);
+        self.data_queue.push(msg);
     }
 }

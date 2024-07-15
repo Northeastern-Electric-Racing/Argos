@@ -15,10 +15,28 @@ use tokio::{signal, sync::mpsc};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
+use tracing::{debug, info, level_filters::LevelFilter};
+use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 
 #[tokio::main]
 async fn main() {
     println!("Initializing scylla server...");
+    // construct a subscriber that prints formatted traces to stdout
+    // if RUST_LOG is not set, defaults to loglevel INFO
+    let subscriber = tracing_subscriber::fmt()
+        .pretty()
+        .with_thread_ids(true)
+        .with_ansi(true)
+        .with_thread_names(true)
+        .with_span_events(FmtSpan::CLOSE)
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .finish();
+    // use that subscriber to process traces emitted after this point
+    tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
 
     // create the database stuff
     let db: Database = Arc::new(
@@ -31,16 +49,16 @@ async fn main() {
     // create the socket stuff
     let (socket_layer, io) = SocketIo::new_layer();
     io.ns("/", |s: SocketRef| {
-        s.on_disconnect(|_: SocketRef| println!("Socket: Client disconnected from socket"))
+        s.on_disconnect(|_: SocketRef| debug!("Socket: Client disconnected from socket"))
     });
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (tx, rx) = mpsc::channel::<ClientData>(1000);
+    let (tx, rx) = mpsc::channel::<ClientData>(10000);
 
     // channel to pass the processed data to the db thread
     // TODO tune buffer size
-    let (tx_proc, rx_proc) = mpsc::channel::<Vec<ClientData>>(1000000);
+    let (tx_proc, rx_proc) = mpsc::channel::<Vec<ClientData>>(1000);
 
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
@@ -50,7 +68,7 @@ async fn main() {
     task_tracker.spawn(
         db_handler::DbHandler::new(rx, Arc::clone(&db)).handling_loop(tx_proc, token.clone()),
     );
-    // spawm the database inserter
+    // spawn the database inserter
     task_tracker.spawn(db_handler::DbHandler::batching_loop(
         rx_proc,
         Arc::clone(&db),
@@ -119,13 +137,14 @@ async fn main() {
 
     task_tracker.close();
 
-    println!("Initialization complete, ready...");
-    println!("Use Ctrl+C or SIGINT to exit cleanly!");
+    info!("Initialization complete, ready...");
+    info!("Use Ctrl+C or SIGINT to exit cleanly!");
 
     // listen for ctrl_c, then cancel, close, and await for all tasks in the tracker.  Other tasks cancel vai the default tokio system
     signal::ctrl_c()
         .await
         .expect("Could not read cancellation trigger (ctr+c)");
+    info!("Recieved exit signal, shutting down!");
     token.cancel();
     task_tracker.wait().await;
 }

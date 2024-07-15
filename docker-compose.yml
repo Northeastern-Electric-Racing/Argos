@@ -32,6 +32,7 @@ services:
         - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/timescaledb
         - PROD_SIREN_HOST_URL=siren:1883
         - PROD_SCYLLA=true
+        - RUST_LOG=none,scylla_server_rust=INFO # default log setting for docker
     cpu_shares: 1024
     mem_limit: 2gb
     stop_grace_period: 10s
