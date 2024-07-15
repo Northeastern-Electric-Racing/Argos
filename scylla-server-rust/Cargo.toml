@@ -8,13 +8,15 @@ prisma-client-rust = {git = "https://github.com/Brendonovich/prisma-client-rust"
 serde = "1.0.203"
 protobuf-codegen = "3.3.0"
 protobuf = "3.3.0"
-tokio = { version = "1.38.0", features = ["full"] }
+tokio = { version = "1.38.0", features = ["full", "tracing"] }
 axum = "0.7.5"
 tower = { version = "0.4.13", features = ["timeout"] }
 tower-http = { version = "0.5.2", features = ["cors"] }
 socketioxide = "0.14.0"
 rumqttc = "0.24.0"
 tokio-util = { version=  "0.7.11", features = ["full"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
 
 [workspace]
 members = ["prisma-cli"]
