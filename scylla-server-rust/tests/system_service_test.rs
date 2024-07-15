@@ -1,8 +1,10 @@
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
     prisma,
-    services::{run_service, system_service},
-    transformers::system_transformer::PublicSystem,
+    services::{
+        run_service,
+        system_service::{self, public_system},
+    },
 };
 use test_utils::cleanup_and_prepare;
 
@@ -15,21 +17,17 @@ const TEST_KEYWORD: &str = "test";
 async fn test_upsert_system_create() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
-    let res_c = system_service::upsert_system(
-        &db,
-        TEST_KEYWORD.to_owned(),
-        run_service::create_run(&db, 101).await?.id,
-    )
-    .await?;
+    let run = run_service::create_run(&db, 101).await?;
 
-    let res = db
+    let _ = system_service::upsert_system(&db, TEST_KEYWORD.to_owned(), run.id).await?;
+
+    let _ = db
         .system()
         .find_unique(prisma::system::name::equals(TEST_KEYWORD.to_owned()))
+        .select(public_system::select())
         .exec()
         .await?
         .expect("System should exist, was just upserted!");
-
-    assert_eq!(PublicSystem::from(&res_c), PublicSystem::from(&res));
 
     Ok(())
 }

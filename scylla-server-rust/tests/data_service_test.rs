@@ -24,7 +24,7 @@ async fn test_data_service() -> Result<(), QueryError> {
         TEST_KEYWORD.to_owned(),
     )
     .await?;
-    data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0, true, true).await?;
+    data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0).await?;
 
     Ok(())
 }
@@ -72,7 +72,7 @@ async fn test_data_fetch_empty() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     // should be empty, nothing was added to run
-    let data = data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0, true, true).await?;
+    let data = data_service::get_data(&db, TEST_KEYWORD.to_owned(), 0).await?;
 
     assert!(data.is_empty());
 

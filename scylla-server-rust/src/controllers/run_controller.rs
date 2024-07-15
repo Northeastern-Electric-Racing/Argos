@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub async fn get_all_runs(State(db): State<Database>) -> Result<Json<Vec<PublicRun>>, ScyllaError> {
-    let run_data = run_service::get_all_runs(&db, true, true, true).await?;
+    let run_data = run_service::get_all_runs(&db).await?;
 
     let transformed_run_data: Vec<PublicRun> = run_data.iter().map(PublicRun::from).collect();
 
@@ -19,7 +19,7 @@ pub async fn get_run_by_id(
     State(db): State<Database>,
     Path(run_id): Path<i32>,
 ) -> Result<Json<PublicRun>, ScyllaError> {
-    let run_data = run_service::get_run_by_id(&db, true, true, true, run_id).await?;
+    let run_data = run_service::get_run_by_id(&db, run_id).await?;
 
     if run_data.is_none() {
         return Err(ScyllaError::NotFound);
