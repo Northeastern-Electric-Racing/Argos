@@ -4,7 +4,10 @@ mod test_utils;
 use prisma_client_rust::QueryError;
 use scylla_server_rust::{
     prisma,
-    services::{data_type_service, node_service},
+    services::{
+        data_type_service::{self, public_datatype},
+        node_service,
+    },
     transformers::data_type_transformer::PublicDataType,
 };
 use test_utils::cleanup_and_prepare;
@@ -16,9 +19,7 @@ async fn test_get_all_datatypes() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     // ensure datatypes is empty
-    assert!(data_type_service::get_all_data_types(&db, true)
-        .await?
-        .is_empty());
+    assert!(data_type_service::get_all_data_types(&db).await?.is_empty());
 
     Ok(())
 }
@@ -58,6 +59,7 @@ async fn test_datatype_create() -> Result<(), QueryError> {
     let data = db
         .data_type()
         .find_unique(prisma::data_type::name::equals(data_type_name.clone()))
+        .select(public_datatype::select())
         .exec()
         .await?
         .expect("This should not be empty");

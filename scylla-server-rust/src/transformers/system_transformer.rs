@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::prisma;
+use crate::services::system_service;
 
 use super::run_transformer::PublicRun;
 
@@ -11,17 +11,11 @@ pub struct PublicSystem {
     pub runs: Vec<PublicRun>,
 }
 
-impl From<&prisma::system::Data> for PublicSystem {
-    fn from(value: &prisma::system::Data) -> Self {
+impl From<&system_service::public_system::Data> for PublicSystem {
+    fn from(value: &system_service::public_system::Data) -> Self {
         PublicSystem {
             name: value.name.clone(),
-            runs: value
-                .runs
-                .clone()
-                .unwrap_or_default()
-                .iter()
-                .map(PublicRun::from)
-                .collect(),
+            runs: value.runs.clone().iter().map(PublicRun::from).collect(),
         }
     }
 }

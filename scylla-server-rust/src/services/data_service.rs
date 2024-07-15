@@ -2,6 +2,11 @@ use prisma_client_rust::{chrono::DateTime, QueryError};
 
 use crate::{prisma, reciever::ClientData, Database};
 
+prisma::data::select! {public_data {
+    time
+    values
+}}
+
 /// Get datapoints that mach criteria
 /// * `db` - The prisma client to make the call to
 /// * `data_type_name` - The data type name to filter the data by
@@ -13,24 +18,15 @@ pub async fn get_data(
     db: &Database,
     data_type_name: String,
     run_id: i32,
-    fetch_run: bool,
-    fetch_data_type: bool,
-) -> Result<Vec<prisma::data::Data>, QueryError> {
-    let mut find_q = db.data().find_many(vec![
-        prisma::data::data_type_name::equals(data_type_name),
-        prisma::data::run_id::equals(run_id),
-    ]);
-
-    // add a with statement to fetch runs
-
-    if fetch_run {
-        find_q = find_q.with(prisma::data::run::fetch());
-    }
-    if fetch_data_type {
-        find_q = find_q.with(prisma::data::data_type::fetch());
-    }
-
-    find_q.exec().await
+) -> Result<Vec<public_data::Data>, QueryError> {
+    db.data()
+        .find_many(vec![
+            prisma::data::data_type_name::equals(data_type_name),
+            prisma::data::run_id::equals(run_id),
+        ])
+        .select(public_data::select())
+        .exec()
+        .await
 }
 
 /// Adds a datapoint
@@ -43,7 +39,7 @@ pub async fn get_data(
 pub async fn add_data(
     db: &Database,
     client_data: ClientData,
-) -> Result<prisma::data::Data, QueryError> {
+) -> Result<public_data::Data, QueryError> {
     db.data()
         .create(
             prisma::data_type::name::equals(client_data.name),
@@ -59,6 +55,7 @@ pub async fn add_data(
                     .collect(),
             )],
         )
+        .select(public_data::select())
         .exec()
         .await
 }

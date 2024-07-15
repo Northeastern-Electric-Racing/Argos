@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::prisma;
+use crate::services::location_service;
 
 use super::run_transformer::PublicRun;
 
@@ -14,20 +14,14 @@ pub struct PublicLocation {
     pub runs: Vec<PublicRun>,
 }
 
-impl From<&prisma::location::Data> for PublicLocation {
-    fn from(value: &prisma::location::Data) -> Self {
+impl From<&location_service::public_location::Data> for PublicLocation {
+    fn from(value: &location_service::public_location::Data) -> Self {
         PublicLocation {
             name: value.name.clone(),
             latitude: value.latitude,
             longitude: value.longitude,
             radius: value.radius,
-            runs: value
-                .runs
-                .clone()
-                .unwrap_or_default()
-                .iter()
-                .map(PublicRun::from)
-                .collect(),
+            runs: value.runs.clone().iter().map(PublicRun::from).collect(),
         }
     }
 }

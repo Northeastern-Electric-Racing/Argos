@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::prisma;
+use crate::services::node_service;
 
 use super::data_type_transformer::PublicDataType;
 
@@ -12,14 +12,13 @@ pub struct PublicNode {
     data_types: Vec<PublicDataType>,
 }
 
-impl From<&prisma::node::Data> for PublicNode {
-    fn from(value: &prisma::node::Data) -> Self {
+impl From<&node_service::public_node::Data> for PublicNode {
+    fn from(value: &node_service::public_node::Data) -> Self {
         PublicNode {
             name: value.name.clone(),
             data_types: value
                 .data_types
                 .clone()
-                .unwrap_or_default()
                 .iter()
                 .map(PublicDataType::from)
                 .collect(),

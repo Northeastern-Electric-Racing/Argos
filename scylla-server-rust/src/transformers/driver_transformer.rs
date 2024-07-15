@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::prisma;
+use crate::services::driver_service;
 
 use super::run_transformer::PublicRun;
 
@@ -11,17 +11,11 @@ pub struct PublicDriver {
     runs: Vec<PublicRun>,
 }
 
-impl From<&prisma::driver::Data> for PublicDriver {
-    fn from(value: &prisma::driver::Data) -> Self {
+impl From<&driver_service::public_driver::Data> for PublicDriver {
+    fn from(value: &driver_service::public_driver::Data) -> Self {
         PublicDriver {
             username: value.username.clone(),
-            runs: value
-                .runs
-                .clone()
-                .unwrap_or_default()
-                .iter()
-                .map(PublicRun::from)
-                .collect(),
+            runs: value.runs.clone().iter().map(PublicRun::from).collect(),
         }
     }
 }

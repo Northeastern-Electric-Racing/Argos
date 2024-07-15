@@ -5,11 +5,29 @@ use crate::{
     Database,
 };
 
+prisma::location::select! {public_location{
+    name
+    latitude
+    longitude
+    radius
+    runs: select {
+        id
+        location_name
+        driver_name
+        system_name
+        time
+    }
+}}
+
 /// Gets all locations
 /// * `db` - The prisma client to make the call to
 /// returns: A result containing the data or the QueryError propogated by the db
-pub async fn get_all_locations(db: &Database) -> Result<Vec<prisma::location::Data>, QueryError> {
-    db.location().find_many(vec![]).exec().await
+pub async fn get_all_locations(db: &Database) -> Result<Vec<public_location::Data>, QueryError> {
+    db.location()
+        .find_many(vec![])
+        .select(public_location::select())
+        .exec()
+        .await
 }
 
 /// Upserts a location, either creating or updating one depending on its existence
@@ -27,7 +45,7 @@ pub async fn upsert_location(
     longitude: f64,
     radius: f64,
     run_id: i32,
-) -> Result<prisma::location::Data, QueryError> {
+) -> Result<public_location::Data, QueryError> {
     let loc = db
         .location()
         .upsert(
@@ -39,6 +57,7 @@ pub async fn upsert_location(
                 prisma::location::radius::set(radius),
             ],
         )
+        .select(public_location::select())
         .exec()
         .await?;
 
