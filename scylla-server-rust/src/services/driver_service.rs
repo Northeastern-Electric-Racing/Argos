@@ -5,11 +5,26 @@ use crate::{
     Database,
 };
 
+prisma::driver::select! { public_driver{
+    username
+    runs: select {
+        id
+        location_name
+        driver_name
+        system_name
+        time
+    }
+}}
+
 /// Gets all drivers
 /// * `db` - The prisma client to make the call to
 /// returns: A result containing the data or the QueryError propogated by the db
-pub async fn get_all_drivers(db: &Database) -> Result<Vec<prisma::driver::Data>, QueryError> {
-    db.driver().find_many(vec![]).exec().await
+pub async fn get_all_drivers(db: &Database) -> Result<Vec<public_driver::Data>, QueryError> {
+    db.driver()
+        .find_many(vec![])
+        .select(public_driver::select())
+        .exec()
+        .await
 }
 
 /// Upserts a driver, either creating or updating one depending on its existence
@@ -21,7 +36,7 @@ pub async fn upsert_driver(
     db: &Database,
     driver_name: String,
     run_id: i32,
-) -> Result<prisma::driver::Data, QueryError> {
+) -> Result<public_driver::Data, QueryError> {
     let drive = db
         .driver()
         .upsert(
@@ -29,6 +44,7 @@ pub async fn upsert_driver(
             prisma::driver::create(driver_name.clone(), vec![]),
             vec![],
         )
+        .select(public_driver::select())
         .exec()
         .await?;
 
