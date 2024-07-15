@@ -9,6 +9,7 @@ use rumqttc::v5::{
 };
 use socketioxide::SocketIo;
 use tokio::sync::mpsc::Sender;
+use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{serverdata, services::run_service, Database};
 
@@ -61,10 +62,12 @@ impl MqttReciever {
         let curr_run = run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis())
             .await
             .expect("Could not create initial run!");
+        debug!("Configuring current run: {:?}", curr_run);
 
         // TODO mess with incoming message cap if db, etc. cannot keep up
         let (client, connect) = AsyncClient::new(create_opts, 1000);
 
+        debug!("Subscribing to siren");
         client
             .try_subscribe("#", rumqttc::v5::mqttbytes::QoS::ExactlyOnce)
             .expect("Could not subscribe to Siren");
@@ -86,11 +89,12 @@ impl MqttReciever {
         while let Ok(msg) = connect.poll().await {
             // safe parse the message
             if let Event::Incoming(Packet::Publish(msg)) = msg {
+                trace!("Recieved mqtt message: {:?}", msg);
                 // parse the message into the data and the node name it falls under
                 let item_data = match self.parse_msg(msg).await {
                     Ok(msg) => msg,
                     Err(err) => {
-                        println!("Message parse error: {:?}", err);
+                        warn!("Message parse error: {:?}", err);
                         continue;
                     }
                 };
@@ -103,6 +107,7 @@ impl MqttReciever {
     /// Parse the message
     /// * `msg` - The mqtt message to parse
     /// returns the ClientData, or the Err of something that can be debug printed
+    #[instrument(skip(self), level = Level::TRACE)]
     async fn parse_msg(&self, msg: Publish) -> Result<ClientData, impl fmt::Debug> {
         let data = serverdata::ServerData::parse_from_bytes(&msg.payload)
             .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
@@ -126,6 +131,7 @@ impl MqttReciever {
             .map(Cow::Borrowed)
             .find(|f| f.0 == "ts")
             .unwrap_or_else(|| {
+                debug!("Could not find timestamp in mqtt, using current time");
                 Cow::Owned((
                     "ts".to_string(),
                     chrono::offset::Utc::now().timestamp_millis().to_string(),
@@ -156,14 +162,14 @@ impl MqttReciever {
     /// * `client_data` - The cliet data to send over the broadcast
     async fn send_msg(&self, client_data: ClientData) {
         if let Err(err) = self.channel.send(client_data.clone()).await {
-            println!("Error sending through channel: {:?}", err)
+            warn!("Error sending through channel: {:?}", err)
         }
         match self.io.emit(
             "message",
             serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
         ) {
             Ok(_) => (),
-            Err(err) => println!("Socket: Broadcast error: {}", err),
+            Err(err) => warn!("Socket: Broadcast error: {}", err),
         }
     }
 }

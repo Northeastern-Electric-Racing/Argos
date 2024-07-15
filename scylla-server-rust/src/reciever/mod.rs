@@ -21,6 +21,7 @@ pub struct ClientData {
 
 /// A final location packet
 /// This has the purpose of representing the struct for the service layer to unpack for insertion, and therefore is not serialized
+#[derive(Debug)]
 struct LocationData {
     location_name: String,
     lat: f64,
