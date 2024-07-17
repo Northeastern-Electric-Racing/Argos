@@ -2914,6 +2914,7 @@ dependencies = [
  "prisma-client-rust",
  "protobuf",
  "protobuf-codegen",
+ "rand 0.8.5",
  "rumqttc",
  "serde",
  "socketioxide",
