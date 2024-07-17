@@ -174,14 +174,14 @@ const BASE_MOCK_STRING_DATA: [MockStringData; 2] = [
     },
 ];
 
-pub struct MockReciever {
+pub struct MockProcessor {
     curr_run: i32,
     io: SocketIo,
 }
 
-impl MockReciever {
+impl MockProcessor {
     pub fn new(io: SocketIo) -> Self {
-        MockReciever { curr_run: 1, io }
+        MockProcessor { curr_run: 1, io }
     }
 
     pub async fn generate_mock(self) {
