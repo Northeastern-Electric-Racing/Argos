@@ -7,7 +7,9 @@ use scylla_server_rust::{
         run_controller, system_controller,
     },
     prisma::PrismaClient,
-    reciever::{db_handler, mock_reciever::MockReciever, mqtt_reciever::MqttReciever, ClientData},
+    processors::{
+        db_handler, mock_processor::MockProcessor, mqtt_processor::MqttProcessor, ClientData,
+    },
     Database,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
@@ -77,43 +79,41 @@ async fn main() {
 
     // if PROD_SCYLLA=false
     if std::env::var("PROD_SCYLLA").is_ok_and(|f| f == "false") {
-        info!("Running reciever in mock mode, no data will be stored");
-        let recv = MockReciever::new(io);
+        info!("Running processor in mock mode, no data will be stored");
+        let recv = MockProcessor::new(io);
         tokio::spawn(recv.generate_mock());
     } else {
         // run prod if this isnt present
-        // create and spawn the mqtt reciever
-        info!("Running reciever in MQTT (production) mode");
-        let (recv, eloop) = MqttReciever::new(
+        // create and spawn the mqtt processor
+        info!("Running processor in MQTT (production) mode");
+        let (recv, eloop) = MqttProcessor::new(
             tx,
             std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
             db.clone(),
             io,
         )
         .await;
-        tokio::spawn(recv.recieve_mqtt(eloop));
+        tokio::spawn(recv.process_mqtt(eloop));
     }
 
     let app = Router::new()
-        // get all data with the name dataTypeName and runID as specified
+        // DATA ROUTES
         .route(
             "/data/:dataTypeName/:runId",
             get(controllers::data_controller::get_data),
         )
-        // get all datatypes
+        // DATA TYPE ROUTES
         .route("/datatypes", get(data_type_controller::get_all_data_types))
-        // get all drivers
+        // DRIVERS
         .route("/drivers", get(driver_controller::get_all_drivers))
-        // get all locations
+        // LOCATIONS
         .route("/locations", get(location_controller::get_all_locations))
-        // get all nodes
+        // NODES
         .route("/nodes", get(node_controller::get_all_nodes))
-        // runs:
-        // get all runs
+        // RUNS
         .route("/runs", get(run_controller::get_all_runs))
-        // get run with id
         .route("/runs/:id", get(run_controller::get_run_by_id))
-        // get all systems
+        // SYSTEMS
         .route("/systems", get(system_controller::get_all_systems))
         // for CORS handling
         .layer(
@@ -153,7 +153,7 @@ async fn main() {
     signal::ctrl_c()
         .await
         .expect("Could not read cancellation trigger (ctr+c)");
-    info!("Recieved exit signal, shutting down!");
+    info!("Received exit signal, shutting down!");
     token.cancel();
     task_tracker.wait().await;
 }

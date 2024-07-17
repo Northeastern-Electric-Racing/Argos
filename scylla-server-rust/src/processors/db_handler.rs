@@ -79,13 +79,13 @@ pub struct DbHandler {
     /// The list of data types seen by this instance, used for when to upsert
     datatype_list: Vec<String>,
     /// The broadcast channel which provides serial datapoints for processing
-    reciever: Receiver<ClientData>,
+    receiver: Receiver<ClientData>,
     /// The database
     db: Database,
     /// An internal state of an in progress location packet
-    loc_lock: LocLock,
+    location_lock: LocLock,
     /// Whether the location has been modified this loop
-    is_loc: bool,
+    is_location: bool,
     /// the queue of data
     data_queue: Vec<ClientData>,
     /// the time since last batch
@@ -95,14 +95,14 @@ pub struct DbHandler {
 impl DbHandler {
     /// Make a new db handler
     /// * `recv` - the broadcast reciver of which clientdata will be sent
-    pub fn new(reciever: Receiver<ClientData>, db: Database) -> DbHandler {
+    pub fn new(receiver: Receiver<ClientData>, db: Database) -> DbHandler {
         DbHandler {
             node_list: vec![],
             datatype_list: vec![],
-            reciever,
+            receiver,
             db,
-            loc_lock: LocLock::new(),
-            is_loc: false,
+            location_lock: LocLock::new(),
+            is_location: false,
             data_queue: vec![],
             last_time: tokio::time::Instant::now(),
         }
@@ -153,7 +153,7 @@ impl DbHandler {
     /// If the data is special, i.e. coordinates, driver, etc. it will store it in its special location of the db immediately
     /// For all data points it will add the to the data_channel for batch uploading logic when a certain time has elapsed
     /// Before this time the data is stored in an internal queue.
-    /// On cancellation, the messages currently in the queue will be sent as a final flush of any remaining messages recieved before cancellation
+    /// On cancellation, the messages currently in the queue will be sent as a final flush of any remaining messages received before cancellation
     pub async fn handling_loop(
         mut self,
         data_channel: Sender<Vec<ClientData>>,
@@ -167,7 +167,7 @@ impl DbHandler {
                     self.data_queue.clear();
                     break;
                 },
-                Some(msg) = self.reciever.recv() => {
+                Some(msg) = self.receiver.recv() => {
                     self.handle_msg(msg, &data_channel).await;
                 }
             }
@@ -178,8 +178,8 @@ impl DbHandler {
     async fn handle_msg(&mut self, msg: ClientData, data_channel: &Sender<Vec<ClientData>>) {
         debug!(
             "Mqtt dispatcher: {} of {}",
-            self.reciever.len(),
-            self.reciever.max_capacity()
+            self.receiver.len(),
+            self.receiver.max_capacity()
         );
 
         // If the time is greater than upload interval, push to batch upload thread and clear queue
@@ -237,13 +237,13 @@ impl DbHandler {
             }
             "location" => {
                 debug!("Upserting location name: {:?}", msg.values);
-                self.loc_lock.add_loc_name(
+                self.location_lock.add_loc_name(
                     msg.values
                         .first()
                         .unwrap_or(&"PizzaTheHut".to_string())
                         .to_string(),
                 );
-                self.is_loc = true;
+                self.is_location = true;
             }
             "system" => {
                 debug!("Upserting system: {:?}", msg.values);
@@ -262,7 +262,7 @@ impl DbHandler {
             }
             "GPS-Location" => {
                 debug!("Upserting location points: {:?}", msg.values);
-                self.loc_lock.add_points(
+                self.location_lock.add_points(
                     msg.values
                         .first()
                         .unwrap_or(&"PizzaTheHut".to_string())
@@ -274,25 +274,25 @@ impl DbHandler {
                         .parse::<f64>()
                         .unwrap_or_default(),
                 );
-                self.is_loc = true;
+                self.is_location = true;
             }
             "Radius" => {
                 debug!("Upserting location radius: {:?}", msg.values);
-                self.loc_lock.add_radius(
+                self.location_lock.add_radius(
                     msg.values
                         .first()
                         .unwrap_or(&"PizzaTheHut".to_string())
                         .parse::<f64>()
                         .unwrap_or_default(),
                 );
-                self.is_loc = true;
+                self.is_location = true;
             }
             _ => {}
         }
         // if location has been modified, push a new location of the loc lock object returns Some
-        if self.is_loc {
+        if self.is_location {
             trace!("Checking location status...");
-            if let Some(loc) = self.loc_lock.finalize() {
+            if let Some(loc) = self.location_lock.finalize() {
                 debug!("Upserting location: {:?}", loc);
                 if let Err(err) = location_service::upsert_location(
                     &self.db,
@@ -307,7 +307,7 @@ impl DbHandler {
                     warn!("Location upsert error: {:?}", err);
                 }
             }
-            self.is_loc = false;
+            self.is_location = false;
         }
 
         // no matter what, batch upload the message

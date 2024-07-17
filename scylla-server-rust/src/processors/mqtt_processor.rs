@@ -16,27 +16,27 @@ use crate::{serverdata, services::run_service, Database};
 use super::ClientData;
 use std::borrow::Cow;
 
-pub struct MqttReciever {
+pub struct MqttProcessor {
     channel: Sender<ClientData>,
     curr_run: i32,
     io: SocketIo,
 }
 
-impl MqttReciever {
-    /// Creates a new mqtt reciever and socketio sender
+impl MqttProcessor {
+    /// Creates a new mqtt receiver and socketio and db sender
     /// * `channel` - The mpsc channel to send the database data to
     /// * `mqtt_path` - The mqtt URI, including port, (without the mqtt://) to subscribe to
     /// * `db` - The database to store the data in
     /// * `io` - The socketio layer to send the data to
     ///
     /// This is async as it creates the initial run and gets the ID, as well as connecting to and subbing Siren
-    /// Returns the instance and the event loop, which can be passed into the recieve_mqtt func to begin recieiving
+    /// Returns the instance and the event loop, which can be passed into the process_mqtt func to begin recieiving
     pub async fn new(
         channel: Sender<ClientData>,
         mqtt_path: String,
         db: Database,
         io: SocketIo,
-    ) -> (MqttReciever, EventLoop) {
+    ) -> (MqttProcessor, EventLoop) {
         // create the mqtt client and configure it
         let mut create_opts = MqttOptions::new(
             "ScyllaServer",
@@ -73,7 +73,7 @@ impl MqttReciever {
             .expect("Could not subscribe to Siren");
 
         (
-            MqttReciever {
+            MqttProcessor {
                 channel,
                 curr_run: curr_run.id,
                 io,
@@ -84,12 +84,12 @@ impl MqttReciever {
 
     /// This handles the reception of mqtt messages, will not return
     /// * `connect` - The eventloop returned by ::new to connect to
-    pub async fn recieve_mqtt(self, mut connect: EventLoop) {
+    pub async fn process_mqtt(self, mut connect: EventLoop) {
         // process over messages, non blocking
         while let Ok(msg) = connect.poll().await {
             // safe parse the message
             if let Event::Incoming(Packet::Publish(msg)) = msg {
-                trace!("Recieved mqtt message: {:?}", msg);
+                trace!("Received mqtt message: {:?}", msg);
                 // parse the message into the data and the node name it falls under
                 let item_data = match self.parse_msg(msg).await {
                     Ok(msg) => msg,
