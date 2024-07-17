@@ -7,7 +7,7 @@ use scylla_server_rust::{
         run_controller, system_controller,
     },
     prisma::PrismaClient,
-    reciever::{db_handler, mqtt_reciever::MqttReciever, ClientData},
+    reciever::{db_handler, mock_reciever::MockReciever, mqtt_reciever::MqttReciever, ClientData},
     Database,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
@@ -75,15 +75,24 @@ async fn main() {
         token.clone(),
     ));
 
-    // create and spawn the mqtt reciever
-    let (recv, eloop) = MqttReciever::new(
-        tx,
-        std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
-        db.clone(),
-        io,
-    )
-    .await;
-    tokio::spawn(recv.recieve_mqtt(eloop));
+    // if PROD_SCYLLA=false
+    if std::env::var("PROD_SCYLLA").is_ok_and(|f| f == "false") {
+        info!("Running reciever in mock mode, no data will be stored");
+        let recv = MockReciever::new(io);
+        tokio::spawn(recv.generate_mock());
+    } else {
+        // run prod if this isnt present
+        // create and spawn the mqtt reciever
+        info!("Running reciever in MQTT (production) mode");
+        let (recv, eloop) = MqttReciever::new(
+            tx,
+            std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
+            db.clone(),
+            io,
+        )
+        .await;
+        tokio::spawn(recv.recieve_mqtt(eloop));
+    }
 
     let app = Router::new()
         // get all data with the name dataTypeName and runID as specified
