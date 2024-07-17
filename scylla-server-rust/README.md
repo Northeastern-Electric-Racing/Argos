@@ -59,9 +59,12 @@ Have an async function that takes time and is somewhat important for performance
 
 ### Deploy this app
 
-Use the docker compose above to build & deploy.  Note the CI prebuilds arm64 and amd64 images upon request in the actions tab of this repository's github page.
-```
-docker compose build
-docker compose up # use -d to fork to background
-```
-A database migration is triggered upon every bootup.
+See main README.
+
+
+#### Env variables
+
+- `SOURCE_DATABASE_URL` The timescale URL
+- `PROD_SCYLLA` false=use mock instead of production (mqtt) as source of data
+- `RUST_LOG=none,scylla_server_rust` levels of logging for this create, see above
+- `PROD_SIREN_HOST_URL` URL:Port of the MQTT server, using when `PROD_SCYLLA=/false`

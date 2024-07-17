@@ -1,6 +1,6 @@
 use prisma_client_rust::{chrono::DateTime, QueryError};
 
-use crate::{prisma, reciever::ClientData, Database};
+use crate::{prisma, processors::ClientData, Database};
 
 prisma::data::select! {public_data {
     time

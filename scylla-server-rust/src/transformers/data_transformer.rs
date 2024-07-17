@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::{reciever::ClientData, services::data_service};
+use crate::{processors::ClientData, services::data_service};
 
 /// The struct defining the data format sent to the client
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
