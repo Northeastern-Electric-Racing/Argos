@@ -190,31 +190,30 @@ impl MockReciever {
             let index = rand::thread_rng()
                 .gen_range(0..(BASE_MOCK_DATA.len() + BASE_MOCK_STRING_DATA.len()));
 
-            let client_data: ClientData;
             // if we are doing non-string mock this loop
-            if index < BASE_MOCK_DATA.len() {
+            let client_data: ClientData = if index < BASE_MOCK_DATA.len() {
                 let dat = BASE_MOCK_DATA[index];
 
-                client_data = ClientData {
+                ClientData {
                     run_id: self.curr_run,
                     name: dat.name.to_string(),
                     unit: dat.unit.to_string(),
                     values: dat.get_values(),
                     timestamp: chrono::offset::Utc::now().timestamp_millis(),
                     node: "".to_string(), // uneeded for socket use only
-                };
+                }
             // do a string mock
             } else {
                 let dat = BASE_MOCK_STRING_DATA[index - BASE_MOCK_DATA.len()];
-                client_data = ClientData {
+                ClientData {
                     run_id: self.curr_run,
                     name: dat.name.to_string(),
                     unit: dat.unit.to_string(),
                     values: vec![dat.vals.to_string()],
                     timestamp: chrono::offset::Utc::now().timestamp_millis(),
                     node: "".to_string(), // uneeded for socket use only
-                };
-            }
+                }
+            };
 
             match self.io.emit(
                 "message",
