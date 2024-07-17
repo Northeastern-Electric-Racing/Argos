@@ -85,22 +85,46 @@ impl MqttProcessor {
     /// This handles the reception of mqtt messages, will not return
     /// * `connect` - The eventloop returned by ::new to connect to
     pub async fn process_mqtt(self, mut connect: EventLoop) {
+        let mut spec_interval = tokio::time::interval(Duration::from_secs(3));
         // process over messages, non blocking
-        while let Ok(msg) = connect.poll().await {
-            // safe parse the message
-            if let Event::Incoming(Packet::Publish(msg)) = msg {
-                trace!("Received mqtt message: {:?}", msg);
-                // parse the message into the data and the node name it falls under
-                let item_data = match self.parse_msg(msg).await {
-                    Ok(msg) => msg,
-                    Err(err) => {
-                        warn!("Message parse error: {:?}", err);
-                        continue;
+        loop {
+            tokio::select! {
+                    Ok(msg) = connect.poll() => {
+                        // safe parse the message
+                        if let Event::Incoming(Packet::Publish(msg)) = msg {
+                            trace!("Received mqtt message: {:?}", msg);
+                            // parse the message into the data and the node name it falls under
+                            let msg = match self.parse_msg(msg) {
+                                Ok(msg) => msg,
+                                Err(err) => {
+                                    warn!("Message parse error: {:?}", err);
+                                    continue;
+                                }
+                            };
+                            self.send_db_msg(msg.clone()).await;
+                            self.send_socket_msg(msg).await;
+                        }
+
+            },
+                    _ = spec_interval.tick() => {
+                        trace!("Updating viewership data!");
+                        if let Ok(sockets) = self.io.sockets() {
+                        let client_data = ClientData {
+                            name: "Viewers".to_string(),
+                            node: "Internal".to_string(),
+                            unit: "".to_string(),
+                            run_id: self.curr_run,
+                            timestamp: chrono::offset::Utc::now().timestamp_millis(),
+                            values: vec![sockets.len().to_string()]
+                        };
+                        self.send_socket_msg(client_data).await;
+
+                    } else {
+                        warn!("Could not fetch socket count");
                     }
-                };
-                // send the message over the channel to the socketio and database consumers
-                self.send_msg(item_data).await;
-            }
+                    }
+
+                }
         }
     }
 
@@ -108,7 +132,7 @@ impl MqttProcessor {
     /// * `msg` - The mqtt message to parse
     /// returns the ClientData, or the Err of something that can be debug printed
     #[instrument(skip(self), level = Level::TRACE)]
-    async fn parse_msg(&self, msg: Publish) -> Result<ClientData, impl fmt::Debug> {
+    fn parse_msg(&self, msg: Publish) -> Result<ClientData, impl fmt::Debug> {
         let data = serverdata::ServerData::parse_from_bytes(&msg.payload)
             .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
 
@@ -159,11 +183,16 @@ impl MqttProcessor {
     }
 
     /// Send a message to the channel, printing and IGNORING any error that may occur
-    /// * `client_data` - The cliet data to send over the broadcast
-    async fn send_msg(&self, client_data: ClientData) {
+    /// * `client_data` - The client data to send over the broadcast
+    async fn send_db_msg(&self, client_data: ClientData) {
         if let Err(err) = self.channel.send(client_data.clone()).await {
             warn!("Error sending through channel: {:?}", err)
         }
+    }
+
+    /// Sends a message to the socket, printing and IGNORING any error that may occur
+    /// * `client_data` - The client data to send over the broadcast
+    async fn send_socket_msg(&self, client_data: ClientData) {
         match self.io.emit(
             "message",
             serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
