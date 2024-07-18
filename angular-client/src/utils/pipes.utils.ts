@@ -5,7 +5,7 @@ export const datePipe = (date: Date) => {
 
 export const convertUTCtoLocal = (utcTimeInMs: number): number => {
   // Create a Date object from the UTC time in milliseconds since epoch and convert it to local time
-  const date = new Date(new Date(utcTimeInMs).toLocaleString());
+  const date = new Date(utcTimeInMs);
 
   // Convert the Date object back to time in milliseconds since epoch
   const localTimeInMs = date.getTime() - date.getTimezoneOffset() * 60 * 1000;
