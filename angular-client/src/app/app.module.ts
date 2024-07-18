@@ -174,9 +174,11 @@ export class AppModule {
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer
   ) {
-    this.matIconRegistry.addSvgIcon(
-      'steering_wheel',
-      this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/search_hands_free.svg')
-    );
+    this.matIconRegistry
+      .addSvgIcon(
+        'steering_wheel',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search_hands_free.svg')
+      )
+      .addSvgIcon('wifi', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/wifi.svg'));
   }
 }
