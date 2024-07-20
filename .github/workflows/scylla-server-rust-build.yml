@@ -1,5 +1,5 @@
 #
-name: Create and publish a Docker image
+name: Create and publish scylla docker image
 
 on:
   workflow_dispatch:
@@ -13,11 +13,8 @@ env:
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
-  build-and-push-image_matrix:
-    strategy:
-        matrix:
-            os: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+  build-and-push-image:
+    runs-on: ubuntu-latest
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -49,6 +46,7 @@ jobs:
         with:
           context: ./scylla-server-rust
           push: true
+          platforms: linux/arm64,linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # for caching
@@ -56,5 +54,4 @@ jobs:
           # cache-to: type=gha,mode=max
           # https://github.com/docker/build-push-action/issues/820
           provenance: false
-
 
