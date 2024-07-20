@@ -7,3 +7,6 @@ edition = "2021"
 prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", features = [
   "postgresql", "migrations"
 ], default-features = false }
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.

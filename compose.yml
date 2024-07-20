@@ -17,7 +17,7 @@ services:
 
   scylla-server-rust:
     container_name: scylla-server-rust
-    image: ghcr.io/northeastern-electric-racing/argos:rust-rewrite-socket-scylla-server-rust
+    image: ghcr.io/northeastern-electric-racing/argos-scylla:rust-rewrite-socket
     build:
         context: ./scylla-server-rust
     restart: unless-stopped
