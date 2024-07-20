@@ -23,3 +23,9 @@ prisma.rs
 
 # protobuf
 serverdata.rs
+
+target
+Dockerfile
+.dockerignore
+.git
+.gitignore
