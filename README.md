@@ -45,6 +45,18 @@ Examples:
 
 Router deploy and send to background: `docker compose -f compose.yml -f compose.router.yml up -d`
 
+### Build and deploy
+
+Using the above profiles, one can `build` the app.  Then, with correct permissions, you can `push` the app then `pull` it elsewhere for usage.  Note that you must `push` and `pull` on the same architecture, so you cannot use for example a dell laptop to build for the router!  To get `push` permissions, create a PAT [here](https://github.com/settings/tokens/new?scopes=write:packages) and copy the token into this command:
+
+```
+sudo docker login ghcr.io -u <gh username> -p <token>
+```
+
+Now you can update the image on a remote server.  Note to save time you can just specify which service to upload, like `scylla-server-rust` or `client`.
+```
+sudo docker compose -f compose.yml -f compose.router.yml build && sudo docker compose -f compose.yml -f compose.router.yml push
+```
 
 
 ## Codegen Protobuf Types (client only)
