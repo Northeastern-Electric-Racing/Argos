@@ -163,7 +163,7 @@ impl MqttProcessor {
             })
             .into_owned();
 
-        // parse time, if time isnt present use sys time (see above)
+        // parse time, if invalid time error out
         let Ok(time_clean) = unix_time.1.parse::<i64>() else {
             return Err(format!("Invalid timestamp: {}", unix_time.1));
         };

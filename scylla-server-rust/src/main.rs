@@ -56,11 +56,11 @@ async fn main() {
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (tx, rx) = mpsc::channel::<ClientData>(10000);
+    let (mqtt_receive, mqtt_send) = mpsc::channel::<ClientData>(10000);
 
     // channel to pass the processed data to the db thread
     // TODO tune buffer size
-    let (tx_proc, rx_proc) = mpsc::channel::<Vec<ClientData>>(1000);
+    let (db_receive, db_send) = mpsc::channel::<Vec<ClientData>>(1000);
 
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
@@ -68,11 +68,12 @@ async fn main() {
     let token = CancellationToken::new();
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(rx, Arc::clone(&db)).handling_loop(tx_proc, token.clone()),
+        db_handler::DbHandler::new(mqtt_send, Arc::clone(&db))
+            .handling_loop(db_receive, token.clone()),
     );
     // spawn the database inserter
     task_tracker.spawn(db_handler::DbHandler::batching_loop(
-        rx_proc,
+        db_send,
         Arc::clone(&db),
         token.clone(),
     ));
@@ -87,7 +88,7 @@ async fn main() {
         // create and spawn the mqtt processor
         info!("Running processor in MQTT (production) mode");
         let (recv, eloop) = MqttProcessor::new(
-            tx,
+            mqtt_receive,
             std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
             db.clone(),
             io,
