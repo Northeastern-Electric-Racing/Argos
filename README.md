@@ -17,34 +17,39 @@ Once you've sucessfully setup Scylla and the Client, you can either run them sep
 
 ## Production
 
-### Running the Project in Prod Mode
-
-There is a `docker-compose-dev.yml` file for a dev which varies from the router deployment:
+The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
 - It matches the number of CPUs as the router to roughly simulate router CPU (your CPU is still faster)
-- You must build it locally first!
-- It does not persist the database between `down` commands
+- It persists the database between `down` commands via a volume called `argos_db-data`.  Delete it with `docker volume rm argos_db-data` to start with a new database next `up`.
+- It weighs the CPU usage of siren higher, so it is prioritized in CPU starvation scenarios.
+- It limits memory according to the capacity of the router.
 
-Note that both compose files limit memory to the same amount.  However, the disk I/O of the router is **much** slower than yours.
 
-This will build the docker images that will be run:
+### Customizing runtime profiles of the project via docker compose
 
-`docker-compose -f ./docker-compose-dev.yml build`
+This project uses docker compose overrides to secify configurations.  Therefore there are multiple "profiles" to choose from when running in production, and there are some profiles for development testing.  Also, there are fragment files for siren and client in `siren-base` and `angular-client` respectively, as they are services only used in certain cases.  These profiles are specified via the command line on top of the base `compose.yml` file as follows.
 
-This will start the containers and output all the outputs from both of them to the terminal. If the container is not already an image through docker-compose build, it will attempt to pull the images from docker hub. 
+```
+docker compose -f compose.yml -f <override_file_name> <your command here>
+```
 
-`docker-compose up`
+Additionally if you need to create your own options, you can create a `compose.override.yml` file in this directory and specify what settings should be changed, which is ignored by git.  If you think the override would become useful, document it here and name it `compose.<name>.yml`. Here is the current list of overrides, designed so only one is used at any given time:
 
-If changes are made to either the client or scylla you will need to rebuild and push to docker hub then pull on the router. Contact the current Argos lead or Chief Software Engineer to get access to the docker hub.
+- `scylla-dev`*: Testing the client and interactions of scylla (scylla prod, siren local, client pt local)
+- `client-dev`*: Testing the client development using the scylla mock data mode (scylla mock, client pt local)
+- `router`: For production deployment to the base gateway node (scylla prod, siren local, client pt 192.168.100.1)
+- `tpu`: Production deployment to the TPU on the car (no client, no siren, scylla pt siren external)
 
-### Running on the Openwrt router
+***Note that since client settings are changed via rebuild, overrides with a * must be rebuilt via `docker compose -f compose.yml -f compose.<override>.yml build client`.  Further, a build should be done when reverting to profiles without stars. **
 
-The `docker-compose.yml` file is made for the router.  When you push a commit it automatically gets built for the router in 20-30 minutes.
-To use a non-standard branch edit the docker-compose.yml file to the name of the tag specified by the name [here](https://github.com/Northeastern-Electric-Racing/Argos/pkgs/container/argos).
-Then do `docker compose down` and `docker compose pull` and `docker compose up -d`.
+Examples:
 
-**The database is stored in a volume called `argos_db-data`, delete the volume to start the database fresh!**
+Router deploy and send to background: `docker compose -f compose.yml -f compose.router.yml up -d`
 
-## Codegen Protobuf Types
+
+
+## Codegen Protobuf Types (client only)
+
+Server protobuf generation is automatic.  See below for client protobuf generation.
 
 ##### Mac
 
