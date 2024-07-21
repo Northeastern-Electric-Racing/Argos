@@ -18,6 +18,10 @@ tokio-util = { version=  "0.7.11", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
 rand = "0.8.5"
+console-subscriber = { version = "0.3.0", optional = true }
+
+[features]
+top = ["dep:console-subscriber"]
 
 [workspace]
 members = ["prisma-cli"]
