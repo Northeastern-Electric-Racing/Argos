@@ -5,7 +5,7 @@ use prisma_client_rust::{chrono, serde_json};
 use protobuf::Message;
 use rumqttc::v5::{
     mqttbytes::v5::{LastWill, Packet, Publish},
-    AsyncClient, Event, EventLoop, MqttOptions,
+    AsyncClient, Event, MqttOptions,
 };
 use socketioxide::SocketIo;
 use tokio::sync::mpsc::Sender;
@@ -20,6 +20,7 @@ pub struct MqttProcessor {
     channel: Sender<ClientData>,
     curr_run: i32,
     io: SocketIo,
+    mqtt_ops: MqttOptions,
 }
 
 impl MqttProcessor {
@@ -36,7 +37,7 @@ impl MqttProcessor {
         mqtt_path: String,
         db: Database,
         io: SocketIo,
-    ) -> (MqttProcessor, EventLoop) {
+    ) -> MqttProcessor {
         // create the mqtt client and configure it
         let mut create_opts = MqttOptions::new(
             "ScyllaServer",
@@ -48,15 +49,19 @@ impl MqttProcessor {
                 .parse::<u16>()
                 .expect("Invalid Siren port"),
         );
-        create_opts.set_keep_alive(Duration::from_secs(20));
-        create_opts.set_last_will(LastWill::new(
-            "Scylla/Status",
-            "Scylla has disconnected!",
-            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
-            true,
-            None,
-        ));
-        create_opts.set_clean_start(false);
+        create_opts
+            .set_last_will(LastWill::new(
+                "Scylla/Status",
+                "Scylla has disconnected!",
+                rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
+                true,
+                None,
+            ))
+            .set_keep_alive(Duration::from_secs(20))
+            .set_clean_start(false)
+            .set_connection_timeout(3)
+            .set_session_expiry_interval(Some(u32::MAX))
+            .set_topic_alias_max(Some(600));
 
         // creates the initial run
         let curr_run = run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis())
@@ -64,67 +69,65 @@ impl MqttProcessor {
             .expect("Could not create initial run!");
         debug!("Configuring current run: {:?}", curr_run);
 
-        // TODO mess with incoming message cap if db, etc. cannot keep up
-        let (client, connect) = AsyncClient::new(create_opts, 1000);
-
-        debug!("Subscribing to siren");
-        client
-            .try_subscribe("#", rumqttc::v5::mqttbytes::QoS::ExactlyOnce)
-            .expect("Could not subscribe to Siren");
-
-        (
-            MqttProcessor {
-                channel,
-                curr_run: curr_run.id,
-                io,
-            },
-            connect,
-        )
+        MqttProcessor {
+            channel,
+            curr_run: curr_run.id,
+            io,
+            mqtt_ops: create_opts,
+        }
     }
 
     /// This handles the reception of mqtt messages, will not return
     /// * `connect` - The eventloop returned by ::new to connect to
-    pub async fn process_mqtt(self, mut connect: EventLoop) {
+    pub async fn process_mqtt(self) {
         let mut spec_interval = tokio::time::interval(Duration::from_secs(3));
         // process over messages, non blocking
+        // TODO mess with incoming message cap if db, etc. cannot keep up
+        let (client, mut connect) = AsyncClient::new(self.mqtt_ops.clone(), 600);
+
+        debug!("Subscribing to siren");
+        client
+            .subscribe("#", rumqttc::v5::mqttbytes::QoS::ExactlyOnce)
+            .await
+            .expect("Could not subscribe to Siren");
+
         loop {
+            #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
-                    Ok(msg) = connect.poll() => {
-                        // safe parse the message
-                        if let Event::Incoming(Packet::Publish(msg)) = msg {
-                            trace!("Received mqtt message: {:?}", msg);
-                            // parse the message into the data and the node name it falls under
-                            let msg = match self.parse_msg(msg) {
-                                Ok(msg) => msg,
-                                Err(err) => {
-                                    warn!("Message parse error: {:?}", err);
-                                    continue;
-                                }
-                            };
-                            self.send_db_msg(msg.clone()).await;
-                            self.send_socket_msg(msg).await;
-                        }
-
-            },
-                    _ = spec_interval.tick() => {
-                        trace!("Updating viewership data!");
-                        if let Ok(sockets) = self.io.sockets() {
-                        let client_data = ClientData {
-                            name: "Viewers".to_string(),
-                            node: "Internal".to_string(),
-                            unit: "".to_string(),
-                            run_id: self.curr_run,
-                            timestamp: chrono::offset::Utc::now().timestamp_millis(),
-                            values: vec![sockets.len().to_string()]
+                msg = connect.poll() => match msg {
+                    Ok(Event::Incoming(Packet::Publish(msg))) => {
+                        trace!("Received mqtt message: {:?}", msg);
+                        // parse the message into the data and the node name it falls under
+                        let msg = match self.parse_msg(msg) {
+                            Ok(msg) => msg,
+                            Err(err) => {
+                                warn!("Message parse error: {:?}", err);
+                                continue;
+                            }
                         };
-                        self.send_socket_msg(client_data).await;
-
+                        self.send_db_msg(msg.clone()).await;
+                        self.send_socket_msg(msg);
+                    },
+                    Err(msg) => trace!("Received mqtt error: {:?}", msg),
+                    _ => trace!("Received misc mqtt: {:?}", msg),
+                },
+                _ = spec_interval.tick() => {
+                    trace!("Updating viewership data!");
+                    if let Ok(sockets) = self.io.sockets() {
+                    let client_data = ClientData {
+                        name: "Viewers".to_string(),
+                        node: "Internal".to_string(),
+                        unit: "".to_string(),
+                        run_id: self.curr_run,
+                        timestamp: chrono::offset::Utc::now().timestamp_millis(),
+                        values: vec![sockets.len().to_string()]
+                    };
+                    self.send_socket_msg(client_data);
                     } else {
                         warn!("Could not fetch socket count");
                     }
-                    }
-
                 }
+            }
         }
     }
 
@@ -145,7 +148,7 @@ impl MqttProcessor {
 
         let data_type = split.1.replace('/', "-");
 
-        // extract the unix time, returning the current time instead if needed
+        // extract the unix time, returning the current time instead if either the "ts" user property isnt present or it isnt parsable
         // note the Cow magic involves the return from the map is a borrow, but the unwrap cannot as we dont own it
         let unix_time = msg
             .properties
@@ -155,29 +158,38 @@ impl MqttProcessor {
             .map(Cow::Borrowed)
             .find(|f| f.0 == "ts")
             .unwrap_or_else(|| {
-                debug!("Could not find timestamp in mqtt, using current time");
+                debug!("Could not find timestamp in mqtt, using system time");
                 Cow::Owned((
                     "ts".to_string(),
                     chrono::offset::Utc::now().timestamp_millis().to_string(),
                 ))
             })
-            .into_owned();
+            .1
+            .parse::<i64>()
+            .unwrap_or_else(|err| {
+                warn!("Invalid timestamp in mqtt, using system time: {}", err);
+                chrono::offset::Utc::now().timestamp_millis()
+            });
 
-        // parse time, if invalid time error out
-        let Ok(time_clean) = unix_time.1.parse::<i64>() else {
-            return Err(format!("Invalid timestamp: {}", unix_time.1));
-        };
         // ts check for bad sources of time which may return 1970
-        if time_clean < 963014966000 {
-            return Err(format!("Timestamp before year 2000: {}", unix_time.1));
-        }
+        // if both system time and packet timestamp are before year 2000, the message cannot be recorded
+        let unix_clean = if unix_time < 963014966000 {
+            debug!("Timestamp before year 2000: {}", unix_time);
+            let sys_time = chrono::offset::Utc::now().timestamp_millis();
+            if sys_time < 963014966000 {
+                return Err("System has no good time, discarding message!".to_string());
+            }
+            sys_time
+        } else {
+            unix_time
+        };
 
         Ok(ClientData {
             run_id: self.curr_run,
             name: data_type,
             unit: data.unit,
             values: data.value,
-            timestamp: time_clean,
+            timestamp: unix_clean,
             node: node.to_string(),
         })
     }
@@ -192,7 +204,7 @@ impl MqttProcessor {
 
     /// Sends a message to the socket, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    async fn send_socket_msg(&self, client_data: ClientData) {
+    fn send_socket_msg(&self, client_data: ClientData) {
         match self.io.emit(
             "message",
             serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
