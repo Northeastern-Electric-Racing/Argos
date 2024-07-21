@@ -141,7 +141,7 @@ impl DbHandler {
         }
     }
 
-    #[instrument(level = Level::DEBUG)]
+    #[instrument(level = Level::DEBUG, skip(msg))]
     async fn batch_upload(msg: Vec<ClientData>, db: &Database) {
         info!(
             "Batch uploaded: {:?}",
@@ -176,7 +176,7 @@ impl DbHandler {
 
     #[instrument(skip(self), level = Level::TRACE)]
     async fn handle_msg(&mut self, msg: ClientData, data_channel: &Sender<Vec<ClientData>>) {
-        debug!(
+        trace!(
             "Mqtt dispatcher: {} of {}",
             self.receiver.len(),
             self.receiver.max_capacity()

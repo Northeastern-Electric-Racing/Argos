@@ -87,14 +87,14 @@ async fn main() {
         // run prod if this isnt present
         // create and spawn the mqtt processor
         info!("Running processor in MQTT (production) mode");
-        let (recv, eloop) = MqttProcessor::new(
+        let recv = MqttProcessor::new(
             mqtt_receive,
             std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
             db.clone(),
             io,
         )
         .await;
-        tokio::spawn(recv.process_mqtt(eloop));
+        tokio::spawn(recv.process_mqtt());
     }
 
     let app = Router::new()
