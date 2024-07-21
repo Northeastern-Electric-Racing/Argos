@@ -23,22 +23,33 @@ use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 #[tokio::main]
 async fn main() {
     println!("Initializing scylla server...");
-    // construct a subscriber that prints formatted traces to stdout
-    // if RUST_LOG is not set, defaults to loglevel INFO
-    let subscriber = tracing_subscriber::fmt()
-        .pretty()
-        .with_thread_ids(true)
-        .with_ansi(true)
-        .with_thread_names(true)
-        .with_span_events(FmtSpan::CLOSE)
-        .with_env_filter(
-            EnvFilter::builder()
-                .with_default_directive(LevelFilter::INFO.into())
-                .from_env_lossy(),
-        )
-        .finish();
-    // use that subscriber to process traces emitted after this point
-    tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
+
+    #[cfg(feature = "top")]
+    {
+        println!("Initializing tokio console subscriber");
+        console_subscriber::init();
+    }
+
+    #[cfg(not(feature = "top"))]
+    {
+        println!("Initializing fmt subscriber");
+        // construct a subscriber that prints formatted traces to stdout
+        // if RUST_LOG is not set, defaults to loglevel INFO
+        let subscriber = tracing_subscriber::fmt()
+            .pretty()
+            .with_thread_ids(true)
+            .with_ansi(true)
+            .with_thread_names(true)
+            .with_span_events(FmtSpan::CLOSE)
+            .with_env_filter(
+                EnvFilter::builder()
+                    .with_default_directive(LevelFilter::INFO.into())
+                    .from_env_lossy(),
+            )
+            .finish();
+        // use that subscriber to process traces emitted after this point
+        tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
+    }
 
     // create the database stuff
     let db: Database = Arc::new(

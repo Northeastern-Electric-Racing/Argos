@@ -38,6 +38,12 @@ You can send your own messages to the app running in production mode, and test h
 
 Follow this confluence doc: https://nerdocs.atlassian.net/wiki/spaces/NER/pages/473727054/How+to+run+data+through+Argos+without+the+car
 
+#### View threads and resources
+
+1. Build or run as: `RUSTFLAGS="--cfg tokio_unstable" cargo run --features top`
+2. Install tokio console: ex `cargo install --locked tokio-console`
+3. Run app and `tokio-console`
+
 #### Debug logging
 
 #### Activate logs
