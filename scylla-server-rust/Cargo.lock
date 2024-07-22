@@ -2922,6 +2922,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ringbuffer"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3df6368f71f205ff9c33c076d170dd56ebf68e8161c733c0caa07a7a5509ed53"
+
+[[package]]
 name = "rumqttc"
 version = "0.24.0"
 source = "git+https://github.com/bytebeamio/rumqtt?branch=main#db1f261dd5cd6c69bbfd1058ba69ea8ef5f4fc38"
@@ -3093,6 +3099,7 @@ dependencies = [
  "protobuf",
  "protobuf-codegen",
  "rand 0.8.5",
+ "ringbuffer",
  "rumqttc",
  "serde",
  "socketioxide",

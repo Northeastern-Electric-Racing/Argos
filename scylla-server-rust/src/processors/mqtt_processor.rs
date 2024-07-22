@@ -1,8 +1,9 @@
 use core::fmt;
 use std::time::Duration;
 
-use prisma_client_rust::{chrono, serde_json};
+use prisma_client_rust::{bigdecimal::ToPrimitive, chrono, serde_json};
 use protobuf::Message;
+use ringbuffer::RingBuffer;
 use rumqttc::v5::{
     mqttbytes::v5::{LastWill, Packet, Publish},
     AsyncClient, Event, MqttOptions,
@@ -80,7 +81,11 @@ impl MqttProcessor {
     /// This handles the reception of mqtt messages, will not return
     /// * `connect` - The eventloop returned by ::new to connect to
     pub async fn process_mqtt(self) {
-        let mut spec_interval = tokio::time::interval(Duration::from_secs(3));
+        let mut view_interval = tokio::time::interval(Duration::from_secs(3));
+
+        let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
+        let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<i64>::new(20);
+
         // process over messages, non blocking
         // TODO mess with incoming message cap if db, etc. cannot keep up
         let (client, mut connect) = AsyncClient::new(self.mqtt_ops.clone(), 600);
@@ -105,13 +110,14 @@ impl MqttProcessor {
                                 continue;
                             }
                         };
+                        latency_ringbuffer.push(chrono::offset::Utc::now().timestamp_millis() - msg.timestamp);
                         self.send_db_msg(msg.clone()).await;
                         self.send_socket_msg(msg);
                     },
                     Err(msg) => trace!("Received mqtt error: {:?}", msg),
                     _ => trace!("Received misc mqtt: {:?}", msg),
                 },
-                _ = spec_interval.tick() => {
+                _ = view_interval.tick() => {
                     trace!("Updating viewership data!");
                     if let Ok(sockets) = self.io.sockets() {
                     let client_data = ClientData {
@@ -126,6 +132,25 @@ impl MqttProcessor {
                     } else {
                         warn!("Could not fetch socket count");
                     }
+                }
+                _ = latency_interval.tick() => {
+                    // set latency to 0 if no messages are in buffer
+                    let avg_latency = if latency_ringbuffer.is_empty() {
+                        0
+                    } else {
+                        latency_ringbuffer.iter().sum::<i64>() / latency_ringbuffer.len().to_i64().unwrap_or_default()
+                    };
+
+                    let client_data = ClientData {
+                        name: "Latency".to_string(),
+                        node: "Internal".to_string(),
+                        unit: "ms".to_string(),
+                        run_id: self.curr_run,
+                        timestamp: chrono::offset::Utc::now().timestamp_millis(),
+                        values: vec![avg_latency.to_string()]
+                    };
+                    trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&"n/a".to_string()));
+                    self.send_socket_msg(client_data);
                 }
             }
         }
