@@ -23,7 +23,12 @@
           class="graph-caption"
         />
       </div>
-      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="mobile-sidebar" />
+      <graph-sidebar
+        [nodes]="nodes!"
+        [onRunSelected]="onRunSelected"
+        [selectDataType]="setSelectedDataType"
+        class="mobile-sidebar"
+      />
     </div>
   </div>
 </ng-template>

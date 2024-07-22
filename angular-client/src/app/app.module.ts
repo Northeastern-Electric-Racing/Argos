@@ -59,7 +59,6 @@ import ConnectionDisplay from 'src/components/connection-display/connection-disp
 import SpeedDisplay from 'src/components/speed-display/speed-display.component';
 import SpeedOverTimeDisplay from 'src/components/speed-over-time-display/speed-over-time-display.component';
 import TorqueDisplay from 'src/components/torque-display/torque-display.component';
-import TransmissionDisplay from 'src/components/transmission-display/transmission-display.component';
 import MapInfoDisplay from 'src/components/map-info-display/map-info-display.component';
 import AccelerationOverTimeDisplay from 'src/components/acceleration-over-time-display/acceleration-over-time-display.component';
 import BrakePressureDisplay from 'src/components/brake-pressure-display/brake-pressure-display.component';
@@ -125,7 +124,6 @@ import { DataTypeFilterPipe } from 'src/utils/pipes/data-type-filter-pipe';
     SpeedDisplay,
     SpeedOverTimeDisplay,
     TorqueDisplay,
-    TransmissionDisplay,
     MapInfoDisplay,
     AccelerationOverTimeDisplay,
     BrakePressureDisplay,
@@ -179,6 +177,25 @@ export class AppModule {
         'steering_wheel',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search_hands_free.svg')
       )
-      .addSvgIcon('wifi', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/wifi.svg'));
+      .addSvgIcon('wifi', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/wifi.svg'))
+      .addSvgIcon('speed', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/speed.svg'))
+      .addSvgIcon('person', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/person.svg'))
+      .addSvgIcon('eye', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/eye_tracking.svg'))
+      .addSvgIcon('timelapse', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/timelapse.svg'))
+      .addSvgIcon('cell_tower', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/cell_tower.svg'))
+      .addSvgIcon('map', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/map.svg'))
+      .addSvgIcon('360', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/360.svg'))
+      .addSvgIcon('electric_car', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/electric_car.svg'))
+      .addSvgIcon('memory', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/memory.svg'))
+      .addSvgIcon('back_hand', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/back_hand.svg'))
+      .addSvgIcon(
+        'battery_charging_full',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_full.svg')
+      )
+      .addSvgIcon('menu', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/menu.svg'))
+      .addSvgIcon('home', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/home.svg'))
+      .addSvgIcon('bar_chart', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bar_chart.svg'))
+      .addSvgIcon('search', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search.svg'))
+      .addSvgIcon('arrow_right', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/arrow_right.svg'));
   }
 }

@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input } from '@angular/core';
-import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+import { DataType, Node, NodeWithVisibilityToggle, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-sidebar-mobile',
@@ -60,6 +60,7 @@ import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils'
 export default class GraphSidebarMobile {
   @Input() nodes!: Node[];
   @Input() selectDataType!: (dataType: DataType) => void;
+  @Input() onRunSelected!: (run: Run) => void;
   nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
   showSelection = false;
 
