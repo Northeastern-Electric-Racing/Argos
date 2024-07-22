@@ -19,6 +19,7 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
 rand = "0.8.5"
 console-subscriber = { version = "0.3.0", optional = true }
+ringbuffer = "0.15.0"
 
 [features]
 top = ["dep:console-subscriber"]
