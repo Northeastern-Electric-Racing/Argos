@@ -54,13 +54,6 @@ const baseMockData: MockData[] = [
     max: 360
   },
   {
-    name: DataType.VOLTAGE,
-    unit: Unit.VOLTS,
-    vals: [0],
-    min: 0,
-    max: 5
-  },
-  {
     name: DataType.CPUUsage,
     unit: Unit.PERCENT,
     vals: [0],
