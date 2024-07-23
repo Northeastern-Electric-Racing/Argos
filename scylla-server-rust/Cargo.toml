@@ -2,6 +2,7 @@
 name = "scylla-server-rust"
 version = "0.0.1"
 edition = "2021"
+default-run = "scylla-server-rust"
 
 [dependencies]
 prisma-client-rust = {git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", default-features = false,features = ["postgresql", "migrations"] }
@@ -35,3 +36,11 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true  # Automatically strip symbols from the binary.
+
+[[bin]]
+name = "scylla-server-rust"
+path = "src/main.rs"
+
+[[bin]]
+name = "seed"
+path = "prisma/seed.rs"

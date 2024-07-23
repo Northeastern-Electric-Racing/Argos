@@ -21,6 +21,10 @@ SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/timescaledb ca
 
 ### Test this app
 
+#### Seed some data
+
+Run `cargo prisma-seed`
+
 
 #### Integration tests
 
