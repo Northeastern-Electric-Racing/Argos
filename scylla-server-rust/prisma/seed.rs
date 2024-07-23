@@ -206,7 +206,7 @@ async fn simulate_route(db: Database, curr_run: i32) -> Result<(), QueryError> {
 
     for i in 0..STEP_NUM {
         // clamp to [-90,90]
-        let inter_lat = f64::min(f64::max(NYC_COORDS.0 + step_lat * i as f64, -90.0), 90.0);
+        let inter_lat = (NYC_COORDS.0 + step_lat * i as f64).clamp(-90.0, 90.0);
         let inter_long = NYC_COORDS.1 + step_long * i as f64;
 
         data_service::add_data(
