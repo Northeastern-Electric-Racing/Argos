@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
+import { decimalPipe } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 @Component({
@@ -16,13 +17,13 @@ export default class HighLowCellGraph implements OnInit {
   constructor(private storage: Storage) {}
   ngOnInit() {
     this.storage.get(IdentifierDataType.VOLTS_HIGH).subscribe((value) => {
-      this.data1.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
+      this.data1.push({ x: new Date().getTime(), y: decimalPipe(value.values[0]) });
       if (this.data1.length >= 100) {
         this.data1.shift();
       }
     });
     this.storage.get(IdentifierDataType.VOLTS_LOW).subscribe((value) => {
-      this.data2.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
+      this.data2.push({ x: new Date().getTime(), y: decimalPipe(value.values[0]) });
       if (this.data2.length >= 100) {
         this.data2.shift();
       }

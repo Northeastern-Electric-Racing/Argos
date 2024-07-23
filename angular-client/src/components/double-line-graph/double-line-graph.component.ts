@@ -3,12 +3,15 @@ import * as ApexCharts from 'apexcharts';
 import {
   ApexAxisChartSeries,
   ApexXAxis,
+  ApexYAxis,
   ApexDataLabels,
   ApexChart,
   ApexMarkers,
   ApexGrid,
   ApexTooltip,
-  ApexFill
+  ApexFill,
+  ApexStroke,
+  ApexLegend
 } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialog } from '../graph-dialog/graph-dialog.component';
@@ -25,6 +28,8 @@ type ChartOptions = {
   tooltip: ApexTooltip;
   fill: ApexFill;
   stroke: ApexStroke;
+  legend: ApexLegend;
+  colors: string[];
 };
 
 @Component({
@@ -44,16 +49,7 @@ export class DoubleLineGraphComponent implements OnInit {
   @Input() graphContainerId!: string;
   options!: ChartOptions;
   chart!: ApexCharts;
-  series: ApexAxisChartSeries = [
-    {
-      name: this.title1,
-      data: []
-    },
-    {
-      name: this.title2,
-      data: []
-    }
-  ];
+  series: ApexAxisChartSeries = [];
 
   constructor(public dialogService: DialogService) {}
 
@@ -69,8 +65,16 @@ export class DoubleLineGraphComponent implements OnInit {
   };
 
   updateChart = () => {
-    this.series[0].data = this.data1;
-    this.series[1].data = this.data2;
+    this.series = [
+      {
+        name: this.title1,
+        data: this.data1
+      },
+      {
+        name: this.title2,
+        data: this.data2
+      }
+    ];
     this.chart.updateSeries(this.series);
     setTimeout(() => {
       this.updateChart();
@@ -90,7 +94,7 @@ export class DoubleLineGraphComponent implements OnInit {
     ];
 
     this.options = {
-      series: [],
+      series: this.series,
       chart: {
         id: 'graph',
         type: 'line',
@@ -110,12 +114,13 @@ export class DoubleLineGraphComponent implements OnInit {
         }
         // background: '#5A5A5A'
       },
+      colors: [this.color1, this.color2], // Set series colors here
       dataLabels: {
         enabled: false
       },
       stroke: {
         curve: 'straight',
-        colors: [this.color1, this.color2]
+        width: 2
       },
       markers: {
         size: 0
@@ -150,7 +155,7 @@ export class DoubleLineGraphComponent implements OnInit {
       tooltip: {
         theme: 'dark',
         x: {
-          //format by hours and minutes and seconds
+          // format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'
         }
       },
@@ -165,10 +170,15 @@ export class DoubleLineGraphComponent implements OnInit {
       },
       grid: {
         show: false
+      },
+      legend: {
+        labels: {
+          colors: '#fffff4' // Set legend label color to black
+        }
       }
     };
 
-    //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
+    // Delay rendering to ensure the container is available
     setTimeout(() => {
       const chartContainer = document.getElementById(this.graphContainerId);
       if (!chartContainer) {
@@ -177,7 +187,6 @@ export class DoubleLineGraphComponent implements OnInit {
       }
 
       this.chart = new ApexCharts(chartContainer, this.options);
-
       this.chart.render();
       this.updateChart();
     }, 100);

@@ -1,7 +1,7 @@
 import { Component, HostListener } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
-import { floatPipe } from 'src/utils/pipes.utils';
+import { decimalPipe } from 'src/utils/pipes.utils';
 
 @Component({
   selector: 'high-low-cell-display',
@@ -24,12 +24,12 @@ export default class HighLowCellDisplay {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.VOLTS_HIGH).subscribe((value) => {
-      this.lowCellVolts = floatPipe(value.values[0]);
-      this.delta = this.highCellVolts - this.lowCellVolts;
+      this.lowCellVolts = decimalPipe(value.values[0]);
+      this.delta = decimalPipe((this.highCellVolts - this.lowCellVolts).toFixed(1));
     });
     this.storage.get(IdentifierDataType.VOLTS_LOW).subscribe((value) => {
-      this.highCellVolts = floatPipe(value.values[0]);
-      this.delta = this.highCellVolts - this.lowCellVolts;
+      this.highCellVolts = decimalPipe(value.values[0]);
+      this.delta = decimalPipe((this.highCellVolts - this.lowCellVolts).toFixed(2));
     });
   }
 }

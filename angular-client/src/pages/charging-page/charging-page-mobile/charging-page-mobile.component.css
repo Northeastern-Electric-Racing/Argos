@@ -1,0 +1,16 @@
+/* Ensure dropdown content is initially hidden */
+.dropdown-content {
+  display: none;
+  padding: 10px;
+}
+
+.collapse {
+  display: block;
+}
+
+.dropdown-header {
+  cursor: pointer;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border: 1px solid #ddd;
+}

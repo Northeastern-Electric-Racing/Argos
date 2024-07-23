@@ -1,18 +1,18 @@
 <info-background icon="electric_meter" title="Cell Voltage">
   <hstack spacing="30px">
-    <vstack style="width: 15%">
+    <vstack style="width: 10%">
       <hstack>
-        <typography variant="info-value" [content]="delta.toString() + 'V'" />
+        <typography variant="info-value" [content]="delta.toString() + 'V'" additionalStyles="fontSize:30px" />
       </hstack>
-      <typography variant="info-subtitle" content="Delta" />
+      <typography variant="info-subtitle" content="Delta" additionalStyles="fontSize:15px" />
     </vstack>
 
     <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
     <divider style="height: 100px"></divider>
 
     <vstack style="width: 10%">
-      <typography variant="info-value" [content]="lowCellVolts.toString() + 'V'" additionalStyles="" />
-      <typography variant="info-subtitle" content="Low Cell" />
+      <typography variant="info-value" [content]="lowCellVolts.toString() + 'V'" additionalStyles="fontSize:30px" />
+      <typography variant="info-subtitle" content="Low Cell" additionalStyles="fontSize:15px" />
     </vstack>
 
     <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
@@ -20,9 +20,9 @@
 
     <vstack style="width: 10%">
       <hstack>
-        <typography variant="info-value" [content]="highCellVolts.toString() + 'V'" />
+        <typography variant="info-value" [content]="highCellVolts.toString() + 'V'" additionalStyles="fontSize:30px" />
       </hstack>
-      <typography variant="info-subtitle" content="High Cell" />
+      <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
     </vstack>
     <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
     <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
