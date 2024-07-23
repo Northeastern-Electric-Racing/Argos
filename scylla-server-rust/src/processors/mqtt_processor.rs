@@ -9,16 +9,17 @@ use rumqttc::v5::{
     AsyncClient, Event, MqttOptions,
 };
 use socketioxide::SocketIo;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tracing::{debug, instrument, trace, warn, Level};
 
-use crate::{serverdata, services::run_service, Database};
+use crate::{serverdata, services::run_service};
 
 use super::ClientData;
 use std::borrow::Cow;
 
 pub struct MqttProcessor {
     channel: Sender<ClientData>,
+    new_run_channel: Receiver<run_service::public_run::Data>,
     curr_run: i32,
     io: SocketIo,
     mqtt_ops: MqttOptions,
@@ -35,8 +36,9 @@ impl MqttProcessor {
     /// Returns the instance and the event loop, which can be passed into the process_mqtt func to begin recieiving
     pub async fn new(
         channel: Sender<ClientData>,
+        new_run_channel: Receiver<run_service::public_run::Data>,
         mqtt_path: String,
-        db: Database,
+        initial_run: i32,
         io: SocketIo,
     ) -> MqttProcessor {
         // create the mqtt client and configure it
@@ -64,15 +66,10 @@ impl MqttProcessor {
             .set_session_expiry_interval(Some(u32::MAX))
             .set_topic_alias_max(Some(600));
 
-        // creates the initial run
-        let curr_run = run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis())
-            .await
-            .expect("Could not create initial run!");
-        debug!("Configuring current run: {:?}", curr_run);
-
         MqttProcessor {
             channel,
-            curr_run: curr_run.id,
+            new_run_channel,
+            curr_run: initial_run,
             io,
             mqtt_ops: create_opts,
         }
@@ -80,7 +77,7 @@ impl MqttProcessor {
 
     /// This handles the reception of mqtt messages, will not return
     /// * `connect` - The eventloop returned by ::new to connect to
-    pub async fn process_mqtt(self) {
+    pub async fn process_mqtt(mut self) {
         let mut view_interval = tokio::time::interval(Duration::from_secs(3));
 
         let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
@@ -152,6 +149,10 @@ impl MqttProcessor {
                     trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&"n/a".to_string()));
                     self.send_socket_msg(client_data);
                 }
+                Some(new_run) = self.new_run_channel.recv() => {
+                    trace!("New run: {:?}", new_run);
+                    self.curr_run = new_run.id;
+                }
             }
         }
     }
@@ -165,7 +166,7 @@ impl MqttProcessor {
             .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
 
         let split = std::str::from_utf8(&msg.topic)
-            .unwrap_or_else(|_| panic!("Could not parse topic: {:?}", msg.topic))
+            .map_err(|f| format!("Could not parse topic: {}, topic: {:?}", f, msg.topic))?
             .split_once('/')
             .ok_or(&format!("Could not parse nesting: {:?}", msg.topic))?;
 
