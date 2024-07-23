@@ -143,10 +143,10 @@ impl DbHandler {
 
     #[instrument(level = Level::DEBUG, skip(msg))]
     async fn batch_upload(msg: Vec<ClientData>, db: &Database) {
-        info!(
-            "Batch uploaded: {:?}",
-            data_service::add_many(db, msg).await
-        );
+        match data_service::add_many(db, msg).await {
+            Ok(count) => info!("Batch uploaded: {:?}", count),
+            Err(err) => warn!("Error in batch upload: {:?}", err),
+        }
     }
 
     /// A loop which uses self and a sender channel to process data

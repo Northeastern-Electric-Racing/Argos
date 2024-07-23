@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use axum::{http::Method, routing::get, Router};
+use axum::{
+    http::Method,
+    routing::{get, post},
+    Extension, Router,
+};
+use prisma_client_rust::chrono;
 use scylla_server_rust::{
     controllers::{
         self, data_type_controller, driver_controller, location_controller, node_controller,
@@ -10,13 +15,17 @@ use scylla_server_rust::{
     processors::{
         db_handler, mock_processor::MockProcessor, mqtt_processor::MqttProcessor, ClientData,
     },
+    services::run_service::{self, public_run},
     Database,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{signal, sync::mpsc};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::TraceLayer,
+};
 use tracing::{debug, info, level_filters::LevelFilter};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 
@@ -67,11 +76,14 @@ async fn main() {
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (mqtt_receive, mqtt_send) = mpsc::channel::<ClientData>(10000);
+    let (mqtt_send, mqtt_receive) = mpsc::channel::<ClientData>(10000);
 
     // channel to pass the processed data to the db thread
     // TODO tune buffer size
-    let (db_receive, db_send) = mpsc::channel::<Vec<ClientData>>(1000);
+    let (db_send, db_receive) = mpsc::channel::<Vec<ClientData>>(1000);
+
+    // channel to update the run to a new value
+    let (new_run_send, new_run_receive) = mpsc::channel::<public_run::Data>(5);
 
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
@@ -79,12 +91,12 @@ async fn main() {
     let token = CancellationToken::new();
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_send, Arc::clone(&db))
-            .handling_loop(db_receive, token.clone()),
+        db_handler::DbHandler::new(mqtt_receive, Arc::clone(&db))
+            .handling_loop(db_send, token.clone()),
     );
     // spawn the database inserter
     task_tracker.spawn(db_handler::DbHandler::batching_loop(
-        db_send,
+        db_receive,
         Arc::clone(&db),
         token.clone(),
     ));
@@ -95,13 +107,20 @@ async fn main() {
         let recv = MockProcessor::new(io);
         tokio::spawn(recv.generate_mock());
     } else {
+        // creates the initial run
+        let curr_run = run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis())
+            .await
+            .expect("Could not create initial run!");
+        debug!("Configuring current run: {:?}", curr_run);
+
         // run prod if this isnt present
         // create and spawn the mqtt processor
         info!("Running processor in MQTT (production) mode");
         let recv = MqttProcessor::new(
-            mqtt_receive,
+            mqtt_send,
+            new_run_receive,
             std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
-            db.clone(),
+            curr_run.id,
             io,
         )
         .await;
@@ -125,13 +144,17 @@ async fn main() {
         // RUNS
         .route("/runs", get(run_controller::get_all_runs))
         .route("/runs/:id", get(run_controller::get_run_by_id))
+        .route(
+            "/runs/new",
+            post(run_controller::new_run).layer(Extension(new_run_send)),
+        )
         // SYSTEMS
         .route("/systems", get(system_controller::get_all_systems))
         // for CORS handling
         .layer(
             CorsLayer::new()
                 // allow `GET`
-                .allow_methods([Method::GET])
+                .allow_methods([Method::GET, Method::POST])
                 // allow requests from any origin
                 .allow_origin(Any),
         )
@@ -141,6 +164,7 @@ async fn main() {
                 .layer(CorsLayer::permissive())
                 .layer(socket_layer),
         )
+        .layer(TraceLayer::new_for_http())
         .with_state(db.clone());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000")
