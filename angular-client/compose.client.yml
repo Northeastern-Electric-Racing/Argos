@@ -1,0 +1,17 @@
+services:
+  client:
+    container_name: client
+    restart: unless-stopped
+    image: ghcr.io/northeastern-electric-racing/argos-client:rust-rewrite-socket
+    build:
+      context: .
+      args:
+        PROD: "true"
+        BACKEND_URL: http://192.168.100.1:8000
+        MAP_ACCESS_TOKEN: pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    cpu_shares: 512
+    mem_limit: 1gb

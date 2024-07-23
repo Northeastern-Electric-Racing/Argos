@@ -6,6 +6,7 @@ use prisma_client_rust::{
     prisma_errors::query_engine::{RecordNotFound, UniqueKeyViolation},
     QueryError,
 };
+use tracing::warn;
 
 pub enum ScyllaError {
     PrismaError(QueryError),
@@ -14,6 +15,7 @@ pub enum ScyllaError {
 
 impl From<QueryError> for ScyllaError {
     fn from(error: QueryError) -> Self {
+        warn!("Query error: {:?}", error);
         match error {
             e if e.is_prisma_error::<RecordNotFound>() => ScyllaError::NotFound,
             e => ScyllaError::PrismaError(e),

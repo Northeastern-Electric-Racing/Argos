@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::prisma;
+use crate::{processors::ClientData, services::data_service};
 
 /// The struct defining the data format sent to the client
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -10,11 +10,21 @@ pub struct PublicData {
 }
 
 /// convert the prisma type to the client type for JSON encoding
-impl From<&prisma::data::Data> for PublicData {
-    fn from(value: &prisma::data::Data) -> Self {
+impl From<&data_service::public_data::Data> for PublicData {
+    fn from(value: &data_service::public_data::Data) -> Self {
         PublicData {
-            values: value.values.iter().map(|f| f.to_string()).collect(),
+            values: value.values.iter().map(f64::to_string).collect(),
             time: value.time.timestamp_millis(),
+        }
+    }
+}
+
+/// convert from the client (socket) type to the client type, for debugging and testing only probably
+impl From<ClientData> for PublicData {
+    fn from(value: ClientData) -> Self {
+        PublicData {
+            time: value.timestamp,
+            values: value.values,
         }
     }
 }

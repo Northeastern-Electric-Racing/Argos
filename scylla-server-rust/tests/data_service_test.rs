@@ -2,9 +2,8 @@
 mod test_utils;
 
 use prisma_client_rust::QueryError;
-use protobuf::SpecialFields;
 use scylla_server_rust::{
-    serverdata::ServerData,
+    processors::ClientData,
     services::{data_service, data_type_service, node_service, run_service},
     transformers::data_transformer::PublicData,
 };
@@ -46,14 +45,14 @@ async fn test_data_add() -> Result<(), QueryError> {
 
     let data = data_service::add_data(
         &db,
-        ServerData {
-            value: vec!["0".to_owned()],
+        ClientData {
+            values: vec!["0".to_owned()],
             unit: "A".to_owned(),
-            special_fields: SpecialFields::new(),
+            run_id: run_data.id,
+            name: TEST_KEYWORD.to_owned(),
+            timestamp: 1000,
+            node: "Irrelevant".to_string(),
         },
-        1000,
-        TEST_KEYWORD.to_owned(),
-        run_data.id,
     )
     .await?;
 
@@ -87,14 +86,14 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
     // should err out as data type name doesnt exist yet
     data_service::add_data(
         &db,
-        ServerData {
-            value: vec!["0".to_owned()],
+        ClientData {
+            values: vec!["0".to_owned()],
             unit: "A".to_owned(),
-            special_fields: SpecialFields::new(),
+            run_id: 0,
+            name: TEST_KEYWORD.to_owned(),
+            timestamp: 1000,
+            node: "Irrelevant".to_string(),
         },
-        1000,
-        TEST_KEYWORD.to_owned(),
-        0,
     )
     .await
     .expect_err("Should have errored, datatype doesnt exist!");
@@ -113,14 +112,14 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
     // now shouldnt fail as it and node does exist
     data_service::add_data(
         &db,
-        ServerData {
-            value: vec!["0".to_owned()],
+        ClientData {
+            values: vec!["0".to_owned()],
             unit: "A".to_owned(),
-            special_fields: SpecialFields::new(),
+            run_id: 0,
+            name: TEST_KEYWORD.to_owned(),
+            timestamp: 1000,
+            node: "Irrelevant".to_string(),
         },
-        1000,
-        TEST_KEYWORD.to_owned(),
-        0,
     )
     .await?;
 

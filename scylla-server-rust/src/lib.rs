@@ -1,5 +1,6 @@
 pub mod controllers;
 pub mod error;
+pub mod processors;
 pub mod services;
 pub mod transformers;
 

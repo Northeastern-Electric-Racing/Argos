@@ -1,0 +1,15 @@
+services:
+  siren:
+    container_name: siren
+    restart: unless-stopped
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+      - 9001:9001 # why?
+    expose:
+      - 1883
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    cpu_shares: 2048
+    mem_limit: 2gb
+    oom_kill_disable: true

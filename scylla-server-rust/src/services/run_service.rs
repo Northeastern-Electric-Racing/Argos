@@ -7,11 +7,23 @@ use crate::{
     Database,
 };
 
+prisma::run::select! {public_run{
+    id
+    location_name
+    driver_name
+    system_name
+    time
+}}
+
 /// Gets all runs
 /// * `db` - The prisma client to make the call to
 /// returns: A result containing the data or the QueryError propogated by the db
-pub async fn get_all_runs(db: &Database) -> Result<Vec<prisma::run::Data>, QueryError> {
-    db.run().find_many(vec![]).exec().await
+pub async fn get_all_runs(db: &Database) -> Result<Vec<public_run::Data>, QueryError> {
+    db.run()
+        .find_many(vec![])
+        .select(public_run::select())
+        .exec()
+        .await
 }
 
 /// Gets a single run by its id
@@ -21,9 +33,10 @@ pub async fn get_all_runs(db: &Database) -> Result<Vec<prisma::run::Data>, Query
 pub async fn get_run_by_id(
     db: &Database,
     run_id: i32,
-) -> Result<Option<prisma::run::Data>, QueryError> {
+) -> Result<Option<public_run::Data>, QueryError> {
     db.run()
         .find_unique(prisma::run::id::equals(run_id))
+        .select(public_run::select())
         .exec()
         .await
 }
@@ -32,14 +45,15 @@ pub async fn get_run_by_id(
 /// * `db` - The prisma client to make the call to
 /// * `timestamp` - The unix time since epoch in miliseconds when the run starts
 /// returns: A result containing the data or the QueryError propogated by the db
-pub async fn create_run(db: &Database, timestamp: i64) -> Result<prisma::run::Data, QueryError> {
+pub async fn create_run(db: &Database, timestamp: i64) -> Result<public_run::Data, QueryError> {
     db.run()
         .create(
             DateTime::from_timestamp_millis(timestamp)
-                .unwrap()
+                .expect("Could not parse timestamp")
                 .fixed_offset(),
             vec![],
         )
+        .select(public_run::select())
         .exec()
         .await
 }
@@ -53,14 +67,15 @@ pub async fn create_run_with_id(
     db: &Database,
     timestamp: i64,
     run_id: i32,
-) -> Result<prisma::run::Data, QueryError> {
+) -> Result<public_run::Data, QueryError> {
     db.run()
         .create(
             DateTime::from_timestamp_millis(timestamp)
-                .unwrap()
+                .expect("Could not parse timestamp")
                 .fixed_offset(),
             vec![prisma::run::id::set(run_id)],
         )
+        .select(public_run::select())
         .exec()
         .await
 }
