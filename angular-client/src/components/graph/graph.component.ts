@@ -111,7 +111,7 @@ export class GraphComponent implements OnInit {
         type: 'category',
         tickAmount: 2,
         labels: {
-          show: false,
+          show: true,
           style: {
             colors: '#FFFFFF'
           },

@@ -256,8 +256,6 @@ export default class MockProxyClient implements ProxyClient {
     this.mockStringData = mockStringData;
   }
 
-  // TODO: gotta make this string data (string UNITS) mocked more easily (that is why the location
-  // is always Fergus despite above)
   fakeStringData = ['Fergus'];
 
   /**

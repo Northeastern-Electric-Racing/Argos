@@ -9,15 +9,15 @@ import { GraphData } from 'src/utils/types.utils';
   styleUrls: ['./cell-temp-graph.component.css']
 })
 export default class CellTempGraph implements OnInit {
-  data: GraphData[] = [];
+  cellTempData: GraphData[] = [];
   maxDataPoints = 100;
 
   constructor(private storage: Storage) {}
   ngOnInit() {
     this.storage.get(IdentifierDataType.CELL_TEMP_HIGH).subscribe((value) => {
-      this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-      if (this.data.length >= 100) {
-        this.data.shift();
+      this.cellTempData.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
+      if (this.cellTempData.length >= 100) {
+        this.cellTempData.shift();
       }
     });
   }

@@ -3,8 +3,7 @@ import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 
 /**
- * Container for the BMS page, obtains data from the storage service.
- *  TODO: update comment
+ * Container for the Charging page, obtains data from the storage service.
  */
 @Component({
   selector: 'charging-page',

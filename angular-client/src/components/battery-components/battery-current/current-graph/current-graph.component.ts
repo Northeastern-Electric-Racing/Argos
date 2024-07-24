@@ -9,15 +9,15 @@ import { GraphData } from 'src/utils/types.utils';
   styleUrls: ['./current-graph.component.css']
 })
 export default class CurrentGraph implements OnInit {
-  data: GraphData[] = [];
+  currentData: GraphData[] = [];
   maxDataPoints = 100;
 
   constructor(private storage: Storage) {}
   ngOnInit() {
     this.storage.get(IdentifierDataType.CURRENT).subscribe((value) => {
-      this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-      if (this.data.length >= 100) {
-        this.data.shift();
+      this.currentData.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
+      if (this.currentData.length >= 100) {
+        this.currentData.shift();
       }
     });
   }
