@@ -4,3 +4,4 @@ services:
             - PROD_SIREN_HOST_URL=host.docker.internal:1883
         extra_hosts:
             - "host.docker.internal:host-gateway" # for external siren
+        init: false # not supported on buildroot for some reason, further investigation needed

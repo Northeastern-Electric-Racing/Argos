@@ -3,7 +3,6 @@ name: Create and publish scylla docker image
 
 on:
   workflow_dispatch:
-  push:
 
 
 

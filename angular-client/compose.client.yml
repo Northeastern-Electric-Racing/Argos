@@ -2,7 +2,7 @@ services:
   client:
     container_name: client
     restart: unless-stopped
-    image: ghcr.io/northeastern-electric-racing/argos-client:rust-rewrite-socket
+    image: ghcr.io/northeastern-electric-racing/argos-client:feature-scylla-rust-server
     build:
       context: .
       args:
