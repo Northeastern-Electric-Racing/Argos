@@ -1,7 +1,6 @@
 <info-background title="Faults" icon="warning_amber">
   <div style="min-width: 20vw; padding-right: 30px" class="fault-text-body">
     <vstack>
-      <!--TODO: Figure out how to divide more cleanly-->
       <div style="height: 25px"></div>
       <ng-container *ngFor="let fault of getFaultStrings()">
         <typography variant="info-subtitle" [content]="fault"></typography>

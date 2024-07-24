@@ -32,6 +32,13 @@ const baseMockData: MockData[] = [
     max: 100
   },
   {
+    name: DataType.STATUS,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
     name: DataType.XYZAccel,
     unit: Unit.G,
     vals: [0, 0, 0],

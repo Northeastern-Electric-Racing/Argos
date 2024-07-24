@@ -82,7 +82,6 @@ import CellTempDisplay from 'src/components/battery-components/cell-temp/cell-te
 import CellTempGraph from 'src/components/battery-components/cell-temp/cell-temp-graph/cell-temp-graph.component';
 import CurrentDisplay from 'src/components/battery-components/battery-current/current-display/current-display.component';
 import FaultDisplay from 'src/components/battery-components/fault-display/fault-display.component';
-import CurrentGraph from 'src/components/battery-components/battery-current/current-graph/current-graph.component';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import BMSModeDisplay from 'src/components/battery-components/BMS-mode/BMS-mode-display.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
@@ -161,7 +160,6 @@ import ChargingStateComponent from 'src/components/battery-components/charging-s
     CellTempGraph,
     CurrentDisplay,
     FaultDisplay,
-    CurrentGraph,
     SwitchComponent,
     BMSModeDisplay,
     DoubleLineGraphComponent,
