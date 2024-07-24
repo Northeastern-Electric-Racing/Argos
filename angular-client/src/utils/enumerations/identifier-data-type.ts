@@ -10,7 +10,7 @@ export enum IdentifierDataType {
   POINTS = 'GPS-Location',
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
-  CURRENT = 'Charging_Current',
+  CURRENT = 'Charging-Current',
   COMM_TIMEOUT_FAULT = 'Box-F_CommTimeout',
   HARDWARE_FAILURE_FAULT = 'Box-F_HardwareFailure',
   OVER_TEMP_FAULT = 'Box-F_OverTemp',
