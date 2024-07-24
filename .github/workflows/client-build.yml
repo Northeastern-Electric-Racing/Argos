@@ -3,7 +3,6 @@ name: Create and publish client docker image
 
 on:
   workflow_dispatch:
-  push:
 
 
 
