@@ -9,6 +9,12 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
 })
 export default class FaultDisplay {
   faults: { faultName: string; time: string }[] = [];
+  resetButton = {
+    onClick: () => {
+      this.faults = [];
+    },
+    icon: 'restart_alt'
+  };
   constructor(private storage: Storage) {}
 
   ngOnInit() {
