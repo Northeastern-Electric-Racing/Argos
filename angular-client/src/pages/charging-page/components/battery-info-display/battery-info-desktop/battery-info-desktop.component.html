@@ -2,7 +2,7 @@
   <vstack style="width: 20%">
     <hstack>
       <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
-      <battery [percentage]="stateOfCharge" [height]="60" [width]="30" />
+      <battery-percentage [percentage]="stateOfCharge" [height]="60" [width]="30" />
     </hstack>
     <typography variant="info-subtitle" content="Charge State" />
   </vstack>

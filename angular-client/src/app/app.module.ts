@@ -5,6 +5,8 @@ import { CarouselModule } from 'primeng/carousel';
 import { ToastModule } from 'primeng/toast';
 import { OrderListModule } from 'primeng/orderlist';
 import LandingPage from 'src/pages/landing-page/landing-page.component';
+import ChargingPage from 'src/pages/charging-page/charging-page.component';
+import ChargingPageMobile from 'src/pages/charging-page/charging-page-mobile/charging-page-mobile.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
 import SidebarCard from 'src/pages/graph-page/graph-sidebar/sidebar-card/sidebar-card.component';
 import AppContext from './context/app-context.component';
@@ -14,7 +16,6 @@ import LoadingPage from 'src/components/loading-page/loading-page.component';
 import ErrorPage from 'src/components/error-page/error-page.component';
 import Header from 'src/components/header/header.component';
 import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.component';
-import { BatteryPercentageComponent } from 'src/components/battery/battery.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { CircularPercentageComponent } from 'src/components/circular-percentage/circular-percentage.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
@@ -40,7 +41,6 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
-import { BatteryInfoDisplay } from 'src/components/battery-info-display/battery-info-display';
 import { GraphComponent } from 'src/components/graph/graph.component';
 import { InfoGraph } from 'src/components/info-graph/info-graph.component';
 import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component';
@@ -70,19 +70,38 @@ import MotorInfo from 'src/components/motor-info/motor-info.component';
 import LandingPageMobile from 'src/pages/landing-page/landing-page-mobile/landing-page-mobile.component';
 import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop-content/raspberry-pi-desktop.component';
 import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
-import BatteryInfoDesktop from 'src/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
-import BatteryInfoMobile from 'src/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter-pipe';
 import { DataTypeFilterPipe } from 'src/utils/pipes/data-type-filter-pipe';
+import { SwitchComponent } from 'src/components/switch/switch.component';
+import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
+import BatteryInfoDesktop from 'src/pages/charging-page/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
+import BatteryInfoMobile from 'src/pages/charging-page/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
+import BatteryStatusDisplay from 'src/pages/charging-page/components/battery-status-display/battery-status-display.component';
+import StateOfChargeDisplay from 'src/pages/charging-page/components/state-of-charge/state-of-charge-display/state-of-charge-display.component';
+import PackTemp from 'src/pages/charging-page/components/pack-temp/pack-temp.component';
+import CellTempDisplay from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-display.component';
+import CellTempGraph from 'src/pages/charging-page/components/cell-temp/cell-temp-graph/cell-temp-graph.component';
+import CurrentDisplay from 'src/pages/charging-page/components/battery-current/current-display/current-display.component';
+import FaultDisplay from 'src/pages/charging-page/components/fault-display/fault-display.component';
+import BMSModeDisplay from 'src/pages/charging-page/components/BMS-mode/BMS-mode-display.component';
+import HighLowCellDisplay from 'src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-display.component';
+import HighLowCellGraph from 'src/pages/charging-page/components/high-low-cell/high-low-cell-graph/high-low-cell-graph.component';
+import PackVoltageGraph from 'src/pages/charging-page/components/pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
+import PackVoltageDisplay from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
+import ChargingStateComponent from 'src/pages/charging-page/components/charging-state/charging-state.component';
+import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
+import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
 
 @NgModule({
   declarations: [
     AppContext,
     LandingPage,
+    ChargingPage,
+    ChargingPageMobile,
     GraphPage,
     GraphSidebar,
     GraphSidebarMobile,
@@ -139,7 +158,22 @@ import { DataTypeFilterPipe } from 'src/utils/pipes/data-type-filter-pipe';
     BatteryInfoDesktop,
     BatteryInfoMobile,
     NodeFilterPipe,
-    DataTypeFilterPipe
+    DataTypeFilterPipe,
+    BatteryStatusDisplay,
+    StateOfChargeDisplay,
+    PackTemp,
+    CellTempDisplay,
+    CellTempGraph,
+    CurrentDisplay,
+    FaultDisplay,
+    SwitchComponent,
+    BMSModeDisplay,
+    DoubleLineGraphComponent,
+    HighLowCellDisplay,
+    HighLowCellGraph,
+    PackVoltageGraph,
+    PackVoltageDisplay,
+    ChargingStateComponent
   ],
   imports: [
     BrowserModule,

@@ -11,6 +11,13 @@ mat-icon {
   width: 100%;
 }
 
+.title-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .title {
   display: flex;
   flex-direction: row;

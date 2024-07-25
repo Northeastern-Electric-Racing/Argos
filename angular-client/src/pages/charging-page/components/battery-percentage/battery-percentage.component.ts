@@ -3,9 +3,9 @@ import Theme from 'src/services/theme.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
-  selector: 'battery',
-  templateUrl: 'battery.component.html',
-  styleUrls: ['battery.component.css'],
+  selector: 'battery-percentage',
+  templateUrl: 'battery-percentage.component.html',
+  styleUrls: ['battery-percentage.component.css'],
   // TODO: this is just a dumb animation that changes the color of the nub, would like to make something actually
   // cool or interesting in the future
   animations: [

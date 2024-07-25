@@ -1,0 +1,8 @@
+.fault-text-body {
+  height: 95%;
+  display: flex;
+  align-items: left;
+  justify-content: left;
+  padding-left: 10%;
+  overflow: hidden;
+}

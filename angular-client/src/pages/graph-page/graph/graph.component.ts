@@ -134,7 +134,7 @@ export default class Graph implements OnInit {
       }
     };
 
-    //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
+    // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
       this.chart = new ApexCharts(chartContainer, this.options);
 
