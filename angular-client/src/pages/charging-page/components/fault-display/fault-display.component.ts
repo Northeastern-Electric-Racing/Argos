@@ -8,48 +8,38 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
   styleUrls: ['./fault-display.component.css']
 })
 export default class FaultDisplay {
-  faultStrings: string[] = [];
+  faults: { faultName: string; time: string }[] = [];
   constructor(private storage: Storage) {}
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.COMM_TIMEOUT_FAULT).subscribe((value) => {
       if (value.values[0]) {
-        this.faultStrings.push('Communication Timeout');
+        this.faults.push({ faultName: 'Communication Timeout', time: new Date().toLocaleTimeString() });
       }
     });
 
     this.storage.get(IdentifierDataType.HARDWARE_FAILURE_FAULT).subscribe((value) => {
       if (value.values[0]) {
-        this.faultStrings.push('Hardware Failure');
+        this.faults.push({ faultName: 'Hardware Failure', time: new Date().toLocaleTimeString() });
       }
     });
 
     this.storage.get(IdentifierDataType.OVER_TEMP_FAULT).subscribe((value) => {
       if (value.values[0]) {
-        this.faultStrings.push('Over Temp');
+        this.faults.push({ faultName: 'Over Temp', time: new Date().toLocaleTimeString() });
       }
     });
 
     this.storage.get(IdentifierDataType.VOLTAGE_WRONG_FAULT).subscribe((value) => {
       if (value.values[0]) {
-        this.faultStrings.push('Voltage Wrong');
+        this.faults.push({ faultName: 'Voltage Wrong', time: new Date().toLocaleTimeString() });
       }
     });
 
     this.storage.get(IdentifierDataType.WRONG_BAT_CONNECT_FAULT).subscribe((value) => {
       if (value.values[0]) {
-        this.faultStrings.push('Wrong Battery Connect');
+        this.faults.push({ faultName: 'Wrong Battery Connect', time: new Date().toLocaleTimeString() });
       }
     });
-  }
-
-  getFaultStrings() {
-    if (this.faultStrings.length === 0) {
-      return ['No faults to display'];
-    }
-
-    const faults = [...this.faultStrings];
-
-    return faults.slice(0, 10).map((fault, index) => `${index + 1}. ${fault}`);
   }
 }
