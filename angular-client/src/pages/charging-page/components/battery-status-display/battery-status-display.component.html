@@ -1,0 +1,8 @@
+<info-background icon="quickreply" title="Status">
+  <div style="display: flex; justify-content: center; align-items: center; height: 80%">
+    <vstack>
+      <div class="connection-dot" [style.background-color]="getStatusColor(isBalancing)"></div>
+      <typography variant="info-subtitle" [content]="getBatteryStatus(isBalancing)" />
+    </vstack>
+  </div>
+</info-background>

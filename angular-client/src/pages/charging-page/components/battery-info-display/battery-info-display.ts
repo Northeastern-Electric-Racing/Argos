@@ -23,7 +23,7 @@ export class BatteryInfoDisplay {
     this.storage.get(IdentifierDataType.PACK_TEMP).subscribe((value) => {
       this.packTemp = floatPipe(value.values[0]);
     });
-    this.storage.get(IdentifierDataType.VOLTAGE).subscribe((value) => {
+    this.storage.get(IdentifierDataType.PACK_VOLTAGE).subscribe((value) => {
       this.voltage = floatPipe(value.values[0]);
     });
     this.storage.get(IdentifierDataType.STATE_OF_CHARGE).subscribe((value) => {

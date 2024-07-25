@@ -1,0 +1,29 @@
+/* TODO: Fix relative size for mobile (plus is a little funky for desktop as well) */
+.switch {
+  width: 100%;
+  height: 50%;
+  border-radius: 10vw;
+  background-color: #808080;
+  position: relative;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.switch-inner {
+  width: 30%;
+  height: 70%;
+  border-radius: 50%;
+  background-color: #161616;
+  margin-left: 5%;
+}
+
+.switch.on {
+  background-color: #ffffff;
+  justify-content: flex-end;
+}
+
+.switch-inner.on {
+  margin-right: 5%;
+}

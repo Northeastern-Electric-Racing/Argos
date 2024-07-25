@@ -32,6 +32,13 @@ const baseMockData: MockData[] = [
     max: 100
   },
   {
+    name: DataType.STATUS,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
     name: DataType.XYZAccel,
     unit: Unit.G,
     vals: [0, 0, 0],
@@ -52,13 +59,6 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 360
-  },
-  {
-    name: DataType.VOLTAGE,
-    unit: Unit.VOLTS,
-    vals: [0],
-    min: 0,
-    max: 5
   },
   {
     name: DataType.CPUUsage,
@@ -136,6 +136,97 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 100
+  },
+  {
+    name: DataType.CURRENT,
+    unit: Unit.AMPERAGE,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.BMS_MODE,
+    unit: Unit.STRING,
+    vals: [0],
+    min: 1,
+    max: 3
+  },
+  {
+    name: DataType.VOLTS_HIGH,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.VOLTS_LOW,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.PACK_VOLTAGE,
+    unit: Unit.VOLTS,
+    vals: [0],
+    min: 0,
+    max: 5
+  },
+  {
+    name: DataType.CELL_TEMP_HIGH,
+    unit: Unit.CELSIUS,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.CELL_TEMP_AVG,
+    unit: Unit.CELSIUS,
+    vals: [0],
+    min: 0,
+    max: 100
+  },
+  {
+    name: DataType.COMM_TIMEOUT_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.HARDWARE_FAILURE_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.OVER_TEMP_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.VOLTAGE_WRONG_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.WRONG_BAT_CONNECT_FAULT,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
+  },
+  {
+    name: DataType.CHARGING,
+    unit: Unit.BINARY,
+    vals: [0],
+    min: 0,
+    max: 1
   }
 ];
 

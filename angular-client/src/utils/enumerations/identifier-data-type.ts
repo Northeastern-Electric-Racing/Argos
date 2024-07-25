@@ -10,7 +10,12 @@ export enum IdentifierDataType {
   POINTS = 'GPS-Location',
   LATENCY = 'Latency',
   STEERING_ANGLE = 'Steering Angle',
-  VOLTAGE = 'Status-Voltage_Average',
+  CURRENT = 'Charging-Current',
+  COMM_TIMEOUT_FAULT = 'Box-F_CommTimeout',
+  HARDWARE_FAILURE_FAULT = 'Box-F_HardwareFailure',
+  OVER_TEMP_FAULT = 'Box-F_OverTemp',
+  VOLTAGE_WRONG_FAULT = 'Box-F_OverVoltage',
+  WRONG_BAT_CONNECT_FAULT = 'Box-F_WrongBatConnect',
   VIEWERS = 'Viewers',
   SPEED = 'State-Speed',
   TORQUE = 'Torque',
@@ -23,5 +28,13 @@ export enum IdentifierDataType {
   ACCELERATION = 'Acceleration',
   CHARGE_CURRENT_LIMIT = 'Pack-CCL',
   DISCHARGE_CURRENT_LIMIT = 'Pack-DCL',
-  XYZAccel = 'XYZAcceleration'
+  XYZAccel = 'XYZAcceleration',
+  STATUS = 'Status-Balancing',
+  BMS_MODE = 'Status-State',
+  VOLTS_HIGH = 'Cells-Volts_High_Value',
+  VOLTS_LOW = 'Cells-Volts_Low_Value',
+  CHARGING = 'Charging-Control',
+  PACK_VOLTAGE = 'Pack-Voltage',
+  CELL_TEMP_HIGH = 'Cells-Temp_High_Value',
+  CELL_TEMP_AVG = 'Cells-Temp_Avg_Value'
 }
