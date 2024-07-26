@@ -16,10 +16,9 @@
         <graph-caption
           [dataType]="selectedDataType"
           [currentValue]="currentValue"
-          [currentDriver]="run?.driverName"
-          [currentSystem]="run?.systemName"
-          [currentLocation]="run?.locationName"
           [onRunSelected]="onRunSelected"
+          [onClearDataType]="clearDataType"
+          [run]="run"
           class="graph-caption"
         />
       </div>

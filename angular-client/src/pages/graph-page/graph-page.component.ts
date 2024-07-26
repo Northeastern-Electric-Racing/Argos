@@ -3,6 +3,7 @@ import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
+import { getAllRuns, getRunById } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -41,6 +42,12 @@ export default class GraphPage implements OnInit {
 
   ngOnInit(): void {
     this.queryNodes();
+
+    this.clearDataType = () => {
+      if (this.subscription) this.subscription.unsubscribe();
+      this.selectedDataType.next({ name: '', unit: '' });
+      this.selectedDataTypeValuesSubject.next([]);
+    };
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
@@ -99,6 +106,8 @@ export default class GraphPage implements OnInit {
     this.selectedDataTypeValuesError = undefined;
   };
 
+  onSetRealtime = () => {};
+
   /**
    * Queries the nodes from the server.
    */
@@ -121,4 +130,6 @@ export default class GraphPage implements OnInit {
    * @param dataType The data type to set.
    */
   setSelectedDataType!: (dataType: DataType) => void;
+
+  clearDataType!: () => void;
 }

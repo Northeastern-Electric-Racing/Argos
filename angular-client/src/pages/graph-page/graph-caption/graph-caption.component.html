@@ -17,25 +17,30 @@
     </div>
     <div class="right-info">
       <div class="driver-info">
-        <typography variant="header" [content]="currentDriver ?? 'No Driver Selected'" />
+        <typography variant="header" [content]="run?.driverName ?? 'No Driver Selected'" />
       </div>
       <div class="system-info">
-        <typography variant="subheader" [content]="currentSystem ?? 'No System Selected'" />
-        <typography variant="subheader" [content]="currentLocation ?? 'No Location Selected'" />
+        <typography variant="subheader" [content]="run?.systemName ?? 'No System Selected'" />
+        <typography variant="subheader" [content]="run?.locationName ?? 'No Location Selected'" />
       </div>
     </div>
   </div>
   <div class="buttons-container">
     <run-selector [selectRun]="onRunSelected" />
     <argos-button
-      [onClick]="clearGraph"
-      label="Clear Graph"
+      [onClick]="onClearDataType"
+      label="Clear Data Type"
       additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
     ></argos-button>
-    <argos-button
-      [onClick]="clearRun"
-      label="Clear Run"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
-    ></argos-button>
+    <div *ngIf="run; else otherBlock">
+      <argos-button
+        [onClick]="clearRun"
+        label="Realtime"
+        additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+      ></argos-button>
+    </div>
+    <ng-template #otherBlock>
+      <div style="width: 140px; height: 45px"></div>
+    </ng-template>
   </div>
 </div>
