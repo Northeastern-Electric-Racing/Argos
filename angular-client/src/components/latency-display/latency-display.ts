@@ -12,12 +12,16 @@ export default class LatencyDisplay implements OnInit {
   @Input() medVal: number = 50;
   @Input() highVal: number = 100;
   latency: number = 0;
+  newLatency: number = 0;
 
   constructor(private storage: Storage) {}
 
   ngOnInit(): void {
     this.storage.get(IdentifierDataType.LATENCY).subscribe((value) => {
       this.latency = parseInt(value.values[0]);
+    });
+    this.storage.get(IdentifierDataType.NEW_LATENCY).subscribe((value) => {
+      this.newLatency = parseInt(value.values[0]);
     });
   }
 
