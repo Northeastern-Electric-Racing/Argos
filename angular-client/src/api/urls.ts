@@ -14,6 +14,7 @@ const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) => `
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;
 const getAllRuns = () => `${baseURL}/runs`;
+const startNewRun = () => `${baseURL}/runs/new`;
 
 export const urls = {
   getAllNodes,
@@ -23,5 +24,6 @@ export const urls = {
   getDataByDataTypeNameAndRunId,
 
   getAllRuns,
-  getRunById
+  getRunById,
+  startNewRun
 };

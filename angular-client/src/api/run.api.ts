@@ -16,3 +16,7 @@ export const getAllRuns = (): Promise<Response> => {
 export const getRunById = (id: number): Promise<Response> => {
   return fetch(urls.getRunById(id));
 };
+
+export const startNewRun = () => {
+  return fetch(urls.startNewRun(), { method: 'POST' });
+};
