@@ -16,7 +16,7 @@ docker compose up odyssey-timescale
 
 ```
 # in this directory
-SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/timescaledb cargo run
+SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres cargo run
 ```
 
 ### Test this app
@@ -33,7 +33,7 @@ Since this app uses the database for testing, you must follow these steps, or ru
 docker volume rm argos_db-data
 docker compose up odyssey-timescale
 cargo prisma migrate deploy
-SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/timescaledb cargo test -- --test-threads=1
+SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres cargo test -- --test-threads=1
 ```
 
 #### Test it yourself!

@@ -26,7 +26,7 @@ services:
     depends_on:
       - odyssey-timescale
     environment:
-        - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/timescaledb
+        - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/postgres
        # - PROD_SIREN_HOST_URL=siren:1883
         - PROD_SCYLLA=true
         - RUST_LOG=none,scylla_server_rust=info # default log setting for docker
