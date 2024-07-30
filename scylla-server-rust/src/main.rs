@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use axum::{
     http::Method,
     routing::{get, post},
     Extension, Router,
 };
+use clap::Parser;
 use prisma_client_rust::chrono;
 use scylla_server_rust::{
     controllers::{
@@ -29,8 +30,39 @@ use tower_http::{
 use tracing::{debug, info, level_filters::LevelFilter};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 
+/// Scylla command line arguments
+#[derive(Parser, Debug)]
+#[command(version)]
+struct ScyllaArgs {
+    /// Whether to enable the Scylla production mode
+    #[arg(short = 'p', long, env = "SCYLLA_PROD")]
+    prod: bool,
+
+    /// Whether to enable batch saturation (parallel batching)
+    #[arg(short = 's', long, env = "SCYLLA_SATURATE_BATCH")]
+    saturate_batch: bool,
+
+    // /// Whether to enable the socket io server in Scylla
+    // #[arg(short, long, env = "SCYLLA_SOCKET")]
+    // socket: bool,
+    /// The host url of the siren, including port and excluding protocol prefix
+    #[arg(
+        short = 'u',
+        long,
+        env = "SCYLLA_SIREN_HOST_URL",
+        default_value = "localhost:1883"
+    )]
+    siren_host_url: String,
+
+    /// The time, in seconds between collection for a batch upsert
+    #[arg(short = 't', long, env = "SCYLLA_BATCH_UPSERT_TIME", default_value = "10")]
+    batch_upsert_time: u64,
+}
+
 #[tokio::main]
 async fn main() {
+    let cli = ScyllaArgs::parse();
+
     println!("Initializing scylla server...");
 
     #[cfg(feature = "top")]
@@ -45,7 +77,6 @@ async fn main() {
         // construct a subscriber that prints formatted traces to stdout
         // if RUST_LOG is not set, defaults to loglevel INFO
         let subscriber = tracing_subscriber::fmt()
-            .pretty()
             .with_thread_ids(true)
             .with_ansi(true)
             .with_thread_names(true)
@@ -69,7 +100,12 @@ async fn main() {
     );
 
     // create the socket stuff
-    let (socket_layer, io) = SocketIo::new_layer();
+    let (socket_layer, io) = SocketIo::builder()
+        .max_buffer_size(4096) // TODO tune values
+        .connect_timeout(Duration::from_secs(5)) // may be unecessary
+        .ping_timeout(Duration::from_secs(5)) // may be unecessary
+        .ack_timeout(Duration::from_millis(1500)) // this should be well below the time to fill max buffer size above
+        .build_layer();
     io.ns("/", |s: SocketRef| {
         s.on_disconnect(|_: SocketRef| debug!("Socket: Client disconnected from socket"))
     });
@@ -91,18 +127,19 @@ async fn main() {
     let token = CancellationToken::new();
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_receive, Arc::clone(&db))
+        db_handler::DbHandler::new(mqtt_receive, Arc::clone(&db), cli.batch_upsert_time * 1000)
             .handling_loop(db_send, token.clone()),
     );
     // spawn the database inserter
     task_tracker.spawn(db_handler::DbHandler::batching_loop(
         db_receive,
         Arc::clone(&db),
+        cli.saturate_batch,
         token.clone(),
     ));
 
     // if PROD_SCYLLA=false
-    if std::env::var("PROD_SCYLLA").is_ok_and(|f| f == "false") {
+    if !cli.prod {
         info!("Running processor in mock mode, no data will be stored");
         let recv = MockProcessor::new(io);
         tokio::spawn(recv.generate_mock());
@@ -119,11 +156,10 @@ async fn main() {
         let recv = MqttProcessor::new(
             mqtt_send,
             new_run_receive,
-            std::env::var("PROD_SIREN_HOST_URL").unwrap_or("localhost:1883".to_string()),
+            cli.siren_host_url,
             curr_run.id,
             io,
-        )
-        .await;
+        );
         tokio::spawn(recv.process_mqtt());
     }
 
