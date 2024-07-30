@@ -3,7 +3,7 @@ services:
         depends_on:
             - siren
         environment:
-            - PROD_SIREN_HOST_URL=siren:1883
+            - SCYLLA_SIREN_HOST_URL=siren:1883
 
     client:
       extends:

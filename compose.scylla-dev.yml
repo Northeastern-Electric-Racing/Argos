@@ -3,7 +3,7 @@
         depends_on:
             - siren
         environment:
-            - PROD_SIREN_HOST_URL=siren:1883
+            - SCYLLA_SIREN_HOST_URL=siren:1883
             - RUST_LOG=none,scylla_server_rust=DEBUG
 
     client:

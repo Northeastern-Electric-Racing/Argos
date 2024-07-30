@@ -17,6 +17,12 @@ Once you've sucessfully setup Scylla and the Client, you can either run them sep
 
 ## Production
 
+### Quick start shortcuts
+
+The `scylla.sh` can be used on POSIX compliant OSes to quickly get up and running without worrying about profiles.  Its syntax is `./scylla.sh <profile> <cmd>` where profile could be router, tpu, scylla-dev, or client-dev and the cmd is the normal argument passed into docker compose, such as `up -d` to start the process and fork to background.  **Make sure to `down` with the same profile that you used `up` with!**
+
+### Customizing and more info
+
 The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
 - It matches the number of CPUs as the router to roughly simulate router CPU (your CPU is still faster)
 - It persists the database between `down` commands via a volume called `argos_db-data`.  Delete it with `docker volume rm argos_db-data` to start with a new database next `up`.
@@ -24,7 +30,7 @@ The base docker compose (`compose.yml`) contains some important features to note
 - It limits memory according to the capacity of the router.
 
 
-### Customizing runtime profiles of the project via docker compose
+#### Customizing runtime profiles of the project via docker compose
 
 This project uses docker compose overrides to secify configurations.  Therefore there are multiple "profiles" to choose from when running in production, and there are some profiles for development testing.  Also, there are fragment files for siren and client in `siren-base` and `angular-client` respectively, as they are services only used in certain cases.  These profiles are specified via the command line on top of the base `compose.yml` file as follows.
 
@@ -71,6 +77,6 @@ Server protobuf generation is automatic.  See below for client protobuf generati
 #### Codegen
 `npm run build:proto`
 
-### Siren
+## Siren
 The configuration for the Mosquitto MQTT server on the router is in the siren-base folder.
 Note that the configuration is used in the docker compose file, but the configuration on the TPU is stored in [Odysseus.](https://github.com/Northeastern-Electric-Racing/Odysseus/tree/cb12fb3240d5fd58adfeae26262e158ad6dd889b/odysseus_tree/overlays/rootfs_overlay_tpu/etc/mosquitto)
