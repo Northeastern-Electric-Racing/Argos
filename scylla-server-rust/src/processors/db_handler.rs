@@ -13,9 +13,6 @@ use crate::{
     Database,
 };
 
-/// The upload interval for batch uploads
-const UPLOAD_INTERVAL: u64 = 5000;
-
 use super::{ClientData, LocationData};
 
 /// A struct defining an in progress location packet
@@ -90,12 +87,14 @@ pub struct DbHandler {
     data_queue: Vec<ClientData>,
     /// the time since last batch
     last_time: tokio::time::Instant,
+    /// upload interval
+    upload_interval: u64,
 }
 
 impl DbHandler {
     /// Make a new db handler
     /// * `recv` - the broadcast reciver of which clientdata will be sent
-    pub fn new(receiver: Receiver<ClientData>, db: Database) -> DbHandler {
+    pub fn new(receiver: Receiver<ClientData>, db: Database, upload_interval: u64) -> DbHandler {
         DbHandler {
             node_list: vec![],
             datatype_list: vec![],
@@ -105,6 +104,7 @@ impl DbHandler {
             is_location: false,
             data_queue: vec![],
             last_time: tokio::time::Instant::now(),
+            upload_interval,
         }
     }
 
@@ -114,24 +114,37 @@ impl DbHandler {
     pub async fn batching_loop(
         mut data_queue: Receiver<Vec<ClientData>>,
         database: Database,
+        saturate_batches: bool,
         cancel_token: CancellationToken,
     ) {
         loop {
             tokio::select! {
                 _ = cancel_token.cancelled() => {
-                    if let  Some(final_msgs) = data_queue.recv().await {
-                    info!(
-                        "Final Batch uploaded: {:?}",
-                        data_service::add_many(&database, final_msgs).await
-                    );
-                } else {
-                    info!("No messages to cleanup.")
+                    loop {
+                        info!("{} batches remaining!", data_queue.len());
+                        if let  Some(final_msgs) = data_queue.recv().await {
+                        info!(
+                            "A cleanup batch uploaded: {:?}",
+                            data_service::add_many(&database, final_msgs).await
+                        );
+                    } else {
+                     info!("No more messages to cleanup.");
+                     break;
+                    }
+
                 }
-                    break;
+                break;
                 },
                 Some(msgs) = data_queue.recv() => {
-                    Self::batch_upload(msgs, &database).await;
-                    trace!(
+                    if saturate_batches {
+                        let shared_db = database.clone();
+                        tokio::spawn(async move {
+                            Self::batch_upload(msgs, &shared_db).await;
+                         });
+                    } else {
+                        Self::batch_upload(msgs, &database).await;
+                    }
+                    debug!(
                         "DB send: {} of {}",
                         data_queue.len(),
                         data_queue.max_capacity()
@@ -184,7 +197,7 @@ impl DbHandler {
 
         // If the time is greater than upload interval, push to batch upload thread and clear queue
         if tokio::time::Instant::now().duration_since(self.last_time)
-            > Duration::from_millis(UPLOAD_INTERVAL)
+            > Duration::from_millis(self.upload_interval)
             && !self.data_queue.is_empty()
         {
             data_channel

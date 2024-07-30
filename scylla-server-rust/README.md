@@ -72,9 +72,9 @@ Have an async function that takes time and is somewhat important for performance
 See main README.
 
 
-#### Env variables
+#### Env variables & CLI Customization
 
 - `SOURCE_DATABASE_URL` The timescale URL
-- `PROD_SCYLLA` false=use mock instead of production (mqtt) as source of data
 - `RUST_LOG=none,scylla_server_rust` levels of logging for this create, see above
-- `PROD_SIREN_HOST_URL` URL:Port of the MQTT server, using when `PROD_SCYLLA=/false`
+
+**See `cargo run -- -h` for other variables and settings to change!**

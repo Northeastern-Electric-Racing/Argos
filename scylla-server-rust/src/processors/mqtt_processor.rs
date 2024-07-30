@@ -32,9 +32,8 @@ impl MqttProcessor {
     /// * `db` - The database to store the data in
     /// * `io` - The socketio layer to send the data to
     ///
-    /// This is async as it creates the initial run and gets the ID, as well as connecting to and subbing Siren
     /// Returns the instance and the event loop, which can be passed into the process_mqtt func to begin recieiving
-    pub async fn new(
+    pub fn new(
         channel: Sender<ClientData>,
         new_run_channel: Receiver<run_service::public_run::Data>,
         mqtt_path: String,
@@ -236,7 +235,17 @@ impl MqttProcessor {
             serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
         ) {
             Ok(_) => (),
-            Err(err) => warn!("Socket: Broadcast error: {}", err),
+            Err(err) => match err {
+                socketioxide::BroadcastError::Socket(e) => {
+                    trace!("Socket: Transmit error: {:?}", e);
+                }
+                socketioxide::BroadcastError::Serialize(_) => {
+                    warn!("Socket: Serialize error: {}", err)
+                }
+                socketioxide::BroadcastError::Adapter(_) => {
+                    warn!("Socket: Adapter error: {}", err)
+                }
+            },
         }
     }
 }

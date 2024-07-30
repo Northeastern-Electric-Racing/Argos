@@ -21,6 +21,7 @@ tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
 rand = "0.8.5"
 console-subscriber = { version = "0.3.0", optional = true }
 ringbuffer = "0.15.0"
+clap = { version = "4.5.11", features = ["derive", "env"] }
 
 [features]
 top = ["dep:console-subscriber"]

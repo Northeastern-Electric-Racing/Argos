@@ -1,8 +1,8 @@
 services:
     scylla-server-rust:
         environment:
-            - PROD_SIREN_HOST_URL=siren:1883
-            - PROD_SCYLLA=false
+            - SCYLLA_SIREN_HOST_URL=siren:1883
+            - SCYLLA_PROD=false
 
     client:
       extends:
