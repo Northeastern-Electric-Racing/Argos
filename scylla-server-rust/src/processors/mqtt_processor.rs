@@ -1,12 +1,12 @@
 use core::fmt;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use prisma_client_rust::{bigdecimal::ToPrimitive, chrono, serde_json};
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
     mqttbytes::v5::{LastWill, Packet, Publish},
-    AsyncClient, Event, MqttOptions,
+    AsyncClient, Event, EventLoop, MqttOptions,
 };
 use socketioxide::SocketIo;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -22,7 +22,6 @@ pub struct MqttProcessor {
     new_run_channel: Receiver<run_service::public_run::Data>,
     curr_run: i32,
     io: SocketIo,
-    mqtt_ops: MqttOptions,
 }
 
 impl MqttProcessor {
@@ -32,16 +31,16 @@ impl MqttProcessor {
     /// * `db` - The database to store the data in
     /// * `io` - The socketio layer to send the data to
     ///
-    /// Returns the instance and the event loop, which can be passed into the process_mqtt func to begin recieiving
+    /// Returns the instance and options to create a client, which is then used in the process_mqtt loop
     pub fn new(
         channel: Sender<ClientData>,
         new_run_channel: Receiver<run_service::public_run::Data>,
         mqtt_path: String,
         initial_run: i32,
         io: SocketIo,
-    ) -> MqttProcessor {
+    ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
-        let mut create_opts = MqttOptions::new(
+        let mut mqtt_opts = MqttOptions::new(
             "ScyllaServer",
             mqtt_path.split_once(':').expect("Invalid Siren URL").0,
             mqtt_path
@@ -51,7 +50,7 @@ impl MqttProcessor {
                 .parse::<u16>()
                 .expect("Invalid Siren port"),
         );
-        create_opts
+        mqtt_opts
             .set_last_will(LastWill::new(
                 "Scylla/Status",
                 "Scylla has disconnected!",
@@ -65,26 +64,27 @@ impl MqttProcessor {
             .set_session_expiry_interval(Some(u32::MAX))
             .set_topic_alias_max(Some(600));
 
-        MqttProcessor {
-            channel,
-            new_run_channel,
-            curr_run: initial_run,
-            io,
-            mqtt_ops: create_opts,
-        }
+        // TODO mess with incoming message cap if db, etc. cannot keep up
+
+        (
+            MqttProcessor {
+                channel,
+                new_run_channel,
+                curr_run: initial_run,
+                io,
+            },
+            mqtt_opts,
+        )
     }
 
     /// This handles the reception of mqtt messages, will not return
-    /// * `connect` - The eventloop returned by ::new to connect to
-    pub async fn process_mqtt(mut self) {
+    /// * `eventloop` - The eventloop returned by ::new to connect to.  The loop isnt sync so this is the best that can be done
+    /// * `client` - The async mqttt v5 client to use for subscriptions
+    pub async fn process_mqtt(mut self, client: Arc<AsyncClient>, mut eventloop: EventLoop) {
         let mut view_interval = tokio::time::interval(Duration::from_secs(3));
 
         let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<i64>::new(20);
-
-        // process over messages, non blocking
-        // TODO mess with incoming message cap if db, etc. cannot keep up
-        let (client, mut connect) = AsyncClient::new(self.mqtt_ops.clone(), 600);
 
         debug!("Subscribing to siren");
         client
@@ -95,7 +95,7 @@ impl MqttProcessor {
         loop {
             #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
-                msg = connect.poll() => match msg {
+                msg = eventloop.poll() => match msg {
                     Ok(Event::Incoming(Packet::Publish(msg))) => {
                         trace!("Received mqtt message: {:?}", msg);
                         // parse the message into the data and the node name it falls under

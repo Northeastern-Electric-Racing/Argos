@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package command_data.v1;
+
+message CommandData {
+   repeated float data = 1;
+}

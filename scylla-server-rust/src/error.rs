@@ -10,7 +10,14 @@ use tracing::warn;
 
 pub enum ScyllaError {
     PrismaError(QueryError),
+    /// A generic not found for a prisma query
     NotFound,
+    /// Not available in mock mode, which the system is in
+    NotProd,
+    /// An instruction was not encodable
+    ImpossibleEncoding,
+    /// Could not communicate to car
+    CommFailure,
 }
 
 impl From<QueryError> for ScyllaError {
@@ -32,6 +39,9 @@ impl IntoResponse for ScyllaError {
             }
             ScyllaError::PrismaError(_) => StatusCode::BAD_REQUEST,
             ScyllaError::NotFound => StatusCode::NOT_FOUND,
+            ScyllaError::NotProd => StatusCode::SERVICE_UNAVAILABLE,
+            ScyllaError::ImpossibleEncoding => StatusCode::UNPROCESSABLE_ENTITY,
+            ScyllaError::CommFailure => StatusCode::BAD_GATEWAY,
         };
 
         status.into_response()

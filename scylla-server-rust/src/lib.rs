@@ -9,6 +9,7 @@ pub mod transformers;
 pub mod prisma;
 
 pub mod serverdata;
+pub mod command_data;
 
 /// The type descriptor of the database passed to the middlelayer through axum state
 pub type Database = std::sync::Arc<prisma::PrismaClient>;
