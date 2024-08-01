@@ -199,7 +199,10 @@ async fn main() {
         // SYSTEMS
         .route("/systems", get(system_controller::get_all_systems))
         // CONFIG
-        .route("/config/:key", post(send_config_controller::send_config).layer(Extension(client)))
+        .route(
+            "/config/:key",
+            post(send_config_controller::send_config).layer(Extension(client)),
+        )
         // for CORS handling
         .layer(
             CorsLayer::new()

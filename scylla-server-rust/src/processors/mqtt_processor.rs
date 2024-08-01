@@ -12,7 +12,10 @@ use socketioxide::SocketIo;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tracing::{debug, instrument, trace, warn, Level};
 
-use crate::{serverdata, services::run_service};
+use crate::{
+    controllers::send_config_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata,
+    services::run_service,
+};
 
 use super::ClientData;
 use std::borrow::Cow;
@@ -161,14 +164,23 @@ impl MqttProcessor {
     /// returns the ClientData, or the Err of something that can be debug printed
     #[instrument(skip(self), level = Level::TRACE)]
     fn parse_msg(&self, msg: Publish) -> Result<ClientData, impl fmt::Debug> {
-        let data = serverdata::ServerData::parse_from_bytes(&msg.payload)
-            .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
+        let topic = std::str::from_utf8(&msg.topic)
+            .map_err(|f| format!("Could not parse topic: {}, topic: {:?}", f, msg.topic))?;
 
-        let split = std::str::from_utf8(&msg.topic)
-            .map_err(|f| format!("Could not parse topic: {}, topic: {:?}", f, msg.topic))?
+        // ignore command messages, less confusing in logs than just failing to decode protobuf
+        if topic.starts_with(CALYPSO_BIDIR_CMD_PREFIX) {
+            return Err(format!("Skipping command message: {}", topic));
+        }
+
+        let split = topic
             .split_once('/')
             .ok_or(&format!("Could not parse nesting: {:?}", msg.topic))?;
 
+        // look at data after topic as if we dont have a topic the protobuf is useless anyways
+        let data = serverdata::ServerData::parse_from_bytes(&msg.payload)
+            .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
+
+        // get the node and datatype from the topic extracted at the beginning
         let node = split.0;
 
         let data_type = split.1.replace('/', "-");

@@ -9,6 +9,8 @@ use tracing::{info, warn};
 
 use crate::{command_data::CommandData, error::ScyllaError};
 
+pub const CALYPSO_BIDIR_CMD_PREFIX: &str = "Calypso/Bidir/Command/";
+
 #[derive(Deserialize, Debug)]
 pub struct ConfigRequest {
     pub data: Vec<f32>,
@@ -21,7 +23,7 @@ pub async fn send_config(
 ) -> Result<(), ScyllaError> {
     info!(
         "Sending car config with key: {}, and values: {:?}",
-        key, data_query.0
+        key, data_query.0.data
     );
     let Some(client) = client else {
         return Err(ScyllaError::NotProd);
@@ -35,7 +37,7 @@ pub async fn send_config(
 
     if let Err(err) = client
         .publish(
-            format!("Calypso/Bidir/Command/{}", key),
+            format!("{}{}", CALYPSO_BIDIR_CMD_PREFIX, key),
             rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
             false,
             bytes,
