@@ -10,10 +10,10 @@ use prisma_client_rust::chrono;
 use rumqttc::v5::AsyncClient;
 use scylla_server_rust::{
     controllers::{
-        self, data_type_controller, driver_controller, location_controller, node_controller,
-        run_controller,
-        send_config_controller::{self},
-        system_controller,
+        self,
+        car_command_controller::{self},
+        data_type_controller, driver_controller, location_controller, node_controller,
+        run_controller, system_controller,
     },
     prisma::PrismaClient,
     processors::{
@@ -200,8 +200,8 @@ async fn main() {
         .route("/systems", get(system_controller::get_all_systems))
         // CONFIG
         .route(
-            "/config/:key",
-            post(send_config_controller::send_config).layer(Extension(client)),
+            "/config/set/:configKey",
+            post(car_command_controller::send_config).layer(Extension(client)),
         )
         // for CORS handling
         .layer(

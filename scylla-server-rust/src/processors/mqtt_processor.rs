@@ -13,7 +13,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{
-    controllers::send_config_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata,
+    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata,
     services::run_service,
 };
 
