@@ -11,22 +11,23 @@ import { floatPipe } from 'src/utils/pipes.utils';
 export default class CellTempDisplay {
   avgTemp: number = 0;
   maxTemp: number = 0;
-
-  // -------- Commented out for now, until mobile view is implemented -----//
-  // mobileThreshold = 1000;
-  // isDesktop = window.innerWidth > this.mobileThreshold;
-  // @HostListener('window:resize', ['$event'])
-  // onResize() {
-  //   this.isDesktop = window.innerWidth >= this.mobileThreshold;
-  // }
+  resetGraph: boolean = false;
+  resetGraphButton = {
+    onClick: () => {
+      this.resetGraph = true;
+    },
+    icon: 'restart_alt'
+  };
 
   constructor(private storage: Storage) {}
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.CELL_TEMP_HIGH).subscribe((value) => {
+      this.resetGraph = false; //!!!! FOR REVIEW !!!!: is there a better way to do this reseting of the graph boolean?
       this.maxTemp = floatPipe(value.values[0]);
     });
     this.storage.get(IdentifierDataType.CELL_TEMP_AVG).subscribe((value) => {
+      this.resetGraph = false;
       this.avgTemp = floatPipe(value.values[0]);
     });
   }

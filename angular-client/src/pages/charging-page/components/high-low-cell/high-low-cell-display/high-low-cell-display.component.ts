@@ -14,6 +14,13 @@ export default class HighLowCellDisplay {
   highCellVoltage: number = 0;
   mobileThreshold = 1000;
   isDesktop = window.innerWidth > this.mobileThreshold;
+  resetGraph: boolean = false;
+  resetGraphButton = {
+    onClick: () => {
+      this.resetGraph = true;
+    },
+    icon: 'restart_alt'
+  };
 
   constructor(private storage: Storage) {}
 
@@ -24,10 +31,16 @@ export default class HighLowCellDisplay {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.VOLTS_LOW).subscribe((value) => {
+      if (this.resetGraph) {
+        this.resetGraph = false;
+      }
       this.lowCellVoltage = decimalPipe(value.values[0], 3);
       this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
     });
     this.storage.get(IdentifierDataType.VOLTS_HIGH).subscribe((value) => {
+      if (this.resetGraph) {
+        this.resetGraph = false;
+      }
       this.highCellVoltage = decimalPipe(value.values[0], 3);
       this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
     });

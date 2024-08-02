@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { GraphData } from 'src/utils/types.utils';
@@ -10,15 +10,16 @@ import { GraphData } from 'src/utils/types.utils';
 })
 export default class CellTempGraph implements OnInit {
   cellTempData: GraphData[] = [];
+  @Input() resetGraph: boolean = false;
   maxDataPoints = 100;
 
   constructor(private storage: Storage) {}
   ngOnInit() {
     this.storage.get(IdentifierDataType.CELL_TEMP_HIGH).subscribe((value) => {
-      this.cellTempData.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-      if (this.cellTempData.length >= 100) {
-        this.cellTempData.shift();
+      if (this.resetGraph) {
+        this.cellTempData = [];
       }
+      this.cellTempData.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
     });
   }
 }
