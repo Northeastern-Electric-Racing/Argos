@@ -2,7 +2,7 @@
   <div style="min-width: 20vw; padding-right: 30px; padding-left: 0px" class="fault-text-body">
     <vstack style="width: 100%">
       <div style="height: 10px"></div>
-      <ng-container *ngFor="let fault of this.faults.reverse(); index as i">
+      <ng-container *ngFor="let fault of faults | slice: 0 : 50; index as i">
         <div
           [style]="
             i % 2 == 0
