@@ -7,7 +7,7 @@ pub mod mqtt_processor;
 /// This has the dual purposes of
 /// * - representing the packet sent over the socket for live data
 /// * - representing the struct for the service layer to unpack for insertion
-/// Note: node name is only considered for database storage and convenience, it is not serialized in a socket packet
+///   Note: node name is only considered for database storage and convenience, it is not serialized in a socket packet
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct ClientData {
     pub run_id: i32,
