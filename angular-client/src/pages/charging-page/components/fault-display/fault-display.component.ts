@@ -39,12 +39,16 @@ export default class FaultDisplay {
     });
   }
 
-  // Takes in a string (which should be an integer) representing the storage value of a fault, and the faults name.
-  // If the string is 0 their is no fault, anything else means there was a fault.
-  // (this is check is required because the storage service still takes information from the server even if a fault hasn't happened, requiring
-  // us to ensure that change to the storage value was actually a fault)
-  faultPushCheck(addFault: string, faultName: string) {
-    if (parseInt(addFault) !== 0) {
+  //
+  /**
+   * Takes in a string (which should have an integer value) representing the storage value of the fault, and the faults name.
+   * If the string is 0 their is no fault, anything else means there was a fault, and the fault is pushed to the faults array,
+   * with the given name and the current time.
+   * @param faultValue an string with an integer value, 0 means no fault, anything else means there was a fault.
+   * @param faultName the name of the fault, to be displayed.
+   */
+  faultPushCheck(faultValue: string, faultName: string) {
+    if (parseInt(faultValue) !== 0) {
       this.faults.push({ faultName, time: new Date().toLocaleTimeString() });
     }
   }
