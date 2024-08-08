@@ -3,6 +3,7 @@ import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllNodes } from 'src/api/node.api';
+import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -23,6 +24,9 @@ export default class GraphPage implements OnInit {
 
   run?: Run;
 
+  allRuns!: Run[];
+  runsIsLoading = true;
+
   previousDataType?: DataType;
 
   selectedDataType: Subject<DataType> = new Subject<DataType>();
@@ -41,6 +45,23 @@ export default class GraphPage implements OnInit {
 
   ngOnInit(): void {
     this.queryNodes();
+
+    const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns());
+    runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+      this.runsIsLoading = isLoading;
+    });
+    runsQueryResponse.error.subscribe((error: Error) => {
+      this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
+    runsQueryResponse.data.subscribe((data: Run[]) => {
+      this.allRuns = data;
+    });
+
+    this.clearDataType = () => {
+      if (this.subscription) this.subscription.unsubscribe();
+      this.selectedDataType.next({ name: '', unit: '' });
+      this.selectedDataTypeValuesSubject.next([]);
+    };
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
@@ -99,6 +120,18 @@ export default class GraphPage implements OnInit {
     this.selectedDataTypeValuesError = undefined;
   };
 
+  onSetRealtime = () => {
+    const currentRunId = this.storage.getCurrentRunId().value;
+    if (currentRunId) {
+      this.run = this.allRuns.find((run) => run.id === currentRunId);
+      this.realTime = true;
+      this.selectedDataTypeValuesSubject.next([]);
+      this.selectedDataTypeValuesIsLoading = false;
+      this.selectedDataTypeValuesIsError = false;
+      this.selectedDataTypeValuesError = undefined;
+    }
+  };
+
   /**
    * Queries the nodes from the server.
    */
@@ -121,4 +154,6 @@ export default class GraphPage implements OnInit {
    * @param dataType The data type to set.
    */
   setSelectedDataType!: (dataType: DataType) => void;
+
+  clearDataType!: () => void;
 }

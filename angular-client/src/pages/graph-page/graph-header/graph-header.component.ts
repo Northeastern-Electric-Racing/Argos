@@ -11,4 +11,12 @@ import { Component, Input } from '@angular/core';
 })
 export default class GraphHeader {
   @Input() runId?: number;
+
+  time = new Date();
+
+  ngOnInit() {
+    setInterval(() => {
+      this.time = new Date();
+    }, 1000);
+  }
 }

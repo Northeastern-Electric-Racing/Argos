@@ -14,12 +14,7 @@
         [dropDown]="true"
       />
       <div *ngIf="node.dataTypesAreVisible" class="subcontainer" @toggleCardExpand>
-        <sidebar-card
-          *ngFor="let dataType of node.dataTypes"
-          [title]="dataType.name"
-          [subtitle]="dataType.unit"
-          (click)="selectDataType(dataType)"
-        />
+        <sidebar-card *ngFor="let dataType of node.dataTypes" [title]="dataType.name" (click)="selectDataType(dataType)" />
       </div>
     </div>
   </div>

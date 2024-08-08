@@ -12,8 +12,9 @@ import { Component, Input, OnInit } from '@angular/core';
 })
 export default class SidebarCard implements OnInit {
   @Input() title!: string;
-  @Input() subtitle?: string;
   @Input() dropDown?: boolean;
+  @Input() open?: boolean;
+  @Input() dataValue?: string;
   iconId!: string;
 
   ngOnInit(): void {

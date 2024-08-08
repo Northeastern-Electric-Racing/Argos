@@ -1,10 +1,17 @@
 <header>
   <div header-left class="header-left">
-    <a routerLink="/">
-      <typography variant="large-header" content="ARGOS" />
-    </a>
+    <sidebar-toggle style="margin-top: 18px" />
+    <typography
+      variant="large-header"
+      additionalStyles="margin-top: 10px; margin-left: 15px; margin-bottom: 0px"
+      [content]="time | date: 'HH:mm:ss'"
+    />
   </div>
   <div header-right>
-    <typography variant="large-header" [content]="!runId ? 'Real Time' : 'Run #' + runId" />
+    <typography
+      variant="large-header"
+      additionalStyles="margin-top: 10px; margin-bottom: 0px"
+      [content]="!runId ? 'Real Time' : 'Run #' + runId"
+    />
   </div>
 </header>

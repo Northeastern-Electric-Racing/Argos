@@ -8,7 +8,7 @@ import LandingPage from 'src/pages/landing-page/landing-page.component';
 import ChargingPage from 'src/pages/charging-page/charging-page.component';
 import ChargingPageMobile from 'src/pages/charging-page/charging-page-mobile/charging-page-mobile.component';
 import GraphSidebar from 'src/pages/graph-page/graph-sidebar/graph-sidebar.component';
-import SidebarCard from 'src/components/sidebar-card/sidebar-card.component';
+import SidebarCard from 'src/pages/graph-page/graph-sidebar/sidebar-card/sidebar-card.component';
 import AppContext from './context/app-context.component';
 import GraphPage from 'src/pages/graph-page/graph-page.component';
 import Typography from 'src/components/typography/typography.component';
@@ -19,7 +19,7 @@ import GraphHeader from 'src/pages/graph-page/graph-header/graph-header.componen
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { CircularPercentageComponent } from 'src/components/circular-percentage/circular-percentage.component';
 import MoreDetails from 'src/components/more-details/more-details.component';
-import { RunSelector } from 'src/components/run-selector/run-selector.component';
+import { RunSelector } from 'src/pages/graph-page/graph-caption/run-selector/run-selector.component';
 import { Carousel } from 'src/components/carousel/carousel.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import GraphInfo from 'src/pages/graph-page/graph-caption/graph-caption.component';
@@ -59,7 +59,6 @@ import ConnectionDisplay from 'src/components/connection-display/connection-disp
 import SpeedDisplay from 'src/components/speed-display/speed-display.component';
 import SpeedOverTimeDisplay from 'src/components/speed-over-time-display/speed-over-time-display.component';
 import TorqueDisplay from 'src/components/torque-display/torque-display.component';
-import TransmissionDisplay from 'src/components/transmission-display/transmission-display.component';
 import MapInfoDisplay from 'src/components/map-info-display/map-info-display.component';
 import AccelerationOverTimeDisplay from 'src/components/acceleration-over-time-display/acceleration-over-time-display.component';
 import BrakePressureDisplay from 'src/components/brake-pressure-display/brake-pressure-display.component';
@@ -71,6 +70,12 @@ import MotorInfo from 'src/components/motor-info/motor-info.component';
 import LandingPageMobile from 'src/pages/landing-page/landing-page-mobile/landing-page-mobile.component';
 import RaspberryPiDesktop from 'src/components/raspberry-pi/raspberry-pi-desktop-content/raspberry-pi-desktop.component';
 import RaspberryPiMobile from 'src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { ReactiveFormsModule } from '@angular/forms';
+import { NodeFilterPipe } from 'src/utils/pipes/node-filter-pipe';
+import { DataTypeFilterPipe } from 'src/utils/pipes/data-type-filter-pipe';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
 import BatteryInfoDesktop from 'src/pages/charging-page/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
@@ -138,7 +143,6 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     SpeedDisplay,
     SpeedOverTimeDisplay,
     TorqueDisplay,
-    TransmissionDisplay,
     MapInfoDisplay,
     AccelerationOverTimeDisplay,
     BrakePressureDisplay,
@@ -153,6 +157,8 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     RaspberryPiMobile,
     BatteryInfoDesktop,
     BatteryInfoMobile,
+    NodeFilterPipe,
+    DataTypeFilterPipe,
     BatteryStatusDisplay,
     StateOfChargeDisplay,
     PackTemp,
@@ -186,7 +192,11 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     ButtonModule,
     HttpClientModule,
     MatIconModule,
-    SidebarModule
+    SidebarModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatInputModule,
+    ReactiveFormsModule
   ],
   providers: [DialogService, MessageService],
   bootstrap: [AppContext]
@@ -196,9 +206,45 @@ export class AppModule {
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer
   ) {
-    this.matIconRegistry.addSvgIcon(
-      'steering_wheel',
-      this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/search_hands_free.svg')
-    );
+    this.matIconRegistry
+      .addSvgIcon(
+        'steering_wheel',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search_hands_free.svg')
+      )
+      .addSvgIcon('wifi', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/wifi.svg'))
+      .addSvgIcon('speed', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/speed.svg'))
+      .addSvgIcon('person', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/person.svg'))
+      .addSvgIcon('eye', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/eye_tracking.svg'))
+      .addSvgIcon('timelapse', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/timelapse.svg'))
+      .addSvgIcon('cell_tower', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/cell_tower.svg'))
+      .addSvgIcon('map', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/map.svg'))
+      .addSvgIcon('360', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/360.svg'))
+      .addSvgIcon('electric_car', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/electric_car.svg'))
+      .addSvgIcon('memory', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/memory.svg'))
+      .addSvgIcon('back_hand', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/back_hand.svg'))
+      .addSvgIcon(
+        'battery_charging_full',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_full.svg')
+      )
+      .addSvgIcon('menu', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/menu.svg'))
+      .addSvgIcon('home', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/home.svg'))
+      .addSvgIcon('bar_chart', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bar_chart.svg'))
+      .addSvgIcon('search', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search.svg'))
+      .addSvgIcon('arrow_right', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/arrow_right.svg'))
+      .addSvgIcon('ev_station', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/ev_station.svg'))
+      .addSvgIcon(
+        'device_thermostat',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/device_thermostat.svg')
+      )
+      .addSvgIcon('electric_meter', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/electric_meter.svg'))
+      .addSvgIcon('warning', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/warning.svg'))
+      .addSvgIcon(
+        'electrical_services',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/electrical_services.svg')
+      )
+      .addSvgIcon('thermostat', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/thermostat.svg'))
+      .addSvgIcon('model_training', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/model_training.svg'))
+      .addSvgIcon('quickreply', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/quickreply.svg'))
+      .addSvgIcon('bolt', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bolt.svg'));
   }
 }
