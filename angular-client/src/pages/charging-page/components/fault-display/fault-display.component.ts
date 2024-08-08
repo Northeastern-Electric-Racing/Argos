@@ -50,9 +50,9 @@ export default class FaultDisplay {
   addFault(faultValue: string, faultName: string) {
     if (parseInt(faultValue) !== 0) {
       if (this.faults.length >= 50) {
-        this.faults.shift();
+        this.faults.pop();
       }
-      this.faults.push({ faultName, time: new Date().toLocaleTimeString() });
+      this.faults.unshift({ faultName, time: new Date().toLocaleTimeString() });
     }
   }
 }
