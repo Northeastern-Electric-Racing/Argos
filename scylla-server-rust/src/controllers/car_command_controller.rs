@@ -33,7 +33,9 @@ pub async fn send_config(
     );
     // disable scylla if not prod, as there will be None mqtt client
     let Some(client) = client else {
-        return Err(ScyllaError::NotProd);
+        return Err(ScyllaError::NotProd(
+            "Car config sending is disabled in mock mode!".to_string(),
+        ));
     };
 
     // create a payload object of the values to be parsed by calypso into a CAN packet
@@ -43,7 +45,9 @@ pub async fn send_config(
         payload.data = data;
     }
     let Ok(bytes) = payload.write_to_bytes() else {
-        return Err(ScyllaError::ImpossibleEncoding);
+        return Err(ScyllaError::ImpossibleEncoding(
+            "Payload could not be written!".to_string(),
+        ));
     };
 
     // publish the message to the topic that calypso's encoder is susbcribed to
@@ -57,7 +61,9 @@ pub async fn send_config(
         .await
     {
         warn!("Could not publish instruction: {}", err);
-        return Err(ScyllaError::CommFailure);
+        return Err(ScyllaError::CommFailure(
+            "Siren publish for instruction failed!".to_string(),
+        ));
     }
 
     Ok(())
