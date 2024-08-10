@@ -1,6 +1,30 @@
 .background {
-  width: 200px;
+  width: 28vw;
+  margin-left: 30px;
+  max-height: 80vh;
+  margin-top: 10px;
+}
+
+.topic-list {
+  height: calc(80vh - 36px);
+  overflow-y: scroll;
+}
+
+.search-block {
+  right: 0;
+  background: #323232;
   margin-left: 16px;
-  height: 80%;
-  overflow: scroll;
+  width: 26vw;
+  border-radius: 30px;
+
+  .search-control {
+    width: calc(26vw - 42px);
+    font-size: 20px;
+    border: 0;
+    outline: none;
+    background: #323232;
+    color: #808080;
+    padding-left: 4px;
+    font-family: 'Roboto';
+  }
 }

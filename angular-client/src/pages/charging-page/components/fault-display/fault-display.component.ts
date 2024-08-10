@@ -19,33 +19,40 @@ export default class FaultDisplay {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.COMM_TIMEOUT_FAULT).subscribe((value) => {
-      this.faultPushCheck(value.values[0], 'Comm Timeout');
+      this.addFault(value.values[0], 'Comm Timeout');
     });
 
     this.storage.get(IdentifierDataType.HARDWARE_FAILURE_FAULT).subscribe((value) => {
-      this.faultPushCheck(value.values[0], 'Hardware Failure');
+      this.addFault(value.values[0], 'Hardware Failure');
     });
 
     this.storage.get(IdentifierDataType.OVER_TEMP_FAULT).subscribe((value) => {
-      this.faultPushCheck(value.values[0], 'Over Temp');
+      this.addFault(value.values[0], 'Over Temp');
     });
 
     this.storage.get(IdentifierDataType.VOLTAGE_WRONG_FAULT).subscribe((value) => {
-      this.faultPushCheck(value.values[0], 'Voltage Wrong');
+      this.addFault(value.values[0], 'Voltage Wrong');
     });
 
     this.storage.get(IdentifierDataType.WRONG_BAT_CONNECT_FAULT).subscribe((value) => {
-      this.faultPushCheck(value.values[0], 'Wrong Battery Connect');
+      this.addFault(value.values[0], 'Wrong Battery Connect');
     });
   }
 
-  // Takes in a string (which should be an integer) representing the storage value of a fault, and the faults name.
-  // If the string is 0 their is no fault, anything else means there was a fault.
-  // (this is check is required because the storage service still takes information from the server even if a fault hasn't happened, requiring
-  // us to ensure that change to the storage value was actually a fault)
-  faultPushCheck(addFault: string, faultName: string) {
-    if (parseInt(addFault) !== 0) {
-      this.faults.push({ faultName, time: new Date().toLocaleTimeString() });
+  //
+  /**
+   * Adds the fault name, with the current time to the faults array, if the faultValue is NOT 0.
+   * Shifts through the fault array to keep only the most recent 50 faults.
+   *
+   * @param faultValue an string with an integer value.
+   * @param faultName the name of the fault, to be displayed.
+   */
+  addFault(faultValue: string, faultName: string) {
+    if (parseInt(faultValue) !== 0) {
+      if (this.faults.length >= 50) {
+        this.faults.pop();
+      }
+      this.faults.unshift({ faultName, time: new Date().toLocaleTimeString() });
     }
   }
 }

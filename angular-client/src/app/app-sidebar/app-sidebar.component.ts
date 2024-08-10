@@ -22,7 +22,6 @@ export default class AppSidebar implements OnInit {
   }
 
   navigateTo(path: string) {
-    console.log('navigation');
     this.router.navigate([path]);
   }
 }

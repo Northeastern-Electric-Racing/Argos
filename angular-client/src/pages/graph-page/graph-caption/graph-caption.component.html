@@ -1,20 +1,46 @@
-<div class="info-container">
-  <div class="left-info">
-    <div *ngIf="dataTypeName && dataTypeUnit; else elseBlock">
-      <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
-      <typography variant="subheader" [content]="value + ' ' + dataTypeUnit" />
+<div class="caption-container">
+  <div class="info-container">
+    <div class="left-info">
+      <div *ngIf="dataTypeName; else elseBlock">
+        <div>
+          <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
+          <typography
+            variant="large-secondary-header"
+            [content]="value + ' ' + dataTypeUnit"
+            additionalStyles="margin: 6px 0px 0px 0px"
+          />
+        </div>
+      </div>
+      <ng-template #elseBlock>
+        <typography variant="large-header" content="No Data Selected" additionalStyles="margin: 12px 0px" />
+      </ng-template>
     </div>
-    <ng-template #elseBlock>
-      <typography variant="large-header" content="No Data Selected" />
-    </ng-template>
+    <div class="right-info">
+      <div class="driver-info">
+        <typography variant="header" [content]="run?.driverName ?? 'No Driver Selected'" />
+      </div>
+      <div class="system-info">
+        <typography variant="subheader" [content]="run?.systemName ?? 'No System Selected'" />
+        <typography variant="subheader" [content]="run?.locationName ?? 'No Location Selected'" />
+      </div>
+    </div>
   </div>
-  <div class="right-info">
-    <div class="driver-info">
-      <typography variant="header" [content]="currentDriver ?? 'No Driver Selected'" />
+  <div class="buttons-container">
+    <run-selector [selectRun]="onRunSelected" />
+    <argos-button
+      [onClick]="onClearDataType"
+      label="Clear Data Type"
+      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+    ></argos-button>
+    <div *ngIf="run; else otherBlock">
+      <argos-button
+        [onClick]="onSetRealtime"
+        label="Realtime"
+        additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+      ></argos-button>
     </div>
-    <div class="system-info">
-      <typography variant="subheader" [content]="currentSystem ?? 'No System Selected'" />
-      <typography variant="subheader" [content]="currentLocation ?? 'No Location Selected'" />
-    </div>
+    <ng-template #otherBlock>
+      <div style="width: 140px; height: 45px"></div>
+    </ng-template>
   </div>
 </div>

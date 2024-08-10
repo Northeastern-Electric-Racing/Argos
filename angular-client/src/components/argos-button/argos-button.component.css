@@ -3,12 +3,11 @@
   border: none;
   color: white;
   border-radius: 12px;
-  padding: 2px 20px;
+  padding: 2px 0px;
   text-align: center;
   text-decoration: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  height: 50px;
-  margin-bottom: 16px;
   display: inline-block;
+  font-weight: bold;
 }

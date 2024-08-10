@@ -1,5 +1,7 @@
 .header-left {
-  margin-left: 50px;
+  margin-left: 0px;
+  display: flex;
+  flex-direction: row;
 }
 
 a {

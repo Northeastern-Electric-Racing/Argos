@@ -26,7 +26,6 @@
     "@angular/platform-browser": "^16.2.0",
     "@angular/platform-browser-dynamic": "^16.2.0",
     "@angular/router": "^16.2.0",
-    "@fontsource/material-icons": "^5.0.18",
     "@types/mapbox-gl": "^2.7.19",
     "apexcharts": "^3.44.0",
     "mapbox-gl": "^3.1.0",
