@@ -17,19 +17,20 @@ pub struct ConfigRequest {
     pub data: Option<Vec<f32>>,
 }
 
-/// This controller recieves two peices of info: the key from the path, and the list of float values from the query params
-/// The key is used in accordance with the calypso specification: a command_data object is sent over siren to CALYPSO_BIDIR_CMD_PREFIX/<key>
-/// That command_data object is processed and matched via the key to a YAML specification for the encoding and sending of a CAN message.
-/// If the data is invalid, too short, etc. the default feild from the YAML is instead sent, as with when the car initially turns on before argos connects.
-/// TLDR: This triggers a command <key> with the values <data_query.0.data> for calypso to update the CAN packet sent to the bus.
-pub async fn send_config(
+/// Sends a configuration to the car over MQTT
+/// * `key` - The key of the configuration, as defined in the cangen YAML
+/// * `data_query` - The data of the configuration, a URI query list of data=<f32>.  If empty or too short, filled with cangen YAMl defaults
+/// * `client` - The MQTT client to be used to send the data
+///
+/// More info: This follows the specification of sending a command_data object over siren to topic CALYPSO_BIDIR_CMD_PREFIX/<key>
+pub async fn send_config_command(
     Path(key): Path<String>,
-    data_query: Query<ConfigRequest>,
+    Query(data_query): Query<ConfigRequest>,
     Extension(client): Extension<Option<Arc<AsyncClient>>>,
 ) -> Result<(), ScyllaError> {
     info!(
         "Sending car config with key: {}, and values: {:?}",
-        key, data_query.0.data
+        key, data_query.data
     );
     // disable scylla if not prod, as there will be None mqtt client
     let Some(client) = client else {
@@ -38,14 +39,14 @@ pub async fn send_config(
         ));
     };
 
-    // create a payload object of the values to be parsed by calypso into a CAN packet
+    // the protobuf calypso converts into CAN
     let mut payload = CommandData::new();
-    // writing an empty protobuf is OK, that indicates to calypso that the default value should be used
-    if let Some(data) = data_query.0.data {
+    // empty "data" in the protobuf tells calypso to use the default value
+    if let Some(data) = data_query.data {
         payload.data = data;
     }
     let Ok(bytes) = payload.write_to_bytes() else {
-        return Err(ScyllaError::ImpossibleEncoding(
+        return Err(ScyllaError::InvalidEncoding(
             "Payload could not be written!".to_string(),
         ));
     };

@@ -201,7 +201,7 @@ async fn main() {
         // CONFIG
         .route(
             "/config/set/:configKey",
-            post(car_command_controller::send_config).layer(Extension(client)),
+            post(car_command_controller::send_config_command).layer(Extension(client)),
         )
         // for CORS handling
         .layer(

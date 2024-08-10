@@ -9,11 +9,12 @@ use prisma_client_rust::{
 use tracing::warn;
 
 pub enum ScyllaError {
+    /// Any prisma query which errors out
     PrismaError(QueryError),
     /// Not available in mock mode, which the system is in
     NotProd(String),
     /// An instruction was not encodable
-    ImpossibleEncoding(String),
+    InvalidEncoding(String),
     /// Could not communicate to car
     CommFailure(String),
     /// A query turned up empty that should not have
@@ -43,7 +44,7 @@ impl IntoResponse for ScyllaError {
                 format!("Misc query error: {}", error),
             ),
             ScyllaError::NotProd(reason) => (StatusCode::SERVICE_UNAVAILABLE, reason),
-            ScyllaError::ImpossibleEncoding(reason) => (StatusCode::UNPROCESSABLE_ENTITY, reason),
+            ScyllaError::InvalidEncoding(reason) => (StatusCode::UNPROCESSABLE_ENTITY, reason),
             ScyllaError::CommFailure(reason) => (StatusCode::BAD_GATEWAY, reason),
             ScyllaError::EmptyResult => (
                 StatusCode::NOT_FOUND,
