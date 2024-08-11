@@ -34,9 +34,8 @@ pub async fn send_config_command(
     );
     // disable scylla if not prod, as there will be None mqtt client
     let Some(client) = client else {
-        return Err(ScyllaError::NotProd(
-            "Car config sending is disabled in mock mode!".to_string(),
-        ));
+        warn!("Cannot use config endpoint in dev mode!");
+        return Ok(())
     };
 
     // the protobuf calypso converts into CAN
