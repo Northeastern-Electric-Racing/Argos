@@ -21,7 +21,7 @@ prisma::location::select! {public_location{
 
 /// Gets all locations
 /// * `db` - The prisma client to make the call to
-/// returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the QueryError propogated by the db
 pub async fn get_all_locations(db: &Database) -> Result<Vec<public_location::Data>, QueryError> {
     db.location()
         .find_many(vec![])
@@ -37,7 +37,7 @@ pub async fn get_all_locations(db: &Database) -> Result<Vec<public_location::Dat
 /// * `longitude` - The longitude of the location
 /// * `radius` - The radius of the locations bounds
 /// * `run_id` - The run at the location, must already exist!
-/// returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the QueryError propogated by the db
 pub async fn upsert_location(
     db: &Database,
     name: String,

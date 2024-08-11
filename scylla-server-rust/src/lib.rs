@@ -8,6 +8,7 @@ pub mod transformers;
 #[allow(warnings)]
 pub mod prisma;
 
+pub mod command_data;
 pub mod serverdata;
 
 /// The type descriptor of the database passed to the middlelayer through axum state
