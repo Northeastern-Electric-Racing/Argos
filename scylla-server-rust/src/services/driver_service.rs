@@ -18,7 +18,7 @@ prisma::driver::select! { public_driver{
 
 /// Gets all drivers
 /// * `db` - The prisma client to make the call to
-/// returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the QueryError propogated by the db
 pub async fn get_all_drivers(db: &Database) -> Result<Vec<public_driver::Data>, QueryError> {
     db.driver()
         .find_many(vec![])
@@ -31,7 +31,7 @@ pub async fn get_all_drivers(db: &Database) -> Result<Vec<public_driver::Data>, 
 /// * `db` - The prisma client to make the call to
 /// * `driver_name` - The name of the driver to upsert
 /// * `run_id` - The id of the run to link to the driver, must already exist!
-/// returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the QueryError propogated by the db
 pub async fn upsert_driver(
     db: &Database,
     driver_name: String,

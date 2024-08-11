@@ -25,7 +25,7 @@ pub async fn get_run_by_id(
     let run_data = run_service::get_run_by_id(&db, run_id).await?;
 
     if run_data.is_none() {
-        return Err(ScyllaError::NotFound);
+        return Err(ScyllaError::EmptyResult);
     }
 
     let run_data_safe = run_data.unwrap();
