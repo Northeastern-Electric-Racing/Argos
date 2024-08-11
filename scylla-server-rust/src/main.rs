@@ -7,9 +7,12 @@ use axum::{
 };
 use clap::Parser;
 use prisma_client_rust::chrono;
+use rumqttc::v5::AsyncClient;
 use scylla_server_rust::{
     controllers::{
-        self, data_type_controller, driver_controller, location_controller, node_controller,
+        self,
+        car_command_controller::{self},
+        data_type_controller, driver_controller, location_controller, node_controller,
         run_controller, system_controller,
     },
     prisma::PrismaClient,
@@ -55,7 +58,12 @@ struct ScyllaArgs {
     siren_host_url: String,
 
     /// The time, in seconds between collection for a batch upsert
-    #[arg(short = 't', long, env = "SCYLLA_BATCH_UPSERT_TIME", default_value = "10")]
+    #[arg(
+        short = 't',
+        long,
+        env = "SCYLLA_BATCH_UPSERT_TIME",
+        default_value = "10"
+    )]
     batch_upsert_time: u64,
 }
 
@@ -138,11 +146,12 @@ async fn main() {
         token.clone(),
     ));
 
-    // if PROD_SCYLLA=false
-    if !cli.prod {
+    // if PROD_SCYLLA=false, also procur a client for use in the config state
+    let client: Option<Arc<AsyncClient>> = if !cli.prod {
         info!("Running processor in mock mode, no data will be stored");
         let recv = MockProcessor::new(io);
         tokio::spawn(recv.generate_mock());
+        None
     } else {
         // creates the initial run
         let curr_run = run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis())
@@ -153,15 +162,18 @@ async fn main() {
         // run prod if this isnt present
         // create and spawn the mqtt processor
         info!("Running processor in MQTT (production) mode");
-        let recv = MqttProcessor::new(
+        let (recv, opts) = MqttProcessor::new(
             mqtt_send,
             new_run_receive,
             cli.siren_host_url,
             curr_run.id,
             io,
         );
-        tokio::spawn(recv.process_mqtt());
-    }
+        let (client, eventloop) = AsyncClient::new(opts, 600);
+        let client_sharable: Arc<AsyncClient> = Arc::new(client);
+        tokio::spawn(recv.process_mqtt(client_sharable.clone(), eventloop));
+        Some(client_sharable)
+    };
 
     let app = Router::new()
         // DATA ROUTES
@@ -186,6 +198,11 @@ async fn main() {
         )
         // SYSTEMS
         .route("/systems", get(system_controller::get_all_systems))
+        // CONFIG
+        .route(
+            "/config/set/:configKey",
+            post(car_command_controller::send_config_command).layer(Extension(client)),
+        )
         // for CORS handling
         .layer(
             CorsLayer::new()

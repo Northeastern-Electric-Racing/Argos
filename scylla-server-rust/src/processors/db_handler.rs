@@ -112,7 +112,7 @@ impl DbHandler {
     /// It uses the queue from data queue to insert to the database specified
     /// On cancellation, will await one final queue message to cleanup anything remaining in the channel
     pub async fn batching_loop(
-        mut data_queue: Receiver<Vec<ClientData>>,
+        mut batch_queue: Receiver<Vec<ClientData>>,
         database: Database,
         saturate_batches: bool,
         cancel_token: CancellationToken,
@@ -120,22 +120,18 @@ impl DbHandler {
         loop {
             tokio::select! {
                 _ = cancel_token.cancelled() => {
-                    loop {
-                        info!("{} batches remaining!", data_queue.len());
-                        if let  Some(final_msgs) = data_queue.recv().await {
-                        info!(
-                            "A cleanup batch uploaded: {:?}",
-                            data_service::add_many(&database, final_msgs).await
-                        );
-                    } else {
-                     info!("No more messages to cleanup.");
-                     break;
+                    // cleanup all remaining messages if batches start backing up
+                    while let Some(final_msgs) = batch_queue.recv().await {
+                        info!("{} batches remaining!", batch_queue.len()+1);
+                    info!(
+                        "A cleanup batch uploaded: {:?}",
+                        data_service::add_many(&database, final_msgs).await
+                    );
                     }
-
-                }
-                break;
+                    info!("No more messages to cleanup.");
+                    break;
                 },
-                Some(msgs) = data_queue.recv() => {
+                Some(msgs) = batch_queue.recv() => {
                     if saturate_batches {
                         let shared_db = database.clone();
                         tokio::spawn(async move {
@@ -146,8 +142,8 @@ impl DbHandler {
                     }
                     debug!(
                         "DB send: {} of {}",
-                        data_queue.len(),
-                        data_queue.max_capacity()
+                        batch_queue.len(),
+                        batch_queue.max_capacity()
                     );
                 }
             }
