@@ -5,12 +5,13 @@
       <ng-container *ngFor="let fault of faults; index as i">
         <div
           [style]="
-            i % 2 == 0
+            (i % 2 == 0) === faultsShifted
               ? 'background-color: #d4760b	; width: 100%; border-radius: 2px'
               : 'background-color: #4d453c; width: 100%; border-radius: 2px'
           "
         >
-          <typography variant="info-subtitle" [content]="fault.faultName"></typography>
+          <typography variant="info-subtitle" [content]="fault.type" additionalStyles="font-weight: bold;"></typography>
+          <typography variant="info-subtitle" [content]="fault.name"></typography>
           <typography variant="info-subtitle" [content]="fault.time"></typography>
         </div>
         <div style="height: 2px"></div>

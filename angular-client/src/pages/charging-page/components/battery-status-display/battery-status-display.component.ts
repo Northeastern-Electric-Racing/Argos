@@ -13,7 +13,7 @@ export default class BatteryStatusDisplay {
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.storage.get(IdentifierDataType.STATUS).subscribe((value) => {
+    this.storage.get(IdentifierDataType.STATUS_BALANCING).subscribe((value) => {
       this.isBalancing = floatPipe(value.values[0]) === 1;
     });
   }

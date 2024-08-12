@@ -24,8 +24,8 @@ enum BMS_FAULTS_TYPES {
 }
 
 enum FaultType {
-  BMS,
-  Charger
+  BMS = 'BMS',
+  Charger = 'Charger'
 }
 
 @Component({
@@ -34,7 +34,8 @@ enum FaultType {
   styleUrls: ['./fault-display.component.css']
 })
 export default class FaultDisplay {
-  faults: { faultName: string; time: string }[] = [];
+  faults: { type: string; name: string; time: string }[] = [];
+  faultsShifted: boolean = false;
   resetButton = {
     onClick: () => {
       this.faults.shift();
@@ -90,7 +91,9 @@ export default class FaultDisplay {
       if (this.faults.length >= 50) {
         this.faults.pop();
       }
-      this.faults.unshift({ faultName, time: new Date().toLocaleTimeString() });
+      this.faultsShifted = !this.faultsShifted;
+
+      this.faults.unshift({ type: faultType, name: faultName, time: new Date().toLocaleTimeString() });
     }
   }
 
