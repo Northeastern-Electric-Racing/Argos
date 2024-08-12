@@ -37,17 +37,17 @@ export default class Graph implements OnInit {
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
-  series: ApexAxisChartSeries = [
-    {
-      name: 'Data Series',
-      data: []
-    }
-  ];
+  data: Map<number, number> = new Map();
 
   updateChart = () => {
-    if (this.previousDataLength !== this.series[0].data.length) {
-      this.previousDataLength = this.series[0].data.length;
-      this.chart.updateSeries(this.series);
+    if (this.previousDataLength !== Array.from(this.data).length) {
+      this.previousDataLength = Array.from(this.data).length;
+      this.chart.updateSeries([
+        {
+          name: 'Data Series',
+          data: Array.from(this.data)
+        }
+      ]);
     }
     setTimeout(() => {
       this.updateChart();
@@ -56,16 +56,11 @@ export default class Graph implements OnInit {
 
   ngOnInit(): void {
     this.valuesSubject.subscribe((values: GraphData[]) => {
-      const mappedValues = values.map((value: GraphData) => {
-        return { x: convertUTCtoLocal(value.x), y: +value.y.toFixed(3) };
-      });
-      const newSeries = [
-        {
-          name: 'Data Series',
-          data: mappedValues
+      values.forEach((value) => {
+        if (!this.data.has(convertUTCtoLocal(value.x))) {
+          this.data.set(convertUTCtoLocal(value.x), +value.y.toFixed(3));
         }
-      ];
-      this.series = newSeries;
+      });
     });
 
     const chartContainer = document.getElementById('chart-container');
@@ -103,7 +98,7 @@ export default class Graph implements OnInit {
       xaxis: {
         type: 'datetime',
         tickAmount: 6,
-        range: 50000,
+        range: 120000,
         labels: {
           style: {
             colors: '#fff'
