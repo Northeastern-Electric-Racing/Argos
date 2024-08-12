@@ -51,12 +51,14 @@ export default class Graph implements OnInit {
     }
     setTimeout(() => {
       this.updateChart();
-    }, 1000);
+    }, 800);
   };
 
   ngOnInit(): void {
     this.valuesSubject.subscribe((values: GraphData[]) => {
-      const mappedValues = values.map((value: GraphData) => [convertUTCtoLocal(value.x), +value.y.toFixed(3)]);
+      const mappedValues = values.map((value: GraphData) => {
+        return { x: convertUTCtoLocal(value.x), y: +value.y.toFixed(3) };
+      });
       const newSeries = [
         {
           name: 'Data Series',
@@ -73,9 +75,9 @@ export default class Graph implements OnInit {
     }
 
     this.options = {
-      series: [],
+      series: [{ data: [] }],
       chart: {
-        id: 'graph',
+        id: 'realtime',
         type: 'line',
         height: '100%',
         zoom: {
@@ -101,6 +103,7 @@ export default class Graph implements OnInit {
       xaxis: {
         type: 'datetime',
         tickAmount: 6,
+        range: 50000,
         labels: {
           style: {
             colors: '#fff'
