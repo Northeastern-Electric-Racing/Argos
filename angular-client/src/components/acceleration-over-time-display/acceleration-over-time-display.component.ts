@@ -10,16 +10,12 @@ import { GraphData } from 'src/utils/types.utils';
 })
 export default class AccelerationOverTimeDisplay {
   data: GraphData[] = [];
-  maxDataPoints = 100;
 
   constructor(private storage: Storage) {}
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.ACCELERATION).subscribe((value) => {
       this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-      if (this.data.length > 100) {
-        this.data.shift();
-      }
     });
   }
 }

@@ -72,7 +72,7 @@ export default class Graph implements OnInit {
     this.options = {
       series: [{ data: [] }],
       chart: {
-        id: 'realtime',
+        id: 'graph',
         type: 'line',
         height: '100%',
         zoom: {
