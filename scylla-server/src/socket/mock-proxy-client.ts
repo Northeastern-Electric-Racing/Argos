@@ -32,7 +32,7 @@ const baseMockData: MockData[] = [
     max: 100
   },
   {
-    name: DataType.STATUS,
+    name: DataType.STATUS_BALANCING,
     unit: Unit.BINARY,
     vals: [0],
     min: 0,
@@ -227,6 +227,13 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 1
+  },
+  {
+    name: DataType.BMS_FAULTS,
+    unit: Unit.HEX,
+    vals: [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072],
+    min: 0,
+    max: 131072
   }
 ];
 
