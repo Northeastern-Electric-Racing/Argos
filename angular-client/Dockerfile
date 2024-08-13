@@ -21,7 +21,7 @@ RUN echo "export const environment = {" > src/environment/environment.ts \
     && echo "  }" >> src/environment/environment.ts \
     && echo "};" >> src/environment/environment.ts
 
-RUN npm run build
+RUN npm run build:production
 
 # Use official nginx image as the base image
 FROM nginx:latest as Production
