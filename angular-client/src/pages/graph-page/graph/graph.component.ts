@@ -1,21 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import * as ApexCharts from 'apexcharts';
-import {
-  ApexAxisChartSeries,
-  ApexXAxis,
-  ApexDataLabels,
-  ApexChart,
-  ApexMarkers,
-  ApexGrid,
-  ApexTooltip,
-  ApexFill
-} from 'ng-apexcharts';
+import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
 import { convertUTCtoLocal } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
-  series: ApexAxisChartSeries;
   chart: ApexChart;
   xaxis: ApexXAxis;
   yaxis: ApexYAxis;
@@ -32,12 +22,14 @@ type ChartOptions = {
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css']
 })
-export default class Graph implements OnInit {
+export default class Graph implements OnChanges {
   @Input() valuesSubject!: BehaviorSubject<GraphData[]>;
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
-  data: Map<number, number> = new Map();
+  data!: Map<number, number>;
+  timeDiffMs: number = 0;
+  isSliding: boolean = false;
 
   updateChart = () => {
     if (this.previousDataLength !== Array.from(this.data).length) {
@@ -48,6 +40,17 @@ export default class Graph implements OnInit {
           data: Array.from(this.data)
         }
       ]);
+
+      if (!this.isSliding && this.timeDiffMs > 120000) {
+        this.isSliding = true;
+        this.chart.updateOptions({
+          ...this.options,
+          xaxis: {
+            ...this.options.xaxis,
+            range: 120000
+          }
+        });
+      }
     }
     setTimeout(() => {
       this.updateChart();
@@ -55,12 +58,18 @@ export default class Graph implements OnInit {
   };
 
   ngOnInit(): void {
+    this.data = new Map();
     this.valuesSubject.subscribe((values: GraphData[]) => {
       values.forEach((value) => {
         if (!this.data.has(convertUTCtoLocal(value.x))) {
           this.data.set(convertUTCtoLocal(value.x), +value.y.toFixed(3));
         }
       });
+
+      if (!this.isSliding) {
+        const times = Array.from(this.data.keys());
+        this.timeDiffMs = times[times.length - 1] - times[0];
+      }
     });
 
     const chartContainer = document.getElementById('chart-container');
@@ -70,7 +79,6 @@ export default class Graph implements OnInit {
     }
 
     this.options = {
-      series: [{ data: [] }],
       chart: {
         id: 'graph',
         type: 'line',
@@ -98,7 +106,6 @@ export default class Graph implements OnInit {
       xaxis: {
         type: 'datetime',
         tickAmount: 6,
-        range: 120000,
         labels: {
           style: {
             colors: '#fff'
@@ -134,10 +141,28 @@ export default class Graph implements OnInit {
 
     // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
-      this.chart = new ApexCharts(chartContainer, this.options);
+      this.chart = new ApexCharts(chartContainer, { series: [{ data: [] }], ...this.options });
 
       this.chart.render();
       this.updateChart();
     }, 0);
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.data = new Map();
+    this.isSliding = false;
+
+    this.valuesSubject.subscribe((values: GraphData[]) => {
+      values.forEach((value) => {
+        if (!this.data.has(convertUTCtoLocal(value.x))) {
+          this.data.set(convertUTCtoLocal(value.x), +value.y.toFixed(3));
+        }
+      });
+
+      if (!this.isSliding) {
+        const times = Array.from(this.data.keys());
+        this.timeDiffMs = times[times.length - 1] - times[0];
+      }
+    });
   }
 }
