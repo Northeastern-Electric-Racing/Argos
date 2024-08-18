@@ -5,11 +5,11 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
 import { floatPipe } from 'src/utils/pipes.utils';
 
 @Component({
-  selector: 'battery-status-display',
-  templateUrl: './battery-status-display.component.html',
-  styleUrls: ['./battery-status-display.component.css']
+  selector: 'balancing-status',
+  templateUrl: './balancing-status.component.html',
+  styleUrls: ['./balancing-status.component.css']
 })
-export default class BatteryStatusDisplay {
+export default class BalancingStatus {
   isBalancing: boolean = false;
   constructor(private storage: Storage) {}
 
@@ -24,6 +24,6 @@ export default class BatteryStatusDisplay {
   }
 
   getStatusColor(isBalancing: boolean) {
-    return isBalancing ? 'green' : Theme.infoBackground;
+    return isBalancing ? 'blue' : Theme.infoBackground;
   }
 }

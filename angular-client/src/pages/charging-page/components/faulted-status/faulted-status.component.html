@@ -1,11 +1,11 @@
-<info-background title="CHARGING">
+<info-background title="FAULTED">
   <hstack>
     <current-total-timer style="padding-left: 20px; min-height: 100px" />
     <div style="padding-top: 40px">
       <div
         class="connection-dot"
-        [style.background-color]="getStateColor(isCharging)"
-        [style.border-color]="isCharging ? getStateColor(isCharging) : 'white'"
+        [style.background-color]="getStatusColor(isFaulted)"
+        [style.border-color]="isFaulted ? getStatusColor(isFaulted) : 'white'"
       ></div>
     </div>
   </hstack>

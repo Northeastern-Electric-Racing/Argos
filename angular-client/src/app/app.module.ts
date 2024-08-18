@@ -95,6 +95,11 @@ import PackVoltageDisplay from 'src/pages/charging-page/components/pack-voltage/
 import ChargingStateComponent from 'src/pages/charging-page/components/charging-state/charging-state.component';
 import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
 import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
+import StartingSocTimer from 'src/pages/charging-page/components/starting-soc/starting-soc-timer.component';
+import CurrentTotalTimer from 'src/components/current-total-timer/current-total-timer.component';
+import BalancingStatus from 'src/pages/charging-page/components/balancing-status/balancing-status.component';
+import FaultedStatus from 'src/pages/charging-page/components/faulted-status/faulted-status.component';
+import ActiveStatus from 'src/pages/charging-page/components/active-status/active-status.component';
 
 @NgModule({
   declarations: [
@@ -173,7 +178,12 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     HighLowCellGraph,
     PackVoltageGraph,
     PackVoltageDisplay,
-    ChargingStateComponent
+    ChargingStateComponent,
+    StartingSocTimer,
+    CurrentTotalTimer,
+    BalancingStatus,
+    FaultedStatus,
+    ActiveStatus
   ],
   imports: [
     BrowserModule,
@@ -245,6 +255,7 @@ export class AppModule {
       .addSvgIcon('thermostat', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/thermostat.svg'))
       .addSvgIcon('model_training', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/model_training.svg'))
       .addSvgIcon('quickreply', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/quickreply.svg'))
-      .addSvgIcon('bolt', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bolt.svg'));
+      .addSvgIcon('bolt', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bolt.svg'))
+      .addSvgIcon('timer', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/timer.svg'));
   }
 }

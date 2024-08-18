@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import Storage from 'src/services/storage.service';
+import Theme from 'src/services/theme.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { floatPipe } from 'src/utils/pipes.utils';
 
@@ -16,18 +17,8 @@ export default class ChargingStateComponent {
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.startTimer();
     this.storage.get(IdentifierDataType.CHARGING).subscribe((value) => {
-      const newChargingState = floatPipe(value.values[0]) === 1;
-
-      if (this.isCharging !== newChargingState) {
-        this.resetTimer();
-        if (newChargingState) {
-          this.startTimer();
-        }
-      }
-
-      this.isCharging = newChargingState;
+      this.isCharging = floatPipe(value.values[0]) === 1;
     });
   }
 
@@ -36,23 +27,6 @@ export default class ChargingStateComponent {
   }
 
   getStateColor(isCharging: boolean) {
-    return isCharging ? 'green' : 'red';
-  }
-
-  startTimer() {
-    this.timerInterval = setInterval(() => {
-      this.timer++;
-    }, 1000);
-  }
-
-  resetTimer() {
-    clearInterval(this.timerInterval);
-    this.timer = 0;
-  }
-
-  getTimerInfo() {
-    const minutes = Math.floor(this.timer / 60);
-    const seconds = this.timer % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return isCharging ? 'yellow' : Theme.infoBackground;
   }
 }
