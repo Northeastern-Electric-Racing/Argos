@@ -1,0 +1,6 @@
+.image-container {
+  /* background-image: url(../../assets/images/NERO.jpeg); */
+  background-size: cover;
+  background-position: center;
+  height: 100%;
+}
