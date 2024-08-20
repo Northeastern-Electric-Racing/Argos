@@ -1,8 +1,8 @@
 <info-background svgIcon="timer" title="Timer">
   <div style="display: flex; justify-content: center; align-items: center; height: 80%; padding-top: 20px">
-    <vstack spacing="20px" style="padding-left: 20px">
+    <vstack spacing="10px" style="padding-left: 20px">
       <hstack>
-        <typography variant="info-subtitle" content="CURRENT:" />
+        <typography variant="info-subtitle" content="CURRENT:" additionalStyles="fontSize:15px" />
         <typography
           variant="info-subtitle"
           [content]="getCurrentTime()"
@@ -10,7 +10,7 @@
         />
       </hstack>
       <hstack spacing="42px">
-        <typography variant="info-subtitle" content="TOTAL:" />
+        <typography variant="info-subtitle" content="TOTAL:" additionalStyles="fontSize:15px" />
         <typography
           variant="info-subtitle"
           [content]="getTotalTime()"

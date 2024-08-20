@@ -1,9 +1,9 @@
-<info-background title="State of Charge" svgIcon="battery_charging_full">
+<info-background title="SOC" svgIcon="battery_charging_full">
   <hstack>
-    <battery-percentage [percentage]="stateOfCharge" [height]="60" [width]="30" />
+    <battery-percentage [percentage]="stateOfCharge" [height]="50" [width]="25" />
     <div class="battery-display-body">
-      <typography variant="info-value" [content]="stateOfCharge.toString()" />
-      <typography variant="info-unit" content="%" />
+      <typography variant="info-value" [content]="stateOfCharge.toString()" additionalStyles="fontSize:40px" />
+      <typography variant="info-unit" content="%" additionalStyles="fontSize:20px" />
     </div>
   </hstack>
 </info-background>

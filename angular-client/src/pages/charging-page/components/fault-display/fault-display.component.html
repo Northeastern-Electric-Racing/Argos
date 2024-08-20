@@ -1,5 +1,5 @@
 <info-background title="Faults" svgIcon="warning" [button]="resetButton">
-  <div style="min-width: 20vw; padding-right: 30px; padding-left: 0px" class="fault-text-body">
+  <div style="width: 100%; padding-right: 5px; padding-left: 0px" class="fault-text-body">
     <vstack style="width: 100%">
       <div style="height: 10px"></div>
       <ng-container *ngFor="let fault of faults; index as i">
@@ -10,9 +10,24 @@
               : 'background-color: #4d453c; width: 100%; border-radius: 2px'
           "
         >
-          <typography variant="info-subtitle" [content]="fault.type" additionalStyles="font-weight: bold;"></typography>
-          <typography variant="info-subtitle" [content]="fault.name"></typography>
-          <typography variant="info-subtitle" [content]="fault.time"></typography>
+          <hstack>
+            <typography
+              variant="info-subtitle"
+              [content]="fault.type"
+              style="width: 33%; height: 40px; padding-top: 10px"
+            ></typography>
+            <typography
+              variant="info-subtitle"
+              [content]="fault.name"
+              additionalStyles="font-weight: bold;"
+              style="width: 33%; height: 40px; padding-top: 10px; width: 350px"
+            ></typography>
+            <typography
+              variant="info-subtitle"
+              [content]="fault.time"
+              style="width: 33%; height: 40px; padding-top: 10px"
+            ></typography>
+          </hstack>
         </div>
         <div style="height: 2px"></div>
       </ng-container>

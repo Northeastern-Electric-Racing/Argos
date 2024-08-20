@@ -1,13 +1,15 @@
 <info-background svgIcon="quickreply" title="Status">
   <div style="display: flex; justify-content: left; align-items: flex-start; height: 80%">
-    <vstack style="padding-top: 30px" align="start">
-      <active-status />
-      <divider style="width: 250px" />
-      <charging-state />
-      <divider style="width: 250px" />
-      <balancing-status />
-      <divider style="width: 250px" />
-      <faulted-status />
-    </vstack>
+    <hstack>
+      <vstack>
+        <active-status />
+        <faulted-status />
+      </vstack>
+      <divider style="height: 300px" />
+      <vstack>
+        <charging-state />
+        <balancing-status />
+      </vstack>
+    </hstack>
   </div>
 </info-background>
