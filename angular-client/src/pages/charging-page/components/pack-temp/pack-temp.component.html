@@ -1,8 +1,8 @@
 <info-background title="Pack Temp" svgIcon="device_thermostat">
   <hstack>
-    <typography variant="info-value" [content]="packTemp.toString() + '°'" additionalStyles="fontSize:40px" />
     <div class="thermometer-container">
       <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />
     </div>
+    <typography variant="info-value" [content]="packTemp.toString() + '°'" additionalStyles="fontSize:40px" />
   </hstack>
 </info-background>
