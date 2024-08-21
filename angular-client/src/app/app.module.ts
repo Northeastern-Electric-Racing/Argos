@@ -92,7 +92,7 @@ import HighLowCellDisplay from 'src/pages/charging-page/components/high-low-cell
 import HighLowCellGraph from 'src/pages/charging-page/components/high-low-cell/high-low-cell-graph/high-low-cell-graph.component';
 import PackVoltageGraph from 'src/pages/charging-page/components/pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
 import PackVoltageDisplay from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
-import ChargingStateComponent from 'src/pages/charging-page/components/charging-state/charging-state.component';
+import ChargingStatusComponent from 'src/pages/charging-page/components/charging-state/charging-status.component';
 import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
 import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
 import StartingSocTimer from 'src/pages/charging-page/components/starting-soc/starting-soc-timer.component';
@@ -178,7 +178,7 @@ import ActiveStatus from 'src/pages/charging-page/components/active-status/activ
     HighLowCellGraph,
     PackVoltageGraph,
     PackVoltageDisplay,
-    ChargingStateComponent,
+    ChargingStatusComponent,
     StartingSocTimer,
     CurrentTotalTimer,
     BalancingStatus,

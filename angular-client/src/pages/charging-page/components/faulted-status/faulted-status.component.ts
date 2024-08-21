@@ -11,12 +11,39 @@ import { floatPipe } from 'src/utils/pipes.utils';
 })
 export default class FaultedStatus {
   isFaulted: boolean = false;
+  currentSeconds: number = 0;
+  totalSeconds: number = 0;
+  intervalId!: NodeJS.Timeout;
   constructor(private storage: Storage) {}
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.BMS_MODE).subscribe((value) => {
-      this.isFaulted = floatPipe(value.values[0]) === 3;
+      if (this.isFaulted) {
+        if (!(floatPipe(value.values[0]) === 3)) {
+          this.isFaulted = false;
+          this.stopTimer();
+          this.resetCurrentSecs();
+        }
+      } else if (floatPipe(value.values[0]) === 3) {
+        this.isFaulted = true;
+        this.startTimer();
+      }
     });
+  }
+
+  startTimer() {
+    this.intervalId = setInterval(() => {
+      this.currentSeconds++;
+      this.totalSeconds++;
+    }, 1000);
+  }
+
+  stopTimer() {
+    clearInterval(this.intervalId);
+  }
+
+  resetCurrentSecs() {
+    this.currentSeconds = 0;
   }
 
   getStatusColor(isFaulted: boolean) {

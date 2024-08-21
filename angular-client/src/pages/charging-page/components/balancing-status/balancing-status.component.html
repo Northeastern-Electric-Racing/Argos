@@ -1,6 +1,10 @@
 <info-background title="BALANCING">
   <hstack>
-    <current-total-timer style="padding-left: 20px; min-height: 100px" />
+    <current-total-timer
+      style="padding-left: 20px; min-height: 100px"
+      [currentTime]="currentSeconds"
+      [totalTime]="totalSeconds"
+    />
     <div style="padding-top: 40px">
       <div
         class="connection-dot"

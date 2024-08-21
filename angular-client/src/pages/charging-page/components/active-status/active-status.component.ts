@@ -11,14 +11,40 @@ import { floatPipe } from 'src/utils/pipes.utils';
 })
 export default class ActiveStatus {
   isActive: boolean = false;
+  currentSeconds: number = 0;
+  totalSeconds: number = 0;
+  intervalId!: NodeJS.Timeout;
   constructor(private storage: Storage) {}
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.BMS_MODE).subscribe((value) => {
-      this.isActive = floatPipe(value.values[0]) === 2;
+      if (this.isActive) {
+        if (!(floatPipe(value.values[0]) === 2)) {
+          this.isActive = false;
+          this.stopTimer();
+          this.resetCurrentSecs();
+        }
+      } else if (floatPipe(value.values[0]) === 2) {
+        this.isActive = true;
+        this.startTimer();
+      }
     });
   }
 
+  startTimer() {
+    this.intervalId = setInterval(() => {
+      this.currentSeconds++;
+      this.totalSeconds++;
+    }, 1000);
+  }
+
+  stopTimer() {
+    clearInterval(this.intervalId);
+  }
+
+  resetCurrentSecs() {
+    this.currentSeconds = 0;
+  }
   getStatusColor(isActive: boolean) {
     return isActive ? 'green' : Theme.infoBackground;
   }

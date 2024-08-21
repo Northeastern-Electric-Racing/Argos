@@ -1,6 +1,10 @@
 <info-background title="ACTIVE">
   <hstack>
-    <current-total-timer style="padding-left: 20px; min-height: 100px" [currentTime]="8" [totalTime]="8" />
+    <current-total-timer
+      style="padding-left: 20px; min-height: 100px"
+      [currentTime]="currentSeconds"
+      [totalTime]="totalSeconds"
+    />
     <div style="padding-top: 40px">
       <div
         class="connection-dot"

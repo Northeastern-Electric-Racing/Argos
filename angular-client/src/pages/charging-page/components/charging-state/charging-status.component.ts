@@ -5,27 +5,28 @@ import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type'
 import { floatPipe } from 'src/utils/pipes.utils';
 
 @Component({
-  selector: 'balancing-status',
-  templateUrl: './balancing-status.component.html',
-  styleUrls: ['./balancing-status.component.css']
+  selector: 'charging-status',
+  templateUrl: './charging-status.component.html',
+  styleUrls: ['./charging-status.component.css']
 })
-export default class BalancingStatus {
-  isBalancing: boolean = false;
+export default class ChargingStatusComponent {
+  isCharging: boolean = false;
   currentSeconds: number = 0;
   totalSeconds: number = 0;
   intervalId!: NodeJS.Timeout;
+
   constructor(private storage: Storage) {}
 
   ngOnInit() {
-    this.storage.get(IdentifierDataType.STATUS_BALANCING).subscribe((value) => {
-      if (this.isBalancing) {
+    this.storage.get(IdentifierDataType.CHARGING).subscribe((value) => {
+      if (this.isCharging) {
         if (!(floatPipe(value.values[0]) === 1)) {
-          this.isBalancing = false;
+          this.isCharging = false;
           this.stopTimer();
           this.resetCurrentSecs();
         }
       } else if (floatPipe(value.values[0]) === 1) {
-        this.isBalancing = true;
+        this.isCharging = true;
         this.startTimer();
       }
     });
@@ -46,11 +47,11 @@ export default class BalancingStatus {
     this.currentSeconds = 0;
   }
 
-  getBatteryStatus(connected: boolean) {
-    return connected ? 'BALANCING' : 'NOT BALANCING';
+  getChargingState(connected: boolean) {
+    return connected ? 'PAUSED' : 'NOT PAUSED';
   }
 
-  getStatusColor(isBalancing: boolean) {
-    return isBalancing ? 'blue' : Theme.infoBackground;
+  getStateColor(isCharging: boolean) {
+    return isCharging ? 'yellow' : Theme.infoBackground;
   }
 }
