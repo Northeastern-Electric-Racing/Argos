@@ -41,15 +41,6 @@ export class AccelerationGraphs implements OnInit {
         y: y1
       });
 
-      //limits the data storage to 400 to prevent lag
-      if (this.xData.length > this.maxDataPoints) {
-        this.xData = this.xData.slice(1);
-      }
-
-      if (this.yData.length > this.maxDataPoints) {
-        this.yData = this.yData.slice(1);
-      }
-
       //checks if there is a new max
       this.xMax = Math.max(Math.abs(x1), this.xMax);
       this.yMax = Math.max(Math.abs(y1), this.yMax);
