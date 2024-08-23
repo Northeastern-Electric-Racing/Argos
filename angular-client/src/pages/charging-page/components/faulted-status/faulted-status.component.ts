@@ -12,7 +12,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
 export default class FaultedStatus {
   isFaulted: boolean = false;
   currentSeconds: number = 0;
-  totalSeconds: number = Number(localStorage.getItem('faulted total seconds')) || 0;
+  totalSeconds: number = Number(sessionStorage.getItem('faulted total seconds')) || 0;
   intervalId!: NodeJS.Timeout;
   constructor(private storage: Storage) {}
 
@@ -35,7 +35,7 @@ export default class FaultedStatus {
     this.intervalId = setInterval(() => {
       this.currentSeconds++;
       this.totalSeconds++;
-      localStorage.setItem('faulted total seconds', this.totalSeconds.toString());
+      sessionStorage.setItem('faulted total seconds', this.totalSeconds.toString());
     }, 1000);
   }
 

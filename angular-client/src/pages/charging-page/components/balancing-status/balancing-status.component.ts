@@ -12,7 +12,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
 export default class BalancingStatus {
   isBalancing: boolean = false;
   currentSeconds: number = 0;
-  totalSeconds: number = Number(localStorage.getItem('balancing total seconds')) || 0;
+  totalSeconds: number = Number(sessionStorage.getItem('balancing total seconds')) || 0;
   intervalId!: NodeJS.Timeout;
   constructor(private storage: Storage) {}
 
@@ -35,7 +35,7 @@ export default class BalancingStatus {
     this.intervalId = setInterval(() => {
       this.currentSeconds++;
       this.totalSeconds++;
-      localStorage.setItem('balancing total seconds', this.totalSeconds.toString());
+      sessionStorage.setItem('balancing total seconds', this.totalSeconds.toString());
     }, 1000);
   }
 
