@@ -6,7 +6,13 @@
       <typography variant="info-title" content="{{ title }}" />
     </div>
     <div *ngIf="button">
-      <mat-icon *ngIf="button" aria-hidden="false" (click)="button.onClick()" [fontIcon]="button.icon"></mat-icon>
+      <mat-icon
+        *ngIf="button"
+        aria-hidden="false"
+        (click)="button.onClick()"
+        [fontIcon]="button.icon"
+        style="position: relative; z-index: 10"
+      ></mat-icon>
     </div>
   </div>
   <typography
