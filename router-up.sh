@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./scylla.sh router up -d
+./argos.sh router up -d
