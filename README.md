@@ -9,17 +9,15 @@ To initialize the odyssey submodule run `git submodule update --init`
 Setup angular-client and scylla-server:
 
 [Angular Client](./angular-client/README.md)\
-[Scylla Server](./scylla-server/README.md)
+[Scylla Server](./scylla-server-rust/README.md)
 
-Once you've sucessfully setup Scylla and the Client, you can either run them separately, or run the following command to run them concurrently (the outputs from both will be output to the same terminal):
-
-`npm run start`
+Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the docker commands below to run them together.
 
 ## Production
 
 ### Quick start shortcuts
 
-The `scylla.sh` can be used on POSIX compliant OSes to quickly get up and running without worrying about profiles.  Its syntax is `./scylla.sh <profile> <cmd>` where profile could be router, tpu, scylla-dev, or client-dev and the cmd is the normal argument passed into docker compose, such as `up -d` to start the process and fork to background.  **Make sure to `down` with the same profile that you used `up` with!**
+The `argos.sh` can be used on POSIX compliant OSes to quickly get up and running without worrying about profiles.  Its syntax is `./argos.sh <profile> <cmd>` where profile could be router, tpu, scylla-dev, or client-dev and the cmd is the normal argument passed into docker compose, such as `up -d` to start the process and fork to background.  **Make sure to `down` with the same profile that you used `up` with!**
 
 ### Customizing and more info
 
