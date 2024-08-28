@@ -1,8 +1,9 @@
 .github
 .vscode
 
-docker-compose.yml
-docker-compose-dev.yml
+# ignore docker, etc
+*.yml
+
 .eslintrc.js
 tsconfig.json
 
