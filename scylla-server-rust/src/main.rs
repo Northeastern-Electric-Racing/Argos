@@ -168,10 +168,11 @@ async fn main() {
             cli.siren_host_url,
             curr_run.id,
             io,
+            token.clone(),
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
         let client_sharable: Arc<AsyncClient> = Arc::new(client);
-        tokio::spawn(recv.process_mqtt(client_sharable.clone(), eventloop));
+        task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop));
         Some(client_sharable)
     };
 

@@ -35,7 +35,7 @@ pub async fn send_config_command(
     // disable scylla if not prod, as there will be None mqtt client
     let Some(client) = client else {
         warn!("Cannot use config endpoint in dev mode!");
-        return Ok(())
+        return Ok(());
     };
 
     // the protobuf calypso converts into CAN

@@ -10,6 +10,7 @@ use rumqttc::v5::{
 };
 use socketioxide::SocketIo;
 use tokio::sync::mpsc::{Receiver, Sender};
+use tokio_util::sync::CancellationToken;
 use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{
@@ -25,6 +26,7 @@ pub struct MqttProcessor {
     new_run_channel: Receiver<run_service::public_run::Data>,
     curr_run: i32,
     io: SocketIo,
+    cancel_token: CancellationToken,
 }
 
 impl MqttProcessor {
@@ -33,14 +35,15 @@ impl MqttProcessor {
     /// * `mqtt_path` - The mqtt URI, including port, (without the mqtt://) to subscribe to
     /// * `db` - The database to store the data in
     /// * `io` - The socketio layer to send the data to
-    ///
-    /// Returns the instance and options to create a client, which is then used in the process_mqtt loop
+    /// * `cancel_token` - The token which indicates cancellation of the task
+    ///     Returns the instance and options to create a client, which is then used in the process_mqtt loop
     pub fn new(
         channel: Sender<ClientData>,
         new_run_channel: Receiver<run_service::public_run::Data>,
         mqtt_path: String,
         initial_run: i32,
         io: SocketIo,
+        cancel_token: CancellationToken,
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
@@ -75,6 +78,7 @@ impl MqttProcessor {
                 new_run_channel,
                 curr_run: initial_run,
                 io,
+                cancel_token,
             },
             mqtt_opts,
         )
@@ -98,6 +102,10 @@ impl MqttProcessor {
         loop {
             #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
+                _ = self.cancel_token.cancelled() => {
+                    debug!("Shutting down MQTT processor!");
+                    break;
+                },
                 msg = eventloop.poll() => match msg {
                     Ok(Event::Incoming(Packet::Publish(msg))) => {
                         trace!("Received mqtt message: {:?}", msg);
@@ -235,7 +243,7 @@ impl MqttProcessor {
     /// * `client_data` - The client data to send over the broadcast
     async fn send_db_msg(&self, client_data: ClientData) {
         if let Err(err) = self.channel.send(client_data.clone()).await {
-            warn!("Error sending through channel: {:?}", err)
+            warn!("Error sending through channel: {:?}", err);
         }
     }
 
