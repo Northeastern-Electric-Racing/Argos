@@ -12,8 +12,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     cpu_shares: 1024
-    mem_limit: 3gb
-    stop_grace_period: 1m
+    stop_grace_period: 2m
 
   scylla-server-rust:
     container_name: scylla-server-rust
@@ -31,8 +30,7 @@ services:
         - SCYLLA_PROD=true
         - RUST_LOG=warn,scylla_server_rust=info # default log setting for docker
     cpu_shares: 1024
-    mem_limit: 2gb
-    stop_grace_period: 10s
+    stop_grace_period: 2m
     stop_signal: SIGINT
     init: true
     entrypoint: ["./docker_run.sh"]

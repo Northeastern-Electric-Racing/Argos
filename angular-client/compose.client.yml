@@ -14,4 +14,3 @@ services:
     ports:
       - 80:80
     cpu_shares: 512
-    mem_limit: 1gb
