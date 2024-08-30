@@ -11,5 +11,4 @@ services:
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
     cpu_shares: 2048
-    mem_limit: 2gb
     oom_kill_disable: true
