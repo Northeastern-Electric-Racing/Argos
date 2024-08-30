@@ -128,6 +128,7 @@ export class DoubleLineGraphComponent implements OnInit {
       xaxis: {
         type: 'category',
         tickAmount: 2,
+        range: 120000,
         labels: {
           show: true,
           style: {
