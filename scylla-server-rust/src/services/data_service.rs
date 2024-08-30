@@ -60,6 +60,11 @@ pub async fn add_data(
         .await
 }
 
+
+/// Adds many datapoints via a batch insert
+/// * `db` - The prisma client to make the call to
+/// * `client_data` - A list of data to batch insert
+///   returns: A result containing the number of rows inserted or the QueryError propogated by the db
 pub async fn add_many(db: &Database, client_data: Vec<ClientData>) -> Result<i64, QueryError> {
     db.data()
         .create_many(
