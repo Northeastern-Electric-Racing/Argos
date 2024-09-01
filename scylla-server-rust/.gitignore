@@ -23,3 +23,6 @@ prisma.rs
 # protobuf
 serverdata.rs
 command_data.rs
+
+# the db
+dev.db
