@@ -186,7 +186,7 @@ impl MqttProcessor {
 
         // look at data after topic as if we dont have a topic the protobuf is useless anyways
         let data = serverdata::ServerData::parse_from_bytes(&msg.payload)
-            .map_err(|f| format!("Could not parse message topic:{:?} error: {}", msg.topic, f))?;
+            .map_err(|f| format!("Could not parse message payload:{:?} error: {}", msg.topic, f))?;
 
         // get the node and datatype from the topic extracted at the beginning
         let node = split.0;
