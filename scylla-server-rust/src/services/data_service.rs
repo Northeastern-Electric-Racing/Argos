@@ -42,24 +42,23 @@ pub async fn add_data(
 ) -> Result<public_data::Data, QueryError> {
     db.data()
         .create(
+            client_data
+                .values
+                .first()
+                .unwrap()
+                .parse::<f64>()
+                .unwrap_or_default(),
             prisma::data_type::name::equals(client_data.name),
             DateTime::from_timestamp_millis(client_data.timestamp)
                 .expect("Could not parse timestamp")
                 .fixed_offset(),
             prisma::run::id::equals(client_data.run_id),
-            vec![prisma::data::values::set(
-                client_data
-                    .values
-                    .iter()
-                    .map(|f| f.parse::<f64>().unwrap_or_default())
-                    .collect(),
-            )],
+            vec![],
         )
         .select(public_data::select())
         .exec()
         .await
 }
-
 
 /// Adds many datapoints via a batch insert
 /// * `db` - The prisma client to make the call to
@@ -72,17 +71,13 @@ pub async fn add_many(db: &Database, client_data: Vec<ClientData>) -> Result<i64
                 .iter()
                 .map(|f| {
                     prisma::data::create_unchecked(
+                        f.values.first().unwrap().parse::<f64>().unwrap_or_default(),
                         f.name.to_string(),
                         DateTime::from_timestamp_millis(f.timestamp)
                             .expect("Could not parse timestamp")
                             .fixed_offset(),
                         f.run_id,
-                        vec![prisma::data::values::set(
-                            f.values
-                                .iter()
-                                .map(|f| f.parse::<f64>().unwrap_or_default())
-                                .collect(),
-                        )],
+                        vec![],
                     )
                 })
                 .collect(),

@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("SOURCE_DATABASE_URL")
+    provider = "sqlite"
+    url = "file:dev.db"
 }
 
 model run {
@@ -17,7 +17,7 @@ model run {
     systemName   String?
     system       system?   @relation(fields: [systemName], references: [name])
     data         data[]
-    time         DateTime  @db.Timestamptz()
+    time         DateTime
 }
 
 model location {
@@ -40,10 +40,10 @@ model system {
 
 model data {
     id           String   @default(uuid())
-    values       Float[]
+    values       Float
     dataTypeName String
     dataType     dataType @relation(fields: [dataTypeName], references: [name])
-    time         DateTime @db.Timestamptz()
+    time         DateTime
     runId        Int
     run          run      @relation(fields: [runId], references: [id])
 

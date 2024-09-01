@@ -13,7 +13,7 @@ pub struct PublicData {
 impl From<&data_service::public_data::Data> for PublicData {
     fn from(value: &data_service::public_data::Data) -> Self {
         PublicData {
-            values: value.values.iter().map(f64::to_string).collect(),
+            values: vec![f64::to_string(&value.values)],
             time: value.time.timestamp_millis(),
         }
     }

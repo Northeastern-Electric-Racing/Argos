@@ -5,7 +5,7 @@ edition = "2021"
 default-run = "scylla-server-rust"
 
 [dependencies]
-prisma-client-rust = {git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", default-features = false,features = ["postgresql", "migrations"] }
+prisma-client-rust = {git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", default-features = false,features = ["sqlite", "sqlite-create-many", "migrations"] }
 serde = "1.0.203"
 protobuf-codegen = "3.3.0"
 protobuf = "3.3.0"
