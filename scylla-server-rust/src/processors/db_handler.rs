@@ -150,6 +150,24 @@ impl DbHandler {
         }
     }
 
+    /// A batching loop that consumes messages but does not upload anything
+    pub async fn fake_batching_loop(
+        mut batch_queue: Receiver<Vec<ClientData>>,
+        cancel_token: CancellationToken,
+    ) {
+        loop {
+            tokio::select! {
+                _ = cancel_token.cancelled() => {
+                    warn!("Cancelling fake upload with {} batches left in queue!", batch_queue.len());
+                    break;
+                },
+                Some(msgs) = batch_queue.recv() => {
+                    warn!("NOT UPLOADING {} MESSAGES", msgs.len());
+                },
+            }
+        }
+    }
+
     #[instrument(level = Level::DEBUG, skip(msg))]
     async fn batch_upload(msg: Vec<ClientData>, db: &Database) {
         match data_service::add_many(db, msg).await {

@@ -45,6 +45,10 @@ struct ScyllaArgs {
     #[arg(short = 's', long, env = "SCYLLA_SATURATE_BATCH")]
     saturate_batch: bool,
 
+    /// Whether to disable batch data uploading (will not disable upsertion of special types)
+    #[arg(long, env = "SCYLLA_DATA_UPLOAD_DISABLE")]
+    disable_data_upload: bool,
+
     // /// Whether to enable the socket io server in Scylla
     // #[arg(short, long, env = "SCYLLA_SOCKET")]
     // socket: bool,
@@ -138,13 +142,20 @@ async fn main() {
         db_handler::DbHandler::new(mqtt_receive, Arc::clone(&db), cli.batch_upsert_time * 1000)
             .handling_loop(db_send, token.clone()),
     );
-    // spawn the database inserter
-    task_tracker.spawn(db_handler::DbHandler::batching_loop(
-        db_receive,
-        Arc::clone(&db),
-        cli.saturate_batch,
-        token.clone(),
-    ));
+    // spawn the database inserter, if we have it enabled
+    if !cli.disable_data_upload {
+        task_tracker.spawn(db_handler::DbHandler::batching_loop(
+            db_receive,
+            Arc::clone(&db),
+            cli.saturate_batch,
+            token.clone(),
+        ));
+    } else {
+        task_tracker.spawn(db_handler::DbHandler::fake_batching_loop(
+            db_receive,
+            token.clone(),
+        ));
+    }
 
     // if PROD_SCYLLA=false, also procur a client for use in the config state
     let client: Option<Arc<AsyncClient>> = if !cli.prod {
