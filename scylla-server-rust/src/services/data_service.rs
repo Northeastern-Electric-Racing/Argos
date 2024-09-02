@@ -60,7 +60,6 @@ pub async fn add_data(
         .await
 }
 
-
 /// Adds many datapoints via a batch insert
 /// * `db` - The prisma client to make the call to
 /// * `client_data` - A list of data to batch insert
