@@ -27,6 +27,8 @@ pub struct MqttProcessor {
     curr_run: i32,
     io: SocketIo,
     cancel_token: CancellationToken,
+    /// Upload ratio, below is not uploaded above is uploaded
+    upload_ratio: u8,
 }
 
 impl MqttProcessor {
@@ -44,6 +46,7 @@ impl MqttProcessor {
         initial_run: i32,
         io: SocketIo,
         cancel_token: CancellationToken,
+        upload_ratio: u8,
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
@@ -79,6 +82,7 @@ impl MqttProcessor {
                 curr_run: initial_run,
                 io,
                 cancel_token,
+                upload_ratio,
             },
             mqtt_opts,
         )
@@ -92,6 +96,8 @@ impl MqttProcessor {
 
         let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<i64>::new(20);
+
+        let mut upload_counter: u8 = 0;
 
         debug!("Subscribing to siren");
         client
@@ -119,7 +125,7 @@ impl MqttProcessor {
                         };
                         latency_ringbuffer.push(chrono::offset::Utc::now().timestamp_millis() - msg.timestamp);
                         self.send_db_msg(msg.clone()).await;
-                        self.send_socket_msg(msg);
+                        self.send_socket_msg(msg, &mut upload_counter);
                     },
                     Err(msg) => trace!("Received mqtt error: {:?}", msg),
                     _ => trace!("Received misc mqtt: {:?}", msg),
@@ -135,7 +141,7 @@ impl MqttProcessor {
                         timestamp: chrono::offset::Utc::now().timestamp_millis(),
                         values: vec![sockets.len().to_string()]
                     };
-                    self.send_socket_msg(client_data);
+                    self.send_socket_msg(client_data, &mut upload_counter);
                     } else {
                         warn!("Could not fetch socket count");
                     }
@@ -157,7 +163,7 @@ impl MqttProcessor {
                         values: vec![avg_latency.to_string()]
                     };
                     trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&"n/a".to_string()));
-                    self.send_socket_msg(client_data);
+                    self.send_socket_msg(client_data, &mut upload_counter);
                 }
                 Some(new_run) = self.new_run_channel.recv() => {
                     trace!("New run: {:?}", new_run);
@@ -253,23 +259,28 @@ impl MqttProcessor {
 
     /// Sends a message to the socket, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    fn send_socket_msg(&self, client_data: ClientData) {
-        match self.io.emit(
-            "message",
-            serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
-        ) {
-            Ok(_) => (),
-            Err(err) => match err {
-                socketioxide::BroadcastError::Socket(e) => {
-                    trace!("Socket: Transmit error: {:?}", e);
-                }
-                socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err)
-                }
-                socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err)
-                }
-            },
+    fn send_socket_msg(&self, client_data: ClientData, upload_counter: &mut u8) {
+        *upload_counter = upload_counter.wrapping_add(1);
+        if *upload_counter >= self.upload_ratio {
+            match self.io.emit(
+                "message",
+                serde_json::to_string(&client_data).expect("Could not serialize ClientData"),
+            ) {
+                Ok(_) => (),
+                Err(err) => match err {
+                    socketioxide::BroadcastError::Socket(e) => {
+                        trace!("Socket: Transmit error: {:?}", e);
+                    }
+                    socketioxide::BroadcastError::Serialize(_) => {
+                        warn!("Socket: Serialize error: {}", err)
+                    }
+                    socketioxide::BroadcastError::Adapter(_) => {
+                        warn!("Socket: Adapter error: {}", err)
+                    }
+                },
+            }
+        } else {
+            trace!("Discarding message with topic {}", client_data.name);
         }
     }
 }
