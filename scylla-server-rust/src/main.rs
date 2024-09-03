@@ -69,6 +69,15 @@ struct ScyllaArgs {
         default_value = "10"
     )]
     batch_upsert_time: u64,
+
+    /// The
+    #[arg(
+        short = 'd',
+        long,
+        env = "SCYLLA_SOCKET_DISCARD_PERCENT",
+        default_value = "0"
+    )]
+    socketio_discard_percent: u8,
 }
 
 #[tokio::main]
@@ -180,6 +189,7 @@ async fn main() {
             curr_run.id,
             io,
             token.clone(),
+            ((cli.socketio_discard_percent as f32 / 100.0) * 255.0) as u8,
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
         let client_sharable: Arc<AsyncClient> = Arc::new(client);
