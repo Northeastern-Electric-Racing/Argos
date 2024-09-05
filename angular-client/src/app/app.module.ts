@@ -80,7 +80,6 @@ import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
 import BatteryInfoDesktop from 'src/pages/charging-page/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobile from 'src/pages/charging-page/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
-import BatteryStatusDisplay from 'src/pages/charging-page/components/battery-status-display/battery-status-display.component';
 import StateOfChargeDisplay from 'src/pages/charging-page/components/state-of-charge/state-of-charge-display/state-of-charge-display.component';
 import PackTemp from 'src/pages/charging-page/components/pack-temp/pack-temp.component';
 import CellTempDisplay from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-display.component';
@@ -100,6 +99,7 @@ import CurrentTotalTimer from 'src/components/current-total-timer/current-total-
 import BalancingStatus from 'src/pages/charging-page/components/balancing-status/balancing-status.component';
 import FaultedStatus from 'src/pages/charging-page/components/faulted-status/faulted-status.component';
 import ActiveStatus from 'src/pages/charging-page/components/active-status/active-status.component';
+import CombinedStatusDisplay from 'src/pages/charging-page/components/combined-status-display/combined-status-display.component';
 
 @NgModule({
   declarations: [
@@ -164,7 +164,7 @@ import ActiveStatus from 'src/pages/charging-page/components/active-status/activ
     BatteryInfoMobile,
     NodeFilterPipe,
     DataTypeFilterPipe,
-    BatteryStatusDisplay,
+    CombinedStatusDisplay,
     StateOfChargeDisplay,
     PackTemp,
     CellTempDisplay,
