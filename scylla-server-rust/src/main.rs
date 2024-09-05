@@ -70,7 +70,7 @@ struct ScyllaArgs {
     )]
     batch_upsert_time: u64,
 
-    /// The
+    /// The percent of messages discarded when sent from the socket
     #[arg(
         short = 'd',
         long,
