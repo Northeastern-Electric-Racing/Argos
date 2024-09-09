@@ -5,7 +5,7 @@ use prisma_client_rust::{bigdecimal::ToPrimitive, chrono, serde_json};
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
-    mqttbytes::v5::{LastWill, Packet, Publish},
+    mqttbytes::v5::{Packet, Publish},
     AsyncClient, Event, EventLoop, MqttOptions,
 };
 use socketioxide::SocketIo;
@@ -60,13 +60,6 @@ impl MqttProcessor {
                 .expect("Invalid Siren port"),
         );
         mqtt_opts
-            .set_last_will(LastWill::new(
-                "Scylla/Status",
-                "Scylla has disconnected!",
-                rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
-                true,
-                None,
-            ))
             .set_keep_alive(Duration::from_secs(20))
             .set_clean_start(false)
             .set_connection_timeout(3)
