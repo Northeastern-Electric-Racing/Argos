@@ -175,7 +175,9 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     PackVoltageDisplay,
     ChargingStateComponent
   ],
-  bootstrap: [AppContext], imports: [BrowserModule,
+  bootstrap: [AppContext],
+  imports: [
+    BrowserModule,
     AppRoutingModule,
     CarouselModule,
     NgApexchartsModule,
