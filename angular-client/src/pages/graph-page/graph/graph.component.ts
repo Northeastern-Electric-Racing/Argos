@@ -162,6 +162,15 @@ export default class Graph implements OnChanges {
     this.data = new Map();
     this.isSliding = false;
 
+    //set range to undefined
+    this.chart.updateOptions({
+      ...this.options,
+      xaxis: {
+        ...this.options.xaxis,
+        range: undefined
+      }
+    });
+
     this.valuesSubject.subscribe((values: GraphData[]) => {
       values.forEach((value) => {
         if (!this.data.has(value.x)) {
