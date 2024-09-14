@@ -2,7 +2,6 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import * as ApexCharts from 'apexcharts';
 import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
-import { convertUTCtoLocal } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
@@ -30,6 +29,7 @@ export default class Graph implements OnChanges {
   data!: Map<number, number>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
+  timeRangeMs = 120000;
 
   updateChart = () => {
     if (this.previousDataLength !== Array.from(this.data).length) {
@@ -41,13 +41,13 @@ export default class Graph implements OnChanges {
         }
       ]);
 
-      if (!this.isSliding && this.timeDiffMs > 120000) {
+      if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
         this.isSliding = true;
         this.chart.updateOptions({
           ...this.options,
           xaxis: {
             ...this.options.xaxis,
-            range: 120000
+            range: this.timeRangeMs
           }
         });
       }
@@ -61,8 +61,8 @@ export default class Graph implements OnChanges {
     this.data = new Map();
     this.valuesSubject.subscribe((values: GraphData[]) => {
       values.forEach((value) => {
-        if (!this.data.has(convertUTCtoLocal(value.x))) {
-          this.data.set(convertUTCtoLocal(value.x), +value.y.toFixed(3));
+        if (!this.data.has(value.x)) {
+          this.data.set(value.x, +value.y.toFixed(3));
         }
       });
 
@@ -104,11 +104,21 @@ export default class Graph implements OnChanges {
         size: 0
       },
       xaxis: {
-        type: 'datetime',
+        type: 'category',
         tickAmount: 6,
         labels: {
           style: {
             colors: '#fff'
+          },
+          formatter: (value) => {
+            return (
+              '' +
+              new Date(value).getHours() +
+              ':' +
+              ((new Date(value).getMinutes() < 10 ? '0' : '') + new Date(value).getMinutes()) +
+              ':' +
+              ((new Date(value).getSeconds() < 10 ? '0' : '') + new Date(value).getSeconds())
+            );
           }
         }
       },
@@ -152,10 +162,19 @@ export default class Graph implements OnChanges {
     this.data = new Map();
     this.isSliding = false;
 
+    //set range to undefined
+    this.chart.updateOptions({
+      ...this.options,
+      xaxis: {
+        ...this.options.xaxis,
+        range: undefined
+      }
+    });
+
     this.valuesSubject.subscribe((values: GraphData[]) => {
       values.forEach((value) => {
-        if (!this.data.has(convertUTCtoLocal(value.x))) {
-          this.data.set(convertUTCtoLocal(value.x), +value.y.toFixed(3));
+        if (!this.data.has(value.x)) {
+          this.data.set(value.x, +value.y.toFixed(3));
         }
       });
 

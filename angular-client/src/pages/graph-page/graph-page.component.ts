@@ -65,7 +65,7 @@ export default class GraphPage implements OnInit {
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
-      this.selectedDataTypeValuesSubject.next([]);
+      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphData[]>([]);
       if (this.realTime) {
         if (this.subscription) this.subscription.unsubscribe();
         const key = dataType.name;
