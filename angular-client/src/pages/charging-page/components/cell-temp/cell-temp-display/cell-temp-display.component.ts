@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -18,6 +18,13 @@ export default class CellTempDisplay {
     },
     icon: 'restart_alt'
   };
+  mobileThreshold = 1000;
+  isDesktop = window.innerWidth > this.mobileThreshold;
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.isDesktop = window.innerWidth >= this.mobileThreshold;
+  }
 
   constructor(private storage: Storage) {}
 

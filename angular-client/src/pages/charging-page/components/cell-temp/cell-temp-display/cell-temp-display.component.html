@@ -1,20 +1,34 @@
 <info-background svgIcon="thermostat" title="Cell Temp" [button]="resetGraphButton">
-  <hstack>
-    <vstack style="width: 10%; padding-bottom: 30px">
-      <typography variant="info-value" [content]="avgTemp.toString() + '°'" />
-      <typography variant="info-subtitle" content="Avg. Temp" />
-    </vstack>
+  <vstack>
+    <div *ngIf="!isDesktop" style="padding-top: 20px"></div>
+    <hstack>
+      <vstack style="width: 10%; padding-bottom: 30px">
+        <typography variant="info-value" [content]="avgTemp.toString() + '°'" />
+        <typography variant="info-subtitle" content="Avg. Temp" />
+      </vstack>
 
-    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-    <divider style="height: 100px"></divider>
+      <div *ngIf="!isDesktop" style="padding-left: 20px"></div>
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px"></divider>
+      <div *ngIf="!isDesktop" style="padding-right: 20px"></div>
 
-    <vstack style="width: 10%; padding-bottom: 30px">
-      <typography variant="info-value" [content]="maxTemp.toString() + '°'" />
-      <typography variant="info-subtitle" content="Max. Temp" />
-    </vstack>
-    <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
-    <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
-    or just don't enforce -->
-    <cell-temp-graph style="width: 85%; padding-bottom: 30px" [resetGraph]="resetGraph"></cell-temp-graph>
-  </hstack>
+      <vstack style="width: 10%; padding-bottom: 30px">
+        <typography variant="info-value" [content]="maxTemp.toString() + '°'" />
+        <typography variant="info-subtitle" content="Max. Temp" />
+      </vstack>
+      <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
+      <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
+      or just don't enforce -->
+      <cell-temp-graph
+        style="width: 85%; padding-bottom: 30px"
+        [resetGraph]="resetGraph"
+        *ngIf="isDesktop"
+      ></cell-temp-graph>
+    </hstack>
+    <cell-temp-graph
+      style="width: 100%; padding-bottom: 30px"
+      [resetGraph]="resetGraph"
+      *ngIf="!isDesktop"
+    ></cell-temp-graph>
+  </vstack>
 </info-background>

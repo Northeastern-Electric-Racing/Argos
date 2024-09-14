@@ -1,33 +1,41 @@
 <info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton">
-  <hstack spacing="30px">
-    <vstack style="width: 10%">
-      <hstack>
-        <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
-      </hstack>
-      <typography variant="info-subtitle" content="Delta" additionalStyles="fontSize:15px" />
-    </vstack>
+  <vstack>
+    <hstack spacing="30px">
+      <vstack style="width: 10%">
+        <hstack>
+          <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+        </hstack>
+        <typography variant="info-subtitle" content="Delta" additionalStyles="fontSize:15px" />
+      </vstack>
 
-    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-    <divider style="height: 100px"></divider>
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px"></divider>
 
-    <vstack style="width: 10%">
-      <typography variant="info-value" [content]="lowCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
-      <typography variant="info-subtitle" content="Low Cell" additionalStyles="fontSize:15px" />
-    </vstack>
+      <vstack style="width: 10%">
+        <typography variant="info-value" [content]="lowCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+        <typography variant="info-subtitle" content="Low Cell" additionalStyles="fontSize:15px" />
+      </vstack>
 
-    <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-    <divider style="height: 100px"></divider>
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px"></divider>
 
-    <vstack style="width: 10%">
-      <hstack>
-        <typography variant="info-value" [content]="highCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
-      </hstack>
-      <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
-    </vstack>
+      <vstack style="width: 10%">
+        <hstack>
+          <typography variant="info-value" [content]="highCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+        </hstack>
+        <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
+      </vstack>
 
-    <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
-    <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
-      or just don't enforce -->
-    <high-low-cell-graph style="width: 70%; padding-bottom: 5vh" [resetGraph]="resetGraph"> </high-low-cell-graph>
-  </hstack>
+      <!--On desktop view we don't want the graph component to be in a horizontal stack-->
+      <high-low-cell-graph style="width: 70%; padding-bottom: 5vh" [resetGraph]="resetGraph" *ngIf="isDesktop">
+      </high-low-cell-graph>
+    </hstack>
+    <!--We want the graph to be in a vertical stack-->
+    <high-low-cell-graph
+      style="width: 100%; padding-bottom: 5vh; height: 280px"
+      [resetGraph]="resetGraph"
+      *ngIf="!isDesktop"
+    >
+    </high-low-cell-graph>
+  </vstack>
 </info-background>

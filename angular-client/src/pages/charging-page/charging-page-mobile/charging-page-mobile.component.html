@@ -1,5 +1,19 @@
 <vstack style="width: 100%" spacing="20px">
-  <typography variant="xx-large-title" content="Argos"></typography>
-  <typography variant="x-large-title" [content]="time | date: 'HH:mm:ss'"></typography>
-  <typography variant="x-large-title" content="{{ time | date: 'MM/dd/yyyy' }}"></typography>
+  <typography variant="x-large-title" content="Argos"></typography>
+  <hstack>
+    <typography variant="large-header" [content]="time | date: 'HH:mm:ss'"></typography>
+    <divider style="height: 40px"></divider>
+    <typography variant="large-header" content="{{ time | date: 'MM/dd/yyyy' }}"></typography>
+  </hstack>
+  <latency-display style="padding-bottom: 20px; margin-top: -10px" />
+  <vstack style="width: 100%" spacing="15px">
+    <combined-status-mobile style="width: 80%; height: 720px" />
+    <state-of-charge-display style="width: 80%; height: 123px" />
+    <current-display style="width: 80%; height: 122px" />
+    <pack-temp style="width: 80%; height: 122px" />
+    <cell-temp-display style="width: 80%; height: 375px" />
+    <high-low-cell-display style="width: 80%; height: 400px" />
+    <pack-voltage-display style="width: 80%; height: 290px" />
+    <fault-display style="width: 80%; height: 375px" />
+  </vstack>
 </vstack>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { waitForDebugger } from 'inspector';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
@@ -18,6 +18,13 @@ export default class PackVoltageDisplay {
     },
     icon: 'restart_alt'
   };
+  mobileThreshold = 1000;
+  isDesktop = window.innerWidth > this.mobileThreshold;
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.isDesktop = window.innerWidth >= this.mobileThreshold;
+  }
 
   constructor(private storage: Storage) {}
 
