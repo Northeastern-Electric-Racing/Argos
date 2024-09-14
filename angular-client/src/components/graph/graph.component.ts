@@ -1,21 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import * as ApexCharts from 'apexcharts';
-import {
-  ApexAxisChartSeries,
-  ApexXAxis,
-  ApexDataLabels,
-  ApexChart,
-  ApexMarkers,
-  ApexGrid,
-  ApexTooltip,
-  ApexFill
-} from 'ng-apexcharts';
+import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialog } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
-  series: ApexAxisChartSeries;
   chart: ApexChart;
   xaxis: ApexXAxis;
   yaxis: ApexYAxis;
@@ -38,14 +28,12 @@ export class GraphComponent implements OnInit {
   @Input() color!: string; // Must be hex
   @Input() title?: string;
   @Input() graphContainerId!: string;
+  @Input({ required: false }) timeRangeSec!: number;
   options!: ChartOptions;
   chart!: ApexCharts;
-  series: ApexAxisChartSeries = [
-    {
-      name: this.title,
-      data: []
-    }
-  ];
+  timeDiffMs: number = 0;
+  isSliding: boolean = false;
+  timeRangeMs: number = 120000; // 2 minutes in ms
 
   constructor(public dialogService: DialogService) {}
 
@@ -61,23 +49,37 @@ export class GraphComponent implements OnInit {
   };
 
   updateChart = () => {
-    this.series[0].data = this.data;
-    this.chart.updateSeries(this.series);
+    this.chart.updateSeries([
+      {
+        name: 'Data Series',
+        data: Array.from(this.data)
+      }
+    ]);
+
+    if (!this.isSliding && this.data.length > 2) {
+      this.timeDiffMs = this.data[this.data.length - 1].x - this.data[0].x;
+    }
+
+    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
+      this.isSliding = true;
+      this.chart.updateOptions({
+        ...this.options,
+        xaxis: {
+          ...this.options.xaxis,
+          range: this.timeRangeMs
+        }
+      });
+    }
+
     setTimeout(() => {
       this.updateChart();
-    }, 1000);
+    }, 800);
   };
 
   ngOnInit(): void {
-    this.series = [
-      {
-        name: this.title,
-        data: this.data
-      }
-    ];
+    this.timeRangeMs = (this.timeRangeSec ?? 120) * 1000;
 
     this.options = {
-      series: [],
       chart: {
         id: 'graph',
         type: 'line',
@@ -116,7 +118,14 @@ export class GraphComponent implements OnInit {
             colors: '#FFFFFF'
           },
           formatter: (value) => {
-            return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
+            return (
+              '' +
+              new Date(value).getHours() +
+              ':' +
+              ((new Date(value).getMinutes() < 10 ? '0' : '') + new Date(value).getMinutes()) +
+              ':' +
+              ((new Date(value).getSeconds() < 10 ? '0' : '') + new Date(value).getSeconds())
+            );
           }
         },
         axisBorder: {
@@ -163,7 +172,7 @@ export class GraphComponent implements OnInit {
         return;
       }
 
-      this.chart = new ApexCharts(chartContainer, this.options);
+      this.chart = new ApexCharts(chartContainer, { series: [{ data: [] }], ...this.options });
 
       this.chart.render();
       this.updateChart();

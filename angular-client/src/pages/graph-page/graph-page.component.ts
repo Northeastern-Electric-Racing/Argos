@@ -60,12 +60,12 @@ export default class GraphPage implements OnInit {
     this.clearDataType = () => {
       if (this.subscription) this.subscription.unsubscribe();
       this.selectedDataType.next({ name: '', unit: '' });
-      this.selectedDataTypeValuesSubject.next([]);
+      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphData[]>([]);
     };
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
-      this.selectedDataTypeValuesSubject.next([]);
+      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphData[]>([]);
       if (this.realTime) {
         if (this.subscription) this.subscription.unsubscribe();
         const key = dataType.name;
