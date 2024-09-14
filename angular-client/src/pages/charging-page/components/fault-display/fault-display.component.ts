@@ -38,7 +38,7 @@ export default class FaultDisplay {
   faultsShifted: boolean = false;
   resetButton = {
     onClick: () => {
-      this.faults.shift();
+      this.faults = [];
     },
     icon: 'restart_alt'
   };
