@@ -198,14 +198,10 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     MatInputModule,
     ReactiveFormsModule
   ],
-  providers: [
-    DialogService,
-    MessageService,
-    provideHttpClient(withInterceptorsFromDi())
-  ]
+  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })
 export class AppModule {
-  constructor (
+  constructor(
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer
   ) {
