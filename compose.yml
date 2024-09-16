@@ -16,7 +16,7 @@ services:
 
   scylla-server:
     container_name: scylla-server
-    image: ghcr.io/northeastern-electric-racing/argos-scylla:feature-scylla-rust-server
+    image: ghcr.io/northeastern-electric-racing/argos-scylla:develop
     build:
         context: ./scylla-server
     restart: unless-stopped
