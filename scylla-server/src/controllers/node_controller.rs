@@ -5,6 +5,7 @@ use crate::{
     Database,
 };
 
+/// get a list of nodes
 pub async fn get_all_nodes(
     State(db): State<Database>,
 ) -> Result<Json<Vec<PublicNode>>, ScyllaError> {

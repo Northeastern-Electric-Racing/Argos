@@ -5,6 +5,7 @@ use crate::{
     transformers::data_type_transformer::PublicDataType, Database,
 };
 
+/// Get a list of data types
 pub async fn get_all_data_types(
     State(db): State<Database>,
 ) -> Result<Json<Vec<PublicDataType>>, ScyllaError> {

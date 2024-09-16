@@ -5,6 +5,7 @@ use crate::{
     Database,
 };
 
+/// Get a list of drivers
 pub async fn get_all_drivers(
     State(db): State<Database>,
 ) -> Result<Json<Vec<PublicDriver>>, ScyllaError> {
