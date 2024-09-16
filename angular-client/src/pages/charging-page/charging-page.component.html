@@ -3,7 +3,7 @@
 
   <charging-page-mobile style="width: 100%" *ngIf="isMobile; else isDesktop" [time]="time" />
   <ng-template #isDesktop>
-    <vstack style="width: 100%" spacing="15px">
+    <vstack style="width: 100%; min-width: 1290px" spacing="15px">
       <div style="align-self: end; width: 100%; display: flex; justify-content: space-around">
         <typography
           style="margin-bottom: -30px; margin-top: -10px"
@@ -17,19 +17,19 @@
         />
         <latency-display style="margin-bottom: -30px; margin-top: -10px" />
       </div>
-      <vstack>
-        <hstack spacing="10px">
-          <combined-status-display style="width: 625px; height: 380px" />
-          <vstack>
-            <state-of-charge-display style="width: 230px; height: 123px" />
-            <current-display style="width: 230px; height: 122px" />
-            <pack-temp style="width: 230px; height: 122px" />
+      <vstack style="width: 100%; min-width: 1290px">
+        <hstack spacing="10px" style="width: 100%; height: 50%">
+          <combined-status-display style="min-width: 620px; width: 45%; height: 380px" />
+          <vstack style="width: 15%">
+            <state-of-charge-display style="min-width: 200px; width: 100%; height: 123px" />
+            <current-display style="min-width: 200px; width: 100%; height: 122px" />
+            <pack-temp style="min-width: 200px; width: 100%; height: 122px" />
           </vstack>
-          <fault-display style="height: 380px; width: 520px" />
+          <fault-display style="height: 380px; min-width: 500px; width: 40%" />
         </hstack>
-        <cell-temp-display style="width: 1400px; height: 175px" />
-        <high-low-cell-display style="width: 1400px; height: 175px" />
-        <pack-voltage-display style="height: 175px; width: 100%" />
+        <cell-temp-display style="min-width: 1300px; width: 100%; height: 175px" />
+        <high-low-cell-display style="min-width: 1300px; width: 100%; height: 175px" />
+        <pack-voltage-display style="min-width: 1300px; width: 100%; height: 175px" />
       </vstack>
     </vstack>
   </ng-template>
