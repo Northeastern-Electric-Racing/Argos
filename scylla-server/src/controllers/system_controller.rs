@@ -5,6 +5,7 @@ use crate::{
     Database,
 };
 
+/// get a list of systems
 pub async fn get_all_systems(
     State(db): State<Database>,
 ) -> Result<Json<Vec<PublicSystem>>, ScyllaError> {

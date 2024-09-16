@@ -8,6 +8,7 @@ use crate::{
     Database,
 };
 
+/// Get all of the data points of a certain data type name and run ID
 pub async fn get_data(
     State(db): State<Database>,
     Path((data_type_name, run_id)): Path<(String, i32)>,

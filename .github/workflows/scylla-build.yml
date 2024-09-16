@@ -44,7 +44,7 @@ jobs:
       - name: Build and push Docker image for scylla server rust
         uses: docker/build-push-action@v5.4.0
         with:
-          context: ./scylla-server-rust
+          context: ./scylla-server
           push: true
           platforms: linux/arm64,linux/amd64
           tags: ${{ steps.meta.outputs.tags }}

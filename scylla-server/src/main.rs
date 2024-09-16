@@ -198,12 +198,12 @@ async fn main() {
     };
 
     let app = Router::new()
-        // DATA ROUTES
+        // DATA
         .route(
             "/data/:dataTypeName/:runId",
             get(controllers::data_controller::get_data),
         )
-        // DATA TYPE ROUTES
+        // DATA TYPE
         .route("/datatypes", get(data_type_controller::get_all_data_types))
         // DRIVERS
         .route("/drivers", get(driver_controller::get_all_drivers))
