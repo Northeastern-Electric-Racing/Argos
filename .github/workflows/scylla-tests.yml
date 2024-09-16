@@ -27,10 +27,10 @@ jobs:
         run: docker compose run -P -d odyssey-timescale
       - name: Generate prisma
         run: cargo prisma generate
-        working-directory: scylla-server-rust
+        working-directory: scylla-server
       - name: Deploy prisma
         run: cargo prisma migrate deploy
-        working-directory: scylla-server-rust
+        working-directory: scylla-server
       - name: Run tests
-        working-directory: scylla-server-rust
+        working-directory: scylla-server
         run: cargo test -- --test-threads=1

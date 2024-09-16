@@ -1,10 +1,10 @@
  services:
-    scylla-server-rust:
+    scylla-server:
         depends_on:
             - siren
         environment:
             - SCYLLA_SIREN_HOST_URL=siren:1883
-            - RUST_LOG=none,scylla_server_rust=DEBUG
+            - RUST_LOG=none,scylla_server=DEBUG
 
     client:
       extends:

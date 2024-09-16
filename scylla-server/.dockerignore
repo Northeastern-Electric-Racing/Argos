@@ -1,1 +1,31 @@
-src/odyssey-base
+# editor things
+.idea/
+.zed/
+.vscode/
+
+# misc things
+.DS_Store
+.gitignore
+*.nix
+
+# python things
+pyrightconfig.json
+__pycache__/
+
+# Added by cargo (rust things)
+/target
+build/
+dist/
+logs/
+
+# prisma
+prisma.rs
+
+# protobuf
+serverdata.rs
+
+target
+Dockerfile
+.dockerignore
+.git
+.gitignore
