@@ -8,7 +8,7 @@ use axum::{
 use clap::Parser;
 use prisma_client_rust::chrono;
 use rumqttc::v5::AsyncClient;
-use scylla_server_rust::{
+use scylla_server::{
     controllers::{
         self,
         car_command_controller::{self},

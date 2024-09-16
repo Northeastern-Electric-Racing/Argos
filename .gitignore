@@ -3,8 +3,8 @@
 
 # environment config
 **/.env
-scylla-server/src/prisma/mydatabase.db
-scylla-server/src/prisma/mydatabase.db-journal
+scylla-server-typescript/src/prisma/mydatabase.db
+scylla-server-typescript/src/prisma/mydatabase.db-journal
 
 # Xcode
 #
