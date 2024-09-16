@@ -5,6 +5,7 @@ use crate::{
     transformers::location_transformer::PublicLocation, Database,
 };
 
+/// get a list of locations
 pub async fn get_all_locations(
     State(db): State<Database>,
 ) -> Result<Json<Vec<PublicLocation>>, ScyllaError> {
