@@ -6,7 +6,7 @@ import { Component, HostListener } from '@angular/core';
   styleUrls: ['./combined-status-display.component.css']
 })
 export default class CombinedStatusDisplay {
-  mobileThreshold = 1000;
+  mobileThreshold = 1200;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   @HostListener('window:resize', ['$event'])

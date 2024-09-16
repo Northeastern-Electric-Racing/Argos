@@ -18,7 +18,7 @@ export default class PackVoltageDisplay {
     },
     icon: 'restart_alt'
   };
-  mobileThreshold = 1000;
+  mobileThreshold = 1200;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
   @HostListener('window:resize', ['$event'])

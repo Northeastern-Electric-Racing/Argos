@@ -12,7 +12,7 @@ export default class HighLowCellDisplay {
   delta: number = 0;
   lowCellVoltage: number = 0;
   highCellVoltage: number = 0;
-  mobileThreshold = 1000;
+  mobileThreshold = 1200;
   isDesktop = window.innerWidth > this.mobileThreshold;
   resetGraph: boolean = false;
   resetGraphButton = {
