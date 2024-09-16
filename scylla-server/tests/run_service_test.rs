@@ -1,5 +1,5 @@
 use prisma_client_rust::QueryError;
-use scylla_server_rust::{services::run_service, transformers::run_transformer::PublicRun};
+use scylla_server::{services::run_service, transformers::run_transformer::PublicRun};
 use test_utils::cleanup_and_prepare;
 
 #[path = "test_utils.rs"]

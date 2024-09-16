@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use prisma_client_rust::{chrono, QueryError};
-use scylla_server_rust::{
+use scylla_server::{
     prisma::PrismaClient,
     processors::ClientData,
     services::{

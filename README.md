@@ -9,7 +9,7 @@ To initialize the odyssey submodule run `git submodule update --init`
 Setup angular-client and scylla-server:
 
 [Angular Client](./angular-client/README.md)\
-[Scylla Server](./scylla-server-rust/README.md)
+[Scylla Server](./scylla-server/README.md)
 
 Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the docker commands below to run them together.
 
@@ -57,7 +57,7 @@ Using the above profiles, one can `build` the app.  Then, with correct permissio
 sudo docker login ghcr.io -u <gh username> -p <token>
 ```
 
-Now you can update the image on a remote server.  Note to save time you can just specify which service to upload, like `scylla-server-rust` or `client`.
+Now you can update the image on a remote server.  Note to save time you can just specify which service to upload, like `scylla-server` or `client`.
 ```
 sudo docker compose -f compose.yml -f compose.router.yml build && sudo docker compose -f compose.yml -f compose.router.yml push
 ```

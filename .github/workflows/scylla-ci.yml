@@ -1,4 +1,4 @@
-name: Scylla Rust CI
+name: Scylla CI
 
 on:
    push:
@@ -14,7 +14,7 @@ on:
 
 defaults:
     run:
-        working-directory: scylla-server-rust
+        working-directory: scylla-server
 
 
 jobs:

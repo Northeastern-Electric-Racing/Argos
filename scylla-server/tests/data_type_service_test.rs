@@ -2,7 +2,7 @@
 mod test_utils;
 
 use prisma_client_rust::QueryError;
-use scylla_server_rust::{
+use scylla_server::{
     prisma,
     services::{
         data_type_service::{self, public_datatype},

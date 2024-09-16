@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use prisma_client_rust::QueryError;
-use scylla_server_rust::{prisma::PrismaClient, Database};
+use scylla_server::{prisma::PrismaClient, Database};
 
 pub async fn cleanup_and_prepare() -> Result<Database, QueryError> {
     let client = Arc::new(PrismaClient::_builder().build().await.unwrap());
