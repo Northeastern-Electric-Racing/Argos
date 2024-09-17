@@ -47,7 +47,7 @@ import { GraphDialog } from 'src/components/graph-dialog/graph-dialog.component'
 import { SteeringAngleDisplay } from 'src/components/steering-angle-display/steering-angle-display.component';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import HalfGauge from 'src/components/half-gauge/half-gauge.component';
 import { Divider } from 'src/components/divider/divider';
 import { DriverComponent } from 'src/components/driver-component/driver-component';
@@ -175,6 +175,7 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     PackVoltageDisplay,
     ChargingStateComponent
   ],
+  bootstrap: [AppContext],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -190,7 +191,6 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     DynamicDialogModule,
     BrowserAnimationsModule,
     ButtonModule,
-    HttpClientModule,
     MatIconModule,
     SidebarModule,
     MatToolbarModule,
@@ -198,8 +198,7 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     MatInputModule,
     ReactiveFormsModule
   ],
-  providers: [DialogService, MessageService],
-  bootstrap: [AppContext]
+  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })
 export class AppModule {
   constructor(
