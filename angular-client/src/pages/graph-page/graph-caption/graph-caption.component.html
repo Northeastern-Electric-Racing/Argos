@@ -31,13 +31,13 @@
       [onClick]="onClearDataType"
       label="Clear Data Type"
       additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
-    ></argos-button>
+    />
     <div *ngIf="run; else otherBlock">
       <argos-button
         [onClick]="onSetRealtime"
         label="Realtime"
         additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
-      ></argos-button>
+      />
     </div>
     <ng-template #otherBlock>
       <div style="width: 140px; height: 45px"></div>
