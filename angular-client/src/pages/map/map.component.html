@@ -1,14 +1,14 @@
 <div *ngIf="isError; else checkIsLoading">
-  <error-page [errorMessage]="error!.message"></error-page>
+  <error-page [errorMessage]="error!.message" />
 </div>
 <ng-template #checkIsLoading>
   <div *ngIf="isLoading; else displayMap">
-    <loading-page></loading-page>
+    <loading-page />
   </div>
 </ng-template>
 <ng-template #displayMap>
   <div id="map" class="map-container">
-    <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px"></sidebar-toggle>
+    <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px" />
     <run-selector
       style="position: absolute; margin-bottom: 16px; margin-right: 16px; bottom: 0; right: 0"
       [selectRun]="onRunSelected"

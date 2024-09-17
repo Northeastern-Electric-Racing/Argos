@@ -1,7 +1,7 @@
 <vstack style="width: 100%">
   <hstack style="width: 100%; height: 100%">
     <vstack style="width: 33%">
-      <circular-percentage [percentage]="cpuUsage" [dimension]="85" [ringColor]="colorRed"></circular-percentage>
+      <circular-percentage [percentage]="cpuUsage" [dimension]="85" [ringColor]="colorRed" />
 
       <typography variant="info-subtitle" content="CPU Usage" />
     </vstack>
@@ -29,7 +29,7 @@
 
   <hstack style="width: 50%">
     <vstack style="width: 50%">
-      <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple"></circular-percentage>
+      <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple" />
       <div style="display: flex; justify-content: center; align-items: center">
         <typography variant="info-subtitle" content="RAM Usage" />
       </div>
@@ -41,7 +41,7 @@
       <hstack style="height: 110px">
         <typography variant="info-value" [content]="wifiRSSI.toString()" />
         <div>
-          <mat-icon svgIcon="wifi"></mat-icon>
+          <mat-icon svgIcon="wifi" />
           <span class="wifi-dbm-unit">dBM</span>
         </div>
       </hstack>
