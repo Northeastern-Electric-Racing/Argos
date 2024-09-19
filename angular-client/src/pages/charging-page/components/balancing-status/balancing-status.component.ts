@@ -18,13 +18,14 @@ export default class BalancingStatus {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.STATUS_BALANCING).subscribe((value) => {
+      const statusBalancingValue = floatPipe(value.values[0]);
       if (this.isBalancing) {
-        if (!(floatPipe(value.values[0]) === 1)) {
+        if (!(statusBalancingValue === 1)) {
           this.isBalancing = false;
           this.stopTimer();
           this.resetCurrentSecs();
         }
-      } else if (floatPipe(value.values[0]) === 1) {
+      } else if (statusBalancingValue === 1) {
         this.isBalancing = true;
         this.startTimer();
       }

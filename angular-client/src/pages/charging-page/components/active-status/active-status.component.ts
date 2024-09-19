@@ -18,13 +18,14 @@ export default class ActiveStatus {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.BMS_MODE).subscribe((value) => {
+      const statusStateValue = floatPipe(value.values[0]);
       if (this.isActive) {
-        if (!(floatPipe(value.values[0]) === 2)) {
+        if (!(statusStateValue === 2)) {
           this.isActive = false;
           this.stopTimer();
           this.resetCurrentSecs();
         }
-      } else if (floatPipe(value.values[0]) === 2) {
+      } else if (statusStateValue === 2) {
         this.isActive = true;
         this.startTimer();
       }

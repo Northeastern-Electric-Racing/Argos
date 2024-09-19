@@ -19,13 +19,14 @@ export default class ChargingStatusComponent {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.CHARGING).subscribe((value) => {
+      const chargingControlValue = floatPipe(value.values[0]);
       if (this.isCharging) {
-        if (floatPipe(value.values[0]) === 1) {
+        if (chargingControlValue === 1) {
           this.isCharging = false;
           this.stopTimer();
           this.resetCurrentSecs();
         }
-      } else if (floatPipe(value.values[0]) === 0) {
+      } else if (chargingControlValue === 0) {
         this.isCharging = true;
         this.startTimer();
       }

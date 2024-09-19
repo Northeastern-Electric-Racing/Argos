@@ -18,6 +18,10 @@
     <!--TODO: (temp fix: padding-bottom) temp fix for voltage graph being centered (and not all the way on bottom of comp)-->
     <!--if it is not desktop, we want to show graph seperately... TODO: need to figure out best logic for enforcing that this is done... 
       or just don't enforce -->
-    <cell-temp-graph style="width: 85%; padding-bottom: 30px" [resetGraph]="resetGraph" *ngIf="isDesktop"></cell-temp-graph>
+    <cell-temp-graph
+      style="width: 85%; padding-bottom: 30px"
+      [maxCellTempData]="cellTempData"
+      *ngIf="isDesktop"
+    ></cell-temp-graph>
   </hstack>
 </info-background>

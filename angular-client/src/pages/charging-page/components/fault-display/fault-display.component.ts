@@ -86,8 +86,6 @@ export default class FaultDisplay {
       if (faultType === FaultType.BMS) {
         faultName = this.getBMSFaultName(parseInt(faultValue));
       }
-      // current implementation doesn't need a specified case for charger faults
-      // (they have indiv binary id's)
       if (this.faults.length >= 50) {
         this.faults.pop();
       }

@@ -18,13 +18,14 @@ export default class FaultedStatus {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.BMS_MODE).subscribe((value) => {
+      const statusStateValue = floatPipe(value.values[0]);
       if (this.isFaulted) {
-        if (!(floatPipe(value.values[0]) === 3)) {
+        if (!(statusStateValue === 3)) {
           this.isFaulted = false;
           this.stopTimer();
           this.resetCurrentSecs();
         }
-      } else if (floatPipe(value.values[0]) === 3) {
+      } else if (statusStateValue === 3) {
         this.isFaulted = true;
         this.startTimer();
       }

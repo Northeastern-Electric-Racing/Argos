@@ -304,7 +304,7 @@ export default class MockProxyClient implements ProxyClient {
         index = this.getRandomIndex(this.mockData.length);
         numericalData = this.mockData[index];
 
-        // IF MORE THAN ONE VALUE IS GIVEN in the numerical data, it is assumed that only those values should be choosen from.
+        // if more than one value is given in the numerical data, it is assumed that only those values should be choosen from.
         if (numericalData.vals.length > 1) {
           numericalData.vals[0] = numericalData.vals[this.getRandomIndex(numericalData.vals.length)];
         } else {

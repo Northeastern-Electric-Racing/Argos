@@ -1,5 +1,4 @@
 import { Component, HostListener } from '@angular/core';
-import { waitForDebugger } from 'inspector';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { floatPipe } from 'src/utils/pipes.utils';
