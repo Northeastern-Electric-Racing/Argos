@@ -101,6 +101,9 @@ import FaultedStatus from 'src/pages/charging-page/components/faulted-status/fau
 import ActiveStatus from 'src/pages/charging-page/components/active-status/active-status.component';
 import CombinedStatusDisplay from 'src/pages/charging-page/components/combined-status-display/combined-status-display.component';
 import CombinedStatusMobile from 'src/pages/charging-page/components/combined-status-display/mobile-view/combined-status-mobile.component';
+import PackVoltageMobileDisplay from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-mobile/pack-voltage-mobile.component';
+import HighLowCellMobile from 'src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-mobile/high-low-cell-mobile.component';
+import CellTempMobile from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-mobile/cell-temp-mobile.component';
 
 @NgModule({
   declarations: [
@@ -185,7 +188,10 @@ import CombinedStatusMobile from 'src/pages/charging-page/components/combined-st
     BalancingStatus,
     FaultedStatus,
     ActiveStatus,
-    CombinedStatusMobile
+    CombinedStatusMobile,
+    PackVoltageMobileDisplay,
+    HighLowCellMobile,
+    CellTempMobile
   ],
   imports: [
     BrowserModule,

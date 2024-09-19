@@ -17,7 +17,7 @@ export default class LandingPage implements OnInit {
   time = new Date();
   location: string = 'No Location Set';
   newRunIsLoading = false;
-  mobileThreshold = 1200;
+  mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   constructor(

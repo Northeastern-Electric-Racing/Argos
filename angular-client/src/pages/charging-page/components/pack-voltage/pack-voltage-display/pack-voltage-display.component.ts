@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { floatPipe } from 'src/utils/pipes.utils';
+import { GraphData } from 'src/utils/types.utils';
 
 @Component({
   selector: 'pack-voltage-display',
@@ -10,14 +11,14 @@ import { floatPipe } from 'src/utils/pipes.utils';
 })
 export default class PackVoltageDisplay {
   voltage: number = 0;
-  resetGraph: boolean = false;
+  packVoltData: GraphData[] = [];
   resetGraphButton = {
     onClick: () => {
-      this.resetGraph = true;
+      this.packVoltData = [];
     },
     icon: 'restart_alt'
   };
-  mobileThreshold = 1200;
+  mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
   @HostListener('window:resize', ['$event'])
@@ -29,8 +30,8 @@ export default class PackVoltageDisplay {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.PACK_VOLTAGE).subscribe((value) => {
-      this.resetGraph = false;
       this.voltage = floatPipe(value.values[0]);
+      this.packVoltData.push({ x: new Date().getTime(), y: this.voltage });
     });
   }
 }

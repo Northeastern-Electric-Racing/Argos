@@ -46,31 +46,28 @@ export default class FaultDisplay {
 
   ngOnInit() {
     this.storage.get(IdentifierDataType.COMM_TIMEOUT_FAULT).subscribe((value) => {
-      this.addFault(value.values[0], 'Comm Timeout', FaultType.Charger);
+      this.addFault(parseInt(value.values[0]), 'Comm Timeout', FaultType.Charger);
     });
 
     this.storage.get(IdentifierDataType.HARDWARE_FAILURE_FAULT).subscribe((value) => {
-      this.addFault(value.values[0], 'Hardware Failure', FaultType.Charger);
+      this.addFault(parseInt(value.values[0]), 'Hardware Failure', FaultType.Charger);
     });
 
     this.storage.get(IdentifierDataType.OVER_TEMP_FAULT).subscribe((value) => {
-      this.addFault(value.values[0], 'Over Temp', FaultType.Charger);
+      this.addFault(parseInt(value.values[0]), 'Over Temp', FaultType.Charger);
     });
 
     this.storage.get(IdentifierDataType.VOLTAGE_WRONG_FAULT).subscribe((value) => {
-      this.addFault(value.values[0], 'Voltage Wrong', FaultType.Charger);
+      this.addFault(parseInt(value.values[0]), 'Voltage Wrong', FaultType.Charger);
     });
 
     this.storage.get(IdentifierDataType.WRONG_BAT_CONNECT_FAULT).subscribe((value) => {
-      this.addFault(value.values[0], 'Wrong Battery Connect', FaultType.Charger);
+      this.addFault(parseInt(value.values[0]), 'Wrong Battery Connect', FaultType.Charger);
     });
 
-    /**
-     * This is based on the shepard enum for faults:
-     * https://github.com/Northeastern-Electric-Racing/ShepherdBMS-2/blob/6eb3f863ed131a15bdf98665532cb7807bbd2920/Core/Inc/datastructs.h#L39
-     */
     this.storage.get(IdentifierDataType.BMS_FAULTS).subscribe((value) => {
-      this.addFault(value.values[0], 'MASSIVE L, Should not be a fault hahaha', FaultType.BMS);
+      const bmsFaultID = parseInt(value.values[0]);
+      this.addFault(bmsFaultID, this.getBMSFaultName(bmsFaultID), FaultType.BMS);
     });
   }
 
@@ -81,11 +78,8 @@ export default class FaultDisplay {
    * @param faultValue an string with an integer value.
    * @param faultName the name of the fault, to be displayed.
    */
-  addFault(faultValue: string, faultName: string, faultType: FaultType) {
-    if (parseInt(faultValue) !== 0) {
-      if (faultType === FaultType.BMS) {
-        faultName = this.getBMSFaultName(parseInt(faultValue));
-      }
+  addFault(faultValue: number, faultName: string, faultType: FaultType) {
+    if (faultValue !== 0) {
       if (this.faults.length >= 50) {
         this.faults.pop();
       }
@@ -95,9 +89,15 @@ export default class FaultDisplay {
     }
   }
 
+  /**
+   * This is based on the shepard enum for faults:
+   * https://github.com/Northeastern-Electric-Racing/ShepherdBMS-2/blob/6eb3f863ed131a15bdf98665532cb7807bbd2920/Core/Inc/datastructs.h#L39
+   */
   getBMSFaultName(faultValue: number): string {
     let faultName = '';
     switch (faultValue) {
+      case 0:
+        break;
       case BMS_FAULTS_TYPES.CELLS_NOT_BALANCING:
         faultName = 'Cells Not Balancing';
         break;

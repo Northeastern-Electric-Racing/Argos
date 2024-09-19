@@ -1,6 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 import { GraphData } from 'src/utils/types.utils';
 
 @Component({
@@ -9,17 +8,8 @@ import { GraphData } from 'src/utils/types.utils';
   styleUrls: ['./pack-voltage-graph.component.css']
 })
 export default class PackVoltageGraph implements OnInit {
-  packVoltData: GraphData[] = [];
-  @Input() resetGraph: boolean = false;
-  maxDataPoints = 100;
+  @Input() packVoltData: GraphData[] = [];
 
   constructor(private storage: Storage) {}
-  ngOnInit() {
-    this.storage.get(IdentifierDataType.PACK_VOLTAGE).subscribe((value) => {
-      if (this.resetGraph) {
-        this.packVoltData = [];
-      }
-      this.packVoltData.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-    });
-  }
+  ngOnInit() {}
 }

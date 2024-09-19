@@ -1,0 +1,22 @@
+<info-background svgIcon="thermostat" title="Cell Temp" [button]="resetGraphButton">
+  <div style="padding-top: 20px"></div>
+  <vstack>
+    <hstack>
+      <vstack style="width: 10%; padding-bottom: 10px">
+        <typography variant="info-value" [content]="avgTemp.toString() + '°'" additionalStyles="fontSize:30px" />
+        <typography variant="info-subtitle" content="Avg. Temp" additionalStyles="fontSize:15px" />
+      </vstack>
+
+      <div style="padding-left: 20px"></div>
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px"></divider>
+      <div style="padding-right: 20px"></div>
+
+      <vstack style="width: 10%; padding-bottom: 10px">
+        <typography variant="info-value" [content]="maxTemp.toString() + '°'" additionalStyles="fontSize:30px" />
+        <typography variant="info-subtitle" content="Max. Temp" additionalStyles="fontSize:15px" />
+      </vstack>
+    </hstack>
+    <cell-temp-graph style="width: 100%; padding-bottom: 30px" [maxCellTempData]="cellTempData"></cell-temp-graph>
+  </vstack>
+</info-background>

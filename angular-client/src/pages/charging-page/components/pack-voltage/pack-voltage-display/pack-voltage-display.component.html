@@ -1,12 +1,9 @@
-<info-background svgIcon="electric_meter" title="Pack. Voltage" [button]="resetGraphButton">
+<info-background svgIcon="electric_meter" *ngIf="isDesktop" title="Pack. Voltage" [button]="resetGraphButton">
   <hstack>
     <hstack style="width: 15%">
       <typography variant="info-value" [content]="voltage.toString() + 'V'" />
     </hstack>
-    <pack-voltage-graph
-      style="width: 80%; padding-bottom: 30px"
-      [resetGraph]="resetGraph"
-      *ngIf="isDesktop"
-    ></pack-voltage-graph>
+    <pack-voltage-graph style="width: 80%; padding-bottom: 30px" [packVoltData]="packVoltData"></pack-voltage-graph>
   </hstack>
 </info-background>
+<pack-voltage-mobile *ngIf="!isDesktop" [packVoltData]="packVoltData" [voltage]="voltage"></pack-voltage-mobile>

@@ -1,0 +1,8 @@
+<info-background svgIcon="electric_meter" title="Pack. Voltage" [button]="resetGraphButton">
+  <vstack>
+    <hstack style="width: 15%">
+      <typography variant="info-value" [content]="voltage.toString() + 'V'" />
+    </hstack>
+    <pack-voltage-graph style="width: 100%; padding-bottom: 30px" [packVoltData]="packVoltData"></pack-voltage-graph>
+  </vstack>
+</info-background>

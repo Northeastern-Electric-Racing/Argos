@@ -1,4 +1,4 @@
-<info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton">
+<info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton" *ngIf="isDesktop">
   <hstack spacing="30px">
     <vstack style="width: 10%">
       <hstack>
@@ -58,7 +58,20 @@
       <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
     </vstack>
 
-    <high-low-cell-graph style="width: 75%; padding-bottom: 35px" [resetGraph]="resetGraph" *ngIf="isDesktop">
+    <high-low-cell-graph
+      style="width: 75%; padding-bottom: 35px"
+      [highVoltsData]="highVoltsData"
+      [lowVoltsData]="lowVoltsData"
+    >
     </high-low-cell-graph>
   </hstack>
 </info-background>
+<high-low-cell-mobile
+  *ngIf="!isDesktop"
+  [delta]="delta"
+  [lowCellVoltage]="lowCellVoltage"
+  [highCellVoltage]="highCellVoltage"
+  [highVoltsData]="highVoltsData"
+  [lowVoltsData]="lowVoltsData"
+  [resetGraphButton]="resetGraphButton"
+></high-low-cell-mobile>

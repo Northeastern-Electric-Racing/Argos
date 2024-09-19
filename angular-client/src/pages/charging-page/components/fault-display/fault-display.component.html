@@ -10,24 +10,16 @@
               : 'background-color: #4d453c; width: 100%; border-radius: 2px'
           "
         >
-          <hstack>
-            <typography
-              variant="info-subtitle"
-              [content]="fault.type"
-              style="width: 33%; height: 40px; padding-top: 10px"
-            ></typography>
+          <div style="display: flex; flex-direction: row; justify-content: space-between; height: 45px; padding: 3px">
+            <typography variant="info-subtitle" [content]="fault.type" style="align-self: center"></typography>
             <typography
               variant="info-subtitle"
               [content]="fault.name"
               additionalStyles="font-weight: bold;"
-              style="width: 33%; height: 40px; padding-top: 10px; width: 400px"
+              style="align-self: center; padding-left: 5px"
             ></typography>
-            <typography
-              variant="info-subtitle"
-              [content]="fault.time"
-              style="width: 33%; height: 40px; padding-top: 10px"
-            ></typography>
-          </hstack>
+            <typography variant="info-subtitle" [content]="fault.time" style="align-self: center"></typography>
+          </div>
         </div>
         <div style="height: 2px"></div>
       </ng-container>

@@ -285,7 +285,7 @@ export default class MockProxyClient implements ProxyClient {
     return new Promise((resolve) =>
       setTimeout(() => {
         resolve('loop');
-      }, 1)
+      }, 10)
     );
   };
 

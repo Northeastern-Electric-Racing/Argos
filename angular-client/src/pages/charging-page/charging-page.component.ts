@@ -14,7 +14,7 @@ export default class ChargingPage implements OnInit {
   time = new Date();
   location: string = 'No Location Set';
   constructor(private storage: Storage) {}
-  mobileThreshold = 1200;
+  mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {

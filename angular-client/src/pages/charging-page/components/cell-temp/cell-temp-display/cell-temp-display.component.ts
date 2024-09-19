@@ -12,7 +12,6 @@ import { GraphData } from 'src/utils/types.utils';
 export default class CellTempDisplay {
   avgTemp: number = 0;
   maxTemp: number = 0;
-  resetGraph: boolean = false;
   resetGraphButton = {
     onClick: () => {
       this.cellTempData = [];
@@ -20,7 +19,7 @@ export default class CellTempDisplay {
     icon: 'restart_alt'
   };
   cellTempData: GraphData[] = [];
-  mobileThreshold = 1200;
+  mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
   @HostListener('window:resize', ['$event'])
@@ -36,7 +35,6 @@ export default class CellTempDisplay {
       this.cellTempData.push({ x: new Date().getTime(), y: this.maxTemp });
     });
     this.storage.get(IdentifierDataType.CELL_TEMP_AVG).subscribe((value) => {
-      this.resetGraph = false;
       this.avgTemp = floatPipe(value.values[0]);
     });
   }

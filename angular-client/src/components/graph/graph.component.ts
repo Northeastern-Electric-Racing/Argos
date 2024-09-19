@@ -51,7 +51,7 @@ export class GraphComponent implements OnInit {
   updateChart = () => {
     this.chart.updateSeries([
       {
-        name: 'Data Series',
+        name: this.title,
         data: Array.from(this.data)
       }
     ]);
