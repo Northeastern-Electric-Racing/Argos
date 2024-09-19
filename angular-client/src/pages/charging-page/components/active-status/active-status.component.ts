@@ -12,7 +12,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
 export default class ActiveStatus {
   isActive: boolean = false;
   currentSeconds: number = 0;
-  totalSeconds: number = Number(sessionStorage.getItem('active total seconds')) || 0;
+  totalSeconds: number = Number(sessionStorage.getItem('active-total-seconds')) || 0;
   intervalId!: NodeJS.Timeout;
   constructor(private storage: Storage) {}
 

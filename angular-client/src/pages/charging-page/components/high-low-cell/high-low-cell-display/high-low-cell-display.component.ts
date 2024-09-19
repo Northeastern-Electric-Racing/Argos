@@ -36,12 +36,12 @@ export default class HighLowCellDisplay {
     this.storage.get(IdentifierDataType.VOLTS_LOW).subscribe((value) => {
       this.lowCellVoltage = decimalPipe(value.values[0], 3);
       this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
-      this.lowVoltsData.push({ x: new Date().getTime(), y: this.lowCellVoltage });
+      this.lowVoltsData.push({ x: decimalPipe(value.time), y: this.lowCellVoltage });
     });
     this.storage.get(IdentifierDataType.VOLTS_HIGH).subscribe((value) => {
       this.highCellVoltage = decimalPipe(value.values[0], 3);
       this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
-      this.highVoltsData.push({ x: new Date().getTime(), y: this.highCellVoltage });
+      this.highVoltsData.push({ x: decimalPipe(value.time), y: this.highCellVoltage });
     });
   }
 }

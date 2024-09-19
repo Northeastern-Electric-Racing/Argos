@@ -12,7 +12,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
 export default class ChargingStatusComponent {
   isCharging: boolean = false;
   currentSeconds: number = 0;
-  totalSeconds: number = Number(sessionStorage.getItem('charging total seconds')) || 0;
+  totalSeconds: number = Number(sessionStorage.getItem('charging-total-seconds')) || 0;
   intervalId!: NodeJS.Timeout;
 
   constructor(private storage: Storage) {}
