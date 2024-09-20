@@ -20,7 +20,7 @@ use scylla_server::{
         db_handler, mock_processor::MockProcessor, mqtt_processor::MqttProcessor, ClientData,
     },
     services::run_service::{self, public_run},
-    Database,
+    Database, RateLimitMode,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{signal, sync::mpsc};
@@ -69,6 +69,25 @@ struct ScyllaArgs {
         default_value = "10"
     )]
     batch_upsert_time: u64,
+
+    /// The rate limit mode to use
+    #[arg(
+        short = 'm',
+        long,
+        env = "SCYLLA_RATE_LIMIT_MODE",
+        default_value_t = RateLimitMode::None,
+        value_enum,
+    )]
+    rate_limit_mode: RateLimitMode,
+
+    /// The static rate limit number to use in ms
+    #[arg(
+        short = 'v',
+        long,
+        env = "SCYLLA_STATIC_RATE_LIMIT_VALUE",
+        default_value = "100"
+    )]
+    static_rate_limit_value: u64,
 
     /// The percent of messages discarded when sent from the socket
     #[arg(
@@ -189,6 +208,8 @@ async fn main() {
             curr_run.id,
             io,
             token.clone(),
+            cli.static_rate_limit_value,
+            cli.rate_limit_mode,
             ((cli.socketio_discard_percent as f32 / 100.0) * 255.0) as u8,
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
