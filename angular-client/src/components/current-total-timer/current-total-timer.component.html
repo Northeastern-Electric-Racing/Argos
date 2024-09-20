@@ -1,0 +1,22 @@
+<info-background svgIcon="timer" title="Timer">
+  <div style="display: flex; justify-content: center; align-items: center; height: 80%; padding-top: 20px">
+    <vstack spacing="10px" style="padding-left: 20px">
+      <hstack>
+        <typography variant="info-subtitle" content="CURRENT:" additionalStyles="fontSize:15px" />
+        <typography
+          variant="info-subtitle"
+          [content]="getCurrentTime()"
+          additionalStyles="color: #fbf7f5; text-shadow: 0 0 5px rgba(217,217,214, 0.3);"
+        />
+      </hstack>
+      <hstack spacing="42px">
+        <typography variant="info-subtitle" content="TOTAL:" additionalStyles="fontSize:15px" />
+        <typography
+          variant="info-subtitle"
+          [content]="getTotalTime()"
+          additionalStyles="color: #fbf7f5; text-shadow: 0 0 5px rgba(217,217,214, 0.3);"
+        />
+      </hstack>
+    </vstack>
+  </div>
+</info-background>
