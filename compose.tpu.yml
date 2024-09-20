@@ -2,6 +2,8 @@ services:
     scylla-server:
         environment:
             - SCYLLA_SIREN_HOST_URL=host.docker.internal:1883
+            - SCYLLA_RATE_LIMIT_MODE=static
+            - SCYLLA_STATIC_RATE_LIMIT_VALUE=100
         extra_hosts:
             - "host.docker.internal:host-gateway" # for external siren
         init: false # not supported on buildroot for some reason, further investigation needed
