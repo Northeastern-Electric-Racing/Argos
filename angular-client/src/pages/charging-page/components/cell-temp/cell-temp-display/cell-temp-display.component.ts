@@ -32,7 +32,7 @@ export default class CellTempDisplay {
   ngOnInit() {
     this.storage.get(IdentifierDataType.CELL_TEMP_HIGH).subscribe((value) => {
       this.maxTemp = floatPipe(value.values[0]);
-      this.cellTempData.push({ x: decimalPipe(value.time), y: this.maxTemp });
+      this.cellTempData.push({ x: +value.time, y: this.maxTemp });
     });
     this.storage.get(IdentifierDataType.CELL_TEMP_AVG).subscribe((value) => {
       this.avgTemp = floatPipe(value.values[0]);

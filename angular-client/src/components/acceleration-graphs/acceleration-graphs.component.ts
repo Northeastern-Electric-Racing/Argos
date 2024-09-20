@@ -30,7 +30,7 @@ export class AccelerationGraphs implements OnInit {
     this.storage.get(IdentifierDataType.XYZAccel).subscribe((value) => {
       const x1 = decimalPipe(value.values[0]);
       const y1 = decimalPipe(value.values[1]);
-      const time = decimalPipe(value.time);
+      const time = +value.time;
       this.xData.push({
         x: time,
         y: x1

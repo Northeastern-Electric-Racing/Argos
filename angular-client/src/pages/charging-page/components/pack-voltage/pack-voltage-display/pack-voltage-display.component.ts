@@ -31,7 +31,7 @@ export default class PackVoltageDisplay {
   ngOnInit() {
     this.storage.get(IdentifierDataType.PACK_VOLTAGE).subscribe((value) => {
       this.voltage = floatPipe(value.values[0]);
-      this.packVoltData.push({ x: decimalPipe(value.time), y: this.voltage });
+      this.packVoltData.push({ x: +value.time, y: this.voltage });
     });
   }
 }
