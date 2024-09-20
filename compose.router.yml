@@ -1,4 +1,4 @@
-comservices:
+services:
     scylla-server:
         depends_on:
             - siren

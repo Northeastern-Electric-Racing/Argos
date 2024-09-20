@@ -1,4 +1,8 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 
 use prisma_client_rust::{bigdecimal::ToPrimitive, chrono, serde_json};
 use protobuf::Message;
@@ -71,7 +75,13 @@ impl MqttProcessor {
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
-            format!("ScyllaServer-{:?}", Instant::now()),
+            format!(
+                "ScyllaServer-{:?}",
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .expect("Time went backwards")
+                    .as_millis()
+            ),
             opts.mqtt_path.split_once(':').expect("Invalid Siren URL").0,
             opts.mqtt_path
                 .split_once(':')
