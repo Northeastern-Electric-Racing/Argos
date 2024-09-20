@@ -17,7 +17,10 @@ use scylla_server::{
     },
     prisma::PrismaClient,
     processors::{
-        db_handler, mock_processor::MockProcessor, mqtt_processor::MqttProcessor, ClientData,
+        db_handler,
+        mock_processor::MockProcessor,
+        mqtt_processor::{MqttProcessor, MqttProcessorOptions},
+        ClientData,
     },
     services::run_service::{self, public_run},
     Database, RateLimitMode,
@@ -204,13 +207,15 @@ async fn main() {
         let (recv, opts) = MqttProcessor::new(
             mqtt_send,
             new_run_receive,
-            cli.siren_host_url,
-            curr_run.id,
             io,
             token.clone(),
-            cli.static_rate_limit_value,
-            cli.rate_limit_mode,
-            ((cli.socketio_discard_percent as f32 / 100.0) * 255.0) as u8,
+            MqttProcessorOptions {
+                mqtt_path: cli.siren_host_url,
+                initial_run: curr_run.id,
+                static_rate_limit_time: cli.static_rate_limit_value,
+                rate_limit_mode: cli.rate_limit_mode,
+                upload_ratio: cli.socketio_discard_percent,
+            },
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
         let client_sharable: Arc<AsyncClient> = Arc::new(client);
