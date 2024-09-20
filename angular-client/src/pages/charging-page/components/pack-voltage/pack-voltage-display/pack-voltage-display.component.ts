@@ -1,7 +1,7 @@
 import { Component, HostListener } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
-import { decimalPipe, floatPipe } from 'src/utils/pipes.utils';
+import { floatPipe } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 @Component({
