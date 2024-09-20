@@ -27,7 +27,14 @@ use crate::{
 use super::ClientData;
 use std::borrow::Cow;
 
-/// a mqtt processor
+/// The chief processor of incoming mqtt data, this handles
+/// - mqtt state
+/// - reception via mqtt and subsequent parsing
+/// - labeling of data with runs
+/// - sending data over socket
+/// - sending data over the channel to a db handler
+///
+/// It also is the main form of rate limiting
 pub struct MqttProcessor {
     channel: Sender<ClientData>,
     new_run_channel: Receiver<run_service::public_run::Data>,
@@ -44,7 +51,7 @@ pub struct MqttProcessor {
     rate_limit_mode: RateLimitMode,
 }
 
-/// processor options
+/// processor options, these are static immutable settings
 pub struct MqttProcessorOptions {
     /// URI of the mqtt server
     pub mqtt_path: String,
@@ -215,15 +222,20 @@ impl MqttProcessor {
             return None;
         }
 
+        // handle static rate limiting mode
         if self.rate_limit_mode == RateLimitMode::Static {
+            // check if we have a previous time for a message based on its topic
             if let Some(old) = self.rate_limiter.get(topic) {
+                // if the message is less than the rate limit, skip it and do not update the map
                 if old.elapsed() < Duration::from_millis(self.rate_limit_time) {
                     trace!("Static rate limit skipping message with topic {}", topic);
                     return None;
                 } else {
+                    // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
                     self.rate_limiter.insert(topic.to_string(), Instant::now());
                 }
             } else {
+                // here is the first insertion of the topic (the first time we receive the topic in scylla's lifetime)
                 self.rate_limiter.insert(topic.to_string(), Instant::now());
             }
         }
