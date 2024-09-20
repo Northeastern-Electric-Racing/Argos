@@ -23,6 +23,7 @@ use crate::{
 use super::ClientData;
 use std::borrow::Cow;
 
+/// a mqtt processor
 pub struct MqttProcessor {
     channel: Sender<ClientData>,
     new_run_channel: Receiver<run_service::public_run::Data>,
@@ -39,30 +40,40 @@ pub struct MqttProcessor {
     rate_limit_mode: RateLimitMode,
 }
 
+/// processor options
+pub struct MqttProcessorOptions {
+    /// URI of the mqtt server
+    pub mqtt_path: String,
+    /// the initial run id
+    pub initial_run: i32,
+    /// the static rate limit time interval in ms
+    pub static_rate_limit_time: u64,
+    /// the rate limit mode
+    pub rate_limit_mode: RateLimitMode,
+    /// the upload ratio for the socketio
+    pub upload_ratio: u8,
+}
+
 impl MqttProcessor {
     /// Creates a new mqtt receiver and socketio and db sender
     /// * `channel` - The mpsc channel to send the database data to
-    /// * `mqtt_path` - The mqtt URI, including port, (without the mqtt://) to subscribe to
-    /// * `db` - The database to store the data in
+    /// * `new_run_channel` - The channel for new run notifications
     /// * `io` - The socketio layer to send the data to
     /// * `cancel_token` - The token which indicates cancellation of the task
+    /// * `opts` - The mqtt processor options to use
     ///     Returns the instance and options to create a client, which is then used in the process_mqtt loop
     pub fn new(
         channel: Sender<ClientData>,
         new_run_channel: Receiver<run_service::public_run::Data>,
-        mqtt_path: String,
-        initial_run: i32,
         io: SocketIo,
         cancel_token: CancellationToken,
-        static_rate_limit_time: u64,
-        rate_limit_mode: RateLimitMode,
-        upload_ratio: u8,
+        opts: MqttProcessorOptions,
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
             format!("ScyllaServer-{:?}", Instant::now()),
-            mqtt_path.split_once(':').expect("Invalid Siren URL").0,
-            mqtt_path
+            opts.mqtt_path.split_once(':').expect("Invalid Siren URL").0,
+            opts.mqtt_path
                 .split_once(':')
                 .unwrap()
                 .1
@@ -84,13 +95,13 @@ impl MqttProcessor {
             MqttProcessor {
                 channel,
                 new_run_channel,
-                curr_run: initial_run,
+                curr_run: opts.initial_run,
                 io,
                 cancel_token,
-                upload_ratio,
+                upload_ratio: opts.upload_ratio,
                 rate_limiter: rate_map,
-                rate_limit_time: static_rate_limit_time,
-                rate_limit_mode,
+                rate_limit_time: opts.static_rate_limit_time,
+                rate_limit_mode: opts.rate_limit_mode,
             },
             mqtt_opts,
         )
