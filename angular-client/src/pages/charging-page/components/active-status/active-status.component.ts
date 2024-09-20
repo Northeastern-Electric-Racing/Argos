@@ -36,7 +36,7 @@ export default class ActiveStatus {
     this.intervalId = setInterval(() => {
       this.currentSeconds++;
       this.totalSeconds++;
-      sessionStorage.setItem('active total seconds', this.totalSeconds.toString());
+      sessionStorage.setItem('active-total-seconds', this.totalSeconds.toString());
     }, 1000);
   }
 

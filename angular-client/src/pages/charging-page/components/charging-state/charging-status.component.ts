@@ -37,7 +37,7 @@ export default class ChargingStatusComponent {
     this.intervalId = setInterval(() => {
       this.currentSeconds++;
       this.totalSeconds++;
-      sessionStorage.setItem('charging total seconds', this.totalSeconds.toString());
+      sessionStorage.setItem('charging-total-seconds', this.totalSeconds.toString());
     }, 1000);
   }
 

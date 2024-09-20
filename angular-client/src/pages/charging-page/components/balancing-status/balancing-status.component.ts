@@ -36,7 +36,7 @@ export default class BalancingStatus {
     this.intervalId = setInterval(() => {
       this.currentSeconds++;
       this.totalSeconds++;
-      sessionStorage.setItem('balancing total seconds', this.totalSeconds.toString());
+      sessionStorage.setItem('balancing-total-seconds', this.totalSeconds.toString());
     }, 1000);
   }
 

@@ -36,7 +36,7 @@ export default class FaultedStatus {
     this.intervalId = setInterval(() => {
       this.currentSeconds++;
       this.totalSeconds++;
-      sessionStorage.setItem('faulted total seconds', this.totalSeconds.toString());
+      sessionStorage.setItem('faulted-total-seconds', this.totalSeconds.toString());
     }, 1000);
   }
 
