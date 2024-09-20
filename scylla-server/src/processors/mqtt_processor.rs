@@ -106,8 +106,6 @@ impl MqttProcessor {
 
         let rate_map: HashMap<String, Instant> = HashMap::new();
 
-        // TODO mess with incoming message cap if db, etc. cannot keep up
-
         (
             MqttProcessor {
                 channel,
