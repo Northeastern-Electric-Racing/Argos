@@ -1,0 +1,16 @@
+services:
+    scylla-server:
+        depends_on:
+            - siren
+        environment:
+            - SCYLLA_SIREN_HOST_URL=siren:1883
+
+    client:
+      extends:
+        file: ./angular-client/compose.client.yml
+        service: client
+
+    siren:
+        extends:
+            file: ./siren-base/compose.siren.yml
+            service: siren

@@ -1,0 +1,48 @@
+[package]
+name = "scylla-server"
+version = "0.0.1"
+edition = "2021"
+default-run = "scylla-server"
+
+[dependencies]
+prisma-client-rust = {git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", default-features = false,features = ["postgresql", "migrations"] }
+serde = "1.0.203"
+protobuf-codegen = "3.5.1"
+protobuf = "3.5.1"
+tokio = { version = "1.38.0", features = ["full", "tracing"] }
+axum = "0.7.5"
+tower = { version = "0.4.13", features = ["timeout"] }
+tower-http = { version = "0.5.2", features = ["cors", "trace"] }
+socketioxide = { version = "0.14.0", features = ["tracing"] }
+rumqttc = { git = "https://github.com/bytebeamio/rumqtt", branch = "main"}
+tokio-util = { version=  "0.7.11", features = ["full"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
+rand = "0.8.5"
+console-subscriber = { version = "0.3.0", optional = true }
+ringbuffer = "0.15.0"
+clap = { version = "4.5.11", features = ["derive", "env"] }
+axum-extra = { version = "0.9.3", features = ["query"] }
+
+[features]
+top = ["dep:console-subscriber"]
+
+[workspace]
+members = ["prisma-cli"]
+
+[build-dependencies]
+protobuf-codegen = "3.5.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true  # Automatically strip symbols from the binary.
+
+[[bin]]
+name = "scylla-server"
+path = "src/main.rs"
+
+[[bin]]
+name = "seed"
+path = "prisma/seed.rs"

@@ -21,7 +21,7 @@ RUN echo "export const environment = {" > src/environment/environment.ts \
     && echo "  }" >> src/environment/environment.ts \
     && echo "};" >> src/environment/environment.ts
 
-RUN npm run build
+RUN npm run build:production
 
 # Use official nginx image as the base image
 FROM nginx:latest as Production
@@ -30,10 +30,11 @@ FROM nginx:latest as Production
 WORKDIR /usr/local/app
 
 # copy dist
-COPY --from=Build /usr/src/app/dist /usr/local/app/
+COPY --from=Build /usr/src/app/dist/angular-client /usr/share/nginx/html
 
-# Copy the build output to replace the default nginx contents.
-RUN mv /usr/local/app/angular-client/* /usr/share/nginx/html
+RUN rm /etc/nginx/conf.d/default.conf
+
+COPY --from=Build /usr/src/app/nginx.conf /etc/nginx/conf.d
 
 EXPOSE 80
 

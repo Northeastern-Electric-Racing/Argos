@@ -1,0 +1,14 @@
+services:
+    scylla-server:
+        environment:
+            - SCYLLA_SIREN_HOST_URL=siren:1883
+            - SCYLLA_PROD=false
+
+    client:
+      extends:
+        file: ./angular-client/compose.client.yml
+        service: client
+      build:
+        context: ./angular-client
+        args:
+            BACKEND_URL: http://localhost:8000

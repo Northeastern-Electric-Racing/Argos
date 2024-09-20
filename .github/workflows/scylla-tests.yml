@@ -1,0 +1,36 @@
+name: Scylla Rust Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+
+env:
+    SOURCE_DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/timescaledb cargo run
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Run db
+        run: docker compose run -P -d odyssey-timescale
+      - name: Generate prisma
+        run: cargo prisma generate
+        working-directory: scylla-server
+      - name: Deploy prisma
+        run: cargo prisma migrate deploy
+        working-directory: scylla-server
+      - name: Run tests
+        working-directory: scylla-server
+        run: cargo test -- --test-threads=1

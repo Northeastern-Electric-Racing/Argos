@@ -1,0 +1,34 @@
+name: Scylla CI
+
+on:
+   push:
+      branches:
+         - main
+         - develop
+   pull_request:
+      branches:
+         - main
+         - develop
+         - 'feature/**'
+
+
+defaults:
+    run:
+        working-directory: scylla-server
+
+
+jobs:
+   build:
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Setup Rust
+           uses: actions/checkout@v3
+           with:
+            submodules: recursive
+         - name: Generate prisma
+           run: cargo prisma generate
+         - name: Build
+           run: cargo build --verbose
+         - name: Clippy
+           run: cargo clippy --verbose -- -D warnings

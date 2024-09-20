@@ -9,6 +9,8 @@ on:
       - main
       - develop
       - 'feature/**'
+
+
 jobs:
   run-prettier-check:
     runs-on: ubuntu-latest
