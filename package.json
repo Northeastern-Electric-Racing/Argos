@@ -3,16 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "lint": "npx eslint .",
-    "test": "cd scylla-server && npm run test",
     "prettier-check": "npx prettier --check .",
-    "install-dependencies": "npm install && cd scylla-server && npm install && cd ../angular-client && npm install",
+    "install-dependencies": "npm install && cd ../angular-client && npm install",
     "build": "cd scylla-server && npm run build && cd ../angular-client && npm run build",
-    "start:production": "cd scylla-server && npm run start:production && cd ../angular-client && npm run start:production",
-    "prisma:generate": "cd scylla-server && npm run prisma:generate",
-    "prisma:migrate": "cd scylla-server && npm run prisma:migrate",
-    "prisma:migrate:prod": "cd scylla-server && npm run prisma:migrate:prod",
-    "build:proto": "cd scylla-server && npm run build:proto",
-    "start": "concurrently \"npm run start --prefix angular-client\" \"npm run start --prefix scylla-server\""
+    "prisma:generate": "cd scylla-server && cargo prisma generate",
+    "prisma:seed": "cd scylla && cargo prisma-seed",
+    "start": "concurrently \"npm run start --prefix angular-client\" \"cd scylla-server && cargo run"
   },
   "author": "Northeastern Electric Racing",
   "license": "ISC",
