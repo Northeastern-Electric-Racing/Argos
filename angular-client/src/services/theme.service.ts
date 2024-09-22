@@ -7,7 +7,7 @@ export default class Theme {
   static readonly textColor: string = 'color: #EFEFEF; ';
   static readonly textStyle: string = this.font + this.textColor;
   static readonly boldedText: string = this.textStyle + 'font-weight: bold; ';
-  static readonly header: string = this.boldedText + 'fontSize: 20px;';
+  static readonly header: string = this.boldedText + 'font-size: 20px; margin: 0';
   static readonly secondaryHeader: string = this.font + 'font-weight: bold; fontSize: 20px; color: #808080; ';
   static readonly subheader: string = this.textStyle + 'fontSize: 16px;';
   static readonly xLargeHeader: string = this.boldedText + 'font-size: 2.5rem; margin: 0; padding: 0;';
