@@ -105,6 +105,8 @@ import PackVoltageMobileDisplay from 'src/pages/charging-page/components/pack-vo
 import HighLowCellMobile from 'src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-mobile/high-low-cell-mobile.component';
 import CellTempMobile from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-mobile/cell-temp-mobile.component';
 import FaultPage from 'src/pages/fault-page/fault-page.component';
+import FaultLog from 'src/pages/fault-page/components/fault-log/fault-log.component';
+import FaultBox from 'src/pages/fault-page/components/fault-display/fault-box.component';
 
 @NgModule({
   declarations: [
@@ -177,6 +179,8 @@ import FaultPage from 'src/pages/fault-page/fault-page.component';
     CellTempGraph,
     CurrentDisplay,
     FaultDisplay,
+    FaultLog,
+    FaultBox,
     SwitchComponent,
     BMSModeDisplay,
     DoubleLineGraphComponent,

@@ -1,4 +1,5 @@
-use prisma_client_rust::{chrono::DateTime, QueryError};
+use prisma_client_rust::{chrono::DateTime, chrono::FixedOffset, chrono::Utc, chrono::NaiveDateTime, QueryError};
+
 
 use crate::{prisma, processors::ClientData, Database};
 
@@ -23,6 +24,28 @@ pub async fn get_data(
         .find_many(vec![
             prisma::data::data_type_name::equals(data_type_name),
             prisma::data::run_id::equals(run_id),
+        ])
+        .select(public_data::select())
+        .exec()
+        .await
+}
+
+/// Get datapoints that mach criteria
+/// * `db` - The prisma client to make the call to
+/// * `data_type_name` - The data type name to filter the data by
+/// * `run_id` - The run id to filter the data
+/// * `fetch_run` whether to fetch the run assocaited with this data
+/// * `fetch_data_type` whether to fetch the data type associated with this data
+///   returns: A result containing the data or the QueryError propogated by the db
+pub async fn get_data_by_datetime(
+    db: &Database,
+    datetime: String,
+) -> Result<Vec<public_data::Data>, QueryError> {
+    let datetime_utc = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_millis(datetime.parse::<i64>().unwrap()).unwrap(), Utc);
+
+    db.data()
+        .find_many(vec![
+            prisma::data::time::equals(datetime_utc.into()),
         ])
         .select(public_data::select())
         .exec()

@@ -1,0 +1,29 @@
+<info-background title="Fault Log" svgIcon="warning" [button]="resetButton">
+  <div style="width: 100%; padding-right: 5px; padding-left: 0px" class="fault-text-body">
+    <vstack style="width: 100%">
+      <div style="height: 10px"></div>
+      <ng-container *ngFor="let fault of faults; index as i">
+        <div
+          [style]="
+            (i % 2 == 0) === faultsShifted
+              ? 'background-color: #d4760b	; width: 100%; border-radius: 2px'
+              : 'background-color: #4d453c; width: 100%; border-radius: 2px'
+          "
+        >
+          <div style="display: flex; flex-direction: row; justify-content: space-between; height: 45px; padding: 10px">
+            <typography variant="info-subtitle" [content]="fault.type" style="align-self: center"></typography>
+            <typography
+              variant="info-subtitle"
+              [content]="fault.name"
+              additionalStyles="font-weight: bold;"
+              style="align-self: center; padding-left: 5px"
+            ></typography>
+            <typography variant="info-subtitle" [content]="fault.displayTime" style="align-self: center"></typography>
+          </div>
+        </div>
+        <div style="height: 2px"></div>
+      </ng-container>
+      <div style="height: 50px"></div>
+    </vstack>
+  </div>
+</info-background>

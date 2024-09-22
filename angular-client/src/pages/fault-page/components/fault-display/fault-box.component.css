@@ -1,0 +1,7 @@
+.fault-box-body {
+  height: 95%;
+  display: flex;
+  align-items: left;
+  justify-content: left;
+  overflow-y: auto;
+}
