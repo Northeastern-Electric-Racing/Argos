@@ -98,7 +98,7 @@ Have an async function that takes time and is somewhat important for performance
 
 
 
-### Deploy this app
+## Deploy this app
 
 See main README.
 
