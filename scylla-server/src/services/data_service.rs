@@ -1,4 +1,4 @@
-use prisma_client_rust::{chrono::DateTime, chrono::FixedOffset, chrono::Utc, chrono::NaiveDateTime, QueryError};
+use prisma_client_rust::{chrono::DateTime, QueryError};
 
 
 use crate::{prisma, processors::ClientData, Database};
@@ -41,7 +41,8 @@ pub async fn get_data_by_datetime(
     db: &Database,
     datetime: String,
 ) -> Result<Vec<public_data::Data>, QueryError> {
-    let datetime_utc = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_millis(datetime.parse::<i64>().unwrap()).unwrap(), Utc);
+    let datetime_utc = DateTime::from_timestamp_millis(datetime.parse::<i64>().unwrap())
+    .expect("Could not parse timestamp");
 
     db.data()
         .find_many(vec![
