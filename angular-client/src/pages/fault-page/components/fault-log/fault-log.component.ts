@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { IdentifierDataType } from 'src/utils/enumerations/identifier-data-type';
 
@@ -34,6 +34,7 @@ enum FaultType {
   styleUrls: ['./fault-log.component.css']
 })
 export default class FaultLog {
+  @Input() setSelectedFault!: (fault: { type: string; name: string; time: string; displayTime: string }) => void;
   faults: { type: string; name: string; time: string; displayTime: string }[] = [];
   faultsShifted: boolean = false;
   resetButton = {

@@ -9,6 +9,7 @@
               ? 'background-color: #d4760b	; width: 100%; border-radius: 2px'
               : 'background-color: #4d453c; width: 100%; border-radius: 2px'
           "
+          (click)="setSelectedFault(fault)"
         >
           <div style="display: flex; flex-direction: row; justify-content: space-between; height: 45px; padding: 10px">
             <typography variant="info-subtitle" [content]="fault.type" style="align-self: center"></typography>

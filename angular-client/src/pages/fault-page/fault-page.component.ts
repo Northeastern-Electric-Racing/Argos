@@ -35,6 +35,7 @@ export default class FaultPage implements OnInit {
     }, 1000);
 
     this.setSelectedFault = (fault: { type: string; name: string; time: string; displayTime: string }) => {
+      console.log(fault);
       const dataQueryResponse = this.serverService.query<DataValue[]>(() => getDataByDatetime(fault.time));
       dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
         this.selectedFaultDataValuesIsLoading = isLoading;

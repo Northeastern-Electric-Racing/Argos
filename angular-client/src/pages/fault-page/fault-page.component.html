@@ -20,7 +20,7 @@
         <latency-display style="margin-bottom: -30px; margin-top: -10px" />
       </div>
       <div style="align-self: end; width: 100%; display: flex; justify-content: space-around">
-        <fault-log style="width: 30%" />
+        <fault-log style="width: 30%" [setSelectedFault]="setSelectedFault" />
         <fault-box style="width: 35%" />
         <graph-sidebar-desktop style="width: 30%" [nodes]="[]" [selectDataType]="onSelectDataType" />
       </div>
