@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
@@ -36,6 +36,8 @@ export default class GraphPage implements OnInit {
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
   subscription?: Subscription;
+
+  dataTypeName?: string | string[];
 
   constructor(
     private serverService: APIService,
@@ -109,6 +111,10 @@ export default class GraphPage implements OnInit {
         });
       }
     };
+
+    this.selectedDataType.subscribe((dataType: DataType) => {
+      this.dataTypeName = dataType.name;
+    });
   }
 
   onRunSelected = (run: Run) => {
@@ -156,4 +162,17 @@ export default class GraphPage implements OnInit {
   setSelectedDataType!: (dataType: DataType) => void;
 
   clearDataType!: () => void;
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {}
+
+  // private getDataType(name: string) {
+  //   this.nodes?.forEach((node: Node) => {
+  //     node.dataTypes.forEach((dataType: DataType) => {
+  //       if (dataType.name == this.dataTypeName) {
+  //         return dataType;
+  //       }
+  //     })
+  //   })
+  // }
 }
