@@ -4,6 +4,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use chrono::TimeDelta;
 use prisma_client_rust::bigdecimal::ToPrimitive;
 use protobuf::Message;
 use ringbuffer::RingBuffer;
@@ -128,7 +129,7 @@ impl MqttProcessor {
         let mut view_interval = tokio::time::interval(Duration::from_secs(3));
 
         let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
-        let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<i64>::new(20);
+        let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
 
         let mut upload_counter: u8 = 0;
 
@@ -153,7 +154,7 @@ impl MqttProcessor {
                             Some(msg) => msg,
                             None => continue
                         };
-                        latency_ringbuffer.push((chrono::offset::Utc::now() - msg.timestamp).num_milliseconds());
+                        latency_ringbuffer.push(chrono::offset::Utc::now() - msg.timestamp);
                         self.send_db_msg(msg.clone()).await;
                         self.send_socket_msg(msg, &mut upload_counter);
                     },
@@ -181,7 +182,7 @@ impl MqttProcessor {
                     let avg_latency = if latency_ringbuffer.is_empty() {
                         0
                     } else {
-                        latency_ringbuffer.iter().sum::<i64>() / latency_ringbuffer.len().to_i64().unwrap_or_default()
+                        latency_ringbuffer.iter().sum::<TimeDelta>().num_milliseconds() / latency_ringbuffer.len().to_i64().unwrap_or_default()
                     };
 
                     let client_data = ClientData {

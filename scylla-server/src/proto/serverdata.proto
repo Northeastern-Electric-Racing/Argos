@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package serverdata.v1;
+package serverdata.v2;
 
 message ServerData {
    // ensure old type is reserved
