@@ -1,4 +1,4 @@
-use super::mock_processor::{MockData, MockStringData};
+use super::mock_processor::MockData;
 
 pub const BASE_MOCK_DATA: [MockData; 17] = [
     MockData {
@@ -119,18 +119,5 @@ pub const BASE_MOCK_DATA: [MockData; 17] = [
         num_of_vals: 1,
         min: 0.0,
         max: 600.0,
-    },
-];
-
-pub const BASE_MOCK_STRING_DATA: [MockStringData; 2] = [
-    MockStringData {
-        name: "Driver",
-        unit: "String",
-        vals: "Fergus",
-    },
-    MockStringData {
-        name: "Location",
-        unit: "String",
-        vals: "Max",
     },
 ];

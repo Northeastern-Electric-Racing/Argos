@@ -1,45 +1,30 @@
 use std::time::Duration;
 
-use prisma_client_rust::{chrono, serde_json};
 use rand::Rng;
 use socketioxide::SocketIo;
 use tracing::warn;
 
-use super::{
-    mock_data::{BASE_MOCK_DATA, BASE_MOCK_STRING_DATA},
-    ClientData,
-};
+use super::{mock_data::BASE_MOCK_DATA, ClientData};
 
 #[derive(Clone, Copy)]
 pub struct MockData {
     pub name: &'static str,
     pub unit: &'static str,
     pub num_of_vals: u8,
-    pub min: f64,
-    pub max: f64,
+    pub min: f32,
+    pub max: f32,
 }
 
 impl MockData {
-    fn get_values(&self) -> Vec<String> {
-        let mut val_vec: Vec<String> = vec![];
+    fn get_values(&self) -> Vec<f32> {
+        let mut val_vec: Vec<f32> = vec![];
         // for each point, get a random number in the range
         for _ in 0..self.num_of_vals {
-            val_vec.push(
-                rand::thread_rng()
-                    .gen_range((self.min)..(self.max))
-                    .to_string(),
-            );
+            val_vec.push(rand::thread_rng().gen_range((self.min)..(self.max)));
         }
 
         val_vec
     }
-}
-
-#[derive(Clone, Copy)]
-pub struct MockStringData {
-    pub name: &'static str,
-    pub unit: &'static str,
-    pub vals: &'static str,
 }
 
 pub struct MockProcessor {
@@ -54,33 +39,18 @@ impl MockProcessor {
 
     pub async fn generate_mock(self) {
         loop {
-            // get a random mock datapoint the first 0 to len of number mock data is for the non string and x to len of string mocks is a string mock index.
-            let index = rand::thread_rng()
-                .gen_range(0..(BASE_MOCK_DATA.len() + BASE_MOCK_STRING_DATA.len()));
+            // get a random mock datapoint the first 0 to len of number mock data
+            let index = rand::thread_rng().gen_range(0..(BASE_MOCK_DATA.len()));
 
-            // if we are doing non-string mock this loop
-            let client_data: ClientData = if index < BASE_MOCK_DATA.len() {
-                let dat = BASE_MOCK_DATA[index];
+            let dat = BASE_MOCK_DATA[index];
 
-                ClientData {
-                    run_id: self.curr_run,
-                    name: dat.name.to_string(),
-                    unit: dat.unit.to_string(),
-                    values: dat.get_values(),
-                    timestamp: chrono::offset::Utc::now().timestamp_millis(),
-                    node: "".to_string(), // uneeded for socket use only
-                }
-            // do a string mock
-            } else {
-                let dat = BASE_MOCK_STRING_DATA[index - BASE_MOCK_DATA.len()];
-                ClientData {
-                    run_id: self.curr_run,
-                    name: dat.name.to_string(),
-                    unit: dat.unit.to_string(),
-                    values: vec![dat.vals.to_string()],
-                    timestamp: chrono::offset::Utc::now().timestamp_millis(),
-                    node: "".to_string(), // uneeded for socket use only
-                }
+            let client_data: ClientData = ClientData {
+                run_id: self.curr_run,
+                name: dat.name.to_string(),
+                unit: dat.unit.to_string(),
+                values: dat.get_values(),
+                timestamp: chrono::offset::Utc::now(),
+                node: "".to_string(), // uneeded for socket use only
             };
 
             match self.io.emit(

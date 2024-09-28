@@ -20,7 +20,9 @@ async fn test_get_all_locations_and_upsert() -> Result<(), QueryError> {
         100.0,
         200.0,
         300.0,
-        run_service::create_run(&db, 10001).await?.id,
+        run_service::create_run(&db, chrono::DateTime::from_timestamp_millis(1001).unwrap())
+            .await?
+            .id,
     )
     .await?;
 

@@ -1,4 +1,4 @@
-use prisma_client_rust::{chrono::DateTime, QueryError};
+use prisma_client_rust::QueryError;
 
 use crate::{prisma, processors::ClientData, Database};
 
@@ -43,16 +43,10 @@ pub async fn add_data(
     db.data()
         .create(
             prisma::data_type::name::equals(client_data.name),
-            DateTime::from_timestamp_millis(client_data.timestamp)
-                .expect("Could not parse timestamp")
-                .fixed_offset(),
+            client_data.timestamp.fixed_offset(),
             prisma::run::id::equals(client_data.run_id),
             vec![prisma::data::values::set(
-                client_data
-                    .values
-                    .iter()
-                    .map(|f| f.parse::<f64>().unwrap_or_default())
-                    .collect(),
+                client_data.values.iter().map(|f| *f as f64).collect(),
             )],
         )
         .select(public_data::select())
@@ -72,15 +66,10 @@ pub async fn add_many(db: &Database, client_data: Vec<ClientData>) -> Result<i64
                 .map(|f| {
                     prisma::data::create_unchecked(
                         f.name.to_string(),
-                        DateTime::from_timestamp_millis(f.timestamp)
-                            .expect("Could not parse timestamp")
-                            .fixed_offset(),
+                        f.timestamp.fixed_offset(),
                         f.run_id,
                         vec![prisma::data::values::set(
-                            f.values
-                                .iter()
-                                .map(|f| f.parse::<f64>().unwrap_or_default())
-                                .collect(),
+                            f.values.iter().map(|f| *f as f64).collect(),
                         )],
                     )
                 })

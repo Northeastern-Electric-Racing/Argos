@@ -57,6 +57,6 @@ jobs:
           provenance: false
           build-args: |
             PROD=true
-            BACKEND_URL=http://192.168.100.1:8000
+            BACKEND_URL=http://192.168.100.11:8000
             MAP_ACCESS_TOKEN=pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw
 

@@ -1,3 +1,6 @@
+use chrono::serde::ts_milliseconds;
+use chrono::{DateTime, Utc};
+
 pub mod db_handler;
 mod mock_data;
 pub mod mock_processor;
@@ -13,9 +16,12 @@ pub struct ClientData {
     pub run_id: i32,
     pub name: String,
     pub unit: String,
-    pub values: Vec<String>,
-    pub timestamp: i64,
+    pub values: Vec<f32>,
+    /// Client expects time in milliseconds, so serialize as such
+    #[serde(with = "ts_milliseconds")]
+    pub timestamp: DateTime<Utc>,
 
+    /// client doesnt parse node
     #[serde(skip_serializing)]
     pub node: String,
 }
@@ -25,7 +31,7 @@ pub struct ClientData {
 #[derive(Debug)]
 struct LocationData {
     location_name: String,
-    lat: f64,
-    long: f64,
-    radius: f64,
+    lat: f32,
+    long: f32,
+    radius: f32,
 }

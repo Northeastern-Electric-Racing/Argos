@@ -24,7 +24,9 @@ async fn test_create_driver() -> Result<(), QueryError> {
     driver_service::upsert_driver(
         &db,
         TEST_KEYWORD.to_owned(),
-        run_service::create_run(&db, 10001).await?.id,
+        run_service::create_run(&db, chrono::DateTime::from_timestamp_millis(1001).unwrap())
+            .await?
+            .id,
     )
     .await?;
 

@@ -20,7 +20,8 @@ async fn test_get_run_by_id() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
     // add a run
-    let run_c = run_service::create_run(&db, 1).await?;
+    let run_c =
+        run_service::create_run(&db, chrono::DateTime::from_timestamp_millis(1).unwrap()).await?;
 
     // get that run
     let run = run_service::get_run_by_id(&db, run_c.id)
