@@ -1,6 +1,11 @@
-<hstack style="width: 100%">
-  <typography style="width: 100%; text-align: center; padding: 0px" variant="header" [content]="time | date: 'HH:mm:ss'" additionalStyles="font-size: 75px"/>
-  <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
-  <latency-display style="width: 40%" />
-  <argos-button [onClick]="this.onStartNewRun" label="Start New Run"></argos-button>
-</hstack>
+<vstack>
+  <hstack style="width: 100%">
+    <typography style="width: 100%; text-align: center; padding: 0px" variant="large-header" [content]="time | date: 'HH:mm:ss'" additionalStyles="font-size: 75px"/>
+    <landing-page-connection-display></landing-page-connection-display>
+  </hstack>
+  <hstack style="width: 100%">
+    <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
+    <latency-display style="width: 40%" />
+    <argos-button [onClick]="this.onStartNewRun" label="Start New Run"></argos-button>
+  </hstack>
+</vstack>

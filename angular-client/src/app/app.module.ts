@@ -105,6 +105,7 @@ import PackVoltageMobileDisplay from 'src/pages/charging-page/components/pack-vo
 import HighLowCellMobile from 'src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-mobile/high-low-cell-mobile.component';
 import CellTempMobile from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-mobile/cell-temp-mobile.component';
 import LandingPageHeader from 'src/pages/landing-page/components/landing-page-header/landing-page-header.component';
+import LandingPageConnectionDisplay from 'src/pages/landing-page/components/landing-page-connection-display/landing-page-connection-display/landing-page-connection-display.component';
 
 @NgModule({
   declarations: [
@@ -193,7 +194,8 @@ import LandingPageHeader from 'src/pages/landing-page/components/landing-page-he
     PackVoltageMobileDisplay,
     HighLowCellMobile,
     CellTempMobile,
-    LandingPageHeader
+    LandingPageHeader,
+    LandingPageConnectionDisplay
   ],
   bootstrap: [AppContext],
   imports: [
