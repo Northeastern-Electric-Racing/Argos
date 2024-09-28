@@ -15,6 +15,7 @@ pub struct PublicRun {
     pub driver_name: String,
     #[serde(rename = "systemName")]
     pub system_name: String,
+    /// time in MILLISECONDS
     pub time: i64,
 }
 

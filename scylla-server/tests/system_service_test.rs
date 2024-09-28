@@ -17,7 +17,8 @@ const TEST_KEYWORD: &str = "test";
 async fn test_upsert_system_create() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
-    let run = run_service::create_run(&db, 101).await?;
+    let run =
+        run_service::create_run(&db, chrono::DateTime::from_timestamp_millis(101).unwrap()).await?;
 
     let _ = system_service::upsert_system(&db, TEST_KEYWORD.to_owned(), run.id).await?;
 
@@ -49,7 +50,9 @@ async fn test_get_upsert_system() -> Result<(), QueryError> {
     system_service::upsert_system(
         &db,
         TEST_KEYWORD.to_owned(),
-        run_service::create_run(&db, 101).await?.id,
+        run_service::create_run(&db, chrono::DateTime::from_timestamp_millis(101).unwrap())
+            .await?
+            .id,
     )
     .await?;
 

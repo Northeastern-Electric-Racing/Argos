@@ -18,8 +18,8 @@ use super::{ClientData, LocationData};
 /// A struct defining an in progress location packet
 struct LocLock {
     location_name: Option<String>,
-    points: Option<(f64, f64)>,
-    radius: Option<f64>,
+    points: Option<(f32, f32)>,
+    radius: Option<f32>,
 }
 
 impl LocLock {
@@ -37,12 +37,12 @@ impl LocLock {
     }
 
     /// Add points to the packet
-    pub fn add_points(&mut self, lat: f64, long: f64) {
+    pub fn add_points(&mut self, lat: f32, long: f32) {
         self.points = Some((lat, long));
     }
 
     /// Add a radius to the packet
-    pub fn add_radius(&mut self, radius: f64) {
+    pub fn add_radius(&mut self, radius: f32) {
         self.radius = Some(radius);
     }
 
@@ -251,10 +251,7 @@ impl DbHandler {
                 debug!("Upserting driver: {:?}", msg.values);
                 if let Err(err) = driver_service::upsert_driver(
                     &self.db,
-                    msg.values
-                        .first()
-                        .unwrap_or(&"PizzaTheHut".to_string())
-                        .to_string(),
+                    (*msg.values.first().unwrap_or(&0.0f32)).to_string(),
                     msg.run_id,
                 )
                 .await
@@ -264,22 +261,15 @@ impl DbHandler {
             }
             "location" => {
                 debug!("Upserting location name: {:?}", msg.values);
-                self.location_lock.add_loc_name(
-                    msg.values
-                        .first()
-                        .unwrap_or(&"PizzaTheHut".to_string())
-                        .to_string(),
-                );
+                self.location_lock
+                    .add_loc_name((*msg.values.first().unwrap_or(&0.0f32)).to_string());
                 self.is_location = true;
             }
             "system" => {
                 debug!("Upserting system: {:?}", msg.values);
                 if let Err(err) = system_service::upsert_system(
                     &self.db,
-                    msg.values
-                        .first()
-                        .unwrap_or(&"PizzaTheHut".to_string())
-                        .to_string(),
+                    (*msg.values.first().unwrap_or(&0.0f32)).to_string(),
                     msg.run_id,
                 )
                 .await
@@ -290,28 +280,15 @@ impl DbHandler {
             "GPS-Location" => {
                 debug!("Upserting location points: {:?}", msg.values);
                 self.location_lock.add_points(
-                    msg.values
-                        .first()
-                        .unwrap_or(&"PizzaTheHut".to_string())
-                        .parse::<f64>()
-                        .unwrap_or_default(),
-                    msg.values
-                        .get(1)
-                        .unwrap_or(&"PizzaTheHut".to_string())
-                        .parse::<f64>()
-                        .unwrap_or_default(),
+                    *msg.values.first().unwrap_or(&0.0f32),
+                    *msg.values.get(1).unwrap_or(&0.0f32),
                 );
                 self.is_location = true;
             }
             "Radius" => {
                 debug!("Upserting location radius: {:?}", msg.values);
-                self.location_lock.add_radius(
-                    msg.values
-                        .first()
-                        .unwrap_or(&"PizzaTheHut".to_string())
-                        .parse::<f64>()
-                        .unwrap_or_default(),
-                );
+                self.location_lock
+                    .add_radius(*msg.values.first().unwrap_or(&0.0f32));
                 self.is_location = true;
             }
             _ => {}
@@ -324,9 +301,9 @@ impl DbHandler {
                 if let Err(err) = location_service::upsert_location(
                     &self.db,
                     loc.location_name,
-                    loc.lat,
-                    loc.long,
-                    loc.radius,
+                    loc.lat as f64,
+                    loc.long as f64,
+                    loc.radius as f64,
                     msg.run_id,
                 )
                 .await

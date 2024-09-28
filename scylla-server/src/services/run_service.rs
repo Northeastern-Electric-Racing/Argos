@@ -1,6 +1,7 @@
 use std::vec;
 
-use prisma_client_rust::{chrono::DateTime, QueryError};
+use chrono::{DateTime, Utc};
+use prisma_client_rust::QueryError;
 
 use crate::{
     prisma::{self},
@@ -43,16 +44,14 @@ pub async fn get_run_by_id(
 
 /// Creates a run
 /// * `db` - The prisma client to make the call to
-/// * `timestamp` - The unix time since epoch in miliseconds when the run starts
+/// * `timestamp` - time when the run starts
 ///   returns: A result containing the data or the QueryError propogated by the db
-pub async fn create_run(db: &Database, timestamp: i64) -> Result<public_run::Data, QueryError> {
+pub async fn create_run(
+    db: &Database,
+    timestamp: DateTime<Utc>,
+) -> Result<public_run::Data, QueryError> {
     db.run()
-        .create(
-            DateTime::from_timestamp_millis(timestamp)
-                .expect("Could not parse timestamp")
-                .fixed_offset(),
-            vec![],
-        )
+        .create(timestamp.fixed_offset(), vec![])
         .select(public_run::select())
         .exec()
         .await
@@ -60,21 +59,16 @@ pub async fn create_run(db: &Database, timestamp: i64) -> Result<public_run::Dat
 
 /// Creates a run with a given id
 /// * `db` - The prisma client to make the call to
-/// * `timestamp` - The unix time since epoch in miliseconds when the run starts
+/// * `timestamp` - time when the run starts
 /// * `run_id` - The id of the run to create, must not already be in use!
 ///   returns: A result containing the data or the QueryError propogated by the db
 pub async fn create_run_with_id(
     db: &Database,
-    timestamp: i64,
+    timestamp: DateTime<Utc>,
     run_id: i32,
 ) -> Result<public_run::Data, QueryError> {
     db.run()
-        .create(
-            DateTime::from_timestamp_millis(timestamp)
-                .expect("Could not parse timestamp")
-                .fixed_offset(),
-            vec![prisma::run::id::set(run_id)],
-        )
+        .create(timestamp.fixed_offset(), vec![prisma::run::id::set(run_id)])
         .select(public_run::select())
         .exec()
         .await
