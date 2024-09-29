@@ -95,6 +95,8 @@ import PackVoltageDisplay from 'src/pages/charging-page/components/pack-voltage/
 import ChargingStateComponent from 'src/pages/charging-page/components/charging-state/charging-state.component';
 import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
 import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
+import { CommonModule } from '@angular/common';
+import { ToastButtonComponent } from 'src/components/toast-button/toast-button.component';
 
 @NgModule({
   declarations: [
@@ -173,7 +175,8 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     HighLowCellGraph,
     PackVoltageGraph,
     PackVoltageDisplay,
-    ChargingStateComponent
+    ChargingStateComponent,
+    ToastButtonComponent
   ],
   bootstrap: [AppContext],
   imports: [
@@ -196,7 +199,9 @@ import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-i
     MatToolbarModule,
     MatButtonModule,
     MatInputModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CommonModule,
+    BrowserAnimationsModule // required animations module
   ],
   providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })

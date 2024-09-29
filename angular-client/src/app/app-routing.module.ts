@@ -1,3 +1,6 @@
+import { CommonModule } from '@angular/common';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import ChargingPage from 'src/pages/charging-page/charging-page.component';
@@ -14,7 +17,11 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [
+    RouterModule.forRoot(routes),
+    CommonModule,
+    BrowserAnimationsModule // required animations module
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}
