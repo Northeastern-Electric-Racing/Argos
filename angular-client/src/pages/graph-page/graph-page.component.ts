@@ -164,15 +164,53 @@ export default class GraphPage implements OnInit {
   clearDataType!: () => void;
 
   @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {}
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (this.dataTypeName == undefined) {
+      this.setSelectedDataType(this.nodes?.at(0)?.dataTypes[0] as DataType);
+    } else {
+      const node = this.getNode(this.dataTypeName as string);
+      const nodeIndex = this.getNodeIndex(this.getNode(this.dataTypeName as string));
+      const dataTypeIndex = this.getDataTypeIndex(
+        this.getNode(this.dataTypeName as string),
+        this.getDataType(this.getNode(this.dataTypeName as string), this.dataTypeName as string)
+      );
+      if (event.key == 'ArrowDown') {
+        if (dataTypeIndex + 1 == node.dataTypes.length && nodeIndex + 1 == this.nodes?.length) {
+          this.setSelectedDataType(this.nodes?.at(0)?.dataTypes[0] as DataType);
+        } else if (dataTypeIndex + 1 == node.dataTypes.length) {
+          this.setSelectedDataType(this.nodes?.at(nodeIndex + 1)?.dataTypes[0] as DataType);
+        } else {
+          this.setSelectedDataType(node.dataTypes[dataTypeIndex + 1]);
+        }
+      } else if (event.key == 'ArrowUp') {
+        if (dataTypeIndex == 0 && nodeIndex == 0) {
+          const lastNode = this.nodes?.at(this.nodes.length - 1) as Node;
+          this.setSelectedDataType(lastNode.dataTypes[(lastNode.dataTypes.length as number) - 1] as DataType);
+        } else if (dataTypeIndex == 0) {
+          const lastNode = this.nodes?.at(nodeIndex - 1) as Node;
+          this.setSelectedDataType(lastNode.dataTypes[(lastNode.dataTypes.length as number) - 1] as DataType);
+        } else {
+          this.setSelectedDataType(node.dataTypes[dataTypeIndex - 1]);
+        }
+      }
+    }
+  }
 
-  // private getDataType(name: string) {
-  //   this.nodes?.forEach((node: Node) => {
-  //     node.dataTypes.forEach((dataType: DataType) => {
-  //       if (dataType.name == this.dataTypeName) {
-  //         return dataType;
-  //       }
-  //     })
-  //   })
-  // }
+  private getNode(name: string): Node {
+    return this.nodes?.filter(
+      (node: Node) => node.dataTypes.filter((dataType: DataType) => dataType.name == name)[0]
+    )[0] as Node;
+  }
+
+  private getNodeIndex(node: Node): number {
+    return this.nodes?.indexOf(node) as number;
+  }
+
+  private getDataType(node: Node, name: string) {
+    return node.dataTypes.filter((dataType: DataType) => dataType.name == name)[0];
+  }
+
+  private getDataTypeIndex(node: Node, dataType: DataType) {
+    return node.dataTypes.indexOf(dataType);
+  }
 }
