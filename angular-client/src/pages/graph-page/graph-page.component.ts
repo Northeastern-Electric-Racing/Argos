@@ -37,7 +37,7 @@ export default class GraphPage implements OnInit {
   selectedDataTypeValuesError?: Error;
   subscription?: Subscription;
 
-  dataTypeName?: string | string[];
+  dataTypeName?: string;
 
   constructor(
     private serverService: APIService,

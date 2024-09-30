@@ -10,7 +10,7 @@
   <div class="container">
     <graph-header class="graph-header" [runId]="run?.id" />
     <div class="content-div">
-      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
+      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" [selectedDataType]="dataTypeName" class="desktop-sidebar" />
       <div class="right-container">
         <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
         <graph-caption

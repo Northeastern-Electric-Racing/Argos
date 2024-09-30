@@ -14,6 +14,7 @@ import { DataType, Node, Run } from 'src/utils/types.utils';
 export default class GraphSidebar implements OnInit {
   @Input() nodes!: Node[];
   @Input() selectDataType!: (dataType: DataType) => void;
+  @Input() selectedDataType: string | undefined;
   @Input() onRunSelected!: (run: Run) => void;
 
   isMobile!: boolean;

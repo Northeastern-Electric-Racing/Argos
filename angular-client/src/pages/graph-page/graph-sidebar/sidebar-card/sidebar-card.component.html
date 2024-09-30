@@ -1,4 +1,10 @@
-<div class="card" [id]="title" [style]="dropDown ? 'marginBottom: 0px;' : 'margin: 0px;'" (click)="selectCard()">
+<div
+  class="card"
+  [id]="title"
+  [style]="dropDown ? 'marginBottom: 0px;' : 'margin: 0px;'"
+  (click)="selectCard()"
+  [class.selected]="selected"
+>
   <div class="text-container">
     <typography
       variant="header"

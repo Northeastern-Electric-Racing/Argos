@@ -15,6 +15,7 @@ export default class SidebarCard implements OnInit {
   @Input() dropDown?: boolean;
   @Input() open?: boolean;
   @Input() dataValue?: string;
+  @Input() selected: boolean = false;
   iconId!: string;
 
   ngOnInit(): void {
@@ -24,16 +25,16 @@ export default class SidebarCard implements OnInit {
    * Runs animation when card is selected
    */
   selectCard() {
-    const card = document.getElementById(this.title);
-    if (card) {
-      card.classList.add('selected');
-      setTimeout(() => {
-        card.classList.remove('selected');
-      }, 250);
-    }
-    const dropDown = document.getElementById(this.iconId);
-    if (dropDown) {
-      dropDown.classList.toggle('selected');
-    }
+    // const card = document.getElementById(this.title);
+    // if (card) {
+    //   card.classList.add('selected');
+    //   setTimeout(() => {
+    //     card.classList.remove('selected');
+    //   }, 250);
+    // }
+    // const dropDown = document.getElementById(this.iconId);
+    // if (dropDown) {
+    //   dropDown.classList.toggle('selected');
+    // }
   }
 }

@@ -49,6 +49,7 @@ import { debounceTime, Observable, of, Subscription } from 'rxjs';
 export default class GraphSidebarDesktop implements OnInit {
   @Input() nodes!: Node[];
   @Input() selectDataType!: (dataType: DataType) => void;
+  @Input() selectedDataType: string | undefined;
   nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggleObservable[]>;
 
   filterForm: FormGroup = new FormGroup({
