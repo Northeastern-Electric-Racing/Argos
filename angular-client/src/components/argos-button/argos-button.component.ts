@@ -1,5 +1,4 @@
 import { Component, Input } from '@angular/core';
-import { ToastService } from 'src/app/toast.service';
 //import { PopUpComponent } from '../argos-toast/argos-popup.component';
 
 /**
