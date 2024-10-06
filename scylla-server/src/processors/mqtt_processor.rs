@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::Arc,
+    sync::{atomic::AtomicI32, Arc},
     time::{Duration, SystemTime},
 };
 
@@ -37,8 +37,6 @@ use std::borrow::Cow;
 /// It also is the main form of rate limiting
 pub struct MqttProcessor {
     channel: Sender<ClientData>,
-    new_run_channel: Receiver<run_service::public_run::Data>,
-    curr_run: i32,
     io: SocketIo,
     cancel_token: CancellationToken,
     /// Upload ratio, below is not socket sent above is socket sent
@@ -68,14 +66,13 @@ pub struct MqttProcessorOptions {
 impl MqttProcessor {
     /// Creates a new mqtt receiver and socketio and db sender
     /// * `channel` - The mpsc channel to send the database data to
-    /// * `new_run_channel` - The channel for new run notifications
+    /// * `new_run_id` - The changed atomic run id.
     /// * `io` - The socketio layer to send the data to
     /// * `cancel_token` - The token which indicates cancellation of the task
     /// * `opts` - The mqtt processor options to use
     ///     Returns the instance and options to create a client, which is then used in the process_mqtt loop
     pub fn new(
         channel: Sender<ClientData>,
-        new_run_channel: Receiver<run_service::public_run::Data>,
         io: SocketIo,
         cancel_token: CancellationToken,
         opts: MqttProcessorOptions,
@@ -109,7 +106,6 @@ impl MqttProcessor {
         (
             MqttProcessor {
                 channel,
-                new_run_channel,
                 curr_run: opts.initial_run,
                 io,
                 cancel_token,
@@ -195,10 +191,6 @@ impl MqttProcessor {
                     };
                     trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&"n/a".to_string()));
                     self.send_socket_msg(client_data, &mut upload_counter);
-                }
-                Some(new_run) = self.new_run_channel.recv() => {
-                    trace!("New run: {:?}", new_run);
-                    self.curr_run = new_run.id;
                 }
             }
         }

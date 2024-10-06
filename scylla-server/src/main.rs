@@ -1,4 +1,10 @@
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{
+        atomic::{AtomicI32, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 
 use axum::{
     http::Method,
@@ -102,6 +108,8 @@ struct ScyllaArgs {
     socketio_discard_percent: u8,
 }
 
+static RUN_ID: AtomicI32 = AtomicI32::new(-1);
+
 #[tokio::main]
 async fn main() {
     let cli = ScyllaArgs::parse();
@@ -161,9 +169,6 @@ async fn main() {
     // TODO tune buffer size
     let (db_send, db_receive) = mpsc::channel::<Vec<ClientData>>(1000);
 
-    // channel to update the run to a new value
-    let (new_run_send, new_run_receive) = mpsc::channel::<public_run::Data>(5);
-
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
     let task_tracker = TaskTracker::new();
@@ -201,12 +206,12 @@ async fn main() {
             .expect("Could not create initial run!");
         debug!("Configuring current run: {:?}", curr_run);
 
+        RUN_ID.store(curr_run.id, Ordering::Relaxed);
         // run prod if this isnt present
         // create and spawn the mqtt processor
         info!("Running processor in MQTT (production) mode");
         let (recv, opts) = MqttProcessor::new(
             mqtt_send,
-            new_run_receive,
             io,
             token.clone(),
             MqttProcessorOptions {
@@ -240,10 +245,7 @@ async fn main() {
         // RUNS
         .route("/runs", get(run_controller::get_all_runs))
         .route("/runs/:id", get(run_controller::get_run_by_id))
-        .route(
-            "/runs/new",
-            post(run_controller::new_run).layer(Extension(new_run_send)),
-        )
+        .route("/runs/new", post(run_controller::new_run))
         // SYSTEMS
         .route("/systems", get(system_controller::get_all_systems))
         // CONFIG

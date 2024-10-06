@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicI32, Ordering};
+
 use axum::{
     extract::{Path, State},
     Extension, Json,
@@ -41,15 +43,12 @@ pub async fn get_run_by_id(
 /// note the new run must be updated so the channel passed in notifies the data processor to use the new run
 pub async fn new_run(
     State(db): State<Database>,
-    Extension(channel): Extension<mpsc::Sender<run_service::public_run::Data>>,
+    Extension(run_id): Extension<AtomicI32>,
 ) -> Result<Json<PublicRun>, ScyllaError> {
     let run_data =
         run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis()).await?;
 
-    // notify the mqtt receiver a new run has been created
-    if let Err(err) = channel.send(run_data.clone()).await {
-        warn!("Could not notify system about an updated run: {}", err);
-    }
+    run_id.store(run_data.id, Ordering::Relaxed);
 
     Ok(Json::from(PublicRun::from(&run_data)))
 }
