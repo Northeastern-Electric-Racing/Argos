@@ -4,13 +4,11 @@
   <landing-page-mobile style="width: 100%" *ngIf="isMobile; else isDesktop" [time]="time" />
   <ng-template #isDesktop>
     <vstack style="width: 100%" spacing="40px">
-      
-      <!-- <vstack style="width: 50%">
-      </vstack> -->
+      <vstack style="width: 100%" spacing="20px">
+        <landing-page-header style="width: 100%; padding-top: 20px;" />
+      </vstack>
 
-      <vstack style="width: 100%">
-        <landing-page-header />
-
+      <vstack style="width: 100%" spacing="20px">
         <hstack style="width: 100%">
           <driver-component style="height: 200px; width: 100%" />
           <viewer-display style="height: 200px; width: 33%" />
@@ -18,7 +16,7 @@
           <connection-display style="height: 200px; width: 33%" />
         </hstack>
       </vstack>
-      
+
       <hstack style="width: 100%">
         <vstack style="width: 50%" spacing="20px">
           <speed-over-time-display style="width: 100%" />

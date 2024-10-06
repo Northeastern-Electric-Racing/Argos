@@ -1,11 +1,12 @@
 <info-background>
-    <div style="display: flex; justify-content: center; align-items: center; height: 80%">
+    <div class="connection-display">
       <vstack>
         <hstack>
           <typography variant="header" content="Connection"></typography>
         </hstack>
-        <hstack>
-          <div class="connection-dot" [style.background-color]="getConnectedColor(connected)"></div>
+        <hstack spacing="5px">
+          <div class="connection-dot" [style.background-color]="getConnectedColor(connected)" 
+                additionalStyles="height: 15px;"></div>
           <typography variant="info-subtitle" [content]="getConnectedStatus(connected)" />
         </hstack>
       </vstack>

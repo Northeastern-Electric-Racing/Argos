@@ -1,0 +1,14 @@
+<!-- <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " /> -->
+
+<info-background>
+  <div class="date-location-display">
+    <vstack>
+      <hstack>
+        <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }}" />
+      </hstack>
+      <hstack>
+        <typography variant="info-subtitle" content="{{ location }}" />
+      </hstack>
+    </vstack>
+  </div>
+</info-background>

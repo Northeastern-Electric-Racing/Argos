@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
+import Storage from 'src/services/storage.service';
 
 @Component({
-  selector: 'app-landing-page-connection-display',
-  standalone: true,
-  imports: [],
+  selector: 'landing-page-connection-display',
   templateUrl: './landing-page-connection-display.component.html',
   styleUrl: './landing-page-connection-display.component.css'
 })
