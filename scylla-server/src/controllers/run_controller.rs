@@ -1,12 +1,10 @@
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::Ordering;
 
 use axum::{
     extract::{Path, State},
-    Extension, Json,
+    Json,
 };
 use prisma_client_rust::chrono;
-use tokio::sync::mpsc;
-use tracing::warn;
 
 use crate::{
     error::ScyllaError, services::run_service, transformers::run_transformer::PublicRun, Database,
@@ -41,14 +39,11 @@ pub async fn get_run_by_id(
 
 /// create a new run with an auto-incremented ID
 /// note the new run must be updated so the channel passed in notifies the data processor to use the new run
-pub async fn new_run(
-    State(db): State<Database>,
-    Extension(run_id): Extension<AtomicI32>,
-) -> Result<Json<PublicRun>, ScyllaError> {
+pub async fn new_run(State(db): State<Database>) -> Result<Json<PublicRun>, ScyllaError> {
     let run_data =
         run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis()).await?;
 
-    run_id.store(run_data.id, Ordering::Relaxed);
+    crate::RUN_ID.store(run_data.id, Ordering::Relaxed);
 
     Ok(Json::from(PublicRun::from(&run_data)))
 }

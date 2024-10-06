@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::{atomic::AtomicI32, Arc},
+    sync::{atomic::Ordering, Arc},
     time::{Duration, SystemTime},
 };
 
@@ -12,16 +12,12 @@ use rumqttc::v5::{
     AsyncClient, Event, EventLoop, MqttOptions,
 };
 use socketioxide::SocketIo;
-use tokio::{
-    sync::mpsc::{Receiver, Sender},
-    time::Instant,
-};
+use tokio::{sync::mpsc::Sender, time::Instant};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{
-    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata,
-    services::run_service, RateLimitMode,
+    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata, RateLimitMode,
 };
 
 use super::ClientData;
@@ -106,7 +102,6 @@ impl MqttProcessor {
         (
             MqttProcessor {
                 channel,
-                curr_run: opts.initial_run,
                 io,
                 cancel_token,
                 upload_ratio: opts.upload_ratio,
@@ -164,7 +159,7 @@ impl MqttProcessor {
                         name: "Viewers".to_string(),
                         node: "Internal".to_string(),
                         unit: "".to_string(),
-                        run_id: self.curr_run,
+                        run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now().timestamp_millis(),
                         values: vec![sockets.len().to_string()]
                     };
@@ -185,7 +180,7 @@ impl MqttProcessor {
                         name: "Latency".to_string(),
                         node: "Internal".to_string(),
                         unit: "ms".to_string(),
-                        run_id: self.curr_run,
+                        run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now().timestamp_millis(),
                         values: vec![avg_latency.to_string()]
                     };
@@ -284,7 +279,7 @@ impl MqttProcessor {
         };
 
         Some(ClientData {
-            run_id: self.curr_run,
+            run_id: crate::RUN_ID.load(Ordering::Relaxed),
             name: data_type,
             unit: data.unit,
             values: data.value,

@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicI32;
+
 pub mod controllers;
 pub mod error;
 pub mod processors;
@@ -23,3 +25,6 @@ pub enum RateLimitMode {
     #[default]
     None,
 }
+
+// Atomic to keep track the current run id across EVERYTHING (very scary)
+pub static RUN_ID: AtomicI32 = AtomicI32::new(-1);

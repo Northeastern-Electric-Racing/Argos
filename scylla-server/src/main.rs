@@ -1,8 +1,5 @@
 use std::{
-    sync::{
-        atomic::{AtomicI32, Ordering},
-        Arc,
-    },
+    sync::{atomic::Ordering, Arc},
     time::Duration,
 };
 
@@ -14,6 +11,7 @@ use axum::{
 use clap::Parser;
 use prisma_client_rust::chrono;
 use rumqttc::v5::AsyncClient;
+use scylla_server::RUN_ID;
 use scylla_server::{
     controllers::{
         self,
@@ -28,7 +26,7 @@ use scylla_server::{
         mqtt_processor::{MqttProcessor, MqttProcessorOptions},
         ClientData,
     },
-    services::run_service::{self, public_run},
+    services::run_service::{self},
     Database, RateLimitMode,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
@@ -107,8 +105,6 @@ struct ScyllaArgs {
     )]
     socketio_discard_percent: u8,
 }
-
-static RUN_ID: AtomicI32 = AtomicI32::new(-1);
 
 #[tokio::main]
 async fn main() {
