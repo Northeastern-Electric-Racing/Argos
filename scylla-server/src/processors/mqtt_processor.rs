@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::Arc,
+    sync::{atomic::Ordering, Arc},
     time::{Duration, SystemTime},
 };
 
@@ -12,16 +12,12 @@ use rumqttc::v5::{
     AsyncClient, Event, EventLoop, MqttOptions,
 };
 use socketioxide::SocketIo;
-use tokio::{
-    sync::mpsc::{Receiver, Sender},
-    time::Instant,
-};
+use tokio::{sync::mpsc::Sender, time::Instant};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{
-    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata,
-    services::run_service, RateLimitMode,
+    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, serverdata, RateLimitMode,
 };
 
 use super::ClientData;
@@ -37,8 +33,6 @@ use std::borrow::Cow;
 /// It also is the main form of rate limiting
 pub struct MqttProcessor {
     channel: Sender<ClientData>,
-    new_run_channel: Receiver<run_service::public_run::Data>,
-    curr_run: i32,
     io: SocketIo,
     cancel_token: CancellationToken,
     /// Upload ratio, below is not socket sent above is socket sent
@@ -68,14 +62,13 @@ pub struct MqttProcessorOptions {
 impl MqttProcessor {
     /// Creates a new mqtt receiver and socketio and db sender
     /// * `channel` - The mpsc channel to send the database data to
-    /// * `new_run_channel` - The channel for new run notifications
+    /// * `new_run_id` - The changed atomic run id.
     /// * `io` - The socketio layer to send the data to
     /// * `cancel_token` - The token which indicates cancellation of the task
     /// * `opts` - The mqtt processor options to use
     ///     Returns the instance and options to create a client, which is then used in the process_mqtt loop
     pub fn new(
         channel: Sender<ClientData>,
-        new_run_channel: Receiver<run_service::public_run::Data>,
         io: SocketIo,
         cancel_token: CancellationToken,
         opts: MqttProcessorOptions,
@@ -109,8 +102,6 @@ impl MqttProcessor {
         (
             MqttProcessor {
                 channel,
-                new_run_channel,
-                curr_run: opts.initial_run,
                 io,
                 cancel_token,
                 upload_ratio: opts.upload_ratio,
@@ -168,7 +159,7 @@ impl MqttProcessor {
                         name: "Viewers".to_string(),
                         node: "Internal".to_string(),
                         unit: "".to_string(),
-                        run_id: self.curr_run,
+                        run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now().timestamp_millis(),
                         values: vec![sockets.len().to_string()]
                     };
@@ -189,16 +180,12 @@ impl MqttProcessor {
                         name: "Latency".to_string(),
                         node: "Internal".to_string(),
                         unit: "ms".to_string(),
-                        run_id: self.curr_run,
+                        run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now().timestamp_millis(),
                         values: vec![avg_latency.to_string()]
                     };
                     trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&"n/a".to_string()));
                     self.send_socket_msg(client_data, &mut upload_counter);
-                }
-                Some(new_run) = self.new_run_channel.recv() => {
-                    trace!("New run: {:?}", new_run);
-                    self.curr_run = new_run.id;
                 }
             }
         }
@@ -292,7 +279,7 @@ impl MqttProcessor {
         };
 
         Some(ClientData {
-            run_id: self.curr_run,
+            run_id: crate::RUN_ID.load(Ordering::Relaxed),
             name: data_type,
             unit: data.unit,
             values: data.value,
