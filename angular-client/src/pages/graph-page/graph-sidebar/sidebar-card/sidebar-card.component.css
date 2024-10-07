@@ -12,7 +12,7 @@
     cursor: pointer;
   }
 
-  &.selected {
+  &.choosed {
     background-color: #4f4f4f;
   }
 }

@@ -1,4 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { Subject } from 'rxjs';
+import { DataType } from 'src/utils/types.utils';
 
 /**
  * Sidebar Card Component to display a card in the sidebar.
@@ -15,11 +17,15 @@ export default class SidebarCard implements OnInit {
   @Input() dropDown?: boolean;
   @Input() open?: boolean;
   @Input() dataValue?: string;
-  @Input() selected: boolean = false;
+  @Input() selectedDataType: Subject<DataType> = new Subject<DataType>();
   iconId!: string;
+  selected?: boolean;
 
   ngOnInit(): void {
     this.iconId = `${this.title}-icon`;
+    this.selectedDataType.subscribe((dataType: DataType) => {
+      this.selected = this.title == dataType.name;
+    });
   }
   /**
    * Runs animation when card is selected

@@ -1,4 +1,5 @@
 import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { Subject } from 'rxjs';
 import { DataType, Node, Run } from 'src/utils/types.utils';
 
 /**
@@ -14,7 +15,7 @@ import { DataType, Node, Run } from 'src/utils/types.utils';
 export default class GraphSidebar implements OnInit {
   @Input() nodes!: Node[];
   @Input() selectDataType!: (dataType: DataType) => void;
-  @Input() selectedDataType: string | undefined;
+  @Input() selectedDataType: Subject<DataType> = new Subject<DataType>();
   @Input() onRunSelected!: (run: Run) => void;
 
   isMobile!: boolean;

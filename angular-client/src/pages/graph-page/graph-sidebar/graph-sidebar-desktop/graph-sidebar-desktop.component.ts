@@ -4,7 +4,7 @@ import { DataType, Node, NodeWithVisibilityToggle, NodeWithVisibilityToggleObser
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { FormControl, FormGroup } from '@angular/forms';
-import { debounceTime, Observable, of, Subscription } from 'rxjs';
+import { debounceTime, Observable, of, Subject, Subscription } from 'rxjs';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -49,7 +49,7 @@ import { debounceTime, Observable, of, Subscription } from 'rxjs';
 export default class GraphSidebarDesktop implements OnInit {
   @Input() nodes!: Node[];
   @Input() selectDataType!: (dataType: DataType) => void;
-  @Input() selectedDataType: string | undefined;
+  @Input() selectedDataType: Subject<DataType> = new Subject<DataType>();
   nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggleObservable[]>;
 
   filterForm: FormGroup = new FormGroup({
@@ -59,6 +59,7 @@ export default class GraphSidebarDesktop implements OnInit {
   searchFilter: string = '';
 
   dataValuesMap: Map<string, string> = new Map();
+  dataTypeName?: string;
 
   constructor(private storage: Storage) {}
   /**
@@ -92,6 +93,15 @@ export default class GraphSidebarDesktop implements OnInit {
         });
       }
     }
+
+    this.selectedDataType.subscribe((dataType: DataType) => {
+      this.dataTypeName = dataType.name;
+      console.log(this.dataTypeName);
+    });
+  }
+
+  isNodeOpen(node: NodeWithVisibilityToggle) {
+    return node.dataTypes.filter((dataType: DataType) => dataType.name == this.dataTypeName).length > 0;
   }
 
   ngOnDestroy(): void {
