@@ -1,6 +1,6 @@
-.date-location-display {
-    display: flex;
-    flex-direction: column; 
+.current-run-display {
+    display: flex; 
+    flex-direction: column;
     justify-content: center; 
     align-items: center; 
     height: 100%

@@ -1,7 +1,7 @@
-.date-location-display {
+.viewer-display {
     display: flex;
     flex-direction: column; 
     justify-content: center; 
     align-items: center; 
-    height: 100%
+    height: 100%;
 }

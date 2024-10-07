@@ -1,16 +1,12 @@
 <hstack style="width: 100%">
-  <typography
-    style="height: 100%; width: 100%; text-align: center; padding: 0px"
-    variant="xx-large-title"
-    [content]="time | date: 'HH:mm:ss'"
-  />
-  <landing-page-date-location style="height: 100px; width: 33%" />
-  <landing-page-connection-display style="height: 100px; width: 33%" />
-  <landing-page-latency-display style="height: 100px; width: 33%" />
-</hstack>
+  <hstack style="width: 33%; height: 145px">
+    <typography variant="xx-large-title" [content]="time | date: 'HH:mm:ss'" additionalStyles="font-size: 120px;" />
+  </hstack>
 
-<!-- <hstack>
-    <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
-    <latency-display style="width: 40%" />
-    <argos-button [onClick]="this.onStartNewRun" label="Start New Run"></argos-button>
-  </hstack> -->
+  <hstack style="width: 66%">
+    <landing-page-date-location style="height: 95px; width: 25%" />
+    <landing-page-connection-display style="height: 95px; width: 25%" />
+    <landing-page-current-run-display style="height: 95px; width: 25%" />
+    <landing-page-viewer-display style="height: 95px; width: 25%" />
+  </hstack>
+</hstack>

@@ -108,6 +108,8 @@ import LandingPageHeader from 'src/pages/landing-page/components/landing-page-he
 import LandingPageConnectionDisplay from 'src/pages/landing-page/components/landing-page-connection-display/landing-page-connection-display.component';
 import LandingPageLatencyDisplay from 'src/pages/landing-page/components/landing-page-latency-display/landing-page-latency-display.component';
 import { LandingPageDateLocation } from 'src/pages/landing-page/components/landing-page-date-location/landing-page-date-location.component';
+import { LandingPageCurrentRunDisplay } from 'src/pages/landing-page/components/landing-page-current-run-display/landing-page-current-run-display.component';
+import { LandingPageViewerDisplay } from 'src/pages/landing-page/components/landing-page-viewer-display/landing-page-viewer-display.component';
 
 @NgModule({
   declarations: [
@@ -199,7 +201,9 @@ import { LandingPageDateLocation } from 'src/pages/landing-page/components/landi
     LandingPageHeader,
     LandingPageConnectionDisplay,
     LandingPageLatencyDisplay,
-    LandingPageDateLocation
+    LandingPageDateLocation,
+    LandingPageCurrentRunDisplay,
+    LandingPageViewerDisplay
   ],
   bootstrap: [AppContext],
   imports: [

@@ -1,8 +1,14 @@
 .connection-display {
   display: flex; 
+  flex-direction: column;
   justify-content: center; 
   align-items: center; 
   height: 100%
+}
+
+.connection-display-data {
+  display: flex;
+  justify-content: center;
 }
 
 .connection-dot {
@@ -11,5 +17,6 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
+    margin-right: 5px;
   }
   
