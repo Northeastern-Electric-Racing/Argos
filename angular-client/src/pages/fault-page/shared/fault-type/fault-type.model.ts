@@ -15,5 +15,7 @@ export interface FaultTypeModel {
 
 export enum FaultType {
   BMS = 'BMS',
-  Charger = 'Charger'
+  Charger = 'Charger',
+  DTI = 'DTI',
+  MPU = 'MPU'
 }

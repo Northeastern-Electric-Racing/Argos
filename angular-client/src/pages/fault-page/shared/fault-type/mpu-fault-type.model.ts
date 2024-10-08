@@ -1,11 +1,11 @@
 import { Fault } from '../indiv-fault/fault.model';
 import { FaultType, FaultTypeModel } from './fault-type.model';
 
-export class BMSFaultType implements FaultTypeModel {
-  subscribeToFaults(): Fault<BMSFaultType> {
+export class MPUFaultType implements FaultTypeModel {
+  subscribeToFaults(): Fault<MPUFaultType> {
     // TODO
     throw new Error('Method not implemented.');
   }
-  name = FaultType.BMS;
-  recordedFaults: Fault<BMSFaultType>[] = [];
+  name = FaultType.MPU;
+  recordedFaults: Fault<MPUFaultType>[] = [];
 }
