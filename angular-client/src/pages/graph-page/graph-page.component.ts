@@ -97,7 +97,6 @@ export default class GraphPage implements OnInit {
           this.selectedDataTypeValuesIsError = true;
         });
         dataQueryResponse.data.subscribe((data: DataValue[]) => {
-          console.log(data);
           this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
           this.currentValue.next(data.pop());
         });

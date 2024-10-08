@@ -10,6 +10,7 @@ const getAllSystems = () => `${baseURL}/systems`;
 
 /* Data */
 const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) => `${baseURL}/data/${dataTypeName}/${runId}`;
+const getDataByDatetime = (dateTime: string) => `${baseURL}/dataByDatetime/${dateTime}`;
 
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;
@@ -22,6 +23,7 @@ export const urls = {
   getAllSystems,
 
   getDataByDataTypeNameAndRunId,
+  getDataByDatetime,
 
   getAllRuns,
   getRunById,

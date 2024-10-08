@@ -1,29 +1,60 @@
-# Scylla Server (Rust)
+# Scylla Server
 
+The backend written in Rust for Argos.
+
+## Local Development
+
+Before doing any of the following make sure you've installed Rust: https://www.rust-lang.org/learn/get-started
+
+We specifically need cargo (Rust's build tool and package manager), so run 'cargo --version' to make sure you've correctly installed Rust.
+
+### Run the Database in Docker
+
+In the root project directory run:
+
+```
+docker compose up odyssey-timescale
+```
 
 ### Generate prisma
+
+Cd into the the scylla-server directory and run:
 
 ```
 cargo prisma generate
 ```
 
+### Seed some data
+
+Run:
+```
+cargo prisma-seed
+```
+
+### Setup Environment Variables
+
+Create a .env file in the scylla-server directory containing the following contents:
+
+```
+SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres
+```
+
+
 ### Run the app
 
-```
-# in argos proper
-docker compose up odyssey-timescale
-```
+In scylla-server run:
 
 ```
-# in this directory
-SOURCE_DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres cargo run
+cargo run
 ```
 
-### Test this app
+Once you also have the client setup you should be able to run both it and the server concurrently from the root directory using:
 
-#### Seed some data
+```
+npm run start
+```
 
-Run `cargo prisma-seed`
+## Test this app
 
 
 #### Integration tests
@@ -67,7 +98,7 @@ Have an async function that takes time and is somewhat important for performance
 
 
 
-### Deploy this app
+## Deploy this app
 
 See main README.
 

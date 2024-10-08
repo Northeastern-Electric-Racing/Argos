@@ -1,0 +1,29 @@
+<div class="image-container" style="margin-right: 16px; margin-left: 16px">
+  <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px" />
+
+  <div *ngIf="isMobile; else isDesktop">
+    <typography style="margin-bottom: -30px; margin-top: -10px" variant="large-header" content="Fault Page Mobile View" />
+  </div>
+  <ng-template #isDesktop>
+    <vstack style="width: 100%" spacing="15px">
+      <div style="align-self: end; width: 100%; display: flex; justify-content: space-around">
+        <typography
+          style="margin-bottom: -30px; margin-top: -10px"
+          variant="large-header"
+          [content]="time | date: 'HH:mm:ss'"
+        />
+        <typography
+          style="margin-bottom: -30px; margin-top: -10px"
+          variant="large-header"
+          content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} "
+        />
+        <latency-display style="margin-bottom: -30px; margin-top: -10px" />
+      </div>
+      <div style="align-self: end; width: 100%; display: flex; justify-content: space-around">
+        <fault-log style="width: 30%" [setSelectedFault]="setSelectedFault" />
+        <fault-box style="width: 35%" />
+        <graph-sidebar-desktop style="width: 30%" [nodes]="[]" [selectDataType]="onSelectDataType" />
+      </div>
+    </vstack>
+  </ng-template>
+</div>

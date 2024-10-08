@@ -29,7 +29,7 @@ export default class Graph implements OnChanges {
   data!: Map<number, number>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
-  timeRangeMs = 120000;
+  timeRangeMs = 60000;
 
   updateChart = () => {
     if (this.previousDataLength !== Array.from(this.data).length) {

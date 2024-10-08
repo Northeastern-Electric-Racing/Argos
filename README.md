@@ -1,9 +1,5 @@
 # Argos
 
-### Initializing Submodule
-
-To initialize the odyssey submodule run `git submodule update --init`
-
 ## Local Development
 
 Setup angular-client and scylla-server:
@@ -11,7 +7,7 @@ Setup angular-client and scylla-server:
 [Angular Client](./angular-client/README.md)\
 [Scylla Server](./scylla-server/README.md)
 
-Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the docker commands below to run them together.
+Once you've sucessfully setup Scylla and the Client, you can either run them separately, use `npm run start` from the root directory to run them together, or follow the docker commands below to run them together.
 
 ## Production
 

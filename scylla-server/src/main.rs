@@ -229,6 +229,10 @@ async fn main() {
             "/data/:dataTypeName/:runId",
             get(controllers::data_controller::get_data),
         )
+        .route(
+            "/dataByDatetime/:datetime",
+            get(controllers::data_controller::get_data_by_datetime),
+        )
         // DATA TYPE
         .route("/datatypes", get(data_type_controller::get_all_data_types))
         // DRIVERS

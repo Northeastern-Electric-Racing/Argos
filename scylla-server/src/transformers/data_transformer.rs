@@ -9,12 +9,30 @@ pub struct PublicData {
     pub values: Vec<String>,
 }
 
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PublicDataWithDataType {
+    pub time: i64,
+    pub values: Vec<String>,
+    pub dataTypeName: String,
+}
+
 /// convert the prisma type to the client type for JSON encoding
 impl From<&data_service::public_data::Data> for PublicData {
     fn from(value: &data_service::public_data::Data) -> Self {
         PublicData {
             values: value.values.iter().map(f64::to_string).collect(),
             time: value.time.timestamp_millis(),
+        }
+    }
+}
+
+/// convert the prisma type to the client type for JSON encoding
+impl From<&data_service::public_data_with_dataType::Data> for PublicDataWithDataType {
+    fn from(value: &data_service::public_data_with_dataType::Data) -> Self {
+        PublicDataWithDataType {
+            values: value.values.iter().map(f64::to_string).collect(),
+            time: value.time.timestamp_millis(),
+            dataTypeName: value.data_type_name.clone(),
         }
     }
 }
