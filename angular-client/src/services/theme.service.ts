@@ -7,9 +7,9 @@ export default class Theme {
   static readonly textColor: string = 'color: #EFEFEF; ';
   static readonly textStyle: string = this.font + this.textColor;
   static readonly boldedText: string = this.textStyle + 'font-weight: bold; ';
-  static readonly header: string = this.boldedText + 'font-size: 20px; margin: 0';
+  static readonly header: string = this.boldedText + 'fontSize: 20px;';
   static readonly secondaryHeader: string = this.font + 'font-weight: bold; fontSize: 20px; color: #808080; ';
-  static readonly subheader: string = this.textStyle + 'font-size: 16px;';
+  static readonly subheader: string = this.textStyle + 'fontSize: 16px;';
   static readonly xLargeHeader: string = this.boldedText + 'font-size: 2.5rem; margin: 0; padding: 0;';
   static readonly xxLargeHeader: string = this.boldedText + 'font-size: 7.5rem; margin: 0; padding: 0;';
   static readonly largeSecondaryHeader: string = this.font + 'font-weight: bold; font-size: xx-large; color: #808080; ';
@@ -19,7 +19,7 @@ export default class Theme {
   static readonly value: string = this.boldedText + 'fontSize: 85px; margin: 0; padding: 0;';
   static readonly infoValue: string = this.boldedText + 'fontSize: 50px; margin: 0; align-self: center;';
   static readonly infoValueMobile: string = this.boldedText + 'fontSize: 25px; margin: 0; align-self: center;';
-  static readonly infoUnit: string = this.textStyle + 'font-size: 24px; color: gray; padding-top: 0px;';
+  static readonly infoUnit: string = this.textStyle + 'font-size: 24px; color: gray; padding-top: 22px;';
   static readonly sidebarLabel: string = this.font + 'font-size: 16px; margin: 0;';
 
   static readonly battteryLow: string = '#f50905';
