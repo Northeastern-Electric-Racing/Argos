@@ -1,0 +1,16 @@
+<info-background>
+  <div class="latency-display">
+    <div class="latency-display-header">
+      <typography variant="header" content="Latency" />
+    </div>
+
+    <div class="latency-display-body">
+      <typography
+        variant="subheader"
+        [content]="latency.toString()"
+        additionalStyles="padding-right: 2px; margin-top: 0px; margin-bottom: 0px;"
+      />
+      <typography variant="info-subtitle" content="ms" additionalStyles="font-size: 15px;" />
+    </div>
+  </div>
+</info-background>
