@@ -1,4 +1,4 @@
-<div @if="isMobile; else desktopView">
+<div *ngIf="isMobile; else desktopView">
   <graph-sidebar-mobile [nodes]="nodes" [selectDataType]="selectDataType" [onRunSelected]="onRunSelected" />
 </div>
 <ng-template #desktopView>

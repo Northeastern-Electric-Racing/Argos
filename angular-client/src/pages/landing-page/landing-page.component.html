@@ -1,7 +1,7 @@
 <div class="image-container" style="margin-right: 16px; margin-left: 16px">
   <sidebar-toggle style="position: absolute; margin-top: 16px; margin-left: 16px" />
 
-  <landing-page-mobile style="width: 100%" @if="isMobile; else isDesktop" [time]="time" />
+  <landing-page-mobile style="width: 100%" *ngIf="isMobile; else isDesktop" [time]="time" />
   <ng-template #isDesktop>
     <vstack style="width: 100%" spacing="40px">
       <hstack style="width: 100%">

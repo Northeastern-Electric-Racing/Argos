@@ -4,7 +4,7 @@
     variant="subheader"
     content="Select Data Type"
   />
-  <div @if="showSelection" class="container" @toggleSidebar>
+  <div *ngIf="showSelection" class="container" @toggleSidebar>
     <run-selector style="text-align: center" [selectRun]="onRunSelected" />
     <div *ngFor="let node of nodesWithVisibilityToggle" class="subcontainer">
       <sidebar-card
@@ -13,7 +13,7 @@
         (click)="toggleDataTypeVisibility(node)"
         [dropDown]="true"
       />
-      <div @if="node.dataTypesAreVisible" class="subcontainer" @toggleCardExpand>
+      <div *ngIf="node.dataTypesAreVisible" class="subcontainer" @toggleCardExpand>
         <sidebar-card *ngFor="let dataType of node.dataTypes" [title]="dataType.name" (click)="selectDataType(dataType)" />
       </div>
     </div>

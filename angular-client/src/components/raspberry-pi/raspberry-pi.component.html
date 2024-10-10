@@ -1,6 +1,6 @@
 <info-background svgIcon="memory" title="Rasberry Pi">
   <raspberry-pi-mobile
-    @if="isMobile; else isDesktop"
+    *ngIf="isMobile; else isDesktop"
     style="width: 100%"
     [cpuTemp]="cpuTemp"
     [cpuUsage]="cpuUsage"

@@ -1,8 +1,8 @@
-<div @if="nodesIsError; else checkLoading">
+<div *ngIf="nodesIsError; else checkLoading">
   <error-page [errorMessage]="nodesError!.message" />
 </div>
 <ng-template #checkLoading>
-  <div @if="!nodes || nodesIsLoading; else displayData">
+  <div *ngIf="!nodes || nodesIsLoading; else displayData">
     <loading-page />
   </div>
 </ng-template>

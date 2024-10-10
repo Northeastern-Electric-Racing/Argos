@@ -17,6 +17,11 @@ const routes: Routes = [
 ];
 
 @NgModule({
+  imports: [
+    RouterModule.forRoot(routes),
+    CommonModule,
+    BrowserAnimationsModule // required animations module
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}

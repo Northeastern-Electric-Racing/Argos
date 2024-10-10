@@ -199,7 +199,9 @@ import { ToastButtonComponent } from 'src/components/toast-button/toast-button.c
     MatToolbarModule,
     MatButtonModule,
     MatInputModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CommonModule,
+    BrowserAnimationsModule // required animations module
   ],
   providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })
