@@ -12,7 +12,7 @@ export class LandingPageCurrentRunDisplay {
 
   ngOnInit() {
     this.storage.getCurrentRunId().subscribe((runId) => {
-      if (runId) { this.currentRun = runId}
+      if (runId) { this.currentRun = runId }
     });
   }
 }
