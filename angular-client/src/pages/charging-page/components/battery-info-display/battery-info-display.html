@@ -1,6 +1,6 @@
 <info-background title="Battery" svgIcon="battery_charging_full">
   <battery-info-mobile
-    *ngIf="isMobile; else isDesktop"
+    @if="isMobile; else isDesktop"
     style="width: 100%"
     [voltage]="voltage"
     [chargeCurrentLimit]="chargeCurrentLimit"

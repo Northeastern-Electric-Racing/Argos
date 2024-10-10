@@ -13,7 +13,7 @@
   </div>
   <mat-icon
     [id]="iconId"
-    *ngIf="dropDown"
+    @if="dropDown"
     class="icon"
     [ngStyle]="{ transform: open ? 'rotate(90deg)' : undefined }"
     svgIcon="arrow_right"

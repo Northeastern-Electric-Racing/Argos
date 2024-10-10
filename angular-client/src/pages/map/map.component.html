@@ -1,8 +1,8 @@
-<div *ngIf="isError; else checkIsLoading">
+<div @if="isError; else checkIsLoading">
   <error-page [errorMessage]="error!.message"></error-page>
 </div>
 <ng-template #checkIsLoading>
-  <div *ngIf="isLoading; else displayMap">
+  <div @if="isLoading; else displayMap">
     <loading-page></loading-page>
   </div>
 </ng-template>
