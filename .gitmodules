@@ -1,3 +1,0 @@
-[submodule "scylla-server-typescript/src/odyssey-base"]
-	path = scylla-server-typescript/src/odyssey-base
-	url = https://github.com/Northeastern-Electric-Racing/Odyssey-Base.git
