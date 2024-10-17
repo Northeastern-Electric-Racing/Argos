@@ -1,7 +1,7 @@
 services:
   odyssey-timescale:
     container_name: odyssey-timescale
-    image: timescale/timescaledb:2.13.1-pg15
+    image: timescale/timescaledb-ha:pg15
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
