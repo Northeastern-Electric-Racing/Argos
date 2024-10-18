@@ -4,7 +4,8 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use prisma_client_rust::{bigdecimal::ToPrimitive, chrono, serde_json};
+use chrono::TimeDelta;
+use prisma_client_rust::bigdecimal::ToPrimitive;
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
@@ -25,7 +26,6 @@ use crate::{
 };
 
 use super::ClientData;
-use std::borrow::Cow;
 
 /// The chief processor of incoming mqtt data, this handles
 /// - mqtt state
@@ -129,7 +129,7 @@ impl MqttProcessor {
         let mut view_interval = tokio::time::interval(Duration::from_secs(3));
 
         let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
-        let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<i64>::new(20);
+        let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
 
         let mut upload_counter: u8 = 0;
 
@@ -154,7 +154,7 @@ impl MqttProcessor {
                             Some(msg) => msg,
                             None => continue
                         };
-                        latency_ringbuffer.push(chrono::offset::Utc::now().timestamp_millis() - msg.timestamp);
+                        latency_ringbuffer.push(chrono::offset::Utc::now() - msg.timestamp);
                         self.send_db_msg(msg.clone()).await;
                         self.send_socket_msg(msg, &mut upload_counter);
                     },
@@ -169,8 +169,8 @@ impl MqttProcessor {
                         node: "Internal".to_string(),
                         unit: "".to_string(),
                         run_id: self.curr_run,
-                        timestamp: chrono::offset::Utc::now().timestamp_millis(),
-                        values: vec![sockets.len().to_string()]
+                        timestamp: chrono::offset::Utc::now(),
+                        values: vec![sockets.len() as f32]
                     };
                     self.send_socket_msg(client_data, &mut upload_counter);
                     } else {
@@ -182,7 +182,7 @@ impl MqttProcessor {
                     let avg_latency = if latency_ringbuffer.is_empty() {
                         0
                     } else {
-                        latency_ringbuffer.iter().sum::<i64>() / latency_ringbuffer.len().to_i64().unwrap_or_default()
+                        latency_ringbuffer.iter().sum::<TimeDelta>().num_milliseconds() / latency_ringbuffer.len().to_i64().unwrap_or_default()
                     };
 
                     let client_data = ClientData {
@@ -190,10 +190,10 @@ impl MqttProcessor {
                         node: "Internal".to_string(),
                         unit: "ms".to_string(),
                         run_id: self.curr_run,
-                        timestamp: chrono::offset::Utc::now().timestamp_millis(),
-                        values: vec![avg_latency.to_string()]
+                        timestamp: chrono::offset::Utc::now(),
+                        values: vec![avg_latency as f32]
                     };
-                    trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&"n/a".to_string()));
+                    trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&0.0f32));
                     self.send_socket_msg(client_data, &mut upload_counter);
                 }
                 Some(new_run) = self.new_run_channel.recv() => {
@@ -254,48 +254,70 @@ impl MqttProcessor {
 
         let data_type = split.1.replace('/', "-");
 
-        // extract the unix time, returning the current time instead if either the "ts" user property isnt present or it isnt parsable
-        // note the Cow magic involves the return from the map is a borrow, but the unwrap cannot as we dont own it
-        let unix_time = msg
-            .properties
-            .unwrap_or_default()
-            .user_properties
-            .iter()
-            .map(Cow::Borrowed)
-            .find(|f| f.0 == "ts")
-            .unwrap_or_else(|| {
-                debug!("Could not find timestamp in mqtt, using system time");
-                Cow::Owned((
-                    "ts".to_string(),
-                    chrono::offset::Utc::now().timestamp_millis().to_string(),
-                ))
-            })
-            .1
-            .parse::<i64>()
-            .unwrap_or_else(|err| {
-                warn!("Invalid timestamp in mqtt, using system time: {}", err);
-                chrono::offset::Utc::now().timestamp_millis()
-            });
+        // extract the unix time
+        // levels of time priority
+        // - A: The time packaged in the protobuf, to microsecond precision
+        // - B: The time packaged in the MQTT header, to millisecond precision (hence the * 1000 on B)
+        // - C: The local scylla system time
+        // note protobuf defaults to 0 for unfilled time, so consider it as an unset time
+        let unix_time = if data.time_us > 0 {
+            // A
+            let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time_us as i64)
+            else {
+                warn!(
+                    "Corrupted time in protobuf: {}, discarding message!",
+                    data.time_us
+                );
+                return None;
+            };
+            unix_time
+        } else {
+            // B
+            match match msg
+                .properties
+                .unwrap_or_default()
+                .user_properties
+                .iter()
+                .find(|f| f.0 == "ts")
+            {
+                Some(val) => {
+                    let Ok(time_parsed) = val.1.parse::<i64>() else {
+                        warn!("Corrupted time in mqtt header, discarding message!");
+                        return None;
+                    };
+                    chrono::DateTime::from_timestamp_millis(time_parsed)
+                }
+                None => None,
+            } {
+                Some(e) => e,
+                None => {
+                    // C
+                    debug!("Could not extract time, using system time!");
+                    chrono::offset::Utc::now()
+                }
+            }
+        };
 
         // ts check for bad sources of time which may return 1970
         // if both system time and packet timestamp are before year 2000, the message cannot be recorded
-        let unix_clean = if unix_time < 963014966000 {
-            debug!("Timestamp before year 2000: {}", unix_time);
-            let sys_time = chrono::offset::Utc::now().timestamp_millis();
-            if sys_time < 963014966000 {
-                warn!("System has no good time, discarding message!");
-                return None;
-            }
-            sys_time
-        } else {
-            unix_time
-        };
+        let unix_clean =
+            if unix_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
+                debug!("Timestamp before year 2000: {}", unix_time.to_string());
+                let sys_time = chrono::offset::Utc::now();
+                if sys_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
+                    warn!("System has no good time, discarding message!");
+                    return None;
+                }
+                sys_time
+            } else {
+                unix_time
+            };
 
         Some(ClientData {
             run_id: self.curr_run,
             name: data_type,
             unit: data.unit,
-            values: data.value,
+            values: data.values,
             timestamp: unix_clean,
             node: node.to_string(),
         })

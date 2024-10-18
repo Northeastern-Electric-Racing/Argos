@@ -2,7 +2,6 @@ use axum::{
     extract::{Path, State},
     Extension, Json,
 };
-use prisma_client_rust::chrono;
 use tokio::sync::mpsc;
 use tracing::warn;
 
@@ -43,8 +42,7 @@ pub async fn new_run(
     State(db): State<Database>,
     Extension(channel): Extension<mpsc::Sender<run_service::public_run::Data>>,
 ) -> Result<Json<PublicRun>, ScyllaError> {
-    let run_data =
-        run_service::create_run(&db, chrono::offset::Utc::now().timestamp_millis()).await?;
+    let run_data = run_service::create_run(&db, chrono::offset::Utc::now()).await?;
 
     // notify the mqtt receiver a new run has been created
     if let Err(err) = channel.send(run_data.clone()).await {

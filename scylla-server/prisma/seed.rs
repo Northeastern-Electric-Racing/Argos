@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use prisma_client_rust::{chrono, QueryError};
+use prisma_client_rust::QueryError;
 use scylla_server::{
     prisma::PrismaClient,
     processors::ClientData,
@@ -35,8 +35,7 @@ async fn main() -> Result<(), QueryError> {
 
     client.system().delete_many(vec![]).exec().await?;
 
-    let created_run =
-        run_service::create_run(&client, chrono::offset::Utc::now().timestamp_millis()).await?;
+    let created_run = run_service::create_run(&client, chrono::offset::Utc::now()).await?;
 
     system_service::upsert_system(&client, "Data And Controls".to_string(), created_run.id).await?;
     driver_service::upsert_driver(&client, "Fergus".to_string(), created_run.id).await?;
@@ -67,72 +66,72 @@ async fn main() -> Result<(), QueryError> {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["20".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis(),
+                values: vec![20f32],
+                timestamp: chrono::offset::Utc::now(),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["21".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 1000,
+                values: vec![21f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(1000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["22".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 2000,
+                values: vec![22f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(2000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["17".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 3000,
+                values: vec![17f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(3000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["25".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 4000,
+                values: vec![17f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(4000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["30".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 5000,
+                values: vec![17f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(5000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["38".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 6000,
+                values: vec![17f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(6000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["32".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 7000,
+                values: vec![17f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(7000),
                 node: "BMS".to_string(),
             },
             ClientData {
                 run_id: created_run.id,
                 name: "Pack-Temp".to_string(),
                 unit: "C".to_string(),
-                values: vec!["26".to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis() + 8000,
+                values: vec![17f32],
+                timestamp: chrono::offset::Utc::now() + Duration::from_millis(8000),
                 node: "BMS".to_string(),
             },
         ],
@@ -215,8 +214,8 @@ async fn simulate_route(db: Database, curr_run: i32) -> Result<(), QueryError> {
                 run_id: curr_run,
                 name: "Points".to_string(),
                 unit: "Coord".to_string(),
-                values: vec![inter_lat.to_string(), inter_long.to_string()],
-                timestamp: chrono::offset::Utc::now().timestamp_millis(),
+                values: vec![inter_lat as f32, inter_long as f32],
+                timestamp: chrono::offset::Utc::now(),
                 node: "TPU".to_string(),
             },
         )

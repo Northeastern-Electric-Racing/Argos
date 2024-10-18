@@ -15,7 +15,8 @@ pub struct PublicRun {
     pub driver_name: String,
     #[serde(rename = "systemName")]
     pub system_name: String,
-    pub time: i64,
+    #[serde(rename = "time")]
+    pub time_ms: i64,
 }
 
 impl From<&public_run::Data> for PublicRun {
@@ -25,7 +26,7 @@ impl From<&public_run::Data> for PublicRun {
             location_name: value.location_name.clone().unwrap_or_default(),
             driver_name: value.driver_name.clone().unwrap_or_default(),
             system_name: value.system_name.clone().unwrap_or_default(),
-            time: value.time.timestamp_millis(),
+            time_ms: value.time.timestamp_millis(),
         }
     }
 }
@@ -39,7 +40,7 @@ impl From<&public_driver::runs::Data> for PublicRun {
             location_name: value.location_name.clone().unwrap_or_default(),
             driver_name: value.driver_name.clone().unwrap_or_default(),
             system_name: value.system_name.clone().unwrap_or_default(),
-            time: value.time.timestamp_millis(),
+            time_ms: value.time.timestamp_millis(),
         }
     }
 }
@@ -51,7 +52,7 @@ impl From<&public_location::runs::Data> for PublicRun {
             location_name: value.location_name.clone().unwrap_or_default(),
             driver_name: value.driver_name.clone().unwrap_or_default(),
             system_name: value.system_name.clone().unwrap_or_default(),
-            time: value.time.timestamp_millis(),
+            time_ms: value.time.timestamp_millis(),
         }
     }
 }
@@ -63,7 +64,7 @@ impl From<&public_system::runs::Data> for PublicRun {
             location_name: value.location_name.clone().unwrap_or_default(),
             driver_name: value.driver_name.clone().unwrap_or_default(),
             system_name: value.system_name.clone().unwrap_or_default(),
-            time: value.time.timestamp_millis(),
+            time_ms: value.time.timestamp_millis(),
         }
     }
 }
