@@ -247,6 +247,7 @@ impl DbHandler {
 
         // if data has some special meanings, push them to the database immediately, notably no matter what also enter batching logic
         match msg.name.as_str() {
+            // TODO remove driver from here, as driver is not car sourced
             "Driver" => {
                 debug!("Upserting driver: {:?}", msg.values);
                 if let Err(err) = driver_service::upsert_driver(
@@ -259,12 +260,14 @@ impl DbHandler {
                     warn!("Driver upsert error: {:?}", err);
                 }
             }
+            // TODO see above
             "location" => {
                 debug!("Upserting location name: {:?}", msg.values);
                 self.location_lock
                     .add_loc_name((*msg.values.first().unwrap_or(&0.0f32)).to_string());
                 self.is_location = true;
             }
+            // TODO see above
             "system" => {
                 debug!("Upserting system: {:?}", msg.values);
                 if let Err(err) = system_service::upsert_system(

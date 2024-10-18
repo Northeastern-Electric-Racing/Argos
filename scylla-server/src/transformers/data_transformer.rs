@@ -7,14 +7,14 @@ use crate::{processors::ClientData, services::data_service};
 /// The struct defining the data format sent to the client
 #[derive(Serialize, Debug)]
 pub struct PublicData {
-    /// time in MILLISECONDS
-    pub time: i64,
+    #[serde(rename = "time")]
+    pub time_ms: i64,
     pub values: Vec<f64>,
 }
 // custom impls to avoid comparing values fields
 impl Ord for PublicData {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.time.cmp(&other.time)
+        self.time_ms.cmp(&other.time_ms)
     }
 }
 
@@ -26,7 +26,7 @@ impl PartialOrd for PublicData {
 
 impl PartialEq for PublicData {
     fn eq(&self, other: &Self) -> bool {
-        self.time == other.time
+        self.time_ms == other.time_ms
     }
 }
 
@@ -37,7 +37,7 @@ impl From<&data_service::public_data::Data> for PublicData {
     fn from(value: &data_service::public_data::Data) -> Self {
         PublicData {
             values: value.values.clone(),
-            time: value.time.timestamp_millis(),
+            time_ms: value.time.timestamp_millis(),
         }
     }
 }
@@ -46,7 +46,7 @@ impl From<&data_service::public_data::Data> for PublicData {
 impl From<ClientData> for PublicData {
     fn from(value: ClientData) -> Self {
         PublicData {
-            time: value.timestamp.timestamp_millis(),
+            time_ms: value.timestamp.timestamp_millis(),
             values: value.values.iter().map(|f| *f as f64).collect(),
         }
     }

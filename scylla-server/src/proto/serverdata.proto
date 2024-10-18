@@ -9,6 +9,6 @@ message ServerData {
    
    string unit = 2;
    // time since unix epoch in MICROSECONDS
-   uint64 time = 3;
+   uint64 time_us = 3;
    repeated float values = 4;
 }

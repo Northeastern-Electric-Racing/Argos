@@ -260,12 +260,13 @@ impl MqttProcessor {
         // - B: The time packaged in the MQTT header, to millisecond precision (hence the * 1000 on B)
         // - C: The local scylla system time
         // note protobuf defaults to 0 for unfilled time, so consider it as an unset time
-        let unix_time = if data.time > 0 {
+        let unix_time = if data.time_us > 0 {
             // A
-            let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time as i64) else {
+            let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time_us as i64)
+            else {
                 warn!(
                     "Corrupted time in protobuf: {}, discarding message!",
-                    data.time
+                    data.time_us
                 );
                 return None;
             };
