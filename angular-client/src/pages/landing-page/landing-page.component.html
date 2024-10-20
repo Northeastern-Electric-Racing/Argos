@@ -14,7 +14,7 @@
           <hstack style="width: 100%"
             ><typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }} | {{ location }} " />
             <latency-display style="width: 40%" />
-            <argos-button [onClick]="this.onStartNewRun" label="Start New Run"></argos-button>
+            <toast-button [onClick]="this.onStartNewRun" label="Start New Run"></toast-button>
           </hstack>
 
           <hstack style="width: 100%">
