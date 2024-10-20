@@ -1,28 +1,7 @@
-.image-container {
-  /* background-image: url(../../assets/images/NERO.jpeg); */
-  background-size: cover;
-  background-position: center;
-  height: 100%;
-}
-
-.overlay-div {
-  background-color: rgba(255, 255, 255, 0.5);
-  height: 100%;
-  padding-top: 16px;
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-.thermometer-container {
+.header-bar-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  height: 200px;
-  width: 75px;
-}
-
-@media screen and (max-width: 800px) {
-  .container-div {
-    background-attachment: fixed;
-  }
+  flex-grow: 1;
+  gap: 20px;
 }

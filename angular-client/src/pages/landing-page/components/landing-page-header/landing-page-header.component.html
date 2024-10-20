@@ -1,7 +1,9 @@
-<hstack style="width: 100">
+<hstack style="width: 100%">
   <typography variant="xx-large-title" [content]="time | date: 'HH:mm:ss'" additionalStyles="width: 36%" />
-  <landing-page-date-location style="height: 95px; width: 16%" />
-  <landing-page-connection-display style="height: 95px; width: 16%" />
-  <landing-page-current-run-display style="height: 95px; width: 16%" />
-  <landing-page-viewer-display style="height: 95px; width: 16%" />
+  <div class="header-bar-container" style="width: 64%">
+    <landing-page-date-location style="height: 95px; width: 25%" />
+    <landing-page-connection-display style="height: 95px; width: 25%" />
+    <landing-page-current-run-display style="height: 95px; width: 25%" />
+    <landing-page-viewer-display style="height: 95px; width: 25%" />
+  </div>
 </hstack>
