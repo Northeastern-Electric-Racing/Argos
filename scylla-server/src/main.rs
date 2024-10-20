@@ -17,10 +17,13 @@ use scylla_server::{
     },
     prisma::PrismaClient,
     processors::{
-        db_handler, mock_processor::MockProcessor, mqtt_processor::MqttProcessor, ClientData,
+        db_handler,
+        mock_processor::MockProcessor,
+        mqtt_processor::{MqttProcessor, MqttProcessorOptions},
+        ClientData,
     },
     services::run_service::{self, public_run},
-    Database,
+    Database, RateLimitMode,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{signal, sync::mpsc};
@@ -69,6 +72,25 @@ struct ScyllaArgs {
         default_value = "10"
     )]
     batch_upsert_time: u64,
+
+    /// The rate limit mode to use
+    #[arg(
+        short = 'm',
+        long,
+        env = "SCYLLA_RATE_LIMIT_MODE",
+        default_value_t = RateLimitMode::None,
+        value_enum,
+    )]
+    rate_limit_mode: RateLimitMode,
+
+    /// The static rate limit number to use in ms
+    #[arg(
+        short = 'v',
+        long,
+        env = "SCYLLA_STATIC_RATE_LIMIT_VALUE",
+        default_value = "100"
+    )]
+    static_rate_limit_value: u64,
 
     /// The percent of messages discarded when sent from the socket
     #[arg(
@@ -185,11 +207,15 @@ async fn main() {
         let (recv, opts) = MqttProcessor::new(
             mqtt_send,
             new_run_receive,
-            cli.siren_host_url,
-            curr_run.id,
             io,
             token.clone(),
-            ((cli.socketio_discard_percent as f32 / 100.0) * 255.0) as u8,
+            MqttProcessorOptions {
+                mqtt_path: cli.siren_host_url,
+                initial_run: curr_run.id,
+                static_rate_limit_time: cli.static_rate_limit_value,
+                rate_limit_mode: cli.rate_limit_mode,
+                upload_ratio: cli.socketio_discard_percent,
+            },
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
         let client_sharable: Arc<AsyncClient> = Arc::new(client);

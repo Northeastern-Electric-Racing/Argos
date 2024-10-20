@@ -1,22 +1,23 @@
 <vstack style="width: 100%" spacing="20px">
-  <typography variant="xx-large-title" content="Argos"></typography>
-  <typography variant="x-large-title" [content]="time | date: 'HH:mm:ss'"></typography>
-  <typography variant="x-large-title" content="{{ time | date: 'MM/dd/yyyy' }}"></typography>
-  <state-of-charge-display style="width: 100%" />
-
-  <hstack style="width: 100%">
-    <battery-status-display style="width: 100%" />
-    <latency-display style="width: 70%" />
+  <typography variant="x-large-title" content="Argos" additionalStyles="fontSize:40px"></typography>
+  <hstack>
+    <typography variant="large-header" [content]="time | date: 'HH:mm:ss'" additionalStyles="fontSize:25px"></typography>
+    <divider style="height: 40px"></divider>
+    <typography
+      variant="large-header"
+      content="{{ time | date: 'MM/dd/yyyy' }}"
+      additionalStyles="fontSize:25px"
+    ></typography>
   </hstack>
-
-  <hstack style="width: 100%">
-    <pack-temp style="width: 50%; height: 20vh" />
-  </hstack>
-  <cell-temp-display style="width: 100%; height: 20vh" />
-  <cell-temp-graph style="width: 100%; height: 20vh" />
-
-  <hstack style="width: 100%">
-    <current-display style="width: 60%" />
-    <fault-display style="width: 40%" />
-  </hstack>
+  <latency-display style="padding-bottom: 20px; margin-top: -10px" />
+  <vstack style="width: 100%" spacing="15px">
+    <combined-status-mobile style="width: 80%; height: 720px" />
+    <state-of-charge-display style="width: 80%; height: 123px" />
+    <current-display style="width: 80%; height: 122px" />
+    <pack-temp style="width: 80%; height: 122px" />
+    <cell-temp-display style="width: 80%; height: 325px" />
+    <high-low-cell-display style="width: 80%; height: 325px" />
+    <pack-voltage-display style="width: 80%; height: 275px" />
+    <fault-display style="width: 80%; height: 375px" />
+  </vstack>
 </vstack>

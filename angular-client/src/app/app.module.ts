@@ -80,7 +80,6 @@ import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
 import BatteryInfoDesktop from 'src/pages/charging-page/components/battery-info-display/battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobile from 'src/pages/charging-page/components/battery-info-display/battery-info-mobile/battery-info-mobile.component';
-import BatteryStatusDisplay from 'src/pages/charging-page/components/battery-status-display/battery-status-display.component';
 import StateOfChargeDisplay from 'src/pages/charging-page/components/state-of-charge/state-of-charge-display/state-of-charge-display.component';
 import PackTemp from 'src/pages/charging-page/components/pack-temp/pack-temp.component';
 import CellTempDisplay from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-display.component';
@@ -92,11 +91,20 @@ import HighLowCellDisplay from 'src/pages/charging-page/components/high-low-cell
 import HighLowCellGraph from 'src/pages/charging-page/components/high-low-cell/high-low-cell-graph/high-low-cell-graph.component';
 import PackVoltageGraph from 'src/pages/charging-page/components/pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
 import PackVoltageDisplay from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
-import ChargingStateComponent from 'src/pages/charging-page/components/charging-state/charging-state.component';
+import ChargingStatusComponent from 'src/pages/charging-page/components/charging-state/charging-status.component';
 import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
 import { BatteryInfoDisplay } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
-import { CommonModule } from '@angular/common';
 import { ToastButtonComponent } from 'src/components/toast-button/toast-button.component';
+import StartingSocTimer from 'src/pages/charging-page/components/starting-soc/starting-soc-timer.component';
+import CurrentTotalTimer from 'src/components/current-total-timer/current-total-timer.component';
+import BalancingStatus from 'src/pages/charging-page/components/balancing-status/balancing-status.component';
+import FaultedStatus from 'src/pages/charging-page/components/faulted-status/faulted-status.component';
+import ActiveStatus from 'src/pages/charging-page/components/active-status/active-status.component';
+import CombinedStatusDisplay from 'src/pages/charging-page/components/combined-status-display/combined-status-display.component';
+import CombinedStatusMobile from 'src/pages/charging-page/components/combined-status-display/mobile-view/combined-status-mobile.component';
+import PackVoltageMobileDisplay from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-mobile/pack-voltage-mobile.component';
+import HighLowCellMobile from 'src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-mobile/high-low-cell-mobile.component';
+import CellTempMobile from 'src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-mobile/cell-temp-mobile.component';
 
 @NgModule({
   declarations: [
@@ -161,7 +169,7 @@ import { ToastButtonComponent } from 'src/components/toast-button/toast-button.c
     BatteryInfoMobile,
     NodeFilterPipe,
     DataTypeFilterPipe,
-    BatteryStatusDisplay,
+    CombinedStatusDisplay,
     StateOfChargeDisplay,
     PackTemp,
     CellTempDisplay,
@@ -175,8 +183,17 @@ import { ToastButtonComponent } from 'src/components/toast-button/toast-button.c
     HighLowCellGraph,
     PackVoltageGraph,
     PackVoltageDisplay,
-    ChargingStateComponent,
-    ToastButtonComponent
+    ToastButtonComponent,
+    ChargingStatusComponent,
+    StartingSocTimer,
+    CurrentTotalTimer,
+    BalancingStatus,
+    FaultedStatus,
+    ActiveStatus,
+    CombinedStatusMobile,
+    PackVoltageMobileDisplay,
+    HighLowCellMobile,
+    CellTempMobile
   ],
   bootstrap: [AppContext],
   imports: [
@@ -247,6 +264,11 @@ export class AppModule {
       .addSvgIcon('thermostat', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/thermostat.svg'))
       .addSvgIcon('model_training', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/model_training.svg'))
       .addSvgIcon('quickreply', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/quickreply.svg'))
-      .addSvgIcon('bolt', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bolt.svg'));
+      .addSvgIcon('bolt', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bolt.svg'))
+      .addSvgIcon('timer', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/timer.svg'))
+      .addSvgIcon(
+        'arrow_drop_down_circle',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assests/icons/arrow_drop_down_circle.svg')
+      );
   }
 }

@@ -4,6 +4,8 @@ services:
             - siren
         environment:
             - SCYLLA_SIREN_HOST_URL=siren:1883
+            - SCYLLA_RATE_LIMIT_MODE=static
+            - SCYLLA_STATIC_RATE_LIMIT_VALUE=100
 
     client:
       extends:

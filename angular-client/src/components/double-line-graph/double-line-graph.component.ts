@@ -47,9 +47,13 @@ export class DoubleLineGraphComponent implements OnInit {
   @Input() title2?: string;
   @Input() header?: string;
   @Input() graphContainerId!: string;
+  @Input({ required: false }) timeRangeSec!: number;
   options!: ChartOptions;
   chart!: ApexCharts;
   series: ApexAxisChartSeries = [];
+  timeDiffMs: number = 0;
+  isSliding: boolean = false;
+  timeRangeMs: number = 120000; // 2 minutes in ms
 
   constructor(public dialogService: DialogService) {}
 
@@ -68,20 +72,39 @@ export class DoubleLineGraphComponent implements OnInit {
     this.series = [
       {
         name: this.title1,
-        data: this.data1
+        data: Array.from(this.data1)
       },
       {
         name: this.title2,
-        data: this.data2
+        data: Array.from(this.data2)
       }
     ];
+    // temp fix, for now just basing change on data1 length...
+    // even though probably should check data1 also
+    if (!this.isSliding && this.data1.length > 2) {
+      this.timeDiffMs = this.data1[this.data1.length - 1].x - this.data1[0].x;
+    }
+
+    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
+      this.isSliding = true;
+      this.chart.updateOptions({
+        ...this.options,
+        xaxis: {
+          ...this.options.xaxis,
+          range: this.timeRangeMs
+        }
+      });
+    }
+
     this.chart.updateSeries(this.series);
     setTimeout(() => {
       this.updateChart();
-    }, 1000);
+    }, 800);
   };
 
   ngOnInit(): void {
+    this.timeRangeMs = (this.timeRangeSec ?? 120) * 1000;
+
     this.series = [
       {
         name: this.title1,

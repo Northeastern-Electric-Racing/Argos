@@ -32,7 +32,7 @@ const baseMockData: MockData[] = [
     max: 100
   },
   {
-    name: DataType.STATUS,
+    name: DataType.STATUS_BALANCING,
     unit: Unit.BINARY,
     vals: [0],
     min: 0,
@@ -227,6 +227,13 @@ const baseMockData: MockData[] = [
     vals: [0],
     min: 0,
     max: 1
+  },
+  {
+    name: DataType.BMS_FAULTS,
+    unit: Unit.HEX,
+    vals: [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072],
+    min: 0,
+    max: 131072
   }
 ];
 
@@ -278,7 +285,7 @@ export default class MockProxyClient implements ProxyClient {
     return new Promise((resolve) =>
       setTimeout(() => {
         resolve('loop');
-      }, 1)
+      }, 10)
     );
   };
 
@@ -297,11 +304,16 @@ export default class MockProxyClient implements ProxyClient {
         index = this.getRandomIndex(this.mockData.length);
         numericalData = this.mockData[index];
 
-        for (const val in numericalData.vals) {
-          if (numericalData.vals.hasOwnProperty(val)) {
-            let newVal = numericalData.vals[val] + Math.random() * 2 - 1;
-            newVal = Math.max(numericalData.min, Math.min(numericalData.max, newVal));
-            numericalData.vals[val] = newVal;
+        // if more than one value is given in the numerical data, it is assumed that only those values should be choosen from.
+        if (numericalData.vals.length > 1) {
+          numericalData.vals[0] = numericalData.vals[this.getRandomIndex(numericalData.vals.length)];
+        } else {
+          for (const val in numericalData.vals) {
+            if (numericalData.vals.hasOwnProperty(val)) {
+              let newVal = numericalData.vals[val] + Math.random() * 2 - 1;
+              newVal = Math.max(numericalData.min, Math.min(numericalData.max, newVal));
+              numericalData.vals[val] = newVal;
+            }
           }
         }
 

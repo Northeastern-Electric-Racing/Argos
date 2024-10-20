@@ -1,0 +1,70 @@
+<info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton">
+  <vstack>
+    <hstack style="width: 100%">
+      <vstack style="width: 10%">
+        <hstack>
+          <typography
+            variant="info-value"
+            [content]="delta.toFixed(3) + 'V'"
+            additionalStyles="fontSize:30px"
+            *ngIf="isDesktop"
+          />
+          <typography
+            variant="info-value"
+            [content]="delta.toFixed(3) + 'V'"
+            additionalStyles="fontSize:20px"
+            *ngIf="!isDesktop"
+          />
+        </hstack>
+        <typography variant="info-subtitle" content="Delta" additionalStyles="fontSize:15px" />
+      </vstack>
+
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px"></divider>
+
+      <vstack style="width: 10%">
+        <typography
+          variant="info-value"
+          [content]="lowCellVoltage.toFixed(3) + 'V'"
+          additionalStyles="fontSize:30px"
+          *ngIf="isDesktop"
+        />
+        <typography
+          variant="info-value"
+          [content]="lowCellVoltage.toFixed(3) + 'V'"
+          additionalStyles="fontSize:20px"
+          *ngIf="!isDesktop"
+        />
+        <typography variant="info-subtitle" content="Low Cell" additionalStyles="fontSize:15px" />
+      </vstack>
+
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px"></divider>
+
+      <vstack style="width: 10%">
+        <hstack>
+          <typography
+            variant="info-value"
+            [content]="highCellVoltage.toFixed(3) + 'V'"
+            additionalStyles="fontSize:30px"
+            *ngIf="isDesktop"
+          />
+          <typography
+            variant="info-value"
+            [content]="highCellVoltage.toFixed(3) + 'V'"
+            additionalStyles="fontSize:20px"
+            *ngIf="!isDesktop"
+          />
+        </hstack>
+        <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
+      </vstack>
+    </hstack>
+    <high-low-cell-graph
+      style="width: 100%; padding-bottom: 35px"
+      [highVoltsData]="highVoltsData"
+      [lowVoltsData]="lowVoltsData"
+      *ngIf="!isDesktop"
+    >
+    </high-low-cell-graph>
+  </vstack>
+</info-background>

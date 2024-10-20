@@ -28,6 +28,13 @@ services:
         - SOURCE_DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/postgres
        # - PROD_SIREN_HOST_URL=siren:1883
         - SCYLLA_PROD=true
+        #- SCYLLA_SATURATE_BATCH=false
+        #-SCYLLA_DATA_UPLOAD_DISABLE=false
+        #-SCYLLA_SIREN_HOST_URL=localhost:1883
+        #-SCYLLA_BATCH_UPSERT_TIME=10
+        - SCYLLA_RATE_LIMIT_MODE=static
+        - SCYLLA_STATIC_RATE_LIMIT_VALUE=50
+        #-SCYLLA_SOCKET_DISCARD_PERCENT=0
         - RUST_LOG=warn,scylla_server=debug
     cpu_shares: 1024
     stop_grace_period: 2m
