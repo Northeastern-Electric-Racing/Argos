@@ -1,5 +1,4 @@
 import { Component, Input } from '@angular/core';
-//import { PopUpComponent } from '../argos-toast/argos-popup.component';
 
 /**
  * Simple custom button component that does something on click
