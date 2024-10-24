@@ -1,6 +1,5 @@
 generator client {
-    provider      = "cargo prisma"
-
+    provider = "cargo prisma"
 }
 
 datasource db {
@@ -9,33 +8,15 @@ datasource db {
 }
 
 model run {
-    id           Int       @id @unique @default(autoincrement())
+    id           Int      @id @unique @default(autoincrement())
     locationName String?
-    location     location? @relation(fields: [locationName], references: [name])
+    latitude     Float?
+    longitude    Float?
+    radius       Float?
     driverName   String?
-    driver       driver?   @relation(fields: [driverName], references: [username])
-    systemName   String?
-    system       system?   @relation(fields: [systemName], references: [name])
+    notes        String
     data         data[]
-    time         DateTime  @db.Timestamptz()
-}
-
-model location {
-    name      String @id @unique
-    latitude  Float
-    longitude Float
-    radius    Float
-    runs      run[]
-}
-
-model driver {
-    username String @id @unique
-    runs     run[]
-}
-
-model system {
-    name String @id @unique
-    runs run[]
+    time         DateTime @db.Timestamptz()
 }
 
 model data {
@@ -54,11 +35,5 @@ model dataType {
     name     String @id @unique
     unit     String
     data     data[]
-    node     node   @relation(fields: [nodeName], references: [name])
     nodeName String
-}
-
-model node {
-    name      String     @id @unique
-    dataTypes dataType[]
 }
