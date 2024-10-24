@@ -13,7 +13,8 @@ import { StyleVariant } from 'src/utils/enumerations/style-variant';
  */
 @Component({
   selector: 'typography',
-  templateUrl: './typography.component.html'
+  templateUrl: './typography.component.html',
+  styleUrls: ['./typography.component.css']
 })
 export default class Typography implements OnInit {
   @Input() variant!: StyleVariant;
