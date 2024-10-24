@@ -15,7 +15,8 @@ const TEST_KEYWORD: &str = "test";
 async fn test_data_service() -> Result<(), QueryError> {
     let db = cleanup_and_prepare().await?;
 
-    run_service::create_run_with_id(&db, 0, 0).await?;
+    run_service::create_run_with_id(&db, chrono::DateTime::from_timestamp_millis(0).unwrap(), 0)
+        .await?;
     node_service::upsert_node(&db, TEST_KEYWORD.to_owned()).await?;
     data_type_service::upsert_data_type(
         &db,
@@ -41,16 +42,17 @@ async fn test_data_add() -> Result<(), QueryError> {
         TEST_KEYWORD.to_owned(),
     )
     .await?;
-    let run_data = run_service::create_run(&db, 999).await?;
+    let run_data =
+        run_service::create_run(&db, chrono::DateTime::from_timestamp_millis(999).unwrap()).await?;
 
     let data = data_service::add_data(
         &db,
         ClientData {
-            values: vec!["0".to_owned()],
+            values: vec![0f32],
             unit: "A".to_owned(),
             run_id: run_data.id,
             name: TEST_KEYWORD.to_owned(),
-            timestamp: 1000,
+            timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
             node: "Irrelevant".to_string(),
         },
     )
@@ -60,7 +62,7 @@ async fn test_data_add() -> Result<(), QueryError> {
         PublicData::from(&data),
         PublicData {
             time: 1000,
-            values: vec!["0".to_owned()]
+            values: vec![0f64]
         }
     );
 
@@ -87,11 +89,11 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
     data_service::add_data(
         &db,
         ClientData {
-            values: vec!["0".to_owned()],
+            values: vec![0f32],
             unit: "A".to_owned(),
             run_id: 0,
             name: TEST_KEYWORD.to_owned(),
-            timestamp: 1000,
+            timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
             node: "Irrelevant".to_string(),
         },
     )
@@ -107,17 +109,22 @@ async fn test_data_no_prereqs() -> Result<(), QueryError> {
         TEST_KEYWORD.to_owned(),
     )
     .await?;
-    run_service::create_run_with_id(&db, 1000, 0).await?;
+    run_service::create_run_with_id(
+        &db,
+        chrono::DateTime::from_timestamp_millis(1000).unwrap(),
+        0,
+    )
+    .await?;
 
     // now shouldnt fail as it and node does exist
     data_service::add_data(
         &db,
         ClientData {
-            values: vec!["0".to_owned()],
+            values: vec![0f32],
             unit: "A".to_owned(),
             run_id: 0,
             name: TEST_KEYWORD.to_owned(),
-            timestamp: 1000,
+            timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
             node: "Irrelevant".to_string(),
         },
     )
