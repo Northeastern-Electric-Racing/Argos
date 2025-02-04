@@ -1,0 +1,55 @@
+/* Container for the top nav */
+.navbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 60px;
+  padding: 10px;
+  align-self: center;
+  align-items: center;
+  background-color: #333;
+  color: #fff;
+  margin-bottom: 1rem;
+  padding-left: 10px;
+  padding-right: 10px;
+  width: 100%;
+}
+
+/* Branding text */
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Nav items container – using flex gap for spacing */
+.navbar-nav {
+  display: flex;
+}
+
+/* Style for each sidebar-chip when used as a nav item */
+.sidebar-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  cursor: pointer; /* shows pointer cursor */
+  transition: background-color 0.2s ease-in-out;
+  user-select: none; /* prevents text selection */
+}
+
+/* Hover effect for the entire chip (icon + text) */
+.sidebar-chip:hover {
+  background-color: #b30000; /* slightly dark red */
+}
+
+/* Optional: ensure inner elements don’t capture pointer events,
+   so that hovering anywhere on the chip triggers the hover state */
+.sidebar-chip i.material-icons,
+.sidebar-chip span {
+  pointer-events: none;
+}
+
+/* Adjust icon spacing */
+.sidebar-chip i.material-icons {
+  font-size: 20px;
+  margin-right: 0.5rem;
+}

@@ -1,16 +1,20 @@
 .chip {
-  border-radius: 10px;
-  padding: 5px 10px;
+  border-radius: 5px;
+  padding: 5px;
   margin: 5px;
   color: #e0e0e0;
   display: flex;
   align-items: center;
   width: 100%;
-  transition: background-color 0.3s; /* Adding a transition for smooth hover effect */
+  transition: background-color 0.3s; /* Smooth hover effect */
 }
 
 .chip:hover {
-  background-color: #e0e0e0;
   color: #ef4345;
   cursor: pointer;
+}
+
+/* New: When a chip is active, it keeps the hover style */
+.chip.active {
+  color: #ef4345;
 }

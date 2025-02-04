@@ -57,8 +57,6 @@ import SpeedOverTimeDisplayComponent from 'src/components/speed-over-time-displa
 import TorqueDisplayComponent from 'src/components/torque-display/torque-display.component';
 import AccelerationOverTimeDisplayComponent from 'src/components/acceleration-over-time-display/acceleration-over-time-display.component';
 import BrakePressureDisplayComponent from 'src/components/brake-pressure-display/brake-pressure-display.component';
-import { SidebarModule } from 'primeng/sidebar';
-import AppSidebarComponent from './app-sidebar/app-sidebar.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import MotorInfoComponent from 'src/components/motor-info/motor-info.component';
@@ -107,6 +105,7 @@ import { DateLocationComponent } from 'src/pages/landing-page/components/date-lo
 import { ViewerDisplayComponent } from 'src/pages/landing-page/components/viewer-display/viewer-display.component';
 import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
 import { FormInputGroupComponent } from 'src/components/form-input-group/form-input-group.component';
+import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
 
 @NgModule({
   declarations: [
@@ -156,7 +155,6 @@ import { FormInputGroupComponent } from 'src/components/form-input-group/form-in
     BrakePressureDisplayComponent,
     RasberryPiComponent,
     AccelerationGraphsComponent,
-    AppSidebarComponent,
     SidebarChipComponent,
     SidebarToggleComponent,
     MotorInfoComponent,
@@ -199,6 +197,7 @@ import { FormInputGroupComponent } from 'src/components/form-input-group/form-in
     ViewerDisplayComponent,
     FormTemplateComponent,
     FormInputGroupComponent,
+    AppNavBarComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -217,11 +216,10 @@ import { FormInputGroupComponent } from 'src/components/form-input-group/form-in
     BrowserAnimationsModule,
     ButtonModule,
     MatIconModule,
-    SidebarModule,
     MatToolbarModule,
     MatButtonModule,
     MatInputModule,
-    ReactiveFormsModule,
+    ReactiveFormsModule
   ],
   providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })

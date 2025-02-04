@@ -20,7 +20,7 @@ export default class Theme {
   static readonly infoValue: string = this.boldedText + 'fontSize: 50px; margin: 0; align-self: center;';
   static readonly infoValueMobile: string = this.boldedText + 'fontSize: 25px; margin: 0; align-self: center;';
   static readonly infoUnit: string = this.textStyle + 'font-size: 24px; color: gray; padding-top: 22px;';
-  static readonly sidebarLabel: string = this.font + 'font-size: 16px; margin: 0;';
+  static readonly sidebarLabel: string = this.font + 'font-weight: bold; font-size: 16px; margin: 0;';
 
   static readonly battteryLow: string = '#f50905';
   static readonly battteryMed: string = '#FFEA00';
