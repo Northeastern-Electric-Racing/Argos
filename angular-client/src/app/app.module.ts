@@ -106,6 +106,8 @@ import { ViewerDisplayComponent } from 'src/pages/landing-page/components/viewer
 import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
 import { FormInputGroupComponent } from 'src/components/form-input-group/form-input-group.component';
 import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 
 @NgModule({
   declarations: [
@@ -219,7 +221,9 @@ import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
     MatToolbarModule,
     MatButtonModule,
     MatInputModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatCardModule,
+    MatDividerModule
   ],
   providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })

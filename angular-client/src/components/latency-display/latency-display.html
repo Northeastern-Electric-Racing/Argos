@@ -1,18 +1,23 @@
-<hstack>
-  <!-- <hstack>
-    <typography variant="subheader" content="Latency:" />
-    <div class="latency-display-body">
-      <div class="latency-display-dot" [style.background-color]="mapColor(latency, medVal)"></div>
-      <typography variant="subheader" [content]="latency.toString()" additionalStyles="font-size:25px" />
-      <typography variant="info-unit" content="ms" additionalStyles="padding-top: 5px; font-size:15px;" />
-    </div>
-  </hstack> -->
-  <hstack>
-    <typography variant="subheader" content="New Latency:" />
-    <div class="latency-display-body">
-      <div class="latency-display-dot" [style.background-color]="mapColor(newLatency, medVal)"></div>
-      <typography variant="subheader" [content]="newLatency.toString()" additionalStyles="font-size:25px" />
-      <typography variant="info-unit" content="ms" additionalStyles="padding-top: 5px; font-size:15px;" />
-    </div>
+<info-background title="Latency" svgIcon="speed">
+  <hstack spacing="20px">
+    <vstack style="padding-bottom: 40px">
+      <typography variant="subheader" content="Old" additionalStyles="font-size:20px" />
+      <div class="latency-display-body">
+        <div class="latency-display-dot" [style.background-color]="mapColor(latency, medVal)"></div>
+        <typography variant="subheader" [content]="latency.toString()" additionalStyles="font-size:25px" />
+        <typography variant="info-unit" content="ms" additionalStyles="padding-top: 5px; font-size:15px;" />
+      </div>
+    </vstack>
+
+    <divider style="height: 70px" />
+
+    <vstack style="padding-bottom: 40px">
+      <typography variant="subheader" content="New" additionalStyles="font-size:20px" />
+      <div class="latency-display-body">
+        <div class="latency-display-dot" [style.background-color]="mapColor(newLatency, medVal)"></div>
+        <typography variant="subheader" [content]="newLatency.toString()" additionalStyles="font-size:25px" />
+        <typography variant="info-unit" content="ms" additionalStyles="padding-top: 5px; font-size:15px;" />
+      </div>
+    </vstack>
   </hstack>
-</hstack>
+</info-background>

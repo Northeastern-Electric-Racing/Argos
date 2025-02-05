@@ -21,15 +21,14 @@ export class AppNavBarComponent {
   private storage = inject(Storage);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
-  // Using Angular’s new inject() to get the Router instance
   private router = inject(Router);
   location: string = 'Boston, Massachusetts';
-  // Set initial active route if needed
-  selectedRoute: string = '/landing';
+  // Set selected route to current URL path
+  selectedRoute: string = window.location.pathname;
 
   newRunIsLoading = false;
   time$: Observable<Date> = interval(1000).pipe(
-    startWith(0), // Emit immediately on subscription.
+    startWith(0),
     map(() => new Date())
   );
 

@@ -26,3 +26,17 @@
     background-attachment: fixed;
   }
 }
+
+.charging-container {
+  padding: 16px;
+}
+
+.full-size {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+mat-card {
+  padding: 16px;
+}

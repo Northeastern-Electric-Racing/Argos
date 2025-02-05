@@ -1,6 +1,6 @@
 <nav class="navbar">
   <div class="navbar-nav">
-    <sidebar-chip icon="home" value="Home" [active]="selectedRoute === '/landing'" (click)="navigateTo('/landing')">
+    <sidebar-chip icon="home" value="Home" [active]="selected\ === '/landing'" (click)="navigateTo('/landing')">
     </sidebar-chip>
     <sidebar-chip
       icon="ev_station"
@@ -14,14 +14,8 @@
     <sidebar-chip icon="map" value="Map" [active]="selectedRoute === '/map'" (click)="navigateTo('/map')"> </sidebar-chip>
   </div>
 
-  <div style="align-self: center">
-    <typography
-      variant="header"
-      content="{{ time$ | async | date: 'MM/dd/yyyy' }} | {{ location }}  | {{ time$ | async | date: 'HH:mm:ss' }}"
-    />
-  </div>
   <div style="display: flex; align-items: center">
-    <latency-display style="margin-right: 10px" />
     <toast-button [onClick]="this.onStartNewRun" label="Start New Run" />
+    <typography variant="large-header" content="{{ time$ | async | date: 'HH:mm:ss' }}" style="margin-left: 20px" />
   </div>
 </nav>

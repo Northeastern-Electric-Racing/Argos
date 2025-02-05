@@ -1,6 +1,14 @@
-<info-background>
-  <div class="date-location-display">
-    <typography variant="header" content="{{ time | date: 'MM/dd/yyyy' }}" additionalStyles="margin: 0px" />
-    <typography variant="info-subtitle" content="{{ location }}" />
-  </div>
+<info-background backgroundColor="#101010" st>
+  <vstack spacing="20px">
+    <typography variant="x-large-title" content="Argos" additionalStyles="margin: 0px; fontSize:80px" />
+    <div class="date-location-display">
+      <typography
+        variant="subheader"
+        content="{{ time | date: 'MM/dd/yyyy' }} "
+        additionalStyles="margin: 0px; fontSize:20px"
+      />
+      <divider style="height: 20px; margin-left: 20px; margin-right: 20px" />
+      <typography variant="subheader" content="{{ location }}" additionalStyles="margin: 0px; fontSize:20px" />
+    </div>
+  </vstack>
 </info-background>

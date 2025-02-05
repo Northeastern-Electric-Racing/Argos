@@ -2,21 +2,38 @@
   @if (isMobile) {
     <charging-page-mobile style="width: 100%" [time]="time" />
   } @else {
-    <vstack style="width: 100%" spacing="15px">
-      <vstack style="width: 100%">
-        <hstack spacing="10px" style="width: 100%; height: 50%">
-          <combined-status-display style="min-width: 590px; width: 45%; height: 380px" />
-          <vstack style="width: 15%">
-            <state-of-charge-display style="min-width: 160px; width: 100%; height: 123px" />
-            <current-display style="min-width: 160px; width: 100%; height: 122px" />
-            <pack-temp style="min-width: 160px; width: 100%; height: 122px" />
-          </vstack>
-          <fault-display style="height: 380px; min-width: 300px; width: 40%" />
-        </hstack>
-        <cell-temp-display style="min-width: 1070px; width: 100%; height: 175px" />
-        <high-low-cell-display style="min-width: 1070px; width: 100%; height: 175px" />
-        <pack-voltage-display style="min-width: 1070px; width: 100%; height: 175px" />
-      </vstack>
-    </vstack>
+    <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.2rem">
+      <!-- Left: Combined Status Display -->
+      <mat-grid-tile [colspan]="3" [rowspan]="12">
+        <combined-status-display style="width: 100%; height: 100%" />
+      </mat-grid-tile>
+
+      <!-- Middle: Vertically Stacked Displays -->
+      <mat-grid-tile [colspan]="1" [rowspan]="12">
+        <div style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 10px">
+          <pack-temp style="width: 100%; max-height: 35%" />
+          <state-of-charge-display style="width: 100%; max-height: 35%" />
+          <current-display style="width: 100%; max-height: 30%" />
+        </div>
+      </mat-grid-tile>
+
+      <!-- Right: Fault Display -->
+      <mat-grid-tile [colspan]="2" [rowspan]="12">
+        <fault-display style="width: 100%; height: 100%" />
+      </mat-grid-tile>
+
+      <!-- Bottom section -->
+      <mat-grid-tile [colspan]="6" [rowspan]="6">
+        <cell-temp-display style="width: 100%; height: 100%" />
+      </mat-grid-tile>
+
+      <mat-grid-tile [colspan]="6" [rowspan]="6">
+        <high-low-cell-display style="width: 100%; height: 100%" />
+      </mat-grid-tile>
+
+      <mat-grid-tile [colspan]="6" [rowspan]="6">
+        <pack-voltage-display style="width: 100%; height: 100%" />
+      </mat-grid-tile>
+    </mat-grid-list>
   }
 </div>
