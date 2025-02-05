@@ -1,10 +1,14 @@
 services:
-  odyssey-timescale:
-    container_name: odyssey-timescale
-    image: timescale/timescaledb-ha:pg15
+  odyssey-db:
+    container_name: odyssey-db
+    image: postgres:17.2
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
+    command: 
+       - "postgres"
+       - "-c"
+       - "shared_buffers=256MB"
     ports:
       # needs to be published for charybdis, which runs outside of docker
       - 5432:5432
@@ -24,15 +28,15 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - odyssey-timescale
+      - odyssey-db
     environment:
-        - DATABASE_URL=postgresql://postgres:password@odyssey-timescale:5432/postgres
+        - DATABASE_URL=postgresql://postgres:password@odyssey-db:5432/postgres
        # - PROD_SIREN_HOST_URL=siren:1883
         #-SCYLLA_DATA_UPLOAD_DISABLE=false
         #-SCYLLA_SIREN_HOST_URL=localhost:1883
         #-SCYLLA_BATCH_UPSERT_TIME=10
-        - SCYLLA_RATE_LIMIT_MODE=static
-        - SCYLLA_STATIC_RATE_LIMIT_VALUE=50
+        #- SCYLLA_RATE_LIMIT_MODE=static
+        #- SCYLLA_STATIC_RATE_LIMIT_VALUE=50
         #-SCYLLA_SOCKET_DISCARD_PERCENT=0
         - RUST_LOG=warn,scylla_server=debug
     cpu_shares: 1024
