@@ -32,7 +32,7 @@ jobs:
            run: cargo fmt --check
          - name: Start DB
            working-directory: compose
-           run: docker compose up -d odyssey-timescale
+           run: docker compose up -d odyssey-db
          - name: Build
            run: cargo build --verbose
          - name: Run # so we can migrate the database, run for a little than bail
