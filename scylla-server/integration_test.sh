@@ -6,11 +6,11 @@ cd ../compose || { echo "Compose directory not found"; exit 1; }
 
 # Remove any existing odyssey-timescale container
 echo "Stopping and removing any existing odyssey-timescale container..."
-docker rm -f odyssey-timescale 2>/dev/null || echo "No existing container to remove."
+docker rm -f odyssey-db 2>/dev/null || echo "No existing container to remove."
 
 # Start a new odyssey-timescale container
 echo "Starting a new odyssey-timescale container..."
-docker compose up -d odyssey-timescale || { echo "Failed to start odyssey-timescale"; exit 1; }
+docker compose up -d odyssey-db || { echo "Failed to start odyssey-timescale"; exit 1; }
 
 # Wait for the database to initialize
 echo "Waiting for the database to initialize..."
