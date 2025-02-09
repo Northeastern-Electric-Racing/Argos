@@ -6,11 +6,13 @@
       [totalTime]="totalSeconds"
     />
     <div style="padding-top: 40px">
-      <div
-        class="connection-dot"
-        [style.background-color]="getStatusColor(isBalancing)"
-        [style.border-color]="isBalancing ? getStatusColor(isBalancing) : 'white'"
-      ></div>
+      @if (displayLight) {
+        <div
+          class="connection-dot"
+          [style.background-color]="getStatusColor(isBalancing)"
+          [style.border-color]="isBalancing ? getStatusColor(isBalancing) : 'white'"
+        ></div>
+      }
     </div>
   </hstack>
 </info-background>

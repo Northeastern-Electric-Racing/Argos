@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
@@ -10,6 +10,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
   styleUrls: ['./active-status.component.css']
 })
 export default class ActiveStatusComponent implements OnInit {
+  @Input() displayLight: boolean = true;
   private storage = inject(Storage);
   isActive: boolean = false;
   currentSeconds: number = 0;

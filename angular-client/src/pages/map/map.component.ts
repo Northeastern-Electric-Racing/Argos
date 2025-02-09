@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { MapService } from '../../services/map.service';
 import { DataValue } from 'src/utils/socket.utils';
 import APIService from 'src/services/api.service';
@@ -19,11 +19,17 @@ export default class MapComponent implements OnInit {
   isLoading: boolean = false;
   isError: boolean = false;
   error?: Error;
+  isMobile = window.innerWidth <= 768;
 
   ngOnInit() {
     setTimeout(() => {
       this.map.buildMap('map');
     }, 1);
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.isMobile = window.innerWidth <= 768;
   }
 
   onRunSelected = (run: Run) => {

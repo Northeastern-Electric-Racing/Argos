@@ -1,0 +1,8 @@
+<p-sidebar [(visible)]="sidebarVisible">
+  <ng-template pTemplate="header">
+    <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+  </ng-template>
+  <ng-template pTemplate="content">
+    <sidebar-chip icon="home" value="Overview" (click)="navigateTo('/overview')" />
+  </ng-template>
+</p-sidebar>

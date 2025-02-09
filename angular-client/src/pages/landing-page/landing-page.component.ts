@@ -18,7 +18,7 @@ export default class LandingPageComponent implements OnInit {
   private messageService = inject(MessageService);
   time = new Date();
   newRunIsLoading = false;
-  mobileThreshold = 1070;
+  mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {

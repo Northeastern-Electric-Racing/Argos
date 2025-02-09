@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
+import SidebarService from 'src/services/sidebar.service';
 import Storage from 'src/services/storage.service';
 
 interface NavItem {
@@ -17,15 +18,30 @@ interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css']
 })
-export class AppNavBarComponent {
+export class AppNavBarComponent implements OnInit {
   private storage = inject(Storage);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
   private router = inject(Router);
   location: string = 'Boston, Massachusetts';
+  private sidebarService = inject(SidebarService);
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
+  sidebarVisible = false;
+  isMobile = false;
 
+  ngOnInit(): void {
+    this.sidebarService.isOpen.subscribe((isOpen) => {
+      this.sidebarVisible = isOpen;
+    });
+    this.selectedRoute = window.location.pathname;
+  }
+
+  // on resize, set the screen width
+  @HostListener('window:resize', ['$event'])
+  onResize(): void {
+    this.isMobile = window.innerWidth <= 768;
+  }
   newRunIsLoading = false;
   time$: Observable<Date> = interval(1000).pipe(
     startWith(0),

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
@@ -10,6 +10,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
   styleUrls: ['./charging-status.component.css']
 })
 export default class ChargingStatusComponent implements OnInit {
+  @Input() displayLight: boolean = true;
   private storage = inject(Storage);
   isCharging: boolean = false;
   currentSeconds: number = 0;

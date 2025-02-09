@@ -14,7 +14,7 @@ export default class ChargingPageComponent implements OnInit {
   private storage = inject(Storage);
   time = new Date();
   location: string = 'No Location Set';
-  mobileThreshold = 1070;
+  mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {

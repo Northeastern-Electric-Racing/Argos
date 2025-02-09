@@ -1,3 +1,6 @@
+@if (isMobile) {
+  <sidebar-toggle style="width: 100%" />
+}
 @if (isError) {
   <div>
     <error-page [errorMessage]="error!.message" />
