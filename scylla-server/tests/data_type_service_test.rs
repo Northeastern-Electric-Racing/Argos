@@ -36,8 +36,7 @@ async fn test_datatype_create() -> Result<(), diesel::result::Error> {
     // make node
     // node_service::upsert_node(&mut db, node_name.clone()).await?;
     // upsert
-    data_type_service::upsert_data_type(&mut db, data_type_name.clone(), unit.clone())
-        .await?;
+    data_type_service::upsert_data_type(&mut db, data_type_name.clone(), unit.clone()).await?;
 
     // fetch
     let data = data_type::table
