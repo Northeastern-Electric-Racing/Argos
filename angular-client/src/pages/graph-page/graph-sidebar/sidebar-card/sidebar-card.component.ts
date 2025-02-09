@@ -20,6 +20,7 @@ export default class SidebarCardComponent implements OnInit {
   @Input() open?: boolean;
   @Input() dataValue?: string;
   @Input() topicName!: string;
+  @Input() isDesktop: boolean = true;
   iconId!: string;
 
   ngOnInit(): void {
