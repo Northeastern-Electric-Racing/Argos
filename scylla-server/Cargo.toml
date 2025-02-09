@@ -6,7 +6,6 @@ default-run = "scylla-server"
 
 [dependencies]
 diesel = { version = "2.2.4", features = ["postgres", "chrono"] }
-pq-sys = { version = "0.6.3", features = ["bundled_without_openssl"] }
 dotenvy = "0.15"
 serde = "1.0.203"
 protobuf-codegen = "3.7.1"
@@ -20,7 +19,6 @@ rumqttc = { git = "https://github.com/bytebeamio/rumqtt", branch = "main"}
 tokio-util = { version=  "0.7.11", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
-rand = "0.8.5"
 console-subscriber = { version = "0.4.1", optional = true }
 ringbuffer = "0.15.0"
 clap = { version = "4.5.28", features = ["derive", "env"] }

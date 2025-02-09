@@ -57,7 +57,7 @@ pub async fn create_run_with_id(
 /// * `driver` - The driver's name
 /// * `location` - The location of the runs
 /// * `run_notes` - The notes written for the run
-/// returns: A result containing the data or the QueryError propogated by the db
+///     returns: A result containing the data or the QueryError propogated by the db
 pub async fn create_run_with_data(
     db: &mut Database<'_>,
     timestamp: DateTime<Utc>,
