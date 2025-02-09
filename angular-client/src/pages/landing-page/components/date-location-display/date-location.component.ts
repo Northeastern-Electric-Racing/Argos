@@ -1,6 +1,9 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { getLatestRun } from 'src/api/run.api';
+import { Run } from 'src/utils/types.utils';
+import APIService from 'src/services/api.service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'date-location',
@@ -9,18 +12,31 @@ import { DataTypeEnum } from 'src/data-type.enum';
 })
 export class DateLocationComponent implements OnInit {
   private storage = inject(Storage);
+  private serverService = inject(APIService);
+  private messageService = inject(MessageService);
   time = new Date();
-  location: string = 'Boston, MA';
+  // TODO: create query for most recent run on scylla
+  location!: string;
   mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
-  ngOnInit() {
+  async ngOnInit() {
     setInterval(() => {
       this.time = new Date();
     }, 1000);
 
-    this.storage.get(DataTypeEnum.LOCATION).subscribe((value) => {
-      [this.location] = value.values || ['No Location Set'];
+    // query for the most recent run to get the location name
+    const runsQueryResponse = this.serverService.query<Run>(() => getLatestRun());
+    runsQueryResponse.isLoading.subscribe(() => {
+      // TODO: possible loading spinner... but we already have a no location set message
+    });
+    runsQueryResponse.error.subscribe((error: Error) => {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
+    runsQueryResponse.data.subscribe((data: Run) => {
+      const run: Run = data;
+      this.location = run?.locationName || 'No Location Set';
+      console.log(run);
     });
   }
 

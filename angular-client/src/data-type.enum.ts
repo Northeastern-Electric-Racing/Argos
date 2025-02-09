@@ -1,6 +1,6 @@
 export enum DataTypeEnum {
   DRIVER = 'Driver',
-  LOCATION = 'location',
+  LOCATION = 'Location',
   VIEWERS = 'Viewers',
 
   // Special Latency info sent by Scylla

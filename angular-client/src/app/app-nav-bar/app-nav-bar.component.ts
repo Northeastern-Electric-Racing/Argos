@@ -23,7 +23,6 @@ export class AppNavBarComponent implements OnInit {
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
   private router = inject(Router);
-  location: string = 'Boston, Massachusetts';
   private sidebarService = inject(SidebarService);
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -35,6 +34,7 @@ export class AppNavBarComponent implements OnInit {
       this.sidebarVisible = isOpen;
     });
     this.selectedRoute = window.location.pathname;
+    this.isMobile = window.innerWidth <= 768;
   }
 
   // on resize, set the screen width

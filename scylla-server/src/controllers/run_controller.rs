@@ -21,6 +21,18 @@ pub async fn get_all_runs(
     Ok(Json::from(transformed_run_data))
 }
 
+/// get the latest run
+pub async fn get_latest_run(
+    State(pool): State<PoolHandle>,
+) -> Result<Json<PublicRun>, ScyllaError> {
+    let mut db = pool.get().await?;
+    let run_data = run_service::get_latest_run(&mut db).await?;
+
+    let transformed_run_data = PublicRun::from(run_data);
+
+    Ok(Json::from(transformed_run_data))
+}
+
 /// get a run given its ID
 pub async fn get_run_by_id(
     State(pool): State<PoolHandle>,

@@ -10,6 +10,13 @@ pub async fn get_all_runs(db: &mut Database<'_>) -> Result<Vec<Run>, diesel::res
     run.order(runId.asc()).get_results(db).await
 }
 
+/// Gets the latest run (highest run id)
+/// * `db` - The prisma client to make the call to
+///  returns: The latest run or the QueryError propogated by the db
+pub async fn get_latest_run(db: &mut Database<'_>) -> Result<Run, diesel::result::Error> {
+    run.order(runId.desc()).first::<Run>(db).await
+}
+
 /// Gets a single run by its id
 /// * `db` - The prisma client to make the call to
 /// * `run_id` - The id of the run to search for

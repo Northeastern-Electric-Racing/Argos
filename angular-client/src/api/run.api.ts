@@ -9,6 +9,15 @@ export const getAllRuns = (): Promise<Response> => {
 };
 
 /**
+ * Fetches the latest run from the server (highest id)
+ *
+ * @returns A promise containing the response from the server
+ */
+export const getLatestRun = (): Promise<Response> => {
+  return fetch(urls.getLatestRun());
+};
+
+/**
  * Fetches the run with the given id
  * @param id The id of the run to request
  * @returns The requested run

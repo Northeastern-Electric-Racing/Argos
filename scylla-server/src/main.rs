@@ -272,6 +272,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // DATA TYPE
         .route("/datatypes", get(data_type_controller::get_all_data_types))
         .route("/runs", get(run_controller::get_all_runs))
+        .route("/runs/latest", get(run_controller::get_latest_run))
         .route("/runs/{id}", get(run_controller::get_run_by_id))
         .route("/runs/new", post(run_controller::new_run))
         .route(

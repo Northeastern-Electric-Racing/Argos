@@ -4,35 +4,29 @@
       <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
     </ng-template>
     <ng-template pTemplate="content">
-      <sidebar-chip icon="home" value="Home" [active]="selectedRoute === '/landing'" (click)="navigateTo('/landing')">
-      </sidebar-chip>
-      <sidebar-chip
-        icon="ev_station"
-        value="Charging"
-        [active]="selectedRoute === '/charging'"
-        (click)="navigateTo('/charging')"
-      >
-      </sidebar-chip>
-      <sidebar-chip icon="bar_chart" value="Graph" [active]="selectedRoute === '/graph'" (click)="navigateTo('/graph')">
-      </sidebar-chip>
-      <sidebar-chip icon="map" value="Map" [active]="selectedRoute === '/map'" (click)="navigateTo('/map')"> </sidebar-chip>
+      @for (navItem of navItems; track navItem) {
+        <sidebar-chip
+          icon="{{ navItem.icon }}"
+          value="{{ navItem.label }}"
+          [active]="selectedRoute === navItem.route"
+          (click)="navigateTo(navItem.route)"
+        >
+        </sidebar-chip>
+      }
     </ng-template>
   </p-sidebar>
 } @else {
   <nav class="navbar">
     <div class="navbar-nav">
-      <sidebar-chip icon="home" value="Home" [active]="selectedRoute === '/landing'" (click)="navigateTo('/landing')">
-      </sidebar-chip>
-      <sidebar-chip
-        icon="ev_station"
-        value="Charging"
-        [active]="selectedRoute === '/charging'"
-        (click)="navigateTo('/charging')"
-      >
-      </sidebar-chip>
-      <sidebar-chip icon="bar_chart" value="Graph" [active]="selectedRoute === '/graph'" (click)="navigateTo('/graph')">
-      </sidebar-chip>
-      <sidebar-chip icon="map" value="Map" [active]="selectedRoute === '/map'" (click)="navigateTo('/map')"> </sidebar-chip>
+      @for (navItem of navItems; track navItem) {
+        <sidebar-chip
+          icon="{{ navItem.icon }}"
+          value="{{ navItem.label }}"
+          [active]="selectedRoute === navItem.route"
+          (click)="navigateTo(navItem.route)"
+        >
+        </sidebar-chip>
+      }
     </div>
 
     <div style="display: flex; align-items: center">
