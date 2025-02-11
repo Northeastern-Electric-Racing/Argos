@@ -19,8 +19,9 @@ export default class Storage {
   public get = (key: string): Subject<DataValue> => {
     const subject = this.storage.get(key);
     if (!subject) {
-      this.storage.set(key, new Subject<DataValue>());
-      return this.storage.get(key)!;
+      const subject = new Subject<DataValue>();
+      this.storage.set(key, subject);
+      return subject;
     }
     return subject;
   };

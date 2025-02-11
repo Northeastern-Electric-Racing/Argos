@@ -1,22 +1,14 @@
-import { Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
-/**
- * Frontend type of a Node
- */
-export type Node = {
+export interface Node {
   name: string;
-  dataTypes: DataType[];
-};
-
-/**
- * Frontend type of a Node with a boolean for whether the data types are visible
- */
-export interface NodeWithVisibilityToggle extends Node {
-  dataTypesAreVisible: boolean;
+  nodes: BehaviorSubject<Node[]>;
+  dataType: DataType;
+  topicName: string;
 }
 
-export interface NodeWithVisibilityToggleObservable extends NodeWithVisibilityToggle {
-  dataTypesObservable: Observable<DataType[]>;
+export interface NodeWithVisibilityToggle extends Node {
+  subnodesVisible: boolean;
 }
 
 /**

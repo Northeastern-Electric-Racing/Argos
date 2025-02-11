@@ -18,7 +18,7 @@ export const floatPipe = (value: string): number => {
 };
 
 //rounds number to specified number of decimal places (defaults to 1)
-export const decimalPipe = (value: string, places?: number): number => {
-  const decimalMultiplier = 10 ** (places || 1);
+export const decimalPipe = (value: string, places: number = 1): number => {
+  const decimalMultiplier = 10 ** places;
   return Math.round(parseFloat(value) * decimalMultiplier) / decimalMultiplier;
 };

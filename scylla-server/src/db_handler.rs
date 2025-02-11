@@ -214,7 +214,6 @@ impl DbHandler {
                 &mut database,
                 msg.name.clone(),
                 msg.unit.clone(),
-                msg.node.clone(),
             )
             .await
             {

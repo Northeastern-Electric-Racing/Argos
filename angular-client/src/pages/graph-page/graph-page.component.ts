@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
-import { getAllDatatypes } from 'src/api/node.api';
+import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
@@ -41,7 +41,7 @@ export default class GraphPageComponent implements OnInit {
   subscription?: Subscription;
 
   ngOnInit(): void {
-    this.queryNodes();
+    this.queryDataTypes();
 
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns());
     runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
@@ -130,9 +130,9 @@ export default class GraphPageComponent implements OnInit {
   };
 
   /**
-   * Queries the nodes from the server.
+   * Queries the datatypes from the server.
    */
-  private queryNodes() {
+  private queryDataTypes() {
     const dataTypesQueryResponse = this.serverService.query<DataType[]>(getAllDatatypes);
     dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
       this.dataTypesIsLoading = isLoading;

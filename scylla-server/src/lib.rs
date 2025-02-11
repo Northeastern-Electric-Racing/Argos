@@ -53,10 +53,6 @@ pub struct ClientData {
     /// Client expects time in milliseconds, so serialize as such
     #[serde(with = "ts_milliseconds")]
     pub timestamp: chrono::DateTime<chrono::Utc>,
-
-    /// client doesnt parse node
-    #[serde(skip_serializing)]
-    pub node: String,
 }
 
 /// this is the main conversion code to insert data.

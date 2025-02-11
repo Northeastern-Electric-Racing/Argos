@@ -27,7 +27,6 @@ async fn test_data_service() -> Result<(), diesel::result::Error> {
         &mut db,
         TEST_KEYWORD.to_owned(),
         "joe_mama".to_owned(),
-        TEST_KEYWORD.to_owned(),
     )
     .await?;
     data_service::get_data(&mut db, TEST_KEYWORD.to_owned(), 0).await?;
@@ -45,7 +44,6 @@ async fn test_data_add() -> Result<(), diesel::result::Error> {
         &mut db,
         TEST_KEYWORD.to_owned(),
         "joe mama".to_owned(),
-        TEST_KEYWORD.to_owned(),
     )
     .await?;
     let run_data = run_service::create_run(
@@ -62,7 +60,6 @@ async fn test_data_add() -> Result<(), diesel::result::Error> {
             run_id: run_data.runId,
             name: TEST_KEYWORD.to_owned(),
             timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
-            node: "Irrelevant".to_string(),
         },
     )
     .await?;
@@ -105,7 +102,6 @@ async fn test_data_no_prereqs() -> Result<(), diesel::result::Error> {
             run_id: 0,
             name: TEST_KEYWORD.to_owned(),
             timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
-            node: "Irrelevant".to_string(),
         },
     )
     .await
@@ -117,7 +113,6 @@ async fn test_data_no_prereqs() -> Result<(), diesel::result::Error> {
         &mut db,
         TEST_KEYWORD.to_owned(),
         "ur mom".to_owned(),
-        TEST_KEYWORD.to_owned(),
     )
     .await?;
     run_service::create_run_with_id(
@@ -136,7 +131,6 @@ async fn test_data_no_prereqs() -> Result<(), diesel::result::Error> {
             run_id: 0,
             name: TEST_KEYWORD.to_owned(),
             timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
-            node: "Irrelevant".to_string(),
         },
     )
     .await?;

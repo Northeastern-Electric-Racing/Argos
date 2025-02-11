@@ -37,9 +37,8 @@ model data {
 }
 
 model data_type {
-  name     String @id
-  unit     String
-  nodeName String
+  name String @id
+  unit String
 
   data data[]
 }

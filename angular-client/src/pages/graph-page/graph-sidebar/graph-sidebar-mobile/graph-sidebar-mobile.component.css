@@ -1,18 +1,3 @@
-.container {
-  display: flex;
-  flex-flow: row;
-  justify-content: flex-start;
-  width: fit-content;
-  align-items: center;
-}
-
-.subcontainer {
-  display: flex;
-  flex-flow: row;
-  width: fit-content;
-  justify-content: flex-start;
-}
-
 .popup-tab {
   height: fit-content;
   bottom: 0px;
@@ -23,6 +8,22 @@
   max-width: 95%;
   border-top-right-radius: 8px;
   margin: 0px 0px 0px 8px;
+}
+
+.container {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-start;
+  width: fit-content;
+  align-items: center;
+  gap: 16px;
+}
+
+.subcontainer {
+  display: flex;
+  flex-flow: row;
+  width: fit-content;
+  justify-content: flex-start;
 }
 
 :host ::ng-deep sidebar-card .card {

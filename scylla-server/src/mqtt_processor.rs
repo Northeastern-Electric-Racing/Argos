@@ -188,19 +188,11 @@ impl MqttProcessor {
             }
         }
 
-        let Some(split) = topic.split_once('/') else {
-            warn!("Could not parse nesting: {:?}", msg.topic);
-            return None;
-        };
-
         // look at data after topic as if we dont have a topic the protobuf is useless anyways
         let Ok(data) = serverdata::ServerData::parse_from_bytes(&msg.payload) else {
             warn!("Could not parse message payload:{:?}", msg.topic);
             return None;
         };
-
-        // get the node from the topic extracted at the beginning
-        let node = split.0;
 
         // extract the unix time
         // levels of time priority
@@ -267,7 +259,6 @@ impl MqttProcessor {
             unit: data.unit,
             values: data.values,
             timestamp: unix_clean,
-            node: node.to_string(),
         })
     }
 

@@ -13,7 +13,6 @@ diesel::table! {
     data_type (name) {
         name -> Text,
         unit -> Text,
-        nodeName -> Text,
     }
 }
 
@@ -30,4 +29,8 @@ diesel::table! {
 diesel::joinable!(data -> data_type (dataTypeName));
 diesel::joinable!(data -> run (runId));
 
-diesel::allow_tables_to_appear_in_same_query!(data, data_type, run,);
+diesel::allow_tables_to_appear_in_same_query!(
+    data,
+    data_type,
+    run,
+);

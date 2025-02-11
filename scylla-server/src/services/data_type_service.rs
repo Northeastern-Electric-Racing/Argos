@@ -21,12 +21,10 @@ pub async fn upsert_data_type(
     db: &mut Database<'_>,
     data_type_name: String,
     new_unit: String,
-    node_name: String,
 ) -> Result<DataType, diesel::result::Error> {
     let val = DataType {
         name: data_type_name,
         unit: new_unit,
-        nodeName: node_name,
     };
     diesel::insert_into(data_type)
         .values(&val)

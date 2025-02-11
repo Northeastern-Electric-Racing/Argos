@@ -29,7 +29,6 @@ async fn test_get_all_datatypes() -> Result<(), diesel::result::Error> {
 async fn test_datatype_create() -> Result<(), diesel::result::Error> {
     let data_type_name: String = "test".to_owned();
     let unit: String = "testUnitCreation".to_owned();
-    let node_name: String = "testNode".to_owned();
 
     let pool = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
@@ -37,7 +36,7 @@ async fn test_datatype_create() -> Result<(), diesel::result::Error> {
     // make node
     // node_service::upsert_node(&mut db, node_name.clone()).await?;
     // upsert
-    data_type_service::upsert_data_type(&mut db, data_type_name.clone(), unit.clone(), node_name)
+    data_type_service::upsert_data_type(&mut db, data_type_name.clone(), unit.clone())
         .await?;
 
     // fetch

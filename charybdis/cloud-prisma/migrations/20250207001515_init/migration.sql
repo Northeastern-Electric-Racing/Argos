@@ -1,10 +1,3 @@
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb') THEN
-        CREATE EXTENSION timescaledb;
-    END IF;
-END $$;
-
 -- CreateTable
 CREATE TABLE "run" (
     "id" TEXT NOT NULL,
@@ -30,7 +23,6 @@ CREATE TABLE "data" (
 CREATE TABLE "data_type" (
     "name" TEXT NOT NULL,
     "unit" TEXT NOT NULL,
-    "nodeName" TEXT NOT NULL,
 
     CONSTRAINT "data_type_pkey" PRIMARY KEY ("name")
 );
@@ -40,16 +32,3 @@ ALTER TABLE "data" ADD CONSTRAINT "data_dataTypeName_fkey" FOREIGN KEY ("dataTyp
 
 -- AddForeignKey
 ALTER TABLE "data" ADD CONSTRAINT "data_runId_fkey" FOREIGN KEY ("runId") REFERENCES "run"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
-
-
-SELECT create_hypertable('data', 'time', chunk_time_interval => 86400000);
-SELECT * FROM add_dimension('data', by_hash('dataTypeName', 4));
-
--- Enable compression
-ALTER TABLE "data" SET (timescaledb.compress,
-   timescaledb.compress_orderby = 'time DESC',
-   timescaledb.compress_segmentby = '"runId", "dataTypeName"'
-);
-
-SELECT add_compression_policy('data', compress_after => 86400000::BIGINT);

@@ -6,22 +6,9 @@
   />
   @if (showSelection) {
     <div class="container" @toggleSidebar>
-      <run-selector style="text-align: center" [selectRun]="onRunSelected" />
-      @for (node of nodesWithVisibilityToggle; track node) {
-        <div class="subcontainer">
-          <sidebar-card
-            [title]="node.name"
-            onclick="event.stopPropagation()"
-            (click)="toggleDataTypeVisibility(node)"
-            [dropDown]="true"
-          />
-          @if (node.dataTypesAreVisible) {
-            <div class="subcontainer" @toggleCardExpand>
-              @for (dataType of node.dataTypes; track dataType) {
-                <sidebar-card [title]="transformDataTypeName(dataType.name)" (click)="selectDataType(dataType)" />
-              }
-            </div>
-          }
+      @for (node of nodesWithVisibilityToggle | async; track node) {
+        <div class="subcontainer" (click)="$event.stopPropagation()">
+          <node-display [node]="node" searchFilter="" [isDesktop]="false" [selectDataType]="selectDataType" />
         </div>
       }
     </div>

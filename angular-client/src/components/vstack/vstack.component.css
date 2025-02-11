@@ -1,0 +1,4 @@
+.vstack {
+  display: flex;
+  flex-direction: column;
+}

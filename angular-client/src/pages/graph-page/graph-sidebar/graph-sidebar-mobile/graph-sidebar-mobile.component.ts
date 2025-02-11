@@ -1,5 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, Input, OnInit } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { DataType, Node, NodeWithVisibilityToggle, Run } from 'src/utils/types.utils';
 
@@ -8,30 +9,6 @@ import { DataType, Node, NodeWithVisibilityToggle, Run } from 'src/utils/types.u
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   animations: [
-    trigger('toggleCardExpand', [
-      transition(':enter', [
-        style({
-          width: 0,
-          opacity: 0
-        }),
-        animate(
-          '400ms',
-          style({
-            width: '*',
-            opacity: 1
-          })
-        )
-      ]),
-      transition(':leave', [
-        animate(
-          '400ms',
-          style({
-            width: 0,
-            opacity: 0
-          })
-        )
-      ])
-    ]),
     trigger('toggleSidebar', [
       transition(':enter', [
         style({
@@ -62,7 +39,7 @@ export default class GraphSidebarMobileComponent implements OnInit {
   @Input() dataTypes!: DataType[];
   @Input() selectDataType!: (dataType: DataType) => void;
   @Input() onRunSelected!: (run: Run) => void;
-  nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
+  nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
   showSelection = false;
   nodes!: Node[];
 
@@ -71,21 +48,15 @@ export default class GraphSidebarMobileComponent implements OnInit {
    */
   ngOnInit(): void {
     this.nodes = dataTypesToNodes(this.dataTypes);
-    this.nodesWithVisibilityToggle = this.nodes.map((node: Node) => {
-      return {
-        ...node,
-        dataTypesAreVisible: false
-      };
-    });
+    this.nodesWithVisibilityToggle = of(
+      this.nodes.map((node: Node) => {
+        return {
+          ...node,
+          subnodesVisible: false
+        };
+      })
+    );
   }
-
-  /**
-   * Toggles Visibility whenever a node is selected
-   * @param node The node to toggle the visibility of the data types for.
-   */
-  toggleDataTypeVisibility = (node: NodeWithVisibilityToggle) => {
-    node.dataTypesAreVisible = !node.dataTypesAreVisible;
-  };
 
   /**
    * Toggles the sidebar.

@@ -39,7 +39,6 @@ pub struct DataInsert {
 pub struct DataType {
     pub name: String,
     pub unit: String,
-    pub nodeName: String,
 }
 
 #[derive(Queryable, Debug, Identifiable, Insertable, Selectable, Serialize, AsChangeset)]

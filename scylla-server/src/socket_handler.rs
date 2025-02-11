@@ -110,7 +110,6 @@ pub async fn socket_handler_with_metadata(
                     };
                     let item = ClientData {
                         name: "Argos/Viewers".to_string(),
-                        node: "Internal".to_string(),
                         unit: "".to_string(),
                         run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now(),

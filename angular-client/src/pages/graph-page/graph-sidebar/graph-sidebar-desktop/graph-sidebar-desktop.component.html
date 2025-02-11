@@ -12,31 +12,7 @@
     </mat-toolbar>
     <div class="topic-list">
       @for (node of nodesWithVisibilityToggle | async | nodeFilter: 'name' : searchFilter; track node) {
-        <div>
-          <sidebar-card
-            [title]="node.name"
-            (click)="toggleDataTypeVisibility(node)"
-            [dropDown]="true"
-            [open]="node.dataTypesAreVisible"
-          />
-          @if (node.dataTypesAreVisible) {
-            <div @toggleExpand>
-              @for (
-                dataType of node.dataTypesObservable | async | dataTypeFilter: 'name' : searchFilter : node.name;
-                track dataType
-              ) {
-                <div style="display: flex; justify-content: center">
-                  <sidebar-card
-                    style="width: 95%; margin-left: 30px"
-                    [title]="transformDataTypeName(dataType.name)"
-                    [dataValue]="dataValuesMap.get(dataType.name)"
-                    (click)="selectDataType(dataType)"
-                  />
-                </div>
-              }
-            </div>
-          }
-        </div>
+        <node-display [node]="node" [isDesktop]="true" [searchFilter]="searchFilter" [selectDataType]="selectDataType" />
       }
     </div>
   </div>

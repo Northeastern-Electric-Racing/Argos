@@ -23,7 +23,6 @@ CREATE TABLE "data" (
 CREATE TABLE "data_type" (
     "name" TEXT NOT NULL,
     "unit" TEXT NOT NULL,
-    "nodeName" TEXT NOT NULL,
 
     CONSTRAINT "data_type_pkey" PRIMARY KEY ("name")
 );

@@ -70,7 +70,6 @@ pub async fn insert_file(
                                 values: f.values,
                                 timestamp: DateTime::from_timestamp_micros(f.time_us as i64)
                                     .unwrap(),
-                                node: f.topic.split_once('/').unwrap_or_default().0.to_owned(),
                             },
                             None => {
                                 count_bad_run += 1;
