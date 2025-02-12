@@ -87,7 +87,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
           autoScaleYaxis: true
         },
         animations: {
-          enabled: true,
+          enabled: false,
           easing: 'linear',
           dynamicAnimation: {
             speed: 1000
