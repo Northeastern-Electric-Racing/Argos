@@ -11,7 +11,7 @@ const getAllSystems = () => `${baseURL}/systems`;
 
 /* Data */
 const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) =>
-  `${baseURL}/data/${dataTypeName.replaceAll('/', '%2F')}/${runId}`;
+  `${baseURL}/data/${encodeURIComponent(dataTypeName)}/${runId}`;
 
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;
