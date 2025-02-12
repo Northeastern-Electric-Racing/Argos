@@ -30,17 +30,28 @@ export const dataTypesToNodes = (dataTypes: DataType[]): Node[] => {
   return flattenMappedNodes(nodes);
 };
 
+const nodeSort = (a: Node, b: Node) => {
+  const aNum = parseFloat(a.name);
+  const bNum = parseFloat(b.name);
+
+  if (Number.isNaN(aNum) || Number.isNaN(bNum)) {
+    return a.name.localeCompare(b.name);
+  }
+
+  return aNum - bNum;
+};
+
 export const flattenMappedNodes = (nodes: Map<string, MappedNode>): Node[] => {
   const flattenedNodes: Node[] = [];
 
   Array.from(nodes.values()).forEach((node) => {
     flattenedNodes.push({
       ...node,
-      nodes: new BehaviorSubject(flattenMappedNodes(node.nodes))
+      nodes: new BehaviorSubject(flattenMappedNodes(node.nodes).sort(nodeSort))
     });
   });
 
-  return flattenedNodes;
+  return flattenedNodes.sort(nodeSort);
 };
 
 export const getNodeNameFromDataType = (dataType: DataType) => {

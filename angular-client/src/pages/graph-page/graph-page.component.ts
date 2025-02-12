@@ -94,7 +94,6 @@ export default class GraphPageComponent implements OnInit {
           this.selectedDataTypeValuesIsError = true;
         });
         dataQueryResponse.data.subscribe((data: DataValue[]) => {
-          console.log(data);
           this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
           this.currentValue.next(data.pop());
         });
@@ -142,7 +141,6 @@ export default class GraphPageComponent implements OnInit {
       this.dataTypesError = error;
     });
     dataTypesQueryResponse.data.subscribe((data: DataType[]) => {
-      console.log(data);
       this.dataTypes = data;
     });
   }
