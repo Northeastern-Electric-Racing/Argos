@@ -28,7 +28,7 @@ pub async fn socket_handler(
                 break;
             },
             Ok(data) = data_channel.recv() => {
-                send_socket_msg(&data, &mut upload_counter, upload_ratio, &io, DATA_SOCKET_KEY);
+                send_socket_msg(&data, &mut upload_counter, upload_ratio, &io, DATA_SOCKET_KEY).await;
             }
         }
     }
@@ -82,7 +82,7 @@ pub async fn socket_handler_with_metadata(
                     upload_ratio,
                     &io,
                     DATA_SOCKET_KEY,
-                );
+                ).await;
                 handle_socket_msg(data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
             }
             _ = recent_faults_interval.tick() => {
@@ -92,22 +92,18 @@ pub async fn socket_handler_with_metadata(
                         upload_ratio,
                         &io,
                         FAULT_SOCKET_KEY,
-                )
+                ).await
             },
             _ = timers_interval.tick() => {
                 trace!("Sending Timers Intervals!");
                 for item in timer_map.values() {
-                    send_socket_msg(item, &mut upload_counter, upload_ratio, &io, TIMER_SOCKET_KEY);
+                    send_socket_msg(item, &mut upload_counter, upload_ratio, &io, TIMER_SOCKET_KEY).await;
                 }
 
             },
             _ = view_interval.tick() => {
                     trace!("Updating viewership data!");
-                    let sockets = io.sockets();
-                    let sockets_cnt = match sockets {
-                        Ok(s) => s.len() as f32,
-                        Err(_) => -1f32,
-                    };
+                    let sockets_cnt = io.sockets().len() as f32;
                     let item = ClientData {
                         name: "Argos/Viewers".to_string(),
                         unit: "".to_string(),
@@ -121,7 +117,7 @@ pub async fn socket_handler_with_metadata(
                         upload_ratio,
                         &io,
                         DATA_SOCKET_KEY,
-                    );
+                    ).await;
             }
         }
     }
@@ -202,7 +198,7 @@ fn handle_socket_msg(
 /// * `upload-ratio` - The rate limit ratio
 /// * `io` - The socket to upload to
 /// * `socket_key` - The socket key to send to
-fn send_socket_msg<T>(
+async fn send_socket_msg<T>(
     client_data: &T,
     upload_counter: &mut u8,
     upload_ratio: u8,
@@ -213,10 +209,13 @@ fn send_socket_msg<T>(
 {
     *upload_counter = upload_counter.wrapping_add(1);
     if *upload_counter >= upload_ratio {
-        match io.emit(
-            socket_key,
-            &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
-        ) {
+        match io
+            .emit(
+                socket_key,
+                &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
+            )
+            .await
+        {
             Ok(_) => (),
             Err(err) => match err {
                 socketioxide::BroadcastError::Socket(e) => {
