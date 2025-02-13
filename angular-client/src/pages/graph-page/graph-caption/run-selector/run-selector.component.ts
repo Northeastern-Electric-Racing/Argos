@@ -21,15 +21,15 @@ export class RunSelectorComponent implements OnInit {
   @Input() selectRun: (run: Run) => void = () => {};
 
   ngOnInit() {
-    const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns());
+    const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
     runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
       this.runsIsLoading = isLoading;
     });
-    runsQueryResponse.error.subscribe((error: Error) => {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    runsQueryResponse.error.subscribe((error) => {
+      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
-    runsQueryResponse.data.subscribe((data: Run[]) => {
-      this.runs = data;
+    runsQueryResponse.data.subscribe((data) => {
+      if (data) this.runs = data;
     });
 
     this.label = 'Select Run';

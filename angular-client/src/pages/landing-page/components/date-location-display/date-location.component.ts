@@ -30,13 +30,14 @@ export class DateLocationComponent implements OnInit {
     runsQueryResponse.isLoading.subscribe(() => {
       // TODO: possible loading spinner... but we already have a no location set message
     });
-    runsQueryResponse.error.subscribe((error: Error) => {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    runsQueryResponse.error.subscribe((error) => {
+      if (error) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      }
     });
-    runsQueryResponse.data.subscribe((data: Run) => {
-      const run: Run = data;
+    runsQueryResponse.data.subscribe((data) => {
+      const run = data;
       this.location = run?.locationName || 'No Location Set';
-      console.log(run);
     });
   }
 

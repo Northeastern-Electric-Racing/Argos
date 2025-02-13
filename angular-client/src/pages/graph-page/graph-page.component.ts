@@ -43,15 +43,19 @@ export default class GraphPageComponent implements OnInit {
   ngOnInit(): void {
     this.queryDataTypes();
 
-    const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns());
+    const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
     runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
       this.runsIsLoading = isLoading;
     });
-    runsQueryResponse.error.subscribe((error: Error) => {
-      this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    runsQueryResponse.error.subscribe((error) => {
+      if (error) {
+        this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      }
     });
-    runsQueryResponse.data.subscribe((data: Run[]) => {
-      this.allRuns = data;
+    runsQueryResponse.data.subscribe((data) => {
+      if (data) {
+        this.allRuns = data;
+      }
     });
 
     this.clearDataType = () => {
@@ -89,13 +93,17 @@ export default class GraphPageComponent implements OnInit {
         dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
           this.selectedDataTypeValuesIsLoading = isLoading;
         });
-        dataQueryResponse.error.subscribe((error: Error) => {
-          this.selectedDataTypeValuesError = error;
-          this.selectedDataTypeValuesIsError = true;
+        dataQueryResponse.error.subscribe((error) => {
+          if (error) {
+            this.selectedDataTypeValuesError = error;
+            this.selectedDataTypeValuesIsError = true;
+          }
         });
-        dataQueryResponse.data.subscribe((data: DataValue[]) => {
-          this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
-          this.currentValue.next(data.pop());
+        dataQueryResponse.data.subscribe((data) => {
+          if (data) {
+            this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
+            this.currentValue.next(data.pop());
+          }
         });
       } else {
         this.toastService.add({
@@ -136,12 +144,16 @@ export default class GraphPageComponent implements OnInit {
     dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
       this.dataTypesIsLoading = isLoading;
     });
-    dataTypesQueryResponse.error.subscribe((error: Error) => {
-      this.dataTypesIsError = true;
-      this.dataTypesError = error;
+    dataTypesQueryResponse.error.subscribe((error) => {
+      if (error) {
+        this.dataTypesIsError = true;
+        this.dataTypesError = error;
+      }
     });
-    dataTypesQueryResponse.data.subscribe((data: DataType[]) => {
-      this.dataTypes = data;
+    dataTypesQueryResponse.data.subscribe((data) => {
+      if (data) {
+        this.dataTypes = data;
+      }
     });
   }
 

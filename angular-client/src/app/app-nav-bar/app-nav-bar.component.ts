@@ -49,12 +49,12 @@ export class AppNavBarComponent implements OnInit {
   );
 
   onStartNewRun = () => {
-    const runsQueryResponse = this.serverService.query(() => startNewRun());
+    const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
     runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
       this.newRunIsLoading = isLoading;
     });
-    runsQueryResponse.error.subscribe((error: Error) => {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    runsQueryResponse.error.subscribe((error) => {
+      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
   };
 
