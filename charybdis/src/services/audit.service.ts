@@ -1,8 +1,28 @@
 import path from "path";
 import { parse } from "csv-parse";
 import fs from "fs";
-import { DOWNLOADS_PATH } from "../storage-paths";
+import { DOWNLOADS_PATH, dumpPaths } from "../storage-paths";
 import { FailedWriteAuditLog } from "../errors/audit.errors";
+import { prependToCsv } from "../utils/csv.utils";
+
+export async function writeAuditLog(
+  status: "Success" | "Failed",
+  dumpFolderName: string,
+  errorMessage?: string
+): Promise<void> {
+  try {
+    const entry = {
+      status,
+      dumpFolderName,
+      timeTrigger: new Date(),
+      ...(errorMessage ? { error: errorMessage } : {}),
+    };
+
+    await prependToCsv(dumpPaths.getAuditLogCsvPath(), [entry]);
+  } catch (err: any) {
+    throw new FailedWriteAuditLog(err.message);
+  }
+}
 
 /**
  *

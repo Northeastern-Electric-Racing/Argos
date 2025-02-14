@@ -4,11 +4,9 @@ import * as path from "path";
 import { v4 as uuidV4 } from "uuid";
 import { LocalRun } from "../types/local.types";
 import { CsvRunRow } from "../types/csv.types";
-import { DOWNLOADS_PATH } from "../storage-paths";
+import { DOWNLOADS_PATH, dumpPaths } from "../storage-paths";
 import {
   CouldNotConnectToLocalDB,
-  DataTypeDumpFailed,
-  RunDumpFailed,
   DataDumpFailed,
 } from "../errors/dump.errors";
 import { appendToCsv, prependToCsv } from "../utils/csv.utils";
@@ -18,6 +16,8 @@ import {
   createMeaningfulFileName,
 } from "../utils/filesystem.utils";
 import { FailedWriteAuditLog } from "../errors/audit.errors";
+import { writeAuditLog } from "./audit.service";
+import { error } from "console";
 
 async function checkDbConnection() {
   try {
@@ -27,78 +27,51 @@ async function checkDbConnection() {
   }
 }
 
-async function initializeDumpFileStructure(): Promise<{
-  dumpFolderPath: string;
-  auditLogCsv: string;
-  dataTypesCsv: string;
-  runsCsv: string;
-  dataFolder: string;
-}> {
+async function initializeDumpFileStructure(): Promise<string> {
   console.log("Acquiring dump file paths...");
   const currentDumpName = createMeaningfulFileName("dump", new Date());
   const dumpFolderPath = `${DOWNLOADS_PATH}/${currentDumpName}`;
-  const auditLogCsv = `${DOWNLOADS_PATH}/audit_log.csv`;
   await createFolder(DOWNLOADS_PATH);
   await createFolder(dumpFolderPath);
-  await createFile(auditLogCsv);
-  const dataTypesCsv = `${dumpFolderPath}/data_type.csv`;
-  await createFile(dataTypesCsv);
-  const runsCsv = `${dumpFolderPath}/run.csv`;
-  await createFile(runsCsv);
-  const dataFolder = `${dumpFolderPath}/data`;
-  await createFolder(dataFolder);
-  return { dumpFolderPath, auditLogCsv, dataTypesCsv, runsCsv, dataFolder };
+  await createFile(dumpPaths.getAuditLogCsvPath());
+  await createFile(dumpPaths.getDataTypeCsvPath(dumpFolderPath));
+  await createFile(dumpPaths.getRunCsvPath(dumpFolderPath));
+  await createFolder(dumpPaths.getDataFolderPath(dumpFolderPath));
+  return dumpFolderPath;
 }
 
-export async function dumpLocalDb(): Promise<void> {
+export async function dumpLocalDb(
+  dataTypesPerBatch: number = 1000,
+  dataPerBatch: number = 49000
+): Promise<void> {
   console.log("Checking database connection...");
   // check that we can actually connect to the database
   await checkDbConnection(); // throws if prisma cannot connect to local
-  const { dumpFolderPath, auditLogCsv, dataTypesCsv, runsCsv, dataFolder } =
-    await initializeDumpFileStructure();
-  console.log("Starting dump process...");
+  const dumpFolderPath = await initializeDumpFileStructure();
+
   try {
-    try {
-      console.log("Dumping each Run with its Data...");
-      await dumpRunsAndDataToCsv(1000, runsCsv, dataFolder);
-    } catch (error) {
-      throw new RunDumpFailed(error.message);
-    }
-    try {
-      console.log("Data Types dump...");
-      // we want to dump data types
-      await dumpDataTypeToCsv(1000, dataTypesCsv);
-    } catch (error) {
-      throw new DataTypeDumpFailed(error.message);
-    }
+    console.log("Starting dump process...");
+    console.log("Dumping each Run with its Data...");
+    await dumpRunsAndDataToCsv(
+      dumpPaths.getRunCsvPath(dumpFolderPath),
+      dumpPaths.getDataFolderPath(dumpFolderPath),
+      dataPerBatch
+    );
+    console.log("Data Types dump...");
+    // we want to dump data types
+    await dumpDataTypeToCsv(
+      dataTypesPerBatch,
+      dumpPaths.getDataTypeCsvPath(dumpFolderPath)
+    );
   } catch (error) {
-    try {
-      await prependToCsv(auditLogCsv, [
-        {
-          status: "Failed",
-          dumpFolderName: dumpFolderPath,
-          timeTrigger: new Date(),
-          error: error.message,
-        },
-      ]);
-    } catch (error) {
-      throw new FailedWriteAuditLog(error.message);
-    }
+    // if we fail in any of the functions above... then we record the dump as a failure
+    await writeAuditLog("Failed", dumpFolderPath, error.message);
     throw error;
   }
-  try {
-    // if we made here we should have avoided all the errors...
-    // if not that's cool, it still looks like we succeeded
-    await prependToCsv(auditLogCsv, [
-      {
-        status: "Success",
-        dumpFolderName: dumpFolderPath,
-        timeTrigger: new Date(),
-      },
-    ]);
-  } catch (error) {
-    throw new FailedWriteAuditLog(error.message);
-  }
+
+  // if we made here we should have avoided all the errors...
+  // if not that's cool, it still looks like we succeeded
+  await writeAuditLog("Success", dumpFolderPath);
 }
 
 async function dumpDataTypeToCsv(batchSize: number, csvPath: string) {
@@ -132,9 +105,9 @@ async function dumpDataTypeToCsv(batchSize: number, csvPath: string) {
 }
 
 async function dumpRunsAndDataToCsv(
-  p0: number,
   runsCsvPath: string,
-  dataFolder: string
+  dumpFolder: string,
+  dataPerBatch: number
 ) {
   // variables used for tracking current run and data
   let moreRuns = true;
@@ -180,8 +153,8 @@ async function dumpRunsAndDataToCsv(
       try {
         totalDataFetched += await dumpDataByRun(
           localRun.runId,
-          49000,
-          dataFolder
+          dataPerBatch,
+          dumpFolder
         );
       } catch (error) {
         throw new DataDumpFailed(
@@ -198,13 +171,13 @@ async function dumpRunsAndDataToCsv(
 async function dumpDataByRun(
   runId: number,
   batchSize: number,
-  dataFolderPath: string
+  dumpFolderPath: string
 ): Promise<number> {
   let moreData = true;
   let offset = 0;
   let totalDataFetched = 0;
   let csvWriteStream = fs.createWriteStream(
-    `${dataFolderPath}/run-${runId}-data.csv`,
+    dumpPaths.getDataByRunCsvPath(dumpFolderPath, runId),
     { flags: "a" }
   );
 

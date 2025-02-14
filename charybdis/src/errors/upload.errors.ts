@@ -1,10 +1,6 @@
 export class CouldNotConnectToCloudDB extends Error {
-  constructor(message?: string) {
-    super(
-      message
-        ? `Could not connect to cloud database: ${message}`
-        : "Could not connect to cloud database"
-    );
+  constructor(message: string = "") {
+    super(`Could not connect to cloud database: ${message}`);
   }
 }
 

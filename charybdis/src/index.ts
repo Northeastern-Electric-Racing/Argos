@@ -1,24 +1,15 @@
-// import { upload } from "./controllers/upload.controller";
 import { uploadToCloud } from "./services/upload.service";
-import { select } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 import { deleteAllDownloads, dumpLocalDb } from "./services/dump.service";
 import chalk from "chalk";
-import {
-  CouldNotConnectToLocalDB,
-  DataDumpFailed,
-  DataTypeDumpFailed,
-  RunDumpFailed,
-} from "./errors/dump.errors";
-import { FailedWriteAuditLog } from "./errors/audit.errors";
-import {
-  CouldNotConnectToCloudDB,
-  DataTypeUploadError,
-  DataUploadError,
-  RunsUploadError,
-} from "./errors/upload.errors";
+import { addAbortListener } from "events";
+
+let dataPerBatch = 49000;
+let dataTypePerBatch = 1000;
 
 const main = async () => {
   await printTitle("Charybdis 2.0");
+  await batchPresetOptionsDialogue();
   await commandDialog();
 };
 
@@ -38,30 +29,31 @@ const printTitle = async (projectName: string) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 };
 
-const commandDialog = async () => {
+const commands = {
+  dump: () => dumpLocalDb(dataTypePerBatch, dataPerBatch),
+  upload: () => uploadToCloud(),
+  "delete-all-downloads": () => deleteAllDownloads(),
+};
+
+const commandDialog = async (): Promise<void> => {
   // Using chalk to style the select prompt message.
   const command = await select({
     message: chalk.bold.blue("What would you like to do with the data:"),
-    choices: ["dump", "upload", "delete-all-downloads"],
+    choices: Object.keys(commands), // all the keys will show up as options for the user
   });
 
+  const userRequestedCmd = commands[command as keyof typeof commands];
+  if (!userRequestedCmd) {
+    printError(`Command "${command}" not found`);
+  }
+
   try {
-    switch (command) {
-      case "dump":
-        await dumpLocalDb();
-        break;
-      case "upload":
-        await uploadToCloud();
-        break;
-      case "delete-all-downloads":
-        await deleteAllDownloads();
-        break;
-      default:
-        printError("Invalid command");
-    }
-  } catch (error) {
+    console.log("Batch size: ", dataPerBatch);
+    await userRequestedCmd();
+  } catch (error: any) {
     printError(error.message);
   }
+
   await commandDialog();
 };
 
@@ -70,6 +62,56 @@ const printError = (errorMessage: string) => {
     chalk.whiteBright.bold("\n\nError: ") +
       chalk.underline.red.bold(`${errorMessage}\n`)
   );
+};
+
+const dataTypeBatchSizeInput = async (): Promise<void> => {
+  const newDataBatchSize = await input({
+    message: chalk.bold.blue(
+      `Set dataType batch size (current size:  ${dataTypePerBatch.toLocaleString()}): `
+    ),
+    validate: (value) => {
+      const num = Number(value);
+      return !isNaN(num) ? true : "Please enter a valid number";
+    },
+  });
+
+  dataTypePerBatch = Number(newDataBatchSize);
+  console.log("Data batch size set to: ", dataTypePerBatch.toLocaleString());
+};
+
+const dataBatchSizeInput = async (): Promise<void> => {
+  const newDataBatchSize = await input({
+    message: chalk.bold.blue(
+      `Set data batch size (current size:  ${dataPerBatch.toLocaleString()}): `
+    ),
+    validate: (value) => {
+      const num = Number(value);
+      return !isNaN(num) ? true : "Please enter a valid number";
+    },
+  });
+
+  dataPerBatch = Number(newDataBatchSize);
+  console.log("Data batch size set to: ", dataPerBatch.toLocaleString());
+};
+
+const batchPresetOptions = {
+  "Data Batch Size": dataBatchSizeInput,
+  "Data Type Batch Size": dataTypeBatchSizeInput,
+};
+
+const batchPresetOptionsDialogue = async (): Promise<void> => {
+  const command = await select({
+    message: chalk.bold.blue("What preset would you like to change:"),
+    choices: Object.keys(batchPresetOptions), // all the keys will show up as options for the user
+  });
+
+  const userRequestedCmd =
+    batchPresetOptions[command as keyof typeof batchPresetOptions];
+  if (!userRequestedCmd) {
+    printError(`Command "${command}" not found`);
+  }
+
+  await userRequestedCmd();
 };
 
 // Start the CLI

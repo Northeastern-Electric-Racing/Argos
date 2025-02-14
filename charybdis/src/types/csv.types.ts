@@ -27,8 +27,8 @@ export interface CsvDataTypeRow {
   nodeName: string;
 }
 
-export interface AuditRow {
-  status: string;
+export interface AuditLogEntry {
+  status: "Success" | "Failed";
   dumpFolderName: string;
   timeTrigger: Date;
   error?: string;

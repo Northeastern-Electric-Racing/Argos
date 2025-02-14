@@ -1,10 +1,6 @@
 export class CouldNotConnectToLocalDB extends Error {
-  constructor(message?: string) {
-    super(
-      message
-        ? `Could not connect to local database: ${message}`
-        : "Could not connect to local database"
-    );
+  constructor(message: string = "") {
+    super(`Could not connect to local database: ${message}`);
   }
 }
 
