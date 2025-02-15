@@ -1,7 +1,7 @@
 import * as path from "path";
 import { createMeaningfulFileName } from "./utils/filesystem.utils";
 
-/* does not change */
+/* structural */
 export const PROJECT_ROOT = path.resolve("./");
 export const DOWNLOADS_PATH = path.resolve(PROJECT_ROOT, "downloads");
 
@@ -29,9 +29,9 @@ export const getRunCsvPath = (dumpFolderPath: string) =>
 export const getDataFolderPath = (dumpFolderPath: string) =>
   `${dumpFolderPath}/data`;
 export const getDataByRunCsvPath = (dumpFolderPath: string, runId: number) =>
-  `${dumpPaths.getDataFolderPath(dumpFolderPath)}/run-${runId}-data.csv`;
+  `${storagePaths.getDataFolderPath(dumpFolderPath)}/run-${runId}-data.csv`;
 
-export const dumpPaths = {
+export const storagePaths = {
   getDumpFolderPath,
   getAuditLogCsvPath,
   getDataTypeCsvPath,

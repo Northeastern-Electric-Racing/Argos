@@ -4,20 +4,18 @@ import * as path from "path";
 import { v4 as uuidV4 } from "uuid";
 import { LocalRun } from "../types/local.types";
 import { CsvRunRow } from "../types/csv.types";
-import { DOWNLOADS_PATH, dumpPaths } from "../storage-paths";
+import { DOWNLOADS_PATH, storagePaths } from "../storage-paths";
 import {
   CouldNotConnectToLocalDB,
   DataDumpFailed,
 } from "../errors/dump.errors";
-import { appendToCsv, prependToCsv } from "../utils/csv.utils";
+import { appendToCsv } from "../utils/csv.utils";
 import {
   createFile,
   createFolder,
   createMeaningfulFileName,
 } from "../utils/filesystem.utils";
-import { FailedWriteAuditLog } from "../errors/audit.errors";
 import { writeAuditLog } from "./audit.service";
-import { error } from "console";
 
 async function checkDbConnection() {
   try {
@@ -33,10 +31,10 @@ async function initializeDumpFileStructure(): Promise<string> {
   const dumpFolderPath = `${DOWNLOADS_PATH}/${currentDumpName}`;
   await createFolder(DOWNLOADS_PATH);
   await createFolder(dumpFolderPath);
-  await createFile(dumpPaths.getAuditLogCsvPath());
-  await createFile(dumpPaths.getDataTypeCsvPath(dumpFolderPath));
-  await createFile(dumpPaths.getRunCsvPath(dumpFolderPath));
-  await createFolder(dumpPaths.getDataFolderPath(dumpFolderPath));
+  await createFile(storagePaths.getAuditLogCsvPath());
+  await createFile(storagePaths.getDataTypeCsvPath(dumpFolderPath));
+  await createFile(storagePaths.getRunCsvPath(dumpFolderPath));
+  await createFolder(storagePaths.getDataFolderPath(dumpFolderPath));
   return dumpFolderPath;
 }
 
@@ -53,15 +51,15 @@ export async function dumpLocalDb(
     console.log("Starting dump process...");
     console.log("Dumping each Run with its Data...");
     await dumpRunsAndDataToCsv(
-      dumpPaths.getRunCsvPath(dumpFolderPath),
-      dumpPaths.getDataFolderPath(dumpFolderPath),
+      storagePaths.getRunCsvPath(dumpFolderPath),
+      storagePaths.getDataFolderPath(dumpFolderPath),
       dataPerBatch
     );
     console.log("Data Types dump...");
     // we want to dump data types
     await dumpDataTypeToCsv(
       dataTypesPerBatch,
-      dumpPaths.getDataTypeCsvPath(dumpFolderPath)
+      storagePaths.getDataTypeCsvPath(dumpFolderPath)
     );
   } catch (error) {
     // if we fail in any of the functions above... then we record the dump as a failure
@@ -177,7 +175,7 @@ async function dumpDataByRun(
   let offset = 0;
   let totalDataFetched = 0;
   let csvWriteStream = fs.createWriteStream(
-    dumpPaths.getDataByRunCsvPath(dumpFolderPath, runId),
+    storagePaths.getDataByRunCsvPath(dumpFolderPath, runId),
     { flags: "a" }
   );
 
