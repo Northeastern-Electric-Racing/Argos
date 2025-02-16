@@ -29,6 +29,8 @@ To access the prisma client for each respective database ensure that you use the
 
 ---
 
+<br/>
+<br/>
 <a id="charybdis-container"></a>
 
 ## Charybdis Container - Quick Start Guide
@@ -38,13 +40,13 @@ To see how to use the CLI in the container see [The Command Line Interface](#cli
 
 ---
 
-### Prerequisites
+#### Prerequisites
 
 - Install [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/).
 
 ---
 
-### Running the App
+#### Running the App
 
 To start the app:
 
@@ -66,7 +68,7 @@ docker compose up charybdis_app charybdis_cloud -d
 
 ---
 
-### Stopping the App
+#### Stopping the App
 
 ```sh
 docker compose down
@@ -74,7 +76,7 @@ docker compose down
 
 ---
 
-### Cleaning Up (Remove Data)
+#### Cleaning Up (Remove Data)
 
 ```sh
 docker compose down --volumes
@@ -82,14 +84,12 @@ docker compose down --volumes
 
 ---
 
-### Environment Variables
+#### Environment Variables
 
 - `LOCAL_DATABASE_URL`: Local database connection.
 - `CLOUD_DATABASE_URL`: Cloud database connection.
 
 ---
-
-You're all set! 🚀
 
 <br/>
 <br/>
