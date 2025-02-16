@@ -1,20 +1,163 @@
-import { uploadToCloud } from "./services/upload.service";
+import { Command } from "commander";
 import { input, select } from "@inquirer/prompts";
-import { deleteAllDownloads, dumpLocalDb } from "./services/dump.service";
 import chalk from "chalk";
-import { addAbortListener } from "events";
 
-let dataPerBatch = 49000;
-let dataTypePerBatch = 1000;
+import { uploadToCloud } from "./services/upload.service";
+import { deleteAllDownloads, dumpLocalDb } from "./services/dump.service";
+import { updatePrismaClient as updateCloudPrismaClient } from "./cloud-prisma/prisma";
+import { updatePrismaClient as updateLocalPrismaClient } from "./local-prisma/prisma";
 
-const main = async () => {
-  await printTitle("Charybdis 2.0");
-  await batchPresetOptionsDialogue();
-  await commandDialog();
+/* ---------------------------- CLI options & Variables ---------------------------- */
+
+// Batch settings
+let downloadDataBatch = 49000;
+let downloadDataTypeBatch = 1000;
+let uploadDataBatch = 4960;
+let uploadDataTypeBatch = 4960;
+
+// Database URLs
+let cloudUrl = process.env.CLOUD_DATABASE_URL || "";
+let localUrl = process.env.LOCAL_DATABASE_URL || "";
+
+// Main menu options
+const MAIN_DIALOGUE_OPTIONS = {
+  "Change Batch Presets": batchPresetOptionsDialogue,
+  "Run a Command": commandDialog,
+  "Change DB urls": changeDBUrls,
+  Exit: async () => {
+    console.log("Goodbye!");
+    process.exit(0);
+  },
 };
 
-const printTitle = async (projectName: string) => {
-  // Print the project title in ASCII art using figlet.
+// general command options for both interactive CLI and command line arguments based CLI
+const COMMAND_OPTIONS = {
+  dump: async () => await dumpLocalDb(downloadDataTypeBatch, downloadDataBatch),
+  upload: async () => await uploadToCloud(uploadDataBatch, uploadDataTypeBatch),
+  "delete-all-downloads": async () => await deleteAllDownloads(),
+};
+
+// Command options for interactive CLI
+const DIALOGE_COMMAND_OPTIONS = {
+  ...COMMAND_OPTIONS,
+  "Back to Menu": () => {}, // do nothing as the menu will be called again
+};
+
+// Batch size update options for interactive CLI and command line arguments based CLI
+const BATCH_SIZE_OPTIONS = {
+  "download-data-batch-size": async (size: number) =>
+    (downloadDataBatch = size),
+  "download-data-type-batch-size": async (size: number) =>
+    (downloadDataTypeBatch = size),
+  "upload-data-batch-size": async (size: number) => (uploadDataBatch = size),
+  "upload-data-type-batch-size": async (size: number) =>
+    (uploadDataTypeBatch = size),
+};
+
+// Batch size update options for interactive CLI
+const DIALOG_BATCH_OPTIONS = {
+  ...BATCH_SIZE_OPTIONS,
+  "Back to Menu": () => {}, // do nothing as the menu will be called again
+};
+
+// Change database URL options
+const CHANGE_DB_URL_OPTIONS = {
+  "set-local-db": (url: string) => {
+    localUrl = url;
+    updateLocalPrismaClient(localUrl);
+  },
+  "set-cloud-db": (url: string) => {
+    cloudUrl = url;
+    updateCloudPrismaClient(cloudUrl);
+  },
+};
+
+// Change database URL options for interactive CLI
+const DIALOG_CHANGE_DB_URL_OPTIONS = {
+  ...CHANGE_DB_URL_OPTIONS,
+  "Back to Menu": () => {}, // do nothing as the menu will be called again
+};
+
+/* ---------------------------- Interactive CLI Flow ---------------------------- */
+
+export async function startInteractiveCLI() {
+  await printTitle();
+  await mainMenu();
+}
+
+async function mainMenu() {
+  const choice = await select({
+    message: chalk.bold.magenta("Menu:"),
+    choices: Object.keys(MAIN_DIALOGUE_OPTIONS),
+  });
+  await MAIN_DIALOGUE_OPTIONS[choice as keyof typeof MAIN_DIALOGUE_OPTIONS]();
+  await mainMenu();
+}
+
+async function commandDialog() {
+  const commandChoice = await select({
+    message: chalk.bold.blue("Select a command:"),
+    choices: Object.keys(DIALOGE_COMMAND_OPTIONS),
+  });
+  try {
+    await DIALOGE_COMMAND_OPTIONS[
+      commandChoice as keyof typeof DIALOGE_COMMAND_OPTIONS
+    ]();
+  } catch (err) {
+    printError(err.message);
+  }
+
+  await mainMenu();
+}
+
+async function batchPresetOptionsDialogue() {
+  console.log("Current batch sizes:", {
+    downloadDataBatch,
+    downloadDataTypeBatch,
+    uploadDataBatch,
+    uploadDataTypeBatch,
+  });
+  const batchChoice = await select({
+    message: chalk.bold.blue("Select batch setting to change:"),
+    choices: Object.keys(DIALOG_BATCH_OPTIONS),
+  });
+  if (batchChoice !== "Back to Menu") {
+    const newSize = await input({
+      message: `Enter new size for ${batchChoice}:`,
+    });
+    try {
+      await DIALOG_BATCH_OPTIONS[
+        batchChoice as keyof typeof DIALOG_BATCH_OPTIONS
+      ](Number(newSize));
+    } catch (err) {
+      printError(err.message);
+    }
+  }
+  await mainMenu();
+}
+
+async function changeDBUrls() {
+  const choice = await select({
+    message: "Select DB URL to change:",
+    choices: Object.keys(DIALOG_CHANGE_DB_URL_OPTIONS),
+  });
+  if (choice !== "Back to Menu") {
+    const newUrl = await input({ message: `Enter new URL for ${choice}:` });
+    try {
+      await DIALOG_CHANGE_DB_URL_OPTIONS[
+        choice as keyof typeof DIALOG_CHANGE_DB_URL_OPTIONS
+      ](newUrl);
+    } catch (err) {
+      printError(err.message);
+    }
+  }
+
+  await mainMenu();
+}
+
+/* ---------------------------- Utility Functions ---------------------------- */
+
+async function printTitle() {
   console.log(`
    ____ _                      _         _ _       ____    ___  
   / ___| |__   __ _ _ __ _   _| |__   __| (_)___  |___ \\  / _ \\ 
@@ -23,96 +166,61 @@ const printTitle = async (projectName: string) => {
   \\____|_| |_|\\__,_|_|   \\__, |_.__/ \\__,_|_|___/ |_____(_)___/ 
                          |___/                                  
 `);
-
-  // Wait a second so that the project title is fully printed
-  // before the user can enter anything else.
   await new Promise((resolve) => setTimeout(resolve, 1000));
-};
+}
 
-const commands = {
-  dump: () => dumpLocalDb(dataTypePerBatch, dataPerBatch),
-  upload: () => uploadToCloud(),
-  "delete-all-downloads": () => deleteAllDownloads(),
-};
-
-const commandDialog = async (): Promise<void> => {
-  // Using chalk to style the select prompt message.
-  const command = await select({
-    message: chalk.bold.blue("What would you like to do with the data:"),
-    choices: Object.keys(commands), // all the keys will show up as options for the user
-  });
-
-  const userRequestedCmd = commands[command as keyof typeof commands];
-  if (!userRequestedCmd) {
-    printError(`Command "${command}" not found`);
-  }
-
-  try {
-    console.log("Batch size: ", dataPerBatch);
-    await userRequestedCmd();
-  } catch (error: any) {
-    printError(error.message);
-  }
-
-  await commandDialog();
-};
-
-const printError = (errorMessage: string) => {
+function printError(errorMessage: string) {
   console.log(
     chalk.whiteBright.bold("\n\nError: ") +
       chalk.underline.red.bold(`${errorMessage}\n`)
   );
-};
+}
 
-const dataTypeBatchSizeInput = async (): Promise<void> => {
-  const newDataBatchSize = await input({
-    message: chalk.bold.blue(
-      `Set dataType batch size (current size:  ${dataTypePerBatch.toLocaleString()}): `
-    ),
-    validate: (value) => {
-      const num = Number(value);
-      return !isNaN(num) ? true : "Please enter a valid number";
-    },
-  });
+/* ---------------------------- CLI Arguments Processing ---------------------------- */
 
-  dataTypePerBatch = Number(newDataBatchSize);
-  console.log("Data batch size set to: ", dataTypePerBatch.toLocaleString());
-};
+export async function main() {
+  const program = new Command();
 
-const dataBatchSizeInput = async (): Promise<void> => {
-  const newDataBatchSize = await input({
-    message: chalk.bold.blue(
-      `Set data batch size (current size:  ${dataPerBatch.toLocaleString()}): `
-    ),
-    validate: (value) => {
-      const num = Number(value);
-      return !isNaN(num) ? true : "Please enter a valid number";
-    },
-  });
+  program
+    .option("-c, --command <cmd>", "Command to run")
+    .option("-b, --batch <batchParams...>", "Set batch parameter")
+    .option("--url-local <localUrl>", "Set local DB URL")
+    .option("--url-cloud <cloudUrl>", "Set cloud DB URL");
 
-  dataPerBatch = Number(newDataBatchSize);
-  console.log("Data batch size set to: ", dataPerBatch.toLocaleString());
-};
+  program.parse(process.argv);
+  const options = program.opts();
 
-const batchPresetOptions = {
-  "Data Batch Size": dataBatchSizeInput,
-  "Data Type Batch Size": dataTypeBatchSizeInput,
-};
-
-const batchPresetOptionsDialogue = async (): Promise<void> => {
-  const command = await select({
-    message: chalk.bold.blue("What preset would you like to change:"),
-    choices: Object.keys(batchPresetOptions), // all the keys will show up as options for the user
-  });
-
-  const userRequestedCmd =
-    batchPresetOptions[command as keyof typeof batchPresetOptions];
-  if (!userRequestedCmd) {
-    printError(`Command "${command}" not found`);
+  if (process.argv.length <= 2) {
+    await startInteractiveCLI();
+    return;
   }
 
-  await userRequestedCmd();
-};
+  if (options.urlLocal)
+    await CHANGE_DB_URL_OPTIONS["set-local-db"](options.urlLocal);
 
-// Start the CLI
-main();
+  if (options.urlCloud)
+    await CHANGE_DB_URL_OPTIONS["set-cloud-db"](options.urlCloud);
+
+  if (options.batch) {
+    const batchArray = options.batch as string[];
+    for (let i = 0; i < batchArray.length; i += 2) {
+      const key = batchArray[i],
+        size = batchArray[i + 1];
+      if (BATCH_SIZE_OPTIONS[key]) await BATCH_SIZE_OPTIONS[key](Number(size));
+    }
+  }
+
+  if (options.command && COMMAND_OPTIONS[options.command]) {
+    await COMMAND_OPTIONS[options.command]();
+    process.exit(0);
+  }
+}
+
+/* ---------------------------- Auto-run CLI ---------------------------- */
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

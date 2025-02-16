@@ -11,10 +11,7 @@ import {
   RunsUploadError,
   CouldNotConnectToCloudDB,
 } from "../errors/upload.errors";
-
-const DATATYPE_BATCH_SIZE = 1000;
-const RUN_BATCH_SIZE = 1000;
-const DATA_BATCH_SIZE = 4960;
+import { storagePaths } from "../storage-paths";
 
 const csvNames = {
   run: (path: string) => `${path}/run.csv`,
@@ -30,7 +27,10 @@ async function checkDbConnection() {
   }
 }
 
-export async function uploadToCloud() {
+export async function uploadToCloud(
+  dataBatchSize: number,
+  dataTypeBatchSize: number
+) {
   // ensure we can actually connect to the database
   console.info("Checking database connection...");
   await checkDbConnection();
@@ -38,21 +38,11 @@ export async function uploadToCloud() {
   try {
     console.info("Opening most recent download folder...");
     let dumpFolderPath = await getMostRecentDownloadFolderPath();
-
     console.info("Processing data types...");
-    try {
-      console.log("calling processDataType with: ", dumpFolderPath);
-      await processDataType(dumpFolderPath);
-    } catch (error) {
-      throw new DataTypeUploadError(error.message);
-    }
-
+    console.log("calling processDataType with: ", dumpFolderPath);
+    await processDataType(dumpFolderPath, dataTypeBatchSize);
     console.info("Startin Run uploads...");
-    try {
-      await processRunsWithData(dumpFolderPath);
-    } catch (error) {
-      throw new RunsUploadError(error.message);
-    }
+    await processRunsWithData(dumpFolderPath, dataBatchSize);
 
     console.log("Inserted all data entries");
     console.log("CSV to Cloud transfer complete.");
@@ -65,10 +55,10 @@ export async function uploadToCloud() {
 
 export async function processDataType(
   dumpFolderPath: string,
-  batchSize: number = DATATYPE_BATCH_SIZE
+  batchSize: number
 ) {
   console.log("Processing data types...");
-  const dataTypeCsvPath = csvNames.data_type(dumpFolderPath);
+  const dataTypeCsvPath = storagePaths.getDataTypeCsvPath(dumpFolderPath);
   console.log(`Processing data types from: ${dataTypeCsvPath}`);
   await processCsvInBatches<LocalDataType>(
     dataTypeCsvPath,
@@ -91,12 +81,10 @@ export async function processDataType(
 
 export async function processRunsWithData(
   dumpFolderPath: string,
-  batchSize: number = RUN_BATCH_SIZE
+  dataBatchSize: number
 ) {
   const runsCsvPath = csvNames.run(dumpFolderPath);
   const runs: CsvRunRow[] = await readCsvFile<CsvRunRow>(runsCsvPath);
-  // console.log("Header found: " + header);
-  // console.log("Content found: " + runs);
 
   for (const run of runs) {
     let cloudRun: CloudRun = {
@@ -108,17 +96,20 @@ export async function processRunsWithData(
     };
 
     try {
-      await cloudPrisma.run.create({
-        data: cloudRun,
+      await cloudPrisma.run.upsert({
+        where: { id: cloudRun.id },
+        create: cloudRun,
+        update: cloudRun,
       });
     } catch (error) {
       throw new RunsUploadError(error.message);
     }
 
-    let dataForRun = await processCsvDataFile(
+    await processCsvDataFile(
       cloudRun.id,
       cloudRun.runId,
-      dumpFolderPath
+      dumpFolderPath,
+      dataBatchSize
     );
   }
 }
@@ -127,13 +118,15 @@ export async function processCsvDataFile(
   uuid: string,
   runId: number,
   dumpFolderPath: string,
-  batchSize: number = DATA_BATCH_SIZE
+  batchSize: number
 ): Promise<number> {
   let dataForRun = 0;
   let csvDataPath = csvNames.data(dumpFolderPath, runId);
+  let startTime = new Date();
   await processCsvInBatches<CsvDataRow>(
     csvDataPath,
     async (batch) => {
+      let startTime = new Date();
       try {
         const cloudData: CloudData[] = batch.map((localData: CsvDataRow) =>
           csvToCloudData(localData, uuid)
@@ -147,7 +140,11 @@ export async function processCsvDataFile(
 
         dataForRun += numOfData;
 
-        console.log(`Inserted ${numOfData} data entries`);
+        console.log(
+          `Inserted ${numOfData} data entries, time taken: ${
+            new Date().getTime() - startTime.getTime()
+          }ms`
+        );
       } catch (error) {
         console.error("Error inserting data:", error);
         process.exit(1);
@@ -156,6 +153,10 @@ export async function processCsvDataFile(
     batchSize
   );
 
-  console.log(`Total data uploaded for RUN ${runId}: ${dataForRun}`);
+  console.log(
+    `Total data uploaded for RUN ${runId}: ${dataForRun}, time taken: ${
+      new Date().getTime() - startTime.getTime()
+    }ms`
+  );
   return dataForRun;
 }

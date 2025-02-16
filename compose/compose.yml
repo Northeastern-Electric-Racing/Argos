@@ -1,3 +1,10 @@
+version: '3.8'
+
+networks:
+  shared_network:
+    name: shared_network  # Ensures a fixed external network
+    driver: bridge
+
 services:
   odyssey-db:
     container_name: odyssey-db
@@ -6,18 +13,19 @@ services:
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     command: 
-       - "postgres"
-       - "-c"
-       - "shared_buffers=256MB"
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
     ports:
-      # needs to be published for charybdis, which runs outside of docker
-      - 5432:5432
+      - 5432:5432  # Exposed for external access if needed
     expose:
-      - 5432
+      - 5432  # Allow inter-container communication
     volumes:
       - db-data:/var/lib/postgresql/data
     cpu_shares: 1024
     stop_grace_period: 2m
+    networks:
+      - shared_network  # Connect to shared network
 
   scylla-server:
     container_name: scylla-server
@@ -30,21 +38,14 @@ services:
     depends_on:
       - odyssey-db
     environment:
-        - DATABASE_URL=postgresql://postgres:password@odyssey-db:5432/postgres
-       # - PROD_SIREN_HOST_URL=siren:1883
-        #-SCYLLA_DATA_UPLOAD_DISABLE=false
-        #-SCYLLA_SIREN_HOST_URL=localhost:1883
-        #-SCYLLA_BATCH_UPSERT_TIME=10
-        #- SCYLLA_RATE_LIMIT_MODE=static
-        #- SCYLLA_STATIC_RATE_LIMIT_VALUE=50
-        #-SCYLLA_SOCKET_DISCARD_PERCENT=0
-        - RUST_LOG=warn,scylla_server=debug
+      - DATABASE_URL=postgresql://postgres:password@odyssey-db:5432/postgres
+      - RUST_LOG=warn,scylla_server=debug
     cpu_shares: 1024
     stop_grace_period: 2m
     stop_signal: SIGINT
     init: true
+    networks:
+      - shared_network  # Connect to shared network
 
 volumes:
   db-data:
-
-

@@ -1,9 +1,7 @@
 import { prisma as localPrisma } from "../local-prisma/prisma";
 import * as fs from "fs";
 import * as path from "path";
-import { v4 as uuidV4 } from "uuid";
 import { LocalRun } from "../types/local.types";
-import { CsvRunRow } from "../types/csv.types";
 import { DOWNLOADS_PATH, storagePaths } from "../storage-paths";
 import {
   CouldNotConnectToLocalDB,
@@ -16,15 +14,13 @@ import {
   createMeaningfulFileName,
 } from "../utils/filesystem.utils";
 import { writeAuditLog } from "./audit.service";
+import { localRunToCsvRunRow } from "../transformers/local.transformer";
 
-async function checkDbConnection() {
-  try {
-    await localPrisma.$connect();
-  } catch (error) {
-    throw new CouldNotConnectToLocalDB();
-  }
-}
-
+/**
+ * Initalizes the dump file structure, for a new dump, creating all necessary folders and non-state oriented files.
+ *
+ * @returns the path to the current dump folder.
+ */
 async function initializeDumpFileStructure(): Promise<string> {
   console.log("Acquiring dump file paths...");
   const currentDumpName = createMeaningfulFileName("dump", new Date());
@@ -38,38 +34,17 @@ async function initializeDumpFileStructure(): Promise<string> {
   return dumpFolderPath;
 }
 
-export async function dumpLocalDb(
-  dataTypesPerBatch: number = 1000,
-  dataPerBatch: number = 49000
-): Promise<void> {
-  console.log("Checking database connection...");
-  // check that we can actually connect to the database
-  await checkDbConnection(); // throws if prisma cannot connect to local
-  const dumpFolderPath = await initializeDumpFileStructure();
-
+/**
+ * Checks if the local database can be connected to.
+ *
+ * @throws {CouldNotConnectToLocalDB} if the local database cannot be connected to
+ */
+async function checkDbConnection() {
   try {
-    console.log("Starting dump process...");
-    console.log("Dumping each Run with its Data...");
-    await dumpRunsAndDataToCsv(
-      storagePaths.getRunCsvPath(dumpFolderPath),
-      storagePaths.getDataFolderPath(dumpFolderPath),
-      dataPerBatch
-    );
-    console.log("Data Types dump...");
-    // we want to dump data types
-    await dumpDataTypeToCsv(
-      dataTypesPerBatch,
-      storagePaths.getDataTypeCsvPath(dumpFolderPath)
-    );
+    await localPrisma.$connect();
   } catch (error) {
-    // if we fail in any of the functions above... then we record the dump as a failure
-    await writeAuditLog("Failed", dumpFolderPath, error.message);
-    throw error;
+    throw new CouldNotConnectToLocalDB();
   }
-
-  // if we made here we should have avoided all the errors...
-  // if not that's cool, it still looks like we succeeded
-  await writeAuditLog("Success", dumpFolderPath);
 }
 
 async function dumpDataTypeToCsv(batchSize: number, csvPath: string) {
@@ -102,17 +77,17 @@ async function dumpDataTypeToCsv(batchSize: number, csvPath: string) {
   }
 }
 
-async function dumpRunsAndDataToCsv(
-  runsCsvPath: string,
-  dumpFolder: string,
-  dataPerBatch: number
-) {
+async function dumpRunsAndDataToCsv(dumpFolder: string, dataPerBatch: number) {
   // variables used for tracking current run and data
   let moreRuns = true;
   let cursor: { runId: number } | undefined;
   let totalRunsFetched = 0;
   let totalDataFetched = 0;
-  let csvWriteStream = fs.createWriteStream(runsCsvPath, { flags: "a" });
+  let csvWriteStream = fs.createWriteStream(
+    storagePaths.getRunCsvPath(dumpFolder),
+    { flags: "a" }
+  );
+  let startTime = new Date();
 
   while (moreRuns) {
     // find the first run after the cursor (the next run to proccess)
@@ -134,14 +109,7 @@ async function dumpRunsAndDataToCsv(
       };
 
       // convert to the csv type before inserting (allowing us to create a uuid)
-      const csvRunRow: CsvRunRow = {
-        uuid: uuidV4(),
-        runId: localRun.runId.toString(),
-        driverName: localRun.driverName,
-        locationName: localRun.locationName,
-        notes: localRun.notes,
-        time: localRun.time.toISOString(),
-      };
+      const csvRunRow = localRunToCsvRunRow(localRun);
 
       appendToCsv(csvWriteStream, [csvRunRow]);
       console.log(`Inserted run ${csvRunRow.runId} to run.csv`);
@@ -149,10 +117,16 @@ async function dumpRunsAndDataToCsv(
 
       // DUMP DATA FOR THIS RUN
       try {
+        let dataDumpStart = new Date();
         totalDataFetched += await dumpDataByRun(
           localRun.runId,
           dataPerBatch,
           dumpFolder
+        );
+        console.log(
+          `Data dump for run ${localRun.runId} took: ${
+            new Date().getTime() - dataDumpStart.getTime()
+          }ms`
         );
       } catch (error) {
         throw new DataDumpFailed(
@@ -162,8 +136,16 @@ async function dumpRunsAndDataToCsv(
     }
   }
 
-  console.log(`Total runs fetched: ${totalRunsFetched}`);
-  console.log(`Total data fetched: ${totalDataFetched}`);
+  console.log(
+    `Total runs fetched: ${totalRunsFetched}, time taken: ${
+      new Date().getTime() - startTime.getTime()
+    }ms`
+  );
+  console.log(
+    `Total data fetched: ${totalDataFetched}, time taken: ${
+      new Date().getTime() - startTime.getTime()
+    }ms`
+  );
 }
 
 async function dumpDataByRun(
@@ -203,26 +185,60 @@ async function dumpDataByRun(
 }
 
 export async function deleteAllDownloads(): Promise<void> {
-  try {
-    // Read all entries in the downloads folder
-    const entries = await fs.promises.readdir(DOWNLOADS_PATH, {
-      withFileTypes: true,
-    });
+  // Read all entries in the downloads folder
+  const entries = await fs.promises.readdir(DOWNLOADS_PATH, {
+    withFileTypes: true,
+  });
 
-    // Iterate over each entry and remove it
-    for (const entry of entries) {
-      const fullPath = path.join(DOWNLOADS_PATH, entry.name);
-      if (entry.isDirectory()) {
-        // Recursively remove the directory and its contents
-        await fs.promises.rm(fullPath, { recursive: true, force: true });
-      } else {
-        // Remove the file
-        await fs.promises.unlink(fullPath);
-      }
+  // Iterate over each entry and remove it
+  for (const entry of entries) {
+    const fullPath = path.join(DOWNLOADS_PATH, entry.name);
+    if (entry.isDirectory()) {
+      // Recursively remove the directory and its contents
+      await fs.promises.rm(fullPath, { recursive: true, force: true });
+    } else {
+      // Remove the file
+      await fs.promises.unlink(fullPath);
     }
-    console.log("All downloads have been deleted.");
+  }
+  console.log("All downloads have been deleted.");
+}
+
+export async function dumpLocalDb(
+  dataTypesPerBatch: number,
+  dataPerBatch: number
+): Promise<void> {
+  console.log("Checking database connection...");
+  // check that we can actually connect to the database
+  await checkDbConnection(); // throws if prisma cannot connect to local
+  const dumpFolderPath = await initializeDumpFileStructure();
+
+  try {
+    console.log("Starting dump process...");
+    console.log("Dumping each Run with its Data...");
+    await dumpRunsAndDataToCsv(dumpFolderPath, dataPerBatch);
+    console.log("Data Types dump...");
+    // we want to dump data types
+    await dumpDataTypeToCsv(
+      dataTypesPerBatch,
+      storagePaths.getDataTypeCsvPath(dumpFolderPath)
+    );
   } catch (error) {
-    console.error("Error deleting downloads:", error);
+    // if we fail in any of the functions above... then we record the dump as a failure
+    await writeAuditLog({
+      status: "Failed",
+      dumpFolderName: dumpFolderPath,
+      timeTrigger: new Date(),
+      error: error.message,
+    });
     throw error;
   }
+
+  // if we made here we should have avoided all the errors...
+  // if not that's cool, it still looks like we succeeded
+  await writeAuditLog({
+    status: "Success",
+    dumpFolderName: dumpFolderPath,
+    timeTrigger: new Date(),
+  });
 }

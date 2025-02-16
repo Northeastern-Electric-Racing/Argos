@@ -38,6 +38,7 @@
     "@json2csv/node": "^7.0.6",
     "@prisma/client": "^6.2.1",
     "chalk": "^5.4.1",
+    "commander": "^13.1.0",
     "csv-parse": "^5.6.0",
     "uuid": "^11.0.5"
   }
