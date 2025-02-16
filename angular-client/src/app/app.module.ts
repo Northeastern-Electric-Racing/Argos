@@ -101,13 +101,13 @@ import { CurrentRunDisplayComponent } from 'src/pages/landing-page/components/cu
 import LatencyDisplayComponent from 'src/components/latency-display/latency-display';
 import { DateLocationComponent } from 'src/pages/landing-page/components/date-location-display/date-location.component';
 import { ViewerDisplayComponent } from 'src/pages/landing-page/components/viewer-display/viewer-display.component';
-import NodeDisplayComponent from 'src/pages/graph-page/graph-sidebar/node-display/node-display.component';
 import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
 import { FormInputGroupComponent } from 'src/components/form-input-group/form-input-group.component';
 import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { SidebarModule } from 'primeng/sidebar';
+import NodeDisplayComponent from 'src/pages/graph-page/graph-sidebar/node-display/node-display.component';
 
 @NgModule({
   declarations: [
@@ -196,6 +196,7 @@ import { SidebarModule } from 'primeng/sidebar';
     DateLocationComponent,
     CurrentRunDisplayComponent,
     ViewerDisplayComponent,
+    NodeDisplayComponent,
     NodeDisplayComponent,
     FormTemplateComponent,
     FormInputGroupComponent,

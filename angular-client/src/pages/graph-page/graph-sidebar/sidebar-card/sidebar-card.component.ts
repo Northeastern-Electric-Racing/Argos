@@ -20,11 +20,15 @@ export default class SidebarCardComponent implements OnInit {
   @Input() open?: boolean;
   @Input() dataValue?: string;
   @Input() topicName!: string;
-  @Input() isDesktop: boolean = true;
   iconId!: string;
 
   ngOnInit(): void {
     this.iconId = `${this.title}-icon`;
+
+    this.storage.get(this.topicName.slice(0, -1)).subscribe((value) => {
+      const displayValue = decimalPipe(value.values[0], 3).toFixed(3) + value.unit;
+      this.dataValue = displayValue;
+    });
 
     this.storage.get(this.topicName.slice(0, -1)).subscribe((value) => {
       const displayValue = decimalPipe(value.values[0], 3).toFixed(3) + value.unit;
