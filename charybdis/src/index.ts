@@ -218,9 +218,4 @@ export async function main() {
 
 /* ---------------------------- Auto-run CLI ---------------------------- */
 
-if (require.main === module) {
-  main().catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
-}
+main();
