@@ -30,6 +30,35 @@ const MAIN_DIALOGUE_OPTIONS = {
   },
 };
 
+/**
+ * Wrap a map of function options with a function to run after each option.
+ * Primarly used to add a call to main menu after each option, for dialogue options.
+ *
+ * @param options - map of function options
+ * @param skipList - list of options to skip wrapping
+ * @param functionToWrap - function to run after each option
+ * @returns wrapped options
+ */
+const addDialgueWrapper = (
+  options: Record<string, Function>,
+  skipList: string[],
+  functionToWrap: Function
+) => {
+  const wrappedOptions: Record<string, Function> = { ...options };
+
+  for (const key in wrappedOptions) {
+    if (!skipList.includes(key)) {
+      const originalFn = wrappedOptions[key];
+      wrappedOptions[key] = async (...args: any[]) => {
+        await originalFn(...args);
+        await functionToWrap();
+      };
+    }
+  }
+
+  return wrappedOptions;
+};
+
 // general command options for both interactive CLI and command line arguments based CLI
 const COMMAND_OPTIONS = {
   dump: async () => await dumpLocalDb(downloadDataTypeBatch, downloadDataBatch),
@@ -37,11 +66,17 @@ const COMMAND_OPTIONS = {
   "delete-all-downloads": async () => await deleteAllDownloads(),
 };
 
+const COMMAND_DIALOGUE_SKIP_WRAPPER = [];
+
 // Command options for interactive CLI
-const DIALOGE_COMMAND_OPTIONS = {
-  ...COMMAND_OPTIONS,
-  "Back to Menu": () => {}, // do nothing as the menu will be called again
-};
+const DIALOGE_COMMAND_OPTIONS = addDialgueWrapper(
+  {
+    ...COMMAND_OPTIONS,
+    "Back to Menu": async () => {},
+  },
+  COMMAND_DIALOGUE_SKIP_WRAPPER,
+  mainMenu
+);
 
 // Batch size update options for interactive CLI and command line arguments based CLI
 const BATCH_SIZE_OPTIONS = {
@@ -54,11 +89,15 @@ const BATCH_SIZE_OPTIONS = {
     (uploadDataTypeBatch = size),
 };
 
+// Options that should NOT call mainMenu after execution in dialogue options
+const BATCH_DIALOGUE_SKIP_WRAPPER = [];
+
 // Batch size update options for interactive CLI
-const DIALOG_BATCH_OPTIONS = {
-  ...BATCH_SIZE_OPTIONS,
-  "Back to Menu": () => {}, // do nothing as the menu will be called again
-};
+const DIALOG_BATCH_OPTIONS = addDialgueWrapper(
+  { ...BATCH_SIZE_OPTIONS, "Back to Menu": async () => {} },
+  BATCH_DIALOGUE_SKIP_WRAPPER,
+  mainMenu
+);
 
 // Change database URL options
 const CHANGE_DB_URL_OPTIONS = {
@@ -72,11 +111,17 @@ const CHANGE_DB_URL_OPTIONS = {
   },
 };
 
+const DB_URL_DIALOGUE_SKIP_WRAPPER = [];
+
 // Change database URL options for interactive CLI
-const DIALOG_CHANGE_DB_URL_OPTIONS = {
-  ...CHANGE_DB_URL_OPTIONS,
-  "Back to Menu": () => {}, // do nothing as the menu will be called again
-};
+const DIALOG_CHANGE_DB_URL_OPTIONS = addDialgueWrapper(
+  {
+    ...CHANGE_DB_URL_OPTIONS,
+    "Back to Menu": async () => {},
+  },
+  DB_URL_DIALOGUE_SKIP_WRAPPER,
+  mainMenu
+);
 
 /* ---------------------------- Interactive CLI Flow ---------------------------- */
 
@@ -91,7 +136,6 @@ async function mainMenu() {
     choices: Object.keys(MAIN_DIALOGUE_OPTIONS),
   });
   await MAIN_DIALOGUE_OPTIONS[choice as keyof typeof MAIN_DIALOGUE_OPTIONS]();
-  await mainMenu();
 }
 
 async function commandDialog() {
@@ -106,8 +150,6 @@ async function commandDialog() {
   } catch (err) {
     printError(err.message);
   }
-
-  await mainMenu();
 }
 
 async function batchPresetOptionsDialogue() {
@@ -132,8 +174,9 @@ async function batchPresetOptionsDialogue() {
     } catch (err) {
       printError(err.message);
     }
+  } else {
+    await DIALOG_BATCH_OPTIONS[batchChoice]();
   }
-  await mainMenu();
 }
 
 async function changeDBUrls() {
@@ -150,9 +193,9 @@ async function changeDBUrls() {
     } catch (err) {
       printError(err.message);
     }
+  } else {
+    await DIALOG_CHANGE_DB_URL_OPTIONS[choice]();
   }
-
-  await mainMenu();
 }
 
 /* ---------------------------- Utility Functions ---------------------------- */

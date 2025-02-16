@@ -7,7 +7,6 @@ import { csvToCloudData } from "../transformers/csv.transformer";
 import { getMostRecentDownloadFolderPath } from "./audit.service";
 import { processCsvInBatches } from "../utils/csv.utils";
 import {
-  DataTypeUploadError,
   RunsUploadError,
   CouldNotConnectToCloudDB,
 } from "../errors/upload.errors";

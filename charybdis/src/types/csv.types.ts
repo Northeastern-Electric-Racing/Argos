@@ -1,5 +1,3 @@
-/* these all match the local database types, except the are the format we expect our csv local csv to hold them in */
-
 export interface CsvRunRow {
   /* 
   we store uuid locally in order to fully ensure 

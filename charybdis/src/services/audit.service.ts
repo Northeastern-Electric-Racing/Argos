@@ -24,7 +24,7 @@ export async function writeAuditLog(entry: AuditLogEntry): Promise<void> {
 /**
  * Reads the audit log file and returns the path to the most recent download folder.
  *
- * @throws {FailedWriteAuditLog} if the audit log file could not be read
+ * @throws {FailedWriteAuditLog} if the audit log file could not be read, with the error message
  * @returns the path to the folder based on the folder name at the top of the list of the audit_log.csv file.
  */
 export async function getMostRecentDownloadFolderPath(): Promise<string> {
