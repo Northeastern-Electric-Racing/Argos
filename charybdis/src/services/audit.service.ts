@@ -14,11 +14,7 @@ import { AuditLogEntry } from "../types/csv.types";
  * @throws {FailedWriteAuditLog} if the entry could not be written to the audit log
  */
 export async function writeAuditLog(entry: AuditLogEntry): Promise<void> {
-  try {
-    await prependToCsv(storagePaths.getAuditLogCsvPath(), [entry]);
-  } catch (err: any) {
-    throw new FailedWriteAuditLog(err.message);
-  }
+  await prependToCsv(storagePaths.getAuditLogCsvPath(), [entry]);
 }
 
 /**
