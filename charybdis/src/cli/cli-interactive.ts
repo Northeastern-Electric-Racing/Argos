@@ -32,13 +32,6 @@ export async function printTitle() {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
-export function printError(errorMessage: string) {
-  console.log(
-    chalk.whiteBright.bold("\n\nError: ") +
-      chalk.underline.red.bold(`${errorMessage}\n`)
-  );
-}
-
 export async function mainMenu() {
   const choice = await select({
     message: chalk.bold.magenta("Menu:"),
@@ -52,13 +45,9 @@ export async function commandDialog() {
     message: chalk.bold.blue("Select a command:"),
     choices: Object.keys(DIALOGE_COMMAND_OPTIONS),
   });
-  try {
-    await DIALOGE_COMMAND_OPTIONS[
-      commandChoice as keyof typeof DIALOGE_COMMAND_OPTIONS
-    ]();
-  } catch (err) {
-    printError(err);
-  }
+  await DIALOGE_COMMAND_OPTIONS[
+    commandChoice as keyof typeof DIALOGE_COMMAND_OPTIONS
+  ]();
 }
 
 export async function batchPresetOptionsDialogue() {
@@ -76,13 +65,9 @@ export async function batchPresetOptionsDialogue() {
     const newSize = await input({
       message: `Enter new size for ${batchChoice}:`,
     });
-    try {
-      await DIALOG_BATCH_OPTIONS[
-        batchChoice as keyof typeof DIALOG_BATCH_OPTIONS
-      ](Number(newSize));
-    } catch (err) {
-      printError(err);
-    }
+    await DIALOG_BATCH_OPTIONS[
+      batchChoice as keyof typeof DIALOG_BATCH_OPTIONS
+    ](Number(newSize));
   } else {
     await DIALOG_BATCH_OPTIONS[batchChoice]();
   }
@@ -95,13 +80,9 @@ export async function changeDBUrls() {
   });
   if (choice !== "Back to Menu") {
     const newUrl = await input({ message: `Enter new URL for ${choice}:` });
-    try {
-      await DIALOG_CHANGE_DB_URL_OPTIONS[
-        choice as keyof typeof DIALOG_CHANGE_DB_URL_OPTIONS
-      ](newUrl);
-    } catch (err) {
-      printError(err);
-    }
+    await DIALOG_CHANGE_DB_URL_OPTIONS[
+      choice as keyof typeof DIALOG_CHANGE_DB_URL_OPTIONS
+    ](newUrl);
   } else {
     await DIALOG_CHANGE_DB_URL_OPTIONS[choice]();
   }

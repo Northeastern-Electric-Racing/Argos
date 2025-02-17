@@ -188,9 +188,11 @@ async function dumpDataByRun(
     storagePaths.getDataByRunCsvPath(dumpFolderPath, runId),
     { flags: "a" }
   );
+  let startTime = new Date();
 
   console.log(`Fetching data for run ${runId}...`);
   while (moreData) {
+    let dataChunkStartTime = new Date();
     const dataChunk = await localPrisma.data.findMany({
       where: { runId },
       take: batchSize,
@@ -204,11 +206,21 @@ async function dumpDataByRun(
       offset += dataChunk.length; // move offset by the amount of data we just read
       appendToCsv(csvWriteStream, dataChunk);
       totalDataFetched += dataChunk.length;
-      console.log(`Inserted ${dataChunk.length} rows to run-${runId}-data.csv`);
+      console.log(
+        `Inserted ${
+          dataChunk.length
+        } rows to run-${runId}-data.csv, time taken: ${
+          new Date().getTime() - dataChunkStartTime.getTime()
+        }ms`
+      );
     }
   }
 
-  console.log(`Total data fetched for run ${runId}: ${totalDataFetched}`);
+  console.log(
+    `Total data fetched for run ${runId}: ${totalDataFetched}, total time taken: ${
+      new Date().getTime() - startTime.getTime()
+    }ms`
+  );
   return totalDataFetched;
 }
 
