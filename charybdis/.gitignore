@@ -2,5 +2,5 @@ node_modules
 # Keep environment variables out of version control
 .env
 
-src/cloud-prisma/cloud-prisma-client/*
-src/local-prisma/local-prisma-client/*
+src/prisma/cloud-prisma/cloud-prisma-client/*
+src/prisma/local-prisma/local-prisma-client/*

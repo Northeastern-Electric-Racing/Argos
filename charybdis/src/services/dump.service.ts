@@ -1,4 +1,4 @@
-import { prisma as localPrisma } from "../local-prisma/prisma";
+import { prisma as localPrisma } from "../prisma/local-prisma/prisma";
 import * as fs from "fs";
 import * as path from "path";
 import { LocalRun } from "../types/local.types";

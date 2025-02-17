@@ -18,8 +18,8 @@ import {
   setUploadDataBatch,
   setUploadDataTypeBatch,
 } from "./settings";
-import { updatePrismaClient as updateCloudPrismaClient } from "../cloud-prisma/prisma";
-import { updatePrismaClient as updateLocalPrismaClient } from "../local-prisma/prisma";
+import { updatePrismaClient as updateCloudPrismaClient } from "../prisma/cloud-prisma/prisma";
+import { updatePrismaClient as updateLocalPrismaClient } from "../prisma/local-prisma/prisma";
 
 /**
  * Wrap a map of function options with a function to run after each option.

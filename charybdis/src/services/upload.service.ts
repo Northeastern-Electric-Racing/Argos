@@ -1,4 +1,4 @@
-import { prisma as cloudPrisma } from "../cloud-prisma/prisma";
+import { prisma as cloudPrisma } from "../prisma/cloud-prisma/prisma";
 import { LocalDataType } from "../types/local.types";
 import { CloudData, CloudDataType, CloudRun } from "../types/cloud.types";
 import { CsvDataRow, CsvDataTypeRow, CsvRunRow } from "../types/csv.types";
