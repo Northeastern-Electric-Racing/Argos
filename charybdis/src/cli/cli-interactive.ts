@@ -52,9 +52,13 @@ export async function commandDialog() {
     message: chalk.bold.blue("Select a command:"),
     choices: Object.keys(DIALOGE_COMMAND_OPTIONS),
   });
-  await DIALOGE_COMMAND_OPTIONS[
-    commandChoice as keyof typeof DIALOGE_COMMAND_OPTIONS
-  ]();
+  try {
+    await DIALOGE_COMMAND_OPTIONS[
+      commandChoice as keyof typeof DIALOGE_COMMAND_OPTIONS
+    ]();
+  } catch (err) {
+    printError(err);
+  }
 }
 
 export async function batchPresetOptionsDialogue() {
