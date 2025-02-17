@@ -9,7 +9,7 @@ import {
   DataTypeDumpFailed,
   RunDumpFailed,
 } from "../errors/dump.errors";
-import { appendToCsv } from "../utils/csv.utils";
+import { appendToCsv, prependToCsv } from "../utils/csv.utils";
 import {
   createFile,
   createFolder,
@@ -129,6 +129,7 @@ async function dumpRunsAndDataToCsv(dumpFolder: string, dataPerBatch: number) {
       // if a local run is no longer found after the cursor, we are done
       if (!mostRecentRun) {
         moreRuns = false;
+        continue;
       } else {
         // Update cursor, this is where we will start of next loop
         cursor = {
@@ -266,8 +267,8 @@ export async function deleteAllDownloads(): Promise<void> {
  * @throws {RunDumpFailed} if there is failure while fetching and writing a run to the CSV.
  */
 export async function dumpLocalDb(
-  dataTypesPerBatch: number,
-  dataPerBatch: number
+  dataPerBatch: number,
+  dataTypesPerBatch: number
 ): Promise<void> {
   console.log("Checking database connection...");
   // check that we can actually connect to the database
@@ -290,10 +291,11 @@ export async function dumpLocalDb(
       status: "Failed",
       dumpFolderName: dumpFolderPath,
       timeTrigger: new Date(),
-      error: error.message,
     });
     throw error;
   }
+
+  console.log("Local database dump complete.");
 
   // if we made here we should have avoided all the errors...
   // if not that's cool, it still looks like we succeeded

@@ -84,10 +84,7 @@ export async function appendToCsv<T>(
   }
 }
 
-export async function prependToCsv<T>(
-  filePath: string,
-  records: T[]
-): Promise<void> {
+export async function prependToCsv<T>(filePath: string, records: T[]) {
   let noContent = true;
   try {
     const stats = await fs.promises.stat(filePath);
@@ -112,6 +109,12 @@ export async function prependToCsv<T>(
   } else {
     writeStream.write(csv);
   }
+
+  // Close the stream and wait for it to finish
+  await new Promise<void>((resolve, reject) => {
+    writeStream.end(() => resolve());
+    writeStream.on("error", reject);
+  });
 }
 
 export function readCsvHeaderAndRow(filePath: string): {
