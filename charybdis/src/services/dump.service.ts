@@ -54,40 +54,34 @@ async function checkDbConnection() {
  *
  * @param batchSize the number of data types to fetch per batch
  * @param csvPath the path to the CSV file to write the data types to.
- *
- * @throws {DataTypeDumpFailed} if the data type dump fails, with the error message included.
  */
 async function dumpDataTypeToCsv(batchSize: number, csvPath: string) {
   let moreData = true;
   let cursor: { name: string } | undefined;
   let csvWriteStream = fs.createWriteStream(csvPath, { flags: "a" });
 
-  try {
-    while (moreData) {
-      const dataTypes = await localPrisma.data_type.findMany({
-        // order by is important to ensure we don't grab the same data
-        // twice while batch querying.
-        orderBy: {
-          name: "asc",
-        },
-        cursor,
-        skip: cursor ? 1 : 0, // skip the cursor itself if we already have one
-        take: batchSize,
-      });
+  while (moreData) {
+    const dataTypes = await localPrisma.data_type.findMany({
+      // order by is important to ensure we don't grab the same data
+      // twice while batch querying.
+      orderBy: {
+        name: "asc",
+      },
+      cursor,
+      skip: cursor ? 1 : 0, // skip the cursor itself if we already have one
+      take: batchSize,
+    });
 
-      if (dataTypes.length === 0) {
-        moreData = false;
-      } else {
-        // Update cursor
-        cursor = {
-          name: dataTypes[dataTypes.length - 1].name,
-        };
-        appendToCsv(csvWriteStream, dataTypes);
-        console.log(`Fetched ${dataTypes.length} Data Types`);
-      }
+    if (dataTypes.length === 0) {
+      moreData = false;
+    } else {
+      // Update cursor
+      cursor = {
+        name: dataTypes[dataTypes.length - 1].name,
+      };
+      appendToCsv(csvWriteStream, dataTypes);
+      console.log(`Fetched ${dataTypes.length} Data Types`);
     }
-  } catch (error) {
-    throw new DataTypeDumpFailed(error.message);
   }
 }
 
@@ -113,58 +107,46 @@ async function dumpRunsAndDataToCsv(dumpFolder: string, dataPerBatch: number) {
   let startTime = new Date();
 
   while (moreRuns) {
-    let mostRecentRun: LocalRun | null;
-
     // FETCH A RUN
-    try {
-      // find the first run after the cursor (the next run to proccess)
-      mostRecentRun = await localPrisma.run.findFirst({
-        orderBy: {
-          runId: `asc`,
-        },
-        cursor,
-        skip: cursor ? 1 : 0, // skip the cursor which we already got last loop
-      });
+    // find the first run after the cursor (the next run to proccess)
+    const mostRecentRun = await localPrisma.run.findFirst({
+      orderBy: {
+        runId: `asc`,
+      },
+      cursor,
+      skip: cursor ? 1 : 0, // skip the cursor which we already got last loop
+    });
 
-      // if a local run is no longer found after the cursor, we are done
-      if (!mostRecentRun) {
-        moreRuns = false;
-        continue;
-      } else {
-        // Update cursor, this is where we will start of next loop
-        cursor = {
-          runId: mostRecentRun.runId,
-        };
+    // if a local run is no longer found after the cursor, we are done
+    if (!mostRecentRun) {
+      moreRuns = false;
+      continue;
+    } else {
+      // Update cursor, this is where we will start of next loop
+      cursor = {
+        runId: mostRecentRun.runId,
+      };
 
-        // convert to the csv type before inserting (allowing us to create a uuid)
-        const csvRunRow = localRunToCsvRunRow(mostRecentRun);
+      // convert to the csv type before inserting (allowing us to create a uuid)
+      const csvRunRow = localRunToCsvRunRow(mostRecentRun);
 
-        appendToCsv(csvWriteStream, [csvRunRow]);
-        console.log(`Inserted run ${csvRunRow.runId} to run.csv`);
-        totalRunsFetched += 1;
-      }
-    } catch (error) {
-      throw new RunDumpFailed(error.message);
+      appendToCsv(csvWriteStream, [csvRunRow]);
+      console.log(`Inserted run ${csvRunRow.runId} to run.csv`);
+      totalRunsFetched += 1;
     }
 
     // DUMP DATA FOR THIS RUN
-    try {
-      let dataDumpStart = new Date();
-      totalDataFetched += await dumpDataByRun(
-        mostRecentRun!.runId,
-        dataPerBatch,
-        dumpFolder
-      );
-      console.log(
-        `Data dump for run ${mostRecentRun!.runId} took: ${
-          new Date().getTime() - dataDumpStart.getTime()
-        }ms`
-      );
-    } catch (error) {
-      throw new DataDumpFailed(
-        `run ${mostRecentRun!.runId} failed with, ${error.message}`
-      );
-    }
+    let dataDumpStart = new Date();
+    totalDataFetched += await dumpDataByRun(
+      mostRecentRun!.runId,
+      dataPerBatch,
+      dumpFolder
+    );
+    console.log(
+      `Data dump for run ${mostRecentRun!.runId} took: ${
+        new Date().getTime() - dataDumpStart.getTime()
+      }ms`
+    );
   }
 
   console.log(
