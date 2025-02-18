@@ -1,0 +1,12 @@
+<div class="summary-container">
+  <div class="glance">
+    <p>12.4V ✅</p>
+    <p>31°C 🌡</p>
+    <p>88% 🔋</p>
+    <p>10.0A CCL</p>
+    <p>20.0A DCL</p>
+  </div>
+  <div class="segments">
+    <app-segment *ngFor="let segment of segments" [data]="segment"></app-segment>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+.summary-container {
+  padding: 20px;
+  color: white;
+  background: #333;
+}
+.glance {
+  display: flex;
+  justify-content: space-around;
+}
+.segments {
+  display: flex;
+  gap: 10px;
+}
