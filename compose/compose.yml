@@ -1,10 +1,5 @@
 version: '3.8'
 
-networks:
-  shared_network:
-    name: shared_network  # Ensures a fixed external network
-    driver: bridge
-
 services:
   odyssey-db:
     container_name: odyssey-db
@@ -24,8 +19,6 @@ services:
       - db-data:/var/lib/postgresql/data
     cpu_shares: 1024
     stop_grace_period: 2m
-    networks:
-      - shared_network  # Connect to shared network
 
   scylla-server:
     container_name: scylla-server
@@ -44,8 +37,6 @@ services:
     stop_grace_period: 2m
     stop_signal: SIGINT
     init: true
-    networks:
-      - shared_network  # Connect to shared network
 
 volumes:
   db-data:

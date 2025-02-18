@@ -5,7 +5,7 @@ FROM node:18
 WORKDIR /app
 
 # Copy package.json, yarn.lock, package-lock.json, and .env first
-COPY package.json yarn.lock package-lock.json .env ./
+COPY package.json yarn.lock package-lock.json ./
 
 # Install dependencies using both npm and yarn
 RUN npm install && yarn install
