@@ -1,11 +1,8 @@
-import { get } from "http";
-import { getMostRecentDownloadFolderPath } from "../services/audit.service";
-
 // Batch settings
 let downloadDataBatch = 49000;
 let downloadDataTypeBatch = 1000;
-let uploadDataBatch = 4960;
-let uploadDataTypeBatch = 4960;
+let uploadDataBatch = 100000;
+let uploadDataTypeBatch = 100000;
 let dumpFoldersForUpload: string[] | undefined = undefined;
 
 // Database URLs
