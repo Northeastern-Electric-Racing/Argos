@@ -192,13 +192,38 @@ yarn start -c upload --url-cloud "postgresql://postgres:docker@localhost:8001/po
 
 ---
 
+#### Using the `--upload-dump-folder` Option
+
+If you need to specify which local dump folder to upload, you can use the `--upload-dump-folder` argument.  
+It supports three modes:
+
+- `most-recent`
+- `all-downloads`
+- `specific-folder <folderName>`
+
+**Examples**:
+
+```sh
+# Upload the most recent dump folder
+yarn start -c upload --upload-dump-folder most-recent
+
+# Upload all available download folders
+yarn start -c upload --upload-dump-folder all-downloads
+
+# Upload a specific folder by name
+yarn start -c upload --upload-dump-folder specific-folder 2025-01-01_12-30-00
+```
+
+You can also combine this with setting URLs or batch sizes in the same command if needed.
+
+---
+
 #### Summary
 
 - Use `-c` or `--command` to run a specific task.
 - Use `-b` or `--batch` to modify batch settings during a command.
 - Use `--url-local` and `--url-cloud` to update database URLs **while executing a command**.
+- Use `--upload-dump-folder` to control which dump folder is uploaded.
 - Multiple options can be combined in a single command.
 
 This guide provides a structured way to use your CLI efficiently.
-
----

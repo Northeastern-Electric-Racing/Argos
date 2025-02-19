@@ -68,7 +68,7 @@ export async function appendToCsv<T>(
     // for simplicity, we consider a file with size 0 as empty
     // POSSIBLE IMPROVEMENT: check if the the headers match the given records
     needsHeader = stats.size === 0;
-  } catch (err) {
+  } catch (err: any) {
     if (err.code !== "ENOENT") throw err;
   }
 
@@ -91,7 +91,7 @@ export async function prependToCsv<T>(filePath: string, records: T[]) {
     // for simplicity, we consider a file with size 0 as empty
     // POSSIBLE IMPROVEMENT: check if the the headers match the given records
     noContent = stats.size === 0;
-  } catch (err) {
+  } catch (err: any) {
     if (err.code !== "ENOENT") throw err;
   }
 

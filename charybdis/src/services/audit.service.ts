@@ -1,10 +1,15 @@
 import path from "path";
 import { parse } from "csv-parse";
 import fs from "fs";
-import { DOWNLOADS_PATH, storagePaths } from "../storage-paths";
+import {
+  DOWNLOADS_PATH,
+  getAuditLogCsvPath,
+  storagePaths,
+} from "../storage-paths";
 import { FailedWriteAuditLog } from "../errors/audit.errors";
 import { prependToCsv } from "../utils/csv.utils";
 import { AuditLogEntry } from "../types/csv.types";
+import { get } from "http";
 
 /**
  * Writes the given audit log entry to the audit_log.csv file.
@@ -26,7 +31,7 @@ export async function writeAuditLog(entry: AuditLogEntry): Promise<void> {
 export async function getMostRecentDownloadFolderPath(): Promise<string> {
   return new Promise((resolve, reject) => {
     console.log("Get most recent download folder initiated...");
-    const auditLogPath = path.resolve(`${DOWNLOADS_PATH}/audit_log.csv`);
+    const auditLogPath = getAuditLogCsvPath();
     const auditLogStream = fs.createReadStream(auditLogPath).pipe(parse());
 
     let lineCount = 0;
@@ -39,6 +44,35 @@ export async function getMostRecentDownloadFolderPath(): Promise<string> {
         console.log(`Found folder: ${folderPath}`);
         resolve(folderPath);
       }
+    });
+
+    auditLogStream.on("error", (err) => {
+      reject(new FailedWriteAuditLog(err.message));
+    });
+  });
+}
+
+export function getAllDownloadFolders(): Promise<string[]> {
+  // Get all the folders in the audit log
+  return new Promise((resolve, reject) => {
+    const auditLogPath = getAuditLogCsvPath();
+    const auditLogStream = fs.createReadStream(auditLogPath).pipe(parse());
+
+    let lineCount = 0;
+    let folders: string[] = [];
+
+    console.log(`Reading audit log from: ${auditLogPath}`);
+    auditLogStream.on("data", (row) => {
+      lineCount += 1;
+      if (lineCount > 1) {
+        // Skip header row
+        const folderPath = row[1]; // Get the second column
+        folders.push(folderPath);
+      }
+    });
+
+    auditLogStream.on("end", () => {
+      resolve(folders);
     });
 
     auditLogStream.on("error", (err) => {

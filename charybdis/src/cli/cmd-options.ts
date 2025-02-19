@@ -2,24 +2,31 @@ import { deleteAllDownloads, dumpLocalDb } from "../services/dump.service";
 import { uploadToCloud } from "../services/upload.service";
 import {
   batchPresetOptionsDialogue,
-  changeDBUrls,
+  changeDBUrlsDialgue,
   commandDialog,
   mainMenu,
+  uploadDumpFolderDialogue,
 } from "./cli-interactive";
 import {
   getDownloadDataBatch,
   getDownloadDataTypeBatch,
+  getDumpFoldersForUpload,
   getUploadDataBatch,
   getUploadDataTypeBatch,
   setCloudDbUrl,
   setDownloadDataBatch,
   setDownloadDataTypeBatch,
+  setDumpFoldersForUpload,
   setLocalDbUrl,
   setUploadDataBatch,
   setUploadDataTypeBatch,
 } from "./settings";
 import { updatePrismaClient as updateCloudPrismaClient } from "../prisma/cloud-prisma/prisma";
 import { updatePrismaClient as updateLocalPrismaClient } from "../prisma/local-prisma/prisma";
+import {
+  getAllDownloadFolders,
+  getMostRecentDownloadFolderPath,
+} from "../services/audit.service";
 
 /**
  * Wrap a map of function options with a function to run after each option.
@@ -54,7 +61,8 @@ export const addDialgueWrapper = (
 export const MAIN_DIALOGUE_OPTIONS = {
   "Change Batch Presets": batchPresetOptionsDialogue,
   "Run a Command": commandDialog,
-  "Change DB urls": changeDBUrls,
+  "Change DB urls": changeDBUrlsDialgue,
+  "Change Upload Dump Folder": uploadDumpFolderDialogue,
   Exit: async () => {
     console.log("Goodbye!");
     process.exit(0);
@@ -66,7 +74,11 @@ export const COMMAND_OPTIONS = {
   dump: async () =>
     await dumpLocalDb(getDownloadDataBatch(), getDownloadDataTypeBatch()),
   upload: async () =>
-    await uploadToCloud(getUploadDataBatch(), getUploadDataTypeBatch()),
+    await uploadToCloud(
+      getUploadDataBatch(),
+      getUploadDataTypeBatch(),
+      getDumpFoldersForUpload()
+    ),
   "delete-all-downloads": async () => await deleteAllDownloads(),
 };
 
@@ -102,6 +114,31 @@ export const DIALOG_BATCH_OPTIONS = addDialgueWrapper(
   BATCH_DIALOGUE_SKIP_WRAPPER,
   mainMenu
 );
+
+export const UPLOAD_DUMP_FOLDER_OPTIONS = {
+  "most-recent": async () => {
+    setDumpFoldersForUpload(undefined);
+  },
+  "specific-folder": async (folder: string) => {
+    setDumpFoldersForUpload([folder]);
+  },
+  "all-downloads": async () => {
+    setDumpFoldersForUpload(await getAllDownloadFolders());
+  },
+};
+
+export const UPLOAD_DUMP_FOLDER_DIALOGUE_SKIP_WRAPPER = [];
+
+// Change database URL options for interactive CLI
+export const DIALOG_UPLOAD_DUMP_FOLDER_OPTIONS = addDialgueWrapper(
+  {
+    ...UPLOAD_DUMP_FOLDER_OPTIONS,
+    "Back to Menu": async () => {},
+  },
+  UPLOAD_DUMP_FOLDER_DIALOGUE_SKIP_WRAPPER,
+  mainMenu
+);
+/* ------------------- Database URL Options ------------------- */
 
 // Change database URL options
 export const CHANGE_DB_URL_OPTIONS = {

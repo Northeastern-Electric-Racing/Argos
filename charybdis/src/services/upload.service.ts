@@ -28,21 +28,35 @@ async function checkDbConnection() {
 
 export async function uploadToCloud(
   dataBatchSize: number,
-  dataTypeBatchSize: number
+  dataTypeBatchSize: number,
+  dumpFolderPaths: string[] | undefined
 ) {
-  // ensure we can actually connect to the database
-  console.info("Checking database connection...");
-  await checkDbConnection();
-  console.info("Opening most recent download folder...");
-  let dumpFolderPath = await getMostRecentDownloadFolderPath();
-  console.info("Processing data types...");
-  console.log("calling processDataType with: ", dumpFolderPath);
-  await processDataType(dumpFolderPath, dataTypeBatchSize);
-  console.info("Startin Run uploads...");
-  await processRunsWithData(dumpFolderPath, dataBatchSize);
+  if (!dumpFolderPaths) {
+    dumpFolderPaths = [await getMostRecentDownloadFolderPath()];
+  }
+  let startTime = new Date();
+  for (const dumpFolderPath of dumpFolderPaths) {
+    // ensure we can actually connect to the database
+    console.info("Checking database connection...");
+    await checkDbConnection();
+    console.info("Opening most recent download folder...");
+    console.info("Processing data types...");
+    await processDataType(dumpFolderPath, dataTypeBatchSize);
+    console.info("Startin Run uploads...");
+    await processRunsWithData(dumpFolderPath, dataBatchSize);
 
-  console.log("Inserted all data entries");
-  console.log("CSV to Cloud transfer complete.");
+    console.log(
+      `CSV to Cloud transfer complete for ${dumpFolderPath}, time taken: ${
+        new Date().getTime() - startTime.getTime()
+      }ms`
+    );
+  }
+
+  console.log(
+    `Data uploaded for folders: ${dumpFolderPaths}, time taken: ${
+      new Date().getTime() - startTime.getTime()
+    }ms`
+  );
   await cloudPrisma.$disconnect();
 }
 

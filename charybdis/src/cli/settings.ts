@@ -1,13 +1,40 @@
+import { get } from "http";
+import { getMostRecentDownloadFolderPath } from "../services/audit.service";
+
 // Batch settings
 let downloadDataBatch = 49000;
 let downloadDataTypeBatch = 1000;
 let uploadDataBatch = 4960;
 let uploadDataTypeBatch = 4960;
+let dumpFoldersForUpload: string[] | undefined = undefined;
 
 // Database URLs
 let cloudUrl = process.env.CLOUD_DATABASE_URL || "";
 let localUrl = process.env.LOCAL_DATABASE_URL || "";
 
+/* ------------------- General  Settings ------------------- */
+
+/**
+ * Change the dump folders to be used for uploading.
+ *
+ * @param dumpFoldersForUpload - The new dump folders
+ *
+ * @returns The dump folders
+ */
+export function setDumpFoldersForUpload(
+  dumpFoldersToAdd: string[] | undefined
+) {
+  console.log("Setting dump folders for upload as: ", dumpFoldersToAdd);
+  dumpFoldersForUpload = dumpFoldersToAdd;
+}
+/**
+ * Get the dump folders to be used for uploading.
+ *
+ * @returns The dump folders
+ */
+export function getDumpFoldersForUpload(): string[] | undefined {
+  return dumpFoldersForUpload;
+}
 /**
  * Change the batch size for downloading data (the table in the database)
  *
@@ -79,6 +106,8 @@ export function setUploadDataTypeBatch(size: number) {
 export function getUploadDataTypeBatch(): number {
   return Number(uploadDataTypeBatch);
 }
+
+/* ------------------- Database URL's ------------------- */
 
 /**
  * Change the URL for the local database

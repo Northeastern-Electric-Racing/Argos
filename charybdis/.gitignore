@@ -4,3 +4,6 @@ node_modules
 
 src/prisma/cloud-prisma/cloud-prisma-client/*
 src/prisma/local-prisma/local-prisma-client/*
+
+# ignore the downloads folder
+downloads/*
