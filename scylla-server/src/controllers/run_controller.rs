@@ -1,15 +1,17 @@
 use std::sync::atomic::Ordering;
 
 use axum::{
-    extract::{Path, State},
     Json,
+    extract::{Path, State},
 };
 
 use crate::{
-    error::ScyllaError, services::run_service, transformers::run_transformer::PublicRun, PoolHandle,
+    PoolHandle, error::ScyllaError, services::run_service, transformers::run_transformer::PublicRun,
 };
 
 /// get a list of runs
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn get_all_runs(
     State(pool): State<PoolHandle>,
 ) -> Result<Json<Vec<PublicRun>>, ScyllaError> {
@@ -22,6 +24,8 @@ pub async fn get_all_runs(
 }
 
 /// get the latest run
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn get_latest_run(
     State(pool): State<PoolHandle>,
 ) -> Result<Json<PublicRun>, ScyllaError> {
@@ -34,6 +38,8 @@ pub async fn get_latest_run(
 }
 
 /// get a run given its ID
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn get_run_by_id(
     State(pool): State<PoolHandle>,
     Path(run_id): Path<i32>,
@@ -41,11 +47,9 @@ pub async fn get_run_by_id(
     let mut db = pool.get().await?;
     let run_data = run_service::get_run_by_id(&mut db, run_id).await?;
 
-    if run_data.is_none() {
+    let Some(run_data_safe) = run_data else {
         return Err(ScyllaError::EmptyResult);
-    }
-
-    let run_data_safe = run_data.unwrap();
+    };
 
     let transformed_run_data = PublicRun::from(run_data_safe);
 
@@ -54,6 +58,8 @@ pub async fn get_run_by_id(
 
 /// create a new run with an auto-incremented ID
 /// note the new run must be updated so the channel passed in notifies the data processor to use the new run
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn new_run(State(pool): State<PoolHandle>) -> Result<Json<PublicRun>, ScyllaError> {
     let mut db = pool.get().await?;
     let run_data = run_service::create_run(&mut db, chrono::offset::Utc::now()).await?;
@@ -68,6 +74,8 @@ pub async fn new_run(State(pool): State<PoolHandle>) -> Result<Json<PublicRun>, 
 }
 
 /// creates a new run with all associated data (driver, location, notes)
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn new_run_with_data(
     State(pool): State<PoolHandle>,
     Path((driver, location, run_notes)): Path<(String, String, String)>,
@@ -92,6 +100,8 @@ pub async fn new_run_with_data(
 }
 
 /// updates a run's notes with a given run id
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn update_run_with_data(
     State(pool): State<PoolHandle>,
     Path((run_id, driver, location, run_notes)): Path<(i32, String, String, String)>,

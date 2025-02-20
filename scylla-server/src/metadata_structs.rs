@@ -1,5 +1,5 @@
 use ::serde::Serialize;
-use chrono::{serde::ts_milliseconds, DateTime, TimeDelta, Utc};
+use chrono::{DateTime, TimeDelta, Utc, serde::ts_milliseconds};
 
 pub const DATA_SOCKET_KEY: &str = "data";
 
@@ -47,11 +47,11 @@ pub const FAULT_SOCKET_KEY: &str = "faults";
 pub const FAULT_MIN_REG_GAP: TimeDelta = TimeDelta::seconds(8);
 
 pub const FAULT_BINS: &[&str] = &["DTI/Fault/FaultCode"];
+
+#[must_use]
 pub const fn map_dti_flt(index: usize) -> Option<&'static str> {
     match index {
-        0 => None,
         1 => Some("Overvoltage"),
-        2 => None,
         3 => Some("DRV"),
         4 => Some("ABS_Overcurrent"),
         5 => Some("CTLR_Overtemp"),
@@ -60,6 +60,7 @@ pub const fn map_dti_flt(index: usize) -> Option<&'static str> {
         8 => Some("Sensor_general"),
         9 => Some("CAN_command"),
         0x0A => Some("Analog_input"),
+        // 0 and 2 are not an actual alerting fault
         _ => None,
     }
 }

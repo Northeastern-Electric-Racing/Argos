@@ -1,14 +1,16 @@
 use axum::{
-    extract::{Path, State},
     Json,
+    extract::{Path, State},
 };
 
 use crate::{
-    error::ScyllaError, services::data_service, transformers::data_transformer::PublicData,
-    PoolHandle,
+    PoolHandle, error::ScyllaError, services::data_service,
+    transformers::data_transformer::PublicData,
 };
 
 /// Get all of the data points of a certain data type name and run ID
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn get_data(
     State(pool): State<PoolHandle>,
     Path((data_type_name, run_id)): Path<(String, i32)>,

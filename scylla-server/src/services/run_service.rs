@@ -1,18 +1,22 @@
-use crate::{models::Run, schema::run::dsl::*, Database};
+use crate::{Database, models::Run, schema::run::dsl::*};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
 /// Gets all runs
 /// * `db` - The prisma client to make the call to
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn get_all_runs(db: &mut Database<'_>) -> Result<Vec<Run>, diesel::result::Error> {
     run.order(runId.asc()).get_results(db).await
 }
 
 /// Gets the latest run (highest run id)
 /// * `db` - The prisma client to make the call to
-///  returns: The latest run or the QueryError propogated by the db
+///   returns: The latest run
+/// # Errors
+/// Gives a db error back
 pub async fn get_latest_run(db: &mut Database<'_>) -> Result<Run, diesel::result::Error> {
     run.order(runId.desc()).first::<Run>(db).await
 }
@@ -20,7 +24,9 @@ pub async fn get_latest_run(db: &mut Database<'_>) -> Result<Run, diesel::result
 /// Gets a single run by its id
 /// * `db` - The prisma client to make the call to
 /// * `run_id` - The id of the run to search for
-///   returns: A result containing the data (or None if the `run_id` was not a valid run) or the QueryError propogated by the db
+///   returns: A result containing the data (or None if the `run_id` was not a valid run)
+/// # Errors
+/// Gives a db error back
 pub async fn get_run_by_id(
     db: &mut Database<'_>,
     run_id: i32,
@@ -31,7 +37,9 @@ pub async fn get_run_by_id(
 /// Creates a run
 /// * `db` - The prisma client to make the call to
 /// * `timestamp` - time when the run starts
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn create_run(
     db: &mut Database<'_>,
     timestamp: DateTime<Utc>,
@@ -46,7 +54,9 @@ pub async fn create_run(
 /// * `db` - The prisma client to make the call to
 /// * `timestamp` - time when the run starts
 /// * `run_id` - The id of the run to create, must not already be in use!
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn create_run_with_id(
     db: &mut Database<'_>,
     timestamp: DateTime<Utc>,
@@ -64,7 +74,9 @@ pub async fn create_run_with_id(
 /// * `driver` - The driver's name
 /// * `location` - The location of the runs
 /// * `run_notes` - The notes written for the run
-///     returns: A result containing the data or the QueryError propogated by the db
+///     returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn create_run_with_data(
     db: &mut Database<'_>,
     timestamp: DateTime<Utc>,
@@ -89,7 +101,9 @@ pub async fn create_run_with_data(
 /// * `driver` - The driver's name
 /// * `location` - The location of the runs
 /// * `run_notes` - The updated run notes
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn update_run_data_with_run_id(
     db: &mut Database<'_>,
     run_id: i32,

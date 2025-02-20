@@ -1,6 +1,6 @@
 use axum::{
-    extract::{Multipart, State},
     Extension,
+    extract::{Multipart, State},
 };
 use axum_macros::debug_handler;
 use chrono::DateTime;
@@ -10,12 +10,18 @@ use tokio::sync::mpsc;
 use tracing::{debug, info, trace, warn};
 
 use crate::{
-    error::ScyllaError, proto::playback_data, services::run_service, ClientData, PoolHandle,
+    ClientData, PoolHandle, error::ScyllaError, proto::playback_data, services::run_service,
 };
 
 /// Inserts a file using http multipart
 /// This file is parsed and clientdata values are extracted, the run ID of each variable is inferred, and then data is batch uploaded
+/// # Errors
+/// Returns a scyllaError if the DB fails
+/// # Panics
+/// Panics if impossible time generated
 // super cool: adding this tag tells you what variable is misbehaving in cases of axum Send+Sync Handler fails
+#[allow(clippy::cast_possible_wrap)]
+#[allow(clippy::cast_sign_loss)]
 #[debug_handler]
 pub async fn insert_file(
     State(pool): State<PoolHandle>,
@@ -62,19 +68,18 @@ pub async fn insert_file(
                 match stream.read_message::<playback_data::PlaybackData>() {
                     Ok(f) => {
                         trace!("Decoded file msg: {}", f);
-                        let f = match run_rng.get(&f.time_us) {
-                            Some(a) => ClientData {
+                        let f = if let Some(a) = run_rng.get(&f.time_us) {
+                            ClientData {
                                 run_id: *a,
                                 name: f.topic.clone(),
                                 unit: f.unit,
                                 values: f.values,
                                 timestamp: DateTime::from_timestamp_micros(f.time_us as i64)
                                     .unwrap(),
-                            },
-                            None => {
-                                count_bad_run += 1;
-                                continue;
                             }
+                        } else {
+                            count_bad_run += 1;
+                            continue;
                         };
                         insertable_data.push(f);
                     }

@@ -1,3 +1,7 @@
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_possible_truncation)]
+
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
@@ -8,11 +12,11 @@ use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
-use crate::metadata_structs::{
-    map_dti_flt, FaultData, Node, TimerData, DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP,
-    FAULT_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
-};
 use crate::ClientData;
+use crate::metadata_structs::{
+    DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData, Node,
+    TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, map_dti_flt,
+};
 
 pub async fn socket_handler(
     cancel_token: CancellationToken,
@@ -23,7 +27,7 @@ pub async fn socket_handler(
     let mut upload_counter = 0u8;
     loop {
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
@@ -34,6 +38,9 @@ pub async fn socket_handler(
     }
 }
 
+/// Setup a socket handler with metadata
+/// # Panics
+/// Panics when regex is invalid on a given platform (unlikely)
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
@@ -51,7 +58,7 @@ pub async fn socket_handler_with_metadata(
     let mut timer_map: HashMap<String, TimerData> = HashMap::new();
     for item in TIMERS_TOPICS {
         timer_map.insert(
-            item.to_string(),
+            (*item).to_string(),
             TimerData {
                 topic: item,
                 last_change: DateTime::UNIX_EPOCH,
@@ -71,7 +78,7 @@ pub async fn socket_handler_with_metadata(
 
     loop {
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
@@ -83,7 +90,7 @@ pub async fn socket_handler_with_metadata(
                     &io,
                     DATA_SOCKET_KEY,
                 ).await;
-                handle_socket_msg(data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -92,7 +99,7 @@ pub async fn socket_handler_with_metadata(
                         upload_ratio,
                         &io,
                         FAULT_SOCKET_KEY,
-                ).await
+                ).await;
             },
             _ = timers_interval.tick() => {
                 trace!("Sending Timers Intervals!");
@@ -106,7 +113,7 @@ pub async fn socket_handler_with_metadata(
                     let sockets_cnt = io.sockets().len() as f32;
                     let item = ClientData {
                         name: "Argos/Viewers".to_string(),
-                        unit: "".to_string(),
+                        unit: String::new(),
                         run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now(),
                         values: vec![sockets_cnt]
@@ -125,7 +132,7 @@ pub async fn socket_handler_with_metadata(
 
 /// Handles parsing and creating metadata for a newly received socket message.
 fn handle_socket_msg(
-    data: ClientData,
+    data: &ClientData,
     fault_regex_mpu: &Regex,
     fault_regex_bms: &Regex,
     fault_regex_charger: &Regex,
@@ -137,7 +144,7 @@ fn handle_socket_msg(
     if let Some(time) = timer_map.get_mut(&data.name) {
         trace!("Triggering timer: {}", data.name);
         let new_val = *data.values.first().unwrap_or(&-1f32);
-        if time.last_value != new_val {
+        if (time.last_value - new_val).abs() > 0.0001 {
             time.last_value = new_val;
             time.last_change = Utc::now();
         }
@@ -216,16 +223,16 @@ async fn send_socket_msg<T>(
             )
             .await
         {
-            Ok(_) => (),
+            Ok(()) => (),
             Err(err) => match err {
                 socketioxide::BroadcastError::Socket(e) => {
                     trace!("Socket: Transmit error: {:?}", e);
                 }
                 socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err)
+                    warn!("Socket: Serialize error: {}", err);
                 }
                 socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err)
+                    warn!("Socket: Adapter error: {}", err);
                 }
             },
         }

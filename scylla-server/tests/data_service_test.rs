@@ -2,10 +2,10 @@
 mod test_utils;
 
 use scylla_server::{
+    ClientData,
     models::Data,
     services::{data_service, data_type_service, run_service},
     transformers::data_transformer::PublicData,
-    ClientData,
 };
 use test_utils::cleanup_and_prepare;
 

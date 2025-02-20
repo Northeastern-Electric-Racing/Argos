@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{extract::Path, Extension};
+use axum::{Extension, extract::Path};
 use axum_extra::extract::Query;
 use protobuf::Message;
 use rumqttc::v5::AsyncClient;
@@ -19,10 +19,12 @@ pub struct ConfigRequest {
 
 /// Sends a configuration to the car over MQTT
 /// * `key` - The key of the configuration, as defined in the cangen YAML
-/// * `data_query` - The data of the configuration, a URI query list of data=<f32>.  If empty or too short, filled with cangen YAMl defaults
+/// * `data_query` - The data of the configuration, a URI query list of data=<f32>.  If empty or too short, filled with cangen YAML defaults
 /// * `client` - The MQTT client to be used to send the data
 ///
-/// More info: This follows the specification of sending a command_data object over siren to topic CALYPSO_BIDIR_CMD_PREFIX/<key>
+/// More info: This follows the specification of sending a `command_data` object over siren to topic `CALYPSO_BIDIR_CMD_PREFIX`/<key>
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn send_config_command(
     Path(key): Path<String>,
     Query(data_query): Query<ConfigRequest>,
@@ -48,7 +50,7 @@ pub async fn send_config_command(
     // publish the message to the topic that calypso's encoder is susbcribed to
     if let Err(err) = client
         .publish(
-            format!("{}{}", CALYPSO_BIDIR_CMD_PREFIX, key),
+            format!("{CALYPSO_BIDIR_CMD_PREFIX}{key}"),
             rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
             false,
             bytes,

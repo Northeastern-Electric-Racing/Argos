@@ -1,10 +1,12 @@
-use crate::{models::DataType, schema::data_type::dsl::*, Database};
+use crate::{Database, models::DataType, schema::data_type::dsl::*};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
 /// Gets all datatypes
 /// * `d ` - The connection to the database
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn get_all_data_types(
     db: &mut Database<'_>,
 ) -> Result<Vec<DataType>, diesel::result::Error> {
@@ -16,7 +18,9 @@ pub async fn get_all_data_types(
 /// * `data_type_name` - The data type name to upsert
 /// * `unit` - The unit of the data
 /// * `node_name` - The name of the node linked to the data type, must already exist!
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data
+/// # Errors
+/// Gives a db error back
 pub async fn upsert_data_type(
     db: &mut Database<'_>,
     data_type_name: String,

@@ -1,11 +1,13 @@
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 
 use crate::{
-    error::ScyllaError, services::data_type_service,
-    transformers::data_type_transformer::PublicDataType, PoolHandle,
+    PoolHandle, error::ScyllaError, services::data_type_service,
+    transformers::data_type_transformer::PublicDataType,
 };
 
 /// Get a list of data types
+/// # Errors
+/// Returns a scyllaError if the DB fails
 pub async fn get_all_data_types(
     State(pool): State<PoolHandle>,
 ) -> Result<Json<Vec<PublicDataType>>, ScyllaError> {

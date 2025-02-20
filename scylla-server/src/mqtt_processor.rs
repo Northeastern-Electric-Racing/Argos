@@ -1,5 +1,5 @@
 use std::{
-    sync::{atomic::Ordering, Arc},
+    sync::{Arc, atomic::Ordering},
     time::{Duration, SystemTime},
 };
 
@@ -7,16 +7,16 @@ use chrono::TimeDelta;
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
-    mqttbytes::v5::{Packet, Publish},
     AsyncClient, Event, EventLoop, MqttOptions,
+    mqttbytes::v5::{Packet, Publish},
 };
 use rustc_hash::FxHashMap;
 use tokio::{sync::broadcast, time::Instant};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, instrument, trace, warn, Level};
+use tracing::{Level, debug, instrument, trace, warn};
 
 use crate::{
-    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata, RateLimitMode,
+    RateLimitMode, controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata,
 };
 
 use super::ClientData;
@@ -56,11 +56,14 @@ impl MqttProcessor {
     /// * `channel` - The mpsc channel to send the database data to
     /// * `cancel_token` - The token which indicates cancellation of the task
     /// * `opts` - The mqtt processor options to use
-    ///     Returns the instance and options to create a client, which is then used in the process_mqtt loop
+    ///     Returns the instance and options to create a client, which is then used in the `process_mqtt` loop
+    /// # Panics
+    /// Panics if unexpected time is fetched, or the siren url format is incorrect
+    #[must_use]
     pub fn new(
         channel: broadcast::Sender<ClientData>,
         cancel_token: CancellationToken,
-        opts: MqttProcessorOptions,
+        opts: &MqttProcessorOptions,
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
@@ -99,8 +102,10 @@ impl MqttProcessor {
     }
 
     /// This handles the reception of mqtt messages, will not return
-    /// * `eventloop` - The eventloop returned by ::new to connect to.  The loop isnt sync so this is the best that can be done
+    /// * `eventloop` - The eventloop returned by `::new` to connect to.  The loop isnt sync so this is the best that can be done
     /// * `client` - The async mqttt v5 client to use for subscriptions
+    /// # Panics
+    /// Panics if it cannot subscribe to Siren messages
     pub async fn process_mqtt(mut self, client: Arc<AsyncClient>, mut eventloop: EventLoop) {
         // let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
@@ -114,7 +119,7 @@ impl MqttProcessor {
         loop {
             #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
-                _ = self.cancel_token.cancelled() => {
+                () = self.cancel_token.cancelled() => {
                     debug!("Shutting down MQTT processor!");
                     break;
                 },
@@ -122,12 +127,11 @@ impl MqttProcessor {
                     Ok(Event::Incoming(Packet::Publish(msg))) => {
                         trace!("Received mqtt message: {:?}", msg);
                         // parse the message into the data and the node name it falls under
-                        let msg = match self.parse_msg(msg) {
-                            Some(msg) => msg,
-                            None => continue
+                        let Some(msg) = self.parse_msg(msg) else {
+                            continue
                         };
                         latency_ringbuffer.push(chrono::offset::Utc::now() - msg.timestamp);
-                        self.send_db_msg(msg.clone()).await;
+                        self.send_db_msg(msg.clone());
                     },
                     Err(msg) => trace!("Received mqtt error: {:?}", msg),
                     _ => trace!("Received misc mqtt: {:?}", msg),
@@ -158,6 +162,7 @@ impl MqttProcessor {
     /// * `msg` - The mqtt message to parse
     /// returns the ClientData, or the Err of something that can be debug printed
     #[instrument(skip(self), level = Level::TRACE)]
+    #[allow(clippy::cast_possible_wrap)]
     fn parse_msg(&mut self, msg: Publish) -> Option<ClientData> {
         let Ok(topic) = std::str::from_utf8(&msg.topic) else {
             warn!("Could not parse topic, topic: {:?}", msg.topic);
@@ -178,10 +183,10 @@ impl MqttProcessor {
                 if old.elapsed() < self.rate_limit_time {
                     trace!("Static rate limit skipping message with topic {}", topic);
                     return None;
-                } else {
-                    // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
-                    self.rate_limiter.insert(topic.to_string(), Instant::now());
                 }
+
+                // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
+                self.rate_limiter.insert(topic.to_string(), Instant::now());
             } else {
                 // here is the first insertion of the topic (the first time we receive the topic in scylla's lifetime)
                 self.rate_limiter.insert(topic.to_string(), Instant::now());
@@ -213,7 +218,7 @@ impl MqttProcessor {
             unix_time
         } else {
             // B
-            match match msg
+            if let Some(e) = match msg
                 .properties
                 .unwrap_or_default()
                 .user_properties
@@ -229,22 +234,21 @@ impl MqttProcessor {
                 }
                 None => None,
             } {
-                Some(e) => e,
-                None => {
-                    // C
-                    debug!("Could not extract time, using system time!");
-                    chrono::offset::Utc::now()
-                }
+                e
+            } else {
+                // C
+                debug!("Could not extract time, using system time!");
+                chrono::offset::Utc::now()
             }
         };
 
         // ts check for bad sources of time which may return 1970
         // if both system time and packet timestamp are before year 2000, the message cannot be recorded
         let unix_clean =
-            if unix_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
+            if unix_time < chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap() {
                 debug!("Timestamp before year 2000: {}", unix_time.to_string());
                 let sys_time = chrono::offset::Utc::now();
-                if sys_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
+                if sys_time < chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap() {
                     warn!("System has no good time, discarding message!");
                     return None;
                 }
@@ -264,7 +268,7 @@ impl MqttProcessor {
 
     /// Send a message to the channel, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    async fn send_db_msg(&self, client_data: ClientData) {
+    fn send_db_msg(&self, client_data: ClientData) {
         if let Err(err) = self.channel.send(client_data) {
             warn!("Error sending through channel: {:?}", err);
         }

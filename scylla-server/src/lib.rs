@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use chrono::serde::ts_milliseconds;
 
 pub mod controllers;
@@ -15,6 +17,7 @@ pub mod models;
 #[allow(non_snake_case)]
 pub mod schema;
 
+#[allow(clippy::pedantic)]
 pub mod proto;
 
 pub mod transformers;

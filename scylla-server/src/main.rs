@@ -1,24 +1,29 @@
 use std::{
-    sync::{atomic::Ordering, Arc},
+    sync::{Arc, atomic::Ordering},
     time::Duration,
 };
 
 use axum::{
+    Extension, Router,
     extract::DefaultBodyLimit,
     http::Method,
     routing::{get, post},
-    Extension, Router,
 };
 use clap::Parser;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{
-    pooled_connection::{bb8::Pool, AsyncDieselConnectionManager},
     AsyncConnection, AsyncPgConnection,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
+    ClientData, RUN_ID, db_handler,
+    mqtt_processor::{MqttProcessor, MqttProcessorOptions},
+};
+use scylla_server::{
+    RateLimitMode,
     controllers::{
         self,
         car_command_controller::{self},
@@ -26,14 +31,8 @@ use scylla_server::{
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode,
 };
-use scylla_server::{
-    db_handler,
-    mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-    ClientData, RUN_ID,
-};
-use socketioxide::{extract::SocketRef, SocketIo};
+use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::{
     signal,
     sync::{broadcast, mpsc},
@@ -45,7 +44,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::{debug, info, level_filters::LevelFilter};
-use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt::format::FmtSpan};
 
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
@@ -252,7 +251,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (recv, opts) = MqttProcessor::new(
         mqtt_send,
         token.clone(),
-        MqttProcessorOptions {
+        &MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
             initial_run: curr_run.runId,
             static_rate_limit_time: cli.static_rate_limit_value,
