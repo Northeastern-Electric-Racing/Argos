@@ -1,0 +1,47 @@
+version: '3.8'
+
+
+services:
+  charybdis_app:
+    build: .
+    container_name: charybdis_app
+    restart: unless-stopped
+    environment:
+      - LOCAL_DATABASE_URL=postgresql://postgres:password@host.docker.internal:5432/postgres
+      - CLOUD_DATABASE_URL=postgresql://postgres:docker@host.docker.internal:8001/postgres?schema=public
+
+    volumes:
+      - .:/app
+      - /app/node_modules  # Prevents overwriting local node_modules
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true  # Allows interactive shell
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  charybdis_local:
+    container_name: charybdis_local
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: docker
+    ports:
+      - "8000:5432"
+    volumes:
+      - charybdis_local_data:/var/lib/postgresql/data
+
+  charybdis_cloud:
+    container_name: charybdis_cloud
+    image: timescale/timescaledb:latest-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: docker
+    ports:
+      - "8001:5432"
+    volumes:
+      - charybdis_cloud_data:/var/lib/postgresql/data
+
+volumes:
+  charybdis_local_data:
+  charybdis_cloud_data:

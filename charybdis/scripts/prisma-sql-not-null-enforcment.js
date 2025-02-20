@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const prismaSchemaPath = "././local-prisma/schema.prisma"; // Path to schema.prisma
-const migrationsDir = "././local-prisma/migrations/"; // Path to migrations directory
+const prismaSchemaPath = "./src/local-prisma/schema.prisma"; // Path to schema.prisma
+const migrationsDir = "./src/local-prisma/migrations/"; // Path to migrations directory
 
 // Helper to parse schema.prisma and find fields that are required
 function parsePrismaSchema() {
