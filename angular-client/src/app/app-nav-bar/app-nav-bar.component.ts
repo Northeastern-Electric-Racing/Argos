@@ -62,7 +62,8 @@ export class AppNavBarComponent implements OnInit {
     { label: 'Home', route: '/landing', icon: 'home' },
     { label: 'Charging', route: '/charging', icon: 'ev_station' },
     { label: 'Graph', route: '/graph', icon: 'bar_chart' },
-    { label: 'Map', route: '/map', icon: 'map' }
+    { label: 'Map', route: '/map', icon: 'map' },
+    { label: 'BMS', route: '/bms', icon: 'action_key' }
   ];
 
   navigateTo(route: string): void {
