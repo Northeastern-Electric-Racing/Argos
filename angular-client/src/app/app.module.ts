@@ -106,6 +106,7 @@ import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { SidebarModule } from 'primeng/sidebar';
+import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
 
 @NgModule({
   declarations: [
@@ -195,7 +196,8 @@ import { SidebarModule } from 'primeng/sidebar';
     CurrentRunDisplayComponent,
     ViewerDisplayComponent,
     NodeDisplayComponent,
-    AppNavBarComponent
+    AppNavBarComponent,
+    BmsDebugPageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -272,6 +274,8 @@ export class AppModule {
       .addSvgIcon(
         'arrow_drop_down_circle',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assests/icons/arrow_drop_down_circle.svg')
-      );
+      )
+      .addSvgIcon('action_key', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/action_key.svg'))
+      .addSvgIcon('apps', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/apps.svg'));
   }
 }
