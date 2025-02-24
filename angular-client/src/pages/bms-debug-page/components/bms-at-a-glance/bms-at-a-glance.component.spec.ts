@@ -9,8 +9,7 @@ describe('BmsAtAGlanceComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BmsAtAGlanceComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BmsAtAGlanceComponent);
     component = fixture.componentInstance;

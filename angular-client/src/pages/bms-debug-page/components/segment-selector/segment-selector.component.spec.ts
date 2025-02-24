@@ -9,8 +9,7 @@ describe('SegmentSelectorComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SegmentSelectorComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(SegmentSelectorComponent);
     component = fixture.componentInstance;

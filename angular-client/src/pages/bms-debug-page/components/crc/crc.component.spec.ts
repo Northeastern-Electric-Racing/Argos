@@ -9,8 +9,7 @@ describe('CRCComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CRCComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CRCComponent);
     component = fixture.componentInstance;
