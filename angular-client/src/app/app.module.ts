@@ -107,6 +107,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { SidebarModule } from 'primeng/sidebar';
 import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
+import { BmsAtAGlanceComponent } from 'src/pages/bms-debug-page/components/bms-at-a-glance/bms-at-a-glance.component';
+import { SegmentSummaryComponent } from 'src/pages/bms-debug-page/components/segment-summary/segment-summary.component';
+import { SegmentSelectorComponent } from 'src/pages/bms-debug-page/components/segment-selector/segment-selector.component';
+import { CRCComponent } from 'src/pages/bms-debug-page/components/crc/crc.component';
+import { AccHighTempComponent } from 'src/pages/bms-debug-page/components/acc-high-temp/acc-high-temp.component';
+import { AccLowVoltageComponent } from 'src/pages/bms-debug-page/components/acc-low-voltage/acc-low-voltage.component';
+import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc-high-voltage/acc-high-voltage.component';
 
 @NgModule({
   declarations: [
@@ -197,7 +204,14 @@ import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.c
     ViewerDisplayComponent,
     NodeDisplayComponent,
     AppNavBarComponent,
-    BmsDebugPageComponent
+    BmsDebugPageComponent,
+    BmsAtAGlanceComponent,
+    SegmentSummaryComponent,
+    SegmentSelectorComponent,
+    CRCComponent,
+    AccHighTempComponent,
+    AccLowVoltageComponent,
+    AccHighVoltageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
