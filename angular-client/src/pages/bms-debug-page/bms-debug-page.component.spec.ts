@@ -9,8 +9,7 @@ describe('BmsDebugPageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BmsDebugPageComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BmsDebugPageComponent);
     component = fixture.componentInstance;

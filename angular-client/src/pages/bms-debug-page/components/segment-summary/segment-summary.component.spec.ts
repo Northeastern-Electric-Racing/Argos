@@ -9,8 +9,7 @@ describe('SegmentSummaryComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SegmentSummaryComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(SegmentSummaryComponent);
     component = fixture.componentInstance;

@@ -9,8 +9,7 @@ describe('AccHighTempComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AccHighTempComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AccHighTempComponent);
     component = fixture.componentInstance;

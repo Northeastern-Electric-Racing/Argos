@@ -9,8 +9,7 @@ describe('AccLowVoltageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AccLowVoltageComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AccLowVoltageComponent);
     component = fixture.componentInstance;
