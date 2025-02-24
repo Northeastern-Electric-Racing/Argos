@@ -290,6 +290,10 @@ export class AppModule {
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assests/icons/arrow_drop_down_circle.svg')
       )
       .addSvgIcon('action_key', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/action_key.svg'))
-      .addSvgIcon('apps', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/apps.svg'));
+      .addSvgIcon('apps', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/apps.svg'))
+      .addSvgIcon(
+        'battery_charging_2',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
+      );
   }
 }
