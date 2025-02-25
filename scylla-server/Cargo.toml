@@ -7,7 +7,7 @@ default-run = "scylla-server"
 [dependencies]
 diesel = { version = "2.2.4", features = ["postgres", "chrono"] }
 dotenvy = "0.15"
-serde = "1.0.203"
+serde = "1.0.218"
 protobuf-codegen = "3.7.1"
 protobuf = { version = "3.7.1", features = ["with-bytes"] }
 tokio = { version = "1.43.0", features = ["full", "tracing"] }
