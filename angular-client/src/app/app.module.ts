@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { CarouselModule } from 'primeng/carousel';
 import { ToastModule } from 'primeng/toast';
@@ -237,7 +237,7 @@ import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc
     MatDividerModule,
     SidebarModule
   ],
-  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
+  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi()), provideClientHydration()]
 })
 export class AppModule {
   constructor(

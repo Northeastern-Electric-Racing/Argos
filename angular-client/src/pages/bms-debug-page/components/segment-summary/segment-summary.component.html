@@ -1,8 +1,8 @@
-<info-background title="Segment 1" svgIcon="battery_charging_2">
+<info-background [title]="'Segment ' + segmentNumber()" svgIcon="battery_charging_2">
   <vstack spacing="20px">
     <vstack spacing="0px">
       <hstack spacing="0px">
-        <typography variant="info-value" [content]="31 + '°'" />
+        <typography variant="info-value" [content]="(temperature ? temperature.toFixed(1) : '-') + '°'" />
         <typography variant="info-unit" [content]="'C'" additionalStyles="padding-top: 20px" />
       </hstack>
       <typography variant="info-subtitle" [content]="'Temperature'" additionalStyles="" />
@@ -11,7 +11,7 @@
 
     <vstack spacing="0px" style="margin-top: -10px">
       <hstack spacing="0px">
-        <typography variant="info-value" [content]="31 + '°'" />
+        <typography variant="info-value" [content]="'31'" />
         <typography variant="info-unit" [content]="'V'" additionalStyles="" />
       </hstack>
       <typography variant="info-subtitle" [content]="'Voltages'" additionalStyles="" />
@@ -19,7 +19,7 @@
     <divider style="width: 100px" />
     <vstack spacing="0px" style="margin-top: -5px">
       <hstack spacing="0px">
-        <typography variant="info-value" [content]="31 + '°'" />
+        <typography variant="info-value" [content]="(alphaChipTemp ? alphaChipTemp.toFixed(2) : '-') + '°'" />
         <typography variant="info-unit" [content]="'C'" />
       </hstack>
       <typography variant="info-subtitle" [content]="'Chip Temp'" additionalStyles="" />
