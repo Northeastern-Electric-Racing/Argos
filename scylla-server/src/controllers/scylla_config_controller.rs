@@ -3,13 +3,14 @@ use std::sync::atomic::Ordering;
 use axum::{extract::Path, Json};
 use serde::Serialize;
 
-use crate::{error::ScyllaError, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE};
+use crate::{error::ScyllaError, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE};
 
 /// holding all of scylla's settings
 #[derive(Serialize)]
 pub struct ScyllaSettings {
     pub data_upload_disabled: bool,
     pub batch_upsert_time: u16,
+    pub ratelimit_mode: u8,
 }
 
 /// gets uploading data status
@@ -18,6 +19,7 @@ pub async fn get_settings() -> Result<Json<ScyllaSettings>, ScyllaError> {
     Ok(Json::from(ScyllaSettings {
         data_upload_disabled: DATA_UPLOAD_DISABLE.load(Ordering::Relaxed),
         batch_upsert_time: BATCH_UPSERT_TIME.load(Ordering::Relaxed),
+        ratelimit_mode: RATE_LIMIT_MODE.load(Ordering::Relaxed),
     }))
 }
 
@@ -36,5 +38,10 @@ pub async fn enable_data_upload() -> Result<(), ScyllaError> {
 /// sets the batch upsert time in seconds
 pub async fn batch_upsert_set(Path(time): Path<u16>) -> Result<(), ScyllaError> {
     BATCH_UPSERT_TIME.store(time, Ordering::Relaxed);
+    Ok(())
+}
+
+pub async fn rate_limit_mode_set(Path(mode_idex): Path<u8>) -> Result<(), ScyllaError> {
+    RATE_LIMIT_MODE.store(mode_idex, Ordering::Relaxed);
     Ok(())
 }

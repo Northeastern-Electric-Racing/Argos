@@ -26,7 +26,7 @@ use scylla_server::{
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE,
+    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE,
 };
 use scylla_server::{
     db_handler,
@@ -153,6 +153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Configuring global variables");
     DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
     BATCH_UPSERT_TIME.store(cli.batch_upsert_time, Ordering::Relaxed);
+    RATE_LIMIT_MODE.store(cli.rate_limit_mode as u8, Ordering::Relaxed);
 
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
@@ -249,7 +250,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             mqtt_path: cli.siren_host_url,
             initial_run: curr_run.runId,
             static_rate_limit_time: cli.static_rate_limit_value,
-            rate_limit_mode: cli.rate_limit_mode,
         },
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
@@ -299,6 +299,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/scylla/batch_time/{time}",
             put(scylla_config_controller::batch_upsert_set),
+        )
+        .route(
+            "/scylla/ratelimit_mode/{mode_idex}",
+            put(scylla_config_controller::rate_limit_mode_set),
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))
