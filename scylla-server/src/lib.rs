@@ -60,7 +60,14 @@ pub static DATA_UPLOAD_DISABLE: std::sync::atomic::AtomicBool =
 pub static BATCH_UPSERT_TIME: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(10);
 
 /// the `RateLimitMode` to use
-pub static RATE_LIMIT_MODE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+pub static RATE_LIMIT_MODE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(1);
+/// the value to rate limit in static mode, (in ms)
+pub static STATIC_RATE_LIMIT_VALUE: std::sync::atomic::AtomicU16 =
+    std::sync::atomic::AtomicU16::new(100);
+
+/// the percentage of messages to discard in send over the socket to the client
+pub static SOCKET_DISCARD_PERCENT: std::sync::atomic::AtomicU8 =
+    std::sync::atomic::AtomicU8::new(0);
 
 /// Represents the client data
 /// This has the dual purposes of
