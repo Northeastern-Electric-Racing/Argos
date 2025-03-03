@@ -1,3 +1,5 @@
+use std::sync::atomic::Ordering;
+
 use rustc_hash::FxHashSet;
 use tokio::sync::{broadcast, mpsc};
 
@@ -7,7 +9,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, instrument, trace, warn, Level};
 
 use crate::services::{data_service, data_type_service};
-use crate::{ClientData, PoolHandle};
+use crate::{ClientData, PoolHandle, DATA_UPLOAD_DISABLE};
 
 /// A few threads to manage the processing and inserting of special types,
 /// upserting of metadata for data, and batch uploading the database
@@ -73,78 +75,73 @@ impl DbHandler {
     /// This loop handles batch uploading, and has no internal state or requirements
     /// It uses the queue from data queue to insert to the database specified
     /// On cancellation, will await one final queue message to cleanup anything remaining in the channel
+    /// If data upload is disable, it will warn about lost messages and discard them
     pub async fn batching_loop(
         mut batch_queue: mpsc::Receiver<Vec<ClientData>>,
         pool: PoolHandle,
         cancel_token: CancellationToken,
     ) {
         loop {
-            tokio::select! {
-                _ = cancel_token.cancelled() => {
-                    let Ok(mut database) = pool.get().await else {
-                        warn!("Could not get connection for cleanup");
+            if DATA_UPLOAD_DISABLE.load(Ordering::Relaxed) {
+                tokio::select! {
+                    _ = cancel_token.cancelled() => {
+                        warn!("Cancelling fake upload with {} batches left in queue!", batch_queue.len());
                         break;
-                    };
-                    // cleanup all remaining messages if batches start backing up
-                    while let Some(final_msgs) = batch_queue.recv().await {
-                        info!("{} batches remaining!", batch_queue.len()+1);
-                        // do not spawn new tasks in this mode, see below comment for chunk_size math
-                        if final_msgs.is_empty() {
+                    },
+                    Some(msgs) = batch_queue.recv() => {
+                        warn!("NOT UPLOADING {} MESSAGES", msgs.len());
+                    },
+                }
+            } else {
+                tokio::select! {
+                    _ = cancel_token.cancelled() => {
+                        let Ok(mut database) = pool.get().await else {
+                            warn!("Could not get connection for cleanup");
+                            break;
+                        };
+                        // cleanup all remaining messages if batches start backing up
+                        while let Some(final_msgs) = batch_queue.recv().await {
+                            info!("{} batches remaining!", batch_queue.len()+1);
+                            // do not spawn new tasks in this mode, see below comment for chunk_size math
+                            if final_msgs.is_empty() {
+                                debug!("A batch of zero messages was sent!");
+                                continue;
+                            }
+                            let chunk_size = final_msgs.len() / ((final_msgs.len() / 8190) + 1);
+                            let chunks = chunk_vec(final_msgs, chunk_size);
+                            debug!("Batch uploading {} chunks in sequence", chunks.len());
+                            for chunk in chunks {
+                                info!(
+                                    "A cleanup chunk uploaded: {:?}",
+                                    data_service::add_many(&mut database, chunk).await
+                            );
+                            }
+                        }
+                        info!("No more messages to cleanup.");
+                        break;
+                    },
+                    Some(msgs) = batch_queue.recv() => {
+                        // libpq has max 65535 params, therefore batch
+                        // max for batch is 65535/4 params per message, hence the below, rounded down with a margin for safety
+                        // TODO avoid this code batch uploading the remainder messages as a new batch, combine it with another safely
+                        if msgs.is_empty() {
                             debug!("A batch of zero messages was sent!");
                             continue;
                         }
-                        let chunk_size = final_msgs.len() / ((final_msgs.len() / 8190) + 1);
-                        let chunks = chunk_vec(final_msgs, chunk_size);
-                        debug!("Batch uploading {} chunks in sequence", chunks.len());
+                        let msg_len = msgs.len();
+                        let chunk_size = msg_len / ((msg_len / 8190) + 1);
+                        let chunks = chunk_vec(msgs, chunk_size);
+                        info!("Batch uploading {} chunks in parrallel, {} messages.", chunks.len(), msg_len);
                         for chunk in chunks {
-                            info!(
-                                "A cleanup chunk uploaded: {:?}",
-                                data_service::add_many(&mut database, chunk).await
-                        );
+                           tokio::spawn(DbHandler::batch_upload(chunk, pool.clone()));
                         }
+                        debug!(
+                            "DB send: {} of {}",
+                            batch_queue.len(),
+                            batch_queue.max_capacity()
+                        );
                     }
-                    info!("No more messages to cleanup.");
-                    break;
-                },
-                Some(msgs) = batch_queue.recv() => {
-                    // libpq has max 65535 params, therefore batch
-                    // max for batch is 65535/4 params per message, hence the below, rounded down with a margin for safety
-                    // TODO avoid this code batch uploading the remainder messages as a new batch, combine it with another safely
-                    if msgs.is_empty() {
-                        debug!("A batch of zero messages was sent!");
-                        continue;
-                    }
-                    let msg_len = msgs.len();
-                    let chunk_size = msg_len / ((msg_len / 8190) + 1);
-                    let chunks = chunk_vec(msgs, chunk_size);
-                    info!("Batch uploading {} chunks in parrallel, {} messages.", chunks.len(), msg_len);
-                    for chunk in chunks {
-                       tokio::spawn(DbHandler::batch_upload(chunk, pool.clone()));
-                    }
-                    debug!(
-                        "DB send: {} of {}",
-                        batch_queue.len(),
-                        batch_queue.max_capacity()
-                    );
                 }
-            }
-        }
-    }
-
-    /// A batching loop that consumes messages but does not upload anything
-    pub async fn fake_batching_loop(
-        mut batch_queue: mpsc::Receiver<Vec<ClientData>>,
-        cancel_token: CancellationToken,
-    ) {
-        loop {
-            tokio::select! {
-                _ = cancel_token.cancelled() => {
-                    warn!("Cancelling fake upload with {} batches left in queue!", batch_queue.len());
-                    break;
-                },
-                Some(msgs) = batch_queue.recv() => {
-                    warn!("NOT UPLOADING {} MESSAGES", msgs.len());
-                },
             }
         }
     }
