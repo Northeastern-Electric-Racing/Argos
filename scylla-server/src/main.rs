@@ -26,7 +26,8 @@ use scylla_server::{
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE,
+    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
+    STATIC_RATE_LIMIT_VALUE,
 };
 use scylla_server::{
     db_handler,
@@ -100,7 +101,7 @@ struct ScyllaArgs {
         env = "SCYLLA_STATIC_RATE_LIMIT_VALUE",
         default_value = "100"
     )]
-    static_rate_limit_value: u64,
+    static_rate_limit_value: u16,
 
     /// The percent of messages discarded when sent from the socket
     #[arg(
@@ -154,6 +155,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
     BATCH_UPSERT_TIME.store(cli.batch_upsert_time, Ordering::Relaxed);
     RATE_LIMIT_MODE.store(cli.rate_limit_mode as u8, Ordering::Relaxed);
+    STATIC_RATE_LIMIT_VALUE.store(cli.static_rate_limit_value, Ordering::Relaxed);
+    SOCKET_DISCARD_PERCENT.store(cli.socketio_discard_percent, Ordering::Relaxed);
 
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
@@ -205,17 +208,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(
-            token.clone(),
-            mqtt_receive,
-            cli.socketio_discard_percent,
-            io,
-        ));
+        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive, io));
     } else {
         task_tracker.spawn(socket_handler_with_metadata(
             token.clone(),
             mqtt_receive,
-            cli.socketio_discard_percent,
             io,
         ));
     }
@@ -249,7 +246,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
             initial_run: curr_run.runId,
-            static_rate_limit_time: cli.static_rate_limit_value,
         },
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
@@ -297,12 +293,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         // --
         .route(
-            "/scylla/batch_time/{time}",
+            "/scylla/batch_time/{time_sec}",
             put(scylla_config_controller::batch_upsert_set),
         )
         .route(
             "/scylla/ratelimit_mode/{mode_idex}",
             put(scylla_config_controller::rate_limit_mode_set),
+        )
+        .route(
+            "/scylla/static_ratelimit_time/{time_ms}",
+            put(scylla_config_controller::static_ratelimit_time_set),
+        )
+        .route(
+            "/scylla/socket_discard_percent/{discard_perc}",
+            put(scylla_config_controller::socket_discard_percent_set),
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))
