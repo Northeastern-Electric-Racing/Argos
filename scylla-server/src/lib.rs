@@ -35,8 +35,14 @@ pub enum RateLimitMode {
     None,
 }
 
-// Atomic to keep track the current run id across EVERYTHING (very scary)
+// GLOBAL VARIABLES
+
+/// Atomic to keep track the current run id across EVERYTHING (very scary)
 pub static RUN_ID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(-1);
+
+/// true if data upload (batching) should be disabled
+pub static DATA_UPLOAD_DISABLE: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
 
 /// Represents the client data
 /// This has the dual purposes of

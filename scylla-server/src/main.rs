@@ -6,7 +6,7 @@ use std::{
 use axum::{
     extract::DefaultBodyLimit,
     http::Method,
-    routing::{get, post},
+    routing::{get, post, put},
     Extension, Router,
 };
 use clap::Parser;
@@ -22,11 +22,11 @@ use scylla_server::{
     controllers::{
         self,
         car_command_controller::{self},
-        data_type_controller, file_insertion_controller, run_controller,
+        data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode,
+    RateLimitMode, DATA_UPLOAD_DISABLE,
 };
 use scylla_server::{
     db_handler,
@@ -150,6 +150,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
     }
 
+    info!("Configuring global variables");
+    DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
+
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
 
@@ -224,19 +227,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .handling_loop(db_send.clone(), token.clone()),
     );
-    // spawn the database inserter, if we have it enabled
-    if !cli.disable_data_upload {
-        task_tracker.spawn(db_handler::DbHandler::batching_loop(
-            db_receive,
-            pool.clone(),
-            token.clone(),
-        ));
-    } else {
-        task_tracker.spawn(db_handler::DbHandler::fake_batching_loop(
-            db_receive,
-            token.clone(),
-        ));
-    }
+    // spawn the database inserter
+    task_tracker.spawn(db_handler::DbHandler::batching_loop(
+        db_receive,
+        pool.clone(),
+        token.clone(),
+    ));
 
     // creates the initial run
     let curr_run =
@@ -283,10 +279,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/runs/update/{id}/{driver}/{location}/{notes}",
             post(run_controller::update_run_with_data),
         )
-        // CONFIG
+        // CAR CONFIG
         .route(
             "/config/set/{configKey}",
             post(car_command_controller::send_config_command).layer(Extension(client_sharable)),
+        )
+        // SCYLLA CONFIG
+        // DATA_UPLOAD_DISABLE --
+        .route(
+            "/scylla/upload/disable",
+            put(scylla_config_controller::disable_data_upload),
+        )
+        .route(
+            "/scylla/upload/enable",
+            put(scylla_config_controller::enable_data_upload),
+        )
+        .route(
+            "/scylla/upload/get",
+            get(scylla_config_controller::get_data_upload),
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))
