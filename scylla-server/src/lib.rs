@@ -26,6 +26,7 @@ pub type Database<'a> =
 pub type PoolHandle = diesel_async::pooled_connection::bb8::Pool<diesel_async::AsyncPgConnection>;
 
 #[derive(clap::ValueEnum, Debug, PartialEq, Copy, Clone, Default)]
+#[repr(u8)]
 #[clap(rename_all = "kebab_case")]
 pub enum RateLimitMode {
     /// static rate limiting based on a set value
@@ -33,6 +34,17 @@ pub enum RateLimitMode {
     /// no rate limiting
     #[default]
     None,
+}
+impl TryFrom<u8> for RateLimitMode {
+    type Error = &'static str;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(RateLimitMode::Static),
+            1 => Ok(RateLimitMode::None),
+            _ => Err("Invalid enum!"),
+        }
+    }
 }
 
 // GLOBAL VARIABLES
@@ -46,6 +58,9 @@ pub static DATA_UPLOAD_DISABLE: std::sync::atomic::AtomicBool =
 
 /// the amount of time in between batch upserts
 pub static BATCH_UPSERT_TIME: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(10);
+
+/// the `RateLimitMode` to use
+pub static RATE_LIMIT_MODE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
 
 /// Represents the client data
 /// This has the dual purposes of
