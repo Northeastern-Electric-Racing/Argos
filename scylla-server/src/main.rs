@@ -26,7 +26,7 @@ use scylla_server::{
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode, DATA_UPLOAD_DISABLE,
+    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE,
 };
 use scylla_server::{
     db_handler,
@@ -81,7 +81,7 @@ struct ScyllaArgs {
         env = "SCYLLA_BATCH_UPSERT_TIME",
         default_value = "10"
     )]
-    batch_upsert_time: u64,
+    batch_upsert_time: u16,
 
     /// The rate limit mode to use
     #[arg(
@@ -152,6 +152,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Configuring global variables");
     DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
+    BATCH_UPSERT_TIME.store(cli.batch_upsert_time, Ordering::Relaxed);
 
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
@@ -220,12 +221,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(
-            mqtt_send.subscribe(),
-            pool.clone(),
-            cli.batch_upsert_time * 1000,
-        )
-        .handling_loop(db_send.clone(), token.clone()),
+        db_handler::DbHandler::new(mqtt_send.subscribe(), pool.clone())
+            .handling_loop(db_send.clone(), token.clone()),
     );
     // spawn the database inserter
     task_tracker.spawn(db_handler::DbHandler::batching_loop(
@@ -285,6 +282,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             post(car_command_controller::send_config_command).layer(Extension(client_sharable)),
         )
         // SCYLLA CONFIG
+        .route(
+            "/scylla/get_settings",
+            get(scylla_config_controller::get_settings),
+        )
         // DATA_UPLOAD_DISABLE --
         .route(
             "/scylla/upload/disable",
@@ -294,9 +295,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/scylla/upload/enable",
             put(scylla_config_controller::enable_data_upload),
         )
+        // --
         .route(
-            "/scylla/upload/get",
-            get(scylla_config_controller::get_data_upload),
+            "/scylla/batch_time/{time}",
+            put(scylla_config_controller::batch_upsert_set),
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))

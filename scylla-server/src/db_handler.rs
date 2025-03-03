@@ -9,7 +9,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, instrument, trace, warn, Level};
 
 use crate::services::{data_service, data_type_service};
-use crate::{ClientData, PoolHandle, DATA_UPLOAD_DISABLE};
+use crate::{ClientData, PoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE};
 
 /// A few threads to manage the processing and inserting of special types,
 /// upserting of metadata for data, and batch uploading the database
@@ -22,8 +22,6 @@ pub struct DbHandler {
     pool: PoolHandle,
     /// the queue of data
     data_queue: Vec<ClientData>,
-    /// upload interval
-    upload_interval: u64,
 }
 
 /// Chunks a vec into roughly equal vectors all under size `max_chunk_size`
@@ -58,17 +56,12 @@ fn chunk_vec<T: Clone>(input: Vec<T>, max_chunk_size: usize) -> Vec<Vec<T>> {
 impl DbHandler {
     /// Make a new db handler
     /// * `recv` - the broadcast reciver of which clientdata will be sent
-    pub fn new(
-        receiver: broadcast::Receiver<ClientData>,
-        pool: PoolHandle,
-        upload_interval: u64,
-    ) -> DbHandler {
+    pub fn new(receiver: broadcast::Receiver<ClientData>, pool: PoolHandle) -> DbHandler {
         DbHandler {
             datatype_list: FxHashSet::default(),
             receiver,
             pool,
             data_queue: vec![],
-            upload_interval,
         }
     }
 
@@ -168,10 +161,20 @@ impl DbHandler {
         data_channel: mpsc::Sender<Vec<ClientData>>,
         cancel_token: CancellationToken,
     ) {
-        let mut batch_interval = tokio::time::interval(Duration::from_millis(self.upload_interval));
+        let mut batch_interval = tokio::time::interval(Duration::from_secs(
+            BATCH_UPSERT_TIME.load(Ordering::Relaxed).into(),
+        ));
         // the max batch size to reasonably expect
         let mut max_batch_size = 2usize;
         loop {
+            // if the batch interval changed, act. this is run per message, which is a performance concern
+            if BATCH_UPSERT_TIME.load(Ordering::Relaxed) as u64 != batch_interval.period().as_secs()
+            {
+                // if the setting is changed, unfortunately the interval is reset
+                batch_interval = tokio::time::interval(Duration::from_secs(
+                    BATCH_UPSERT_TIME.load(Ordering::Relaxed).into(),
+                ));
+            }
             tokio::select! {
                 _ = cancel_token.cancelled() => {
                     debug!("Pushing final messages to queue");

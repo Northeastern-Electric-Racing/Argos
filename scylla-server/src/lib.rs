@@ -44,6 +44,9 @@ pub static RUN_ID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::
 pub static DATA_UPLOAD_DISABLE: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
+/// the amount of time in between batch upserts
+pub static BATCH_UPSERT_TIME: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(10);
+
 /// Represents the client data
 /// This has the dual purposes of
 /// * - representing the packet sent over the socket for live data
