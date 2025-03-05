@@ -114,6 +114,7 @@ import { CRCComponent } from 'src/pages/bms-debug-page/components/crc/crc.compon
 import { AccHighTempComponent } from 'src/pages/bms-debug-page/components/acc-high-temp/acc-high-temp.component';
 import { AccLowVoltageComponent } from 'src/pages/bms-debug-page/components/acc-low-voltage/acc-low-voltage.component';
 import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc-high-voltage/acc-high-voltage.component';
+import { BmsOverflowComponent } from 'src/pages/bms-debug-page/components/bms-overflow/bms-overflow.component';
 
 @NgModule({
   declarations: [
@@ -211,7 +212,8 @@ import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc
     CRCComponent,
     AccHighTempComponent,
     AccLowVoltageComponent,
-    AccHighVoltageComponent
+    AccHighVoltageComponent,
+    BmsOverflowComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
