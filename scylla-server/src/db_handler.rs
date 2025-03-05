@@ -82,7 +82,7 @@ impl DbHandler {
                         break;
                     },
                     Some(msgs) = batch_queue.recv() => {
-                        warn!("NOT UPLOADING {} MESSAGES", msgs.len());
+                        warn!("NOT STORING {} MESSAGES", msgs.len());
                     },
                 }
             } else {
