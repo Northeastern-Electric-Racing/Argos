@@ -4,18 +4,23 @@
   } @else {
     <!-- TODO: Add components for the segment summary-->
     <mat-grid-list cols="6" gutterSize="20px" rowHeight="1.5rem" style="margin-top: -20px">
-      <mat-grid-tile [colspan]="windowSize > 1300 ? 4 : 2" rowspan="3">
+      <mat-grid-tile [colspan]="3" rowspan="3" style="padding-left: 16px">
         <typography
+          class="title-container"
           variant="x-large-title"
-          [content]="windowSize > 1300 ? 'Accumulator Summary' : 'Summary'"
-          additionalStyles="fontSize: 5vw; letter-spacing: 0.2rem;  word-spacing: 0.2rem; line-height: 0px; padding-bottom: -10px"
+          [content]="windowSize > 1300 ? 'Accumulator' : 'Accumulator'"
+          additionalStyles="font-size: 7vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; line-height: 0px; text-align: left;"
         />
       </mat-grid-tile>
-      <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="3">
+
+      <mat-grid-tile [colspan]="1" rowspan="3">
         <segment-selector style="height: 75%; width: 100%" />
       </mat-grid-tile>
-      <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="3">
+      <mat-grid-tile [colspan]="1" rowspan="3">
         <crc style="height: 75%; width: 100%" />
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="1" rowspan="3">
+        <bms-overflow style="height: 75%; width: 100%" />
       </mat-grid-tile>
       <mat-grid-tile [colspan]="6" rowspan="5">
         <bms-at-a-glance style="height: 100%; width: 100%" />
