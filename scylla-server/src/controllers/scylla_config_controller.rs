@@ -44,23 +44,47 @@ pub async fn enable_data_upload() -> Result<(), ScyllaError> {
 
 /// sets the batch upsert time in seconds
 pub async fn batch_upsert_set(Path(time_sec): Path<u16>) -> Result<(), ScyllaError> {
-    BATCH_UPSERT_TIME.store(time_sec, Ordering::Relaxed);
-    Ok(())
+    if time_sec != 0 {
+        BATCH_UPSERT_TIME.store(time_sec, Ordering::Relaxed);
+        Ok(())
+    } else {
+        Err(ScyllaError::InvalidSetting(
+            "batch upsert time must not be zero!".to_owned(),
+        ))
+    }
 }
 
 pub async fn rate_limit_mode_set(Path(mode_idex): Path<u8>) -> Result<(), ScyllaError> {
-    RATE_LIMIT_MODE.store(mode_idex, Ordering::Relaxed);
-    Ok(())
+    if mode_idex <= 1 {
+        RATE_LIMIT_MODE.store(mode_idex, Ordering::Relaxed);
+        Ok(())
+    } else {
+        Err(ScyllaError::InvalidSetting(
+            "invalid selection for ratelimit mode!".to_owned(),
+        ))
+    }
 }
 
 /// sets the static rate limit time in milliseconds
 pub async fn static_ratelimit_time_set(Path(time_ms): Path<u16>) -> Result<(), ScyllaError> {
-    STATIC_RATE_LIMIT_VALUE.store(time_ms, Ordering::Relaxed);
-    Ok(())
+    if time_ms > 0 {
+        STATIC_RATE_LIMIT_VALUE.store(time_ms, Ordering::Relaxed);
+        Ok(())
+    } else {
+        Err(ScyllaError::InvalidSetting(
+            "static ratelimit time must be greater than 0!".to_owned(),
+        ))
+    }
 }
 
 /// sets the socket IO discard percentage
 pub async fn socket_discard_percent_set(Path(discard_perc): Path<u8>) -> Result<(), ScyllaError> {
-    SOCKET_DISCARD_PERCENT.store(discard_perc, Ordering::Relaxed);
-    Ok(())
+    if discard_perc <= 100 {
+        SOCKET_DISCARD_PERCENT.store(discard_perc, Ordering::Relaxed);
+        Ok(())
+    } else {
+        Err(ScyllaError::InvalidSetting(
+            "discard percent must be between 0 and 100!".to_owned(),
+        ))
+    }
 }
