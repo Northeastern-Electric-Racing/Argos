@@ -115,6 +115,7 @@ import { AccHighTempComponent } from 'src/pages/bms-debug-page/components/acc-hi
 import { AccLowVoltageComponent } from 'src/pages/bms-debug-page/components/acc-low-voltage/acc-low-voltage.component';
 import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc-high-voltage/acc-high-voltage.component';
 import { BmsOverflowComponent } from 'src/pages/bms-debug-page/components/bms-overflow/bms-overflow.component';
+import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/info-value-display.component';
 
 @NgModule({
   declarations: [
@@ -213,7 +214,8 @@ import { BmsOverflowComponent } from 'src/pages/bms-debug-page/components/bms-ov
     AccHighTempComponent,
     AccLowVoltageComponent,
     AccHighVoltageComponent,
-    BmsOverflowComponent
+    BmsOverflowComponent,
+    InfoValueDisplayComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
