@@ -12,12 +12,11 @@ use crate::metadata_structs::{
     map_dti_flt, FaultData, Node, TimerData, DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP,
     FAULT_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
 };
-use crate::ClientData;
+use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
-    upload_ratio: u8,
     io: SocketIo,
 ) {
     let mut upload_counter = 0u8;
@@ -28,7 +27,7 @@ pub async fn socket_handler(
                 break;
             },
             Ok(data) = data_channel.recv() => {
-                send_socket_msg(&data, &mut upload_counter, upload_ratio, &io, DATA_SOCKET_KEY).await;
+                send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
             }
         }
     }
@@ -37,7 +36,6 @@ pub async fn socket_handler(
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
-    upload_ratio: u8,
     io: SocketIo,
 ) {
     let mut upload_counter = 0u8;
@@ -79,7 +77,6 @@ pub async fn socket_handler_with_metadata(
                 send_socket_msg(
                     &data,
                     &mut upload_counter,
-                    upload_ratio,
                     &io,
                     DATA_SOCKET_KEY,
                 ).await;
@@ -89,7 +86,6 @@ pub async fn socket_handler_with_metadata(
                 send_socket_msg(
                     &fault_ringbuffer.to_vec(),
                     &mut upload_counter,
-                        upload_ratio,
                         &io,
                         FAULT_SOCKET_KEY,
                 ).await
@@ -97,7 +93,7 @@ pub async fn socket_handler_with_metadata(
             _ = timers_interval.tick() => {
                 trace!("Sending Timers Intervals!");
                 for item in timer_map.values() {
-                    send_socket_msg(item, &mut upload_counter, upload_ratio, &io, TIMER_SOCKET_KEY).await;
+                    send_socket_msg(item, &mut upload_counter, &io, TIMER_SOCKET_KEY).await;
                 }
 
             },
@@ -114,7 +110,6 @@ pub async fn socket_handler_with_metadata(
                     send_socket_msg(
                         &item,
                         &mut upload_counter,
-                        upload_ratio,
                         &io,
                         DATA_SOCKET_KEY,
                     ).await;
@@ -201,14 +196,13 @@ fn handle_socket_msg(
 async fn send_socket_msg<T>(
     client_data: &T,
     upload_counter: &mut u8,
-    upload_ratio: u8,
     io: &SocketIo,
     socket_key: &'static str,
 ) where
     T: Serialize,
 {
     *upload_counter = upload_counter.wrapping_add(1);
-    if *upload_counter >= upload_ratio {
+    if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
         match io
             .emit(
                 socket_key,
