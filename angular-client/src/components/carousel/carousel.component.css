@@ -4,12 +4,22 @@
   margin-top: 8px;
 }
 
+/* Run select button - using PrimeNG's CSS variables */
 .run-select-button {
-  border-radius: 10px;
-  color: #262626;
-  background-color: white;
-  margin-top: 8px;
-  margin-bottom: 8px;
+  --p-button-primary-color: #262626;
+  --p-button-primary-background: #777777;
+  --p-button-primary-border-color: #777777;
+  --p-button-primary-hover-background: white;
+  --p-button-border-radius: 10px;
+  --p-button-padding-y: 8px;
+  --p-button-padding-x: 1.5rem;
+  --p-button-transition-duration: 0.15s;
+  margin: 8px 0;
+}
+
+.p-dialog-title {
+  --p-dialog-title-font-weight: bold;
+  --p-dialog-title-font-size: 1.5rem;
 }
 
 .close-button {
@@ -54,7 +64,7 @@
   background-color: #262626;
   border-color: #262626;
   color: white;
-  border-radius: 10px;
+  border-radius: 100px;
 }
 
 /* should eventually be replaced with Grid component */

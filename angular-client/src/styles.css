@@ -20,9 +20,13 @@ body {
 * {
   scrollbar-width: none;
 }
-
 .mat-mdc-dialog-container {
   --mdc-dialog-container-color: transparent !important;
+}
+
+/* Add these styles to your component */
+mat-grid-tile {
+  overflow: visible !important; /* Allow dropdown to overflow */
 }
 
 .p-dialog-header {
@@ -39,4 +43,80 @@ body {
   background-color: #1a0808 !important;
   color: white !important;
   width: 200px !important;
+}
+
+/* Main select button */
+.p-select {
+  color: white !important;
+  background-color: #5a5a5a !important;
+  border-radius: 5px !important;
+  padding: 8px 20px 8px 20px !important; /* Right padding for icon */
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+  position: relative !important;
+  min-width: 12vw !important;
+  height: 25px !important;
+  font-size: 15px !important;
+  padding: 8px 0px 8px 0px !important; /* More left padding for icon */
+  display: flex !important;
+  flex-direction: row-reverse !important; /* Reverse order */
+  justify-content: space-between;
+}
+
+/* Dropdown panel */
+.p-select-panel {
+  background-color: #5a5a5a !important;
+  color: white !important;
+  border-radius: 0 0 5px 5px !important;
+  gap: 0px !important;
+}
+
+/* Dropdown items */
+.p-select-option {
+  color: white !important;
+  background-color: transparent !important;
+  padding: 8px 16px !important;
+  border-radius: 5px !important;
+}
+
+.p-select-label {
+  margin-bottom: -5px;
+  margin-top: -5px;
+  padding-left: 2vw !important;
+}
+
+/* Hovered item */
+.p-select-option:hover {
+  background-color: #45454594 !important;
+  border-radius: 0px !important;
+}
+
+/* Selected item */
+.p-select-option.p-highlight {
+  background-color: rgba(0, 122, 255, 0.15) !important;
+  color: #007aff !important;
+}
+
+/* Dropdown list container */
+.p-select-list {
+  background-color: #5a5a5a !important;
+  border-radius: 0 0 5px 5px !important;
+  margin: 0px;
+}
+
+/* Chevron icon */
+.p-icon {
+  color: rgba(255, 255, 255, 0.8) !important;
+  left: 12px !important;
+  right: auto !important;
+  margin-right: 8px !important;
+  position: relative !important;
+  transform: none !important;
+  top: auto !important;
+}
+
+/* Open state */
+.p-select-open {
+  border-radius: 10px 10px 0 0 !important;
+  box-shadow: none !important;
 }
