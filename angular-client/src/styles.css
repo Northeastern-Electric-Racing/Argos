@@ -52,18 +52,9 @@ body {
 .p-select {
   color: white !important;
   background-color: #5a5a5a !important;
-  border-radius: 5px !important;
-  padding: 8px 20px 8px 20px !important; /* Right padding for icon */
+
   border: none !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-  position: relative !important;
-  min-width: 12vw !important;
-  height: 25px !important;
-  font-size: 15px !important;
-  padding: 8px 0px 8px 0px !important; /* More left padding for icon */
-  display: flex !important;
-  flex-direction: row-reverse !important; /* Reverse order */
-  justify-content: space-between;
 }
 
 /* Dropdown panel */
@@ -80,12 +71,6 @@ body {
   background-color: transparent !important;
   padding: 8px 16px !important;
   border-radius: 5px !important;
-}
-
-.p-select-label {
-  margin-bottom: -5px;
-  margin-top: -5px;
-  padding-left: 2vw !important;
 }
 
 /* Hovered item */
@@ -105,21 +90,4 @@ body {
   background-color: #5a5a5a !important;
   border-radius: 0 0 5px 5px !important;
   margin: 0px;
-}
-
-/* Chevron icon */
-.p-icon {
-  color: rgba(255, 255, 255, 0.8) !important;
-  left: 5px !important;
-  right: auto !important;
-  margin-right: 8px !important;
-  position: relative !important;
-  transform: none !important;
-  top: auto !important;
-}
-
-/* Open state */
-.p-select-open {
-  border-radius: 10px 10px 0 0 !important;
-  box-shadow: none !important;
 }

@@ -37,10 +37,6 @@ export class CarouselComponent {
     this.currentIndex = nexIndex;
   }
 
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
-
   handlePageChange(event: CarouselPageEvent): void {
     const newIndex = event.page;
     if (newIndex) {
