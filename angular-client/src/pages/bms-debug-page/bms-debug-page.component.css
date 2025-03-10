@@ -1,13 +1,8 @@
-.title-container {
+.title-style {
   display: grid;
   width: 100%;
   height: 100%;
   align-items: center;
   grid-template-columns: [start] 1fr [end];
-}
-
-.title-container h1 {
-  grid-column: start;
-  justify-self: start;
-  /* Your font styles here */
+  padding-left: 20px;
 }

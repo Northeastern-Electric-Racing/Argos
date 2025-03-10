@@ -3,37 +3,37 @@
     <!-- TODO: Add mobile display component -->
   } @else {
     <!-- TODO: Add components for the segment summary-->
-    <mat-grid-list cols="6" gutterSize="20px" rowHeight="1.5rem" style="margin-top: -20px">
+    <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem" style="margin-top: -20px">
       <mat-grid-tile [colspan]="3" rowspan="3" style="padding-left: 16px">
         <typography
-          class="title-container"
+          class="title-style"
           variant="x-large-title"
           [content]="windowSize > 1300 ? 'Accumulator' : 'Accumulator'"
-          additionalStyles="font-size: 7vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; line-height: 0px; text-align: left;"
+          additionalStyles="font-size: 6.5vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; line-height: 0px; text-align: left; margin-top: 10px"
         />
       </mat-grid-tile>
 
       <mat-grid-tile [colspan]="1" rowspan="3">
-        <segment-selector style="height: 75%; width: 100%" />
+        <segment-selector style="height: 80%; width: 100%; margin-top: 10px" />
       </mat-grid-tile>
       <mat-grid-tile [colspan]="1" rowspan="3">
-        <crc style="height: 75%; width: 100%" />
+        <crc style="height: 80%; width: 100%; margin-top: 10px" />
       </mat-grid-tile>
       <mat-grid-tile [colspan]="1" rowspan="3">
-        <bms-overflow style="height: 75%; width: 100%" />
+        <bms-overflow style="height: 80%; width: 100%; margin-top: 10px" />
       </mat-grid-tile>
       <mat-grid-tile [colspan]="6" rowspan="5">
         <bms-at-a-glance style="height: 100%; width: 100%" />
       </mat-grid-tile>
-      <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" [rowspan]="14">
-        <div style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 30px">
-          <acc-high-voltage style="width: 100%; min-height: 30%" />
-          <acc-low-voltage style="width: 100%; min-height: 30%" />
-          <acc-high-temp style="width: 100%; min-height: 30%" />
+      <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" [rowspan]="16">
+        <div style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 3%">
+          <acc-high-voltage style="width: 100%; min-height: 31%" />
+          <acc-low-voltage style="width: 100%; min-height: 31%" />
+          <acc-high-temp style="width: 100%; min-height: 32%" />
         </div>
       </mat-grid-tile>
       @for (segment of segments; track segment) {
-        <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="14">
+        <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="16">
           <segment-summary [segmentNumber]="segment" style="height: 100%; width: 100%" />
         </mat-grid-tile>
       }

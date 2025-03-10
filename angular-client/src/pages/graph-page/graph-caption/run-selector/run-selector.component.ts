@@ -8,7 +8,8 @@ import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'run-selector',
-  templateUrl: './run-selector.component.html'
+  templateUrl: './run-selector.component.html',
+  styleUrls: ['./run-selector.component.css']
 })
 export class RunSelectorComponent implements OnInit {
   public dialogService = inject(DialogService);
@@ -39,7 +40,8 @@ export class RunSelectorComponent implements OnInit {
     this.ref = this.dialogService.open(CarouselComponent, {
       width: '550px',
       data: { runs: this.runs, selectRun: this.selectRun },
-      header: 'Select a run to view'
+      header: 'Select a run to view',
+      styleClass: 'custom-dialog'
     });
   };
 }

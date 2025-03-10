@@ -34,7 +34,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialog } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -66,6 +66,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
@@ -116,6 +117,10 @@ import { AccLowVoltageComponent } from 'src/pages/bms-debug-page/components/acc-
 import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc-high-voltage/acc-high-voltage.component';
 import { BmsOverflowComponent } from 'src/pages/bms-debug-page/components/bms-overflow/bms-overflow.component';
 import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/info-value-display.component';
+import { SelectDropdownComponent } from 'src/components/select-dropdown/select-dropdown.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { SelectModule } from 'primeng/select';
 
 @NgModule({
   declarations: [
@@ -215,7 +220,8 @@ import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/inf
     AccLowVoltageComponent,
     AccHighVoltageComponent,
     BmsOverflowComponent,
-    InfoValueDisplayComponent
+    InfoValueDisplayComponent,
+    SelectDropdownComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -229,7 +235,7 @@ import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/inf
     ProgressSpinnerModule,
     MatIconModule,
     MatGridListModule,
-    DynamicDialogModule,
+    DynamicDialog,
     BrowserAnimationsModule,
     ButtonModule,
     MatIconModule,
@@ -239,7 +245,11 @@ import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/inf
     ReactiveFormsModule,
     MatCardModule,
     MatDividerModule,
-    SidebarModule
+    SidebarModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    FormsModule,
+    SelectModule
   ],
   providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi()), provideClientHydration()]
 })
