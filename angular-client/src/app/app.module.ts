@@ -121,6 +121,9 @@ import { SelectDropdownComponent } from 'src/components/select-dropdown/select-d
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SelectModule } from 'primeng/select';
+import { providePrimeNG } from 'primeng/config';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import Lara from '@primeng/themes/aura';
 
 @NgModule({
   declarations: [
@@ -251,7 +254,18 @@ import { SelectModule } from 'primeng/select';
     FormsModule,
     SelectModule
   ],
-  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi()), provideClientHydration()]
+  providers: [
+    DialogService,
+    MessageService,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideClientHydration(),
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Lara
+      }
+    })
+  ]
 })
 export class AppModule {
   constructor(

@@ -40,7 +40,11 @@ export class RunSelectorComponent implements OnInit {
     this.ref = this.dialogService.open(CarouselComponent, {
       width: '550px',
       data: { runs: this.runs, selectRun: this.selectRun },
-      header: 'Select a run to view'
+      header: 'Select a run to view',
+      modal: true, // makes the dialog modal
+      dismissableMask: true, // enables auto-close on outside click
+      closable: true,
+      closeAriaLabel: 'Close'
     });
   };
 }
