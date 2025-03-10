@@ -1,25 +1,21 @@
 .select-button-container {
   width: 100%;
   text-align: center;
-  margin-top: 8px;
+  padding: 10px;
 }
 
 /* Run select button - using PrimeNG's CSS variables */
 .run-select-button {
-  --p-button-primary-color: #262626;
-  --p-button-primary-background: #777777;
+  --p-button-primary-color: #ffffff;
+  --p-button-primary-background: #313131;
   --p-button-primary-border-color: #777777;
-  --p-button-primary-hover-background: white;
+  --p-button-primary-hover-background: rgba(104, 104, 104, 0.261);
+  --p-button-primary-hover-border-color: #777777;
   --p-button-border-radius: 10px;
   --p-button-padding-y: 8px;
   --p-button-padding-x: 1.5rem;
   --p-button-transition-duration: 0.15s;
-  margin: 8px 0;
-}
-
-.p-dialog-title {
-  --p-dialog-title-font-weight: bold;
-  --p-dialog-title-font-size: 1.5rem;
+  --p-iconwrapper-padding-x: 1rem;
 }
 
 .close-button {
