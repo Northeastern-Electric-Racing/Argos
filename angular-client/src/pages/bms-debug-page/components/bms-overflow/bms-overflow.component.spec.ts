@@ -9,8 +9,7 @@ describe('BmsOverflowComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BmsOverflowComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BmsOverflowComponent);
     component = fixture.componentInstance;

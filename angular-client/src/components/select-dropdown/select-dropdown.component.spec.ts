@@ -9,8 +9,7 @@ describe('SelectDropdownComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SelectDropdownComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(SelectDropdownComponent);
     component = fixture.componentInstance;
