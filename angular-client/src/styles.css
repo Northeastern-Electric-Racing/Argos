@@ -5,6 +5,7 @@
 html,
 body {
   height: 100%;
+  font-family: 'Roboto';
 }
 body {
   margin: 0;
@@ -24,14 +25,16 @@ body {
   --mdc-dialog-container-color: transparent !important;
 }
 
-/* Add these styles to your component */
-mat-grid-tile {
-  overflow: visible !important; /* Allow dropdown to overflow */
+.p-dialog-title {
+  --p-dialog-title-font-weight: bold;
 }
 
 .p-dialog-header {
   background-color: #262626 !important;
   color: white !important;
+  padding: 1rem !important;
+  font-size: 1.2rem;
+  padding: 1rem;
   border-radius: 20px 20px 0px 0px !important;
 }
 .p-dialog-content {
@@ -107,7 +110,7 @@ mat-grid-tile {
 /* Chevron icon */
 .p-icon {
   color: rgba(255, 255, 255, 0.8) !important;
-  left: 12px !important;
+  left: 5px !important;
   right: auto !important;
   margin-right: 8px !important;
   position: relative !important;
