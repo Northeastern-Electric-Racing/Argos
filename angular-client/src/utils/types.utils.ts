@@ -40,6 +40,11 @@ export type GraphData = {
   y: number;
 };
 
+export type GraphInfo = {
+  label: string;
+  data: GraphData[][]
+}
+
 export type DoubleGraphData = {
   x1: number;
   y1: number;

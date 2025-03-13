@@ -7,7 +7,7 @@ import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, GraphData, Run } from 'src/utils/types.utils';
+import { DataType, GraphInfo, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-page',
@@ -33,7 +33,9 @@ export default class GraphPageComponent implements OnInit {
   previousDataType?: DataType;
 
   selectedDataType: Subject<DataType> = new Subject<DataType>();
-  selectedDataTypeValuesSubject: BehaviorSubject<GraphData[]> = new BehaviorSubject<GraphData[]>([]);
+  selectedDataTypeValuesSubject: BehaviorSubject<GraphInfo | undefined> = new BehaviorSubject<GraphInfo | undefined>(
+    undefined
+  );
   currentValue: Subject<DataValue | undefined> = new Subject<DataValue | undefined>();
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
@@ -61,12 +63,12 @@ export default class GraphPageComponent implements OnInit {
     this.clearDataType = () => {
       if (this.subscription) this.subscription.unsubscribe();
       this.selectedDataType.next({ name: '', unit: '' });
-      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphData[]>([]);
+      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphInfo | undefined>(undefined);
     };
 
     this.setSelectedDataType = (dataType: DataType) => {
       this.selectedDataType.next(dataType);
-      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphData[]>([]);
+      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphInfo | undefined>({ label: dataType.name, data: [] });
       if (this.realTime) {
         if (this.subscription) this.subscription.unsubscribe();
         const key = dataType.name;
@@ -74,13 +76,22 @@ export default class GraphPageComponent implements OnInit {
         this.subscription = valuesSubject.subscribe((value: DataValue) => {
           /* Take only data from the last minute */
           const now = new Date();
-          const lastMinute = new Date(now.getTime() - 60000);
-          const storedValues = this.selectedDataTypeValuesSubject.getValue();
-          storedValues.push({ x: +value.time, y: +value.values[0] });
-          const nextValue = storedValues.filter((v) => new Date(v.x) > lastMinute);
+          const lastMinute = now.getTime() - 60000;
+          const storedInfo = this.selectedDataTypeValuesSubject.getValue()!; // Defined earlier in this function
+          const storedValues = storedInfo.data;
+          value.values.forEach((val, i) => {
+            const graphData = { x: +value.time, y: +val, label: dataType.name };
+            if (storedValues[i]) storedValues[i].push(graphData);
+            else storedValues[i] = [graphData];
+          });
+          const nextValue = storedValues.map((val) =>
+            val.filter((v) => {
+              return new Date(v.x).getTime() > lastMinute;
+            })
+          );
 
           this.currentValue.next(value);
-          this.selectedDataTypeValuesSubject.next(nextValue);
+          this.selectedDataTypeValuesSubject.next({ ...storedInfo, data: nextValue });
         });
       } else if (this.run !== undefined) {
         this.selectedDataTypeValuesIsLoading = true;
@@ -101,7 +112,10 @@ export default class GraphPageComponent implements OnInit {
         });
         dataQueryResponse.data.subscribe((data) => {
           if (data) {
-            this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
+            this.selectedDataTypeValuesSubject.next({
+              label: dataType.name,
+              data: data.map((value) => value.values.map((val) => ({ x: +value.time, y: +val })))
+            });
             this.currentValue.next(data.pop());
           }
         });
@@ -118,7 +132,7 @@ export default class GraphPageComponent implements OnInit {
   onRunSelected = (run: Run) => {
     this.run = run;
     this.realTime = run.id === this.storage.getCurrentRunId().value;
-    this.selectedDataTypeValuesSubject.next([]);
+    this.selectedDataTypeValuesSubject.next(undefined);
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
@@ -129,7 +143,7 @@ export default class GraphPageComponent implements OnInit {
     if (currentRunId) {
       this.run = this.allRuns.find((run) => run.id === currentRunId);
       this.realTime = true;
-      this.selectedDataTypeValuesSubject.next([]);
+      this.selectedDataTypeValuesSubject.next(undefined);
       this.selectedDataTypeValuesIsLoading = false;
       this.selectedDataTypeValuesIsError = false;
       this.selectedDataTypeValuesError = undefined;
