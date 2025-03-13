@@ -1,0 +1,20 @@
+.modal-close-button {
+  position: absolute !important;
+  top: 10px !important;
+  left: 10px !important;
+  z-index: 1000;
+  transform: scale(0.75); /* use transform to scale */
+  border-radius: 10px;
+  margin: 0; /* remove margin overrides */
+}
+
+/* Container that holds the carousel */
+.modal-container {
+  background-color: #262626;
+  border-radius: 20px;
+  overflow: hidden;
+  width: 70vw;
+  height: 70vh;
+  position: relative;
+  align-items: end;
+}
