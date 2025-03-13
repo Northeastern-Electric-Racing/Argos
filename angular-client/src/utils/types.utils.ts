@@ -42,8 +42,8 @@ export type GraphData = {
 
 export type GraphInfo = {
   label: string;
-  data: GraphData[][]
-}
+  data: GraphData[][];
+};
 
 export type DoubleGraphData = {
   x1: number;
