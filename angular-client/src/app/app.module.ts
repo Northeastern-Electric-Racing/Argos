@@ -124,7 +124,7 @@ import { SelectModule } from 'primeng/select';
 import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import Lara from '@primeng/themes/aura';
-
+import { TreeModule } from 'primeng/tree';
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -252,7 +252,8 @@ import Lara from '@primeng/themes/aura';
     MatSelectModule,
     MatFormFieldModule,
     FormsModule,
-    SelectModule
+    SelectModule,
+    TreeModule
   ],
   providers: [
     DialogService,
