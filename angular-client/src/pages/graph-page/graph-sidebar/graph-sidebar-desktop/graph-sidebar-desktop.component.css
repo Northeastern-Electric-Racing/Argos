@@ -5,7 +5,20 @@
   margin-top: 10px;
 }
 
+::ng-deep .p-tree-node-label {
+  width: 100%;
+}
+
+::ng-deep .p-tree-node-leaf {
+  height: 30px;
+}
+
+::ng-deep .p-tree-node-selectable {
+  height: 30px;
+}
+
 :host {
   /* p-tree styles */
   --p-tree-background: transparent !important;
+  --p-tree-node-padding: 0;
 }
