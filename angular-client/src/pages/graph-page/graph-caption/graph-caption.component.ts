@@ -26,7 +26,7 @@ export default class GraphInfoComponent implements OnInit {
     });
     this.currentValue.subscribe((pvalue?: DataValue) => {
       const value = pvalue?.values[0];
-      this.value = value ? parseFloat(value).toFixed(2) : 'No Values';
+      this.value = value !== undefined ? parseFloat(value).toFixed(2) : 'No Values';
     });
   }
 }
