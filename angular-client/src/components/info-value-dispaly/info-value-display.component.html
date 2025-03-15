@@ -1,0 +1,7 @@
+<vstack spacing="0px" [style]="this.containerStyle()">
+  <hstack spacing="5px" [style]="this.valueUnitContainerStyle()">
+    <typography variant="info-value" [content]="this.formattedValue" />
+    <typography variant="info-unit" [content]="this.unit()" />
+  </hstack>
+  <typography variant="info-subtitle" [content]="this.subtitle()" [additionalStyles]="this.subtitleStyle()" />
+</vstack>

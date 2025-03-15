@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
@@ -10,7 +11,8 @@ const routes: Routes = [
   { path: 'graph', component: GraphPageComponent },
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
   { path: 'map', component: MapComponent },
-  { path: 'charging', component: ChargingPageComponent }
+  { path: 'charging', component: ChargingPageComponent },
+  { path: 'bms', component: BmsDebugPageComponent }
 ];
 
 @NgModule({
