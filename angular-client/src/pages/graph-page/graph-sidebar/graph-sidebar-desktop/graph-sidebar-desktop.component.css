@@ -5,7 +5,7 @@
   margin-top: 10px;
 }
 
-::ng-deep .p-tree {
-  background: transparent !important; /* Removes background */
-  border: none !important; /* Optional: Removes border */
+:host {
+  /* p-tree styles */
+  --p-tree-background: transparent !important;
 }
