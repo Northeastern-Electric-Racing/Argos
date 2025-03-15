@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
-import { GraphData } from 'src/utils/types.utils';
+import { GraphInfo } from 'src/utils/types.utils';
 
 type ChartOptions = {
   chart: ApexChart;
@@ -22,55 +22,65 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
-  @Input() valuesSubject!: BehaviorSubject<GraphData[]>;
+  @Input() valuesSubject!: BehaviorSubject<GraphInfo | undefined>;
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
-  data!: Map<number, number>;
+  data!: Map<number, Map<number, number>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
-  timeRangeMs = 120000;
+  timeRangeMs = 60000;
 
   updateChart = () => {
-    if (this.previousDataLength !== Array.from(this.data).length) {
-      this.previousDataLength = Array.from(this.data).length;
-      this.chart.updateSeries([
-        {
-          name: 'Data Series',
-          data: Array.from(this.data)
-        }
-      ]);
+    const label = this.valuesSubject.value?.label ?? 'No Label';
+    this.chart.updateSeries(
+      Array.from(this.data).map(([index, map]) => ({
+        name: label + ' ' + index,
+        data: Array.from(map)
+      }))
+    );
 
-      if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
-        this.isSliding = true;
-        this.chart.updateOptions({
-          ...this.options,
-          xaxis: {
-            ...this.options.xaxis,
-            range: this.timeRangeMs
-          }
-        });
-      }
+    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
+      this.isSliding = true;
+      this.chart.updateOptions({
+        ...this.options,
+        xaxis: {
+          ...this.options.xaxis,
+          range: this.timeRangeMs
+        }
+      });
     }
+
     setTimeout(() => {
       this.updateChart();
     }, 800);
   };
 
-  ngOnInit(): void {
-    this.data = new Map();
-    this.valuesSubject.subscribe((values: GraphData[]) => {
-      values.forEach((value) => {
-        if (!this.data.has(value.x)) {
-          this.data.set(value.x, +value.y.toFixed(3));
+  graphInfoCallback = (info: GraphInfo | undefined) => {
+    const values = info?.data ?? [];
+    values.forEach((value, i) => {
+      let line: Map<number, number>;
+      if (!this.data.has(i)) {
+        line = this.data.set(i, new Map<number, number>()).get(i)!;
+      } else {
+        line = this.data.get(i)!;
+      }
+      value.forEach((val) => {
+        if (!line.has(val.x)) {
+          line.set(val.x, +val.y.toFixed(3));
         }
       });
-
-      if (!this.isSliding) {
-        const times = Array.from(this.data.keys());
-        this.timeDiffMs = times[times.length - 1] - times[0];
-      }
     });
+
+    if (!this.isSliding) {
+      const times = Array.from(Array.from(this.data.values())[0].keys());
+      this.timeDiffMs = times[times.length - 1] - times[0];
+    }
+  };
+
+  ngOnInit(): void {
+    this.data = new Map();
+    this.valuesSubject.subscribe(this.graphInfoCallback);
 
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) {
@@ -133,7 +143,8 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         x: {
           //format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'
-        }
+        },
+        theme: 'dark'
       },
       fill: {
         type: 'linear',
@@ -174,17 +185,6 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       }
     });
 
-    this.valuesSubject.subscribe((values: GraphData[]) => {
-      values.forEach((value) => {
-        if (!this.data.has(value.x)) {
-          this.data.set(value.x, +value.y.toFixed(3));
-        }
-      });
-
-      if (!this.isSliding) {
-        const times = Array.from(this.data.keys());
-        this.timeDiffMs = times[times.length - 1] - times[0];
-      }
-    });
+    this.valuesSubject.subscribe(this.graphInfoCallback);
   }
 }
