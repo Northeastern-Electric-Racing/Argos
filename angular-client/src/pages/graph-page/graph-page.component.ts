@@ -7,7 +7,7 @@ import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, GraphInfo, Run } from 'src/utils/types.utils';
+import { DataType, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-page',
@@ -112,9 +112,19 @@ export default class GraphPageComponent implements OnInit {
         });
         dataQueryResponse.data.subscribe((data) => {
           if (data) {
+            const graphData: GraphData[][] = [];
+            data.forEach((dataValue) => {
+              dataValue.values.forEach((value, i) => {
+                if (graphData[i]) {
+                  graphData[i].push({ x: +dataValue.time, y: +value });
+                } else {
+                  graphData[i] = [{ x: +dataValue.time, y: +value }];
+                }
+              });
+            });
             this.selectedDataTypeValuesSubject.next({
               label: dataType.name,
-              data: data.map((value) => value.values.map((val) => ({ x: +value.time, y: +val })))
+              data: graphData
             });
             this.currentValue.next(data.pop());
           }
