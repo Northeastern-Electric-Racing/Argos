@@ -20,5 +20,8 @@
 :host {
   /* p-tree styles */
   --p-tree-background: transparent !important;
-  --p-tree-node-padding: 0;
+  --p-tree-node-hover-color: #ef4343;
+  --p-tree-node-selected-background: #ef434355;
+  --p-tree-node-focus-ring-color: #ef4343;
+  
 }
