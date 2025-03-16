@@ -31,6 +31,7 @@
 
     <div style="display: flex; align-items: center">
       <toast-button [onClick]="this.onStartNewRun" label="Start New Run" />
+      <argos-button [onClick]="this.renderTemplate" label="Edit Current Run" style="margin-left: 20px" />
       <typography variant="large-header" content="{{ time$ | async | date: 'HH:mm:ss' }}" style="margin-left: 20px" />
     </div>
   </nav>

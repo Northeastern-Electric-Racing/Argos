@@ -1,0 +1,140 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+
+type anyType = string | number | boolean | undefined;
+
+export interface DynamicFormField {
+  type: string; // 'text', 'dropdown', 'checkbox', etc.
+  name: string; // FormControl name
+  label: string; // Label text
+  placeholder?: string; // Placeholder text
+  optionLabel?: string; // Option label
+  optionValue?: string; // Option value
+  // options?: any[]; // Dropdown options, etc.
+  validation?: ValidatorFn[]; // Validators
+  disabled: boolean; // Disabled state
+  required?: boolean; // Is field required
+  pattern?: string; // Pattern validation
+  maxLength?: number; // Maximum length
+  minLength?: number; // Minimum length
+}
+
+@Component({
+  selector: 'run-form-template',
+  templateUrl: './run-form-template.component.html',
+  styleUrl: './run-form-template.component.css'
+})
+export class RunFormTemplateComponent implements OnInit, OnChanges {
+  public config = inject(DynamicDialogConfig);
+
+  fields: DynamicFormField[] = [
+    // Form Fields For Login
+    // {
+    //   name: 'full name',
+    //   label: 'Full Name',
+    //   type: 'text',
+    //   placeholder: 'Enter Full Name',
+    //   required: true,
+    //   minLength: 3,
+    //   maxLength: 40,
+    //   pattern: '^[a-zA-Z0-9._%+-]+\\s+[a-zA-Z0-9.-]{2,}$',
+    //   disabled: false
+    // },
+    // {
+    //   name: 'email',
+    //   label: 'Email',
+    //   type: 'text',
+    //   placeholder: 'Enter Email Address',
+    //   required: true,
+    //   minLength: 3,
+    //   maxLength: 40,
+    //   pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+    //   disabled: false
+    // }
+  ];
+  @Input() formData: Map<string, anyType> = new Map();
+  @Input() isEdit: boolean = false;
+  @Output() submitForm: EventEmitter<FormGroup> = new EventEmitter();
+
+  form: FormGroup = this.fb.group({});
+
+  constructor(private fb: FormBuilder) {
+    this.fields = this.config.data.fields;
+  }
+
+  ngOnInit(): void {
+    console.log("fields:", this.fields);
+    this.buildForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log('here');
+    if (changes['fields'] || changes['formData']) {
+      this.buildForm();
+    }
+    // this way also you can write it.
+    // if (changes.fields || changes.formData) {
+    //   this.buildForm();
+    // }
+  }
+
+  buildForm() {
+    const group: any = {};
+    this.fields.forEach((field) => {
+      const control = this.fb.control({
+        value: this.formData ? this.formData.get(field.name) : '',
+        disabled: field.disabled //|| !this.isEdit
+      });
+
+      const validations = [];
+
+      if (field.required) validations.push(Validators.required);
+      if (field.pattern) validations.push(Validators.pattern(field.pattern));
+      if (field.maxLength) validations.push(Validators.maxLength(field.maxLength));
+      if (field.minLength) validations.push(Validators.minLength(field.minLength));
+
+      control.setValidators(validations);
+      group[field.name] = control;
+    });
+
+    this.form = this.fb.group(group);
+  }
+
+  onSubmit() {
+    console.log("data:")
+    if (this.form.valid) {
+      this.submitForm.emit(this.form);
+      console.log(this.form.controls["full name"].value);
+      console.log(this.form.controls["email"].value);
+    } else {
+      this.markAllFieldsAsTouched();
+    }
+  }
+
+  markAllFieldsAsTouched() {
+    Object.keys(this.form.controls).forEach((field) => {
+      const control = this.form.get(field);
+      control?.markAsTouched({ onlySelf: true });
+    });
+  }
+
+  getErrorMessage(field: DynamicFormField) {
+    const control = this.form.get(field.name);
+    if (control?.hasError('required')) {
+      return `${field.label} is required`;
+    } else if (control?.hasError('pattern')) {
+      return `Invalid ${field.label}`;
+    } else if (control?.hasError('maxlength')) {
+      return `${field.label} exceeds maximum length of ${field.maxLength}`;
+    } else if (control?.hasError('minlength')) {
+      return `${field.label} must be at least ${field.minLength} characters long`;
+    }
+    return '';
+  }
+
+  resetForm() {
+    this.form.reset();
+  }
+}

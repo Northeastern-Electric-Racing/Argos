@@ -65,7 +65,7 @@ import RaspberryPiMobileComponent from 'src/components/raspberry-pi/raspberry-pi
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
@@ -106,6 +106,7 @@ import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { SidebarModule } from 'primeng/sidebar';
+import { RunFormTemplateComponent } from 'src/components/run-form-template/run-form-template.component';
 
 @NgModule({
   declarations: [
@@ -195,7 +196,8 @@ import { SidebarModule } from 'primeng/sidebar';
     CurrentRunDisplayComponent,
     ViewerDisplayComponent,
     NodeDisplayComponent,
-    AppNavBarComponent
+    AppNavBarComponent,
+    RunFormTemplateComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -219,7 +221,8 @@ import { SidebarModule } from 'primeng/sidebar';
     ReactiveFormsModule,
     MatCardModule,
     MatDividerModule,
-    SidebarModule
+    SidebarModule,
+    FormsModule,
   ],
   providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
 })

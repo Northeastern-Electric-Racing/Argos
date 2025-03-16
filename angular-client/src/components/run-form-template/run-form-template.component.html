@@ -1,0 +1,93 @@
+<!-- dynamic-form.component.html -->
+<form class="flex flex-column gap-4 dynamic-form" [formGroup]="form">
+  @for (field of fields; track field) {
+    <div class="flex flex-column gap-1">
+      @if (field.label) {
+        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+      }
+
+      <!-- Text Input -->
+      @if (true) {
+        <input
+          [attr.placeholder]="field.placeholder"
+          [formControlName]="field.name"
+          [type]="field.type"
+          pInputText
+          class="form-control w-full"
+          [ngClass]="{
+            'ng-invalid ng-dirty':
+              form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
+          }"
+        />
+      }
+
+      <!-- Password Input -->
+      <!-- <p-password
+        *ngIf="field.type === 'password'"
+        [formControlName]="field.name"
+        [attr.placeholder]="field.placeholder"
+        class="w-full"
+        [toggleMask]="true"
+        [feedback]="false"
+      /> -->
+
+      <!-- Dropdown -->
+      <!-- this is primeng component p-dropdown you can use your own ui or html <select> -->
+      <!-- <p-dropdown
+        *ngIf="field.type === 'dropdown'"
+        [options]="field.options"
+        [formControlName]="field.name"
+        [placeholder]="field.placeholder"
+        [showClear]="true"
+        [optionLabel]="field.optionLabel"
+        [optionValue]="field.optionValue"
+        class="form-control"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
+        }"
+      > -->
+      <!-- </p-dropdown> -->
+
+      <!-- Checkbox -->
+      <!-- <p-checkbox
+        *ngIf="field.type === 'checkbox'"
+        [formControlName]="field.name"
+        [binary]="true"
+        class="form-control"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
+        }"
+      >
+      </p-checkbox> -->
+
+      <!-- Datepicker -->
+      <!-- <p-calendar
+        *ngIf="field.type === 'date'"
+        [formControlName]="field.name"
+        [placeholder]="field.placeholder"
+        [showIcon]="true"
+        appendTo="body"
+        [monthNavigator]="true"
+        [yearNavigator]="true"
+        class="form-control"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
+        }"
+      >
+      </p-calendar> -->
+
+      <!-- Error Message -->
+      <div
+        class="error-msg"
+        *ngIf="form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)"
+      >
+        {{ getErrorMessage(field) }}
+      </div>
+    </div>
+  }
+
+  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+</form>

@@ -3,6 +3,7 @@ import { MessageService } from 'primeng/api';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
+import { FormGroup } from '@angular/forms';
 
 /**
  * Container for the landing page, obtains data from the storage service.
@@ -44,5 +45,10 @@ export default class LandingPageComponent implements OnInit {
   @HostListener('window:resize', ['$event'])
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
+  }
+
+  saveForm(formData: FormGroup): void {
+    Object.keys(formData.controls).forEach((field) => console.log('form output: ', formData.controls[field].value));
+    // this.formData = formData.value;
   }
 }

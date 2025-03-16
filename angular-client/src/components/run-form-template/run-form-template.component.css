@@ -1,0 +1,36 @@
+
+.required:after {
+  content: "*";
+  color: red;
+  margin-left: 6px;
+}
+
+.error-msg {
+  color: red;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+::ng-deep .dynamic-form .p-dropdown,
+::ng-deep .dynamic-form .p-calendar {
+  width: 100%;
+}
+
+::ng-deep .dynamic-form .p-calendar-w-btn .p-datepicker-trigger {
+  background: transparent;
+  color: #22242e;
+  border: 1px solid #ced4da;
+  border-width: 1px 1px 1px 0px;
+}
+
+::ng-deep .dynamic-form .p-password,
+::ng-deep .dynamic-form .p-password .p-inputtext {
+  width: 100%;
+}
+
+::ng-deep .dynamic-form .p-inputnumber-input,
+::ng-deep .dynamic-form .p-inputnumber {
+  width: 100%;
+}

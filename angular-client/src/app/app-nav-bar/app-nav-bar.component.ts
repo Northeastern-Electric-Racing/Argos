@@ -1,8 +1,10 @@
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { DialogService } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
+import { RunFormTemplateComponent } from 'src/components/run-form-template/run-form-template.component';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import Storage from 'src/services/storage.service';
@@ -24,6 +26,8 @@ export class AppNavBarComponent implements OnInit {
   private messageService = inject(MessageService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
+  private dialogService = inject(DialogService);
+
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
   sidebarVisible = false;
@@ -56,6 +60,41 @@ export class AppNavBarComponent implements OnInit {
     runsQueryResponse.error.subscribe((error) => {
       error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
+  };
+
+  renderTemplate = () => {
+    // console.log("edit run clicked.");
+    this.dialogService.open(RunFormTemplateComponent, {
+      header: 'Form Template',
+      data: {
+        fields: [
+          {
+            name: 'full name',
+            label: 'Full Name',
+            type: 'text',
+            placeholder: 'Enter Full Name',
+            required: true,
+            minLength: 3,
+            maxLength: 40,
+            // pattern: '^[a-zA-Z0-9._%+-]+\\s+[a-zA-Z0-9.-]',
+            disabled: false
+          },
+          {
+            name: 'email',
+            label: 'Email',
+            type: 'text',
+            placeholder: 'Enter Email Address',
+            required: true,
+            minLength: 3,
+            maxLength: 40,
+            // pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+            disabled: false
+          }
+        ]
+      }
+    });
+
+    console.log("edit run clicked.");
   };
 
   navItems: NavItem[] = [
