@@ -77,6 +77,14 @@ export enum DataTypeEnum {
   Segment_Temp_3 = 'BMS/Segment_Temp/3',
   Segment_Temp_4 = 'BMS/Segment_Temp/4',
   Segment_Temp_5 = 'BMS/Segment_Temp/5',
+
+  // Segment Voltage
+  Segment_Voltage_1 = 'BMS/Segment_Voltage/1',
+  Segment_Voltage_2 = 'BMS/Segment_Voltage/2',
+  Segment_Voltage_3 = 'BMS/Segment_Voltage/3',
+  Segment_Voltage_4 = 'BMS/Segment_Voltage/4',
+  Segment_Voltage_5 = 'BMS/Segment_Voltage/5',
+
   // BMS Per Cell
   // Alpha
   PER_CELL_ALPHA_DIE_TEMP_0 = 'BMS/PerCell/Alpha/0/DieTemp',
