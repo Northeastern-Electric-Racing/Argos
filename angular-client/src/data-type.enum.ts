@@ -44,6 +44,8 @@ export enum DataTypeEnum {
   PACK_VOLTAGE = 'BMS/Pack/Voltage',
   CELL_TEMP_HIGH = 'BMS/Cells/Temp_High_Value',
   CELL_TEMP_AVG = 'BMS/Cells/Temp_Avg_Value',
+  PACK_CCL = 'BMS/Pack/CCL',
+  PACK_DCL = 'BMS/Pack/DCL',
 
   // Charger Faults
   COMM_TIMEOUT_FAULT = 'Charger/Box/F_CommTimeout',

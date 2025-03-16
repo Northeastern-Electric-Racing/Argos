@@ -1,8 +1,52 @@
 <info-background title="At A Glance" svgIcon="battery_charging_2">
-  <!-- <hstack>
-    <typography variant="info-value" [content]="31 + '°'" additionalStyles="fontSize:40px" />
-    <div class="thermometer-container">
-      <thermometer [temperature]="20" [min]="-15" [max]="30" />
-    </div>
-  </hstack> -->
+  <hstack justifyContent="space-evenly" class="bms-container">
+    <!-- Voltage -->
+    <vstack class="bms-item">
+      <hstack>
+        <typography variant="info-value" [content]="voltage + 'V'" />
+      </hstack>
+      <typography variant="info-subtitle" [content]="'Voltage'" />
+    </vstack>
+    <div class="divider"></div>
+
+    <!-- Temperature -->
+    <vstack class="bms-item">
+      <hstack>
+        <typography variant="info-value" [content]="temperature + '°'" />
+        <typography variant="info-unit" [content]="'C'" />
+        <div class="thermometer-container">
+          <thermometer [temperature]="temperature" [min]="-15" [max]="30" />
+        </div>
+      </hstack>
+      <typography variant="info-subtitle" [content]="'Temperature'" />
+    </vstack>
+    <div class="divider"></div>
+
+    <!-- Charge State -->
+    <vstack class="bms-item">
+      <hstack class="charge-container">
+        <typography variant="info-value" [content]="chargeState + '%'" />
+        <battery-percentage [percentage]="chargeState" [height]="50" [width]="25" />
+      </hstack>
+      <typography variant="info-subtitle" [content]="'Charge State'" />
+    </vstack>
+    <div class="divider"></div>
+
+    <!-- CCL -->
+    <vstack class="bms-item">
+      <hstack>
+        <typography variant="info-value" [content]="ccl + 'A'" />
+      </hstack>
+      <typography variant="info-subtitle" [content]="'CCL'" />
+    </vstack>
+    <div class="divider"></div>
+
+    <!-- DCL -->
+    <vstack class="bms-item">
+      <hstack>
+        <typography variant="info-value" [content]="dcl + 'A'" />
+      </hstack>
+      <typography variant="info-subtitle" [content]="'DCL'" />
+    </vstack>
+  </hstack>
 </info-background>
