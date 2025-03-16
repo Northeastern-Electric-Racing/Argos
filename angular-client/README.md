@@ -12,6 +12,7 @@ Make sure to install [node and npm](https://www.geeksforgeeks.org/how-to-downloa
 
 ### Extensions to install
 
+Search these in the extension tab on vs code.
 prettier: `esbenp.prettier-vscode`
 eslint: `dbaeumer.vscode-eslint`
 
