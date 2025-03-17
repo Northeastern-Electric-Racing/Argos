@@ -6,31 +6,21 @@ The Angular Frontend for Argos.
 
 ## Quickstart
 
-Make sure to install [node and npm](https://www.geeksforgeeks.org/how-to-download-and-install-node-js-and-npm/) before beginning. Contact a lead if you need help.
+Make sure to install [node and npm](https://www.geeksforgeeks.org/how-to-download-and-install-node-js-and-npm/) before beginning. Contact let us know in slack if you have issues.
 
 ---
 
 ### Extensions to install
 
-Search these in the extension tab on vs code.
-prettier: `esbenp.prettier-vscode`
-eslint: `dbaeumer.vscode-eslint`
+Please install by searching that id(s) in vs code extensions.
+
+prettier: `esbenp.prettier-vscode` <br>
+eslint: `dbaeumer.vscode-eslint` <br>
+angular intellisense: `angular.ng-template`
 
 ### Running the app
 
 Make sure you're in the `angular-client` directory.
-
-Set ./src/environment/environment.ts to the following for local development:
-
-```
-export const environment = {
-  production: false,
-  mapbox: {
-    accessToken: 'pk.eyJ1IjoibWNrZWVwIiwiYSI6ImNscXBrcmU1ZTBscWIya284cDFyYjR3Nm8ifQ.6TQHlxhAJzptZyV-W28dnw'
-  }
-};
-
-```
 
 To install dependencies run:
 

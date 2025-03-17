@@ -10,7 +10,9 @@ The backend for argos, processes data storing it into the database, sends messag
 
 ### Extensions to install
 
-Please install `rust-lang.rust-analyzer`, by searching that name in vs code extensions.
+Please install by searching that id(s) in vs code extensions.
+
+rust analysizer: `rust-lang.rust-analyzer`
 
 ### Run the app
 
@@ -24,7 +26,11 @@ And you're done!
 
 ---
 
-## Development
+## Development Guide
+
+This section should be your first refrence when developing or running into development issues.
+
+---
 
 ### Test this app
 

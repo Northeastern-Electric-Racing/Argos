@@ -2,24 +2,18 @@
 
 Our real-time data processing and visualization tool.
 
----
-
 ## Quickstart
 
-Go through the local development sections of client and scylla-server:
+Go through the quickstart sections of client and scylla-server:
 
-[Angular Client](./angular-client/README.md)\
+[Angular Client](./angular-client/README.md) <br>
 [Scylla Server](./scylla-server/README.md)
 
-Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the development guide to setup pull from published docker images for one or the other.
-
----
+Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the development guide to run locally, or pull from published docker images for one or the other (client, or scylla).
 
 ## Development
 
 Your guide for everything development for Argos, in the [Odyssey](https://nerdocs.atlassian.net/wiki/spaces/NER/pages/615874585/Odyssey+24A) ecosystem.
-
----
 
 ### Mock Data & Docker Setup
 
@@ -29,9 +23,13 @@ Commonly used commands in development:
 
 - `./argos.sh client-dev up`: runs scylla from a remote branch and combined with mock data from related Odyssey containers.
 
----
+### Schema Related Work
+
+For all changes and adjustments of schema look to [Charybdis](./charybdis/README.md).
 
 ## Production
+
+Only used when deploying to the router for testing or comp.
 
 Please see [Compose Profiles](./compose/README.md) to for more info on docker deployment abstractions.
 
