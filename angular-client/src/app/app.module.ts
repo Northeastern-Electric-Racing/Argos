@@ -125,6 +125,8 @@ import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import Lara from '@primeng/themes/aura';
 import { TreeModule } from 'primeng/tree';
+import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
+
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -224,7 +226,8 @@ import { TreeModule } from 'primeng/tree';
     AccHighVoltageComponent,
     BmsOverflowComponent,
     InfoValueDisplayComponent,
-    SelectDropdownComponent
+    SelectDropdownComponent,
+    CameraPageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -323,6 +326,7 @@ export class AppModule {
       .addSvgIcon(
         'battery_charging_2',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
-      );
+      )
+      .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'));
   }
 }
