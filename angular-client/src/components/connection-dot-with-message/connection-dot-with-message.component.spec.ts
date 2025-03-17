@@ -9,8 +9,7 @@ describe('ConnectionDotWithMessageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ConnectionDotWithMessageComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ConnectionDotWithMessageComponent);
     component = fixture.componentInstance;

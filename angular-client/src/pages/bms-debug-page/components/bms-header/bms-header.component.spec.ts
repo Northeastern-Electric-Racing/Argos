@@ -9,8 +9,7 @@ describe('BmsHeaderComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BmsHeaderComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BmsHeaderComponent);
     component = fixture.componentInstance;
