@@ -228,6 +228,7 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
     InfoValueDisplayComponent,
     SelectDropdownComponent,
     CameraPageComponent
+
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -328,5 +329,6 @@ export class AppModule {
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
       )
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'));
+      );
   }
 }
