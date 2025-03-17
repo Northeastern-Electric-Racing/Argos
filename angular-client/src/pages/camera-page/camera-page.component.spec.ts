@@ -9,8 +9,7 @@ describe('CameraPageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CameraPageComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CameraPageComponent);
     component = fixture.componentInstance;
