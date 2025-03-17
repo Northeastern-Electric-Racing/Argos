@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { CarouselModule } from 'primeng/carousel';
 import { ToastModule } from 'primeng/toast';
@@ -34,7 +34,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialog } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -66,6 +66,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
@@ -114,7 +115,16 @@ import { CRCComponent } from 'src/pages/bms-debug-page/components/crc/crc.compon
 import { AccHighTempComponent } from 'src/pages/bms-debug-page/components/acc-high-temp/acc-high-temp.component';
 import { AccLowVoltageComponent } from 'src/pages/bms-debug-page/components/acc-low-voltage/acc-low-voltage.component';
 import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc-high-voltage/acc-high-voltage.component';
-
+import { BmsOverflowComponent } from 'src/pages/bms-debug-page/components/bms-overflow/bms-overflow.component';
+import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/info-value-display.component';
+import { SelectDropdownComponent } from 'src/components/select-dropdown/select-dropdown.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { SelectModule } from 'primeng/select';
+import { providePrimeNG } from 'primeng/config';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import Lara from '@primeng/themes/aura';
+import { TreeModule } from 'primeng/tree';
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -211,7 +221,10 @@ import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc
     CRCComponent,
     AccHighTempComponent,
     AccLowVoltageComponent,
-    AccHighVoltageComponent
+    AccHighVoltageComponent,
+    BmsOverflowComponent,
+    InfoValueDisplayComponent,
+    SelectDropdownComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -225,7 +238,7 @@ import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc
     ProgressSpinnerModule,
     MatIconModule,
     MatGridListModule,
-    DynamicDialogModule,
+    DynamicDialog,
     BrowserAnimationsModule,
     ButtonModule,
     MatIconModule,
@@ -235,9 +248,25 @@ import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc
     ReactiveFormsModule,
     MatCardModule,
     MatDividerModule,
-    SidebarModule
+    SidebarModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    FormsModule,
+    SelectModule,
+    TreeModule
   ],
-  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
+  providers: [
+    DialogService,
+    MessageService,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideClientHydration(),
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Lara
+      }
+    })
+  ]
 })
 export class AppModule {
   constructor(

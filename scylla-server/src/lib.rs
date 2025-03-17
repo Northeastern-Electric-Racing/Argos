@@ -26,6 +26,7 @@ pub type Database<'a> =
 pub type PoolHandle = diesel_async::pooled_connection::bb8::Pool<diesel_async::AsyncPgConnection>;
 
 #[derive(clap::ValueEnum, Debug, PartialEq, Copy, Clone, Default)]
+#[repr(u8)]
 #[clap(rename_all = "kebab_case")]
 pub enum RateLimitMode {
     /// static rate limiting based on a set value
@@ -34,9 +35,39 @@ pub enum RateLimitMode {
     #[default]
     None,
 }
+impl TryFrom<u8> for RateLimitMode {
+    type Error = &'static str;
 
-// Atomic to keep track the current run id across EVERYTHING (very scary)
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(RateLimitMode::Static),
+            1 => Ok(RateLimitMode::None),
+            _ => Err("Invalid enum!"),
+        }
+    }
+}
+
+// GLOBAL VARIABLES
+
+/// Atomic to keep track the current run id across EVERYTHING (very scary)
 pub static RUN_ID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(-1);
+
+/// true if data upload (batching) should be disabled
+pub static DATA_UPLOAD_DISABLE: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// the amount of time in between batch upserts
+pub static BATCH_UPSERT_TIME: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(10);
+
+/// the `RateLimitMode` to use
+pub static RATE_LIMIT_MODE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(1);
+/// the value to rate limit in static mode, (in ms)
+pub static STATIC_RATE_LIMIT_VALUE: std::sync::atomic::AtomicU16 =
+    std::sync::atomic::AtomicU16::new(100);
+
+/// the percentage of messages to discard in send over the socket to the client
+pub static SOCKET_DISCARD_PERCENT: std::sync::atomic::AtomicU8 =
+    std::sync::atomic::AtomicU8::new(0);
 
 /// Represents the client data
 /// This has the dual purposes of

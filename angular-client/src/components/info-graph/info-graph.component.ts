@@ -26,7 +26,11 @@ export class InfoGraphComponent {
         title: this.title,
         subTitle: this.subTitle,
         graphContainerId: this.graphContainerId + 'big'
-      }
+      },
+      modal: true, // makes the dialog modal
+      dismissableMask: true, // enables auto-close on outside click
+      closable: true,
+      closeAriaLabel: 'Close'
     });
   };
 }

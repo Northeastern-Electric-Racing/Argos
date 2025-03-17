@@ -16,7 +16,8 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{
-    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata, RateLimitMode,
+    controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata,
+    RateLimitMode, RATE_LIMIT_MODE, STATIC_RATE_LIMIT_VALUE,
 };
 
 use super::ClientData;
@@ -33,10 +34,6 @@ pub struct MqttProcessor {
     cancel_token: CancellationToken,
     /// static rate limiter
     rate_limiter: FxHashMap<String, Instant>,
-    /// time to rate limit
-    rate_limit_time: Duration,
-    /// rate limit mode
-    rate_limit_mode: RateLimitMode,
 }
 
 /// processor options, these are static immutable settings
@@ -45,10 +42,6 @@ pub struct MqttProcessorOptions {
     pub mqtt_path: String,
     /// the initial run id
     pub initial_run: i32,
-    /// the static rate limit time interval in ms
-    pub static_rate_limit_time: u64,
-    /// the rate limit mode
-    pub rate_limit_mode: RateLimitMode,
 }
 
 impl MqttProcessor {
@@ -91,8 +84,6 @@ impl MqttProcessor {
                 channel,
                 cancel_token,
                 rate_limiter: FxHashMap::default(),
-                rate_limit_time: Duration::from_millis(opts.static_rate_limit_time),
-                rate_limit_mode: opts.rate_limit_mode,
             },
             mqtt_opts,
         )
@@ -171,11 +162,18 @@ impl MqttProcessor {
         }
 
         // handle static rate limiting mode
-        if self.rate_limit_mode == RateLimitMode::Static {
+        if RATE_LIMIT_MODE
+            .load(Ordering::Relaxed)
+            .try_into()
+            .unwrap_or(RateLimitMode::None)
+            == RateLimitMode::Static
+        {
             // check if we have a previous time for a message based on its topic
             if let Some(old) = self.rate_limiter.get(topic) {
                 // if the message is less than the rate limit, skip it and do not update the map
-                if old.elapsed() < self.rate_limit_time {
+                if old.elapsed()
+                    < Duration::from_millis(STATIC_RATE_LIMIT_VALUE.load(Ordering::Relaxed).into())
+                {
                     trace!("Static rate limit skipping message with topic {}", topic);
                     return None;
                 } else {

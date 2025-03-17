@@ -30,7 +30,7 @@
     </div>
 
     <div style="display: flex; align-items: center">
-      <toast-button [onClick]="this.onStartNewRun" label="Start New Run" />
+      <toast-button [onClick]="this.onStartNewRun" label="Start New Run" additionalStyles="height: 35px" />
       <typography variant="large-header" content="{{ time$ | async | date: 'HH:mm:ss' }}" style="margin-left: 20px" />
     </div>
   </nav>

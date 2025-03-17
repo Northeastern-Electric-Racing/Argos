@@ -9,4 +9,3 @@ services:
           #- CALYPSO_SOCKETCAN_IFACE=vcan0
           # in sim or prod mode
           - CALYPSO_SIREN_HOST_URL=siren:1883
-        
