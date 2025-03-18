@@ -71,6 +71,7 @@ export enum DataTypeEnum {
   INTERNAL_THERMAL_ERROR = 'BMS/Status/F/Thermal_Err',
   INTERNAL_SOFTWARE_FAULT = 'BMS/Status/F/Software',
   PACK_OVERHEAT = 'BMS/Status/F/Pack_Overheat',
+
   // BMS Debug
   Segment_Temp_1 = 'BMS/Segment_Temp/1',
   Segment_Temp_2 = 'BMS/Segment_Temp/2',
@@ -98,5 +99,9 @@ export enum DataTypeEnum {
   PER_CELL_BETA_DIE_TEMP_1 = 'BMS/PerCell/Beta/1/DieTemp',
   PER_CELL_BETA_DIE_TEMP_2 = 'BMS/PerCell/Beta/2/DieTemp',
   PER_CELL_BETA_DIE_TEMP_3 = 'BMS/PerCell/Beta/3/DieTemp',
-  PER_CELL_BETA_DIE_TEMP_4 = 'BMS/PerCell/Beta/4/DieTemp'
+  PER_CELL_BETA_DIE_TEMP_4 = 'BMS/PerCell/Beta/4/DieTemp',
+
+  // Overflow and CRC
+  PER_CELL_OVERFLOWID = 'BMS/PerCell/OverflowID',
+  PER_CELL_CRC = 'BMS/PerCell/PECErrorChip'
 }

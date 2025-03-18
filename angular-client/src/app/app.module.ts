@@ -125,6 +125,8 @@ import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import Lara from '@primeng/themes/aura';
 import { TreeModule } from 'primeng/tree';
+import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
+import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -224,7 +226,9 @@ import { TreeModule } from 'primeng/tree';
     AccHighVoltageComponent,
     BmsOverflowComponent,
     InfoValueDisplayComponent,
-    SelectDropdownComponent
+    SelectDropdownComponent,
+    BmsHeaderComponent,
+    ConnectionDotWithMessageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
