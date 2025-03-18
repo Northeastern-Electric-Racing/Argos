@@ -1,8 +1,11 @@
 <info-background title="At A Glance" svgIcon="battery_charging_2">
   <hstack justifyContent="space-evenly" class="bms-container">
     <vstack>
-      <!-- Voltage -->
-      <info-value-display [value]="voltage" unit="V" subtitle="Voltage" />
+      <hstack>
+        <!-- Voltage -->
+        <info-value-display [value]="voltage" unit="V" subtitle="Voltage" />
+        <connection-dot-with-message [getStatusColor]="this.getStatusColor"></connection-dot-with-message>
+      </hstack>
     </vstack>
     <div class="divider"></div>
 

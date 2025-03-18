@@ -42,4 +42,17 @@ export class BmsAtAGlanceComponent implements OnInit {
       this.dcl = parseInt(value.values[0]);
     });
   }
+
+  getStatusColor = (): string => {
+    let dotColor = '#808080';
+    // We have to multiply by 125 cells to get the scaling right
+    if (this.voltage <= 3 * 125) {
+      dotColor = 'red';
+    } else if (this.voltage <= 3.5 * 125) {
+      dotColor = 'yellow';
+    } else {
+      dotColor = '#19ff30';
+    }
+    return dotColor;
+  };
 }
