@@ -1,0 +1,14 @@
+<hstack spacing="10px" style="margin-top: 10px">
+  <div
+    class="connection-dot"
+    [style.background-color]="this.getStatusColor()()"
+    [style.border-color]="this.getStatusColor()()"
+    style="margin-top: -10px; width: 30px; height: 30px"
+  ></div>
+  <typography
+    variant="info-title"
+    [content]="this.getStatusMessage()()"
+    additionalStyles="fontSize:20px"
+    style="margin-top: -10px"
+  ></typography>
+</hstack>

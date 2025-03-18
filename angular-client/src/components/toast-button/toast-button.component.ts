@@ -1,5 +1,7 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import { MessageService } from 'primeng/api';
+
+export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
 
 @Component({
   selector: 'toast-button',
@@ -8,26 +10,31 @@ import { MessageService } from 'primeng/api';
 })
 export class ToastButtonComponent implements OnInit {
   private messageService = inject(MessageService);
-  @Input() label!: string;
-  @Input() onClick!: () => void;
-  @Input() additionalStyles?: string;
-  style!: string;
+  buttonLabel = input.required<string>();
+  popUpSeverity = input<toastSeverity>('success');
+  popUpTitle = input<string>('Success!');
+  popUpDetails = input<string>('No Details Set');
+  disableToast = input<boolean>(false);
+
+  onClick = input.required<() => void>();
+  additionalStyles = input<string>('');
+  style = 'width: 140px; height: 45px;';
 
   ngOnInit(): void {
-    this.style = 'width: 140px; height: 45px; ';
-
-    if (this.additionalStyles) {
-      this.style += this.additionalStyles;
-    }
+    this.style += this.additionalStyles();
   }
 
   handleClick() {
-    this.onClick();
+    // the first () is to access the signal value,
+    // which is the function which we call with the second ()
+    this.onClick()();
+    // if the toast is disabled, we don't want to show it
+    if (this.disableToast()) return;
     setTimeout(() => {
       this.messageService.add({
-        severity: 'success',
-        summary: 'Success!',
-        detail: 'Your new run has started successfully.'
+        severity: this.popUpSeverity(),
+        summary: this.popUpTitle(),
+        detail: this.popUpDetails()
       });
     });
   }
