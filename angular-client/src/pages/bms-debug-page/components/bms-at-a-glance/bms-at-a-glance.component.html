@@ -1,52 +1,44 @@
 <info-background title="At A Glance" svgIcon="battery_charging_2">
   <hstack justifyContent="space-evenly" class="bms-container">
-    <!-- Voltage -->
-    <vstack class="bms-item">
-      <hstack>
-        <typography variant="info-value" [content]="voltage + 'V'" />
-      </hstack>
-      <typography variant="info-subtitle" [content]="'Voltage'" />
+    <vstack>
+      <!-- Voltage -->
+      <info-value-display [value]="voltage" unit="V" subtitle="Voltage" />
     </vstack>
     <div class="divider"></div>
 
     <!-- Temperature -->
-    <vstack class="bms-item">
+    <vstack>
       <hstack>
-        <typography variant="info-value" [content]="temperature + '°'" />
-        <typography variant="info-unit" [content]="'C'" />
+        <info-value-display [value]="temperature" unit="C" subtitle="Temperature" />
         <div class="thermometer-container">
           <thermometer [temperature]="temperature" [min]="-15" [max]="30" />
         </div>
       </hstack>
-      <typography variant="info-subtitle" [content]="'Temperature'" />
     </vstack>
     <div class="divider"></div>
 
     <!-- Charge State -->
-    <vstack class="bms-item">
-      <hstack class="charge-container">
-        <typography variant="info-value" [content]="chargeState + '%'" />
+    <vstack>
+      <hstack>
+        <info-value-display [value]="chargeState" unit="%" subtitle="Charge State" />
         <battery-percentage [percentage]="chargeState" [height]="50" [width]="25" />
       </hstack>
-      <typography variant="info-subtitle" [content]="'Charge State'" />
     </vstack>
     <div class="divider"></div>
 
     <!-- CCL -->
-    <vstack class="bms-item">
+    <vstack>
       <hstack>
-        <typography variant="info-value" [content]="ccl + 'A'" />
+        <info-value-display [value]="ccl" unit="A" subtitle="CCL" />
       </hstack>
-      <typography variant="info-subtitle" [content]="'CCL'" />
     </vstack>
     <div class="divider"></div>
 
     <!-- DCL -->
-    <vstack class="bms-item">
+    <vstack>
       <hstack>
-        <typography variant="info-value" [content]="dcl + 'A'" />
+        <info-value-display [value]="ccl" unit="A" subtitle="DCL" />
       </hstack>
-      <typography variant="info-subtitle" [content]="'DCL'" />
     </vstack>
   </hstack>
 </info-background>

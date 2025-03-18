@@ -34,11 +34,11 @@ export class BmsAtAGlanceComponent implements OnInit {
       this.chargeState = parseInt(value.values[0]);
     });
 
-    this.storage.get(DataTypeEnum.PACK_CCL).subscribe((value) => {
+    this.storage.get(DataTypeEnum.CHARGE_CURRENT_LIMIT).subscribe((value) => {
       this.ccl = parseInt(value.values[0]);
     });
 
-    this.storage.get(DataTypeEnum.PACK_DCL).subscribe((value) => {
+    this.storage.get(DataTypeEnum.DISCHARGE_CURRENT_LIMIT).subscribe((value) => {
       this.dcl = parseInt(value.values[0]);
     });
   }

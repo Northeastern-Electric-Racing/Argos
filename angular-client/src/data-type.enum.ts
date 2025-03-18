@@ -44,8 +44,6 @@ export enum DataTypeEnum {
   PACK_VOLTAGE = 'BMS/Pack/Voltage',
   CELL_TEMP_HIGH = 'BMS/Cells/Temp_High_Value',
   CELL_TEMP_AVG = 'BMS/Cells/Temp_Avg_Value',
-  PACK_CCL = 'BMS/Pack/CCL',
-  PACK_DCL = 'BMS/Pack/DCL',
   CELL_UNDERVOLTAGE = 'BMS/Status/F/Cell_Undervoltage',
   CELL_OVERVOLTAGE = 'BMS/Status/F/Cell_Overvoltage',
   CELLS_NOT_BALANCING = 'BMS/Status/F/Cells_Not_Balancing',
