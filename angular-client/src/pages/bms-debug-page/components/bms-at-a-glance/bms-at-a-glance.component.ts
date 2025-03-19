@@ -7,12 +7,6 @@ import {
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 
-// PACK_VOLTAGE
-// PACK_TEMP
-// STATE_OF_CHARGE
-// PACK_CCL
-// PACK_DCL
-
 @Component({
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
