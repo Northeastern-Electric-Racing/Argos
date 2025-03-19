@@ -133,7 +133,8 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         x: {
           //format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'
-        }
+        },
+        theme: 'dark'
       },
       fill: {
         type: 'linear',

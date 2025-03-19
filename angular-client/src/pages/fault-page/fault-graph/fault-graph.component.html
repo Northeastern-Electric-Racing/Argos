@@ -9,18 +9,14 @@
     </div>
   } @else {
     <div class="container">
-      <graph-header class="graph-header" [rightHeader]="run ? 'Run #' + run.id : 'Real Time'" />
+      <graph-header class="graph-header" [rightHeader]="'Fault: ' + selectedFault?.name" />
       <div class="content-div">
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
         <div class="right-container">
           <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
-          <graph-caption
+          <fault-graph-caption
             [dataType]="selectedDataType"
-            [currentValue]="currentValue"
-            [onRunSelected]="onRunSelected"
             [onClearDataType]="clearDataType"
-            [onSetRealtime]="onSetRealtime"
-            [run]="run"
             class="graph-caption"
           />
         </div>

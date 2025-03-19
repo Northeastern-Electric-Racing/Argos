@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  odyssey-db:
+    container_name: odyssey-db
+    image: postgres:17.2
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: 
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
+    ports:
+      - 5432:5432  # Exposed for external access if needed
+    expose:
+      - 5432  # Allow inter-container communication
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    cpu_shares: 1024
+    stop_grace_period: 2m

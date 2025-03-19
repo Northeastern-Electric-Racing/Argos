@@ -64,7 +64,7 @@ pub async fn socket_handler_with_metadata(
     let fault_regex_charger: Regex =
         Regex::new(r"Charger\/Box\/F_(.*)").expect("Could not compile regex!");
     let fault_regex_mpu: Regex =
-        Regex::new(r"MPU\/Fault\/F_(.*)").expect("Could not compile regex!");
+        Regex::new(r"MPU\/Fault\/(.*)").expect("Could not compile regex!");
     let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
 
     loop {

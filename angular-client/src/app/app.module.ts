@@ -124,6 +124,11 @@ import { SelectModule } from 'primeng/select';
 import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import Lara from '@primeng/themes/aura';
+import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TableModule } from 'primeng/table';
+import FaultGraphComponent from 'src/pages/fault-page/fault-graph/fault-graph.component';
+import FaultGraphCaptionComponent from 'src/pages/fault-page/fault-graph/fault-graph-caption/fault-graph-caption.component';
 
 @NgModule({
   declarations: [
@@ -224,7 +229,10 @@ import Lara from '@primeng/themes/aura';
     AccHighVoltageComponent,
     BmsOverflowComponent,
     InfoValueDisplayComponent,
-    SelectDropdownComponent
+    SelectDropdownComponent,
+    FaultPageComponent,
+    FaultGraphComponent,
+    FaultGraphCaptionComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -252,7 +260,9 @@ import Lara from '@primeng/themes/aura';
     MatSelectModule,
     MatFormFieldModule,
     FormsModule,
-    SelectModule
+    SelectModule,
+    AccordionModule,
+    TableModule
   ],
   providers: [
     DialogService,
@@ -322,6 +332,7 @@ export class AppModule {
       .addSvgIcon(
         'battery_charging_2',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
-      );
+      )
+      .addSvgIcon('error', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/alert-triangle.svg'));
   }
 }
