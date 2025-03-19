@@ -1,0 +1,13 @@
+.title-style {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  grid-template-columns: [start] 1fr [end];
+  padding-left: 20px;
+}
+
+/* Add these styles to your component */
+mat-grid-tile {
+  overflow: visible !important; /* Allow dropdown to overflow */
+}

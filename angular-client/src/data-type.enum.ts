@@ -38,12 +38,12 @@ export enum DataTypeEnum {
   DISCHARGE_CURRENT_LIMIT = 'BMS/Pack/DCL',
   STATUS_BALANCING = 'BMS/Status/Balancing',
   BMS_MODE = 'BMS/Status/State',
-  VOLTS_HIGH = 'BMS/Cells/Volts_High_Value',
-  VOLTS_LOW = 'BMS/Cells/Volts_Low_Value',
-  CHARGING = 'BMS/Charging/Control',
-  PACK_VOLTAGE = 'BMS/Pack/Voltage',
+  CELL_VOLTS_HIGH = 'BMS/Cells/Volts_High_Value',
   CELL_TEMP_HIGH = 'BMS/Cells/Temp_High_Value',
   CELL_TEMP_AVG = 'BMS/Cells/Temp_Avg_Value',
+  CELL_VOLTS_LOW = 'BMS/Cells/Volts_Low_Value',
+  CHARGING = 'BMS/Charging/Control',
+  PACK_VOLTAGE = 'BMS/Pack/Voltage',
   CELL_UNDERVOLTAGE = 'BMS/Status/F/Cell_Undervoltage',
   CELL_OVERVOLTAGE = 'BMS/Status/F/Cell_Overvoltage',
   CELLS_NOT_BALANCING = 'BMS/Status/F/Cells_Not_Balancing',
@@ -71,12 +71,21 @@ export enum DataTypeEnum {
   INTERNAL_THERMAL_ERROR = 'BMS/Status/F/Thermal_Err',
   INTERNAL_SOFTWARE_FAULT = 'BMS/Status/F/Software',
   PACK_OVERHEAT = 'BMS/Status/F/Pack_Overheat',
+
   // BMS Debug
   Segment_Temp_1 = 'BMS/Segment_Temp/1',
   Segment_Temp_2 = 'BMS/Segment_Temp/2',
   Segment_Temp_3 = 'BMS/Segment_Temp/3',
   Segment_Temp_4 = 'BMS/Segment_Temp/4',
   Segment_Temp_5 = 'BMS/Segment_Temp/5',
+
+  // Segment Voltage
+  Segment_Voltage_1 = 'BMS/Segment_Voltage/1',
+  Segment_Voltage_2 = 'BMS/Segment_Voltage/2',
+  Segment_Voltage_3 = 'BMS/Segment_Voltage/3',
+  Segment_Voltage_4 = 'BMS/Segment_Voltage/4',
+  Segment_Voltage_5 = 'BMS/Segment_Voltage/5',
+
   // BMS Per Cell
   // Alpha
   PER_CELL_ALPHA_DIE_TEMP_0 = 'BMS/PerCell/Alpha/0/DieTemp',
@@ -90,5 +99,9 @@ export enum DataTypeEnum {
   PER_CELL_BETA_DIE_TEMP_1 = 'BMS/PerCell/Beta/1/DieTemp',
   PER_CELL_BETA_DIE_TEMP_2 = 'BMS/PerCell/Beta/2/DieTemp',
   PER_CELL_BETA_DIE_TEMP_3 = 'BMS/PerCell/Beta/3/DieTemp',
-  PER_CELL_BETA_DIE_TEMP_4 = 'BMS/PerCell/Beta/4/DieTemp'
+  PER_CELL_BETA_DIE_TEMP_4 = 'BMS/PerCell/Beta/4/DieTemp',
+
+  // Overflow and CRC
+  PER_CELL_OVERFLOWID = 'BMS/PerCell/OverflowID',
+  PER_CELL_CRC = 'BMS/PerCell/PECErrorChip'
 }

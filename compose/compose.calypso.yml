@@ -1,7 +1,7 @@
 services:
     calypso:
         container_name: calypso
-        image: ghcr.io/northeastern-electric-racing/calypso@sha256:186e653fb99081eb4a7f20b3d315746d59af52c788c748f530fafbe11a0d0368
+        image: ghcr.io/northeastern-electric-racing/calypso:develop
         restart: unless-stopped
         environment:
           # in prod mode
@@ -9,4 +9,3 @@ services:
           #- CALYPSO_SOCKETCAN_IFACE=vcan0
           # in sim or prod mode
           - CALYPSO_SIREN_HOST_URL=siren:1883
-        

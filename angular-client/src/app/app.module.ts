@@ -129,7 +129,9 @@ import { AccordionModule } from 'primeng/accordion';
 import { TableModule } from 'primeng/table';
 import FaultGraphComponent from 'src/pages/fault-page/fault-graph/fault-graph.component';
 import FaultGraphCaptionComponent from 'src/pages/fault-page/fault-graph/fault-graph-caption/fault-graph-caption.component';
-
+import { TreeModule } from 'primeng/tree';
+import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
+import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -232,7 +234,9 @@ import FaultGraphCaptionComponent from 'src/pages/fault-page/fault-graph/fault-g
     SelectDropdownComponent,
     FaultPageComponent,
     FaultGraphComponent,
-    FaultGraphCaptionComponent
+    FaultGraphCaptionComponent,
+    BmsHeaderComponent,
+    ConnectionDotWithMessageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -262,7 +266,8 @@ import FaultGraphCaptionComponent from 'src/pages/fault-page/fault-graph/fault-g
     FormsModule,
     SelectModule,
     AccordionModule,
-    TableModule
+    TableModule,
+    TreeModule
   ],
   providers: [
     DialogService,
