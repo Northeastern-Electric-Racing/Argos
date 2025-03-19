@@ -6,7 +6,7 @@ import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, FaultData, GraphData } from 'src/utils/types.utils';
+import { DataType, FaultData, GraphData, GraphInfo } from 'src/utils/types.utils';
 
 @Component({
   selector: 'fault-graph',
@@ -25,9 +25,8 @@ export default class FaultGraphComponent implements OnInit {
   dataTypesIsError = false;
   dataTypesError?: Error;
 
-  selectedDataType: Subject<DataType> = new Subject<DataType>();
-  selectedDataTypeValuesSubject: BehaviorSubject<GraphData[]> = new BehaviorSubject<GraphData[]>([]);
-  currentValue: Subject<DataValue | undefined> = new Subject<DataValue | undefined>();
+  selectedDataType = new Subject<DataType | undefined>();
+  selectedDataTypeValuesSubject = new BehaviorSubject<GraphInfo | undefined>(undefined);
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
@@ -70,9 +69,9 @@ export default class FaultGraphComponent implements OnInit {
    */
   setSelectedDataType = (dataType: DataType) => {
     const fault = this.selectedFault;
+    this.clearDataType();
     if (fault) {
       this.selectedDataType.next(dataType);
-      this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphData[]>([]);
 
       this.selectedDataTypeValuesIsLoading = true;
       this.selectedDataTypeValuesIsError = false;
@@ -92,14 +91,24 @@ export default class FaultGraphComponent implements OnInit {
       });
       dataQueryResponse.data.subscribe((data) => {
         if (data) {
-          this.selectedDataTypeValuesSubject.next(data.map((value) => ({ x: +value.time, y: +value.values[0] })));
-          this.currentValue.next(data.pop());
+          const graphData: GraphData[][] = [];
+          data.forEach((dataValue) => {
+            dataValue.values.forEach((value, i) => {
+              if (graphData[i]) {
+                graphData[i].push({ x: +dataValue.time, y: +value });
+              } else {
+                graphData[i] = [{ x: +dataValue.time, y: +value }];
+              }
+            });
+          });
+          this.selectedDataTypeValuesSubject.next({ label: dataType.name, data: graphData });
         }
       });
     }
   };
 
   clearDataType = () => {
-    this.selectedDataTypeValuesSubject.next([]);
+    this.selectedDataTypeValuesSubject.next(undefined);
+    this.selectedDataType.next(undefined);
   };
 }

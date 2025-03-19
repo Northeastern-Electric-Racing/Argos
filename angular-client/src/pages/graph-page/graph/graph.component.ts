@@ -58,6 +58,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
     const values = info?.data ?? [];
+    if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
       let line: Map<number, number>;
       if (!this.data.has(i)) {

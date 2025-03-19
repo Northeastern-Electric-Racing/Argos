@@ -14,11 +14,7 @@
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
         <div class="right-container">
           <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
-          <fault-graph-caption
-            [dataType]="selectedDataType"
-            [onClearDataType]="clearDataType"
-            class="graph-caption"
-          />
+          <fault-graph-caption [dataType]="selectedDataType" [onClearDataType]="clearDataType" class="graph-caption" />
         </div>
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataType]="setSelectedDataType" class="mobile-sidebar" />
       </div>

@@ -10,7 +10,7 @@ import { DataType, FaultData } from 'src/utils/types.utils';
 })
 export default class FaultGraphCaptionComponent implements OnInit {
   private faultService = inject(FaultService);
-  dataType = input.required<Subject<DataType>>();
+  dataType = input.required<Subject<DataType | undefined>>();
   onClearDataType = input.required<() => void>();
   dataTypeName?: string | string[];
   dataTypeUnit?: string | string[];
@@ -18,12 +18,16 @@ export default class FaultGraphCaptionComponent implements OnInit {
   selectedFault?: FaultData;
 
   ngOnInit(): void {
-    this.dataType().subscribe((dataType: DataType) => {
-      this.dataTypeName = dataType.name;
-      this.dataTypeUnit = dataType.unit;
+    this.dataType().subscribe((dataType: DataType | undefined) => {
+      this.dataTypeName = dataType?.name ?? '';
+      this.dataTypeUnit = dataType?.unit ?? '';
     });
     const subscription = this.faultService.getSelectedFault();
     this.selectedFault = subscription.value;
     subscription.subscribe((fault) => (this.selectedFault = fault));
   }
+
+  onClearDataTypeWrapper = () => {
+    this.onClearDataType()();
+  };
 }
