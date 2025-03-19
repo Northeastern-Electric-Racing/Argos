@@ -1,47 +1,34 @@
 <info-background title="At A Glance" svgIcon="battery_charging_2">
   <hstack justifyContent="space-evenly" class="bms-container">
-    <vstack>
-      <hstack>
-        <!-- Voltage -->
-        <info-value-display [value]="voltage" unit="V" subtitle="Voltage" />
-        <connection-dot-with-message [getStatusColor]="this.getStatusColor"></connection-dot-with-message>
-      </hstack>
-    </vstack>
+    <!-- Voltage -->
+    <info-value-display [value]="voltage" unit="V" [widget]="this.connectionDotConfig" [enableWidget]="this.enableWidgets" />
     <div class="divider"></div>
 
     <!-- Temperature -->
-    <vstack>
-      <hstack>
-        <info-value-display [value]="temperature" unit="C" subtitle="Temperature" />
-        <div class="thermometer-container">
-          <thermometer [temperature]="temperature" [min]="-15" [max]="30" />
-        </div>
-      </hstack>
-    </vstack>
+    <info-value-display
+      [value]="temperature"
+      unit="C"
+      subtitle="Average Temperature"
+      [widget]="this.thermometerConfig"
+      [enableWidget]="this.enableWidgets"
+    />
     <div class="divider"></div>
 
     <!-- Charge State -->
-    <vstack>
-      <hstack>
-        <info-value-display [value]="chargeState" unit="%" subtitle="Charge State" />
-        <battery-percentage [percentage]="chargeState" [height]="50" [width]="25" />
-      </hstack>
-    </vstack>
+    <info-value-display
+      [value]="chargeState"
+      unit="%"
+      subtitle="Charge State"
+      [widget]="this.batteryConfig"
+      [enableWidget]="this.enableWidgets"
+    />
     <div class="divider"></div>
 
     <!-- CCL -->
-    <vstack>
-      <hstack>
-        <info-value-display [value]="ccl" unit="A" subtitle="CCL" />
-      </hstack>
-    </vstack>
+    <info-value-display [value]="this.ccl" unit="A" subtitle="CCL" />
     <div class="divider"></div>
 
     <!-- DCL -->
-    <vstack>
-      <hstack>
-        <info-value-display [value]="ccl" unit="A" subtitle="DCL" />
-      </hstack>
-    </vstack>
+    <info-value-display [value]="this.dcl" unit="A" subtitle="DCL" />
   </hstack>
 </info-background>

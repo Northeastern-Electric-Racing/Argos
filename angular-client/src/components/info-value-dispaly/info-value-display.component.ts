@@ -1,5 +1,27 @@
 import { Component, input, OnChanges, OnInit } from '@angular/core';
 
+export interface ThermometerConfig {
+  type: 'thermometer-config';
+  currentValue: number;
+  min: number;
+  max: number;
+}
+
+export interface BatteryConfig {
+  type: 'battery-config';
+  percentage: number;
+  height: number;
+  width: number;
+}
+
+export interface ConnectionDotConfig {
+  type: 'connection-dot-config';
+  getStatusColor: () => string;
+  getStatusMessage?: () => string;
+}
+
+export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConfig;
+
 @Component({
   selector: 'info-value-display',
   templateUrl: './info-value-display.component.html',
@@ -18,7 +40,15 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
   unit = input<string>('');
   formattedValue = '-';
 
+  // Consolidated widget input
+  widget = input<WidgetConfig>();
+  enableWidget = input<boolean>(true);
+
   ngOnInit(): void {
     console.log('Info Value Display');
   }
+
+  getStatusMessage = (connectDotConfig: ConnectionDotConfig): (() => string) => {
+    return connectDotConfig.getStatusMessage ? connectDotConfig.getStatusMessage : () => '';
+  };
 }

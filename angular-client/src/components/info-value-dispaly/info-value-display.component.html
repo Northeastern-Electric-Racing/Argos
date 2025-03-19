@@ -1,7 +1,30 @@
-<vstack spacing="0px" [style]="this.containerStyle()">
-  <hstack spacing="5px" [style]="this.valueUnitContainerStyle()">
-    <typography variant="info-value" [content]="this.formattedValue" />
-    <typography variant="info-unit" [content]="this.unit()" />
+<vstack spacing="0px" [style]="containerStyle()">
+  <hstack spacing="5px" [style]="valueUnitContainerStyle()">
+    <typography variant="info-value" [content]="formattedValue" />
+    <typography variant="info-unit" [content]="unit()" />
+
+    @if (this.enableWidget() && this.widget(); as widget) {
+      @switch (widget.type) {
+        @case ('thermometer-config') {
+          <div class="thermometer-container">
+            <thermometer [temperature]="widget.currentValue" [min]="widget.min" [max]="widget.max" />
+          </div>
+        }
+        @case ('battery-config') {
+          <battery-percentage [percentage]="widget.percentage" [height]="widget.height" [width]="widget.width" />
+        }
+        @case ('connection-dot-config') {
+          <connection-dot-with-message
+            [getStatusColor]="widget.getStatusColor"
+            [getStatusMessage]="this.getStatusMessage(widget)"
+            style="margin-left: 5px"
+          />
+        }
+      }
+    }
   </hstack>
-  <typography variant="info-subtitle" [content]="this.subtitle()" [additionalStyles]="this.subtitleStyle()" />
+
+  @if (subtitle() !== '') {
+    <typography variant="info-subtitle" [content]="subtitle()" [additionalStyles]="subtitleStyle()" />
+  }
 </vstack>

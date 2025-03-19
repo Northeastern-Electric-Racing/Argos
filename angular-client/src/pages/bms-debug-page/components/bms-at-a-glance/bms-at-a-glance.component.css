@@ -8,6 +8,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 74px;
-  width: 28px;
+  align-self: flex-start;
+  margin-left: -20px;
+  height: 90px;
+  width: 35px;
 }
