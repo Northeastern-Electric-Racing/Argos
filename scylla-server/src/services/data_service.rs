@@ -6,7 +6,6 @@ use crate::{
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use tracing::info;
 
 /// Get datapoints that mach criteria
 /// * `db` - The database connection to use
