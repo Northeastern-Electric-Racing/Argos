@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
+import { getDataByDatatTypeNameAndTiming } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
@@ -78,7 +78,7 @@ export default class FaultGraphComponent implements OnInit {
       this.selectedDataTypeValuesError = undefined;
 
       const dataQueryResponse = this.serverService.query<DataValue[]>(() =>
-        getDataByDataTypeNameAndRunId(dataType.name, 0, { time: fault.lastSeen.getTime(), before: 1, after: 1 })
+        getDataByDatatTypeNameAndTiming(dataType.name, { time: fault.lastSeen.getTime(), before: 1, after: 1 })
       );
       dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
         this.selectedDataTypeValuesIsLoading = isLoading;

@@ -11,9 +11,11 @@ const getAllDatatypes = () => `${baseURL}/datatypes`;
 const getAllSystems = () => `${baseURL}/systems`;
 
 /* Data */
-const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number, timing?: Timing) =>
-  `${baseURL}/data/${encodeURIComponent(dataTypeName)}/${runId}` +
-  (timing ? `?time=${timing.time}&before=${timing.before}&after=${timing.after}` : '');
+const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) =>
+  `${baseURL}/data/${encodeURIComponent(dataTypeName)}/${runId}`;
+
+const getDataByDataTypeNameAndTiming = (dataTypeName: string, timing: Timing) =>
+  `${baseURL}/data/${encodeURIComponent(dataTypeName)}?time=${timing.time}&before=${timing.before}&after=${timing.after}`;
 
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;
@@ -27,6 +29,7 @@ export const urls = {
   getAllSystems,
 
   getDataByDataTypeNameAndRunId,
+  getDataByDataTypeNameAndTiming,
 
   getAllRuns,
   getLatestRun,
