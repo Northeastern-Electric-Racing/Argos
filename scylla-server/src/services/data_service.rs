@@ -35,8 +35,6 @@ pub async fn get_data_by_timing(
 ) -> Result<Vec<Data>, diesel::result::Error> {
     let higher_end: i64 = timing.time + (timing.after * 60 * 1000); // minutes to microsseconds
     let lower_end: i64 = timing.time - (timing.before * 60 * 1000); // minutes to microsseconds
-    info!("Higher end: {}", higher_end);
-    info!("Lower end: {}", lower_end);
 
     data.filter(
         dataTypeName
