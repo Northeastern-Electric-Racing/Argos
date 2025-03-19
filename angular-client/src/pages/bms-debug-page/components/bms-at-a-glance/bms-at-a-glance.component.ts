@@ -16,7 +16,7 @@ import Storage from 'src/services/storage.service';
 @Component({
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
-  styleUrls: ['./bms-at-a-glance.component.css']
+  styleUrl: './bms-at-a-glance.component.css'
 })
 export class BmsAtAGlanceComponent implements OnInit {
   private storage = inject(Storage);
