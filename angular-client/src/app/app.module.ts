@@ -127,6 +127,8 @@ import Lara from '@primeng/themes/aura';
 import { TreeModule } from 'primeng/tree';
 import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
 import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
+import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
+
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -228,7 +230,8 @@ import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot
     InfoValueDisplayComponent,
     SelectDropdownComponent,
     BmsHeaderComponent,
-    ConnectionDotWithMessageComponent
+    ConnectionDotWithMessageComponent,
+    CameraPageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -327,6 +330,7 @@ export class AppModule {
       .addSvgIcon(
         'battery_charging_2',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
-      );
+      )
+      .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'));
   }
 }
