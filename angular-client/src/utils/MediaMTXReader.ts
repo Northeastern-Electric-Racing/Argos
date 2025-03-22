@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Conf {
   url: URL;
   onError: (message: string) => void;
-  onTrack: (event: any) => void;
+  onTrack: (event: RTCTrackEvent) => void;
 }
 export default class MediaMTXWebRTCReader {
   private conf: Conf;
@@ -30,7 +29,7 @@ export default class MediaMTXWebRTCReader {
 
     const direction = 'recvonly';
     this.pc.addTransceiver('video', { direction });
-    this.pc.ontrack = (evt: any) => this.onTrack(evt);
+    this.pc.ontrack = (evt) => this.onTrack(evt);
 
     return this.pc.createOffer().then((offer: RTCSessionDescriptionInit) => {
       if (!offer.sdp) return undefined;
@@ -39,7 +38,7 @@ export default class MediaMTXWebRTCReader {
     });
   };
 
-  private sendOffer = (offer: any) => {
+  private sendOffer = (offer: string | undefined) => {
     return fetch(this.conf.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/sdp' },
@@ -75,7 +74,7 @@ export default class MediaMTXWebRTCReader {
     );
   };
 
-  private onTrack = (evt: any) => {
+  private onTrack = (evt: RTCTrackEvent) => {
     if (this.conf.onTrack !== undefined) {
       this.conf.onTrack(evt);
     }
