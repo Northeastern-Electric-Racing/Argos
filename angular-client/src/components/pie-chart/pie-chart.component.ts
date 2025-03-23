@@ -27,9 +27,9 @@ export default class PieChartComponent implements OnInit {
 
   ngOnInit() {
     this.setChartWidth();
-    setTimeout(() => {
+    setInterval(() => {
       this.setChartOptions();
-    });
+    }, 1000);
   }
 
   setChartOptions() {
@@ -47,7 +47,7 @@ export default class PieChartComponent implements OnInit {
           dataLabels: {
             offset: -10
           }
-        }
+        }, 
       },
       colors: ['#ce2727', '#2799ce', '#3cba40', '#ba3cb4', '#efce29'],
       chart: {
@@ -55,7 +55,10 @@ export default class PieChartComponent implements OnInit {
         type: 'pie',
         background: this.backgroundColor,
         redrawOnParentResize: true,
-        foreColor: '#ffffff'
+        foreColor: '#ffffff',
+        animations: {
+          enabled: false
+        }
       },
       dataLabels: {
         style: {
@@ -65,6 +68,10 @@ export default class PieChartComponent implements OnInit {
       labels,
       legend: {
         offsetX: 10
+      },
+      animations: {
+          enabled: false,
+          easing: 'linear'
       }
     };
   }
