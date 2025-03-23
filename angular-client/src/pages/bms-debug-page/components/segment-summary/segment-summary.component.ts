@@ -1,15 +1,8 @@
 import { Component, inject, input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { appRoutes } from 'src/app/app-routing.module';
 import Storage from 'src/services/storage.service';
-
-export enum SegmentSummarys {
-  Segment1 = 1,
-  Segment2 = 2,
-  Segment3 = 3,
-  Segment4 = 4,
-  Segment5 = 5
-}
+import { getSegmentInfo, SegmentInfo, Segments } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'segment-summary',
@@ -19,7 +12,7 @@ export enum SegmentSummarys {
 export class SegmentSummaryComponent implements OnInit {
   private router = inject(Router);
   private storage = inject(Storage);
-  segmentNumber = input.required<SegmentSummarys>();
+  segmentNumber = input.required<Segments>();
   temperature!: number;
   alphaChipTemp!: number;
   betaChipTemp!: number;
@@ -30,65 +23,30 @@ export class SegmentSummaryComponent implements OnInit {
   }
 
   subscribeAndUpdateTemperature = () => {
-    const [segmentTempKey, alphaChipTempKey, betaChipTempKey, voltageKey] = this.getRelevantKeys();
+    const segmentInfo = this.getRelevantKeys();
 
-    this.storage.get(segmentTempKey).subscribe((value) => {
+    this.storage.get(segmentInfo.segmentTempKey).subscribe((value) => {
       this.temperature = parseFloat(value.values[0]);
     });
-    this.storage.get(alphaChipTempKey).subscribe((value) => {
+    this.storage.get(segmentInfo.alphaChipTempKey).subscribe((value) => {
       this.alphaChipTemp = parseFloat(value.values[0]);
     });
-    this.storage.get(betaChipTempKey).subscribe((value) => {
+    this.storage.get(segmentInfo.betaChipTempKey).subscribe((value) => {
       this.betaChipTemp = parseFloat(value.values[0]);
     });
-    this.storage.get(voltageKey).subscribe((value) => {
+    this.storage.get(segmentInfo.voltageKey).subscribe((value) => {
       this.voltage = parseFloat(value.values[0]);
     });
   };
 
+  /**
+   * Opens the segment page for the current segment.
+   */
   openSegmentPage = () => {
-    // Open the segment page with the segment number
-    this.router.navigate(['bms/segment/', this.segmentNumber()]);
+    this.router.navigate([appRoutes.bmsSegmentViewRoute(this.segmentNumber())]);
   };
 
-  getRelevantKeys = (): [DataTypeEnum, DataTypeEnum, DataTypeEnum, DataTypeEnum] => {
-    let segmentTempKey!: DataTypeEnum;
-    let alphaChipTempKey!: DataTypeEnum;
-    let betaChipTempKey!: DataTypeEnum;
-    let voltageKey!: DataTypeEnum;
-
-    switch (this.segmentNumber()) {
-      case SegmentSummarys.Segment1:
-        segmentTempKey = DataTypeEnum.Segment_Temp_1;
-        alphaChipTempKey = DataTypeEnum.PER_CELL_ALPHA_DIE_TEMP_0;
-        betaChipTempKey = DataTypeEnum.PER_CELL_BETA_DIE_TEMP_0;
-        voltageKey = DataTypeEnum.Segment_Voltage_1;
-        break;
-      case SegmentSummarys.Segment2:
-        segmentTempKey = DataTypeEnum.Segment_Temp_2;
-        alphaChipTempKey = DataTypeEnum.PER_CELL_ALPHA_DIE_TEMP_1;
-        betaChipTempKey = DataTypeEnum.PER_CELL_BETA_DIE_TEMP_1;
-        voltageKey = DataTypeEnum.Segment_Voltage_2;
-        break;
-      case SegmentSummarys.Segment3:
-        segmentTempKey = DataTypeEnum.Segment_Temp_3;
-        alphaChipTempKey = DataTypeEnum.PER_CELL_ALPHA_DIE_TEMP_2;
-        betaChipTempKey = DataTypeEnum.PER_CELL_BETA_DIE_TEMP_2;
-        voltageKey = DataTypeEnum.Segment_Voltage_3;
-        break;
-      case SegmentSummarys.Segment4:
-        segmentTempKey = DataTypeEnum.Segment_Temp_4;
-        alphaChipTempKey = DataTypeEnum.PER_CELL_ALPHA_DIE_TEMP_3;
-        betaChipTempKey = DataTypeEnum.PER_CELL_BETA_DIE_TEMP_3;
-        voltageKey = DataTypeEnum.Segment_Voltage_4;
-        break;
-      case SegmentSummarys.Segment5:
-        segmentTempKey = DataTypeEnum.Segment_Temp_5;
-        alphaChipTempKey = DataTypeEnum.PER_CELL_ALPHA_DIE_TEMP_4;
-        betaChipTempKey = DataTypeEnum.PER_CELL_BETA_DIE_TEMP_4;
-        voltageKey = DataTypeEnum.Segment_Voltage_5;
-        break;
-    }
-    return [segmentTempKey, alphaChipTempKey, betaChipTempKey, voltageKey];
+  getRelevantKeys = (): SegmentInfo => {
+    return getSegmentInfo(this.segmentNumber());
   };
 }

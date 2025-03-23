@@ -8,15 +8,34 @@ import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import MapComponent from 'src/pages/map/map.component';
 
+const landingRoute = () => `/landing`;
+const graphRoute = () => `/graph`;
+const mapRoute = () => `/map`;
+const chargingRoute = () => `/charging`;
+const bmsRoute = () => `/bms`;
+const bmsSegmentViewRoute = (id: number) => `bms/segment/${id}`;
+const cameraRoute = () => `/camera`;
+
+export const appRoutes = {
+  landingRoute,
+  graphRoute,
+  mapRoute,
+  chargingRoute,
+  bmsRoute,
+  bmsSegmentViewRoute,
+  cameraRoute
+};
+
 const routes: Routes = [
-  { path: 'landing', component: LandingPageComponent },
-  { path: 'graph', component: GraphPageComponent },
-  { path: '', redirectTo: '/landing', pathMatch: 'full' },
-  { path: 'map', component: MapComponent },
-  { path: 'charging', component: ChargingPageComponent },
-  { path: 'bms', component: BmsDebugPageComponent },
+  { path: appRoutes.landingRoute(), component: LandingPageComponent },
+  { path: appRoutes.graphRoute(), component: GraphPageComponent },
+  { path: '', redirectTo: appRoutes.landingRoute(), pathMatch: 'full' },
+  { path: appRoutes.mapRoute(), component: MapComponent },
+  { path: appRoutes.chargingRoute(), component: ChargingPageComponent },
+  { path: appRoutes.bmsRoute(), component: BmsDebugPageComponent },
+  // Routes with params should be carefully defined in conjunction with it's lambda function
   { path: 'bms/segment/:id', component: BmsSegmentViewComponent },
-  { path: 'camera', component: CameraPageComponent }
+  { path: appRoutes.cameraRoute(), component: CameraPageComponent }
 ];
 
 @NgModule({

@@ -1,7 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { appRoutes } from 'src/app/app-routing.module';
 import { DropdownOption } from 'src/components/select-dropdown/select-dropdown.component';
-import { SegmentSummarys } from '../segment-summary/segment-summary.component';
+import { Segments } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'segment-selector',
@@ -14,26 +15,20 @@ export class SegmentSelectorComponent implements OnInit {
     {
       name: 'Accumulator',
       function: () => {
-        this.router.navigate(['/bms']);
+        this.router.navigate([appRoutes.bmsRoute()]);
       }
     }
-  ];
-  segments = [
-    SegmentSummarys.Segment1,
-    SegmentSummarys.Segment2,
-    SegmentSummarys.Segment3,
-    SegmentSummarys.Segment4,
-    SegmentSummarys.Segment5
   ];
   placeholder = 'Select Segment';
 
   constructor() {
+    // Add all segments with title: 'Segment {segmentNumber}' to dropdown
     this.selectorOptions.push(
-      ...this.segments.map((segment) => {
+      ...Object.values(Segments).map((segment) => {
         return {
           name: `Segment ${segment}`,
           function: () => {
-            this.router.navigate(['bms/segment/', segment]);
+            this.router.navigate([appRoutes.bmsSegmentViewRoute(Number(segment))]);
           }
         };
       })

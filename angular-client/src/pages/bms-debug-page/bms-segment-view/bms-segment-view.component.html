@@ -14,17 +14,17 @@
     </mat-grid-tile>
     <mat-grid-tile colspan="3" rowspan="8">
       <!-- Alpha -->
-      <chip-diagnostics style="width: 100%; height: 100%" [chip]="0" />
+      <chip-diagnostics style="width: 100%; height: 100%" [chip]="this.chipAlpha" />
     </mat-grid-tile>
     <mat-grid-tile colspan="3" rowspan="8">
       <!-- Beta -->
-      <chip-diagnostics style="width: 100%; height: 100%" [chip]="1" />
+      <chip-diagnostics style="width: 100%; height: 100%" [chip]="this.chipBeta" />
     </mat-grid-tile>
     <mat-grid-tile colspan="3" rowspan="10">
-      <chip-faults style="width: 100%; height: 100%" [chip]="0"></chip-faults>
+      <chip-faults style="width: 100%; height: 100%" [chip]="this.chipAlpha"></chip-faults>
     </mat-grid-tile>
     <mat-grid-tile colspan="3" rowspan="10">
-      <chip-faults style="width: 100%; height: 100%" [chip]="1"></chip-faults>
+      <chip-faults style="width: 100%; height: 100%" [chip]="this.chipBeta"></chip-faults>
     </mat-grid-tile>
   </mat-grid-list>
 </div>
