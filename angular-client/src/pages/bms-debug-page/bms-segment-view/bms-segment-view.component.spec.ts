@@ -9,8 +9,7 @@ describe('BmsSegmentViewComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BmsSegmentViewComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BmsSegmentViewComponent);
     component = fixture.componentInstance;

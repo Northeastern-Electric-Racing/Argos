@@ -9,8 +9,7 @@ describe('SegmentAtAGlanceComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SegmentAtAGlanceComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(SegmentAtAGlanceComponent);
     component = fixture.componentInstance;

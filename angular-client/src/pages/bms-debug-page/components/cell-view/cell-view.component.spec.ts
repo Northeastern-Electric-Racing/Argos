@@ -9,8 +9,7 @@ describe('CellViewComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CellViewComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CellViewComponent);
     component = fixture.componentInstance;

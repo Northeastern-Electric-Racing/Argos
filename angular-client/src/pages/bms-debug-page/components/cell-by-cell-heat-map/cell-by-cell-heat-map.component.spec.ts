@@ -9,8 +9,7 @@ describe('CellByCellHeatMapComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CellByCellHeatMapComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CellByCellHeatMapComponent);
     component = fixture.componentInstance;
