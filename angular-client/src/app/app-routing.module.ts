@@ -27,15 +27,15 @@ export const appRoutes = {
 };
 
 const routes: Routes = [
-  { path: appRoutes.landingRoute(), component: LandingPageComponent },
-  { path: appRoutes.graphRoute(), component: GraphPageComponent },
+  { path: 'landing', component: LandingPageComponent },
+  { path: 'graph', component: GraphPageComponent },
   { path: '', redirectTo: appRoutes.landingRoute(), pathMatch: 'full' },
-  { path: appRoutes.mapRoute(), component: MapComponent },
-  { path: appRoutes.chargingRoute(), component: ChargingPageComponent },
-  { path: appRoutes.bmsRoute(), component: BmsDebugPageComponent },
+  { path: 'map', component: MapComponent },
+  { path: 'charging', component: ChargingPageComponent },
+  { path: 'bms', component: BmsDebugPageComponent },
   // Routes with params should be carefully defined in conjunction with it's lambda function
   { path: 'bms/segment/:id', component: BmsSegmentViewComponent },
-  { path: appRoutes.cameraRoute(), component: CameraPageComponent }
+  { path: 'camera', component: CameraPageComponent }
 ];
 
 @NgModule({

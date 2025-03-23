@@ -22,9 +22,11 @@ export class SegmentSelectorComponent implements OnInit {
   placeholder = 'Select Segment';
 
   constructor() {
+    // get all the values from the Segments enum
+    const segments = Object.values(Segments).filter((segment) => !isNaN(Number(segment)));
     // Add all segments with title: 'Segment {segmentNumber}' to dropdown
     this.selectorOptions.push(
-      ...Object.values(Segments).map((segment) => {
+      ...segments.map((segment) => {
         return {
           name: `Segment ${segment}`,
           function: () => {

@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { SegmentSummarys } from './components/segment-summary/segment-summary.component';
+import { Segments } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'app-bms-debug-page',
@@ -12,13 +12,7 @@ export class BmsDebugPageComponent implements OnInit {
   mobileThreshold = 768;
   windowSize: number = window.innerWidth;
   isMobile = window.innerWidth < this.mobileThreshold;
-  segments = [
-    SegmentSummarys.Segment1,
-    SegmentSummarys.Segment2,
-    SegmentSummarys.Segment3,
-    SegmentSummarys.Segment4,
-    SegmentSummarys.Segment5
-  ];
+  segments = [Segments.Segment1, Segments.Segment2, Segments.Segment3, Segments.Segment4, Segments.Segment5];
 
   constructor() {}
 
