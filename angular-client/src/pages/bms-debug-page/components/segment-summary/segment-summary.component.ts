@@ -1,4 +1,5 @@
 import { Component, inject, input, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 
@@ -16,6 +17,7 @@ export enum SegmentSummarys {
   styleUrl: './segment-summary.component.css'
 })
 export class SegmentSummaryComponent implements OnInit {
+  private router = inject(Router);
   private storage = inject(Storage);
   segmentNumber = input.required<SegmentSummarys>();
   temperature!: number;
@@ -46,7 +48,7 @@ export class SegmentSummaryComponent implements OnInit {
 
   openSegmentPage = () => {
     // Open the segment page with the segment number
-    console.log('TODO: Opening segment page for segment: ', this.segmentNumber());
+    this.router.navigate(['bms/segment/', this.segmentNumber()]);
   };
 
   getRelevantKeys = (): [DataTypeEnum, DataTypeEnum, DataTypeEnum, DataTypeEnum] => {

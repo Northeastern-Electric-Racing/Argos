@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
+import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component';
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
@@ -14,6 +15,7 @@ const routes: Routes = [
   { path: 'map', component: MapComponent },
   { path: 'charging', component: ChargingPageComponent },
   { path: 'bms', component: BmsDebugPageComponent },
+  { path: 'bms/segment/:id', component: BmsSegmentViewComponent },
   { path: 'camera', component: CameraPageComponent }
 ];
 

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, Input } from '@angular/core';
 import Theme from 'src/services/theme.service';
 
 /**
@@ -23,4 +23,5 @@ export class InfoBackgroundComponent {
   @Input() title!: string;
   @Input() onClick!: (() => void) | undefined;
   @Input() button?: ButtonInputs;
+  slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
 }

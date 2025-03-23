@@ -128,6 +128,12 @@ import { TreeModule } from 'primeng/tree';
 import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
 import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
+import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component';
+import { SegmentAtAGlanceComponent } from 'src/pages/bms-debug-page/components/segment-at-a-glance/segment-at-a-glance.component';
+import { CellByCellHeatMapComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-by-cell-heat-map.component';
+import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
+import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/chip-diagnostics/chip-diagnostics.component';
+import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
 
 @NgModule({
   declarations: [
@@ -231,7 +237,13 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
     SelectDropdownComponent,
     BmsHeaderComponent,
     ConnectionDotWithMessageComponent,
-    CameraPageComponent
+    CameraPageComponent,
+    BmsSegmentViewComponent,
+    SegmentAtAGlanceComponent,
+    CellViewComponent,
+    CellByCellHeatMapComponent,
+    ChipDiagnosticsComponent,
+    ChipFaultsComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [

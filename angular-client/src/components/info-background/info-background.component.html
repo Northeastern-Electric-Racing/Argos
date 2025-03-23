@@ -1,7 +1,12 @@
-<div class="container" (click)="onClick ? onClick() : undefined" [style]="{ 'background-color': backgroundColor }">
+<div
+  class="container"
+  (click)="onClick ? onClick() : undefined"
+  [style]="{ 'background-color': backgroundColor }"
+  [class.sliced-left-corner]="this.slicedLeftCorner()"
+>
   @if (title) {
     <div class="title-container">
-      <div class="title">
+      <div class="title" [class.sliced-left-corner]="this.slicedLeftCorner()">
         @if (icon) {
           <mat-icon aria-hidden="false" [fontIcon]="icon" />
         }
