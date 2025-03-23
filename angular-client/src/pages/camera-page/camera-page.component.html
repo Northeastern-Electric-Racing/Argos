@@ -1,0 +1,7 @@
+@if (this.urlAvailable) {
+  <video #remoteVideo controls autoplay muted style="width: 100%; height: 90vh"></video>
+} @else {
+  <div style="display: flex; justify-content: center; align-items: center; height: 100%">
+    <typography content="Camera Not Reachable" variant="xx-large-title" additionalStyles="color: red" />
+  </div>
+}

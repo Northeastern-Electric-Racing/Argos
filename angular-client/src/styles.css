@@ -25,6 +25,15 @@ body {
   --mdc-dialog-container-color: transparent !important;
 }
 
+.connection-dot {
+  background-color: transparent;
+  border: 3px solid;
+  border-color: rgb(243, 243, 243);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
 .p-dialog-title {
   --p-dialog-title-font-weight: bold;
 }

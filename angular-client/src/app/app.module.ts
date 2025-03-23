@@ -84,7 +84,7 @@ import HighLowCellGraphComponent from 'src/pages/charging-page/components/high-l
 import PackVoltageGraphComponent from 'src/pages/charging-page/components/pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
 import PackVoltageDisplayComponent from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
 import ChargingStatusComponent from 'src/pages/charging-page/components/charging-state/charging-status.component';
-import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
+import { BatteryPercentageComponent } from 'src/components/battery-percentage/battery-percentage.component';
 import { BatteryInfoDisplayComponent } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
 import { ToastButtonComponent } from 'src/components/toast-button/toast-button.component';
 import StartingSocTimerComponent from 'src/pages/charging-page/components/starting-soc/starting-soc-timer.component';
@@ -126,6 +126,9 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import Lara from '@primeng/themes/aura';
 import { TreeModule } from 'primeng/tree';
 import { ChartModule } from 'primeng/chart';
+import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
+import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
+import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 
 @NgModule({
   declarations: [
@@ -226,7 +229,10 @@ import { ChartModule } from 'primeng/chart';
     AccHighVoltageComponent,
     BmsOverflowComponent,
     InfoValueDisplayComponent,
-    SelectDropdownComponent
+    SelectDropdownComponent,
+    BmsHeaderComponent,
+    ConnectionDotWithMessageComponent,
+    CameraPageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -326,6 +332,7 @@ export class AppModule {
       .addSvgIcon(
         'battery_charging_2',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
-      );
+      )
+      .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'));
   }
 }
