@@ -12,8 +12,10 @@ export class BmsSegmentViewComponent implements OnInit {
   segmentId!: number;
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      this.segmentId = Number(params.get('id'));
-    });
+    if (this.route.url.subscribe((url) => url.toString().includes('bms/segment'))) {
+      this.route.paramMap.subscribe((params) => {
+        this.segmentId = Number(params.get('id'));
+      });
+    }
   }
 }
