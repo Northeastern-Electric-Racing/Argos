@@ -7,5 +7,7 @@ import { Component, input } from '@angular/core';
 })
 export class ConnectionDotWithMessageComponent {
   getStatusColor = input.required<() => string>();
-  getStatusMessage = input.required<() => string>();
+  getStatusMessage = input<() => string>((): string => {
+    return '';
+  });
 }

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
+import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
@@ -15,7 +16,8 @@ const routes: Routes = [
   { path: 'charging', component: ChargingPageComponent },
   { path: 'bms', component: BmsDebugPageComponent },
   { path: 'faults', component: FaultPageComponent },
-  { path: 'faults/fault-graph', component: GraphPageComponent }
+  { path: 'faults/fault-graph', component: GraphPageComponent },
+  { path: 'camera', component: CameraPageComponent }
 ];
 
 @NgModule({
