@@ -127,11 +127,13 @@ import Lara from '@primeng/themes/aura';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TableModule } from 'primeng/table';
-import FaultGraphComponent from 'src/pages/fault-page/fault-graph/fault-graph.component';
-import FaultGraphCaptionComponent from 'src/pages/fault-page/fault-graph/fault-graph-caption/fault-graph-caption.component';
 import { TreeModule } from 'primeng/tree';
 import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
 import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
+import { GeneralButtonsComponent } from 'src/pages/graph-page/graph-caption/general-buttons/general-buttons.component';
+import { FaultDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/fault-display-info/fault-display-info.component';
+import { FaultButtonsComponent } from 'src/pages/graph-page/graph-caption/fault-buttons/fault-buttons.component';
+import { GeneralDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/general-display-info/general-display-info.component';
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -233,10 +235,12 @@ import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot
     InfoValueDisplayComponent,
     SelectDropdownComponent,
     FaultPageComponent,
-    FaultGraphComponent,
-    FaultGraphCaptionComponent,
     BmsHeaderComponent,
-    ConnectionDotWithMessageComponent
+    ConnectionDotWithMessageComponent,
+    GeneralButtonsComponent,
+    FaultButtonsComponent,
+    GeneralDisplayInfoComponent,
+    FaultDisplayInfoComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [

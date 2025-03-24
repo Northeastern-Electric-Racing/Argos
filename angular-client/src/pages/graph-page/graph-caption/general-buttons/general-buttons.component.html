@@ -1,0 +1,17 @@
+<run-selector [selectRun]="onRunSelected()" />
+<argos-button
+  [onClick]="onClearDataType()"
+  label="Clear Data Type"
+  additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+/>
+@if (run()) {
+  <div>
+    <argos-button
+      [onClick]="onSetRealTime()"
+      label="Realtime"
+      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7"
+    />
+  </div>
+} @else {
+  <div style="width: 140px; height: 45px"></div>
+}

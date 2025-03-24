@@ -31,7 +31,7 @@ export default class FaultPageComponent implements OnInit {
   onRowSelect = () => {
     if (this.selectedFault) {
       this.faultService.selectFault(this.selectedFault);
-      this.navigateTo('/fault-graph');
+      this.navigateTo('/faults/fault-graph');
     }
   };
 

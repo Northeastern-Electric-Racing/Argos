@@ -4,16 +4,6 @@
   margin-top: 10px;
 }
 
-.buttons-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  height: 100%;
-  margin: 0px 5px 0px 15px;
-}
-
 .info-container {
   font: small-caption;
   width: 100%;
@@ -31,8 +21,4 @@
 
 .left-info {
   text-align: left;
-}
-
-.right-info {
-  text-align: right;
 }

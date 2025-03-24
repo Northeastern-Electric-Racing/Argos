@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
-import FaultGraphComponent from 'src/pages/fault-page/fault-graph/fault-graph.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
@@ -16,7 +15,7 @@ const routes: Routes = [
   { path: 'charging', component: ChargingPageComponent },
   { path: 'bms', component: BmsDebugPageComponent },
   { path: 'faults', component: FaultPageComponent },
-  { path: 'fault-graph', component: FaultGraphComponent }
+  { path: 'faults/fault-graph', component: GraphPageComponent }
 ];
 
 @NgModule({

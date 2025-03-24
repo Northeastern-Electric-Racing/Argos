@@ -77,7 +77,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     });
 
     if (this.limitRange() && !this.isSliding) {
-      const times = Array.from(Array.from(this.data.values())[0].keys());
+      const times = Array.from(Array.from(this.data.values())[0]?.keys());
       this.timeDiffMs = times[times.length - 1] - times[0];
     } else if (!this.limitRange()) {
       this.updateChart();
