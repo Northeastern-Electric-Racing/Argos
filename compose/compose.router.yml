@@ -16,3 +16,12 @@ services:
         extends:
             file: ../siren-base/compose.siren.yml
             service: siren
+
+    siren-av:
+        network_mode: host
+        image: bluenviron/mediamtx:latest-ffmpeg
+        volumes:
+            - type: bind
+              source: ../siren-base/mediamtx.yml
+              target: /mediamtx.yml
+              read_only: true

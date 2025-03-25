@@ -1,0 +1,8 @@
+<p-select
+  class="small-grey-select"
+  [options]="options()"
+  [(ngModel)]="selectedOption"
+  optionLabel="name"
+  [placeholder]="placeholder()"
+  (onChange)="handleChangedOption($event)"
+></p-select>

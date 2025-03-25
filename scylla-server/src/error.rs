@@ -15,6 +15,8 @@ pub enum ScyllaError {
     CommFailure(String),
     /// A query turned up empty that should not have
     EmptyResult,
+    /// A setting change was requested with an invalid parameter
+    InvalidSetting(String),
 }
 
 impl From<diesel::result::Error> for ScyllaError {
@@ -47,6 +49,7 @@ impl IntoResponse for ScyllaError {
                 StatusCode::NOT_FOUND,
                 "Fetched an empty result that should not be!".to_string(),
             ),
+            ScyllaError::InvalidSetting(reason) => (StatusCode::BAD_REQUEST, reason),
         };
 
         warn!("Routing error: {}: {}", status, reason);

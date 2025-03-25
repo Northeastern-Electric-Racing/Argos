@@ -16,11 +16,11 @@ export default class ConnectionDisplayComponent implements OnInit {
     });
   }
 
-  getConnectedStatus(connected: boolean) {
-    return connected ? 'Connected' : 'Disconnected';
-  }
+  getConnectedStatus = (): string => {
+    return this.connected ? 'Connected' : 'Disconnected';
+  };
 
-  getConnectedColor(connected: boolean) {
-    return connected ? 'green' : 'red';
-  }
+  getConnectedColor = (): string => {
+    return this.connected ? 'green' : 'red';
+  };
 }

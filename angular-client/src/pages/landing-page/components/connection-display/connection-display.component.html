@@ -3,14 +3,10 @@
     <div class="connection-display-title">
       <typography variant="header" content="Connection" additionalStyles="margin: 0px;" />
     </div>
-
-    <div class="connection-display-data">
-      <div
-        class="connection-dot"
-        [style.background-color]="getConnectedColor(connected)"
-        additionalStyles="height: 15px;"
-      ></div>
-      <typography variant="info-subtitle" [content]="getConnectedStatus(connected)" />
-    </div>
+    <div style="margin-top: 20px"></div>
+    <connection-dot-with-message
+      [getStatusColor]="this.getConnectedColor"
+      [getStatusMessage]="this.getConnectedStatus"
+    ></connection-dot-with-message>
   </div>
 </info-background>
