@@ -13,7 +13,7 @@
       <div class="content-div">
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
         <div class="right-container">
-          <graph [limitRange]="!onFaultPage" [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
+          <graph [limitRange]="realTime === true" [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
           <graph-caption [dataType]="selectedDataType" [currentValue]="currentValue" class="graph-caption">
             <ng-template #buttons>
               @if (onFaultPage) {
