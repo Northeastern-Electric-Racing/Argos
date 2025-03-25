@@ -1,0 +1,10 @@
+.cell-tile {
+  border-radius: 10px;
+  background-color: grey;
+  padding: 20px;
+  width: 7vw;
+  height: 7vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

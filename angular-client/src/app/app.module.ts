@@ -134,6 +134,7 @@ import { CellByCellHeatMapComponent } from 'src/pages/bms-debug-page/components/
 import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/chip-diagnostics/chip-diagnostics.component';
 import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
+import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-tile/cell-tile.component';
 
 @NgModule({
   declarations: [
@@ -243,7 +244,8 @@ import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-fa
     CellViewComponent,
     CellByCellHeatMapComponent,
     ChipDiagnosticsComponent,
-    ChipFaultsComponent
+    ChipFaultsComponent,
+    CellTileComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [

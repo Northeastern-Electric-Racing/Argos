@@ -1,0 +1,7 @@
+<div class="cell-tile" [style.background-color]="this.color()">
+  <typography
+    variant="info-value"
+    [content]="(this.value() === -1 ? '-' : this.value().toString()) + '°'"
+    additionalStyles="fontSize: 3vw; color: #2C2C2C;   margin-left: 10px;"
+  />
+</div>
