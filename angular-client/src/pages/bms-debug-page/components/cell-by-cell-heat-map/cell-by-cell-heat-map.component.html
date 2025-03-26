@@ -1,12 +1,12 @@
 <info-background title="Cell-by-Cell Heat Map" svgIcon="battery_charging_2" [slicedLeftCorner]="true">
   <div style="padding-top: 20px"></div>
-  <hstack alignItems="end" justifyContent="end">
+  <hstack alignItems="end" justifyContent="end" spacing="1vw">
     @for (cell of betaCells; track cell) {
       <cell-tile [value]="cell.value" [color]="cell.color"></cell-tile>
     }
   </hstack>
   <div style="padding-top: 20px"></div>
-  <hstack alignItems="end" justifyContent="end">
+  <hstack alignItems="end" justifyContent="end" spacing="1vw">
     @for (cell of alphaCells; track cell) {
       <cell-tile [value]="cell.value" [color]="cell.color"></cell-tile>
     }

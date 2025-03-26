@@ -2,8 +2,10 @@
   border-radius: 10px;
   background-color: grey;
   padding: 20px;
-  width: 7vw;
-  height: 7vw;
+  width: 7.5vw;
+  height: 12vh;
+  max-width: 200px;
+  max-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
