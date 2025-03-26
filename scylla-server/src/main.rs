@@ -256,7 +256,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // DATA
         .route(
             "/data/{dataTypeName}/{runId}",
-            get(controllers::data_controller::get_data),
+            get(controllers::data_controller::get_data_by_run_id),
+        )
+        .route(
+            "/data/{dataTypeName}",
+            get(controllers::data_controller::get_data_by_timing),
         )
         // DATA TYPE
         .route("/datatypes", get(data_type_controller::get_all_data_types))

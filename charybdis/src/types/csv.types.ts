@@ -22,7 +22,6 @@ export interface CsvDataRow {
 export interface CsvDataTypeRow {
   name: string;
   unit: string;
-  nodeName: string;
 }
 
 export interface AuditLogEntry {

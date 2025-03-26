@@ -1,0 +1,42 @@
+<div class="container">
+  <typography
+    class="title-style"
+    variant="x-large-title"
+    content="Faults"
+    additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
+  />
+  <p-accordion [value]="0" [multiple]="true">
+    @for (node of nodeArray; track node) {
+      <p-accordion-panel [value]="node.node">
+        <p-accordion-header>{{ node.node }}</p-accordion-header>
+        <p-accordion-content>
+          <p-table
+            selectionMode="single"
+            [(selection)]="selectedFault"
+            (onRowSelect)="onRowSelect()"
+            metaKeySelection
+            [value]="node.data"
+            stripedRows
+          >
+            <ng-template #header>
+              <tr>
+                <th>Name</th>
+                <th>Occurred At</th>
+                <th>Last Seen</th>
+                <th>Expired?</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-node>
+              <tr [pSelectableRow]="node">
+                <td>{{ node.name }}</td>
+                <td>{{ node.occurredAt | date: 'HH:mm:ss' }}</td>
+                <td>{{ node.lastSeen | date: 'HH:mm:ss' }}</td>
+                <td>{{ node.expired ? 'Yes' : 'No' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-accordion-content>
+      </p-accordion-panel>
+    }
+  </p-accordion>
+</div>

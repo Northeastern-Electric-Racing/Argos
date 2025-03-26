@@ -1,4 +1,5 @@
 use crate::{
+    controllers::data_controller::Timing,
     models::{Data, DataInsert},
     schema::data::dsl::*,
     ClientData, Database,
@@ -11,7 +12,7 @@ use diesel_async::RunQueryDsl;
 /// * `data_type_name` - The data type name to filter the data by
 /// * `run_id` - The run id to filter the data
 ///   returns: A result containing the data or the error propogated by the db
-pub async fn get_data(
+pub async fn get_data_by_run_id(
     db: &mut Database<'_>,
     data_type_name: String,
     run_id: i32,
@@ -19,6 +20,29 @@ pub async fn get_data(
     data.filter(runId.eq(run_id).and(dataTypeName.eq(data_type_name)))
         .load(db)
         .await
+}
+
+/// Get datapoints that mach criteria
+/// * `db` - The database connection to use
+/// * `data_type_name` - The data type name to filter the data by
+/// * `timing` - The timeframe the data must be constrained within
+///   returns: A result containing the data or the error propogated by the db
+pub async fn get_data_by_timing(
+    db: &mut Database<'_>,
+    data_type_name: String,
+    timing: Timing,
+) -> Result<Vec<Data>, diesel::result::Error> {
+    let higher_end: i64 = timing.time + (timing.after * 60 * 1000); // minutes to microsseconds
+    let lower_end: i64 = timing.time - (timing.before * 60 * 1000); // minutes to microsseconds
+
+    data.filter(
+        dataTypeName
+            .eq(data_type_name)
+            .and(time.ge(lower_end))
+            .and(time.le(higher_end)),
+    )
+    .load(db)
+    .await
 }
 
 /// Adds a datapoint

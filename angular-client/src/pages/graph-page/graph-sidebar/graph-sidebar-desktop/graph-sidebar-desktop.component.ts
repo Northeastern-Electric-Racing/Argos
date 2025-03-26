@@ -49,7 +49,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     const mapToTreeNode = (node: Node): TreeNode => {
       const displayValue = new BehaviorSubject<string>('N/A');
       this.storage.get(node.topicName.slice(0, -1)).subscribe((value) => {
-        console.log(value);
         displayValue.next(decimalPipe(value.values[0], 3).toFixed(3) + value.unit);
       });
       return {
