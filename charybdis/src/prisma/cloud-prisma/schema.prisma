@@ -19,6 +19,8 @@ model run {
   time       DateTime @db.Timestamptz()
 
   data data[]
+
+  @@unique([runId, time], name: "unique_run_time")
 }
 
 model data {
