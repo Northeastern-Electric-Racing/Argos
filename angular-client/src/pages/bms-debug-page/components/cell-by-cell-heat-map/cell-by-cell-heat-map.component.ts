@@ -2,7 +2,7 @@ import { Component, effect, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { dataTypes } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
-import { Segments } from 'src/utils/bms.utils';
+import { Segment } from 'src/utils/bms.utils';
 import { Subscription } from 'rxjs';
 
 // todo: implement below
@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
 })
 export class CellByCellHeatMapComponent {
   private storage = inject(Storage);
-  currentSegment = input.required<Segments>();
+  currentSegment = input.required<Segment>();
   alphaSubscriptions: Subscription[] = [];
   betaSubscriptions: Subscription[] = [];
   alphaCells = [

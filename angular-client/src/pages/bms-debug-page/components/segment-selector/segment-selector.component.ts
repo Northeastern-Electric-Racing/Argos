@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routing.module';
 import { DropdownOption } from 'src/components/select-dropdown/select-dropdown.component';
-import { Segments } from 'src/utils/bms.utils';
+import { Segment } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'segment-selector',
@@ -23,7 +23,7 @@ export class SegmentSelectorComponent implements OnInit {
 
   constructor() {
     // get all the values from the Segments enum
-    const segments = Object.values(Segments).filter((segment) => !isNaN(Number(segment)));
+    const segments = Object.values(Segment).filter((segment) => !isNaN(Number(segment)));
     // Add all segments with title: 'Segment {segmentNumber}' to dropdown
     this.selectorOptions.push(
       ...segments.map((segment) => {

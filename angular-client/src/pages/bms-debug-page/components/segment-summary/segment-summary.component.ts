@@ -2,7 +2,7 @@ import { Component, inject, input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routing.module';
 import Storage from 'src/services/storage.service';
-import { getSegmentInfo, SegmentInfo, Segments } from 'src/utils/bms.utils';
+import { SegmentInfo, Segment, segmentInfoMap } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'segment-summary',
@@ -12,7 +12,7 @@ import { getSegmentInfo, SegmentInfo, Segments } from 'src/utils/bms.utils';
 export class SegmentSummaryComponent implements OnInit {
   private router = inject(Router);
   private storage = inject(Storage);
-  segmentNumber = input.required<Segments>();
+  segmentNumber = input.required<Segment>();
   temperature!: number;
   alphaChipTemp!: number;
   betaChipTemp!: number;
@@ -47,6 +47,6 @@ export class SegmentSummaryComponent implements OnInit {
   };
 
   getRelevantKeys = (): SegmentInfo => {
-    return getSegmentInfo(this.segmentNumber());
+    return segmentInfoMap[this.segmentNumber()];
   };
 }

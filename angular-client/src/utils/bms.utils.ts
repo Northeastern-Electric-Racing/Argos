@@ -20,6 +20,14 @@ export type SegmentInfo = {
   voltageKey: DataTypeEnum;
 };
 
+export const segmentNamesMap = {
+  [Segment.Segment1]: 'Segment 1',
+  [Segment.Segment2]: 'Segment 2',
+  [Segment.Segment3]: 'Segment 3',
+  [Segment.Segment4]: 'Segment 4',
+  [Segment.Segment5]: 'Segment 5'
+};
+
 export const segment1: SegmentInfo = {
   segmentTempKey: DataTypeEnum.Segment_Temp_1,
   alphaChipTempKey: DataTypeEnum.PER_CELL_ALPHA_DIE_TEMP_0,
@@ -55,10 +63,10 @@ export const segment5: SegmentInfo = {
   voltageKey: DataTypeEnum.Segment_Voltage_5
 };
 
-export const segmentInfoMap = new Map<Segment, SegmentInfo>([
-  [Segment.Segment1, segment1],
-  [Segment.Segment2, segment2],
-  [Segment.Segment3, segment3],
-  [Segment.Segment4, segment4],
-  [Segment.Segment5, segment5]
-]);
+export const segmentInfoMap = {
+  [Segment.Segment1]: segment1,
+  [Segment.Segment2]: segment2,
+  [Segment.Segment3]: segment3,
+  [Segment.Segment4]: segment4,
+  [Segment.Segment5]: segment5
+};

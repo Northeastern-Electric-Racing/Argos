@@ -1,5 +1,5 @@
 import { Component, input, OnInit } from '@angular/core';
-import { Chips } from 'src/utils/bms.utils';
+import { Chip } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'chip-diagnostics',
@@ -7,11 +7,11 @@ import { Chips } from 'src/utils/bms.utils';
   styleUrl: './chip-diagnostics.component.css'
 })
 export class ChipDiagnosticsComponent implements OnInit {
-  chip = input.required<Chips>();
+  chip = input.required<Chip>();
   title!: string;
 
   ngOnInit(): void {
     // Simply formats: Chip (Alpha/Beta) Diagnostics
-    this.title = `Chip ${Chips[this.chip()]} Diagnostics`;
+    this.title = `Chip ${Chip[this.chip()]} Diagnostics`;
   }
 }
