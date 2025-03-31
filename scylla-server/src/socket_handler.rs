@@ -60,13 +60,13 @@ pub async fn socket_handler_with_metadata(
         );
     }
 
-    // init faults
+    // init faults, only cirtical faults, as of 3/31 can JSON
     let fault_regex_bms: Regex =
-        Regex::new(r"BMS\/Status\/F\/(.*)").expect("Could not compile regex!");
+        Regex::new(r"BMS\/Faults\/(.*)").expect("Could not compile regex!");
     let fault_regex_charger: Regex =
         Regex::new(r"Charger\/Box\/F_(.*)").expect("Could not compile regex!");
     let fault_regex_mpu: Regex =
-        Regex::new(r"MPU\/Fault\/F_(.*)").expect("Could not compile regex!");
+        Regex::new(r"MPU\/Fault\/Critical\/(.*)").expect("Could not compile regex!");
     let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
 
     loop {
