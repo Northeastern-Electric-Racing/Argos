@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { Segment } from 'src/utils/bms.utils';
+import { allSegments } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'app-bms-debug-page',
@@ -12,7 +12,7 @@ export class BmsDebugPageComponent implements OnInit {
   mobileThreshold = 768;
   windowSize: number = window.innerWidth;
   isMobile = window.innerWidth < this.mobileThreshold;
-  segments = [Segment.Segment1, Segment.Segment2, Segment.Segment3, Segment.Segment4, Segment.Segment5];
+  segments = allSegments;
 
   constructor() {}
 

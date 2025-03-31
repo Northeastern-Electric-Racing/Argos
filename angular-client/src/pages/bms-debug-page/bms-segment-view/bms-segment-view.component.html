@@ -1,7 +1,12 @@
 <div class="image-container" style="margin-right: 16px; margin-left: 16px">
   <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem" style="margin-top: -20px">
     <mat-grid-tile [colspan]="6" rowspan="3">
-      <bms-header style="width: 100%" [pageTitle]="'Segment ' + this.segmentId" />
+      <!-- Display values are 1-based index for segments-->
+      <bms-header
+        class="bms-header"
+        style="width: 100%"
+        [pageTitle]="(this.changeTitleSize ? 'Seg. ' : 'Segment ') + (this.segmentId + 1)"
+      />
     </mat-grid-tile>
     <mat-grid-tile colspan="6" rowspan="5">
       <segment-at-a-glance style="width: 100%; height: 100%" />

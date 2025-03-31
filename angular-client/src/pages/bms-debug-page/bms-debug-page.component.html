@@ -5,7 +5,7 @@
     <!-- TODO: Add components for the segment summary-->
     <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem" style="margin-top: -20px">
       <mat-grid-tile [colspan]="6" rowspan="3">
-        <bms-header style="width: 100%" pageTitle="Accumulator" />
+        <bms-header style="width: 100%" [pageTitle]="this.windowSize < 1200 ? 'ACCU' : 'Accumulator'" />
       </mat-grid-tile>
       <mat-grid-tile [colspan]="6" rowspan="5">
         <bms-at-a-glance style="height: 100%; width: 100%" />
@@ -19,7 +19,7 @@
       </mat-grid-tile>
       @for (segment of segments; track segment) {
         <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="16">
-          <segment-summary [segmentNumber]="segment" style="height: 100%; width: 100%" />
+          <segment-summary [segmentNumber]="segment + 1" style="height: 100%; width: 100%" />
         </mat-grid-tile>
       }
     </mat-grid-list>

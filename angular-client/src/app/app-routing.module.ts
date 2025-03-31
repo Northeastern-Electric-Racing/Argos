@@ -7,13 +7,14 @@ import ChargingPageComponent from 'src/pages/charging-page/charging-page.compone
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import MapComponent from 'src/pages/map/map.component';
+import { Segment } from 'src/utils/bms.utils';
 
 const landingRoute = () => `/landing`;
 const graphRoute = () => `/graph`;
 const mapRoute = () => `/map`;
 const chargingRoute = () => `/charging`;
 const bmsRoute = () => `/bms`;
-const bmsSegmentViewRoute = (id: number) => `bms/segment/${id}`;
+const bmsSegmentViewRoute = (id: Segment) => `/bms/segment/${id + 1}`;
 const cameraRoute = () => `/camera`;
 
 export const appRoutes = {
@@ -26,6 +27,7 @@ export const appRoutes = {
   cameraRoute
 };
 
+// Routes should be defined carefully in accordance with the appRoutes
 const routes: Routes = [
   { path: 'landing', component: LandingPageComponent },
   { path: 'graph', component: GraphPageComponent },
@@ -33,7 +35,7 @@ const routes: Routes = [
   { path: 'map', component: MapComponent },
   { path: 'charging', component: ChargingPageComponent },
   { path: 'bms', component: BmsDebugPageComponent },
-  // Routes with params should be carefully defined in conjunction with it's lambda function
+  // NOTE: paramaterized routes should be even more carefully defined in accordance with the appRoutes
   { path: 'bms/segment/:id', component: BmsSegmentViewComponent },
   { path: 'camera', component: CameraPageComponent }
 ];
