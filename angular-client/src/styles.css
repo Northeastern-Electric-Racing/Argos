@@ -5,6 +5,7 @@
 html,
 body {
   height: 100%;
+  font-family: 'Roboto';
 }
 body {
   margin: 0;
@@ -20,14 +21,29 @@ body {
 * {
   scrollbar-width: none;
 }
-
 .mat-mdc-dialog-container {
   --mdc-dialog-container-color: transparent !important;
+}
+
+.connection-dot {
+  background-color: transparent;
+  border: 3px solid;
+  border-color: rgb(243, 243, 243);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.p-dialog-title {
+  --p-dialog-title-font-weight: bold;
 }
 
 .p-dialog-header {
   background-color: #262626 !important;
   color: white !important;
+  padding: 1rem !important;
+  font-size: 1.2rem;
+  padding: 1rem;
   border-radius: 20px 20px 0px 0px !important;
 }
 .p-dialog-content {
@@ -39,4 +55,48 @@ body {
   background-color: #1a0808 !important;
   color: white !important;
   width: 200px !important;
+}
+
+/* Main select button */
+.p-select {
+  color: white !important;
+  background-color: #5a5a5a !important;
+
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dropdown panel */
+.p-select-panel {
+  background-color: #5a5a5a !important;
+  color: white !important;
+  border-radius: 0 0 5px 5px !important;
+  gap: 0px !important;
+}
+
+/* Dropdown items */
+.p-select-option {
+  color: white !important;
+  background-color: transparent !important;
+  padding: 8px 16px !important;
+  border-radius: 5px !important;
+}
+
+/* Hovered item */
+.p-select-option:hover {
+  background-color: #45454594 !important;
+  border-radius: 0px !important;
+}
+
+/* Selected item */
+.p-select-option.p-highlight {
+  background-color: rgba(0, 122, 255, 0.15) !important;
+  color: #007aff !important;
+}
+
+/* Dropdown list container */
+.p-select-list {
+  background-color: #5a5a5a !important;
+  border-radius: 0 0 5px 5px !important;
+  margin: 0px;
 }

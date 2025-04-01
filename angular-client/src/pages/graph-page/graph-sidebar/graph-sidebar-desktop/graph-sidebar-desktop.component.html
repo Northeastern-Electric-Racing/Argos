@@ -1,19 +1,25 @@
 <div class="background">
-  <div>
-    <mat-toolbar class="search-block mat-elevation-z4">
-      <mat-toolbar-row style="padding: 0px">
-        <button mat-icon-button style="padding: 6px; width: 36px; height: 36px" disabled>
-          <mat-icon style="padding: 0px; color: #808080" svgIcon="search" />
-        </button>
-        <form [formGroup]="filterForm">
-          <input matInput class="search-control" type="text" placeholder="Search Topic" formControlName="searchFilter" />
-        </form>
-      </mat-toolbar-row>
-    </mat-toolbar>
-    <div class="topic-list">
-      @for (node of nodesWithVisibilityToggle | async | nodeFilter: 'name' : searchFilter; track node) {
-        <node-display [node]="node" [isDesktop]="true" [searchFilter]="searchFilter" [selectDataType]="selectDataType" />
-      }
-    </div>
-  </div>
+  <p-tree
+    [value]="treeNodes"
+    styleClass="w-full md:w-[30rem]"
+    selectionMode="single"
+    (onNodeSelect)="nodeSelect()"
+    [(selection)]="selectedNode"
+    [filter]="true"
+    filterPlaceholder="Select Data Type"
+    styleClass="w-full"
+    [autofocus]="true"
+    [style]="{ height: '80vh', overflow: 'auto' }"
+  >
+    <ng-template let-node pTemplate="default">
+      <div class="tree-node-container">
+        <div [style]="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
+          <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
+          @if (node.children.length === 0) {
+            <typography [content]="node.data.displayValue.value" variant="subheader" />
+          }
+        </div>
+      </div>
+    </ng-template>
+  </p-tree>
 </div>

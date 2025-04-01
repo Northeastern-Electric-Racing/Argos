@@ -40,9 +40,33 @@ export type GraphData = {
   y: number;
 };
 
+export type GraphInfo = {
+  label: string;
+  data: GraphData[][];
+};
+
 export type DoubleGraphData = {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
 };
+
+export interface FaultData {
+  node: string;
+  name: string;
+  occurredAt: Date;
+  lastSeen: Date;
+  expired: boolean;
+}
+
+export interface FaultNode {
+  node: string;
+  data: FaultData[];
+}
+
+export interface Timing {
+  time: number;
+  before: number;
+  after: number;
+}

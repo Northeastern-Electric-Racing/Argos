@@ -37,10 +37,6 @@ export class CarouselComponent {
     this.currentIndex = nexIndex;
   }
 
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
-
   handlePageChange(event: CarouselPageEvent): void {
     const newIndex = event.page;
     if (newIndex) {
@@ -58,6 +54,6 @@ export class CarouselComponent {
 
   datePipe = (date: Date) => {
     date = new Date(date);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}`;
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} - ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padEnd(2, '0')}`;
   };
 }

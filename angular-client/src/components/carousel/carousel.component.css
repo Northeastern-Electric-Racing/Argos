@@ -1,27 +1,21 @@
 .select-button-container {
   width: 100%;
   text-align: center;
-  margin-top: 8px;
+  padding: 10px;
 }
 
+/* Run select button - using PrimeNG's CSS variables */
 .run-select-button {
-  border-radius: 10px;
-  color: #262626;
-  background-color: white;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.close-button {
-  background-color: #f04346;
-  color: white;
-  position: absolute;
-  top: 0;
-  right: 0;
-  scale: 75%;
-  border-radius: 10px;
-  margin-top: 15px;
-  margin-right: 10px;
+  --p-button-primary-color: #ffffff;
+  --p-button-primary-background: #313131;
+  --p-button-primary-border-color: #777777;
+  --p-button-primary-hover-background: rgba(104, 104, 104, 0.261);
+  --p-button-primary-hover-border-color: #777777;
+  --p-button-border-radius: 10px;
+  --p-button-padding-y: 8px;
+  --p-button-padding-x: 1.5rem;
+  --p-button-transition-duration: 0.15s;
+  --p-iconwrapper-padding-x: 1rem;
 }
 
 .run-card {
@@ -54,7 +48,7 @@
   background-color: #262626;
   border-color: #262626;
   color: white;
-  border-radius: 10px;
+  border-radius: 100px;
 }
 
 /* should eventually be replaced with Grid component */
@@ -81,4 +75,14 @@
 .number_buttons.highlight {
   border: 2px solid #0099ff; /* Highlight color */
   background-color: #808080; /* Slightly different background to stand out */
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  scale: 75%;
+  border-radius: 10px;
+  margin-top: 15px;
+  margin-right: 10px;
 }

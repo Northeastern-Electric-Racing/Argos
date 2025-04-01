@@ -6,10 +6,7 @@ import { readCsvFile } from "../utils/csv.utils";
 import { csvToCloudData } from "../transformers/csv.transformer";
 import { getMostRecentDownloadFolderPath } from "./audit.service";
 import { processCsvInBatches } from "../utils/csv.utils";
-import {
-  RunsUploadError,
-  CouldNotConnectToCloudDB,
-} from "../errors/upload.errors";
+import { CouldNotConnectToCloudDB } from "../errors/upload.errors";
 import { storagePaths } from "../storage-paths";
 
 const csvNames = {
@@ -21,6 +18,7 @@ const csvNames = {
 async function checkDbConnection() {
   try {
     await cloudPrisma.$connect();
+    await cloudPrisma;
   } catch (error) {
     throw new CouldNotConnectToCloudDB();
   }
@@ -73,7 +71,6 @@ export async function processDataType(
       const cloudDataTypes: CloudDataType[] = batch.map((localDataType) => ({
         name: localDataType.name,
         unit: localDataType.unit,
-        nodeName: localDataType.nodeName,
       }));
 
       await cloudPrisma.data_type.createMany({
@@ -103,7 +100,12 @@ export async function processRunsWithData(
     };
 
     await cloudPrisma.run.upsert({
-      where: { id: cloudRun.id },
+      where: {
+        unique_run_time: {
+          runId: cloudRun.runId,
+          time: cloudRun.time,
+        },
+      },
       create: cloudRun,
       update: cloudRun,
     });

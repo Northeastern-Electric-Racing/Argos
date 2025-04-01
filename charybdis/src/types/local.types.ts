@@ -25,5 +25,4 @@ export interface LocalData {
 export interface LocalDataType {
   name: string;
   unit: string;
-  nodeName: string;
 }

@@ -28,7 +28,7 @@
     "@types/express": "^5.0.0",
     "@types/json2csv": "^5.0.7",
     "@types/node": "^22.13.1",
-    "prisma": "^6.2.1",
+    "prisma": "6.2.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
@@ -36,7 +36,7 @@
   "dependencies": {
     "@inquirer/prompts": "^7.3.1",
     "@json2csv/node": "^7.0.6",
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "6.2.1",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "csv-parse": "^5.6.0",

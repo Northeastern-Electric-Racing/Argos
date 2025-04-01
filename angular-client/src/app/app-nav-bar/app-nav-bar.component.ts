@@ -5,7 +5,6 @@ import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
-import Storage from 'src/services/storage.service';
 
 interface NavItem {
   label: string;
@@ -19,7 +18,6 @@ interface NavItem {
   styleUrls: ['./app-nav-bar.component.css']
 })
 export class AppNavBarComponent implements OnInit {
-  private storage = inject(Storage);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
   private router = inject(Router);
@@ -62,7 +60,10 @@ export class AppNavBarComponent implements OnInit {
     { label: 'Home', route: '/landing', icon: 'home' },
     { label: 'Charging', route: '/charging', icon: 'ev_station' },
     { label: 'Graph', route: '/graph', icon: 'bar_chart' },
-    { label: 'Map', route: '/map', icon: 'map' }
+    { label: 'Map', route: '/map', icon: 'map' },
+    { label: 'BMS', route: '/bms', icon: 'action_key' },
+    { label: 'Faults', route: '/faults', icon: 'error' },
+    { label: 'Camera', route: '/camera', icon: 'linked_camera' }
   ];
 
   navigateTo(route: string): void {

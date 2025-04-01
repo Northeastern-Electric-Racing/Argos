@@ -6,7 +6,7 @@ use std::{
 use axum::{
     extract::DefaultBodyLimit,
     http::Method,
-    routing::{get, post},
+    routing::{get, post, put},
     Extension, Router,
 };
 use clap::Parser;
@@ -22,11 +22,12 @@ use scylla_server::{
     controllers::{
         self,
         car_command_controller::{self},
-        data_type_controller, file_insertion_controller, run_controller,
+        data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode,
+    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
+    STATIC_RATE_LIMIT_VALUE,
 };
 use scylla_server::{
     db_handler,
@@ -81,7 +82,7 @@ struct ScyllaArgs {
         env = "SCYLLA_BATCH_UPSERT_TIME",
         default_value = "10"
     )]
-    batch_upsert_time: u64,
+    batch_upsert_time: u16,
 
     /// The rate limit mode to use
     #[arg(
@@ -100,7 +101,7 @@ struct ScyllaArgs {
         env = "SCYLLA_STATIC_RATE_LIMIT_VALUE",
         default_value = "100"
     )]
-    static_rate_limit_value: u64,
+    static_rate_limit_value: u16,
 
     /// The percent of messages discarded when sent from the socket
     #[arg(
@@ -149,6 +150,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // use that subscriber to process traces emitted after this point
         tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
     }
+
+    info!("Configuring global variables");
+    DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
+    BATCH_UPSERT_TIME.store(cli.batch_upsert_time, Ordering::Relaxed);
+    RATE_LIMIT_MODE.store(cli.rate_limit_mode as u8, Ordering::Relaxed);
+    STATIC_RATE_LIMIT_VALUE.store(cli.static_rate_limit_value, Ordering::Relaxed);
+    SOCKET_DISCARD_PERCENT.store(cli.socketio_discard_percent, Ordering::Relaxed);
 
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
@@ -200,43 +208,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(
-            token.clone(),
-            mqtt_receive,
-            cli.socketio_discard_percent,
-            io,
-        ));
+        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive, io));
     } else {
         task_tracker.spawn(socket_handler_with_metadata(
             token.clone(),
             mqtt_receive,
-            cli.socketio_discard_percent,
             io,
         ));
     }
 
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(
-            mqtt_send.subscribe(),
-            pool.clone(),
-            cli.batch_upsert_time * 1000,
-        )
-        .handling_loop(db_send.clone(), token.clone()),
+        db_handler::DbHandler::new(mqtt_send.subscribe(), pool.clone())
+            .handling_loop(db_send.clone(), token.clone()),
     );
-    // spawn the database inserter, if we have it enabled
-    if !cli.disable_data_upload {
-        task_tracker.spawn(db_handler::DbHandler::batching_loop(
-            db_receive,
-            pool.clone(),
-            token.clone(),
-        ));
-    } else {
-        task_tracker.spawn(db_handler::DbHandler::fake_batching_loop(
-            db_receive,
-            token.clone(),
-        ));
-    }
+    // spawn the database inserter
+    task_tracker.spawn(db_handler::DbHandler::batching_loop(
+        db_receive,
+        pool.clone(),
+        token.clone(),
+    ));
 
     // creates the initial run
     let curr_run =
@@ -255,8 +246,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
             initial_run: curr_run.runId,
-            static_rate_limit_time: cli.static_rate_limit_value,
-            rate_limit_mode: cli.rate_limit_mode,
         },
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
@@ -267,7 +256,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // DATA
         .route(
             "/data/{dataTypeName}/{runId}",
-            get(controllers::data_controller::get_data),
+            get(controllers::data_controller::get_data_by_run_id),
+        )
+        .route(
+            "/data/{dataTypeName}",
+            get(controllers::data_controller::get_data_by_timing),
         )
         // DATA TYPE
         .route("/datatypes", get(data_type_controller::get_all_data_types))
@@ -283,10 +276,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/runs/update/{id}/{driver}/{location}/{notes}",
             post(run_controller::update_run_with_data),
         )
-        // CONFIG
+        // CAR CONFIG
         .route(
             "/config/set/{configKey}",
             post(car_command_controller::send_config_command).layer(Extension(client_sharable)),
+        )
+        // SCYLLA CONFIG
+        .route(
+            "/scylla/get_settings",
+            get(scylla_config_controller::get_settings),
+        )
+        // DATA_UPLOAD_DISABLE --
+        .route(
+            "/scylla/upload/disable",
+            put(scylla_config_controller::disable_data_upload),
+        )
+        .route(
+            "/scylla/upload/enable",
+            put(scylla_config_controller::enable_data_upload),
+        )
+        // --
+        .route(
+            "/scylla/batch_time/{time_sec}",
+            put(scylla_config_controller::batch_upsert_set),
+        )
+        .route(
+            "/scylla/ratelimit_mode/{mode_idex}",
+            put(scylla_config_controller::rate_limit_mode_set),
+        )
+        .route(
+            "/scylla/static_ratelimit_time/{time_ms}",
+            put(scylla_config_controller::static_ratelimit_time_set),
+        )
+        .route(
+            "/scylla/socket_discard_percent/{discard_perc}",
+            put(scylla_config_controller::socket_discard_percent_set),
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))

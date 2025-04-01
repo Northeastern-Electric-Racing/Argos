@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { CarouselModule } from 'primeng/carousel';
 import { ToastModule } from 'primeng/toast';
@@ -34,7 +34,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialog } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -66,6 +66,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import { SwitchComponent } from 'src/components/switch/switch.component';
 import { DoubleLineGraphComponent } from 'src/components/double-line-graph/double-line-graph.component';
@@ -83,7 +84,7 @@ import HighLowCellGraphComponent from 'src/pages/charging-page/components/high-l
 import PackVoltageGraphComponent from 'src/pages/charging-page/components/pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
 import PackVoltageDisplayComponent from 'src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
 import ChargingStatusComponent from 'src/pages/charging-page/components/charging-state/charging-status.component';
-import { BatteryPercentageComponent } from 'src/pages/charging-page/components/battery-percentage/battery-percentage.component';
+import { BatteryPercentageComponent } from 'src/components/battery-percentage/battery-percentage.component';
 import { BatteryInfoDisplayComponent } from 'src/pages/charging-page/components/battery-info-display/battery-info-display';
 import { ToastButtonComponent } from 'src/components/toast-button/toast-button.component';
 import StartingSocTimerComponent from 'src/pages/charging-page/components/starting-soc/starting-soc-timer.component';
@@ -106,6 +107,34 @@ import { AppNavBarComponent } from './app-nav-bar/app-nav-bar.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { SidebarModule } from 'primeng/sidebar';
+import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
+import { BmsAtAGlanceComponent } from 'src/pages/bms-debug-page/components/bms-at-a-glance/bms-at-a-glance.component';
+import { SegmentSummaryComponent } from 'src/pages/bms-debug-page/components/segment-summary/segment-summary.component';
+import { SegmentSelectorComponent } from 'src/pages/bms-debug-page/components/segment-selector/segment-selector.component';
+import { CRCComponent } from 'src/pages/bms-debug-page/components/crc/crc.component';
+import { AccHighTempComponent } from 'src/pages/bms-debug-page/components/acc-high-temp/acc-high-temp.component';
+import { AccLowVoltageComponent } from 'src/pages/bms-debug-page/components/acc-low-voltage/acc-low-voltage.component';
+import { AccHighVoltageComponent } from 'src/pages/bms-debug-page/components/acc-high-voltage/acc-high-voltage.component';
+import { BmsOverflowComponent } from 'src/pages/bms-debug-page/components/bms-overflow/bms-overflow.component';
+import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/info-value-display.component';
+import { SelectDropdownComponent } from 'src/components/select-dropdown/select-dropdown.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { SelectModule } from 'primeng/select';
+import { providePrimeNG } from 'primeng/config';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import Lara from '@primeng/themes/aura';
+import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TableModule } from 'primeng/table';
+import { TreeModule } from 'primeng/tree';
+import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
+import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
+import { GeneralButtonsComponent } from 'src/pages/graph-page/graph-caption/general-buttons/general-buttons.component';
+import { FaultDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/fault-display-info/fault-display-info.component';
+import { FaultButtonsComponent } from 'src/pages/graph-page/graph-caption/fault-buttons/fault-buttons.component';
+import { GeneralDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/general-display-info/general-display-info.component';
+import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 
 @NgModule({
   declarations: [
@@ -195,7 +224,26 @@ import { SidebarModule } from 'primeng/sidebar';
     CurrentRunDisplayComponent,
     ViewerDisplayComponent,
     NodeDisplayComponent,
-    AppNavBarComponent
+    AppNavBarComponent,
+    BmsDebugPageComponent,
+    BmsAtAGlanceComponent,
+    SegmentSummaryComponent,
+    SegmentSelectorComponent,
+    CRCComponent,
+    AccHighTempComponent,
+    AccLowVoltageComponent,
+    AccHighVoltageComponent,
+    BmsOverflowComponent,
+    InfoValueDisplayComponent,
+    SelectDropdownComponent,
+    FaultPageComponent,
+    BmsHeaderComponent,
+    ConnectionDotWithMessageComponent,
+    GeneralButtonsComponent,
+    FaultButtonsComponent,
+    GeneralDisplayInfoComponent,
+    FaultDisplayInfoComponent,
+    CameraPageComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -209,7 +257,7 @@ import { SidebarModule } from 'primeng/sidebar';
     ProgressSpinnerModule,
     MatIconModule,
     MatGridListModule,
-    DynamicDialogModule,
+    DynamicDialog,
     BrowserAnimationsModule,
     ButtonModule,
     MatIconModule,
@@ -219,9 +267,27 @@ import { SidebarModule } from 'primeng/sidebar';
     ReactiveFormsModule,
     MatCardModule,
     MatDividerModule,
-    SidebarModule
+    SidebarModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    FormsModule,
+    SelectModule,
+    AccordionModule,
+    TableModule,
+    TreeModule
   ],
-  providers: [DialogService, MessageService, provideHttpClient(withInterceptorsFromDi())]
+  providers: [
+    DialogService,
+    MessageService,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideClientHydration(),
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Lara
+      }
+    })
+  ]
 })
 export class AppModule {
   constructor(
@@ -272,6 +338,14 @@ export class AppModule {
       .addSvgIcon(
         'arrow_drop_down_circle',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assests/icons/arrow_drop_down_circle.svg')
-      );
+      )
+      .addSvgIcon('action_key', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/action_key.svg'))
+      .addSvgIcon('apps', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/apps.svg'))
+      .addSvgIcon(
+        'battery_charging_2',
+        this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
+      )
+      .addSvgIcon('error', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/alert-triangle.svg'))
+      .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'));
   }
 }

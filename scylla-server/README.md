@@ -1,8 +1,18 @@
 # Scylla Server
 
-The backend written in Rust for Argos.
+The backend for argos, processes data storing it into the database, sends messages over MQTT to the car, and broadcasts data and metadata to the frontend.
 
-## Local Development
+---
+
+## Quickstart
+
+[Install rust](https://www.rust-lang.org/tools/install)
+
+### Extensions to install
+
+Please install by searching that id(s) in vs code extensions.
+
+rust analysizer: `rust-lang.rust-analyzer`
 
 ### Run the app
 
@@ -14,25 +24,36 @@ cargo run
 
 And you're done!
 
-## Test this app
+---
 
-#### Get started with DB
+## Development Guide
 
-Download the diesel CLI from [here](https://diesel.rs/guides/getting-started).
+This section should be your first refrence when developing or running into development issues.
 
-With this you can run manual migrations and change the schema.
+---
 
-#### Integration tests
+### Test this app
+
+#### Get started with DB:
+
+We use diesel, for our ORM: [diesel docs](https://diesel.rs/guides/getting-started).
+
+However, when creating schema changes please use charybis, [Charybdis README](../charybdis/README.md).
+
+#### Integration tests:
 
 Since this app uses the database for testing, you must:
-1. Install the diesel CLI.
+
+1. Install the [diesel CLI](https://diesel.rs/guides/getting-started.html#installing-diesel-cli) globally.
 2. run `./integration_test.sh`:
 
-#### Test it yourself!
+<!-- #### Test it yourself!
 
 You can send your own messages to the app running in production mode, and test how the client, database, etc. reacts!
 
-Follow this confluence doc: https://nerdocs.atlassian.net/wiki/spaces/NER/pages/473727054/How+to+run+data+through+Argos+without+the+car
+Follow this confluence doc: https://nerdocs.atlassian.net/wiki/spaces/NER/pages/473727054/How+to+run+data+through+Argos+without+the+car -->
+
+---
 
 #### View threads and resources
 
@@ -40,9 +61,11 @@ Follow this confluence doc: https://nerdocs.atlassian.net/wiki/spaces/NER/pages/
 2. Install tokio console: ex `cargo install --locked tokio-console`
 3. Run app and `tokio-console`
 
-#### Debug logging
+---
 
-#### Activate logs
+### Logging
+
+#### Debug logging / Activate logs
 
 Modify the RUST_LOG env variable. Usually you dont want third party crate logs, so `RUST_LOG=none,scylla_server=trace`. You can replace both none and trace with the levels you want. The levels are:
 
@@ -61,7 +84,7 @@ Have an async function that takes time and is somewhat important for performance
 
 ## Deploy this app
 
-See main README.
+See [main README](../README.md).
 
 #### Env variables & CLI Customization
 
