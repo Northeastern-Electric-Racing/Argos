@@ -1,20 +1,9 @@
 import { Component, effect, inject, input } from '@angular/core';
-import Storage from 'src/services/storage.service';
-import { allAlphaThermValues, allBetaThermValues, dataTypes } from 'src/utils/topic.utils';
-import { floatPipe } from 'src/utils/pipes.utils';
-import { numToSegmentType, Segment } from 'src/utils/bms.utils';
+import { Segment } from 'src/utils/bms.utils';
 import { Subscription } from 'rxjs';
-
-// todo: implement below
-// type AlphaCells = [number, number, number];
-export type Cell = {
-  value: number;
-  color: string;
-};
-// 7 beta cells
-export type AlphaCells = [Cell, Cell, Cell, Cell, Cell, Cell, Cell];
-// 6 alpha cells
-export type BetaCells = [Cell, Cell, Cell, Cell, Cell, Cell];
+import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
+import { AlphaCells, BetaCells, CellReading, CellService } from 'src/services/cell.service';
+import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 
 @Component({
   selector: 'cell-by-cell-heat-map',
@@ -22,79 +11,67 @@ export type BetaCells = [Cell, Cell, Cell, Cell, Cell, Cell];
   styleUrl: './cell-by-cell-heat-map.component.css'
 })
 export class CellByCellHeatMapComponent {
-  private storage = inject(Storage);
+  private cellService = inject(CellService);
+  private heatMapService = inject(HeatMapService);
   currentSegment = input.required<Segment>();
   alphaSubscriptions: Subscription[] = [];
   betaSubscriptions: Subscription[] = [];
-  alphaCells: AlphaCells = [
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' }
+  alphaCells!: Readonly<AlphaCells>;
+  betaCells!: Readonly<BetaCells>;
+  view = HeatMapView.Temperature;
+  cellViewSelectOptions: DropdownOption[] = [
+    {
+      name: HeatMapView.Temperature.toString(),
+      function: () => {
+        this.view = HeatMapView.Temperature;
+        this.heatMapService.setCurrentView(HeatMapView.Temperature);
+      }
+    },
+    {
+      name: HeatMapView.Voltage.toString(),
+      function: () => {
+        this.view = HeatMapView.Voltage;
+        this.heatMapService.setCurrentView(HeatMapView.Voltage);
+      }
+    }
   ];
-  betaCells: BetaCells = [
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' },
-    { value: -1, color: 'grey' }
-  ];
+  selectorConfig: SelectorConfig = {
+    options: this.cellViewSelectOptions,
+    placeholder: 'Change View'
+  };
 
   constructor() {
-    this.resetCells();
     effect(() => {
-      this.alphaSubscriptions.forEach((sub) => sub.unsubscribe());
-      this.betaSubscriptions.forEach((sub) => sub.unsubscribe());
-      this.subscribeToAlphaChips(this.currentSegment());
-      this.subscribeToBetaChips(this.currentSegment());
-      console.log(this.betaCells[5].value);
-      console.log('Current Segment:', this.currentSegment());
+      this.alphaCells = this.cellService.getAlphaCellsBySegment(this.currentSegment());
+      this.betaCells = this.cellService.getBetaCellsBySegment(this.currentSegment());
     });
   }
 
-  resetCells = () => {
-    this.betaCells.map((cell) => {
-      cell.value = -1;
-      cell.color = 'grey';
-    });
-    this.alphaCells.map((cell) => {
-      cell.value = -1;
-      cell.color = 'grey';
-    });
-  };
+  getColor = (value: number | undefined) => {
+    if (value === undefined) {
+      return 'grey';
+    }
 
-  subscribeToAlphaChips = (segment: number) => {
-    const segmentNumber = numToSegmentType(segment);
-    allAlphaThermValues.map((therm) =>
-      this.alphaSubscriptions.push(
-        this.storage.get(dataTypes.alphaTemp(segmentNumber, therm)).subscribe((data) => {
-          this.alphaCells[0].value = floatPipe(data.values[0]);
-          this.alphaCells[0].color = this.getColor(this.alphaCells[0].value);
-        })
-      )
-    );
-    this.alphaSubscriptions.push();
-  };
-
-  subscribeToBetaChips = (segment: number) => {
-    const segmentNumber = numToSegmentType(segment);
-    allBetaThermValues.map((therm) =>
-      this.betaSubscriptions.push(
-        this.storage.get(dataTypes.betaTemp(segmentNumber, therm)).subscribe((data) => {
-          this.betaCells[0].value = floatPipe(data.values[0]);
-          this.betaCells[0].color = this.getColor(this.betaCells[0].value);
-        })
-      )
-    );
-  };
-
-  getColor = (value: number) => {
-    const hslMainValue = Math.min(Math.max(55 - value, 0) * 8, 120);
+    // Math: red is 0 so when the value we have red, when the value is 45 we have bright green,
+    // and increase slowly from 0... to 120 by 8 increments transitioning from green -> red.
+    const hslMainValue = Math.min(Math.max(55 - value, 0) * 6, 120);
 
     return `hsl(${hslMainValue}, 100%, 50%)`;
+  };
+
+  cellClicked = (cell: CellReading) => {
+    this.heatMapService.setSelectedCell(cell);
+  };
+
+  averageVoltCellPair = (reading: CellReading): number | undefined => {
+    const { volt1, volt2 } = reading;
+
+    if (volt1 === undefined) {
+      return volt2;
+    } else if (volt2 === undefined) {
+      return volt1;
+    }
+
+    return (volt1 + volt2) / 2;
   };
 }

@@ -1,6 +1,6 @@
 import { Segment } from './bms.utils';
 
-export const enum AlphaTherm {
+export const enum AlphaThermReading {
   Therm0 = 0 * 2,
   Therm1 = 1 * 2,
   Therm2 = 2 * 2,
@@ -10,16 +10,16 @@ export const enum AlphaTherm {
   Therm6 = 6 * 2
 }
 export const allAlphaThermValues = [
-  AlphaTherm.Therm0,
-  AlphaTherm.Therm1,
-  AlphaTherm.Therm2,
-  AlphaTherm.Therm3,
-  AlphaTherm.Therm4,
-  AlphaTherm.Therm5,
-  AlphaTherm.Therm6
+  AlphaThermReading.Therm0,
+  AlphaThermReading.Therm1,
+  AlphaThermReading.Therm2,
+  AlphaThermReading.Therm3,
+  AlphaThermReading.Therm4,
+  AlphaThermReading.Therm5,
+  AlphaThermReading.Therm6
 ];
 
-export const enum BetaTherms {
+export const enum BetaThermReading {
   Therm0 = 0 * 2,
   Therm1 = 1 * 2,
   Therm2 = 2 * 2,
@@ -28,15 +28,15 @@ export const enum BetaTherms {
   Therm5 = 5 * 2
 }
 export const allBetaThermValues = [
-  BetaTherms.Therm0,
-  BetaTherms.Therm1,
-  BetaTherms.Therm2,
-  BetaTherms.Therm3,
-  BetaTherms.Therm4,
-  BetaTherms.Therm5
+  BetaThermReading.Therm0,
+  BetaThermReading.Therm1,
+  BetaThermReading.Therm2,
+  BetaThermReading.Therm3,
+  BetaThermReading.Therm4,
+  BetaThermReading.Therm5
 ];
 
-export enum BetaCellReadings {
+export enum BetaVoltReading {
   Cell0 = 0 * 2,
   Cell1 = 1 * 2,
   Cell2 = 2 * 2,
@@ -49,7 +49,20 @@ export enum BetaCellReadings {
   Cell9 = 9 * 2,
   Cell10 = 10 * 2
 }
-export enum AlphaCellsReadings {
+export const allBetaVoltValues = [
+  BetaVoltReading.Cell0,
+  BetaVoltReading.Cell1,
+  BetaVoltReading.Cell2,
+  BetaVoltReading.Cell3,
+  BetaVoltReading.Cell4,
+  BetaVoltReading.Cell5,
+  BetaVoltReading.Cell6,
+  BetaVoltReading.Cell7,
+  BetaVoltReading.Cell8,
+  BetaVoltReading.Cell9,
+  BetaVoltReading.Cell10
+];
+export enum AlphaVoltReading {
   Cell0 = 0 * 2,
   Cell1 = 1 * 2,
   Cell2 = 2 * 2,
@@ -65,13 +78,88 @@ export enum AlphaCellsReadings {
   Cell12 = 12 * 2,
   Cell13 = 13 * 2
 }
+export const allAlphaVoltValues = [
+  AlphaVoltReading.Cell0,
+  AlphaVoltReading.Cell1,
+  AlphaVoltReading.Cell2,
+  AlphaVoltReading.Cell3,
+  AlphaVoltReading.Cell4,
+  AlphaVoltReading.Cell5,
+  AlphaVoltReading.Cell6,
+  AlphaVoltReading.Cell7,
+  AlphaVoltReading.Cell8,
+  AlphaVoltReading.Cell9,
+  AlphaVoltReading.Cell10,
+  AlphaVoltReading.Cell11,
+  AlphaVoltReading.Cell12,
+  AlphaVoltReading.Cell13
+];
+export enum AlphaBurnReading {
+  Cell0 = 0 * 2,
+  Cell1 = 1 * 2,
+  Cell2 = 2 * 2,
+  Cell3 = 3 * 2,
+  Cell4 = 4 * 2,
+  Cell5 = 5 * 2,
+  Cell6 = 6 * 2,
+  Cell7 = 7 * 2,
+  Cell8 = 8 * 2,
+  Cell9 = 9 * 2,
+  Cell10 = 10 * 2,
+  Cell11 = 11 * 2,
+  Cell12 = 12 * 2,
+  Cell13 = 13 * 2
+}
+export const allAlphaBurnValues = [
+  AlphaBurnReading.Cell0,
+  AlphaBurnReading.Cell1,
+  AlphaBurnReading.Cell2,
+  AlphaBurnReading.Cell3,
+  AlphaBurnReading.Cell4,
+  AlphaBurnReading.Cell5,
+  AlphaBurnReading.Cell6,
+  AlphaBurnReading.Cell7,
+  AlphaBurnReading.Cell8,
+  AlphaBurnReading.Cell9,
+  AlphaBurnReading.Cell10,
+  AlphaBurnReading.Cell11,
+  AlphaBurnReading.Cell12,
+  AlphaBurnReading.Cell13
+];
 
-export const alphaTemp = (segment: Segment, therm: AlphaTherm) => `BMS/PerCell/Alpha/${segment}/Therms/${therm}`;
-export const betaTemp = (segment: Segment, therm: BetaTherms) => `BMS/PerCell/Beta/${segment}/Therms/${therm}`;
-export const alphaVoltage = (segment: Segment, cell: AlphaCellsReadings) => `BMS/PerCell/Alpha/${segment}/Volts/${cell}`;
-export const betaVoltage = (segment: Segment, cell: BetaCellReadings) => `BMS/PerCell/Beta/${segment}/Volts/${cell}`;
-export const alphaBurning = (segment: Segment, cell: AlphaCellsReadings) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
-export const betaBurning = (segment: Segment, cell: BetaCellReadings) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
+export enum BetaBurnReading {
+  Cell0 = 0 * 2,
+  Cell1 = 1 * 2,
+  Cell2 = 2 * 2,
+  Cell3 = 3 * 2,
+  Cell4 = 4 * 2,
+  Cell5 = 5 * 2,
+  Cell6 = 6 * 2,
+  Cell7 = 7 * 2,
+  Cell8 = 8 * 2,
+  Cell9 = 9 * 2,
+  Cell10 = 10 * 2
+}
+export const allBetaBurnValues = [
+  BetaBurnReading.Cell0,
+  BetaBurnReading.Cell1,
+  BetaBurnReading.Cell2,
+  BetaBurnReading.Cell3,
+  BetaBurnReading.Cell4,
+  BetaBurnReading.Cell5,
+  BetaBurnReading.Cell6,
+  BetaBurnReading.Cell7,
+  BetaBurnReading.Cell8,
+  BetaBurnReading.Cell9,
+  BetaBurnReading.Cell10
+];
+
+export const alphaTemp = (segment: Segment, cell: AlphaThermReading) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
+export const betaTemp = (segment: Segment, cell: BetaThermReading) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
+export const alphaVolt = (segment: Segment, cell: AlphaVoltReading) => `BMS/PerCell/Alpha/${segment}/Volts/${cell}`;
+export const betaVolt = (segment: Segment, cell: BetaVoltReading) => `BMS/PerCell/Beta/${segment}/Volts/${cell}`;
+export const alphaBurning = (segment: Segment, cell: AlphaBurnReading) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
+export const betaBurning = (segment: Segment, cell: BetaBurnReading) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
 export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
 export const perCellAlphaDieTemp = (segment: Segment) => `BMS/PerCell/Alpha/${segment}/DieTemp`;
 export const perCellBetaDieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
@@ -80,8 +168,8 @@ export const segmentVoltage = (segment: Segment) => `BMS/Segment_Voltage/${segme
 export const dataTypes = {
   alphaTemp,
   betaTemp,
-  alphaVoltage,
-  betaVoltage,
+  alphaVolt,
+  betaVolt,
   alphaBurning,
   betaBurning,
   segmentTemp,

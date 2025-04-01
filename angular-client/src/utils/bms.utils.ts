@@ -12,13 +12,12 @@ export enum Segment {
   Segment4 = 4
 }
 export const allSegments = [Segment.Segment0, Segment.Segment1, Segment.Segment2, Segment.Segment3, Segment.Segment4];
-
 export const numToSegmentType = (segment: number): Segment => {
   const segmentType: Segment | undefined = segment as Segment;
-  if (segmentType) {
+  if (segmentType !== undefined) {
     return segmentType;
   }
-  throw new Error('Invalid segment number');
+  throw new Error('Invalid segment number ' + segment);
 };
 
 export type SegmentInfo = {

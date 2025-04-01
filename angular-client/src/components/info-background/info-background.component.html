@@ -27,6 +27,9 @@
           }
         </div>
       }
+      @if (this.selectorConfig(); as selectorConfig) {
+        <select-dropdown [options]="selectorConfig.options" [placeholder]="selectorConfig.placeholder"></select-dropdown>
+      }
     </div>
   }
   @if (onClick) {

@@ -1,5 +1,6 @@
 import { Component, input, Input } from '@angular/core';
 import Theme from 'src/services/theme.service';
+import { SelectorConfig } from '../select-dropdown/select-dropdown.component';
 
 /**
  * Component that is essentially the template/background for
@@ -23,5 +24,7 @@ export class InfoBackgroundComponent {
   @Input() title!: string;
   @Input() onClick!: (() => void) | undefined;
   @Input() button?: ButtonInputs;
+  selectorConfig = input<SelectorConfig | undefined>(undefined);
+
   slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
 }

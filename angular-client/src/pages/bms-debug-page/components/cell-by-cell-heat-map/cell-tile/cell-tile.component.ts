@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { HeatMapView } from 'src/services/heat-map.service';
 
 @Component({
   selector: 'cell-tile',
@@ -6,6 +7,14 @@ import { Component, input } from '@angular/core';
   styleUrl: './cell-tile.component.css'
 })
 export class CellTileComponent {
-  value = input.required<number>();
+  value = input.required<number | undefined>();
   color = input.required<string>();
+  currentView = input<HeatMapView>();
+
+  getDisplayValue = () => {
+    const value = this.value();
+    const view = this.currentView();
+    const symbol = view === undefined ? '' : view === HeatMapView.Temperature ? '°' : 'ⱽ';
+    return (value === undefined ? '-' : value.toString()) + symbol;
+  };
 }
