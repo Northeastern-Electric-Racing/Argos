@@ -20,7 +20,7 @@ export type CellReading = {
   volt2: number | undefined;
   balancing1: boolean | undefined;
   balancing2: boolean | undefined;
-  cellNumbers?: [number, number]; // Optional property for cell number
+  cellNumbers: [number, number] | undefined;
 };
 
 /* 7 alpha cell reading (for 14 cells) (if we only record data for every other CellReading, or anything like that, adjacents will contain the same data for field) */
@@ -109,30 +109,34 @@ export class CellService {
           const tempBtwnTwoCells = floatPipe(data.values[0]);
           const cellIndex = index;
           segmentAlphaCells[cellIndex].temp = tempBtwnTwoCells;
-          segmentAlphaCells[cellIndex].cellNumbers = [cellIndex, cellIndex + 1];
+          segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
         });
       });
 
       allAlphaVoltValues.forEach((therm, index) => {
         const constIndex = index;
+        const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(dataTypes.alphaVolt(segmentNumber, therm)).subscribe((data) => {
           const voltage = floatPipe(data.values[0]);
+          segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
           if (constIndex % 2 === 0) {
-            segmentAlphaCells[constIndex].volt1 = voltage;
+            segmentAlphaCells[cellIndex].volt1 = voltage;
           } else {
-            segmentAlphaCells[constIndex].volt2 = voltage;
+            segmentAlphaCells[cellIndex].volt2 = voltage;
           }
         });
       });
 
       allAlphaBurnValues.forEach((burn, index) => {
         const constIndex = index;
+        const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(dataTypes.alphaBurning(segmentNumber, burn)).subscribe((data) => {
           const balancing = parseInt(data.values[0]) === 1;
+          segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
           if (constIndex % 2 === 0) {
-            segmentAlphaCells[constIndex].balancing1 = balancing;
+            segmentAlphaCells[cellIndex].balancing1 = balancing;
           } else {
-            segmentAlphaCells[constIndex].balancing2 = balancing;
+            segmentAlphaCells[cellIndex].balancing2 = balancing;
           }
         });
       });
@@ -146,30 +150,36 @@ export class CellService {
         const constIndex = index;
         this.storageService.get(dataTypes.betaTemp(segmentNumber, therm)).subscribe((data) => {
           const tempBtwnTwoCells = floatPipe(data.values[0]);
+          segmentBetaCells[constIndex].cellNumbers = [constIndex * 2, Math.min(constIndex * 2 + 1, 10)];
+
           segmentBetaCells[constIndex].temp = tempBtwnTwoCells;
         });
       });
 
       allBetaVoltValues.map((volt, index) => {
         const constIndex = index;
+        const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(dataTypes.betaVolt(segmentNumber, volt)).subscribe((data) => {
           const voltage = floatPipe(data.values[0]);
+          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
           if (constIndex % 2 === 0) {
-            segmentBetaCells[constIndex].volt1 = voltage;
+            segmentBetaCells[cellIndex].volt1 = voltage;
           } else {
-            segmentBetaCells[constIndex].volt2 = voltage;
+            segmentBetaCells[cellIndex].volt2 = voltage;
           }
         });
       });
 
       allBetaBurnValues.map((burn, index) => {
         const constIndex = index;
+        const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(dataTypes.betaBurning(segmentNumber, burn)).subscribe((data) => {
           const balancing = parseInt(data.values[0]) === 1;
+          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
           if (constIndex % 2 === 0) {
-            segmentBetaCells[constIndex].balancing1 = balancing;
+            segmentBetaCells[cellIndex].balancing1 = balancing;
           } else {
-            segmentBetaCells[constIndex].balancing2 = balancing;
+            segmentBetaCells[cellIndex].balancing2 = balancing;
           }
         });
       });
