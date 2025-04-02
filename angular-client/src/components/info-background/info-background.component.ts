@@ -25,6 +25,7 @@ export class InfoBackgroundComponent {
   @Input() onClick!: (() => void) | undefined;
   @Input() button?: ButtonInputs;
   selectorConfig = input<SelectorConfig | undefined>(undefined);
+  topRightInfo = input<string | undefined>(undefined);
 
   slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
 }

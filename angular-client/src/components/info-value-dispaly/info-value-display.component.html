@@ -1,7 +1,12 @@
 <vstack spacing="0px" [style]="containerStyle()">
   <hstack spacing="5px" [style]="valueUnitContainerStyle()">
-    <typography variant="info-value" [content]="formattedValue" />
-    <typography variant="info-unit" [content]="unit()" />
+    @if (this.boolValue() !== undefined) {
+      <typography variant="info-value" [content]="this.boolValue() ? 'YES' : 'NO'" />
+      <typography variant="info-unit" [content]="this.unit()" />
+    } @else {
+      <typography variant="info-value" [content]="this.formattedValue" />
+      <typography variant="info-unit" [content]="this.unit()" />
+    }
 
     @if (this.enableWidget() && this.widget(); as widget) {
       @switch (widget.type) {

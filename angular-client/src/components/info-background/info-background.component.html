@@ -30,6 +30,11 @@
       @if (this.selectorConfig(); as selectorConfig) {
         <select-dropdown [options]="selectorConfig.options" [placeholder]="selectorConfig.placeholder"></select-dropdown>
       }
+      @if (this.topRightInfo(); as topRightInfo) {
+        <div class="top-right-info">
+          <typography variant="info-subtitle" content="{{ topRightInfo }}" />
+        </div>
+      }
     </div>
   }
   @if (onClick) {

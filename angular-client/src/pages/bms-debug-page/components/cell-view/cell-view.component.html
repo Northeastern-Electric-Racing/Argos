@@ -1,1 +1,52 @@
-<info-background title="Cell View" svgIcon="battery_charging_2"> </info-background>
+<info-background
+  title="Cell View"
+  svgIcon="battery_charging_2"
+  [topRightInfo]="
+    'CELL CHIP: ' +
+    (this.cellViewData?.chip === 1 ? 'A ' : 'B ') +
+    ' | ' +
+    'Temperatue: ' +
+    (this.cellViewData?.temp === undefined || this.cellViewData?.temp === null
+      ? ' No Value'
+      : ' ' + this.cellViewData?.temp?.toFixed(2) + ' °C')
+  "
+>
+  <hstack spacing="60px">
+    <vstack spacing="20px" style="margin-top: 15px">
+      <info-value-display
+        [value]="this.cellViewData?.cellNumbers?.[0]"
+        subtitle="1st Cell Number"
+        [precision]="0"
+      ></info-value-display>
+      <info-value-display
+        [value]="this.cellViewData?.cellNumbers?.[1]"
+        subtitle="2nd Cell Number"
+        style="padding-top: 25px"
+        [precision]="0"
+      ></info-value-display>
+    </vstack>
+    <vstack spacing="20px">
+      <info-value-display
+        style="margin-top: -15px"
+        [value]="this.cellViewData?.volt1"
+        unit="V"
+        subtitle="Voltage 1"
+      ></info-value-display>
+      <info-value-display
+        style="margin-top: -5px"
+        [value]="this.cellViewData?.volt2"
+        unit="V"
+        subtitle="Voltage 2"
+      ></info-value-display>
+    </vstack>
+    <!-- Balancing -->
+    <vstack spacing="20px" style="margin-top: 15px">
+      <info-value-display [boolValue]="this.cellViewData?.balancing1" subtitle="Balancing? 1"></info-value-display>
+      <info-value-display
+        [boolValue]="this.cellViewData?.balancing2"
+        subtitle="Balancing? 2"
+        style="padding-top: 25px"
+      ></info-value-display>
+    </vstack>
+  </hstack>
+</info-background>

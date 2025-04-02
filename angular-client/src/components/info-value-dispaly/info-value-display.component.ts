@@ -34,6 +34,7 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
   containerStyle = input<string>('');
   valueUnitContainerStyle = input<string>('');
   value = input<number>();
+  boolValue = input<boolean>();
   precision = input<number>(1);
   subtitle = input<string>('');
   subtitleStyle = input<string>('');
