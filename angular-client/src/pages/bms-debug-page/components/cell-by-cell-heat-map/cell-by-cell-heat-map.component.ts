@@ -47,7 +47,7 @@ export class CellByCellHeatMapComponent {
     });
   }
 
-  getColor = (value: number | undefined) => {
+  getTempColor = (value: number | undefined) => {
     if (value === undefined) {
       return 'grey';
     }
@@ -55,6 +55,17 @@ export class CellByCellHeatMapComponent {
     // Math: red is 0 so when the value we have red, when the value is 45 we have bright green,
     // and increase slowly from 0... to 120 by 8 increments transitioning from green -> red.
     const hslMainValue = Math.min(Math.max(55 - value, 0) * 6, 120);
+
+    return `hsl(${hslMainValue}, 100%, 50%)`;
+  };
+
+  getVoltColor = (value: number | undefined) => {
+    if (value === undefined) {
+      return 'grey';
+    }
+    // Math: red is 0 so when the value we have red, when the value is 45 we have bright green,
+    // and increase slowly from 0... to 120 by 8 increments transitioning from green -> red.
+    const hslMainValue = Math.min(Math.max(4 - value, 0) * 100, 120);
 
     return `hsl(${hslMainValue}, 100%, 50%)`;
   };

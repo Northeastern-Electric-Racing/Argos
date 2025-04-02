@@ -10,7 +10,6 @@ import {
   allBetaVoltValues,
   dataTypes
 } from 'src/utils/topic.utils';
-import { floatPipe } from 'src/utils/pipes.utils';
 
 export type CellReading = {
   chip: Chip;
@@ -106,7 +105,7 @@ export class CellService {
       const segmentNumber = numToSegmentType(index);
       allAlphaThermValues.forEach((therm, index) => {
         this.storageService.get(dataTypes.alphaTemp(segmentNumber, therm)).subscribe((data) => {
-          const tempBtwnTwoCells = floatPipe(data.values[0]);
+          const tempBtwnTwoCells = parseFloat(data.values[0]);
           const cellIndex = index;
           segmentAlphaCells[cellIndex].temp = tempBtwnTwoCells;
           segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
@@ -117,9 +116,9 @@ export class CellService {
         const constIndex = index;
         const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(dataTypes.alphaVolt(segmentNumber, therm)).subscribe((data) => {
-          const voltage = floatPipe(data.values[0]);
-          segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
+          const voltage = parseFloat(data.values[0]);
           if (constIndex % 2 === 0) {
+            segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
             segmentAlphaCells[cellIndex].volt1 = voltage;
           } else {
             segmentAlphaCells[cellIndex].volt2 = voltage;
@@ -149,7 +148,7 @@ export class CellService {
       allBetaThermValues.map((therm, index) => {
         const constIndex = index;
         this.storageService.get(dataTypes.betaTemp(segmentNumber, therm)).subscribe((data) => {
-          const tempBtwnTwoCells = floatPipe(data.values[0]);
+          const tempBtwnTwoCells = parseFloat(data.values[0]);
           segmentBetaCells[constIndex].cellNumbers = [constIndex * 2, Math.min(constIndex * 2 + 1, 10)];
 
           segmentBetaCells[constIndex].temp = tempBtwnTwoCells;
@@ -160,7 +159,7 @@ export class CellService {
         const constIndex = index;
         const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(dataTypes.betaVolt(segmentNumber, volt)).subscribe((data) => {
-          const voltage = floatPipe(data.values[0]);
+          const voltage = parseFloat(data.values[0]);
           segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
           if (constIndex % 2 === 0) {
             segmentBetaCells[cellIndex].volt1 = voltage;

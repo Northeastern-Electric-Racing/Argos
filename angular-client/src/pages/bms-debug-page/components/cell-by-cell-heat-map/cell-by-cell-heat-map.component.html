@@ -10,7 +10,7 @@
       @for (cell of betaCells; track cell) {
         <cell-tile
           [value]="cell.temp"
-          [color]="this.getColor(cell.temp)"
+          [color]="this.getTempColor(cell.temp)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
         ></cell-tile>
@@ -21,7 +21,7 @@
       @for (cell of alphaCells; track cell) {
         <cell-tile
           [value]="cell.temp"
-          [color]="this.getColor(cell.temp)"
+          [color]="this.getTempColor(cell.temp)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
         ></cell-tile>
@@ -32,7 +32,7 @@
       @for (cell of betaCells; track cell) {
         <cell-tile
           [value]="this.averageVoltCellPair(cell)"
-          [color]="this.getColor(this.averageVoltCellPair(cell))"
+          [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
         ></cell-tile>
@@ -43,7 +43,7 @@
       @for (cell of alphaCells; track cell) {
         <cell-tile
           [value]="this.averageVoltCellPair(cell)"
-          [color]="this.getColor(this.averageVoltCellPair(cell))"
+          [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
         ></cell-tile>

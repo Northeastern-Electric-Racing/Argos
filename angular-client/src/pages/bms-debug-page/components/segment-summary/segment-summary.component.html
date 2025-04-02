@@ -1,11 +1,11 @@
 <info-background [title]="'Segment ' + this.segmentNumber()" svgIcon="battery_charging_2">
   <vstack spacing="20px">
-    <info-value-display style="margin-top: 10px" containerStyle="" [value]="temperature" unit="C" subtitle="Temperature" />
+    <info-value-display style="margin-top: 10px" [value]="this.temperature" unit="C" subtitle="Temperature" />
 
     <divider style="width: 100px; margin-top: 15px" />
-    <info-value-display style="margin-top: -5px" [value]="voltage" unit="V" subtitle="Voltages" />
+    <info-value-display style="margin-top: -5px" [value]="this.voltage" unit="V" subtitle="Voltages" />
     <divider style="width: 100px; margin-top: 25px" />
-    <info-value-display style="margin-top: -5px" containerStyle="" [value]="alphaChipTemp" unit="C" subtitle="Chip Temp" />
+    <info-value-display style="margin-top: -5px" [value]="this.alphaChipTemp" unit="C" subtitle="Chip Temp" />
     <toast-button
       buttonLabel="See More ➜"
       additionalStyles="background-color: #2aaeee; color: black; border-radius: 20px"

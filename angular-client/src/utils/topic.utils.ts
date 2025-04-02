@@ -37,17 +37,17 @@ export const allBetaThermValues = [
 ];
 
 export enum BetaVoltReading {
-  Cell0 = 0 * 2,
-  Cell1 = 1 * 2,
-  Cell2 = 2 * 2,
-  Cell3 = 3 * 2,
-  Cell4 = 4 * 2,
-  Cell5 = 5 * 2,
-  Cell6 = 6 * 2,
-  Cell7 = 7 * 2,
-  Cell8 = 8 * 2,
-  Cell9 = 9 * 2,
-  Cell10 = 10 * 2
+  Cell0 = 0,
+  Cell1 = 1,
+  Cell2 = 2,
+  Cell3 = 3,
+  Cell4 = 4,
+  Cell5 = 5,
+  Cell6 = 6,
+  Cell7 = 7,
+  Cell8 = 8,
+  Cell9 = 9,
+  Cell10 = 10
 }
 export const allBetaVoltValues = [
   BetaVoltReading.Cell0,
@@ -63,20 +63,20 @@ export const allBetaVoltValues = [
   BetaVoltReading.Cell10
 ];
 export enum AlphaVoltReading {
-  Cell0 = 0 * 2,
-  Cell1 = 1 * 2,
-  Cell2 = 2 * 2,
-  Cell3 = 3 * 2,
-  Cell4 = 4 * 2,
-  Cell5 = 5 * 2,
-  Cell6 = 6 * 2,
-  Cell7 = 7 * 2,
-  Cell8 = 8 * 2,
-  Cell9 = 9 * 2,
-  Cell10 = 10 * 2,
-  Cell11 = 11 * 2,
-  Cell12 = 12 * 2,
-  Cell13 = 13 * 2
+  Cell0 = 0,
+  Cell1 = 1,
+  Cell2 = 2,
+  Cell3 = 3,
+  Cell4 = 4,
+  Cell5 = 5,
+  Cell6 = 6,
+  Cell7 = 7,
+  Cell8 = 8,
+  Cell9 = 9,
+  Cell10 = 10,
+  Cell11 = 11,
+  Cell12 = 12,
+  Cell13 = 13
 }
 export const allAlphaVoltValues = [
   AlphaVoltReading.Cell0,
@@ -95,20 +95,20 @@ export const allAlphaVoltValues = [
   AlphaVoltReading.Cell13
 ];
 export enum AlphaBurnReading {
-  Cell0 = 0 * 2,
-  Cell1 = 1 * 2,
-  Cell2 = 2 * 2,
-  Cell3 = 3 * 2,
-  Cell4 = 4 * 2,
-  Cell5 = 5 * 2,
-  Cell6 = 6 * 2,
-  Cell7 = 7 * 2,
-  Cell8 = 8 * 2,
-  Cell9 = 9 * 2,
-  Cell10 = 10 * 2,
-  Cell11 = 11 * 2,
-  Cell12 = 12 * 2,
-  Cell13 = 13 * 2
+  Cell0 = 0,
+  Cell1 = 1,
+  Cell2 = 2,
+  Cell3 = 3,
+  Cell4 = 4,
+  Cell5 = 5,
+  Cell6 = 6,
+  Cell7 = 7,
+  Cell8 = 8,
+  Cell9 = 9,
+  Cell10 = 10,
+  Cell11 = 11,
+  Cell12 = 12,
+  Cell13 = 13
 }
 export const allAlphaBurnValues = [
   AlphaBurnReading.Cell0,
@@ -128,17 +128,17 @@ export const allAlphaBurnValues = [
 ];
 
 export enum BetaBurnReading {
-  Cell0 = 0 * 2,
-  Cell1 = 1 * 2,
-  Cell2 = 2 * 2,
-  Cell3 = 3 * 2,
-  Cell4 = 4 * 2,
-  Cell5 = 5 * 2,
-  Cell6 = 6 * 2,
-  Cell7 = 7 * 2,
-  Cell8 = 8 * 2,
-  Cell9 = 9 * 2,
-  Cell10 = 10 * 2
+  Cell0 = 0,
+  Cell1 = 1,
+  Cell2 = 2,
+  Cell3 = 3,
+  Cell4 = 4,
+  Cell5 = 5,
+  Cell6 = 6,
+  Cell7 = 7,
+  Cell8 = 8,
+  Cell9 = 9,
+  Cell10 = 10
 }
 export const allBetaBurnValues = [
   BetaBurnReading.Cell0,
