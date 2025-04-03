@@ -124,9 +124,16 @@ import { SelectModule } from 'primeng/select';
 import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import Lara from '@primeng/themes/aura';
+import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TableModule } from 'primeng/table';
 import { TreeModule } from 'primeng/tree';
 import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
 import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
+import { GeneralButtonsComponent } from 'src/pages/graph-page/graph-caption/general-buttons/general-buttons.component';
+import { FaultDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/fault-display-info/fault-display-info.component';
+import { FaultButtonsComponent } from 'src/pages/graph-page/graph-caption/fault-buttons/fault-buttons.component';
+import { GeneralDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/general-display-info/general-display-info.component';
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component';
 import { SegmentAtAGlanceComponent } from 'src/pages/bms-debug-page/components/segment-at-a-glance/segment-at-a-glance.component';
@@ -236,8 +243,13 @@ import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-c
     BmsOverflowComponent,
     InfoValueDisplayComponent,
     SelectDropdownComponent,
+    FaultPageComponent,
     BmsHeaderComponent,
     ConnectionDotWithMessageComponent,
+    GeneralButtonsComponent,
+    FaultButtonsComponent,
+    GeneralDisplayInfoComponent,
+    FaultDisplayInfoComponent,
     CameraPageComponent,
     BmsSegmentViewComponent,
     SegmentAtAGlanceComponent,
@@ -274,6 +286,8 @@ import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-c
     MatFormFieldModule,
     FormsModule,
     SelectModule,
+    AccordionModule,
+    TableModule,
     TreeModule
   ],
   providers: [
@@ -345,6 +359,7 @@ export class AppModule {
         'battery_charging_2',
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
       )
+      .addSvgIcon('error', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/alert-triangle.svg'))
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'));
   }
 }

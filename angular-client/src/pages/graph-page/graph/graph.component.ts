@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, input, OnChanges, OnInit } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
@@ -22,7 +22,8 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
-  @Input() valuesSubject!: BehaviorSubject<GraphInfo | undefined>;
+  valuesSubject = input.required<BehaviorSubject<GraphInfo | undefined>>();
+  limitRange = input(true);
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
@@ -32,7 +33,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   timeRangeMs = 60000;
 
   updateChart = () => {
-    const label = this.valuesSubject.value?.label ?? 'No Label';
+    const label = this.valuesSubject().value?.label ?? 'No Label';
     this.chart.updateSeries(
       Array.from(this.data).map(([index, map]) => ({
         name: label + ' ' + index,
@@ -51,13 +52,16 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       });
     }
 
-    setTimeout(() => {
-      this.updateChart();
-    }, 800);
+    if (this.limitRange()) {
+      setTimeout(() => {
+        this.updateChart();
+      }, 800);
+    }
   };
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
     const values = info?.data ?? [];
+    if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
       let line: Map<number, number>;
       if (!this.data.has(i)) {
@@ -72,15 +76,17 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       });
     });
 
-    if (!this.isSliding) {
-      const times = Array.from(Array.from(this.data.values())[0].keys());
+    if (this.limitRange() && !this.isSliding) {
+      const times = Array.from(Array.from(this.data.values())[0]?.keys());
       this.timeDiffMs = times[times.length - 1] - times[0];
+    } else if (!this.limitRange()) {
+      this.updateChart();
     }
   };
 
   ngOnInit(): void {
     this.data = new Map();
-    this.valuesSubject.subscribe(this.graphInfoCallback);
+    this.valuesSubject().subscribe(this.graphInfoCallback);
 
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) {
@@ -185,6 +191,6 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       }
     });
 
-    this.valuesSubject.subscribe(this.graphInfoCallback);
+    this.valuesSubject().subscribe(this.graphInfoCallback);
   }
 }

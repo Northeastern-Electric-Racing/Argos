@@ -1,4 +1,5 @@
 import { environment } from 'src/environment/environment';
+import { Timing } from 'src/utils/types.utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const baseURL = (environment as any).url || 'http://localhost:8000';
@@ -13,6 +14,9 @@ const getAllSystems = () => `${baseURL}/systems`;
 const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) =>
   `${baseURL}/data/${encodeURIComponent(dataTypeName)}/${runId}`;
 
+const getDataByDataTypeNameAndTiming = (dataTypeName: string, timing: Timing) =>
+  `${baseURL}/data/${encodeURIComponent(dataTypeName)}?time=${timing.time}&before=${timing.before}&after=${timing.after}`;
+
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;
 const getAllRuns = () => `${baseURL}/runs`;
@@ -25,6 +29,7 @@ export const urls = {
   getAllSystems,
 
   getDataByDataTypeNameAndRunId,
+  getDataByDataTypeNameAndTiming,
 
   getAllRuns,
   getLatestRun,

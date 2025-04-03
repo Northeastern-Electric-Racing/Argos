@@ -4,6 +4,7 @@ import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.c
 import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component';
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
+import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import MapComponent from 'src/pages/map/map.component';
@@ -37,6 +38,8 @@ const routes: Routes = [
   { path: 'bms', component: BmsDebugPageComponent },
   // NOTE: paramaterized routes should be even more carefully defined in accordance with the appRoutes
   { path: 'bms/segment/:id', component: BmsSegmentViewComponent },
+  { path: 'faults', component: FaultPageComponent },
+  { path: 'faults/fault-graph', component: GraphPageComponent },
   { path: 'camera', component: CameraPageComponent }
 ];
 

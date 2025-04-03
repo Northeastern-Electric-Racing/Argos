@@ -785,12 +785,13 @@ dependencies = [
 
 [[package]]
 name = "engineioxide"
-version = "0.16.1"
+version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d54215ff8557580b44a07a7f25c873a0629329e11cc3b3f323ebec79dcc5431"
+checksum = "a36d7cb810f4501c85c13211064288cdc870742a072005de2851096d4956acb6"
 dependencies = [
  "base64 0.22.1",
  "bytes",
+ "engineioxide-core",
  "futures-core",
  "futures-util",
  "http",
@@ -799,7 +800,6 @@ dependencies = [
  "hyper",
  "hyper-util",
  "pin-project-lite",
- "rand 0.8.5",
  "serde",
  "serde_json",
  "smallvec",
@@ -809,6 +809,18 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
+]
+
+[[package]]
+name = "engineioxide-core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a6512b1bc8dfb74d61b55878d712082be39a960abee8590f310723587de343e"
+dependencies = [
+ "base64 0.22.1",
+ "bytes",
+ "rand 0.9.0",
+ "serde",
 ]
 
 [[package]]
@@ -1068,9 +1080,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.2.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f16ca2af56261c99fba8bac40a10251ce8188205a4c448fbb745a2e4daa76fea"
+checksum = "f4a85d31aea989eead29a3aaf9e1115a180df8282431156e533de47660892565"
 dependencies = [
  "bytes",
  "fnv",
@@ -2223,9 +2235,9 @@ dependencies = [
 
 [[package]]
 name = "socketioxide"
-version = "0.16.1"
+version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4017ef1ab1fb7de02ffeffa418119d7d32dcd55e3c494954df42835dbfe3f75"
+checksum = "6f7227f46a8ccc90ffdc6d96ff8ebf50eea3973866fb87dec8d6d034d5402605"
 dependencies = [
  "bytes",
  "engineioxide",
@@ -2425,9 +2437,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.43.0"
+version = "1.44.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d61fa4ffa3de412bfea335c6ecff681de2b609ba3c77ef3e00e521813a9ed9e"
+checksum = "f382da615b842244d4b8738c82ed1275e6c5dd90c459a30941cd07080b06c91a"
 dependencies = [
  "backtrace",
  "bytes",

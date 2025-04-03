@@ -73,7 +73,6 @@ export async function processDataType(
       const cloudDataTypes: CloudDataType[] = batch.map((localDataType) => ({
         name: localDataType.name,
         unit: localDataType.unit,
-        nodeName: localDataType.nodeName,
       }));
 
       await cloudPrisma.data_type.createMany({
