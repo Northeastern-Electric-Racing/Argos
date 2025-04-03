@@ -5,6 +5,7 @@ import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
+import { appRoutes } from 'src/app/app-routing.module';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
@@ -56,8 +57,7 @@ export default class GraphPageComponent implements OnInit {
     this.queryDataTypes();
     this.run = undefined;
 
-    this.onFaultPage = this.router.url.includes('/faults');
-
+    this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
     if (this.onFaultPage) this.initFaultPage();
     else this.initGeneralPage();
   }
@@ -69,7 +69,7 @@ export default class GraphPageComponent implements OnInit {
     const selectedFaultSubscription = this.faultService.getSelectedFault();
     this.selectedFault = selectedFaultSubscription.value;
     if (!this.selectedFault) {
-      this.router.navigate(['/faults']);
+      this.router.navigate([appRoutes.faultsRoute()]);
     }
     selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault));
     this.rightHeader = `Fault ${this.selectedFault?.name}`;

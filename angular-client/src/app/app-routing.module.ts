@@ -17,6 +17,8 @@ const chargingRoute = () => `/charging`;
 const bmsRoute = () => `/bms`;
 const bmsSegmentViewRoute = (id: Segment) => `/bms/segment/${id + 1}`;
 const cameraRoute = () => `/camera`;
+const faultsRoute = () => `/faults`;
+const faultsGraphRoute = () => `/faults/fault-graph`;
 
 export const appRoutes = {
   landingRoute,
@@ -25,7 +27,9 @@ export const appRoutes = {
   chargingRoute,
   bmsRoute,
   bmsSegmentViewRoute,
-  cameraRoute
+  cameraRoute,
+  faultsRoute,
+  faultsGraphRoute
 };
 
 // Routes should be defined carefully in accordance with the appRoutes

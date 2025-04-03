@@ -10,7 +10,12 @@
       <hstack spacing="7vw" justifyContent="space-evenly">
         <div style="margin-right: -4vw"></div>
         <info-value-display [value]="this.vDigital" unit="V" subtitle="VDigital" [precision]="2"></info-value-display>
-        <info-value-display [value]="this.boardTemp" unit="C" subtitle="VLogic" [precision]="2"></info-value-display>
+        <info-value-display
+          [value]="this.boardTemp"
+          unit="C"
+          subtitle="Board Temperature"
+          [precision]="2"
+        ></info-value-display>
       </hstack>
     </vstack>
   </hstack>
