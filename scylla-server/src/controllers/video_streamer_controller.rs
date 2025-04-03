@@ -1,6 +1,7 @@
-use std::fs;
+use std::{fs, sync::Arc};
 
 use axum::{extract::Path, http::Response, response::IntoResponse, Extension, Json};
+use rumqttc::v5::AsyncClient;
 use tokio::{fs::File, io::AsyncReadExt};
 use tracing::info;
 
@@ -60,4 +61,20 @@ pub async fn get_videos(
     }
 
     Ok(Json::from(file_paths))
+}
+
+pub async fn request_updated_videos(
+    Extension(mqtt_client): Extension<Arc<AsyncClient>>,
+) -> Result<Json<String>, ScyllaError> {
+    mqtt_client
+        .publish(
+            "/Scylla/Video/Send",
+            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
+            false,
+            vec![1],
+        )
+        .await
+        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+
+    Ok(Json::from("Sent Request to update videos".to_string()))
 }

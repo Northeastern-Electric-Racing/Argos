@@ -311,7 +311,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // CAR CONFIG
         .route(
             "/config/set/{configKey}",
-            post(car_command_controller::send_config_command).layer(Extension(client_sharable)),
+            post(car_command_controller::send_config_command),
         )
         // SCYLLA CONFIG
         .route(
@@ -356,9 +356,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             get(video_streamer_controller::stream_video),
         )
         .route("/videos", get(video_streamer_controller::get_videos))
+        .route(
+            "/videos/update",
+            post(video_streamer_controller::request_updated_videos),
+        )
         .layer(Extension(db_send))
         .layer(Extension(OutputDirectory(cli.output_directory)))
         .layer(Extension(VideoSuffix(cli.video_suffix)))
+        .layer(Extension(client_sharable))
         .layer(DefaultBodyLimit::disable())
         // for CORS handling
         .layer(

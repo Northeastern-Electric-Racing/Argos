@@ -2,7 +2,7 @@ import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core'
 import { MessageService } from 'primeng/api';
 import { SelectChangeEvent } from 'primeng/select';
 import { urls } from 'src/api/urls';
-import { getAllVideos } from 'src/api/video.api';
+import { getAllVideos, updateVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
 import MediaMTXWebRTCReader from 'src/utils/MediaMTXReader';
 @Component({
@@ -72,5 +72,17 @@ export class CameraPageComponent implements OnInit {
     } else {
       this.onVideoSelected(event.value);
     }
+  };
+
+  onUpdateVideosPressed = () => {
+    const updateVideoQueryResponse = this.serverService.query(() => updateVideos(), { invalidates: ['videos'] });
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Update Videos',
+      detail: 'A request was made for scylla to update its videos, this may take a minute, please refresh in a moment'
+    });
+    updateVideoQueryResponse.error.subscribe((error) => {
+      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
   };
 }
