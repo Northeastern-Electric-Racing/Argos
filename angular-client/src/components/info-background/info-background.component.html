@@ -32,7 +32,7 @@
       }
       @if (this.topRightInfo(); as topRightInfo) {
         <div class="top-right-info">
-          <typography variant="info-subtitle" content="{{ topRightInfo }}" />
+          <typography variant="info-subtitle" [content]="topRightInfo" additionalStyles="fontSize: 19px;" />
         </div>
       }
     </div>
