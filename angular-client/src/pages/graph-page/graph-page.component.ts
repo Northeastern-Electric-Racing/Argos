@@ -72,7 +72,7 @@ export default class GraphPageComponent implements OnInit {
       this.router.navigate([appRoutes.faultsRoute()]);
     }
     selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault));
-    this.rightHeader = `Fault ${this.selectedFault?.name}`;
+    this.rightHeader = `Fault: ${this.selectedFault?.name}`;
   };
 
   private initGeneralPage = () => {
