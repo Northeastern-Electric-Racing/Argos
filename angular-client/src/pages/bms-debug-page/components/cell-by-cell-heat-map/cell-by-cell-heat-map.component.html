@@ -13,6 +13,7 @@
           [color]="this.getTempColor(cell.temp)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
         ></cell-tile>
       }
     </hstack>
@@ -24,6 +25,7 @@
           [color]="this.getTempColor(cell.temp)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
         ></cell-tile>
       }
     </hstack>
@@ -35,6 +37,7 @@
           [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
         ></cell-tile>
       }
     </hstack>
@@ -46,6 +49,7 @@
           [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
         ></cell-tile>
       }
     </hstack>

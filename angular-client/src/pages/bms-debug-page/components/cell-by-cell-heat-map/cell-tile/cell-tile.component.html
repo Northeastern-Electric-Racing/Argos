@@ -1,4 +1,8 @@
-<div class="cell-tile" [style.background-color]="this.color()" [style.box-shadow]="this.getBoxShadowStyle()">
+<div
+  class="cell-tile"
+  [style.background-color]="this.color()"
+  [style.box-shadow]="this.boxShadowColor() ? '0px 0px 30px ' + this.color() + ', 0px 0px 50px rgba(0, 0, 0, 0.5)' : ''"
+>
   <typography
     variant="info-value"
     [content]="this.getDisplayValue()"

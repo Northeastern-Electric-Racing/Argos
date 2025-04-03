@@ -72,7 +72,12 @@ export class CellByCellHeatMapComponent {
   };
 
   cellClicked = (cell: CellReading) => {
+    this.selectedCell = cell;
     this.heatMapService.setSelectedCell(cell);
+  };
+
+  isSelectedCell = (cell: CellReading) => {
+    return this.selectedCell === cell;
   };
 
   averageVoltCellPair = (reading: CellReading): number | undefined => {
