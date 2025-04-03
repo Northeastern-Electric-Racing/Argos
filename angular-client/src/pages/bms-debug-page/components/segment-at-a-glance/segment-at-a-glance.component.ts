@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import {
   BatteryConfig,
   ConnectionDotConfig,
@@ -21,6 +21,9 @@ export class SegmentAtAGlanceComponent {
   crc: number = 0;
   thermometerConfig: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: -15, max: 30 };
   batteryConfig: BatteryConfig = { type: 'battery-config', percentage: 0, height: 50, width: 25 };
+
+  constructor() {}
+
   getStatusMessage = (): string => {
     return '';
   };

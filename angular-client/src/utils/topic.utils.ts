@@ -1,4 +1,4 @@
-import { Segment } from './bms.utils';
+import { Chip, Segment } from './bms.utils';
 
 export const alphaTemp = (segment: Segment, cell: AlphaThermReading) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
 export const betaTemp = (segment: Segment, cell: BetaThermReading) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
@@ -16,6 +16,8 @@ export const vAnalog = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vanalo
 export const vDigital = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vdigital`;
 export const boardTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/SegTemp`;
 export const dieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
+export const chipFault = (segment: Segment, chip: Chip, fault: ChipFault) =>
+  `BMS/PerCell/${chip === Chip.Alpha ? 'Alpha' : 'Beta'}/${segment}/Faults/${fault}`;
 
 export const dataTypes = {
   alphaTemp,
@@ -33,7 +35,8 @@ export const dataTypes = {
   vAnalog,
   vDigital,
   boardTemp,
-  dieTemp
+  dieTemp,
+  chipFault
 };
 
 export const enum AlphaThermReading {
@@ -188,4 +191,35 @@ export const allBetaBurnValues = [
   BetaBurnReading.Cell8,
   BetaBurnReading.Cell9,
   BetaBurnReading.Cell10
+];
+
+export enum ChipFault {
+  VA_OV = 'VA_OV',
+  VA_UV = 'VA_UV',
+  VD_OV = 'VD_OV',
+  VD_UV = 'VD_UV',
+  VDE = 'VDE',
+  VDEL = 'VDEL',
+  SPI = 'SPI',
+  SLEEP = 'SLEEP',
+  THSD = 'THSD',
+  TMOD_CHCK = 'TMOD_CHCK',
+  OSC_CHCK = 'OSC_CHCK',
+  OTP1 = 'OTP1',
+  OTP2 = 'OTP2'
+}
+export const allChipFaults = [
+  ChipFault.VA_OV,
+  ChipFault.VA_UV,
+  ChipFault.VD_OV,
+  ChipFault.VD_UV,
+  ChipFault.VDE,
+  ChipFault.VDEL,
+  ChipFault.SPI,
+  ChipFault.SLEEP,
+  ChipFault.THSD,
+  ChipFault.TMOD_CHCK,
+  ChipFault.OSC_CHCK,
+  ChipFault.OTP1,
+  ChipFault.OTP2
 ];

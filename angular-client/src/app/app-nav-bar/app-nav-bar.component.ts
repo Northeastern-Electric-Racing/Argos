@@ -61,7 +61,8 @@ export class AppNavBarComponent implements OnInit {
     { label: 'Home', route: appRoutes.landingRoute(), icon: 'home' },
     { label: 'Charging', route: appRoutes.chargingRoute(), icon: 'ev_station' },
     { label: 'Graph', route: appRoutes.graphRoute(), icon: 'bar_chart' },
-    { label: 'Map', route: appRoutes.mapRoute(), icon: 'map' },
+    // TODO: fix map
+    // { label: 'Map', route: appRoutes.mapRoute(), icon: 'map' },
     { label: 'BMS', route: appRoutes.bmsRoute(), icon: 'action_key' },
     { label: 'Faults', route: appRoutes.faultsRoute(), icon: 'error' },
     { label: 'Camera', route: appRoutes.cameraRoute(), icon: 'linked_camera' }
