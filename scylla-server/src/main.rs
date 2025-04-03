@@ -1,4 +1,6 @@
 use std::{
+    fs,
+    path::Path,
     sync::{atomic::Ordering, Arc},
     time::Duration,
 };
@@ -23,6 +25,7 @@ use scylla_server::{
         self,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
+        video_streamer_controller::{self, OutputDirectory, VideoSuffix},
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
@@ -112,6 +115,19 @@ struct ScyllaArgs {
     )]
     socketio_discard_percent: u8,
 
+    /// The output directory to store the .cap and .mp4 files coming in from the odysseus daemon
+    #[arg(
+        short = 'o',
+        long,
+        env = "SCYLLA_FILE_OUTPUT_DIRECTORY",
+        default_value = "files" // Do not use absolute file path unless you mean to
+    )]
+    output_directory: String,
+
+    /// The suffix to find video files by
+    #[arg(short = 's', long, env = "SCYLLA_VIDEO_SUFFIX", default_value = ".mp4")]
+    video_suffix: String,
+
     /// Whether to disable sending of metadata over the socket to the client
     #[arg(long, env = "SCYLLA_SOCKET_DISABLE_METADATA")]
     no_metadata: bool,
@@ -119,11 +135,27 @@ struct ScyllaArgs {
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
+fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
+    let dir_path = Path::new(path);
+    if !dir_path.exists() {
+        fs::create_dir_all(dir_path)?;
+        println!("Directory created: {}", path);
+    } else {
+        println!("Directory already exists: {}", path);
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = ScyllaArgs::parse();
 
     println!("Initializing scylla server...");
+
+    if let Err(e) = ensure_directory_exists(cli.output_directory.as_str()) {
+        eprintln!("Failed to create directory: {}", e);
+    }
 
     #[cfg(feature = "top")]
     {
@@ -314,7 +346,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))
+        .route(
+            "/insert/log",
+            post(file_insertion_controller::insert_logger_file),
+        )
+        // VIDEO STREAMING
+        .route(
+            "/videos/{file_name}",
+            get(video_streamer_controller::stream_video),
+        )
+        .route("/videos", get(video_streamer_controller::get_videos))
         .layer(Extension(db_send))
+        .layer(Extension(OutputDirectory(cli.output_directory)))
+        .layer(Extension(VideoSuffix(cli.video_suffix)))
         .layer(DefaultBodyLimit::disable())
         // for CORS handling
         .layer(

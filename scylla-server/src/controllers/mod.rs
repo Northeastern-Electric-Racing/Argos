@@ -6,3 +6,4 @@ pub mod data_type_controller;
 pub mod run_controller;
 
 pub mod file_insertion_controller;
+pub mod video_streamer_controller;

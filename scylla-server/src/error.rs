@@ -21,6 +21,8 @@ pub enum ScyllaError {
     InvalidSetting(String),
     /// An invalid request was made
     HttpError(StatusCode, String),
+    /// An error when writing or retrieving a file was made
+    FileError(String),
 }
 
 impl From<diesel::result::Error> for ScyllaError {
@@ -55,6 +57,7 @@ impl IntoResponse for ScyllaError {
             ),
             ScyllaError::InvalidSetting(reason) => (StatusCode::BAD_REQUEST, reason),
             ScyllaError::HttpError(code, reason) => (code, reason),
+            ScyllaError::FileError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
         };
 
         warn!("Routing error: {}: {}", status, reason);

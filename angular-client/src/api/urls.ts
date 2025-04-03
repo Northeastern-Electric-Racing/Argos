@@ -23,6 +23,10 @@ const getAllRuns = () => `${baseURL}/runs`;
 const getLatestRun = () => `${baseURL}/runs/latest`;
 const startNewRun = () => `${baseURL}/runs/new`;
 
+/* Videos */
+const getAllVideos = () => `${baseURL}/videos`;
+const getVideo = (fileName: string) => `${getAllVideos()}/${encodeURIComponent(fileName)}`;
+
 export const urls = {
   getAllDatatypes,
 
@@ -34,5 +38,8 @@ export const urls = {
   getAllRuns,
   getLatestRun,
   getRunById,
-  startNewRun
+  startNewRun,
+
+  getAllVideos,
+  getVideo
 };

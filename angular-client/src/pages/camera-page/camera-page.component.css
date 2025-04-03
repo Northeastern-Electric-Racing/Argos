@@ -1,0 +1,19 @@
+.background {
+  position: relative;
+}
+
+.top-right {
+  float: right;
+  top: 10vh;
+  right: 20px;
+  background-color: red;
+  color: white;
+  padding: 10px;
+  z-index: 9999;
+}
+
+.video-container {
+  margin-top: -70px;
+  width: 100%;
+  height: 90vh;
+}
