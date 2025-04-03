@@ -52,4 +52,11 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
   getStatusMessage = (connectDotConfig: ConnectionDotConfig): (() => string) => {
     return connectDotConfig.getStatusMessage ? connectDotConfig.getStatusMessage : () => '';
   };
+
+  getSubtitleStyle = (): string => {
+    if (this.unit() === '' && this.boolValue() === undefined) {
+      return this.subtitleStyle() + 'margin-top: 1vh';
+    }
+    return this.subtitleStyle();
+  };
 }

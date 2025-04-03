@@ -5,48 +5,51 @@
     'CELL CHIP: ' +
     (this.cellViewData?.chip === 1 ? 'A ' : 'B ') +
     ' | ' +
-    'Temperatue: ' +
+    'Temp: ' +
     (this.cellViewData?.temp === undefined || this.cellViewData?.temp === null
       ? ' No Value'
       : ' ' + this.cellViewData?.temp?.toFixed(2) + ' °C')
   "
 >
-  <hstack spacing="60px">
-    <vstack spacing="20px" style="margin-top: 15px">
+  <vstack justifyContent="space-evenly" alignItems="center" spacing="0px">
+    <hstack style="margin-top: -2vh" spacing="5vw">
       <info-value-display
         [value]="this.cellViewData?.cellNumbers?.[0]"
-        subtitle="1st Cell Number"
+        subtitle="Cell Num 1"
         [precision]="0"
-      ></info-value-display>
-      <info-value-display
-        [value]="this.cellViewData?.cellNumbers?.[1]"
-        subtitle="2nd Cell Number"
         style="padding-top: 25px"
-        [precision]="0"
       ></info-value-display>
-    </vstack>
-    <vstack spacing="20px">
       <info-value-display
-        style="margin-top: -15px"
         [value]="this.cellViewData?.volt1"
         unit="V"
         subtitle="Voltage 1"
+        style="margin-top: 0.8vh"
       ></info-value-display>
       <info-value-display
-        style="margin-top: -5px"
+        [boolValue]="this.cellViewData?.balancing1"
+        subtitle="Balancing? 1"
+        style="padding-top: 25px"
+      ></info-value-display>
+    </hstack>
+    <divider style="width: 25vw; margin-top: 3vh" />
+    <hstack spacing="20px" spacing="5vw" style="margin-top: -1vh">
+      <info-value-display
+        [value]="this.cellViewData?.cellNumbers?.[1]"
+        subtitle="Cell Num 2"
+        style="padding-top: 25px"
+        [precision]="0"
+      ></info-value-display>
+      <info-value-display
         [value]="this.cellViewData?.volt2"
         unit="V"
         subtitle="Voltage 2"
+        style="margin-top: 0.5vh"
       ></info-value-display>
-    </vstack>
-    <!-- Balancing -->
-    <vstack spacing="20px" style="margin-top: 15px">
-      <info-value-display [boolValue]="this.cellViewData?.balancing1" subtitle="Balancing? 1"></info-value-display>
       <info-value-display
         [boolValue]="this.cellViewData?.balancing2"
         subtitle="Balancing? 2"
         style="padding-top: 25px"
       ></info-value-display>
-    </vstack>
-  </hstack>
+    </hstack>
+  </vstack>
 </info-background>

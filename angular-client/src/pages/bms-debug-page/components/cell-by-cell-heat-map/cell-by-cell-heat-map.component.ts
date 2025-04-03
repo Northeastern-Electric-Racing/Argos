@@ -19,6 +19,7 @@ export class CellByCellHeatMapComponent {
   alphaCells!: Readonly<AlphaCells>;
   betaCells!: Readonly<BetaCells>;
   view = HeatMapView.Temperature;
+  selectedCell: CellReading | undefined = undefined;
   cellViewSelectOptions: DropdownOption[] = [
     {
       name: HeatMapView.Temperature.toString(),

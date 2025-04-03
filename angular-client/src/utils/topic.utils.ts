@@ -1,5 +1,41 @@
 import { Segment } from './bms.utils';
 
+export const alphaTemp = (segment: Segment, cell: AlphaThermReading) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
+export const betaTemp = (segment: Segment, cell: BetaThermReading) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
+export const alphaVolt = (segment: Segment, cell: AlphaVoltReading) => `BMS/PerCell/Alpha/${segment}/Volts/${cell}`;
+export const betaVolt = (segment: Segment, cell: BetaVoltReading) => `BMS/PerCell/Beta/${segment}/Volts/${cell}`;
+export const alphaBurning = (segment: Segment, cell: AlphaBurnReading) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
+export const betaBurning = (segment: Segment, cell: BetaBurnReading) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
+export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
+export const perCellAlphaDieTemp = (segment: Segment) => `BMS/PerCell/Alpha/${segment}/DieTemp`;
+export const perCellBetaDieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
+export const segmentVoltage = (segment: Segment) => `BMS/Segment_Voltage/${segment}`;
+export const vref = (segment: Segment) => `BMS/PerCell/Alpha/${segment}/Vref2`;
+export const vres = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vres`;
+export const vAnalog = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vanalog`;
+export const vDigital = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vdigital`;
+export const boardTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/SegTemp`;
+export const dieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
+
+export const dataTypes = {
+  alphaTemp,
+  betaTemp,
+  alphaVolt,
+  betaVolt,
+  alphaBurning,
+  betaBurning,
+  segmentTemp,
+  perCellAlphaDieTemp,
+  perCellBetaDieTemp,
+  segmentVoltage,
+  vref,
+  vres,
+  vAnalog,
+  vDigital,
+  boardTemp,
+  dieTemp
+};
+
 export const enum AlphaThermReading {
   Therm0 = 0 * 2,
   Therm1 = 1 * 2,
@@ -153,27 +189,3 @@ export const allBetaBurnValues = [
   BetaBurnReading.Cell9,
   BetaBurnReading.Cell10
 ];
-
-export const alphaTemp = (segment: Segment, cell: AlphaThermReading) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
-export const betaTemp = (segment: Segment, cell: BetaThermReading) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
-export const alphaVolt = (segment: Segment, cell: AlphaVoltReading) => `BMS/PerCell/Alpha/${segment}/Volts/${cell}`;
-export const betaVolt = (segment: Segment, cell: BetaVoltReading) => `BMS/PerCell/Beta/${segment}/Volts/${cell}`;
-export const alphaBurning = (segment: Segment, cell: AlphaBurnReading) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
-export const betaBurning = (segment: Segment, cell: BetaBurnReading) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
-export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
-export const perCellAlphaDieTemp = (segment: Segment) => `BMS/PerCell/Alpha/${segment}/DieTemp`;
-export const perCellBetaDieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
-export const segmentVoltage = (segment: Segment) => `BMS/Segment_Voltage/${segment}`;
-
-export const dataTypes = {
-  alphaTemp,
-  betaTemp,
-  alphaVolt,
-  betaVolt,
-  alphaBurning,
-  betaBurning,
-  segmentTemp,
-  perCellAlphaDieTemp,
-  perCellBetaDieTemp,
-  segmentVoltage
-};

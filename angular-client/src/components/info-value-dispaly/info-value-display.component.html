@@ -4,7 +4,7 @@
       <typography variant="info-value" [content]="this.boolValue() ? 'YES' : 'NO'" />
       <typography variant="info-unit" [content]="this.unit()" />
     } @else {
-      <typography variant="info-value" [content]="this.formattedValue" />
+      <typography variant="info-value" [content]="this.formattedValue" style="margin-bottom: -10px" />
       <typography variant="info-unit" [content]="this.unit()" />
     }
 
@@ -29,7 +29,7 @@
     }
   </hstack>
 
-  @if (subtitle() !== '') {
-    <typography variant="info-subtitle" [content]="subtitle()" [additionalStyles]="subtitleStyle()" />
+  @if (this.subtitle() !== '') {
+    <typography variant="info-subtitle" [content]="subtitle()" [additionalStyles]="this.getSubtitleStyle()" />
   }
 </vstack>

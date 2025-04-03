@@ -9,6 +9,7 @@ import { Chip } from 'src/utils/bms.utils';
 export class ChipFaultsComponent implements OnInit {
   chip = input.required<Chip>();
   title!: string;
+  segment = input.required<number>();
 
   ngOnInit(): void {
     // Simply formats: Chip (Alpha/Beta) Faults
