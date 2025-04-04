@@ -274,7 +274,7 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
     SelectModule,
     AccordionModule,
     TableModule,
-    TreeModule,
+    TreeModule
   ],
   providers: [
     DialogService,
