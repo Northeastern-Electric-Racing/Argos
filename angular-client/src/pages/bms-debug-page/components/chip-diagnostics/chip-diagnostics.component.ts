@@ -43,19 +43,19 @@ export class ChipDiagnosticsComponent implements OnInit {
 
   subscribeToData(segment: number) {
     this.valueSubscriptions.push(
-      this.storage.get(dataTypes.vref(segment)).subscribe((data) => {
+      this.storage.get(dataTypes.vref(segment, this.chip())).subscribe((data) => {
         this.vRef = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.vres(segment)).subscribe((data) => {
+      this.storage.get(dataTypes.vres(segment, this.chip())).subscribe((data) => {
         this.vRes = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.vAnalog(segment)).subscribe((data) => {
+      this.storage.get(dataTypes.vAnalog(segment, this.chip())).subscribe((data) => {
         this.vAnalog = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.vDigital(segment)).subscribe((data) => {
+      this.storage.get(dataTypes.vDigital(segment, this.chip())).subscribe((data) => {
         this.vDigital = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.boardTemp(segment)).subscribe((data) => {
+      this.storage.get(dataTypes.boardTemp(segment, this.chip())).subscribe((data) => {
         this.boardTemp = parseFloat(data.values[0]);
       })
     );

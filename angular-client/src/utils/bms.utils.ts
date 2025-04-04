@@ -4,6 +4,16 @@ export enum Chip {
   Alpha = 0,
   Beta = 1
 }
+export const chipToString = (chip: Chip): string => {
+  switch (chip) {
+    case Chip.Alpha:
+      return 'Alpha';
+    case Chip.Beta:
+      return 'Beta';
+    default:
+      throw new Error('Invalid chip type ' + chip);
+  }
+};
 export enum Segment {
   Segment0 = 0,
   Segment1 = 1,
@@ -29,36 +39,36 @@ export type SegmentInfo = {
 
 export const segment0: SegmentInfo = {
   segmentTempKey: dataTypes.segmentTemp(Segment.Segment0),
-  alphaChipTempKey: dataTypes.perCellAlphaDieTemp(Segment.Segment0),
-  betaChipTempKey: dataTypes.perCellBetaDieTemp(Segment.Segment0),
+  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment0, Chip.Alpha),
+  betaChipTempKey: dataTypes.dieTemp(Segment.Segment0, Chip.Beta),
   voltageKey: dataTypes.segmentVoltage(Segment.Segment0)
 };
 
 export const segment1: SegmentInfo = {
   segmentTempKey: dataTypes.segmentTemp(Segment.Segment1),
-  alphaChipTempKey: dataTypes.perCellAlphaDieTemp(Segment.Segment1),
-  betaChipTempKey: dataTypes.perCellBetaDieTemp(Segment.Segment1),
+  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment1, Chip.Alpha),
+  betaChipTempKey: dataTypes.dieTemp(Segment.Segment1, Chip.Beta),
   voltageKey: dataTypes.segmentVoltage(Segment.Segment1)
 };
 
 export const segment2: SegmentInfo = {
   segmentTempKey: dataTypes.segmentTemp(Segment.Segment2),
-  alphaChipTempKey: dataTypes.perCellAlphaDieTemp(Segment.Segment2),
-  betaChipTempKey: dataTypes.perCellBetaDieTemp(Segment.Segment2),
+  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment2, Chip.Alpha),
+  betaChipTempKey: dataTypes.dieTemp(Segment.Segment2, Chip.Beta),
   voltageKey: dataTypes.segmentVoltage(Segment.Segment2)
 };
 
 export const segment3: SegmentInfo = {
   segmentTempKey: dataTypes.segmentTemp(Segment.Segment3),
-  alphaChipTempKey: dataTypes.perCellAlphaDieTemp(Segment.Segment3),
-  betaChipTempKey: dataTypes.perCellBetaDieTemp(Segment.Segment3),
+  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment3, Chip.Alpha),
+  betaChipTempKey: dataTypes.dieTemp(Segment.Segment3, Chip.Beta),
   voltageKey: dataTypes.segmentVoltage(Segment.Segment3)
 };
 
 export const segment4: SegmentInfo = {
   segmentTempKey: dataTypes.segmentTemp(Segment.Segment4),
-  alphaChipTempKey: dataTypes.perCellAlphaDieTemp(Segment.Segment4),
-  betaChipTempKey: dataTypes.perCellBetaDieTemp(Segment.Segment4),
+  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment4, Chip.Alpha),
+  betaChipTempKey: dataTypes.dieTemp(Segment.Segment4, Chip.Beta),
   voltageKey: dataTypes.segmentVoltage(Segment.Segment4)
 };
 

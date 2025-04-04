@@ -1,4 +1,4 @@
-import { Chip, Segment } from './bms.utils';
+import { Chip, chipToString, Segment } from './bms.utils';
 
 export const alphaTemp = (segment: Segment, cell: AlphaThermReading) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
 export const betaTemp = (segment: Segment, cell: BetaThermReading) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
@@ -7,17 +7,17 @@ export const betaVolt = (segment: Segment, cell: BetaVoltReading) => `BMS/PerCel
 export const alphaBurning = (segment: Segment, cell: AlphaBurnReading) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
 export const betaBurning = (segment: Segment, cell: BetaBurnReading) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
 export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
-export const perCellAlphaDieTemp = (segment: Segment) => `BMS/PerCell/Alpha/${segment}/DieTemp`;
-export const perCellBetaDieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
 export const segmentVoltage = (segment: Segment) => `BMS/Segment_Voltage/${segment}`;
-export const vref = (segment: Segment) => `BMS/PerCell/Alpha/${segment}/Vref2`;
-export const vres = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vres`;
-export const vAnalog = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vanalog`;
-export const vDigital = (segment: Segment) => `BMS/PerCell/Beta/${segment}/Vdigital`;
-export const boardTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/SegTemp`;
-export const dieTemp = (segment: Segment) => `BMS/PerCell/Beta/${segment}/DieTemp`;
+export const vref = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vref2`;
+export const vres = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vres`;
+export const vAnalog = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vanalog`;
+export const vDigital = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vdigital`;
+export const boardTemp = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/SegTemp`;
+export const dieTemp = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/DieTemp`;
 export const chipFault = (segment: Segment, chip: Chip, fault: ChipFault) =>
-  `BMS/PerCell/${chip === Chip.Alpha ? 'Alpha' : 'Beta'}/${segment}/Faults/${fault}`;
+  `BMS/PerCell/${chipToString(chip)}/${segment}/Faults/${fault}`;
+// BMS/PerChip/PECErrorChip
+export const pecErrorChip = () => `BMS/PerChip/PECErrorChip`;
 
 export const dataTypes = {
   alphaTemp,
@@ -27,8 +27,6 @@ export const dataTypes = {
   alphaBurning,
   betaBurning,
   segmentTemp,
-  perCellAlphaDieTemp,
-  perCellBetaDieTemp,
   segmentVoltage,
   vref,
   vres,
@@ -36,7 +34,8 @@ export const dataTypes = {
   vDigital,
   boardTemp,
   dieTemp,
-  chipFault
+  chipFault,
+  pecErrorChip
 };
 
 export const enum AlphaThermReading {

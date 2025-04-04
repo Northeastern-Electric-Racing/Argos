@@ -26,7 +26,6 @@ export class SegmentSummaryComponent implements OnInit {
     const segmentInfo = this.getRelevantKeys();
 
     this.storage.get(segmentInfo.segmentTempKey).subscribe((value) => {
-      console.log('Segment number: ', this.segmentNumber(), 'Temperature: ', value.values[0]);
       this.temperature = parseFloat(value.values[0]);
     });
     this.storage.get(segmentInfo.alphaChipTempKey).subscribe((value) => {
