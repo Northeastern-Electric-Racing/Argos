@@ -24,6 +24,7 @@ export class CameraPageComponent implements OnInit {
   videoUrlsIsLoading: boolean = true;
 
   @ViewChild('remoteVideo') remoteVideo?: ElementRef<HTMLVideoElement>;
+  @ViewChild('playbackVideo', { static: false }) playbackVideoRef!: ElementRef<HTMLVideoElement>;
 
   async ngOnInit(): Promise<void> {
     this.urlAvailable = await this.checkConnection();
@@ -58,6 +59,12 @@ export class CameraPageComponent implements OnInit {
     this.playbackVideoUrl = urls.getVideo(videoName);
     this.selectedVideoName = videoName;
     this.liveStream = false;
+    // Wait for Angular to update the DOM
+    setTimeout(() => {
+      const videoEl = this.playbackVideoRef.nativeElement;
+      videoEl.load(); // This reloads the new <source> inside the <video>
+      videoEl.play();
+    });
   };
 
   onLiveStreamSelected = () => {
