@@ -106,18 +106,21 @@ pub async fn insert_file(
     mut multipart: Multipart,
 ) -> Result<String, ScyllaError> {
     while let Ok(Some(field)) = multipart.next_field().await {
-        let Some(file_name) = field.file_name().map(|s| s.to_string()) else {
-            warn!("No File name found for file");
-            continue;
-        };
+        let name = field.name().map(|s| s.to_string());
+
         let Ok(data) = field.bytes().await else {
             warn!("Could not decode file insert");
             continue;
         };
 
-        println!("Inserting file: {}", file_name);
+        let Some(name) = name else {
+            warn!("Could not get name");
+            continue;
+        };
 
-        fs::write(format!("{}/{}", output_directory.0, file_name), data)
+        println!("Inserting file: {}", name);
+
+        fs::write(format!("{}/{}", output_directory.0, name), data)
             .await
             .map_err(|e| ScyllaError::FileError(format!("Failed to write file {}", e)))?;
     }
