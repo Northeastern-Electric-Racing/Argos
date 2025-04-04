@@ -115,6 +115,8 @@ pub async fn insert_file(
             continue;
         };
 
+        println!("Inserting file: {}", file_name);
+
         fs::write(format!("{}/{}", output_directory.0, file_name), data)
             .await
             .map_err(|e| ScyllaError::FileError(format!("Failed to write file {}", e)))?;

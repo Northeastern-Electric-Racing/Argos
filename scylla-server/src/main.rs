@@ -74,7 +74,7 @@ struct ScyllaArgs {
         short = 'u',
         long,
         env = "SCYLLA_SIREN_HOST_URL",
-        default_value = "localhost:1883"
+        default_value = "192.168.100.11:1883"
     )]
     siren_host_url: String,
 
