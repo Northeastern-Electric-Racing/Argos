@@ -13,7 +13,7 @@ use crate::{
     error::ScyllaError, proto::playback_data, services::run_service, ClientData, PoolHandle,
 };
 
-use super::video_streamer_controller::OutputDirectory;
+use super::OutputDirectory;
 
 /// Inserts a logger file using http multipart
 /// This file is parsed and clientdata values are extracted, the run ID of each variable is inferred, and then data is batch uploaded
@@ -118,7 +118,7 @@ pub async fn insert_file(
             continue;
         };
 
-        println!("Inserting file: {}", name);
+        info!("Inserting file: {}", name);
 
         fs::write(format!("{}/{}", output_directory.0, name), data)
             .await

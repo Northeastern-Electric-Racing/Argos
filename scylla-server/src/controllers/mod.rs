@@ -7,3 +7,9 @@ pub mod run_controller;
 
 pub mod file_insertion_controller;
 pub mod video_streamer_controller;
+
+#[derive(Clone)]
+pub struct VideoSuffix(pub String);
+
+#[derive(Clone)]
+pub struct OutputDirectory(pub String);

@@ -25,7 +25,8 @@ use scylla_server::{
         self,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
-        video_streamer_controller::{self, OutputDirectory, VideoSuffix},
+        video_streamer_controller::{self},
+        OutputDirectory, VideoSuffix,
     },
     services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
@@ -74,7 +75,7 @@ struct ScyllaArgs {
         short = 'u',
         long,
         env = "SCYLLA_SIREN_HOST_URL",
-        default_value = "192.168.100.11:1883"
+        default_value = "localhost:1883"
     )]
     siren_host_url: String,
 
@@ -355,14 +356,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/videos/{file_name}",
             get(video_streamer_controller::stream_video),
         )
-        .route("/videos", get(video_streamer_controller::get_videos))
+        .route(
+            "/videos",
+            get(video_streamer_controller::get_videos)
+                .layer(Extension(VideoSuffix(cli.video_suffix))),
+        )
         .route(
             "/videos/update",
             post(video_streamer_controller::request_updated_videos),
         )
         .layer(Extension(db_send))
         .layer(Extension(OutputDirectory(cli.output_directory)))
-        .layer(Extension(VideoSuffix(cli.video_suffix)))
         .layer(Extension(client_sharable))
         .layer(DefaultBodyLimit::disable())
         // for CORS handling

@@ -19,14 +19,11 @@ use crate::{
     proto::serverdata::{self},
 };
 
-#[derive(Clone)]
-pub struct VideoSuffix(pub String);
-
-#[derive(Clone)]
-pub struct OutputDirectory(pub String);
+use super::{OutputDirectory, VideoSuffix};
 
 const INITIAL_CHUNK_SIZE: u64 = 1_048_576; // 1 MB for faster initial load
 
+// Inspired by https://github.com/henningcullin/rustflix/blob/90cbcf2f33a2c26792a21fcbe295db146d2333a5/src-tauri/src/server/stream_film.rs#L35
 pub async fn stream_video(
     Path(file_path): Path<String>,
     Extension(output_directory): Extension<OutputDirectory>,
@@ -125,17 +122,6 @@ pub async fn request_updated_videos(
         )
         .await
         .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
-
-    payload.values = vec![0.0];
-    mqtt_client
-        .publish(
-            "Scylla/Video/Send",
-            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
-            false,
-            protobuf::Message::write_to_bytes(&payload)
-                .unwrap_or_else(|e| format!("failed to serialize {}", e).as_bytes().to_vec()),
-        )
-        .await
-        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+    
     Ok(Json::from("Sent Request to update videos".to_string()))
 }
