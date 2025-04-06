@@ -97,7 +97,6 @@ export class CellService {
   updateCellInfo = () => {
     this.subscribeToAlphaCellInfo();
     this.subscribeToBetaCellInfo();
-    console.log(this.perSegmentAlphaCells);
   };
 
   private subscribeToAlphaCellInfo = () => {
