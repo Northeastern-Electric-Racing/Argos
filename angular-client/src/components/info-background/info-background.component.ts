@@ -18,11 +18,11 @@ interface ButtonInputs {
   styleUrls: ['./info-background.component.css']
 })
 export class InfoBackgroundComponent {
-  @Input() icon?: string;
-  @Input() svgIcon?: string;
-  @Input() backgroundColor?: string = Theme.infoBackground;
-  @Input() title!: string;
-  @Input() onClick!: (() => void) | undefined;
+  icon = input<string>();
+  svgIcon = input<string>();
+  backgroundColor = input<Theme>(Theme.infoBackground);
+  title = input<string>();
+  @Input() onClick?: () => void;
   @Input() button?: ButtonInputs;
   selectorConfig = input<SelectorConfig | undefined>(undefined);
   topRightInfo = input<string | undefined>(undefined);

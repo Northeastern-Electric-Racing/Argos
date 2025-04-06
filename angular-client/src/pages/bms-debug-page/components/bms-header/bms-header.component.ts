@@ -1,5 +1,4 @@
-import { Component, HostListener, inject, input, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, HostListener, input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'bms-header',
@@ -7,7 +6,6 @@ import { Router } from '@angular/router';
   styleUrl: './bms-header.component.css'
 })
 export class BmsHeaderComponent implements OnInit {
-  router = inject(Router);
   pageTitle = input.required<string>();
   time = new Date();
   newRunIsLoading = false;
