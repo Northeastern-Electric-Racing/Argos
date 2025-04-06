@@ -7,7 +7,7 @@ export const betaVolt = (segment: Segment, cell: BetaVoltReading) => `BMS/PerCel
 export const alphaBurning = (segment: Segment, cell: AlphaBurnReading) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
 export const betaBurning = (segment: Segment, cell: BetaBurnReading) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
 export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
-export const segmentVoltage = (segment: Segment) => `BMS/Segment_Voltage/${segment}`;
+export const segmentVoltage = (segment: Segment) => `BMS/Segment_Volt/${segment}`;
 export const vref = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vref2`;
 export const vres = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vres`;
 export const vAnalog = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vanalog`;
@@ -16,8 +16,33 @@ export const boardTemp = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipTo
 export const dieTemp = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/DieTemp`;
 export const chipFault = (segment: Segment, chip: Chip, fault: ChipFault) =>
   `BMS/PerCell/${chipToString(chip)}/${segment}/Faults/${fault}`;
-// BMS/PerChip/PECErrorChip
+export const accCCL = () => `BMS/Commands/Max_DC_Brake_Current_Target`;
+export const accDCL = () => `BMS/Commands/Max_DC_Current_Target`;
+// examples:
+/* 
+BMS/Cells/Volts_High_Value	V	1
+BMS/Cells/Volts_High_Chip		2
+BMS/Cells/Volts_High_Cell		3
+BMS/Cells/Volts_Low_Value	V	4
+BMS/Cells/Volts_Low_Chip		5
+BMS/Cells/Volts_Low_Cell		6
+BMS/Cells/Volts_Avg_Value
+*/
 export const pecErrorChip = () => `BMS/PerChip/PECErrorChip`;
+export const highVoltsChip = () => `BMS/Cells/Volts_High_Chip`;
+export const highVoltsCell = () => `BMS/Cells/Volts_High_Cell`;
+export const highVoltsValue = () => `BMS/Cells/Volts_High_Value`;
+export const lowVoltsChip = () => `BMS/Cells/Volts_Low_Chip`;
+export const lowVoltsValue = () => `BMS/Cells/Volts_Low_Value`;
+export const lowVoltsCell = () => `BMS/Cells/Volts_Low_Cell`;
+export const voltsAvgValue = () => `BMS/Cells/Volts_Avg_Value`;
+export const highTempValue = () => `BMS/Cells/Temp_High_Value`;
+export const highTempChip = () => `BMS/Cells/Temp_High_Chip`;
+export const highTempCell = () => `BMS/Cells/Temp_High_Cell`;
+export const lowTempValue = () => `BMS/Cells/Temp_Low_Value`;
+export const lowTempChip = () => `BMS/Cells/Temp_Low_Chip`;
+export const lowTempCell = () => `BMS/Cells/Temp_Low_Cell`;
+export const tempAvgValue = () => `BMS/Cells/Temp_Avg_Value`;
 
 export const dataTypes = {
   alphaTemp,
@@ -35,7 +60,23 @@ export const dataTypes = {
   boardTemp,
   dieTemp,
   chipFault,
-  pecErrorChip
+  pecErrorChip,
+  highVoltsCell,
+  highVoltsChip,
+  highVoltsValue,
+  lowVoltsCell,
+  lowVoltsChip,
+  lowVoltsValue,
+  voltsAvgValue,
+  highTempCell,
+  highTempChip,
+  highTempValue,
+  lowTempCell,
+  lowTempChip,
+  lowTempValue,
+  tempAvgValue,
+  accCCL,
+  accDCL
 };
 
 export const enum AlphaThermReading {

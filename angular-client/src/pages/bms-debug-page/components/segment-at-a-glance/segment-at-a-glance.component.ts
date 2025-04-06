@@ -15,11 +15,20 @@ export class SegmentAtAGlanceComponent {
   segmentNumber = input.required<Segment>();
   voltage: number = 0;
   temperature: number = 0;
-  chip_alpha_temp: number = 0;
-  chip_beta_temp: number = 0;
+  alphaChipTemp: number = 0;
+  betaChipTemp: number = 0;
   alphaCrc: number = 0;
-  thermometerConfig: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: -15, max: 30 };
+  betaCrc: number = 0;
+  thermometerConfigAlphaChip: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: 0, max: 60 };
+  thermometerConfigBetaChip: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: 0, max: 60 };
+  thermometerConfigSegment: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: 0, max: 60 };
   valueSubscriptions: Subscription[] = [];
+
+  enableWidgets = window.innerWidth >= 1000;
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.enableWidgets = window.innerWidth >= 1000;
+  }
 
   constructor() {
     effect(() => {
@@ -32,33 +41,40 @@ export class SegmentAtAGlanceComponent {
   resetValues() {
     this.voltage = 0;
     this.temperature = 0;
-    this.chip_alpha_temp = 0;
-    this.chip_beta_temp = 0;
+    this.alphaChipTemp = 0;
+    this.betaChipTemp = 0;
     this.alphaCrc = 0;
   }
-
-  /*
-  BMS/Segment_Temp/X where X is 1 thru 5 segment
-Chip Alpha Temp: BMS/PerCell/Alpha/{4}/DieTemp {4} is chip 0 thru 4
-Chip Beta Temp: BMS/PerCell/Beta/{4}/DieTemp {4} is chip 0 thru 4
-CRCs: BMS/PerChip/PECErrorChip
-  */
 
   subscribeToData = (segment: number) => {
     this.storage.get(dataTypes.segmentTemp(segment)).subscribe((value) => {
       this.temperature = parseFloat(value.values[0]);
-      this.thermometerConfig.currentValue = this.temperature;
+      this.thermometerConfigSegment.currentValue = this.temperature;
     });
     this.storage.get(dataTypes.dieTemp(segment, Chip.Alpha)).subscribe((value) => {
-      this.chip_alpha_temp = parseFloat(value.values[0]);
+      this.alphaChipTemp = parseFloat(value.values[0]);
+      this.thermometerConfigAlphaChip.currentValue = this.alphaChipTemp;
     });
     this.storage.get(dataTypes.dieTemp(segment, Chip.Beta)).subscribe((value) => {
-      this.chip_beta_temp = parseFloat(value.values[0]);
+      this.betaChipTemp = parseFloat(value.values[0]);
+      this.thermometerConfigBetaChip.currentValue = this.betaChipTemp;
+    });
+    this.storage.get(dataTypes.pecErrorChip()).subscribe((value) => {
+      const chip = parseInt(value.values[0]);
+      if (chip % 2 === 0) {
+        this.alphaCrc = parseInt(value.values[0]);
+      } else {
+        this.betaCrc = parseInt(value.values[0]);
+      }
     });
   };
 
-  getStatusMessage = (): string => {
-    return '';
+  getAlphaCrcColor = (): string => {
+    return this.alphaCrc === 0 ? 'green' : 'red';
+  };
+
+  getBetaCrcColor = (): string => {
+    return this.betaCrc === 0 ? 'green' : 'red';
   };
   getStatusColor = (): string => {
     let dotColor: string;
@@ -78,9 +94,4 @@ CRCs: BMS/PerChip/PECErrorChip
     type: 'connection-dot-config',
     getStatusColor: this.getStatusColor
   };
-  enableWidgets = window.innerWidth >= 1000;
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.enableWidgets = window.innerWidth >= 1000;
-  }
 }

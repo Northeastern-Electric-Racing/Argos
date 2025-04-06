@@ -4,12 +4,12 @@ export enum Chip {
   Alpha = 0,
   Beta = 1
 }
-export const chipToString = (chip: Chip): string => {
+export const chipToString = (chip: Chip, singleLetter = false): string => {
   switch (chip) {
     case Chip.Alpha:
-      return 'Alpha';
+      return singleLetter ? 'A' : 'Alpha';
     case Chip.Beta:
-      return 'Beta';
+      return singleLetter ? 'B' : 'Beta';
     default:
       throw new Error('Invalid chip type ' + chip);
   }

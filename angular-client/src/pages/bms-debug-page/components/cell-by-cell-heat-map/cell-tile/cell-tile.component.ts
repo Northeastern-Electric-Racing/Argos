@@ -16,6 +16,6 @@ export class CellTileComponent {
     const value = this.value();
     const view = this.currentView();
     const symbol = view === undefined ? '' : view === HeatMapView.Temperature ? '°' : 'ⱽ';
-    return (value === undefined ? '-' : value.toFixed(1).toString()) + symbol;
+    return (value === undefined ? '-' : value.toFixed(2).toString()) + symbol;
   };
 }

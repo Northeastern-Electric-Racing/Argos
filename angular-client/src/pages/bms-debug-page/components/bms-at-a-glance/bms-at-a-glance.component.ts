@@ -6,6 +6,7 @@ import {
 } from 'src/components/info-value-dispaly/info-value-display.component';
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
+import { dataTypes } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'bms-at-a-glance',
@@ -60,11 +61,11 @@ export class BmsAtAGlanceComponent implements OnInit {
       this.batteryConfig.percentage = this.chargeState;
     });
 
-    this.storage.get(DataTypeEnum.CHARGE_CURRENT_LIMIT).subscribe((value) => {
+    this.storage.get(dataTypes.accCCL()).subscribe((value) => {
       this.ccl = parseInt(value.values[0]);
     });
 
-    this.storage.get(DataTypeEnum.DISCHARGE_CURRENT_LIMIT).subscribe((value) => {
+    this.storage.get(dataTypes.accDCL()).subscribe((value) => {
       this.dcl = parseInt(value.values[0]);
     });
   }

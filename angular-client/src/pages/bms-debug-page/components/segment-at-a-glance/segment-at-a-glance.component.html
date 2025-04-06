@@ -2,7 +2,7 @@
   <hstack justifyContent="space-evenly" class="bms-container">
     <!-- Voltage -->
     <info-value-display
-      [value]="voltage"
+      [value]="this.voltage"
       unit="V"
       subtitle="Average Voltage"
       [widget]="this.connectionDotConfig"
@@ -15,27 +15,27 @@
       [value]="temperature"
       unit="C"
       subtitle="Average Temperature"
-      [widget]="this.thermometerConfig"
+      [widget]="this.thermometerConfigSegment"
       [enableWidget]="this.enableWidgets"
     />
     <div class="divider"></div>
 
     <!-- Chip Alpha Temperature -->
     <info-value-display
-      [value]="temperature"
+      [value]="this.alphaChipTemp"
       unit="C"
       subtitle="Chip Alpha Temperature"
-      [widget]="this.thermometerConfig"
+      [widget]="this.thermometerConfigAlphaChip"
       [enableWidget]="this.enableWidgets"
     />
     <div class="divider"></div>
 
     <!-- Chip Beta Temperature -->
     <info-value-display
-      [value]="temperature"
+      [value]="this.betaChipTemp"
       unit="C"
       subtitle="Chip Beta Temperature"
-      [widget]="this.thermometerConfig"
+      [widget]="this.thermometerConfigBetaChip"
       [enableWidget]="this.enableWidgets"
     />
     <div class="divider"></div>
@@ -45,13 +45,11 @@
       <hstack style="margin-bottom: 10px">
         <vstack>
           <connection-dot-with-message
-            [getStatusColor]="this.getStatusColor"
-            [getStatusMessage]="this.getStatusMessage"
+            [getStatusColor]="this.getAlphaCrcColor"
             style="margin-top: 0px"
           ></connection-dot-with-message>
           <connection-dot-with-message
-            [getStatusColor]="this.getStatusColor"
-            [getStatusMessage]="this.getStatusMessage"
+            [getStatusColor]="this.getBetaCrcColor"
             style="margin-top: 20px"
           ></connection-dot-with-message>
         </vstack>
