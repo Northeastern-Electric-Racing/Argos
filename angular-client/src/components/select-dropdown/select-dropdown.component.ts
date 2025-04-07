@@ -1,6 +1,10 @@
 import { Component, input } from '@angular/core';
 import { SelectChangeEvent } from 'primeng/select';
 
+export interface SelectorConfig {
+  options: DropdownOption[];
+  placeholder: string;
+}
 export interface DropdownOption {
   name: string;
   function: () => void;

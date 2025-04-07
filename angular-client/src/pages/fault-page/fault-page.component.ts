@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { appRoutes } from 'src/app/app-routing.module';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
@@ -31,7 +32,7 @@ export default class FaultPageComponent implements OnInit {
   onRowSelect = () => {
     if (this.selectedFault) {
       this.faultService.selectFault(this.selectedFault);
-      this.navigateTo('/faults/fault-graph');
+      this.navigateTo(appRoutes.faultsGraphRoute());
     }
   };
 

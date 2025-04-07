@@ -8,10 +8,16 @@
 }
 
 ::ng-deep .p-select-label.p-placeholder {
-  width: 10vw;
-  padding-bottom: 10px;
+  width: 10vw !important;
+  padding-bottom: 10px !important;
   --p-select-placeholder-color: white !important;
 }
+::ng-deep .p-select-label {
+  width: 10vw !important;
+  padding-bottom: 10px !important;
+  --p-select-placeholder-color: white !important;
+}
+
 /* Override focus and hover states to keep the grey background and remove highlight */
 ::ng-deep .small-grey-select:focus,
 ::ng-deep .small-grey-select:hover {

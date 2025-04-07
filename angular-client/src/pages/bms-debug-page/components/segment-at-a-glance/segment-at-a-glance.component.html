@@ -1,0 +1,72 @@
+<info-background title="Segment At A Glance" svgIcon="battery_charging_2">
+  <hstack justifyContent="space-evenly" class="bms-container">
+    <!-- Voltage -->
+    <info-value-display
+      [value]="this.voltage"
+      unit="V"
+      subtitle="Average Voltage"
+      [widget]="this.connectionDotConfig"
+      [enableWidget]="this.enableWidgets"
+    />
+    <div class="divider"></div>
+
+    <!-- Temperature -->
+    <info-value-display
+      [value]="temperature"
+      unit="C"
+      subtitle="Average Temperature"
+      [widget]="this.thermometerConfigSegment"
+      [enableWidget]="this.enableWidgets"
+    />
+    <div class="divider"></div>
+
+    <!-- Chip Alpha Temperature -->
+    <info-value-display
+      [value]="this.alphaChipTemp"
+      unit="C"
+      subtitle="Chip Alpha Temperature"
+      [widget]="this.thermometerConfigAlphaChip"
+      [enableWidget]="this.enableWidgets"
+    />
+    <div class="divider"></div>
+
+    <!-- Chip Beta Temperature -->
+    <info-value-display
+      [value]="this.betaChipTemp"
+      unit="C"
+      subtitle="Chip Beta Temperature"
+      [widget]="this.thermometerConfigBetaChip"
+      [enableWidget]="this.enableWidgets"
+    />
+    <div class="divider"></div>
+
+    <!-- Chip CRC -->
+    <vstack>
+      <hstack style="margin-bottom: 10px">
+        <vstack>
+          <connection-dot-with-message
+            [getStatusColor]="this.getAlphaCrcColor"
+            style="margin-top: 0px"
+          ></connection-dot-with-message>
+          <connection-dot-with-message
+            [getStatusColor]="this.getBetaCrcColor"
+            style="margin-top: 20px"
+          ></connection-dot-with-message>
+        </vstack>
+        <vstack>
+          <typography
+            variant="info-title"
+            content="Alpha CRC"
+            additionalStyles="fontSize: 24px; fontWeight: 900; margin-top: 0px;"
+          ></typography>
+          <typography
+            variant="info-title"
+            content="Beta CRC"
+            additionalStyles="fontSize: 24px; fontWeight: 900; margin-top: 12.5px;"
+          ></typography>
+        </vstack>
+      </hstack>
+      <typography variant="info-subtitle" content="Chip CRCs"></typography>
+    </vstack>
+  </hstack>
+</info-background>

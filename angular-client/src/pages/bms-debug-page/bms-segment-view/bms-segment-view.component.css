@@ -1,0 +1,4 @@
+/* Add these styles to your component */
+mat-grid-tile {
+  overflow: visible !important; /* Allow dropdown to overflow */
+}
