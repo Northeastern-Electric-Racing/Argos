@@ -122,6 +122,6 @@ pub async fn request_updated_videos(
         )
         .await
         .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
-    
+
     Ok(Json::from("Sent Request to update videos".to_string()))
 }
