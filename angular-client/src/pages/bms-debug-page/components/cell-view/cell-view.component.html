@@ -1,33 +1,21 @@
-<info-background
-  title="Cell View"
-  svgIcon="battery_charging_2"
-  [topRightInfo]="
-    'CHIP: ' +
-    (this.cellViewData?.chip === 1 ? 'Alpha' : 'Beta') +
-    ' | ' +
-    'Temp: ' +
-    (this.cellViewData?.temp === undefined || this.cellViewData?.temp === null
-      ? ' No Value'
-      : ' ' + this.cellViewData?.temp?.toFixed(2) + ' °C')
-  "
->
+<info-background title="Cell View" svgIcon="battery_charging_2" [topRightInfo]="this.getUpperRightTitle()">
   <vstack justifyContent="space-evenly" alignItems="center" spacing="0px">
     <hstack style="margin-top: -2vh" spacing="5vw">
       <info-value-display
         [value]="this.cellViewData?.cellNumbers?.[0]"
-        subtitle="Cell Num 1"
+        [subtitle]="this.getCellNumTitle()"
         [precision]="0"
         style="padding-top: 25px"
       ></info-value-display>
       <info-value-display
         [value]="this.cellViewData?.volt1"
         unit="V"
-        subtitle="Voltage 1"
+        [subtitle]="this.getCellVoltageTitle()"
         style="margin-top: 0.8vh"
       ></info-value-display>
       <info-value-display
         [boolValue]="this.cellViewData?.balancing1"
-        subtitle="Balancing? 1"
+        [subtitle]="this.getBalancingTitle()"
         style="padding-top: 25px"
       ></info-value-display>
     </hstack>
@@ -35,19 +23,19 @@
     <hstack spacing="20px" spacing="5vw" style="margin-top: -1vh">
       <info-value-display
         [value]="this.cellViewData?.cellNumbers?.[1]"
-        subtitle="Cell Num 2"
+        [subtitle]="this.getCellNumTitle()"
         style="padding-top: 25px"
         [precision]="0"
       ></info-value-display>
       <info-value-display
         [value]="this.cellViewData?.volt2"
         unit="V"
-        subtitle="Voltage 2"
+        [subtitle]="this.getCellVoltageTitle()"
         style="margin-top: 0.5vh"
       ></info-value-display>
       <info-value-display
         [boolValue]="this.cellViewData?.balancing2"
-        subtitle="Balancing? 2"
+        [subtitle]="this.getBalancingTitle()"
         style="padding-top: 25px"
       ></info-value-display>
     </hstack>

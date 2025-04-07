@@ -47,9 +47,9 @@ export class ChipFaultsComponent implements OnInit {
           const fault = this.chipFaultPipe.transform(data, chip, segment, faultName);
           if (!fault) return;
           if (this.chipFaults.length >= 50) {
-            this.chipFaults.shift();
+            this.chipFaults.pop();
           }
-          this.chipFaults.push(fault);
+          this.chipFaults.unshift(fault);
         })
       );
     });
