@@ -112,7 +112,6 @@ struct ScyllaArgs {
     )]
     socketio_discard_percent: u8,
 
-
     /// The port to bind scylla to
     #[arg(short = 'p', long, env = "SCYLLA_PORT", default_value = "8000")]
     port: u16,
