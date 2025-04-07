@@ -79,3 +79,16 @@ export const segmentInfoMap = {
   [Segment.Segment3]: segment3,
   [Segment.Segment4]: segment4
 };
+
+export const getConnectionDotStatusColor = (voltage: number): string => {
+  if (voltage <= 375) {
+    // multiply by 3 * 125 cells for scaling
+    return 'red';
+  }
+  if (voltage <= 437.5) {
+    // multiply by 3.5 * 125 cells for scaling
+    return 'yellow';
+  }
+  // anything above 3.5 * 125 cells for scaling, is good
+  return '#19ff30';
+};

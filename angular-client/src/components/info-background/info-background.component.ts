@@ -22,7 +22,7 @@ export class InfoBackgroundComponent {
   svgIcon = input<string>();
   backgroundColor = input<Theme>(Theme.infoBackground);
   title = input<string>();
-  @Input() onClick?: () => void;
+  onClick = input<(() => void) | undefined>(undefined);
   @Input() button?: ButtonInputs;
   selectorConfig = input<SelectorConfig | undefined>(undefined);
   topRightInfo = input<string | undefined>(undefined);

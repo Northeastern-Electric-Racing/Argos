@@ -4,9 +4,10 @@ import { Subscription } from 'rxjs';
 import { appRoutes } from 'src/app/app-routing.module';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
-import { Chip } from 'src/utils/bms.utils';
+import { Chip, chipToString } from 'src/utils/bms.utils';
 import { allChipFaults, dataTypes } from 'src/utils/topic.utils';
 import { FaultData } from 'src/utils/types.utils';
+import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 
 @Component({
   selector: 'chip-faults',
@@ -23,6 +24,7 @@ export class ChipFaultsComponent implements OnInit {
   chipFaults: FaultData[] = [];
   selectedFault: FaultData | undefined = undefined;
   private router = inject(Router);
+  chipFaultPipe = inject(ChipFaultPipe);
 
   constructor() {
     effect(() => {
@@ -42,14 +44,12 @@ export class ChipFaultsComponent implements OnInit {
       this.subscribtions.push(
         this.storage.get(dataTypes.chipFault(segment, chip, faultName)).subscribe((data) => {
           if (parseInt(data.values[0]) === 0) return;
-          const chipFault: FaultData = {
-            node: 'BMS',
-            name: 'PerCell/' + (chip === Chip.Alpha ? 'Alpha' : 'Beta') + '/' + segment + '/' + faultName,
-            occurredAt: new Date(parseInt(data.time)),
-            lastSeen: new Date(parseInt(data.time)),
-            expired: false
-          };
-          this.chipFaults.push(chipFault);
+          const fault = this.chipFaultPipe.transform(data, chip, segment, faultName);
+          if (!fault) return;
+          if (this.chipFaults.length >= 50) {
+            this.chipFaults.shift();
+          }
+          this.chipFaults.push(fault);
         })
       );
     });
@@ -57,7 +57,7 @@ export class ChipFaultsComponent implements OnInit {
 
   ngOnInit(): void {
     // Simply formats: Chip (Alpha/Beta) Faults
-    this.title = `Chip ${Chip[this.chip()]} Faults`;
+    this.title = `Chip ${chipToString(this.chip())} Faults`;
   }
 
   onRowSelect = () => {

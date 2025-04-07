@@ -1,6 +1,6 @@
 <div
   class="container"
-  (click)="onClick ? onClick() : undefined"
+  (click)="onClick()?.()"
   [style]="{ 'background-color': this.backgroundColor() }"
   [class.sliced-left-corner]="this.slicedLeftCorner()"
 >
@@ -37,7 +37,7 @@
       }
     </div>
   }
-  @if (this.onClick) {
+  @if (this.onClick(); as onClick) {
     <typography additionalStyles="text-align: left;" variant="info-subtitle" content="Click for more details" />
   }
   <ng-content />

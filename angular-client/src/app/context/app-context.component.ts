@@ -19,6 +19,7 @@ export default class AppContextComponent implements OnInit {
   private cellService = new CellService(this.storage);
   private heatmapService = inject(HeatMapService);
   private faultService = inject(FaultService);
+  private chipFaultPipe = inject(FaultService);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   socket = io((environment as any).url || 'http://localhost:8000');
   socketService = new SocketService(this.socket);

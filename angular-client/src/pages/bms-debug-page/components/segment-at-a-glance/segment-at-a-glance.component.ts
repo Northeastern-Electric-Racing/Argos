@@ -2,7 +2,7 @@ import { Component, effect, HostListener, inject, input } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
 import Storage from 'src/services/storage.service';
-import { Chip, Segment } from 'src/utils/bms.utils';
+import { Chip, getConnectionDotStatusColor, Segment } from 'src/utils/bms.utils';
 import { dataTypes } from 'src/utils/topic.utils';
 
 @Component({
@@ -77,18 +77,7 @@ export class SegmentAtAGlanceComponent {
     return this.betaCrc === 0 ? 'green' : 'red';
   };
   getStatusColor = (): string => {
-    let dotColor: string;
-    if (this.voltage <= 375) {
-      // multiply by 3 * 125 cells for scalling
-      dotColor = 'red';
-    } else if (this.voltage <= 437.5) {
-      // multiply by 3.5 * 125 cells for scalling
-      dotColor = 'yellow';
-    } else {
-      // antyhing above 3.5 * 125 cells for scalling, is good
-      dotColor = '#19ff30';
-    }
-    return dotColor;
+    return getConnectionDotStatusColor(this.voltage);
   };
   connectionDotConfig: ConnectionDotConfig = {
     type: 'connection-dot-config',

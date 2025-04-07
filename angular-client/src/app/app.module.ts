@@ -142,6 +142,7 @@ import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view
 import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/chip-diagnostics/chip-diagnostics.component';
 import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
 import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-tile/cell-tile.component';
+import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 
 @NgModule({
   declarations: [
@@ -200,6 +201,7 @@ import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-c
     BatteryInfoDesktopComponent,
     BatteryInfoMobileComponent,
     NodeFilterPipe,
+    ChipFaultPipe,
     CombinedStatusDisplayComponent,
     StateOfChargeDisplayComponent,
     PackTempComponent,
@@ -293,6 +295,7 @@ import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-c
   providers: [
     DialogService,
     MessageService,
+    ChipFaultPipe,
     provideHttpClient(withInterceptorsFromDi()),
     provideClientHydration(),
     provideAnimationsAsync(),
