@@ -12,7 +12,7 @@ CREATE TABLE "run" (
 -- CreateTable
 CREATE TABLE "data" (
     "values" DOUBLE PRECISION[],
-    "time" BIGINT NOT NULL,
+    "time" TIMESTAMPTZ NOT NULL,
     "dataTypeName" TEXT NOT NULL,
     "runId" TEXT NOT NULL,
 

@@ -25,7 +25,7 @@ model run {
 
 model data {
   values Float[]
-  time   BigInt  @db.BigInt
+  time   DateTime @db.Timestamptz()
 
   dataTypeName String
   dataType     data_type @relation(fields: [dataTypeName], references: [name])
