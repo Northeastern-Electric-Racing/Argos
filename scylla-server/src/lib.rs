@@ -94,7 +94,7 @@ impl From<ClientData> for models::DataInsert {
         models::DataInsert {
             values: val.values,
             dataTypeName: val.name,
-            time: val.timestamp.timestamp_millis(),
+            time: val.timestamp.timestamp_micros(),
             runId: val.run_id,
         }
     }
