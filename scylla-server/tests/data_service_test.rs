@@ -52,7 +52,7 @@ async fn test_data_add() -> Result<(), diesel::result::Error> {
             unit: "A".to_owned(),
             run_id: run_data.runId,
             name: TEST_KEYWORD.to_owned(),
-            timestamp: chrono::DateTime::from_timestamp_millis(1000).unwrap(),
+            timestamp: chrono::DateTime::from_timestamp_micros(1000).unwrap(),
         },
     )
     .await?;
@@ -60,7 +60,7 @@ async fn test_data_add() -> Result<(), diesel::result::Error> {
     assert_eq!(
         PublicData::from(data),
         PublicData {
-            time_ms: 1000000,
+            time_ms: 1000,
             values: vec![0f32]
         }
     );
