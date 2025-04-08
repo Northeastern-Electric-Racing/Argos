@@ -18,7 +18,6 @@ const csvNames = {
 async function checkDbConnection() {
   try {
     await cloudPrisma.$connect();
-    await cloudPrisma;
   } catch (error) {
     throw new CouldNotConnectToCloudDB();
   }
@@ -138,7 +137,17 @@ export async function processCsvDataFile(
 
       let numOfData = cloudData.length;
       await cloudPrisma.data.createMany({
-        data: cloudData,
+        data: cloudData.map((data) => {
+          // JS Dates only work with maximum precision of miliseconds, 
+          // however psql / prisma doesnt care about that as long as its in iso form, 
+          // so manually add the microseconds into the date string
+          const miliseconds = Number(data.time / 1000n);
+          const date = new Date(miliseconds);
+          const formattedISODate = `${date.toISOString().split("Z")[0]}${Number(
+            data.time % 1000n
+          )}Z`;
+          return { ...data, time: formattedISODate };
+        }),
         skipDuplicates: true,
       });
 
