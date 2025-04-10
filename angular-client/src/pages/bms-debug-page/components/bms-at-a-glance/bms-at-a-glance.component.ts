@@ -6,6 +6,8 @@ import {
 } from 'src/components/info-value-dispaly/info-value-display.component';
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
+import { getConnectionDotStatusColor } from 'src/utils/bms.utils';
+import { dataTypes } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'bms-at-a-glance',
@@ -22,18 +24,7 @@ export class BmsAtAGlanceComponent implements OnInit {
   thermometerConfig: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: -15, max: 30 };
   batteryConfig: BatteryConfig = { type: 'battery-config', percentage: 0, height: 50, width: 25 };
   getStatusColor = (): string => {
-    let dotColor: string;
-    if (this.voltage <= 375) {
-      // multiply by 3 * 125 cells for scalling
-      dotColor = 'red';
-    } else if (this.voltage <= 437.5) {
-      // multiply by 3.5 * 125 cells for scalling
-      dotColor = 'yellow';
-    } else {
-      // antyhing above 3.5 * 125 cells for scalling, is good
-      dotColor = '#19ff30';
-    }
-    return dotColor;
+    return getConnectionDotStatusColor(this.voltage);
   };
   connectionDotConfig: ConnectionDotConfig = {
     type: 'connection-dot-config',
@@ -60,11 +51,11 @@ export class BmsAtAGlanceComponent implements OnInit {
       this.batteryConfig.percentage = this.chargeState;
     });
 
-    this.storage.get(DataTypeEnum.CHARGE_CURRENT_LIMIT).subscribe((value) => {
+    this.storage.get(dataTypes.accCCL()).subscribe((value) => {
       this.ccl = parseInt(value.values[0]);
     });
 
-    this.storage.get(DataTypeEnum.DISCHARGE_CURRENT_LIMIT).subscribe((value) => {
+    this.storage.get(dataTypes.accDCL()).subscribe((value) => {
       this.dcl = parseInt(value.values[0]);
     });
   }

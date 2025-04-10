@@ -10,3 +10,11 @@
   align-items: center;
   margin-top: -20px;
 }
+
+.fault-text-body {
+  height: 700px;
+  display: flex;
+  align-items: left;
+  justify-content: left;
+  overflow-y: auto;
+}

@@ -49,7 +49,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{debug, info, level_filters::LevelFilter};
+use tracing::{debug, info, level_filters::LevelFilter, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 
 #[cfg(not(target_env = "msvc"))]
@@ -129,6 +129,10 @@ struct ScyllaArgs {
     #[arg(short = 's', long, env = "SCYLLA_VIDEO_SUFFIX", default_value = ".mp4")]
     video_suffix: String,
 
+  /// The port to bind scylla to
+    #[arg(short = 'p', long, env = "SCYLLA_PORT", default_value = "8000")]
+    port: u16,
+
     /// Whether to disable sending of metadata over the socket to the client
     #[arg(long, env = "SCYLLA_SOCKET_DISABLE_METADATA")]
     no_metadata: bool,
@@ -200,11 +204,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let conn: AsyncPgConnection = AsyncPgConnection::establish(&db_url).await?;
     let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
         AsyncConnectionWrapper::from(conn);
-    tokio::task::spawn_blocking(move || {
-        async_wrapper.run_pending_migrations(MIGRATIONS).unwrap();
-    })
+    tokio::task::spawn_blocking(
+        move || match async_wrapper.run_pending_migrations(MIGRATIONS) {
+            Ok(_res) => info!("Successfully migrated DB!"),
+            Err(e) => warn!("Encountered Error: {}", e),
+        },
+    )
     .await?;
-    info!("Successfully migrated DB!");
 
     info!("Initializing database connections...");
     let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
@@ -386,7 +392,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(TraceLayer::new_for_http())
         .with_state(pool.clone());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000")
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", cli.port))
         .await
         .expect("Could not bind to 8000!");
     let axum_token = token.clone();

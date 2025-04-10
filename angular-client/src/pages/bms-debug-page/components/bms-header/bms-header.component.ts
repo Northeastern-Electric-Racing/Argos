@@ -1,5 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { SegmentSummarys } from '../segment-summary/segment-summary.component';
+import { Component, HostListener, input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'bms-header',
@@ -7,18 +6,12 @@ import { SegmentSummarys } from '../segment-summary/segment-summary.component';
   styleUrl: './bms-header.component.css'
 })
 export class BmsHeaderComponent implements OnInit {
+  pageTitle = input.required<string>();
   time = new Date();
   newRunIsLoading = false;
   mobileThreshold = 768;
   windowSize: number = window.innerWidth;
   isMobile = window.innerWidth < this.mobileThreshold;
-  segments = [
-    SegmentSummarys.Segment1,
-    SegmentSummarys.Segment2,
-    SegmentSummarys.Segment3,
-    SegmentSummarys.Segment4,
-    SegmentSummarys.Segment5
-  ];
 
   constructor() {}
 

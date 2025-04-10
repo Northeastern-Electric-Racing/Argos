@@ -1,0 +1,57 @@
+<info-background
+  title="Cell-by-Cell Heat Map"
+  svgIcon="battery_charging_2"
+  [slicedLeftCorner]="true"
+  [selectorConfig]="selectorConfig"
+>
+  <div style="padding-top: 20px"></div>
+  @if (this.view.toString() === 'Temperature') {
+    <hstack alignItems="end" justifyContent="end" spacing="1vw">
+      @for (cell of betaCells; track cell) {
+        <cell-tile
+          [value]="cell.temp"
+          [color]="this.getTempColor(cell.temp)"
+          (click)="this.cellClicked(cell)"
+          [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
+        ></cell-tile>
+      }
+    </hstack>
+    <div style="padding-top: 20px"></div>
+    <hstack alignItems="end" justifyContent="end" spacing="1vw">
+      @for (cell of alphaCells; track cell) {
+        <cell-tile
+          [value]="cell.temp"
+          [color]="this.getTempColor(cell.temp)"
+          (click)="this.cellClicked(cell)"
+          [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
+        ></cell-tile>
+      }
+    </hstack>
+  } @else if (this.view.toString() === 'Voltage') {
+    <hstack alignItems="end" justifyContent="end" spacing="1vw">
+      @for (cell of betaCells; track cell) {
+        <cell-tile
+          [value]="this.averageVoltCellPair(cell)"
+          [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
+          (click)="this.cellClicked(cell)"
+          [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
+        ></cell-tile>
+      }
+    </hstack>
+    <div style="padding-top: 20px"></div>
+    <hstack alignItems="end" justifyContent="end" spacing="1vw">
+      @for (cell of alphaCells; track cell) {
+        <cell-tile
+          [value]="this.averageVoltCellPair(cell)"
+          [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
+          (click)="this.cellClicked(cell)"
+          [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
+        ></cell-tile>
+      }
+    </hstack>
+  }
+</info-background>

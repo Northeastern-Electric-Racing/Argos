@@ -5,6 +5,7 @@ import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
+import { appRoutes } from '../app-routing.module';
 
 interface NavItem {
   label: string;
@@ -57,13 +58,14 @@ export class AppNavBarComponent implements OnInit {
   };
 
   navItems: NavItem[] = [
-    { label: 'Home', route: '/landing', icon: 'home' },
-    { label: 'Charging', route: '/charging', icon: 'ev_station' },
-    { label: 'Graph', route: '/graph', icon: 'bar_chart' },
-    { label: 'Map', route: '/map', icon: 'map' },
-    { label: 'BMS', route: '/bms', icon: 'action_key' },
-    { label: 'Faults', route: '/faults', icon: 'error' },
-    { label: 'Camera', route: '/camera', icon: 'linked_camera' }
+    { label: 'Home', route: appRoutes.landingRoute(), icon: 'home' },
+    { label: 'Charging', route: appRoutes.chargingRoute(), icon: 'ev_station' },
+    { label: 'Graph', route: appRoutes.graphRoute(), icon: 'bar_chart' },
+    // TODO: fix map
+    // { label: 'Map', route: appRoutes.mapRoute(), icon: 'map' },
+    { label: 'BMS', route: appRoutes.bmsRoute(), icon: 'action_key' },
+    { label: 'Faults', route: appRoutes.faultsRoute(), icon: 'error' },
+    { label: 'Camera', route: appRoutes.cameraRoute(), icon: 'linked_camera' }
   ];
 
   navigateTo(route: string): void {

@@ -135,6 +135,14 @@ import { FaultDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/fa
 import { FaultButtonsComponent } from 'src/pages/graph-page/graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralDisplayInfoComponent } from 'src/pages/graph-page/graph-caption/general-display-info/general-display-info.component';
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
+import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component';
+import { SegmentAtAGlanceComponent } from 'src/pages/bms-debug-page/components/segment-at-a-glance/segment-at-a-glance.component';
+import { CellByCellHeatMapComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-by-cell-heat-map.component';
+import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
+import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/chip-diagnostics/chip-diagnostics.component';
+import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
+import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-tile/cell-tile.component';
+import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 
 @NgModule({
   declarations: [
@@ -193,6 +201,7 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
     BatteryInfoDesktopComponent,
     BatteryInfoMobileComponent,
     NodeFilterPipe,
+    ChipFaultPipe,
     CombinedStatusDisplayComponent,
     StateOfChargeDisplayComponent,
     PackTempComponent,
@@ -243,7 +252,14 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
     FaultButtonsComponent,
     GeneralDisplayInfoComponent,
     FaultDisplayInfoComponent,
-    CameraPageComponent
+    CameraPageComponent,
+    BmsSegmentViewComponent,
+    SegmentAtAGlanceComponent,
+    CellViewComponent,
+    CellByCellHeatMapComponent,
+    ChipDiagnosticsComponent,
+    ChipFaultsComponent,
+    CellTileComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -279,6 +295,7 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
   providers: [
     DialogService,
     MessageService,
+    ChipFaultPipe,
     provideHttpClient(withInterceptorsFromDi()),
     provideClientHydration(),
     provideAnimationsAsync(),
