@@ -129,7 +129,7 @@ struct ScyllaArgs {
     #[arg(short = 's', long, env = "SCYLLA_VIDEO_SUFFIX", default_value = ".mp4")]
     video_suffix: String,
 
-  /// The port to bind scylla to
+    /// The port to bind scylla to
     #[arg(short = 'p', long, env = "SCYLLA_PORT", default_value = "8000")]
     port: u16,
 
