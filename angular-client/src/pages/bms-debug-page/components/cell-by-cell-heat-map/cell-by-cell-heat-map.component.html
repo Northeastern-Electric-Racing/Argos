@@ -7,7 +7,7 @@
   <div style="padding-top: 20px"></div>
   @if (this.view.toString() === 'Temperature') {
     <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of betaCells; track cell) {
+      @for (cell of betaCells.slice().reverse(); track cell) {
         <cell-tile
           [value]="cell.temp"
           [color]="this.getTempColor(cell.temp)"
@@ -19,7 +19,7 @@
     </hstack>
     <div style="padding-top: 20px"></div>
     <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of alphaCells; track cell) {
+      @for (cell of alphaCells.slice().reverse(); track cell) {
         <cell-tile
           [value]="cell.temp"
           [color]="this.getTempColor(cell.temp)"
@@ -31,7 +31,7 @@
     </hstack>
   } @else if (this.view.toString() === 'Voltage') {
     <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of betaCells; track cell) {
+      @for (cell of betaCells.slice().reverse(); track cell) {
         <cell-tile
           [value]="this.averageVoltCellPair(cell)"
           [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
@@ -43,7 +43,7 @@
     </hstack>
     <div style="padding-top: 20px"></div>
     <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of alphaCells; track cell) {
+      @for (cell of alphaCells.slice().reverse(); track cell) {
         <cell-tile
           [value]="this.averageVoltCellPair(cell)"
           [color]="this.getVoltColor(this.averageVoltCellPair(cell))"

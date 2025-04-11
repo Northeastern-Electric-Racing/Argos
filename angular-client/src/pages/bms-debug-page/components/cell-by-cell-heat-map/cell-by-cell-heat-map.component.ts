@@ -1,4 +1,4 @@
-import { Component, effect, inject, input } from '@angular/core';
+import { Component, effect, inject, input, OnInit } from '@angular/core';
 import { Segment } from 'src/utils/bms.utils';
 import { Subscription } from 'rxjs';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
@@ -10,7 +10,7 @@ import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/s
   templateUrl: './cell-by-cell-heat-map.component.html',
   styleUrl: './cell-by-cell-heat-map.component.css'
 })
-export class CellByCellHeatMapComponent {
+export class CellByCellHeatMapComponent implements OnInit {
   private cellService = inject(CellService);
   private heatMapService = inject(HeatMapService);
   currentSegment = input.required<Segment>();
@@ -48,6 +48,10 @@ export class CellByCellHeatMapComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.alphaCells = this.cellService.getAlphaCellsBySegment(this.currentSegment());
+    this.betaCells = this.cellService.getBetaCellsBySegment(this.currentSegment());
+  }
   getTempColor = (value: number | undefined) => {
     if (value === undefined) {
       return 'grey';
