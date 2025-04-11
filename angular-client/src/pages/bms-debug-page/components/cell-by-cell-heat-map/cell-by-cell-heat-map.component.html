@@ -19,7 +19,7 @@
     </hstack>
     <div style="padding-top: 20px"></div>
     <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of alphaCells.slice().reverse(); track cell) {
+      @for (cell of alphaCells; track cell) {
         <cell-tile
           [value]="cell.temp"
           [color]="this.getTempColor(cell.temp)"
@@ -43,7 +43,7 @@
     </hstack>
     <div style="padding-top: 20px"></div>
     <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of alphaCells.slice().reverse(); track cell) {
+      @for (cell of alphaCells; track cell) {
         <cell-tile
           [value]="this.averageVoltCellPair(cell)"
           [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
