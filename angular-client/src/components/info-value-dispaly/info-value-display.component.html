@@ -1,10 +1,15 @@
 <vstack spacing="0px" [style]="containerStyle()">
   <hstack spacing="5px" [style]="valueUnitContainerStyle()">
     @if (this.boolValue() !== undefined) {
-      <typography variant="info-value" [content]="this.boolValue() ? 'YES' : 'NO'" />
+      <typography variant="info-value" [content]="this.boolValue() ? 'YES' : 'NO'" [additionalStyles]="this.valueStyle()" />
       <typography variant="info-unit" [content]="this.unit()" />
     } @else {
-      <typography variant="info-value" [content]="this.formattedValue" style="margin-bottom: -10px" />
+      <typography
+        variant="info-value"
+        [content]="this.formattedValue"
+        style="margin-bottom: -10px"
+        [additionalStyles]="this.valueStyle()"
+      />
       <typography variant="info-unit" [content]="this.unit()" />
     }
 
