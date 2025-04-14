@@ -18,6 +18,8 @@ const getRunById = (id: number) => `${baseURL}/runs/${id}`;
 const getAllRuns = () => `${baseURL}/runs`;
 const getLatestRun = () => `${baseURL}/runs/latest`;
 const startNewRun = () => `${baseURL}/runs/new`;
+const startNewRunWithData = (driver: string, location: string, notes: string) => `${baseURL}/runs/new/${driver}/${location}/${notes}`;
+const updateRun = (id: number, driver: string, location: string, notes: string) => `${baseURL}/runs/update/${id}/${driver}/${location}/${notes}`;
 
 export const urls = {
   getAllDatatypes,
@@ -29,5 +31,7 @@ export const urls = {
   getAllRuns,
   getLatestRun,
   getRunById,
-  startNewRun
+  startNewRun,
+  startNewRunWithData,
+  updateRun,
 };

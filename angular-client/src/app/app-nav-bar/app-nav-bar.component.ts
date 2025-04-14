@@ -1,10 +1,10 @@
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
-import { RunFormTemplateComponent } from 'src/components/run-form-template/run-form-template.component';
+import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import Storage from 'src/services/storage.service';
@@ -27,6 +27,8 @@ export class AppNavBarComponent implements OnInit {
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private dialogService = inject(DialogService);
+
+  ref: DynamicDialogRef | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -62,39 +64,8 @@ export class AppNavBarComponent implements OnInit {
     });
   };
 
-  renderTemplate = () => {
-    // console.log("edit run clicked.");
-    this.dialogService.open(RunFormTemplateComponent, {
-      header: 'Form Template',
-      data: {
-        fields: [
-          {
-            name: 'full name',
-            label: 'Full Name',
-            type: 'text',
-            placeholder: 'Enter Full Name',
-            required: true,
-            minLength: 3,
-            maxLength: 40,
-            // pattern: '^[a-zA-Z0-9._%+-]+\\s+[a-zA-Z0-9.-]',
-            disabled: false
-          },
-          {
-            name: 'email',
-            label: 'Email',
-            type: 'text',
-            placeholder: 'Enter Email Address',
-            required: true,
-            minLength: 3,
-            maxLength: 40,
-            // pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
-            disabled: false
-          }
-        ]
-      }
-    });
-
-    console.log("edit run clicked.");
+  openRunForm = () => {
+    this.ref = this.dialogService.open(RunFormComponent, {});
   };
 
   navItems: NavItem[] = [

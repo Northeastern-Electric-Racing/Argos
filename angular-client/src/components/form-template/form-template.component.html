@@ -1,6 +1,6 @@
 <!-- dynamic-form.component.html -->
 <form class="flex flex-column gap-4 dynamic-form" [formGroup]="form">
-  @for (field of fields; track field) {
+  @for (field of fields(); track field) {
     <div class="flex flex-column gap-1">
       @if (field.label) {
         <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
@@ -12,6 +12,7 @@
           [attr.placeholder]="field.placeholder"
           [formControlName]="field.name"
           [type]="field.type"
+          [value]="'boston'"
           pInputText
           class="form-control w-full"
           [ngClass]="{

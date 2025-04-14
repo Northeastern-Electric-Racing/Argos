@@ -1,0 +1,13 @@
+
+.required:after {
+  content: "*";
+  color: red;
+  margin-left: 6px;
+}
+
+.error-msg {
+  color: red;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}

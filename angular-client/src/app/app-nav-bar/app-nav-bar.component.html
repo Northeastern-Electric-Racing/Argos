@@ -38,7 +38,7 @@
         popUpDetails="Your new run has started successfully."
         additionalStyles="height: 35px"
       />
-      <argos-button [onClick]="this.renderTemplate" label="Edit Current Run" style="margin-left: 20px" />
+      <toast-button [onClick]="this.openRunForm" buttonLabel="Edit Currrent Run" />
       <typography variant="large-header" content="{{ time$ | async | date: 'HH:mm:ss' }}" style="margin-left: 20px" />
     </div>
   </nav>

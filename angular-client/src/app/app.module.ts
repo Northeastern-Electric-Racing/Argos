@@ -34,7 +34,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialog } from 'primeng/dynamicdialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -120,12 +120,16 @@ import { InfoValueDisplayComponent } from 'src/components/info-value-dispaly/inf
 import { SelectDropdownComponent } from 'src/components/select-dropdown/select-dropdown.component';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { SelectModule } from 'primeng/select';
+import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import Lara from '@primeng/themes/aura';
 import { TreeModule } from 'primeng/tree';
 import { BmsHeaderComponent } from 'src/pages/bms-debug-page/components/bms-header/bms-header.component';
 import { ConnectionDotWithMessageComponent } from 'src/components/connection-dot-with-message/connection-dot-with-message.component';
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
-import { RunFormTemplateComponent } from 'src/components/run-form-template/run-form-template.component';
+import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
+import { RunFormComponent } from 'src/components/run-form/run-form.component';
 
 @NgModule({
   declarations: [
@@ -216,7 +220,6 @@ import { RunFormTemplateComponent } from 'src/components/run-form-template/run-f
     ViewerDisplayComponent,
     NodeDisplayComponent,
     AppNavBarComponent,
-    AppNavBarComponent,
     BmsDebugPageComponent,
     BmsAtAGlanceComponent,
     SegmentSummaryComponent,
@@ -231,7 +234,8 @@ import { RunFormTemplateComponent } from 'src/components/run-form-template/run-f
     BmsHeaderComponent,
     ConnectionDotWithMessageComponent,
     CameraPageComponent,
-    RunFormTemplateComponent,
+    FormTemplateComponent,
+    RunFormComponent,
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -245,6 +249,7 @@ import { RunFormTemplateComponent } from 'src/components/run-form-template/run-f
     ProgressSpinnerModule,
     MatIconModule,
     MatGridListModule,
+    DynamicDialog,
     BrowserAnimationsModule,
     ButtonModule,
     MatIconModule,
@@ -258,6 +263,7 @@ import { RunFormTemplateComponent } from 'src/components/run-form-template/run-f
     MatSelectModule,
     MatFormFieldModule,
     FormsModule,
+    SelectModule,
     TreeModule
   ],
   providers: [
@@ -266,6 +272,11 @@ import { RunFormTemplateComponent } from 'src/components/run-form-template/run-f
     provideHttpClient(withInterceptorsFromDi()),
     provideClientHydration(),
     provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Lara
+      }
+    })
   ]
 })
 export class AppModule {

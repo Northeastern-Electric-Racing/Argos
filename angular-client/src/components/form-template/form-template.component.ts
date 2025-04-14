@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, input, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 type anyType = string | number | boolean | undefined;
 
@@ -22,70 +22,43 @@ export interface DynamicFormField {
 }
 
 @Component({
-  selector: 'run-form-template',
-  templateUrl: './run-form-template.component.html',
-  styleUrl: './run-form-template.component.css'
+  selector: 'form-template',
+  templateUrl: './form-template.component.html',
+  styleUrl: './form-template.component.css'
 })
-export class RunFormTemplateComponent implements OnInit, OnChanges {
+export class FormTemplateComponent implements OnInit, OnChanges {
   public config = inject(DynamicDialogConfig);
 
-  fields: DynamicFormField[] = [
-    // Form Fields For Login
-    // {
-    //   name: 'full name',
-    //   label: 'Full Name',
-    //   type: 'text',
-    //   placeholder: 'Enter Full Name',
-    //   required: true,
-    //   minLength: 3,
-    //   maxLength: 40,
-    //   pattern: '^[a-zA-Z0-9._%+-]+\\s+[a-zA-Z0-9.-]{2,}$',
-    //   disabled: false
-    // },
-    // {
-    //   name: 'email',
-    //   label: 'Email',
-    //   type: 'text',
-    //   placeholder: 'Enter Email Address',
-    //   required: true,
-    //   minLength: 3,
-    //   maxLength: 40,
-    //   pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
-    //   disabled: false
-    // }
-  ];
+  fields = input.required<DynamicFormField[]>();
+
+  public ref = inject(DynamicDialogRef);
+
   @Input() formData: Map<string, anyType> = new Map();
-  @Input() isEdit: boolean = false;
   @Output() submitForm: EventEmitter<FormGroup> = new EventEmitter();
 
   form: FormGroup = this.fb.group({});
 
   constructor(private fb: FormBuilder) {
-    this.fields = this.config.data.fields;
+    // this.fields = this.config.data.fields;
   }
 
   ngOnInit(): void {
-    console.log("fields:", this.fields);
     this.buildForm();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('here');
     if (changes['fields'] || changes['formData']) {
       this.buildForm();
     }
-    // this way also you can write it.
-    // if (changes.fields || changes.formData) {
-    //   this.buildForm();
-    // }
   }
 
   buildForm() {
     const group: any = {};
-    this.fields.forEach((field) => {
+
+    this.fields().forEach((field) => {
       const control = this.fb.control({
         value: this.formData ? this.formData.get(field.name) : '',
-        disabled: field.disabled //|| !this.isEdit
+        disabled: field.disabled
       });
 
       const validations = [];
@@ -102,12 +75,14 @@ export class RunFormTemplateComponent implements OnInit, OnChanges {
     this.form = this.fb.group(group);
   }
 
+  closeForm() {
+    this.ref.close(this.form);
+  }
+
   onSubmit() {
-    console.log("data:")
     if (this.form.valid) {
-      this.submitForm.emit(this.form);
-      console.log(this.form.controls["full name"].value);
-      console.log(this.form.controls["email"].value);
+      console.log('form submitted');
+      this.closeForm();
     } else {
       this.markAllFieldsAsTouched();
     }
