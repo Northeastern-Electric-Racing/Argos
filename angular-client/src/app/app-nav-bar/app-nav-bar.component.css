@@ -53,3 +53,8 @@
   font-size: 20px;
   margin-right: 0.5rem;
 }
+
+:host {
+  --p-dialog-background: #2c2c2c;
+  --p-dialog-border-color: #2c2c2c;
+}

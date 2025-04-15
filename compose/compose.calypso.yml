@@ -1,7 +1,7 @@
 services:
     calypso:
         container_name: calypso
-        image: ghcr.io/northeastern-electric-racing/calypso:develop
+        image: ghcr.io/northeastern-electric-racing/calypso:m1calypso
         restart: unless-stopped
         environment:
           # in prod mode

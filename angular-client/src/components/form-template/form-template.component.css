@@ -1,6 +1,5 @@
-
 .required:after {
-  content: "*";
+  content: '*';
   color: red;
   margin-left: 6px;
 }
@@ -11,4 +10,3 @@
   font-size: 12px;
   font-weight: 500;
 }
-

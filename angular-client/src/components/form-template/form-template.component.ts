@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, inject, input, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
@@ -33,7 +33,7 @@ export class FormTemplateComponent implements OnInit, OnChanges {
 
   public ref = inject(DynamicDialogRef);
 
-  @Input() formData: Map<string, anyType> = new Map();
+  formData = input<Map<string, anyType>>(new Map());
   @Output() submitForm: EventEmitter<FormGroup> = new EventEmitter();
 
   form: FormGroup = this.fb.group({});
@@ -57,7 +57,7 @@ export class FormTemplateComponent implements OnInit, OnChanges {
 
     this.fields().forEach((field) => {
       const control = this.fb.control({
-        value: this.formData ? this.formData.get(field.name) : '',
+        value: this.formData() ? this.formData().get(field.name) : '',
         disabled: field.disabled
       });
 
@@ -69,6 +69,10 @@ export class FormTemplateComponent implements OnInit, OnChanges {
       if (field.minLength) validations.push(Validators.minLength(field.minLength));
 
       control.setValidators(validations);
+      if (field.optionValue !== undefined) {
+        control.setValue(field.optionValue);
+      }
+
       group[field.name] = control;
     });
 
