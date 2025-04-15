@@ -261,7 +261,9 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
     CellByCellHeatMapComponent,
     ChipDiagnosticsComponent,
     ChipFaultsComponent,
-    CellTileComponent
+    CellTileComponent,
+    FormTemplateComponent,
+    RunFormComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
