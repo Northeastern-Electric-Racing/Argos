@@ -1,0 +1,15 @@
+.divider {
+  width: 2px;
+  height: 50px;
+  background-color: #555;
+}
+
+.thermometer-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: flex-start;
+  margin-left: -20px;
+  height: 90px;
+  width: 35px;
+}

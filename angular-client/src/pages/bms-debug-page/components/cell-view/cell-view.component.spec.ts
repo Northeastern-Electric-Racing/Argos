@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CameraPageComponent } from './camera-page.component';
+import { CellViewComponent } from './cell-view.component';
 
-describe('CameraPageComponent', () => {
-  let component: CameraPageComponent;
-  let fixture: ComponentFixture<CameraPageComponent>;
+describe('CellViewComponent', () => {
+  let component: CellViewComponent;
+  let fixture: ComponentFixture<CellViewComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CameraPageComponent]
+      imports: [CellViewComponent]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CameraPageComponent);
+    fixture = TestBed.createComponent(CellViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

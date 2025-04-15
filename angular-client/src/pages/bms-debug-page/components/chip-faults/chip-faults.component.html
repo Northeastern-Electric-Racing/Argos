@@ -1,0 +1,26 @@
+<info-background [title]="this.title" svgIcon="battery_charging_2">
+  <div style="padding-top: 20px"></div>
+  <p-table
+    selectionMode="single"
+    stripedRows
+    [value]="this.chipFaults"
+    [scrollable]="true"
+    scrollHeight="300px"
+    [(selection)]="selectedFault"
+    (onRowSelect)="onRowSelect()"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Name</th>
+        <th>Occurred At</th>
+      </tr>
+    </ng-template>
+    <div style="width: 100%; padding-right: 5px; padding-left: 0px" class="fault-text-body"></div>
+    <ng-template pTemplate="body" let-fault>
+      <tr [pSelectableRow]="fault">
+        <td>{{ fault.name }}</td>
+        <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</info-background>

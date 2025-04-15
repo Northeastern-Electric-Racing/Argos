@@ -1,13 +1,13 @@
 @if (isDesktop) {
   <info-background svgIcon="thermostat" title="Cell Temp" [button]="resetGraphButton">
     <hstack>
-      <vstack style="width: 10%; padding-bottom: 30px">
+      <vstack style="width: 10%; margin-bottom: 40px">
         <typography variant="info-value" [content]="avgTemp.toString() + '°'" />
         <typography variant="info-subtitle" content="Avg. Temp" />
       </vstack>
       <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-      <divider style="height: 100px" />
-      <vstack style="width: 10%; padding-bottom: 30px">
+      <divider style="height: 100px; margin-bottom: 40px" />
+      <vstack style="width: 10%; margin-bottom: 40px">
         <typography variant="info-value" [content]="maxTemp.toString() + '°'" />
         <typography variant="info-subtitle" content="Max. Temp" />
       </vstack>

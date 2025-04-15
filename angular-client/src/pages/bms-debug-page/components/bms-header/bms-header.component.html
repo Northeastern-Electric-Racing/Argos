@@ -3,8 +3,8 @@
     <typography
       class="title-style"
       variant="x-large-title"
-      [content]="windowSize > 1300 ? 'Accumulator' : 'Accumulator'"
-      additionalStyles="font-size: 6vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; line-height: 0px; text-align: left; margin-top: 10px"
+      [content]="this.pageTitle()"
+      additionalStyles="font-size: 6rem; letter-spacing: 0.2rem; word-spacing: 0.2rem; line-height: 0px; text-align: left; margin-top: 10px;"
     />
   </mat-grid-tile>
 

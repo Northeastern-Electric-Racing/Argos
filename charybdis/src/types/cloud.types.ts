@@ -25,5 +25,4 @@ export interface CloudData {
 export interface CloudDataType {
   name: string; // unique id
   unit: string; // e.g. "V (Volts), "A (Amps)", "C (Celsius)"
-  nodeName: string;
 }

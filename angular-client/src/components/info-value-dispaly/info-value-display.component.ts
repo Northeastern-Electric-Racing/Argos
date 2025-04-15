@@ -34,6 +34,8 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
   containerStyle = input<string>('');
   valueUnitContainerStyle = input<string>('');
   value = input<number>();
+  valueStyle = input<string>('');
+  boolValue = input<boolean>();
   precision = input<number>(1);
   subtitle = input<string>('');
   subtitleStyle = input<string>('');
@@ -50,5 +52,12 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
 
   getStatusMessage = (connectDotConfig: ConnectionDotConfig): (() => string) => {
     return connectDotConfig.getStatusMessage ? connectDotConfig.getStatusMessage : () => '';
+  };
+
+  getSubtitleStyle = (): string => {
+    if (this.unit() === '' && this.boolValue() === undefined) {
+      return this.subtitleStyle() + 'margin-top: 1vh';
+    }
+    return this.subtitleStyle();
   };
 }

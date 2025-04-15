@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { Component, HostListener, input, OnInit } from '@angular/core';
 
 /**
  * Graph Header Component to display the graph page header.
@@ -10,7 +10,7 @@ import { Component, HostListener, Input, OnInit } from '@angular/core';
   styleUrls: ['./graph-header.component.css']
 })
 export default class GraphHeaderComponent implements OnInit {
-  @Input() runId?: number;
+  rightHeader = input.required<string>();
   isMobile = window.innerWidth <= 768;
 
   time = new Date();

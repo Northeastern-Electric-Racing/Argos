@@ -12,7 +12,7 @@ CREATE TABLE "run" (
 -- CreateTable
 CREATE TABLE "data" (
     "values" DOUBLE PRECISION[],
-    "time" BIGINT NOT NULL,
+    "time" TIMESTAMPTZ NOT NULL,
     "dataTypeName" TEXT NOT NULL,
     "runId" TEXT NOT NULL,
 
@@ -26,6 +26,9 @@ CREATE TABLE "data_type" (
 
     CONSTRAINT "data_type_pkey" PRIMARY KEY ("name")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "run_runId_time_key" ON "run"("runId", "time");
 
 -- AddForeignKey
 ALTER TABLE "data" ADD CONSTRAINT "data_dataTypeName_fkey" FOREIGN KEY ("dataTypeName") REFERENCES "data_type"("name") ON DELETE RESTRICT ON UPDATE CASCADE;

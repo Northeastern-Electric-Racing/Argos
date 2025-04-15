@@ -6,10 +6,7 @@ import { readCsvFile } from "../utils/csv.utils";
 import { csvToCloudData } from "../transformers/csv.transformer";
 import { getMostRecentDownloadFolderPath } from "./audit.service";
 import { processCsvInBatches } from "../utils/csv.utils";
-import {
-  RunsUploadError,
-  CouldNotConnectToCloudDB,
-} from "../errors/upload.errors";
+import { CouldNotConnectToCloudDB } from "../errors/upload.errors";
 import { storagePaths } from "../storage-paths";
 
 const csvNames = {
@@ -73,7 +70,6 @@ export async function processDataType(
       const cloudDataTypes: CloudDataType[] = batch.map((localDataType) => ({
         name: localDataType.name,
         unit: localDataType.unit,
-        nodeName: localDataType.nodeName,
       }));
 
       await cloudPrisma.data_type.createMany({
@@ -103,7 +99,12 @@ export async function processRunsWithData(
     };
 
     await cloudPrisma.run.upsert({
-      where: { id: cloudRun.id },
+      where: {
+        unique_run_time: {
+          runId: cloudRun.runId,
+          time: cloudRun.time,
+        },
+      },
       create: cloudRun,
       update: cloudRun,
     });
@@ -136,7 +137,17 @@ export async function processCsvDataFile(
 
       let numOfData = cloudData.length;
       await cloudPrisma.data.createMany({
-        data: cloudData,
+        data: cloudData.map((data) => {
+          // JS Dates only work with maximum precision of miliseconds, 
+          // however psql / prisma doesnt care about that as long as its in iso form, 
+          // so manually add the microseconds into the date string
+          const miliseconds = Number(data.time / 1000n);
+          const date = new Date(miliseconds);
+          const formattedISODate = `${date.toISOString().split("Z")[0]}${Number(
+            data.time % 1000n
+          )}Z`;
+          return { ...data, time: formattedISODate };
+        }),
         skipDuplicates: true,
       });
 
