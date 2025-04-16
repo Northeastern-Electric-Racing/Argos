@@ -15,26 +15,25 @@ export class DriverComponent implements OnInit {
   apiService = inject(APIService);
 
   ngOnInit() {
-    setTimeout(() => {
-      const latestRunQuery = this.apiService.query<Run>(() => getLatestRun());
-      latestRunQuery.isLoading.subscribe((loading: boolean) => {
-        if (loading) {
-          // TODO
-        }
-      });
-      latestRunQuery.error.subscribe((error) => {
-        if (error) {
-          // TODO
-        }
-      });
-      latestRunQuery.data.subscribe((data) => {
-        const latestRun = data;
-        if (latestRun) {
-          this.driver =
-            latestRun.driverName !== undefined || latestRun.driverName === '' ? latestRun.driverName : 'No Driver';
-        }
-      });
-    }, 10000);
+    this.updateDriverName();
     console.log(this.driver);
+  }
+
+  updateDriverName() {
+    const latestRunQuery = this.apiService.query<Run>(() => getLatestRun());
+    latestRunQuery.isLoading.subscribe((loading: boolean) => {
+      if (loading) {
+        // TODO
+      }
+    });
+    latestRunQuery.error.subscribe((error) => {
+      if (error) {
+        // TODO
+      }
+    });
+    latestRunQuery.data.subscribe((data) => {
+      const latestRun = data;
+      this.driver = latestRun?.driverName === undefined || latestRun?.driverName === '' ? 'No Driver' : latestRun.driverName;
+    });
   }
 }

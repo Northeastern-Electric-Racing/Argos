@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, inject, input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
@@ -46,10 +46,8 @@ export class FormTemplateComponent implements OnInit, OnChanges {
     this.buildForm();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['fields'] || changes['formData']) {
-      this.buildForm();
-    }
+  ngOnChanges(): void {
+    this.buildForm();
   }
 
   buildForm() {

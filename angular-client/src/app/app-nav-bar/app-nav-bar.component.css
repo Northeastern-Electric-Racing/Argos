@@ -55,6 +55,6 @@
 }
 
 :host {
-  --p-dialog-background: #2c2c2c;
-  --p-dialog-border-color: #2c2c2c;
+  --p-dialog-background: transparent !important;
+  --p-dialog-border-color: transparent !important;
 }

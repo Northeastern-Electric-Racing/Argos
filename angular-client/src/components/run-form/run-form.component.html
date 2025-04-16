@@ -1,7 +1,7 @@
 @if (!this.templateReady) {
   <loading-page />
 } @else {
-  <info-background>
+  <info-background [selectorConfig]="this.selectorConfig" title="Edit Run">
     <form-template [fields]="this.inputFields" />
   </info-background>
 }
