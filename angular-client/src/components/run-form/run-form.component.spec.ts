@@ -9,8 +9,7 @@ describe('RunFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RunFormComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(RunFormComponent);
     component = fixture.componentInstance;

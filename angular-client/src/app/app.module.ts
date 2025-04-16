@@ -146,7 +146,6 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 
-
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -265,7 +264,6 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
     CellTileComponent,
     FormTemplateComponent,
     RunFormComponent
-
   ],
   bootstrap: [AppContextComponent],
   imports: [
