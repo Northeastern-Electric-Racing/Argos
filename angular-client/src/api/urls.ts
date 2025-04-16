@@ -32,6 +32,11 @@ const getAllVideos = () => `${baseURL}/videos`;
 const getVideo = (fileName: string) => `${getAllVideos()}/${encodeURIComponent(fileName)}`;
 const updateVideos = () => `${getAllVideos()}/update`;
 
+/* Videos */
+const getAllVideos = () => `${baseURL}/videos`;
+const getVideo = (fileName: string) => `${getAllVideos()}/${encodeURIComponent(fileName)}`;
+const updateVideos = () => `${getAllVideos()}/update`;
+
 export const urls = {
   getAllDatatypes,
 
@@ -46,6 +51,7 @@ export const urls = {
   startNewRun,
   startNewRunWithData,
   updateRun,
+
 
   getAllVideos,
   getVideo,
