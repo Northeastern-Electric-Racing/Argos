@@ -8,7 +8,7 @@ use crate::ClientData;
 #[derive(Serialize, Debug)]
 pub struct PublicData {
     #[serde(rename = "time")]
-    pub time_ms: i32,
+    pub time_ms: i64,
     pub values: Vec<f32>,
 }
 
@@ -38,7 +38,9 @@ impl From<crate::models::Data> for PublicData {
     fn from(value: crate::models::Data) -> Self {
         PublicData {
             values: value.values.into_iter().flatten().collect(),
-            time_ms: (value.time / 1000) as i32,
+            time_ms: chrono::DateTime::from_timestamp_micros(value.time)
+                .unwrap()
+                .timestamp_millis(),
         }
     }
 }
@@ -47,7 +49,7 @@ impl From<crate::models::Data> for PublicData {
 impl From<ClientData> for PublicData {
     fn from(value: ClientData) -> Self {
         PublicData {
-            time_ms: value.timestamp.timestamp_millis() as i32,
+            time_ms: value.timestamp.timestamp_millis(),
             values: value.values,
         }
     }
