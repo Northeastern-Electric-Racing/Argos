@@ -11,7 +11,7 @@
     <div class="container">
       <graph-header class="graph-header" [rightHeader]="rightHeader" />
       <div class="content-div">
-        <graph-sidebar [dataTypes]="dataTypes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
+        <graph-sidebar [dataTypes]="dataTypes" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
         <div class="right-container">
           <graph [limitRange]="realTime === true" [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
           <graph-caption [dataType]="selectedDataType" [currentValue]="currentValue" class="graph-caption">

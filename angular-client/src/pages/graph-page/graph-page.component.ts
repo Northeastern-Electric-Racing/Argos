@@ -24,12 +24,12 @@ export default class GraphPageComponent implements OnInit {
   private faultService = inject(FaultService);
   private router = inject(Router);
 
-  dataTypes?: DataType[];
+  dataTypes: DataType[] = [];
   dataTypesIsLoading = true;
   dataTypesIsError = false;
   dataTypesError?: Error;
 
-  allRuns!: Run[];
+  allRuns: Run[] = [];
   runsIsLoading = true;
 
   previousDataType?: DataType;

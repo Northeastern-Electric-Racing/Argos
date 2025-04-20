@@ -30,7 +30,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   data!: Map<number, Map<number, number>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
-  timeRangeMs = 60000;
+  timeRangeMs = 120000;
 
   updateChart = () => {
     const label = this.valuesSubject().value?.label ?? 'No Label';
@@ -41,7 +41,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       }))
     );
 
-    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
+    if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
       this.chart.updateOptions({
         ...this.options,
