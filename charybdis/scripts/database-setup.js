@@ -2,8 +2,8 @@ const fs = require("fs");
 
 const filePath = "./.env"; // Replace with your file path
 const linesToAdd = [
-  'LOCAL_DATABASE_URL="postgresql://postgres:docker@localhost:8000/charybdis-local?schema=public"',
   'CLOUD_DATABASE_URL="postgresql://postgres:docker@localhost:8001/postgres?schema=public"',
+  'LOCAL_DATABASE_URL="postgresql://postgres:docker@localhost:8002/charybdis-local?schema=public"',
 ];
 
 // Helper function to check if a line starts with the environment variable name

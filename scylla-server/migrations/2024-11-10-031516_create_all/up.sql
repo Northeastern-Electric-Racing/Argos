@@ -32,3 +32,4 @@ ALTER TABLE "data" ADD CONSTRAINT "data_dataTypeName_fkey" FOREIGN KEY ("dataTyp
 
 -- AddForeignKey
 ALTER TABLE "data" ADD CONSTRAINT "data_runId_fkey" FOREIGN KEY ("runId") REFERENCES "run"("runId") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN EXECUTE format('ALTER SEQUENCE %s CACHE 1', pg_get_serial_sequence('run', 'runId')); END $$;;
