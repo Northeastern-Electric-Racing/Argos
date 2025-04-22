@@ -8,25 +8,20 @@ import {
   uploadDumpFolderDialogue,
 } from "./cli-interactive";
 import {
-  getDownloadDataBatch,
-  getDownloadDataTypeBatch,
   getDumpFoldersForUpload,
+  getTransformingDataBatch,
   getUploadDataBatch,
   getUploadDataTypeBatch,
   setCloudDbUrl,
-  setDownloadDataBatch,
-  setDownloadDataTypeBatch,
   setDumpFoldersForUpload,
   setLocalDbUrl,
+  setTransformDataBatch,
   setUploadDataBatch,
   setUploadDataTypeBatch,
 } from "./settings";
 import { updatePrismaClient as updateCloudPrismaClient } from "../prisma/cloud-prisma/prisma";
 import { updatePrismaClient as updateLocalPrismaClient } from "../prisma/local-prisma/prisma";
-import {
-  getAllDownloadFolders,
-  getMostRecentDownloadFolderPath,
-} from "../services/audit.service";
+import { getAllDownloadFolders } from "../services/audit.service";
 
 /**
  * Wrap a map of function options with a function to run after each option.
@@ -71,8 +66,7 @@ export const MAIN_DIALOGUE_OPTIONS = {
 
 // general command options for both interactive CLI and command line arguments based CLI
 export const COMMAND_OPTIONS = {
-  dump: async () =>
-    await dumpLocalDb(getDownloadDataBatch(), getDownloadDataTypeBatch()),
+  dump: async () => await dumpLocalDb(getTransformingDataBatch()),
   upload: async () =>
     await uploadToCloud(
       getUploadDataBatch(),
@@ -96,10 +90,8 @@ export const DIALOGE_COMMAND_OPTIONS = addDialgueWrapper(
 
 // Batch size update options for interactive CLI and command line arguments based CLI
 export const BATCH_SIZE_OPTIONS = {
-  "download-data-batch-size": async (size: number) =>
-    setDownloadDataBatch(size),
-  "download-data-type-batch-size": async (size: number) =>
-    setDownloadDataTypeBatch(size),
+  "transform-data-batch-size": async (size: number) =>
+    setTransformDataBatch(size),
   "upload-data-batch-size": async (size: number) => setUploadDataBatch(size),
   "upload-data-type-batch-size": async (size: number) =>
     setUploadDataTypeBatch(size),

@@ -22,20 +22,25 @@ export const getDataTypeCsvPath = (dumpFolderPath: string) =>
   `${dumpFolderPath}/data_type.csv`;
 
 /* run(s) */
+export const getTempRunCsvPath = (dumpFolderPath: string) =>
+  `${dumpFolderPath}/temp-run.csv`;
 export const getRunCsvPath = (dumpFolderPath: string) =>
   `${dumpFolderPath}/run.csv`;
 
 /* data */
 export const getDataFolderPath = (dumpFolderPath: string) =>
   `${dumpFolderPath}/data`;
-export const getDataByRunCsvPath = (dumpFolderPath: string, runId: number) =>
-  `${storagePaths.getDataFolderPath(dumpFolderPath)}/run-${runId}-data.csv`;
+export const getDataCSVPath = (dumpFolderPath: string) =>
+  `${storagePaths.getDataFolderPath(dumpFolderPath)}/data.csv`;
+export const getTempDataCSVPath = (dumpFolderPath: string) =>
+  `${storagePaths.getDataFolderPath(dumpFolderPath)}/temp-data.csv`;
 
 export const storagePaths = {
   getDumpFolderPath,
   getAuditLogCsvPath,
   getDataTypeCsvPath,
   getRunCsvPath,
+  getTempRunCsvPath,
   getDataFolderPath,
-  getDataByRunCsvPath,
+  getTempDataCSVPath,
 };
