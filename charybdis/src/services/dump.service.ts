@@ -65,7 +65,7 @@ function dumpDataTypeToCsv(csvPath: string) {
   let startTime = new Date();
 
   execSync(
-    `psql ${process.env.LOCAL_DATABASE_URL} "\\copy run TO '${csvPath}' CSV HEADER"`
+    `psql ${process.env.LOCAL_DATABASE_URL} -c "\\copy data_type TO '${csvPath}' CSV HEADER"`
   );
 
   console.log(
@@ -90,9 +90,9 @@ async function dumpRunsAndDataToCsv(
   let startTime = new Date();
 
   execSync(
-    `psql ${process.env.LOCAL_DATABASE_URL} "\\copy run TO '${getTempRunCsvPath(
-      dumpFolder
-    )}' CSV HEADER"`
+    `psql ${
+      process.env.LOCAL_DATABASE_URL
+    } -c "\\copy run TO '${getTempRunCsvPath(dumpFolder)}' CSV HEADER;"`
   );
 
   console.log(
@@ -126,16 +126,6 @@ async function dumpRunsAndDataToCsv(
         row.id = uuidv4();
         runIdToCloudIdMap.set(row.runId, row.id);
         rows.push(row);
-        if (rows.length > 100) {
-          csv
-            .write(rows, { headers: true })
-            .pipe(ws)
-            .on("finish", () => {
-              console.log("Finished copying 100 Runs");
-              resolve(null);
-            });
-          rows = [];
-        }
       })
       .on("end", () => {
         csv
@@ -150,26 +140,16 @@ async function dumpRunsAndDataToCsv(
 
   await new Promise((resolve) => {
     const ws = fs.createWriteStream(getDataCSVPath(dumpFolder));
+    ws.write("values,time,dataTypeName,runId\n"); // headers
 
     let rows: LocalData[] = [];
     fs.createReadStream(getTempDataCSVPath(dumpFolder))
       .pipe(csv.parse({ headers: true }))
-      .on("data", (row) => {
+      .on("data", async (row) => {
         // Add a unique id for each row
         row.runId = runIdToCloudIdMap.get(row.runId);
-        rows.push(row);
-        if (rows.length > dataTransformingBatchSize) {
-          csv
-            .write(rows, { headers: true })
-            .pipe(ws)
-            .on("finish", () => {
-              console.log(
-                `Finished transforming ${dataTransformingBatchSize} Runs`
-              );
-              resolve(null);
-            });
-          rows = [];
-        }
+        const line = await csv.writeToString([row], { headers: false });
+        ws.write(line + '\n');
       })
       .on("end", () => {
         csv
@@ -196,11 +176,10 @@ async function dumpRunsAndDataToCsv(
  */
 function dumpData(dumpFolderPath: string): void {
   let startTime = new Date();
-
   execSync(
     `psql ${
       process.env.LOCAL_DATABASE_URL
-    } -c "\\copy data TO '${getDataCSVPath(dumpFolderPath)}' CSV HEADER"`
+    } -c "\\copy data TO '${getTempDataCSVPath(dumpFolderPath)}' CSV HEADER;"`
   );
 
   console.log(
