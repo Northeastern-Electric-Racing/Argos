@@ -10,7 +10,6 @@ import {
   storagePaths,
 } from "../storage-paths";
 import { CouldNotConnectToLocalDB } from "../errors/dump.errors";
-import { appendToCsv } from "../utils/csv.utils";
 import {
   createFile,
   createFolder,
@@ -113,6 +112,14 @@ async function dumpRunsAndDataToCsv(
     }ms`
   );
 
+  console.log("Transforming Data");
+
+  await transformData(dumpFolder, dataTransformingBatchSize);
+
+  console.log(`Total time: ${new Date().getTime() - startTime.getTime()}ms`);
+}
+
+export async function transformData(dumpFolder: string, dataBatchSize: number) {
   const runIdToCloudIdMap = new Map<string, string>();
 
   await new Promise((resolve) => {
@@ -125,6 +132,7 @@ async function dumpRunsAndDataToCsv(
         // Add a unique id for each row
         row.id = uuidv4();
         runIdToCloudIdMap.set(row.runId, row.id);
+        delete row.runId;
         rows.push(row);
       })
       .on("end", () => {
@@ -138,31 +146,61 @@ async function dumpRunsAndDataToCsv(
       });
   });
 
-  await new Promise((resolve) => {
+  await new Promise((resolve, reject) => {
     const ws = fs.createWriteStream(getDataCSVPath(dumpFolder));
     ws.write("values,time,dataTypeName,runId\n"); // headers
 
-    let rows: LocalData[] = [];
+    let buffer: string[] = [];
+    let processing = false;
+    let ended = false;
+
+    const flushBuffer = () => {
+      if (buffer.length === 0 || processing) return;
+      processing = true;
+
+      const chunk = buffer.join("");
+      const length = buffer.length;
+      buffer = [];
+
+      ws.write(chunk, () => {
+        console.log(`Flushed ${length} Rows`);
+        processing = false;
+
+        // Check if we need to flush more after finishing a write
+        if (ended && buffer.length > 0) {
+          flushBuffer();
+        } else if (ended) {
+          console.log("Runs Updated");
+          resolve(null);
+        }
+      });
+    };
+
     fs.createReadStream(getTempDataCSVPath(dumpFolder))
       .pipe(csv.parse({ headers: true }))
-      .on("data", async (row) => {
+      .on("data", (row) => {
         // Add a unique id for each row
         row.runId = runIdToCloudIdMap.get(row.runId);
-        const line = await csv.writeToString([row], { headers: false });
-        ws.write(line + '\n');
+        // JS Dates only work with maximum precision of miliseconds,
+        // however psql / prisma doesnt care about that as long as its in iso form,
+        // so manually add the microseconds into the date string
+        const miliseconds = Number(BigInt(row.time) / 1000n);
+        const date = new Date(miliseconds);
+        const formattedISODate = `${date.toISOString().split("Z")[0]}${Number(
+          BigInt(row.time) % 1000n
+        )}Z`;
+        row.time = formattedISODate;
+        const formattedRow =
+          [row.values, formattedISODate, row.dataTypeName, row.runId].join(
+            ","
+          ) + "\n";
+        buffer.push(formattedRow);
       })
       .on("end", () => {
-        csv
-          .write(rows, { headers: true })
-          .pipe(ws)
-          .on("finish", () => {
-            console.log("Runs Updated");
-            resolve(null);
-          });
+        ended = true;
+        flushBuffer();
       });
   });
-
-  console.log(`Total time: ${new Date().getTime() - startTime.getTime()}ms`);
 }
 
 /**

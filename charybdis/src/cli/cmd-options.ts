@@ -1,4 +1,8 @@
-import { deleteAllDownloads, dumpLocalDb } from "../services/dump.service";
+import {
+  deleteAllDownloads,
+  dumpLocalDb,
+  transformData,
+} from "../services/dump.service";
 import { uploadToCloud } from "../services/upload.service";
 import {
   batchPresetOptionsDialogue,
@@ -10,18 +14,20 @@ import {
 import {
   getDumpFoldersForUpload,
   getTransformingDataBatch,
-  getUploadDataBatch,
   getUploadDataTypeBatch,
   setCloudDbUrl,
   setDumpFoldersForUpload,
   setLocalDbUrl,
   setTransformDataBatch,
-  setUploadDataBatch,
   setUploadDataTypeBatch,
 } from "./settings";
 import { updatePrismaClient as updateCloudPrismaClient } from "../prisma/cloud-prisma/prisma";
 import { updatePrismaClient as updateLocalPrismaClient } from "../prisma/local-prisma/prisma";
-import { getAllDownloadFolders } from "../services/audit.service";
+import {
+  getAllDownloadFolders,
+  getMostRecentDownloadFolderPath,
+} from "../services/audit.service";
+import { getDumpFolderPath } from "../storage-paths";
 
 /**
  * Wrap a map of function options with a function to run after each option.
@@ -68,10 +74,11 @@ export const MAIN_DIALOGUE_OPTIONS = {
 export const COMMAND_OPTIONS = {
   dump: async () => await dumpLocalDb(getTransformingDataBatch()),
   upload: async () =>
-    await uploadToCloud(
-      getUploadDataBatch(),
-      getUploadDataTypeBatch(),
-      getDumpFoldersForUpload()
+    await uploadToCloud(getDumpFoldersForUpload(), getUploadDataTypeBatch()),
+  transform: async () =>
+    await transformData(
+      await getMostRecentDownloadFolderPath(),
+      getTransformingDataBatch()
     ),
   "delete-all-downloads": async () => await deleteAllDownloads(),
 };
@@ -92,7 +99,6 @@ export const DIALOGE_COMMAND_OPTIONS = addDialgueWrapper(
 export const BATCH_SIZE_OPTIONS = {
   "transform-data-batch-size": async (size: number) =>
     setTransformDataBatch(size),
-  "upload-data-batch-size": async (size: number) => setUploadDataBatch(size),
   "upload-data-type-batch-size": async (size: number) =>
     setUploadDataTypeBatch(size),
 };

@@ -12,11 +12,12 @@ datasource db {
 }
 
 model run {
-  id         String   @id @default(uuid())
-  runId      Int      @default(autoincrement())
-  driverName String
-  notes      String
-  time       DateTime @db.Timestamptz()
+  id           String   @id @default(uuid())
+  runId        Int      @default(autoincrement())
+  driverName   String?
+  locationName String?
+  notes        String?
+  time         DateTime @db.Timestamptz()
 
   data data[]
 

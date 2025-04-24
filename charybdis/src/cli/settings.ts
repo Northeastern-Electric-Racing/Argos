@@ -1,8 +1,6 @@
 // Batch settings
-let downloadDataBatch = 49000;
-let downloadDataTypeBatch = 1000;
-let uploadDataBatch = 100000;
-let uploadDataTypeBatch = 100000;
+let downloadDataBatch = 100000000;
+let uploadDataTypeBatch = 1000;
 let dumpFoldersForUpload: string[] | undefined = undefined;
 
 // Database URLs
@@ -48,24 +46,6 @@ export function setTransformDataBatch(size: number) {
  */
 export function getTransformingDataBatch(): number {
   return Number(downloadDataBatch);
-}
-
-/**
- * Change the batch size for uploading data (the table in the database)
- *
- * @param size - The new batch size
- */
-export function setUploadDataBatch(size: number) {
-  uploadDataBatch = size;
-}
-
-/**
- * Get the batch size for uploading data.
- *
- * @returns The batch size
- */
-export function getUploadDataBatch(): number {
-  return Number(uploadDataBatch);
 }
 
 /**
