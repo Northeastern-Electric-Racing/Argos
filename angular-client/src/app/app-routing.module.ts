@@ -5,13 +5,17 @@ import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-vi
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
-import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
+import { GraphPageComponent } from 'src/pages/graph/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import MapComponent from 'src/pages/map/map.component';
 import { Segment } from 'src/utils/bms.utils';
+import { GraphPageComponent as TelemetryGraphPageComponent } from 'src/pages/graph/graph-page.component';
+import { TopicsSelectorComponent } from 'src/pages/graph/topics-selector.component';
 
 const landingRoute = () => `/landing`;
 const graphRoute = () => `/graph`;
+const telemetryGraphRoute = () => `/telemetry`;
+const topicsRoute = () => `/topics`;
 const mapRoute = () => `/map`;
 const chargingRoute = () => `/charging`;
 const bmsRoute = () => `/bms`;
@@ -23,6 +27,8 @@ const faultsGraphRoute = () => `/faults/fault-graph`;
 export const appRoutes = {
   landingRoute,
   graphRoute,
+  telemetryGraphRoute,
+  topicsRoute,
   mapRoute,
   chargingRoute,
   bmsRoute,
@@ -36,6 +42,8 @@ export const appRoutes = {
 const routes: Routes = [
   { path: 'landing', component: LandingPageComponent },
   { path: 'graph', component: GraphPageComponent },
+  { path: 'telemetry', component: TelemetryGraphPageComponent },
+  { path: 'topics', component: TopicsSelectorComponent },
   { path: '', redirectTo: appRoutes.landingRoute(), pathMatch: 'full' },
   { path: 'map', component: MapComponent },
   { path: 'charging', component: ChargingPageComponent },

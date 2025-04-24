@@ -1,0 +1,28 @@
+<!-- Toolbar -->
+<div class="flex align-items-center gap-3 mb-3">
+  <select-dropdown [options]="this.dropDownOptions" />
+  <p-dropdown
+    [options]="(runs$ | async)?.values || []"
+    [(ngModel)]="selectedRunId"
+    (ngModelChange)="updateRunId($event)"
+    optionLabel="id"
+    optionValue="id"
+    [disabled]="isLive()"
+  >
+  </p-dropdown>
+
+  <div class="flex align-items-center gap-2">
+    <p-inputSwitch [(ngModel)]="isLive" (ngModelChange)="toggleMode()"></p-inputSwitch>
+    <span class="ml-1">{{ isLive() ? 'Live' : 'Historical' }}</span>
+  </div>
+
+  <button pButton label="Reset Graph" class="ml-auto" (click)="reset()"></button>
+</div>
+
+<!-- Body -->
+<ng-container *ngIf="isLive(); else historical">
+  <app-graph-live></app-graph-live>
+</ng-container>
+<ng-template #historical>
+  <app-graph-historical [key]="resetKey()"></app-graph-historical>
+</ng-template>

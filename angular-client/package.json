@@ -29,6 +29,8 @@
     "@angular/platform-browser-dynamic": "^18.2.4",
     "@angular/router": "^18.2.4",
     "@primeng/themes": "^19.0.9",
+    "@syncfusion/ej2-angular-base": "^29.1.33",
+    "@syncfusion/ej2-angular-charts": "^29.1.35",
     "@types/mapbox-gl": "^2.7.19",
     "apexcharts": "^3.44.0",
     "mapbox-gl": "^3.1.0",

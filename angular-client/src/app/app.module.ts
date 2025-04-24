@@ -143,6 +143,15 @@ import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/ch
 import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
 import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-tile/cell-tile.component';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { GraphLiveComponent } from 'src/pages/graph/graph-live.component';
+import { GraphHistoricalComponent } from 'src/pages/graph/graph-historical.component';
+import { ChartModule, ChartAllModule } from '@syncfusion/ej2-angular-charts';
+import { GraphPageComponent as G2 } from 'src/pages/graph/graph-page.component';
+import { TopicService } from 'src/services/topic.service';
 
 @NgModule({
   declarations: [
@@ -259,7 +268,10 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
     CellByCellHeatMapComponent,
     ChipDiagnosticsComponent,
     ChipFaultsComponent,
-    CellTileComponent
+    CellTileComponent,
+    GraphLiveComponent,
+    GraphHistoricalComponent,
+    G2
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -290,12 +302,20 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
     SelectModule,
     AccordionModule,
     TableModule,
-    TreeModule
+    TreeModule,
+    CommonModule,
+    RouterLink,
+    ButtonModule,
+    DropdownModule,
+    InputSwitchModule,
+    ChartModule,
+    ChartAllModule
   ],
   providers: [
     DialogService,
     MessageService,
     ChipFaultPipe,
+    TopicService,
     provideHttpClient(withInterceptorsFromDi()),
     provideClientHydration(),
     provideAnimationsAsync(),
