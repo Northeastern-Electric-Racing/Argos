@@ -98,7 +98,7 @@ export async function processRunsWithData(dumpFolderPath: string) {
   console.log("Drop index");
 
   execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "ALTER TABLE data DROP CONSTRAINT \\"data_pkey\\";"`
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "ALTER TABLE data DROP CONSTRAINT IF EXISTS \\"data_pkey\\";"`
   );
 
   console.log("Processing data, this may take a while...");

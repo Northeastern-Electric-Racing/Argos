@@ -146,7 +146,7 @@ export async function transformData(dumpFolder: string, dataBatchSize: number) {
       });
   });
 
-  await new Promise((resolve, reject) => {
+  await new Promise((resolve) => {
     const ws = fs.createWriteStream(getDataCSVPath(dumpFolder));
     ws.write("values,time,dataTypeName,runId\n"); // headers
 
@@ -191,10 +191,16 @@ export async function transformData(dumpFolder: string, dataBatchSize: number) {
         )}Z`;
         row.time = formattedISODate;
         const formattedRow =
-          [row.values, formattedISODate, row.dataTypeName, row.runId].join(
-            ","
-          ) + "\n";
+          [
+            `"${row.values}"`,
+            formattedISODate,
+            row.dataTypeName,
+            row.runId,
+          ].join(",") + "\n";
         buffer.push(formattedRow);
+        if (buffer.length > dataBatchSize) {
+          flushBuffer();
+        }
       })
       .on("end", () => {
         ended = true;

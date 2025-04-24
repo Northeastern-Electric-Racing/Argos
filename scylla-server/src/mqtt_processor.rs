@@ -49,7 +49,7 @@ impl MqttProcessor {
     /// * `channel` - The mpsc channel to send the database data to
     /// * `cancel_token` - The token which indicates cancellation of the task
     /// * `opts` - The mqtt processor options to use
-    ///     Returns the instance and options to create a client, which is then used in the process_mqtt loop
+    ///   Returns the instance and options to create a client, which is then used in the process_mqtt loop
     pub fn new(
         channel: broadcast::Sender<ClientData>,
         cancel_token: CancellationToken,

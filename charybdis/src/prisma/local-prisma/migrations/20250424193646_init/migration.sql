@@ -27,6 +27,9 @@ CREATE TABLE "data_type" (
     CONSTRAINT "data_type_pkey" PRIMARY KEY ("name")
 );
 
+-- CreateIndex
+CREATE INDEX "data_runId_dataTypeName_idx" ON "data"("runId", "dataTypeName");
+
 -- AddForeignKey
 ALTER TABLE "data" ADD CONSTRAINT "data_dataTypeName_fkey" FOREIGN KEY ("dataTypeName") REFERENCES "data_type"("name") ON DELETE RESTRICT ON UPDATE CASCADE;
 
