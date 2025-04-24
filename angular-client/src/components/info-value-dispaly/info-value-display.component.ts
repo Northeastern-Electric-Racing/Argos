@@ -1,4 +1,4 @@
-import { Component, input, OnChanges, OnInit } from '@angular/core';
+import { Component, input, OnChanges } from '@angular/core';
 
 export interface ThermometerConfig {
   type: 'thermometer-config';
@@ -27,7 +27,7 @@ export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConf
   templateUrl: './info-value-display.component.html',
   styleUrl: './info-value-display.component.css'
 })
-export class InfoValueDisplayComponent implements OnInit, OnChanges {
+export class InfoValueDisplayComponent implements OnChanges {
   ngOnChanges(): void {
     this.formattedValue = (this.value()?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
   }
@@ -45,10 +45,6 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
   // Consolidated widget input
   widget = input<WidgetConfig>();
   enableWidget = input<boolean>(true);
-
-  ngOnInit(): void {
-    console.log('Info Value Display');
-  }
 
   getStatusMessage = (connectDotConfig: ConnectionDotConfig): (() => string) => {
     return connectDotConfig.getStatusMessage ? connectDotConfig.getStatusMessage : () => '';

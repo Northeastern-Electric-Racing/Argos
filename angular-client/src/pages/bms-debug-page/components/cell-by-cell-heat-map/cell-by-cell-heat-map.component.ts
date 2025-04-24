@@ -18,21 +18,21 @@ export class CellByCellHeatMapComponent implements OnInit {
   betaSubscriptions: Subscription[] = [];
   alphaCells!: Readonly<AlphaCells>;
   betaCells!: Readonly<BetaCells>;
-  view = HeatMapView.Temperature;
+  view = HeatMapView.Voltage;
   selectedCell: CellReading | undefined = undefined;
   cellViewSelectOptions: DropdownOption[] = [
     {
       name: HeatMapView.Temperature.toString(),
       function: () => {
         this.view = HeatMapView.Temperature;
-        this.heatMapService.setCurrentView(HeatMapView.Temperature);
+        this.heatMapService.setCurrentView(this.currentSegment(), HeatMapView.Temperature);
       }
     },
     {
       name: HeatMapView.Voltage.toString(),
       function: () => {
         this.view = HeatMapView.Voltage;
-        this.heatMapService.setCurrentView(HeatMapView.Voltage);
+        this.heatMapService.setCurrentView(this.currentSegment(), HeatMapView.Voltage);
       }
     }
   ];

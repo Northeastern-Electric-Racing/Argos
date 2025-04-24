@@ -15,6 +15,5 @@ export class DriverComponent implements OnInit {
     this.storage.get(DataTypeEnum.DRIVER).subscribe((value) => {
       [this.driver] = value.values || ['No Driver'];
     });
-    console.log(this.driver);
   }
 }

@@ -1,7 +1,7 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, input, OnInit } from '@angular/core';
 import { CellReading } from 'src/services/cell.service';
 import { HeatMapService } from 'src/services/heat-map.service';
-import { chipToString } from 'src/utils/bms.utils';
+import { chipToString, Segment } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'cell-view',
@@ -12,6 +12,7 @@ export class CellViewComponent implements OnInit {
   private heatMapService = inject(HeatMapService);
   cellViewData: CellReading | undefined = undefined;
   screenWidth = window.innerWidth;
+  forSegment = input.required<Segment>();
 
   // Update view width
   @HostListener('window:resize', ['$event'])
@@ -20,7 +21,7 @@ export class CellViewComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.heatMapService.getSelectedCell().subscribe((data) => {
+    this.heatMapService.getSelectedCell(this.forSegment())?.subscribe((data) => {
       this.cellViewData = data;
     });
   }

@@ -22,6 +22,14 @@
           <segment-summary [segmentNumber]="segment" style="height: 100%; width: 100%" />
         </mat-grid-tile>
       }
+      @for (segment of segments; track segment) {
+        <mat-grid-tile colspan="2" rowspan="8">
+          <cell-view [forSegment]="segment" style="width: 100%; height: 100%"></cell-view>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4" rowspan="8">
+          <cell-by-cell-heat-map style="width: 100%; height: 100%" [currentSegment]="segment"></cell-by-cell-heat-map>
+        </mat-grid-tile>
+      }
     </mat-grid-list>
   }
 </div>
