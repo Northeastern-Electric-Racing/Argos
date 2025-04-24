@@ -27,7 +27,6 @@ import {
   getAllDownloadFolders,
   getMostRecentDownloadFolderPath,
 } from "../services/audit.service";
-import { getDumpFolderPath } from "../storage-paths";
 
 /**
  * Wrap a map of function options with a function to run after each option.

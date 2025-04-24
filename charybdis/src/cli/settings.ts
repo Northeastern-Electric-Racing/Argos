@@ -1,5 +1,5 @@
 // Batch settings
-let downloadDataBatch = 100000000;
+let downloadDataBatch = 1000000;
 let uploadDataTypeBatch = 1000;
 let dumpFoldersForUpload: string[] | undefined = undefined;
 
