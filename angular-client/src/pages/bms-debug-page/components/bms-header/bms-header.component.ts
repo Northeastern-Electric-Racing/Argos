@@ -1,11 +1,11 @@
-import { Component, HostListener, input, OnInit } from '@angular/core';
+import { Component, HostListener, input } from '@angular/core';
 
 @Component({
   selector: 'bms-header',
   templateUrl: './bms-header.component.html',
   styleUrl: './bms-header.component.css'
 })
-export class BmsHeaderComponent implements OnInit {
+export class BmsHeaderComponent {
   pageTitle = input.required<string>();
   time = new Date();
   newRunIsLoading = false;
@@ -14,10 +14,6 @@ export class BmsHeaderComponent implements OnInit {
   isMobile = window.innerWidth < this.mobileThreshold;
 
   constructor() {}
-
-  ngOnInit() {
-    console.log('BMS Debug Page');
-  }
 
   @HostListener('window:resize', ['$event'])
   onResize() {
