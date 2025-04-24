@@ -10,7 +10,6 @@ import {
 import {
   getDumpFoldersForUpload,
   getTransformingDataBatch,
-  getUploadDataBatch,
   getUploadDataTypeBatch,
 } from "./settings";
 import {
@@ -59,7 +58,6 @@ export async function batchPresetOptionsDialogue() {
   console.log(
     `Current batch settings:\n`,
     `Transform data in batches of: ${getTransformingDataBatch()}\n`,
-    `upload data per batch: ${getUploadDataBatch()}\n`,
     `upload data_type per batch: ${getUploadDataTypeBatch()}\n`
   );
   const batchChoice = await select({
