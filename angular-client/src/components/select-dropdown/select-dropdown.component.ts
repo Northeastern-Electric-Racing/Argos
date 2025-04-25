@@ -1,4 +1,4 @@
-import { Component, input, OnInit } from '@angular/core';
+import { Component, input, OnInit, ViewChild } from '@angular/core';
 import { SelectChangeEvent } from 'primeng/select';
 
 export interface SelectorConfig {
@@ -30,6 +30,9 @@ export class SelectDropdownComponent implements OnInit {
   defaultValue = input<string | undefined>(undefined);
 
   selectedOption: DropdownOption | undefined;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  @ViewChild('dropdownRef') dropdownRef: any;
 
   ngOnInit() {
     if (this.defaultValue()) {
