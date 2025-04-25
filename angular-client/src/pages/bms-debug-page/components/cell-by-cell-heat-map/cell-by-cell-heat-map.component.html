@@ -1,5 +1,5 @@
 <info-background
-  title="Cell-by-Cell Heat Map"
+  [title]="this.getTitle()"
   svgIcon="battery_charging_2"
   [slicedLeftCorner]="true"
   [selectorConfig]="selectorConfig"
@@ -14,6 +14,8 @@
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
+          [sevenBoxLayout]="true"
+          [upperTitle]="cell.cellNumbers?.toString()"
         ></cell-tile>
       }
     </hstack>
@@ -26,30 +28,50 @@
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
+          [sevenBoxLayout]="true"
+          [upperTitle]="cell.cellNumbers?.toString()"
         ></cell-tile>
       }
     </hstack>
   } @else if (this.view.toString() === 'Voltage') {
-    <hstack alignItems="end" justifyContent="end" spacing="1vw">
+    <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
       @for (cell of betaCells.slice().reverse(); track cell) {
         <cell-tile
-          [value]="this.averageVoltCellPair(cell)"
-          [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
+          [value]="cell.volt1"
+          [color]="this.getVoltColor(cell.volt1)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
+          [upperTitle]="cell.cellNumbers?.[1]?.toString()"
+        ></cell-tile>
+        <cell-tile
+          [value]="cell.volt2"
+          [color]="this.getVoltColor(cell.volt2)"
+          (click)="this.cellClicked(cell)"
+          [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
+          [upperTitle]="cell.cellNumbers?.[0]?.toString()"
         ></cell-tile>
       }
     </hstack>
     <div style="padding-top: 20px"></div>
-    <hstack alignItems="end" justifyContent="end" spacing="1vw">
-      @for (cell of alphaCells; track cell) {
+    <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
+      @for (cell of alphaCells; track cell; let i = $index) {
         <cell-tile
-          [value]="this.averageVoltCellPair(cell)"
-          [color]="this.getVoltColor(this.averageVoltCellPair(cell))"
+          [value]="cell.volt1"
+          [color]="this.getVoltColor(cell.volt1)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
+          [upperTitle]="cell.cellNumbers?.[0]?.toString()"
+        ></cell-tile>
+        <cell-tile
+          [value]="cell.volt2"
+          [color]="this.getVoltColor(cell.volt2)"
+          (click)="this.cellClicked(cell)"
+          [currentView]="this.view"
+          [boxShadowColor]="this.isSelectedCell(cell)"
+          [upperTitle]="cell.cellNumbers?.[1]?.toString()"
         ></cell-tile>
       }
     </hstack>

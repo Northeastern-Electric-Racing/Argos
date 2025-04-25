@@ -11,6 +11,8 @@ export class CellTileComponent {
   color = input.required<string>();
   currentView = input<HeatMapView>();
   boxShadowColor = input<boolean>(false);
+  sevenBoxLayout = input<boolean>(false);
+  upperTitle = input<string | undefined>();
 
   getDisplayValue = () => {
     const value = this.value();
