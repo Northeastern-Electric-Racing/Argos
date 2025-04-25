@@ -60,7 +60,7 @@ async fn test_data_add() -> Result<(), diesel::result::Error> {
     assert_eq!(
         PublicData::from(data),
         PublicData {
-            time_ms: 1000,
+            time_ms: 1,
             values: vec![0f32]
         }
     );
