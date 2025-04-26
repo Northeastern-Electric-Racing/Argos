@@ -144,7 +144,6 @@ export default class GraphPageComponent implements OnInit {
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
-    console.log('Processing real time data type selection:', dataTypes);
     const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
     dataTypes.forEach((dataType) => {
       const key = dataType.name;
@@ -174,13 +173,11 @@ export default class GraphPageComponent implements OnInit {
             });
 
             this.currentValues.push(value);
-            this.selectedDataTypeValuesSubject.forEach((subject, idx) => {
-              if (nextValue[idx]) {
-                subject.next({
-                  label: dataType.name,
-                  data: [nextValue[idx]]
-                });
-              }
+            this.selectedDataTypeValuesSubject.forEach((subject) => {
+              subject.next({
+                label: dataType.name,
+                data: nextValue
+              });
             });
           })
         );
