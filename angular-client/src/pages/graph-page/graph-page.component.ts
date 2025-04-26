@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
 import { appRoutes } from 'src/app/app-routing.module';
@@ -9,7 +10,7 @@ import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, FaultData, GraphInfo, Run } from 'src/utils/types.utils';
+import { DataType, FaultData, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
 
 @Component({
   selector: 'graph-page',
@@ -35,7 +36,7 @@ export default class GraphPageComponent implements OnInit {
 
   // this shit is only used for the fucking graph caption I hate it.
   selectedDataType = new Subject<DataType[] | undefined>();
-  selectedDataTypeValuesSubject = new BehaviorSubject<GraphInfo[]>([]);
+  selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
   currentValues: DataValue[] = [];
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
@@ -99,7 +100,7 @@ export default class GraphPageComponent implements OnInit {
   onRunSelected = (run: Run) => {
     this.run = run;
     this.realTime = false;
-    this.selectedDataTypeValuesSubject.next([]);
+    this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
@@ -112,7 +113,7 @@ export default class GraphPageComponent implements OnInit {
     if (currentRunId) {
       this.run = this.allRuns.find((run) => run.id === currentRunId);
       this.realTime = true;
-      this.selectedDataTypeValuesSubject.next([]);
+      this.selectedDataTypeValuesSubject = [];
       this.selectedDataTypeValuesIsLoading = false;
       this.selectedDataTypeValuesIsError = false;
       this.selectedDataTypeValuesError = undefined;
@@ -143,7 +144,8 @@ export default class GraphPageComponent implements OnInit {
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
-    const dataTypeValues = this.selectedDataTypeValuesSubject.getValue();
+    console.log('Processing real time data type selection:', dataTypes);
+    const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
     dataTypes.forEach((dataType) => {
       const key = dataType.name;
       const graphInfo = dataTypeValues.find((dtV) => dtV.label === key);
@@ -165,16 +167,20 @@ export default class GraphPageComponent implements OnInit {
               if (storedValues[i]) storedValues[i].push(graphData);
               else storedValues[i] = [graphData];
             });
-            const nextValue = storedValues.map((val) =>
-              val.filter((v) => {
+            const nextValue = storedValues.map((val) => {
+              return val.filter((v) => {
                 return new Date(v.x).getTime() > lastMinute;
-              })
-            );
+              });
+            });
 
             this.currentValues.push(value);
-            this.selectedDataTypeValuesSubject.getValue().push({
-              ...graphInfo,
-              data: nextValue
+            this.selectedDataTypeValuesSubject.forEach((subject, idx) => {
+              if (nextValue[idx]) {
+                subject.next({
+                  label: dataType.name,
+                  data: [nextValue[idx]]
+                });
+              }
             });
           })
         );
@@ -182,77 +188,110 @@ export default class GraphPageComponent implements OnInit {
     });
   };
 
-  // private processHistoricalDataTypeSelection = (dataType: DataType, queryFunction: () => Promise<Response>) => {
-  //   this.selectedDataTypeValuesIsLoading = true;
-  //   this.selectedDataTypeValuesIsError = false;
-  //   this.selectedDataTypeValuesError = undefined;
+  /**
+   * Pull historical data for *every* selected datatype (run-replay or fault-replay)
+   * and push the transformed points into the *matching* BehaviorSubject that has
+   * the same .label (datatype name).  Mirrors the strategy used by
+   * processRealTimeDataTypeSelection, so everything stays consistent.
+   */
+  private processHistoricalDataTypeSelection = (dataTypes: DataType[]) => {
+    // global “loading” flags
+    this.selectedDataTypeValuesIsLoading = true;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
 
-  //   const dataQueryResponse = this.serverService.query<DataValue[]>(queryFunction);
-  //   dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-  //     this.selectedDataTypeValuesIsLoading = isLoading;
-  //   });
-  //   dataQueryResponse.error.subscribe((error) => {
-  //     if (error) {
-  //       this.selectedDataTypeValuesError = error;
-  //       this.selectedDataTypeValuesIsError = true;
-  //     }
-  //   });
-  //   dataQueryResponse.data.subscribe((data) => {
-  //     if (data) {
-  //       const graphData: GraphData[][] = [];
-  //       data.forEach((dataValue) => {
-  //         dataValue.values.forEach((value, i) => {
-  //           if (graphData[i]) {
-  //             graphData[i].push({ x: +dataValue.time, y: +value });
-  //           } else {
-  //             graphData[i] = [{ x: +dataValue.time, y: +value }];
-  //           }
-  //         });
-  //       });
-  //       this.selectedDataTypeValuesSubject.next({
-  //         label: dataType.name,
-  //         data: graphData
-  //       });
-  //       this.currentValue.next(data.pop());
-  //     }
-  //   });
-  // };
+    let pending = dataTypes.length; // we’ll clear loading only after the last query returns
+
+    dataTypes.forEach((dataType) => {
+      /* -------- choose the right query fn for run-replay vs fault-replay -------- */
+      console.log('Selected fault', this.selectedFault);
+      const queryFn =
+        this.run !== undefined
+          ? () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id)
+          : () =>
+              getDataByDatatTypeNameAndTiming(dataType.name, {
+                time: this.selectedFault?.occurredAt.getTime() ?? 0,
+                before: 1,
+                after: 1
+              });
+
+      /* -------- fire the query through APIService ------------------------------ */
+      const dataQueryResponse = this.serverService.query<DataValue[]>(queryFn);
+
+      /* ---- error flag handling (same as before) ------------------------------- */
+      dataQueryResponse.error.subscribe((error) => {
+        if (error) {
+          this.selectedDataTypeValuesIsError = true;
+          this.selectedDataTypeValuesError = error;
+        }
+      });
+
+      dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+        console.log('Loading data %s, for dataType, %s', isLoading, dataType.name);
+      });
+
+      /* ---- data handler ------------------------------------------------------- */
+      dataQueryResponse.data.subscribe((data) => {
+        console.log(data);
+        if (data) {
+          /* ---------- reshape → GraphData[][] (unchanged logic) ---------------- */
+          const graphData: GraphData[][] = [];
+          data.forEach((dataValue) => {
+            dataValue.values.forEach((val, i) => {
+              if (graphData[i]) {
+                graphData[i].push({ x: +dataValue.time, y: +val });
+              } else {
+                graphData[i] = [{ x: +dataValue.time, y: +val }];
+              }
+            });
+          });
+
+          /* ---------- push into the BehaviorSubject that matches by .label ----- */
+          let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
+
+          if (!target) {
+            // (shouldn’t normally happen, but keep it safe)
+            target = new BehaviorSubject<GraphInfo>({ label: dataType.name, data: [] });
+            this.selectedDataTypeValuesSubject.push(target);
+          }
+
+          target.next({ label: dataType.name, data: graphData });
+
+          /* ---------- keep raw values if you use them elsewhere ---------------- */
+          this.currentValues.push(...data);
+          // If you still have a single-value subject called currentValue, keep this:
+          // this.currentValue?.next(data[data.length - 1]);
+        }
+
+        /* ---------- global loading flag cleared after final response ---------- */
+        pending--;
+        if (pending === 0) {
+          this.selectedDataTypeValuesIsLoading = false;
+        }
+      });
+    });
+  };
 
   /**
    * Sets the selected data type.
    * @param dataType The data type to set.
    */
   setSelectedDataTypes = (dataTypes: DataType[]) => {
-    // get rid of the fucking current data type, and it's fucking subscription
+    console.log('Graph-page Selected data types:', dataTypes);
     this.clearDataType();
-    // set the selected data type (is this the best way to update it? I don't fucking know...
-    // I bet a better fucking way would be mutate a fucking behavorial subject
-    // however, that could be fucking anoying to debug for those that use this subject.
-    // I'll come back with a better undersanding...
-    // update: selectedDataType has no fucking, fuck the graph caption.
     this.selectedDataType.next(dataTypes);
 
-    // now this shit seems kinda crazzzzzy tooo me, MAKING A FUCKING NEW GRAPH INFO BEHAVORIAL SUBJECT FOR
-    // EVERY FUCKING TIME WE CHANGE DATA TYPES FUCKKKKKK THIS.
-    this.selectedDataTypeValuesSubject.next(
-      dataTypes.map((dt) => ({
-        label: dt.name,
-        data: []
-      }))
-    );
+    this.selectedDataTypeValuesSubject = dataTypes.map((dt) => new BehaviorSubject<GraphInfo>({ label: dt.name, data: [] }));
 
-    if (this.realTime) this.processRealTimeDataTypeSelection(dataTypes);
-    // else if (this.run !== undefined)
-    //   this.processHistoricalDataTypeSelection(dataType, () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id));
-    // else if (this.selectedFault !== undefined)
-    //   this.processHistoricalDataTypeSelection(dataType, () =>
-    //     getDataByDatatTypeNameAndTiming(dataType.name, { time: this.selectedFault!.lastSeen.getTime(), before: 1, after: 1 })
-    //   );
-    else {
+    if (this.realTime) {
+      this.processRealTimeDataTypeSelection(dataTypes);
+    } else if (this.run !== undefined || this.selectedFault !== undefined) {
+      this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
+    } else {
       this.toastService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No run selected Please select a run. Choose most recent for real time.'
+        detail: 'No run selected. Please select a run or choose “Real Time”.'
       });
     }
   };
@@ -264,6 +303,6 @@ export default class GraphPageComponent implements OnInit {
       }
     });
     this.selectedDataType.next([]);
-    this.selectedDataTypeValuesSubject.next([]);
+    this.selectedDataTypeValuesSubject = [];
   };
 }

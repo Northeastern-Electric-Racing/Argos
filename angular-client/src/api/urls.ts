@@ -14,8 +14,11 @@ const getAllSystems = () => `${baseURL}/systems`;
 const getDataByDataTypeNameAndRunId = (dataTypeName: string, runId: number) =>
   `${baseURL}/data/${encodeURIComponent(dataTypeName)}/${runId}`;
 
-const getDataByDataTypeNameAndTiming = (dataTypeName: string, timing: Timing) =>
-  `${baseURL}/data/${encodeURIComponent(dataTypeName)}?time=${timing.time}&before=${timing.before}&after=${timing.after}`;
+const getDataByDataTypeNameAndTiming = (dataTypeName: string, timing: Timing) => {
+  const queryString = `${baseURL}/data/${encodeURIComponent(dataTypeName)}?time=${timing.time}&before=${timing.before}&after=${timing.after}`;
+  console.log(queryString);
+  return queryString;
+};
 
 /* Runs */
 const getRunById = (id: number) => `${baseURL}/runs/${id}`;
