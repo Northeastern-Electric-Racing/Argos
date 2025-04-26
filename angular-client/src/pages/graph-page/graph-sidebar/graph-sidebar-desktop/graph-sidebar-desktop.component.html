@@ -2,14 +2,15 @@
   <p-tree
     [value]="treeNodes"
     styleClass="w-full md:w-[30rem]"
-    selectionMode="single"
     (onNodeSelect)="nodeSelect()"
-    [(selection)]="selectedNode"
+    [(selection)]="selectedNodes"
     [filter]="true"
     filterPlaceholder="Select Data Type"
     styleClass="w-full"
     [autofocus]="true"
     [style]="{ height: '80vh', overflow: 'auto' }"
+    [metaKeySelection]="false"
+    selectionMode="checkbox"
   >
     <ng-template let-node pTemplate="default">
       <div class="tree-node-container">

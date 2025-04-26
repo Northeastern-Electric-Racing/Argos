@@ -13,7 +13,7 @@ import { DataType } from 'src/utils/types.utils';
 })
 export default class GraphSidebarComponent implements OnInit {
   @Input() dataTypes!: DataType[];
-  @Input() selectDataType!: (dataType: DataType) => void;
+  @Input() selectDataTypes!: (dataTypes: DataType[]) => void;
 
   isMobile!: boolean;
 
