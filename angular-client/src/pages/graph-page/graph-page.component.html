@@ -14,26 +14,26 @@
         <graph-sidebar [dataTypes]="dataTypes" [selectDataTypes]="this.setSelectedDataTypes" class="desktop-sidebar" />
         <div class="right-container">
           <graph [limitRange]="realTime === true" [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
-          <!-- <graph-caption [dataType]="selectedDataType" [currentValue]="currentValue" class="graph-caption"> -->
-          <ng-template #buttons>
-            @if (onFaultPage) {
-              <fault-buttons [onClearData]="clearDataType" />
-            } @else {
-              <general-buttons
-                [onRunSelected]="onRunSelected"
-                [onClearDataType]="clearDataType"
-                [onSetRealTime]="onSetRealtime"
-              />
-            }
-          </ng-template>
-          <ng-template #rightInfo>
-            @if (onFaultPage) {
-              <fault-display-info />
-            } @else {
-              <general-display-info [run]="run" />
-            }
-          </ng-template>
-          <!-- </graph-caption> -->
+          <graph-caption [dataType]="this.selectedDataType" [currentValue]="this.currentValues" class="graph-caption">
+            <ng-template #buttons>
+              @if (onFaultPage) {
+                <fault-buttons [onClearData]="clearDataType" />
+              } @else {
+                <general-buttons
+                  [onRunSelected]="onRunSelected"
+                  [onClearDataType]="clearDataType"
+                  [onSetRealTime]="onSetRealtime"
+                />
+              }
+            </ng-template>
+            <ng-template #rightInfo>
+              @if (onFaultPage) {
+                <fault-display-info />
+              } @else {
+                <general-display-info [run]="run" />
+              }
+            </ng-template>
+          </graph-caption>
         </div>
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataTypes]="this.setSelectedDataTypes" class="mobile-sidebar" />
       </div>

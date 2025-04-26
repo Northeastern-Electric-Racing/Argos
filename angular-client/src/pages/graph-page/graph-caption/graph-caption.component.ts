@@ -9,8 +9,8 @@ import { DataType } from 'src/utils/types.utils';
   templateUrl: './graph-caption.component.html'
 })
 export default class GraphInfoComponent implements OnInit {
-  dataType = input.required<Subject<DataType | undefined>>();
-  currentValue = input<Subject<DataValue | undefined>>();
+  dataType = input.required<Subject<DataType[] | undefined>>();
+  currentValue = input<DataValue[]>();
   @ContentChild('rightInfo', { static: true }) rightInfo!: TemplateRef<void>;
   @ContentChild('buttons', { static: true }) buttons!: TemplateRef<void>;
 
@@ -19,13 +19,11 @@ export default class GraphInfoComponent implements OnInit {
   value?: string | number;
 
   ngOnInit(): void {
-    this.dataType().subscribe((dataType: DataType | undefined) => {
-      this.dataTypeName = dataType?.name;
-      this.dataTypeUnit = dataType?.unit;
+    this.dataType().subscribe((dataType: DataType[] | undefined) => {
+      this.dataTypeName = dataType?.at(0)?.name;
+      this.dataTypeUnit = dataType?.at(0)?.unit;
     });
-    this.currentValue()?.subscribe((pvalue?: DataValue) => {
-      const value = pvalue?.values[0];
-      this.value = value !== undefined ? parseFloat(value).toFixed(2) : 'No Values';
-    });
+    const currentValues = this.currentValue();
+    this.value = currentValues?.[0]?.values?.[0];
   }
 }

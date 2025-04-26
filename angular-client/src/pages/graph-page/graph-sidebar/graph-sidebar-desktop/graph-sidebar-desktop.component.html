@@ -3,6 +3,7 @@
     [value]="treeNodes"
     styleClass="w-full md:w-[30rem]"
     (onNodeSelect)="nodeSelect()"
+    (onNodeUnselect)="onNodeUnselect($event)"
     [(selection)]="selectedNodes"
     [filter]="true"
     filterPlaceholder="Select Data Type"
@@ -10,7 +11,7 @@
     [autofocus]="true"
     [style]="{ height: '80vh', overflow: 'auto' }"
     [metaKeySelection]="false"
-    selectionMode="checkbox"
+    selectionMode="multiple"
   >
     <ng-template let-node pTemplate="default">
       <div class="tree-node-container">
