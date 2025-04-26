@@ -74,7 +74,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
       let line: Map<number, number>;
-      const label = (info?.label ?? '') + i;
+      const label = (info?.label ?? '') + ' ' + i;
       if (!this.data.has(label)) {
         line = this.data.set(label, new Map<number, number>()).get(label)!;
       } else {
