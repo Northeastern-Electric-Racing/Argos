@@ -60,7 +60,7 @@ export default class NodeDisplayComponent {
   @Input() node!: NodeWithVisibilityToggle;
   @Input() isDesktop: boolean = true;
   @Input() searchFilter: string = '';
-  @Input() selectDataType!: (dataType: DataType) => void;
+  @Input() selectDataTypes!: (dataType: DataType[]) => void;
 
   /**
    * Toggles Visibility whenever a node is selected
@@ -73,7 +73,7 @@ export default class NodeDisplayComponent {
   onSelect(node: NodeWithVisibilityToggle) {
     this.toggleSubnodeVisibility(node);
     if (node.nodes.value.length === 0) {
-      this.selectDataType(node.dataType);
+      this.selectDataTypes([node.dataType]);
     }
   }
 }

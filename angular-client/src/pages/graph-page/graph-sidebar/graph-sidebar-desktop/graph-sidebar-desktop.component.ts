@@ -22,7 +22,7 @@ import { decimalPipe } from 'src/utils/pipes.utils';
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   dataTypes = input<DataType[]>([]);
-  selectDataType = input.required<(dataType: DataType) => void>();
+  selectedDataTypes = input.required<(dataTypes: DataType[]) => void>();
   nodes: Node[] = [];
 
   filterForm: FormGroup = new FormGroup({
@@ -32,8 +32,9 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   searchFilter: string = '';
 
   treeNodes: TreeNode<Node>[] = [];
-  selectedNode?: TreeNode<Node>;
+  selectedNodes?: TreeNode<Node>[];
   treeInitialized = false;
+  multiple: 'single' | 'multiple' | 'checkbox' | null | undefined;
 
   /**
    * Initializes the nodes with the visibility toggle.
@@ -71,14 +72,21 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }
 
   nodeSelect() {
-    if (this.selectedNode?.data) {
-      if (this.selectedNode.data.nodes.value.length === 0) {
-        this.selectDataType()(this.selectedNode.data.dataType);
-      } else {
-        this.selectedNode.expanded = !this.selectedNode.expanded;
-        this.selectedNode = undefined;
-        this.treeNodes = [...this.treeNodes];
+    if (this.selectedNodes && this.selectedNodes.length > 0) {
+      const selectedDataTypes: DataType[] = [];
+      this.selectedNodes.forEach((node) => {
+        if (node.data && node.data.nodes.value.length === 0) {
+          selectedDataTypes.push(node.data.dataType);
+        } else if (node.data) {
+          node.expanded = !node.expanded;
+        }
+      });
+      if (selectedDataTypes.length > 0) {
+        this.selectedDataTypes()(selectedDataTypes);
       }
+      // Optionally, clear selection after handling
+      // this.selectedNodes = undefined;
+      this.treeNodes = [...this.treeNodes];
     }
   }
 }

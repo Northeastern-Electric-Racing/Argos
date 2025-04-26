@@ -22,27 +22,36 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
-  valuesSubject = input.required<BehaviorSubject<GraphInfo | undefined>>();
+  valuesSubject = input.required<BehaviorSubject<GraphInfo[]>>();
   limitRange = input(true);
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
-  data!: Map<number, Map<number, number>>;
+  // label -> x,y
+  data!: Map<string, Map<number, number>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
   timeRangeMs = 120000;
 
   updateChart = () => {
-    const label = this.valuesSubject().value?.label ?? 'No Label';
+    // TODO: FUCK UPDATING SERIES
+    // we create a fucking new series every fucking time, the logic here however, will create
+    // multiple data points, from our data map.... this is the fucking meat of the shit.
     this.chart.updateSeries(
-      Array.from(this.data).map(([index, map]) => ({
-        name: label + ' ' + index,
+      // so instead of looping through "data", which is not fucking data
+      // we will loop through each and create new data points, y-axis shit is seperate... but stil based
+      // on the fucking label / name
+      Array.from(this.data).map(([string, map]) => ({
+        name: string,
         data: Array.from(map)
       }))
     );
 
+    //
     if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
+
+      // again whyyyy would we ever decoupled the options from the udpating.. whagerver
       this.chart.updateOptions({
         ...this.options,
         xaxis: {
@@ -52,6 +61,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       });
     }
 
+    // weird but OK
     if (this.limitRange()) {
       setTimeout(() => {
         this.updateChart();
@@ -59,33 +69,43 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     }
   };
 
-  graphInfoCallback = (info: GraphInfo | undefined) => {
-    const values = info?.data ?? [];
-    if (values.length === 0) this.data = new Map();
-    values.forEach((value, i) => {
-      let line: Map<number, number>;
-      if (!this.data.has(i)) {
-        line = this.data.set(i, new Map<number, number>()).get(i)!;
-      } else {
-        line = this.data.get(i)!;
-      }
-      value.forEach((val) => {
-        if (!line.has(val.x)) {
-          line.set(val.x, +val.y.toFixed(3));
+  graphInfoCallback = (graphInfo: GraphInfo[] | undefined) => {
+    // go thrpoug and do something with each
+    graphInfo?.forEach((info) => {
+      // We get another fuckign GraphInfo... e.g. another topic
+      // retrieve the fucking data associated. (2-d array of the fucking values we get for data points)
+      // to do this is dubious... because what if we get really fucking fast data?.... oh well
+      const values = info?.data ?? [];
+
+      // fuck this
+      if (values.length === 0) this.data = new Map();
+
+      // for each of our label values add it to the fucking thing FUCK THE FUCKING 2-D ARRAY
+      values.forEach((value, i) => {
+        let line: Map<number, number>;
+        const label = info.label + i;
+        if (!this.data.has(label)) {
+          line = this.data.set(label, new Map<number, number>()).get(label)!;
+        } else {
+          line = this.data.get(label)!;
         }
+        // for each fucking value on the current high level topic value, we go through all the fucking values for it.
+        // and add it to the *NEW* fucking line we make. We should not be making a new line.
+        value.forEach((val) => {
+          if (!line.has(val.x)) {
+            line.set(val.x, +val.y.toFixed(3));
+          }
+        });
       });
     });
 
-    if (this.limitRange() && !this.isSliding) {
-      const times = Array.from(Array.from(this.data.values())[0]?.keys());
-      this.timeDiffMs = times[times.length - 1] - times[0];
-    } else if (!this.limitRange()) {
-      this.updateChart();
-    }
+    // limit range shit
+    this.updateChart();
   };
 
   ngOnInit(): void {
     this.data = new Map();
+    // pipes the valuesSubject into graphInfoCallBack, WHICH IS A FUCKING GRAPH INFO WITH A LABEL
     this.valuesSubject().subscribe(this.graphInfoCallback);
 
     const chartContainer = document.getElementById('chart-container');
@@ -138,6 +158,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
           }
         }
       },
+      // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
       yaxis: {
         labels: {
           style: {
@@ -182,7 +203,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     this.data = new Map();
     this.isSliding = false;
 
-    //set range to undefined
+    //set range to undefined... why?
     this.chart.updateOptions({
       ...this.options,
       xaxis: {
