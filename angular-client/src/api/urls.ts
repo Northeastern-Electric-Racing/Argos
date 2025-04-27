@@ -28,6 +28,13 @@ const getAllVideos = () => `${baseURL}/videos`;
 const getVideo = (fileName: string) => `${getAllVideos()}/${encodeURIComponent(fileName)}`;
 const updateVideos = () => `${getAllVideos()}/update`;
 
+/* Car Commands */
+const carCommandConfig = (key: string, values: number[]) =>
+  `${baseURL}/config/set/${key}?${values.map((value) => `data=${value}`).join('&')}`;
+
+/* Authentication */
+const authenticate = () => `${baseURL}/authenticate`;
+
 export const urls = {
   getAllDatatypes,
 
@@ -43,5 +50,8 @@ export const urls = {
 
   getAllVideos,
   getVideo,
-  updateVideos
+  updateVideos,
+
+  carCommandConfig,
+  authenticate
 };

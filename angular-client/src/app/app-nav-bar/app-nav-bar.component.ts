@@ -65,7 +65,8 @@ export class AppNavBarComponent implements OnInit {
     // { label: 'Map', route: appRoutes.mapRoute(), icon: 'map' },
     { label: 'BMS', route: appRoutes.bmsRoute(), icon: 'action_key' },
     { label: 'Faults', route: appRoutes.faultsRoute(), icon: 'error' },
-    { label: 'Camera', route: appRoutes.cameraRoute(), icon: 'linked_camera' }
+    { label: 'Camera', route: appRoutes.cameraRoute(), icon: 'linked_camera' },
+    { label: 'Commands', route: appRoutes.commandsRoute(), icon: 'electrical_services' }
   ];
 
   navigateTo(route: string): void {

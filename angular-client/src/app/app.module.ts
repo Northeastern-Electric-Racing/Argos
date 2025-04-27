@@ -143,6 +143,10 @@ import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/ch
 import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
 import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-tile/cell-tile.component';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
+import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { PasswordModule } from 'primeng/password';
 
 @NgModule({
   declarations: [
@@ -259,7 +263,8 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
     CellByCellHeatMapComponent,
     ChipDiagnosticsComponent,
     ChipFaultsComponent,
-    CellTileComponent
+    CellTileComponent,
+    CarCommandComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -290,7 +295,10 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
     SelectModule,
     AccordionModule,
     TableModule,
-    TreeModule
+    TreeModule,
+    InputTextModule,
+    InputNumberModule,
+    PasswordModule
   ],
   providers: [
     DialogService,

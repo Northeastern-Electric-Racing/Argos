@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
-use axum::{extract::Path, Extension};
+use axum::{
+    extract::{Json, Path},
+    http::StatusCode,
+    Extension,
+};
 use axum_extra::extract::Query;
 use protobuf::Message;
 use rumqttc::v5::AsyncClient;
@@ -27,7 +31,7 @@ pub async fn send_config_command(
     Path(key): Path<String>,
     Query(data_query): Query<ConfigRequest>,
     Extension(client): Extension<Arc<AsyncClient>>,
-) -> Result<(), ScyllaError> {
+) -> Result<Json<String>, ScyllaError> {
     info!(
         "Sending car config with key: {}, and values: {:?}",
         key, data_query.data
@@ -61,5 +65,23 @@ pub async fn send_config_command(
         ));
     }
 
-    Ok(())
+    Ok(Json::from("Successfully Published Message".to_string()))
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PasswordBody {
+    password: String,
+}
+
+pub async fn authenticate_password(
+    Extension(password): Extension<String>,
+    payload: Json<PasswordBody>,
+) -> Result<Json<String>, ScyllaError> {
+    if payload.password != password {
+        return Err(ScyllaError::HttpError(
+            StatusCode::UNAUTHORIZED,
+            "Incorrect Password".to_string(),
+        ));
+    }
+    Ok(Json::from("Successfully Authenticated".to_string()))
 }
