@@ -34,15 +34,14 @@ export default class GraphPageComponent implements OnInit {
 
   previousDataType?: DataType;
 
-  selectedDataType = new Subject<DataType | undefined>();
-  selectedDataTypeValuesSubject: BehaviorSubject<GraphInfo | undefined> = new BehaviorSubject<GraphInfo | undefined>(
-    undefined
-  );
-  currentValue: Subject<DataValue | undefined> = new Subject<DataValue | undefined>();
+  // this shit is only used for the fucking graph caption I hate it.
+  selectedDataType = new Subject<DataType[] | undefined>();
+  selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
+  currentValues: DataValue[] = [];
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
-  subscription?: Subscription;
+  subscriptions: Subscription[] = [];
 
   onFaultPage?: boolean;
   selectedFault?: FaultData;
@@ -97,22 +96,24 @@ export default class GraphPageComponent implements OnInit {
     });
   };
 
+  // reset shit when a run is selected.
   onRunSelected = (run: Run) => {
     this.run = run;
     this.realTime = false;
-    this.selectedDataTypeValuesSubject.next(undefined);
+    this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Run #' + run.id;
   };
 
+  // get real time ready
   onSetRealtime = () => {
     const currentRunId = this.storage.getCurrentRunId().value;
     if (currentRunId) {
       this.run = this.allRuns.find((run) => run.id === currentRunId);
       this.realTime = true;
-      this.selectedDataTypeValuesSubject.next(undefined);
+      this.selectedDataTypeValuesSubject = [];
       this.selectedDataTypeValuesIsLoading = false;
       this.selectedDataTypeValuesIsError = false;
       this.selectedDataTypeValuesError = undefined;
@@ -141,64 +142,103 @@ export default class GraphPageComponent implements OnInit {
     });
   }
 
-  private processRealTimeDataTypeSelection = (dataType: DataType) => {
-    const key = dataType.name;
-    const valuesSubject = this.storage.get(key);
-    this.subscription = valuesSubject.subscribe((value: DataValue) => {
-      /* Take only data from the last minute */
-      const now = new Date();
-      const lastMinute = now.getTime() - 60000;
-      const storedInfo = this.selectedDataTypeValuesSubject.getValue()!; // Defined earlier in this function
-      const storedValues = storedInfo.data;
-      value.values.forEach((val, i) => {
-        const graphData = { x: +value.time, y: +val, label: dataType.name };
-        if (storedValues[i]) storedValues[i].push(graphData);
-        else storedValues[i] = [graphData];
-      });
-      const nextValue = storedValues.map((val) =>
-        val.filter((v) => {
-          return new Date(v.x).getTime() > lastMinute;
-        })
-      );
+  private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
+    const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
+    dataTypes.forEach((dataType) => {
+      const key = dataType.name;
+      const graphInfo = dataTypeValues.find((dtV) => dtV.label === key);
+      const valuesSubject = this.storage.get(key);
+      if (graphInfo !== undefined) {
+        this.subscriptions.push(
+          valuesSubject.subscribe((value: DataValue) => {
+            const now = new Date();
+            const lastMinute = now.getTime() - 60000;
+            const storedValues = graphInfo.data;
+            value.values.forEach((val, i) => {
+              const graphData = { x: +value.time, y: +val, label: dataType.name };
+              if (storedValues[i]) storedValues[i].push(graphData);
+              else storedValues[i] = [graphData];
+            });
+            const nextValue = storedValues.map((val) => {
+              return val.filter((v) => {
+                return new Date(v.x).getTime() > lastMinute;
+              });
+            });
 
-      this.currentValue.next(value);
-      this.selectedDataTypeValuesSubject.next({ ...storedInfo, data: nextValue });
+            this.currentValues.push(value);
+            this.selectedDataTypeValuesSubject.forEach((subject) => {
+              subject.next({
+                label: dataType.name,
+                data: nextValue
+              });
+            });
+          })
+        );
+      }
     });
   };
 
-  private processHistoricalDataTypeSelection = (dataType: DataType, queryFunction: () => Promise<Response>) => {
+  private processHistoricalDataTypeSelection = (dataTypes: DataType[]) => {
     this.selectedDataTypeValuesIsLoading = true;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
 
-    const dataQueryResponse = this.serverService.query<DataValue[]>(queryFunction);
-    dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.selectedDataTypeValuesIsLoading = isLoading;
-    });
-    dataQueryResponse.error.subscribe((error) => {
-      if (error) {
-        this.selectedDataTypeValuesError = error;
-        this.selectedDataTypeValuesIsError = true;
-      }
-    });
-    dataQueryResponse.data.subscribe((data) => {
-      if (data) {
-        const graphData: GraphData[][] = [];
-        data.forEach((dataValue) => {
-          dataValue.values.forEach((value, i) => {
-            if (graphData[i]) {
-              graphData[i].push({ x: +dataValue.time, y: +value });
-            } else {
-              graphData[i] = [{ x: +dataValue.time, y: +value }];
-            }
+    dataTypes.forEach((dataType) => {
+      const queryFn =
+        this.run !== undefined
+          ? () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id)
+          : () =>
+              getDataByDatatTypeNameAndTiming(dataType.name, {
+                time: this.selectedFault?.occurredAt.getTime() ?? 0,
+                before: 1,
+                after: 1
+              });
+
+      const dataQueryResponse = this.serverService.query<DataValue[]>(queryFn);
+
+      dataQueryResponse.error.subscribe((error) => {
+        if (error) {
+          this.selectedDataTypeValuesIsError = true;
+          this.selectedDataTypeValuesError = error;
+        }
+      });
+
+      dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+        this.selectedDataTypeValuesIsLoading = isLoading;
+      });
+
+      /* ---- data handler ------------------------------------------------------- */
+      dataQueryResponse.data.subscribe((data) => {
+        if (data) {
+          /* ---------- reshape → GraphData[][] (unchanged logic) ---------------- */
+          const graphData: GraphData[][] = [];
+          data.forEach((dataValue) => {
+            dataValue.values.forEach((val, i) => {
+              if (graphData[i]) {
+                graphData[i].push({ x: +dataValue.time, y: +val });
+              } else {
+                graphData[i] = [{ x: +dataValue.time, y: +val }];
+              }
+            });
           });
-        });
-        this.selectedDataTypeValuesSubject.next({
-          label: dataType.name,
-          data: graphData
-        });
-        this.currentValue.next(data.pop());
-      }
+
+          /* ---------- push into the BehaviorSubject that matches by .label ----- */
+          let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
+
+          if (!target) {
+            // (shouldn’t normally happen, but keep it safe)
+            target = new BehaviorSubject<GraphInfo>({ label: dataType.name, data: [] });
+            this.selectedDataTypeValuesSubject.push(target);
+          }
+
+          target.next({ label: dataType.name, data: graphData });
+
+          /* ---------- keep raw values if you use them elsewhere ---------------- */
+          this.currentValues.push(...data);
+          // If you still have a single-value subject called currentValue, keep this:
+          // this.currentValue?.next(data[data.length - 1]);
+        }
+      });
     });
   };
 
@@ -206,32 +246,44 @@ export default class GraphPageComponent implements OnInit {
    * Sets the selected data type.
    * @param dataType The data type to set.
    */
-  setSelectedDataType: (dataType: DataType) => void = (dataType: DataType) => {
+  setSelectedDataTypes = (dataTypes: DataType[]) => {
     this.clearDataType();
-    this.selectedDataType.next(dataType);
-    this.selectedDataTypeValuesSubject = new BehaviorSubject<GraphInfo | undefined>({ label: dataType.name, data: [] });
+    this.selectedDataType.next(dataTypes);
 
-    if (this.subscription) this.subscription.unsubscribe();
+    this.selectedDataTypeValuesSubject = dataTypes.map((dt) => new BehaviorSubject<GraphInfo>({ label: dt.name, data: [] }));
 
-    if (this.realTime) this.processRealTimeDataTypeSelection(dataType);
-    else if (this.run !== undefined)
-      this.processHistoricalDataTypeSelection(dataType, () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id));
-    else if (this.selectedFault !== undefined)
-      this.processHistoricalDataTypeSelection(dataType, () =>
-        getDataByDatatTypeNameAndTiming(dataType.name, { time: this.selectedFault!.lastSeen.getTime(), before: 1, after: 1 })
-      );
-    else {
+    if (this.realTime) {
+      this.processRealTimeDataTypeSelection(dataTypes);
+    } else if (this.run !== undefined || this.selectedFault !== undefined) {
+      this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
+    } else {
       this.toastService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No run selected Please select a run. Choose most recent for real time.'
+        detail: 'No run selected. Please select a run or choose “Real Time”.'
       });
     }
   };
 
   clearDataType: () => void = () => {
-    if (this.subscription) this.subscription.unsubscribe();
+    // Unsubscribe from all previous subscriptions
+    this.subscriptions.forEach((sub) => {
+      if (sub) {
+        sub.unsubscribe();
+      }
+    });
+    this.subscriptions = [];
+
+    // Reset all subjects and data
     this.selectedDataType.next(undefined);
-    this.selectedDataTypeValuesSubject.next(undefined);
+    this.selectedDataTypeValuesSubject.forEach((subject) => {
+      subject.next({ label: '', data: [] });
+      subject.complete();
+    });
+    this.selectedDataTypeValuesSubject = [];
+    this.currentValues = [];
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
   };
 }

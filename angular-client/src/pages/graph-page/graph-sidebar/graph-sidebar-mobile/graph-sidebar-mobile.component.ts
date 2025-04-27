@@ -37,7 +37,7 @@ import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils'
 })
 export default class GraphSidebarMobileComponent implements OnInit {
   @Input() dataTypes!: DataType[];
-  @Input() selectDataType!: (dataType: DataType) => void;
+  @Input() selectedDataTypes!: (dataTypes: DataType[]) => void;
   nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
   showSelection = false;
   nodes!: Node[];

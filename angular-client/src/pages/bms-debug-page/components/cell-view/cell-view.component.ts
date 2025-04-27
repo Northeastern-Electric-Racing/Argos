@@ -26,7 +26,6 @@ export class CellViewComponent {
   constructor() {
     this.segment = this.config.data.forSegment;
     this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
-      console.log('data', data);
       this.cellViewData = data;
     });
   }

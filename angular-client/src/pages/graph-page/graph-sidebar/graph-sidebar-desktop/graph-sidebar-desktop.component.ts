@@ -7,6 +7,7 @@ import { dataTypeNamePipe } from 'src/utils/dataTypes.utils';
 import { TreeNode } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
+import { TreeNodeSelectEvent, TreeNodeUnSelectEvent } from 'primeng/tree';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -22,7 +23,7 @@ import { decimalPipe } from 'src/utils/pipes.utils';
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   dataTypes = input<DataType[]>([]);
-  selectDataType = input.required<(dataType: DataType) => void>();
+  selectedDataTypes = input.required<(dataTypes: DataType[]) => void>();
   nodes: Node[] = [];
 
   filterForm: FormGroup = new FormGroup({
@@ -32,7 +33,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   searchFilter: string = '';
 
   treeNodes: TreeNode<Node>[] = [];
-  selectedNode?: TreeNode<Node>;
+  selectedNodes?: TreeNode<Node>[];
   treeInitialized = false;
 
   /**
@@ -66,19 +67,50 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     this.filterFormSubsription.unsubscribe();
   }
 
+  clearSelections = () => {
+    this.selectedNodes = [];
+    this.treeNodes.forEach((node) => {
+      node.expanded = false;
+    });
+    this.selectedDataTypes()([]);
+  };
+
   transformDataTypeName(dataTypeName: string) {
     return dataTypeNamePipe(dataTypeName);
   }
 
-  nodeSelect() {
-    if (this.selectedNode?.data) {
-      if (this.selectedNode.data.nodes.value.length === 0) {
-        this.selectDataType()(this.selectedNode.data.dataType);
-      } else {
-        this.selectedNode.expanded = !this.selectedNode.expanded;
-        this.selectedNode = undefined;
-        this.treeNodes = [...this.treeNodes];
+  nodeSelect(event: TreeNodeSelectEvent) {
+    if ((event.node.children?.length ?? 0) !== 0) {
+      this.selectedNodes = this.selectedNodes?.filter((node) => node.label !== event.node.label);
+      event.node.expanded = !event.node.expanded;
+      return;
+    }
+
+    if (this.selectedNodes && this.selectedNodes.length > 0) {
+      const selectedDataTypes: DataType[] = [];
+      this.selectedNodes.forEach((node) => {
+        if (node.data && node.data.nodes.value.length === 0) {
+          selectedDataTypes.push(node.data.dataType);
+        } else if (node.data) {
+          node.expanded = !node.expanded;
+        }
+      });
+
+      if (selectedDataTypes.length > 0) {
+        this.selectedDataTypes()(selectedDataTypes);
       }
+    }
+  }
+
+  onNodeUnselect(event: TreeNodeUnSelectEvent) {
+    if (event.node.data && event.node.data.nodes.value.length === 0) {
+      const selectedDataTypes: DataType[] = [];
+      this.selectedNodes?.forEach((node) => {
+        if (node.label !== event.node.label && node.data !== undefined && node.data.nodes.value.length === 0) {
+          selectedDataTypes.push(node.data.dataType);
+        }
+      });
+      this.selectedDataTypes()(selectedDataTypes);
     }
   }
 }

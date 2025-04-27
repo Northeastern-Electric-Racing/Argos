@@ -22,34 +22,63 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
-  valuesSubject = input.required<BehaviorSubject<GraphInfo | undefined>>();
+  valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
-  data!: Map<number, Map<number, number>>;
+  // label -> x,y
+  data!: Map<string, Map<number, number>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
   timeRangeMs = 120000;
 
   updateChart = () => {
-    const label = this.valuesSubject().value?.label ?? 'No Label';
-    this.chart.updateSeries(
-      Array.from(this.data).map(([index, map]) => ({
-        name: label + ' ' + index,
-        data: Array.from(map)
-      }))
+    const series = Array.from(this.data).map(([key, map], index) => ({
+      name: key,
+      data: Array.from(map),
+      yaxis: index // Assign each series to a y-axis index
+    }));
+
+    const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
+      title: {
+        text: key.replace('0', ''),
+        style: {
+          color: 'grey',
+          fontSize: '20px',
+          fontWeight: 'bold'
+        }
+      },
+      labels: {
+        style: {
+          colors: '#fff'
+        }
+      },
+      opposite: index % 2 !== 0 // Alternate sides for each y-axis
+    }));
+
+    this.chart.updateSeries(series);
+
+    // Update y-axis configurations
+    this.chart.updateOptions(
+      {
+        yaxis: yaxisConfigs
+      },
+      false,
+      false
     );
 
     if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis,
-          range: this.timeRangeMs
-        }
-      });
+      this.chart.updateOptions(
+        {
+          xaxis: {
+            range: this.timeRangeMs
+          }
+        },
+        false,
+        false
+      );
     }
 
     if (this.limitRange()) {
@@ -64,10 +93,11 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
       let line: Map<number, number>;
-      if (!this.data.has(i)) {
-        line = this.data.set(i, new Map<number, number>()).get(i)!;
+      const label = (info?.label ?? '') + ' ' + i;
+      if (!this.data.has(label)) {
+        line = this.data.set(label, new Map<number, number>()).get(label)!;
       } else {
-        line = this.data.get(i)!;
+        line = this.data.get(label)!;
       }
       value.forEach((val) => {
         if (!line.has(val.x)) {
@@ -86,13 +116,12 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.data = new Map();
-    this.valuesSubject().subscribe(this.graphInfoCallback);
+    this.valuesSubject().forEach((graphInfo) => {
+      graphInfo.subscribe(this.graphInfoCallback);
+    });
 
     const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) {
-      console.log('Something went very wrong');
-      return;
-    }
+    if (!chartContainer) return;
 
     this.options = {
       chart: {
@@ -114,7 +143,8 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         enabled: false
       },
       stroke: {
-        curve: 'straight'
+        curve: 'straight',
+        width: 3
       },
       markers: {
         size: 0
@@ -138,6 +168,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
           }
         }
       },
+      // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
       yaxis: {
         labels: {
           style: {
@@ -162,17 +193,16 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         }
       },
       grid: {
-        show: false
+        show: true
       }
     };
 
     // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
       this.chart = new ApexCharts(chartContainer, {
-        series: [{ data: [] }],
+        series: [],
         ...this.options
       });
-
       this.chart.render();
       this.updateChart();
     }, 0);
@@ -182,7 +212,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     this.data = new Map();
     this.isSliding = false;
 
-    //set range to undefined
+    //set range to undefined... why?
     this.chart.updateOptions({
       ...this.options,
       xaxis: {
@@ -191,6 +221,8 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       }
     });
 
-    this.valuesSubject().subscribe(this.graphInfoCallback);
+    this.valuesSubject().forEach((graphInfo) => {
+      graphInfo.subscribe(this.graphInfoCallback);
+    });
   }
 }
