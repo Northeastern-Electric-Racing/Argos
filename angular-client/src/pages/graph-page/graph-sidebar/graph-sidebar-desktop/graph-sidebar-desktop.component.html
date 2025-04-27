@@ -1,8 +1,13 @@
 <div class="background">
+  <argos-button
+    [onClick]="clearSelections"
+    label="Clear Topics"
+    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+  />
   <p-tree
     [value]="treeNodes"
     styleClass="w-full md:w-[30rem]"
-    (onNodeSelect)="nodeSelect()"
+    (onNodeSelect)="nodeSelect($event)"
     (onNodeUnselect)="onNodeUnselect($event)"
     [(selection)]="selectedNodes"
     [filter]="true"

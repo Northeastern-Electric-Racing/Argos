@@ -7,7 +7,7 @@ import { dataTypeNamePipe } from 'src/utils/dataTypes.utils';
 import { TreeNode } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
-import { TreeNodeUnSelectEvent } from 'primeng/tree';
+import { TreeNodeSelectEvent, TreeNodeUnSelectEvent } from 'primeng/tree';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -67,11 +67,26 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     this.filterFormSubsription.unsubscribe();
   }
 
+  clearSelections = () => {
+    this.selectedNodes = [];
+    this.treeNodes.forEach((node) => {
+      node.expanded = false;
+    });
+    this.selectedDataTypes()([]);
+  };
+
   transformDataTypeName(dataTypeName: string) {
     return dataTypeNamePipe(dataTypeName);
   }
 
-  nodeSelect() {
+  nodeSelect(event: TreeNodeSelectEvent) {
+    if ((event.node.children?.length ?? 0) !== 0) {
+      console.log('Node selected from the sidebar: ', event.node);
+      this.selectedNodes = this.selectedNodes?.filter((node) => node.label !== event.node.label);
+      event.node.expanded = !event.node.expanded;
+      return;
+    }
+
     if (this.selectedNodes && this.selectedNodes.length > 0) {
       console.log('Node selected from the sidebar: ', this.selectedNodes);
       const selectedDataTypes: DataType[] = [];
@@ -88,7 +103,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
       }
       // Optionally, clear selection after handling
       // this.selectedNodes = undefined;
-      this.treeNodes = [...this.treeNodes];
     }
   }
 
