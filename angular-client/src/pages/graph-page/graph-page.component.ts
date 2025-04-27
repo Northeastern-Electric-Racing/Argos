@@ -152,14 +152,8 @@ export default class GraphPageComponent implements OnInit {
       if (graphInfo !== undefined) {
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
-            /* Take only data from the last minute, fucking why? I WANT MORE DATA MORRRREEEEEEEEEEE */
             const now = new Date();
             const lastMinute = now.getTime() - 60000;
-            // get the fucking GraphInfo for the current topic
-            // ok right now... I'm thinking to myself (WHAT THE FUCK IS THE POINT OF HAVING A FUCKING 2-d ARRAY)
-            // well unfortunately we try to track multiple values accross time, keeping track of all their points...
-            // I for one think this is stupid, why the fuck would you do that, if instead you can just fucking add points on too
-            // the graph, and let it take care of that. FUCK THIS SHIT ITS SO FUCKING STUPID.
             const storedValues = graphInfo.data;
             value.values.forEach((val, i) => {
               const graphData = { x: +value.time, y: +val, label: dataType.name };
@@ -185,22 +179,12 @@ export default class GraphPageComponent implements OnInit {
     });
   };
 
-  /**
-   * Pull historical data for *every* selected datatype (run-replay or fault-replay)
-   * and push the transformed points into the *matching* BehaviorSubject that has
-   * the same .label (datatype name).  Mirrors the strategy used by
-   * processRealTimeDataTypeSelection, so everything stays consistent.
-   */
   private processHistoricalDataTypeSelection = (dataTypes: DataType[]) => {
-    // global “loading” flags
     this.selectedDataTypeValuesIsLoading = true;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
 
-    let pending = dataTypes.length; // we’ll clear loading only after the last query returns
-
     dataTypes.forEach((dataType) => {
-      /* -------- choose the right query fn for run-replay vs fault-replay -------- */
       console.log('Selected fault', this.selectedFault);
       const queryFn =
         this.run !== undefined
@@ -212,10 +196,8 @@ export default class GraphPageComponent implements OnInit {
                 after: 1
               });
 
-      /* -------- fire the query through APIService ------------------------------ */
       const dataQueryResponse = this.serverService.query<DataValue[]>(queryFn);
 
-      /* ---- error flag handling (same as before) ------------------------------- */
       dataQueryResponse.error.subscribe((error) => {
         if (error) {
           this.selectedDataTypeValuesIsError = true;
@@ -259,12 +241,6 @@ export default class GraphPageComponent implements OnInit {
           // If you still have a single-value subject called currentValue, keep this:
           // this.currentValue?.next(data[data.length - 1]);
         }
-
-        /* ---------- global loading flag cleared after final response ---------- */
-        pending--;
-        if (pending === 0) {
-          this.selectedDataTypeValuesIsLoading = false;
-        }
       });
     });
   };
@@ -294,12 +270,24 @@ export default class GraphPageComponent implements OnInit {
   };
 
   clearDataType: () => void = () => {
+    // Unsubscribe from all previous subscriptions
     this.subscriptions.forEach((sub) => {
       if (sub) {
         sub.unsubscribe();
       }
     });
-    this.selectedDataType.next([]);
+    this.subscriptions = [];
+
+    // Reset all subjects and data
+    this.selectedDataType.next(undefined);
+    this.selectedDataTypeValuesSubject.forEach((subject) => {
+      subject.next({ label: '', data: [] });
+      subject.complete();
+    });
     this.selectedDataTypeValuesSubject = [];
+    this.currentValues = [];
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
   };
 }

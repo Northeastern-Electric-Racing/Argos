@@ -101,8 +101,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
       if (selectedDataTypes.length > 0) {
         this.selectedDataTypes()(selectedDataTypes);
       }
-      // Optionally, clear selection after handling
-      // this.selectedNodes = undefined;
     }
   }
 
