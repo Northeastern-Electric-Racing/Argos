@@ -42,9 +42,11 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
 
     const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
       title: {
-        text: key,
+        text: key.replace('0', ''),
         style: {
-          color: '#fff'
+          color: 'grey',
+          fontSize: '20px',
+          fontWeight: 'bold'
         }
       },
       labels: {
