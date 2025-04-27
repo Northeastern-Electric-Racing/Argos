@@ -34,34 +34,51 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   timeRangeMs = 120000;
 
   updateChart = () => {
-    // TODO: FUCK UPDATING SERIES
-    // we create a fucking new series every fucking time, the logic here however, will create
-    // multiple data points, from our data map.... this is the fucking meat of the shit.
-    this.chart.updateSeries(
-      // so instead of looping through "data", which is not fucking data
-      // we will loop through each and create new data points, y-axis shit is seperate... but stil based
-      // on the fucking label / name
-      Array.from(this.data).map(([string, map]) => ({
-        name: string,
-        data: Array.from(map)
-      }))
+    const series = Array.from(this.data).map(([key, map], index) => ({
+      name: key,
+      data: Array.from(map),
+      yaxis: index // Assign each series to a y-axis index
+    }));
+
+    const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
+      title: {
+        text: key,
+        style: {
+          color: '#fff'
+        }
+      },
+      labels: {
+        style: {
+          colors: '#fff'
+        }
+      },
+      opposite: index % 2 !== 0 // Alternate sides for each y-axis
+    }));
+
+    this.chart.updateSeries(series);
+
+    // Update y-axis configurations
+    this.chart.updateOptions(
+      {
+        yaxis: yaxisConfigs
+      },
+      false,
+      false
     );
 
-    //
     if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
-
-      // again whyyyy would we ever decoupled the options from the udpating.. whagerver
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis,
-          range: this.timeRangeMs
-        }
-      });
+      this.chart.updateOptions(
+        {
+          xaxis: {
+            range: this.timeRangeMs
+          }
+        },
+        false,
+        false
+      );
     }
 
-    // weird but OK
     if (this.limitRange()) {
       setTimeout(() => {
         this.updateChart();
@@ -97,16 +114,12 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.data = new Map();
-    // pipes the valuesSubject into graphInfoCallBack, WHICH IS A FUCKING GRAPH INFO WITH A LABEL
     this.valuesSubject().forEach((graphInfo) => {
       graphInfo.subscribe(this.graphInfoCallback);
     });
 
     const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) {
-      console.log('Something went very wrong');
-      return;
-    }
+    if (!chartContainer) return;
 
     this.options = {
       chart: {
@@ -185,10 +198,9 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     setTimeout(() => {
       this.chart = new ApexCharts(chartContainer, {
-        series: [{ data: [] }],
+        series: [],
         ...this.options
       });
-
       this.chart.render();
       this.updateChart();
     }, 0);
