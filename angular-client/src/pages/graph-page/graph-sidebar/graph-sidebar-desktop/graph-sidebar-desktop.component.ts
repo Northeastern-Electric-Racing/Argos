@@ -81,14 +81,12 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
 
   nodeSelect(event: TreeNodeSelectEvent) {
     if ((event.node.children?.length ?? 0) !== 0) {
-      console.log('Node selected from the sidebar: ', event.node);
       this.selectedNodes = this.selectedNodes?.filter((node) => node.label !== event.node.label);
       event.node.expanded = !event.node.expanded;
       return;
     }
 
     if (this.selectedNodes && this.selectedNodes.length > 0) {
-      console.log('Node selected from the sidebar: ', this.selectedNodes);
       const selectedDataTypes: DataType[] = [];
       this.selectedNodes.forEach((node) => {
         if (node.data && node.data.nodes.value.length === 0) {

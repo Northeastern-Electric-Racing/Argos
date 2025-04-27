@@ -137,7 +137,6 @@ export default class GraphPageComponent implements OnInit {
     });
     dataTypesQueryResponse.data.subscribe((data) => {
       if (data) {
-        console.log('Data types:', data);
         this.dataTypes = data;
       }
     });
@@ -185,7 +184,6 @@ export default class GraphPageComponent implements OnInit {
     this.selectedDataTypeValuesError = undefined;
 
     dataTypes.forEach((dataType) => {
-      console.log('Selected fault', this.selectedFault);
       const queryFn =
         this.run !== undefined
           ? () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id)
@@ -206,12 +204,11 @@ export default class GraphPageComponent implements OnInit {
       });
 
       dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-        console.log('Loading data %s, for dataType, %s', isLoading, dataType.name);
+        this.selectedDataTypeValuesIsLoading = isLoading;
       });
 
       /* ---- data handler ------------------------------------------------------- */
       dataQueryResponse.data.subscribe((data) => {
-        console.log(data);
         if (data) {
           /* ---------- reshape → GraphData[][] (unchanged logic) ---------------- */
           const graphData: GraphData[][] = [];
@@ -250,7 +247,6 @@ export default class GraphPageComponent implements OnInit {
    * @param dataType The data type to set.
    */
   setSelectedDataTypes = (dataTypes: DataType[]) => {
-    console.log('Graph-page Selected data types:', dataTypes);
     this.clearDataType();
     this.selectedDataType.next(dataTypes);
 

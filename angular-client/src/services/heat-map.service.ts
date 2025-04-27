@@ -34,7 +34,6 @@ export class HeatMapService {
       this.currentViewMap.set(segment, new BehaviorSubject(view));
     }
     this.currentViewMap.get(segment)?.next(view);
-    console.log(this.currentViewMap);
   };
 
   getCurrentView = (segment: Segment) => {
