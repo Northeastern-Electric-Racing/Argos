@@ -32,15 +32,6 @@
   color: #000 !important;
 }
 
-::ng-deep .small-grey-select {
-  font-size: 0.8rem; /* Smaller font size */
-  height: 30px; /* Reduced height */
-  background-color: grey !important; /* Grey background */
-  color: #d5d5d5 !important; /* Ensure text remains black */
-  border: none; /* Remove default border */
-  outline: none; /* Remove any outline */
-}
-
 ::ng-deep .p-select-label.p-placeholder {
   --p-select-placeholder-color: white !important;
 }
@@ -56,4 +47,8 @@
 ::ng-deep .small-grey-select .p-dropdown-panel {
   background-color: #e0e0e0 !important;
   color: #000 !important;
+}
+
+::ng-deep .p-select-option {
+  font-size: 0.8rem;
 }

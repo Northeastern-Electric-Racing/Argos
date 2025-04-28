@@ -64,7 +64,12 @@ export class AppNavBarComponent implements OnInit {
   };
 
   openRunForm = () => {
-    this.ref = this.dialogService.open(RunFormComponent, {});
+    this.ref = this.dialogService.open(RunFormComponent, {
+      width: '550px',
+      header: 'Edit Run',
+      closable: true,
+      closeAriaLabel: 'Close'
+    });
   };
 
   navItems: NavItem[] = [

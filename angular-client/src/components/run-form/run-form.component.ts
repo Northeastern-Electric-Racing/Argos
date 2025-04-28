@@ -20,7 +20,7 @@ export class RunFormComponent implements OnInit {
   private messageService = inject(MessageService);
   private ref = inject(DynamicDialogRef);
   templateReady = false;
-  selectRunId: number | undefined = undefined;
+  selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
   runsLoaded = false;
 
@@ -36,9 +36,8 @@ export class RunFormComponent implements OnInit {
     label: 'Location Name',
     type: 'text',
     placeholder: 'Enter Location Name',
-    required: true,
-    minLength: 3,
     maxLength: 50,
+    required: false,
     disabled: false
   };
 
@@ -47,17 +46,8 @@ export class RunFormComponent implements OnInit {
     label: 'Driver Name',
     type: 'text',
     placeholder: 'Enter Driver Name',
-    required: true,
+    required: false,
     maxLength: 50,
-    disabled: false
-  };
-
-  time: DynamicFormField = {
-    name: 'time',
-    label: 'Time',
-    type: 'date',
-    placeholder: 'Enter Time',
-    required: true,
     disabled: false
   };
 
@@ -66,7 +56,7 @@ export class RunFormComponent implements OnInit {
     label: 'Notes',
     type: 'text',
     placeholder: 'Enter Notes',
-    required: true,
+    required: false,
     disabled: false
   };
 
@@ -74,12 +64,12 @@ export class RunFormComponent implements OnInit {
 
   constructor() {
     this.ref.onClose.subscribe((form: FormGroup) => {
-      if (this.selectRunId === undefined) {
+      if (this.selectedRun === undefined) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
         return;
       }
       updateRun(
-        this.selectRunId,
+        this.selectedRun.id,
         form.controls['driverName'].value,
         form.controls['locationName'].value,
         form.controls['notes'].value
@@ -119,12 +109,12 @@ export class RunFormComponent implements OnInit {
         if (data.length > 0) {
           const latestRun = data[data.length - 1]; // Get the last element as latest run
           this.updateFormFields(latestRun);
-          this.selectRunId = latestRun.id;
+          this.selectedRun = latestRun;
 
           // Update selector config with default value
           this.selectorConfig = {
             ...this.selectorConfig,
-            defaultValue: `Run #${latestRun.id}`
+            defaultValue: this.formatRunInfo(latestRun)
           };
         }
       }
@@ -138,7 +128,7 @@ export class RunFormComponent implements OnInit {
     // Add options for each run
     this.allRuns.forEach((run) => {
       this.selectorOptions.push({
-        name: `Run #${run.id}`,
+        name: this.formatRunInfo(run),
         function: () => {
           this.loadRunById(run.id);
         }
@@ -149,7 +139,7 @@ export class RunFormComponent implements OnInit {
     this.selectorConfig = {
       options: this.selectorOptions,
       placeholder: 'Select Run',
-      defaultValue: this.selectRunId ? `Run #${this.selectRunId}` : undefined
+      defaultValue: this.selectedRun ? this.formatRunInfo(this.selectedRun) : undefined
     };
   };
 
@@ -158,12 +148,12 @@ export class RunFormComponent implements OnInit {
     const existingRun = this.allRuns.find((run) => run.id === runId);
     if (existingRun) {
       this.updateFormFields(existingRun);
-      this.selectRunId = existingRun.id;
+      this.selectedRun = existingRun;
 
       // Update selector config with new default value
       this.selectorConfig = {
         ...this.selectorConfig,
-        defaultValue: `Run #${existingRun.id}`
+        defaultValue: this.formatRunInfo(existingRun)
       };
       return;
     }
@@ -186,12 +176,12 @@ export class RunFormComponent implements OnInit {
     runQueryResponse.data.subscribe((run) => {
       if (run) {
         this.updateFormFields(run);
-        this.selectRunId = run.id;
+        this.selectedRun = run;
 
         // Update selector config with new default value
         this.selectorConfig = {
           ...this.selectorConfig,
-          defaultValue: `Run #${run.id}`
+          defaultValue: this.formatRunInfo(run)
         };
       }
     });
@@ -202,5 +192,10 @@ export class RunFormComponent implements OnInit {
     this.driverName.optionValue = run.driverName;
     this.notes.optionValue = run.notes;
     this.inputFields = [this.locationName, this.driverName, this.notes];
+  };
+
+  formatRunInfo = (run: Run) => {
+    const date = new Date(run.time);
+    return `Run #${run.id} - ${date.toLocaleTimeString()}, ${date.toLocaleDateString()}`;
   };
 }
