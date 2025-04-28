@@ -115,7 +115,9 @@ export class CellByCellHeatMapComponent implements OnInit {
           forSegment: this.currentSegment()
         },
         width: '40%',
-        draggable: true
+        draggable: true,
+        closable: true,
+        closeAriaLabel: 'Close'
       });
     }
   };
