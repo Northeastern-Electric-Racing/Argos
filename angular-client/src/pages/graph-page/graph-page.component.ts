@@ -31,6 +31,11 @@ export default class GraphPageComponent implements OnInit {
 
   allRuns: Run[] = [];
   runsIsLoading = true;
+  showSideBar = true;
+
+  toggleSideBar = () => {
+    this.showSideBar = !this.showSideBar;
+  };
 
   previousDataType?: DataType;
 
@@ -109,16 +114,12 @@ export default class GraphPageComponent implements OnInit {
 
   // get real time ready
   onSetRealtime = () => {
-    const currentRunId = this.storage.getCurrentRunId().value;
-    if (currentRunId) {
-      this.run = this.allRuns.find((run) => run.id === currentRunId);
-      this.realTime = true;
-      this.selectedDataTypeValuesSubject = [];
-      this.selectedDataTypeValuesIsLoading = false;
-      this.selectedDataTypeValuesIsError = false;
-      this.selectedDataTypeValuesError = undefined;
-      this.rightHeader = 'Real Time';
-    }
+    this.queryDataTypes();
+    this.run = undefined;
+
+    this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
+    if (this.onFaultPage) this.initFaultPage();
+    else this.initGeneralPage();
   };
 
   /**

@@ -210,7 +210,8 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       legend: {
         labels: {
           colors: '#fff'
-        }
+        },
+        fontSize: '15px'
       }
     };
 
