@@ -23,7 +23,8 @@
             [onRunSelected]="onRunSelected"
             [onClearDataType]="clearDataType"
             [onSetRealTime]="onSetRealtime"
-            [run]="this.run"
+            [historicalOn]="this.run !== undefined || this.minutesToQuery !== undefined"
+            [selectorConfig]="this.queryMinutesConfig"
           />
         }
       </hstack>
