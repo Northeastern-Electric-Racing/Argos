@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const prismaSchemaPath = "./src/local-prisma/schema.prisma"; // Path to schema.prisma
-const migrationsDir = "./src/local-prisma/migrations/"; // Path to migrations directory
+const prismaSchemaPath = "./src/prisma/local-prisma/schema.prisma"; // Path to schema.prisma
+const migrationsDir = "./src/prisma/local-prisma/migrations/"; // Path to migrations directory
 
 // Helper to parse schema.prisma and find fields that are required
 function parsePrismaSchema() {
@@ -34,8 +34,7 @@ function parsePrismaSchema() {
   return models;
 }
 
-// Modify the latest migration to add NOT NULL constraints for required array fields
-function modifyLatestMigration(models) {
+function getMigrationFile() {
   const migrationDirs = fs.readdirSync(migrationsDir).filter((file) => {
     const fullPath = path.join(migrationsDir, file);
     return fs.statSync(fullPath).isDirectory();
@@ -62,6 +61,12 @@ function modifyLatestMigration(models) {
 
   console.log(`Modifying migration: ${migrationFile}`);
   let migrationSQL = fs.readFileSync(migrationFile, "utf8");
+  return { migrationSQL, migrationFile };
+}
+
+// Modify the latest migration to add NOT NULL constraints for required array fields
+function modifyLatestMigration(models) {
+  let { migrationSQL, migrationFile } = getMigrationFile();
 
   for (const [modelName, fields] of Object.entries(models)) {
     fields
@@ -92,12 +97,21 @@ function modifyLatestMigration(models) {
   }
 
   fs.writeFileSync(migrationFile, migrationSQL, "utf8");
-  console.log("Migration modified successfully.");
+}
+
+function addAlterSequence() {
+  let { migrationFile, migrationSQL } = getMigrationFile();
+
+  migrationSQL +=
+    "DO $$ BEGIN EXECUTE format('ALTER SEQUENCE %s CACHE 1', pg_get_serial_sequence('run', 'runId')); END $$;;";
+  fs.writeFileSync(migrationFile, migrationSQL, "utf8");
 }
 
 function main() {
   const models = parsePrismaSchema();
   modifyLatestMigration(models);
+  addAlterSequence();
+  console.log("Migration modified successfully.");
 }
 
 main();

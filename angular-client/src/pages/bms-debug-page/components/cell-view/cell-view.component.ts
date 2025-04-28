@@ -1,17 +1,21 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, input } from '@angular/core';
+import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { CellReading } from 'src/services/cell.service';
 import { HeatMapService } from 'src/services/heat-map.service';
-import { chipToString } from 'src/utils/bms.utils';
+import { chipToString, Segment } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css'
 })
-export class CellViewComponent implements OnInit {
+export class CellViewComponent {
   private heatMapService = inject(HeatMapService);
   cellViewData: CellReading | undefined = undefined;
   screenWidth = window.innerWidth;
+  forSegment = input.required<Segment>();
+  segment: Segment;
+  public config = inject(DynamicDialogConfig);
 
   // Update view width
   @HostListener('window:resize', ['$event'])
@@ -19,11 +23,25 @@ export class CellViewComponent implements OnInit {
     this.screenWidth = window.innerWidth;
   }
 
-  ngOnInit(): void {
-    this.heatMapService.getSelectedCell().subscribe((data) => {
+  constructor() {
+    this.segment = this.config.data.forSegment;
+    this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
       this.cellViewData = data;
     });
   }
+
+  // ngOnInit(): void {
+  //   this.segment = this.forSegment();
+  //   this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
+  //     console.log('data', data);
+  //     this.cellViewData = data;
+  //   });
+  // }
+
+  getTitle = (): string => {
+    const title = `Seg ${this.segment + 1}: Cell View`;
+    return title;
+  };
 
   getUpperRightTitle = (): string => {
     const smallChipLabel = this.screenWidth < 1200;

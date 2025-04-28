@@ -27,7 +27,7 @@ services:
     environment:
       POSTGRES_PASSWORD: docker
     ports:
-      - "8000:5432"
+      - "8002:5432"
     volumes:
       - charybdis_local_data:/var/lib/postgresql/data
 

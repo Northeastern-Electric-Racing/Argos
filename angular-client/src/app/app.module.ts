@@ -145,7 +145,10 @@ import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-c
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
-
+import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { PasswordModule } from 'primeng/password';
 @NgModule({
   declarations: [
     AppContextComponent,
@@ -263,7 +266,8 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
     ChipFaultsComponent,
     CellTileComponent,
     FormTemplateComponent,
-    RunFormComponent
+    RunFormComponent,
+    CarCommandComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [
@@ -294,7 +298,10 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
     SelectModule,
     AccordionModule,
     TableModule,
-    TreeModule
+    TreeModule,
+    InputTextModule,
+    InputNumberModule,
+    PasswordModule
   ],
   providers: [
     DialogService,

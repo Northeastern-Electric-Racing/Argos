@@ -1,15 +1,22 @@
 <div class="background">
+  <argos-button
+    [onClick]="clearSelections"
+    label="Clear Topics"
+    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+  />
   <p-tree
     [value]="treeNodes"
     styleClass="w-full md:w-[30rem]"
-    selectionMode="single"
-    (onNodeSelect)="nodeSelect()"
-    [(selection)]="selectedNode"
+    (onNodeSelect)="nodeSelect($event)"
+    (onNodeUnselect)="onNodeUnselect($event)"
+    [(selection)]="selectedNodes"
     [filter]="true"
     filterPlaceholder="Select Data Type"
     styleClass="w-full"
     [autofocus]="true"
     [style]="{ height: '80vh', overflow: 'auto' }"
+    [metaKeySelection]="false"
+    selectionMode="multiple"
   >
     <ng-template let-node pTemplate="default">
       <div class="tree-node-container">

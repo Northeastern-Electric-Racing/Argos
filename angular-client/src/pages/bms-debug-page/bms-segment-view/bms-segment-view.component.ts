@@ -31,7 +31,6 @@ export class BmsSegmentViewComponent implements OnInit {
       this.route.paramMap.subscribe((params) => {
         const possibleSegId = Number(params.get('id')) - 1;
         allSegments.indexOf(possibleSegId) !== -1 ? (this.segmentId = possibleSegId) : this.router.navigate(['bms']);
-        console.log('Segment ID:', this.segmentId);
       });
     } else {
       this.router.navigate(['bms']);

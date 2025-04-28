@@ -8,7 +8,7 @@
     <div class="container" @toggleSidebar>
       @for (node of nodesWithVisibilityToggle | async; track node) {
         <div class="subcontainer" (click)="$event.stopPropagation()">
-          <node-display [node]="node" searchFilter="" [isDesktop]="false" [selectDataType]="selectDataType" />
+          <node-display [node]="node" searchFilter="" [isDesktop]="false" [selectDataTypes]="this.selectedDataTypes" />
         </div>
       }
     </div>

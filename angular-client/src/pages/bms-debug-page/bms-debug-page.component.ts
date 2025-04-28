@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { allSegments } from 'src/utils/bms.utils';
 
 @Component({
@@ -6,7 +6,7 @@ import { allSegments } from 'src/utils/bms.utils';
   templateUrl: './bms-debug-page.component.html',
   styleUrl: './bms-debug-page.component.css'
 })
-export class BmsDebugPageComponent implements OnInit {
+export class BmsDebugPageComponent {
   time = new Date();
   newRunIsLoading = false;
   mobileThreshold = 768;
@@ -15,10 +15,6 @@ export class BmsDebugPageComponent implements OnInit {
   segments = allSegments;
 
   constructor() {}
-
-  ngOnInit() {
-    console.log('BMS Debug Page');
-  }
 
   @HostListener('window:resize', ['$event'])
   onResize() {

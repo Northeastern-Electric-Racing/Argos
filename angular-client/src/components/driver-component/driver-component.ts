@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { getLatestRun } from 'src/api/run.api';
+import { DataTypeEnum } from 'src/data-type.enum';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { Run } from 'src/utils/types.utils';
@@ -15,8 +16,9 @@ export class DriverComponent implements OnInit {
   apiService = inject(APIService);
 
   ngOnInit() {
-    this.updateDriverName();
-    console.log(this.driver);
+    this.storage.get(DataTypeEnum.DRIVER).subscribe((value) => {
+      [this.driver] = value.values || ['No Driver'];
+    });
   }
 
   updateDriverName() {

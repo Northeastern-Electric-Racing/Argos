@@ -1,17 +1,16 @@
 import { prisma as cloudPrisma } from "../prisma/cloud-prisma/prisma";
-import { LocalDataType } from "../types/local.types";
-import { CloudData, CloudDataType, CloudRun } from "../types/cloud.types";
-import { CsvDataRow, CsvDataTypeRow, CsvRunRow } from "../types/csv.types";
-import { readCsvFile } from "../utils/csv.utils";
-import { csvToCloudData } from "../transformers/csv.transformer";
 import { getMostRecentDownloadFolderPath } from "./audit.service";
-import { processCsvInBatches } from "../utils/csv.utils";
 import { CouldNotConnectToCloudDB } from "../errors/upload.errors";
-import { storagePaths } from "../storage-paths";
+import { getDataCSVPath, storagePaths } from "../storage-paths";
+import { execSync } from "child_process";
+import { processCsvInBatches } from "../utils/csv.utils";
+import { LocalDataType } from "../types/local.types";
+import { CsvDataTypeRow } from "../types/csv.types";
+import { CloudDataType } from "../types/cloud.types";
 
 const csvNames = {
   run: (path: string) => `${path}/run.csv`,
-  data: (path: string, runId: number) => `${path}/data/run-${runId}-data.csv`,
+  data: (path: string) => `${path}/data/data.csv`,
   data_type: (path: string) => `${path}/data_type.csv`,
 };
 
@@ -24,9 +23,8 @@ async function checkDbConnection() {
 }
 
 export async function uploadToCloud(
-  dataBatchSize: number,
-  dataTypeBatchSize: number,
-  dumpFolderPaths: string[] | undefined
+  dumpFolderPaths: string[] | undefined,
+  dataTypeBatchSize: number
 ) {
   if (!dumpFolderPaths) {
     dumpFolderPaths = [await getMostRecentDownloadFolderPath()];
@@ -40,7 +38,7 @@ export async function uploadToCloud(
     console.info("Processing data types...");
     await processDataType(dumpFolderPath, dataTypeBatchSize);
     console.info("Startin Run uploads...");
-    await processRunsWithData(dumpFolderPath, dataBatchSize);
+    await processRunsWithData(dumpFolderPath);
 
     console.log(
       `CSV to Cloud transfer complete for ${dumpFolderPath}, time taken: ${
@@ -80,92 +78,72 @@ export async function processDataType(
     },
     batchSize
   );
+  console.log("Completed processing data types.");
 }
 
-export async function processRunsWithData(
-  dumpFolderPath: string,
-  dataBatchSize: number
-) {
+export async function processRunsWithData(dumpFolderPath: string) {
   const runsCsvPath = csvNames.run(dumpFolderPath);
-  const runs: CsvRunRow[] = await readCsvFile<CsvRunRow>(runsCsvPath);
 
-  for (const run of runs) {
-    let cloudRun: CloudRun = {
-      id: run.uuid,
-      runId: Number(run.runId),
-      driverName: run.driverName,
-      notes: run.notes,
-      time: new Date(run.time),
-    };
-
-    await cloudPrisma.run.upsert({
-      where: {
-        unique_run_time: {
-          runId: cloudRun.runId,
-          time: cloudRun.time,
-        },
-      },
-      create: cloudRun,
-      update: cloudRun,
-    });
-
-    await processCsvDataFile(
-      cloudRun.id,
-      cloudRun.runId,
-      dumpFolderPath,
-      dataBatchSize
-    );
-  }
-}
-
-export async function processCsvDataFile(
-  uuid: string,
-  runId: number,
-  dumpFolderPath: string,
-  batchSize: number
-): Promise<number> {
-  let dataForRun = 0;
-  let csvDataPath = csvNames.data(dumpFolderPath, runId);
-  let startTime = new Date();
-  await processCsvInBatches<CsvDataRow>(
-    csvDataPath,
-    async (batch) => {
-      let startTime = new Date();
-      const cloudData: CloudData[] = batch.map((localData: CsvDataRow) =>
-        csvToCloudData(localData, uuid)
-      );
-
-      let numOfData = cloudData.length;
-      await cloudPrisma.data.createMany({
-        data: cloudData.map((data) => {
-          // JS Dates only work with maximum precision of miliseconds, 
-          // however psql / prisma doesnt care about that as long as its in iso form, 
-          // so manually add the microseconds into the date string
-          const miliseconds = Number(data.time / 1000n);
-          const date = new Date(miliseconds);
-          const formattedISODate = `${date.toISOString().split("Z")[0]}${Number(
-            data.time % 1000n
-          )}Z`;
-          return { ...data, time: formattedISODate };
-        }),
-        skipDuplicates: true,
-      });
-
-      dataForRun += numOfData;
-
-      console.log(
-        `Inserted ${numOfData} data entries, time taken: ${
-          new Date().getTime() - startTime.getTime()
-        }ms`
-      );
-    },
-    batchSize
+  console.log("Processing Runs...");
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "\\copy run(\\"driverName\\", \\"locationName\\",\\"notes\\",\\"time\\",\\"id\\") FROM '${runsCsvPath}' CSV HEADER;"`
   );
 
-  console.log(
-    `Total data uploaded for RUN ${runId}: ${dataForRun}, time taken: ${
-      new Date().getTime() - startTime.getTime()
-    }ms`
+  console.log("Processed runs");
+
+  console.log("Begin Transaction");
+
+  execSync(`psql ${process.env.CLOUD_DATABASE_URL} -c "BEGIN;"`);
+
+  console.log("Drop index");
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "ALTER TABLE data DROP CONSTRAINT IF EXISTS \\"data_pkey\\";"`
   );
-  return dataForRun;
+
+  console.log("Processing data, this may take a while...");
+  const startTime = Date.now();
+
+  execSync(
+    `psql ${
+      process.env.CLOUD_DATABASE_URL
+    } -c "\\copy data(\\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\") FROM '${getDataCSVPath(
+      dumpFolderPath
+    )}' CSV HEADER;"`
+  );
+
+  console.log(`Data copying took: ${Date.now() - startTime}ms`);
+  const newStartTime = Date.now();
+  console.log(`Removing Duplicates`);
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "CREATE INDEX IF NOT EXISTS idx_time_data_type_name ON data (\\"time\\", \\"dataTypeName\\");"`
+  );
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "WITH duplicates AS (
+     SELECT ctid FROM (
+       SELECT ctid, ROW_NUMBER() OVER (PARTITION BY \\"time\\", \\"dataTypeName\\" ORDER BY ctid) AS rn
+       FROM data
+     ) sub WHERE rn > 1
+   )
+   DELETE FROM data WHERE ctid IN (SELECT ctid FROM duplicates);"`
+  );
+
+  console.log(`Removing Duplicates took ${Date.now() - newStartTime}ms`);
+  console.log(`Recreating Constraints`);
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "DROP INDEX IF EXISTS idx_time_data_type_name;"`
+  );
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "ALTER TABLE data ADD CONSTRAINT \\"data_pkey\\" PRIMARY KEY (\\"time\\",\\"dataTypeName\\");"`
+  );
+
+  console.log("Committing");
+
+  execSync(`psql ${process.env.CLOUD_DATABASE_URL} -c "COMMIT;"`);
+
+  console.log(`Completed Data transfer took ${Date.now() - startTime}ms`);
 }
