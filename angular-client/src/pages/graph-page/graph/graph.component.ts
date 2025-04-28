@@ -62,6 +62,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     // Update y-axis configurations
     this.chart.updateOptions(
       {
+        ...this.options,
         yaxis: yaxisConfigs
       },
       false,
@@ -72,6 +73,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       this.isSliding = true;
       this.chart.updateOptions(
         {
+          ...this.options,
           xaxis: {
             range: this.timeRangeMs
           }
