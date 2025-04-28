@@ -6,6 +6,7 @@ import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from '
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
 import { appRoutes } from 'src/app/app-routing.module';
+import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
@@ -31,6 +32,11 @@ export default class GraphPageComponent implements OnInit {
 
   allRuns: Run[] = [];
   runsIsLoading = true;
+  showSideBar = true;
+
+  toggleSideBar = () => {
+    this.showSideBar = !this.showSideBar;
+  };
 
   previousDataType?: DataType;
 
@@ -109,16 +115,13 @@ export default class GraphPageComponent implements OnInit {
 
   // get real time ready
   onSetRealtime = () => {
-    const currentRunId = this.storage.getCurrentRunId().value;
-    if (currentRunId) {
-      this.run = this.allRuns.find((run) => run.id === currentRunId);
-      this.realTime = true;
-      this.selectedDataTypeValuesSubject = [];
-      this.selectedDataTypeValuesIsLoading = false;
-      this.selectedDataTypeValuesIsError = false;
-      this.selectedDataTypeValuesError = undefined;
-      this.rightHeader = 'Real Time';
-    }
+    this.queryDataTypes();
+    this.run = undefined;
+    this.minutesToQuery = undefined;
+
+    this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
+    if (this.onFaultPage) this.initFaultPage();
+    else this.initGeneralPage();
   };
 
   /**
@@ -178,21 +181,96 @@ export default class GraphPageComponent implements OnInit {
     });
   };
 
+  minutesToQuery: number | undefined = undefined;
+
+  queryMinutesConfig: SelectorConfig = {
+    options: [
+      {
+        name: '1 minute',
+        function: () => {
+          this.minutesToQuery = 1;
+          this.realTime = false;
+        }
+      },
+      {
+        name: '2 minutes',
+        function: () => {
+          this.minutesToQuery = 2;
+          this.realTime = false;
+        }
+      },
+      {
+        name: '5 minutes',
+        function: () => {
+          this.minutesToQuery = 5;
+          this.realTime = false;
+        }
+      },
+      {
+        name: '10 minutes',
+        function: () => {
+          this.minutesToQuery = 10;
+          this.realTime = false;
+        }
+      },
+      {
+        name: '15 minutes',
+        function: () => {
+          this.minutesToQuery = 15;
+          this.realTime = false;
+        }
+      },
+      {
+        name: '30 minutes',
+        function: () => {
+          this.minutesToQuery = 30;
+          this.realTime = false;
+        }
+      },
+      {
+        name: '1 hour',
+        function: () => {
+          this.minutesToQuery = 60;
+          this.realTime = false;
+        }
+      }
+    ],
+    placeholder: 'Select Range'
+  };
+
+  setMinutesToQuery = (minutes: number) => {
+    this.clearDataType();
+    this.minutesToQuery = minutes;
+    this.selectedDataTypeValuesSubject.forEach((subject) => {
+      subject.next({ label: '', data: [] });
+    });
+  };
+
   private processHistoricalDataTypeSelection = (dataTypes: DataType[]) => {
     this.selectedDataTypeValuesIsLoading = true;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
-
     dataTypes.forEach((dataType) => {
-      const queryFn =
-        this.run !== undefined
-          ? () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id)
-          : () =>
-              getDataByDatatTypeNameAndTiming(dataType.name, {
-                time: this.selectedFault?.occurredAt.getTime() ?? 0,
-                before: 1,
-                after: 1
-              });
+      let queryFn: () => Promise<Response>;
+      if (this.run !== undefined) {
+        queryFn = () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id);
+      } else if (this.minutesToQuery !== undefined) {
+        const realMinutes = this.minutesToQuery;
+        queryFn = () =>
+          getDataByDatatTypeNameAndTiming(dataType.name, {
+            time: new Date().getTime(),
+            before: realMinutes,
+            after: 0
+          });
+      } else {
+        queryFn = () => {
+          return getDataByDatatTypeNameAndTiming(dataType.name, {
+            time: this.selectedFault?.lastSeen.getTime() ?? 0,
+            before: 2,
+            after: 2
+          });
+        };
+      }
 
       const dataQueryResponse = this.serverService.query<DataValue[]>(queryFn);
 
@@ -254,7 +332,7 @@ export default class GraphPageComponent implements OnInit {
 
     if (this.realTime) {
       this.processRealTimeDataTypeSelection(dataTypes);
-    } else if (this.run !== undefined || this.selectedFault !== undefined) {
+    } else if (this.run !== undefined || this.selectedFault !== undefined || this.minutesToQuery !== undefined) {
       this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
     } else {
       this.toastService.add({
