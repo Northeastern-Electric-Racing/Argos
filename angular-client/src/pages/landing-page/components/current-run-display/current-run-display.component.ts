@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 
 @Component({
@@ -9,6 +9,7 @@ import Storage from 'src/services/storage.service';
 export class CurrentRunDisplayComponent implements OnInit {
   private storage = inject(Storage);
   currentRun: number = 0;
+  navBarStyle = input<boolean>(false);
 
   ngOnInit() {
     this.storage.getCurrentRunId().subscribe((runId) => {

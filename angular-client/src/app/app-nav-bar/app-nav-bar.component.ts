@@ -1,8 +1,10 @@
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
+import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routing.module';
@@ -23,6 +25,10 @@ export class AppNavBarComponent implements OnInit {
   private messageService = inject(MessageService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
+  private dialogService = inject(DialogService);
+
+  ref: DynamicDialogRef | undefined;
+
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
   sidebarVisible = false;
@@ -54,6 +60,15 @@ export class AppNavBarComponent implements OnInit {
     });
     runsQueryResponse.error.subscribe((error) => {
       error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
+  };
+
+  openRunForm = () => {
+    this.ref = this.dialogService.open(RunFormComponent, {
+      width: '550px',
+      header: 'Edit Run',
+      closable: true,
+      closeAriaLabel: 'Close'
     });
   };
 

@@ -28,7 +28,13 @@
         </div>
       }
       @if (this.selectorConfig(); as selectorConfig) {
-        <select-dropdown [options]="selectorConfig.options" [placeholder]="selectorConfig.placeholder"></select-dropdown>
+        <div class="selector-container">
+          <select-dropdown
+            [options]="selectorConfig.options"
+            [placeholder]="selectorConfig.placeholder"
+            [defaultValue]="selectorConfig.defaultValue"
+          />
+        </div>
       }
       @if (this.topRightInfo(); as topRightInfo) {
         <div class="top-right-info">

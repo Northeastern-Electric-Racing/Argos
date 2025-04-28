@@ -1,6 +1,15 @@
 import { Component, input, OnChanges, OnInit } from '@angular/core';
 import ApexCharts from 'apexcharts';
-import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
+import {
+  ApexXAxis,
+  ApexDataLabels,
+  ApexChart,
+  ApexMarkers,
+  ApexGrid,
+  ApexTooltip,
+  ApexFill,
+  ApexLegend
+} from 'ng-apexcharts';
 import { BehaviorSubject } from 'rxjs';
 import { GraphInfo } from 'src/utils/types.utils';
 
@@ -14,6 +23,7 @@ type ChartOptions = {
   tooltip: ApexTooltip;
   fill: ApexFill;
   stroke: ApexStroke;
+  legend?: ApexLegend; // Add legend property to match the options object
 };
 
 @Component({
@@ -62,6 +72,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     // Update y-axis configurations
     this.chart.updateOptions(
       {
+        ...this.options,
         yaxis: yaxisConfigs
       },
       false,
@@ -72,6 +83,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       this.isSliding = true;
       this.chart.updateOptions(
         {
+          ...this.options,
           xaxis: {
             range: this.timeRangeMs
           }
@@ -194,6 +206,11 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       },
       grid: {
         show: true
+      },
+      legend: {
+        labels: {
+          colors: '#fff'
+        }
       }
     };
 

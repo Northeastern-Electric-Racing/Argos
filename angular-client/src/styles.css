@@ -38,6 +38,14 @@ body {
   --p-dialog-title-font-weight: bold;
 }
 
+.p-dialog {
+  background-color: #262626 !important;
+  color: white !important;
+  border-radius: 20px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
 .p-dialog-header {
   background-color: #262626 !important;
   color: white !important;

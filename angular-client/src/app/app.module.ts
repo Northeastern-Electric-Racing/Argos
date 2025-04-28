@@ -143,6 +143,8 @@ import { ChipDiagnosticsComponent } from 'src/pages/bms-debug-page/components/ch
 import { ChipFaultsComponent } from 'src/pages/bms-debug-page/components/chip-faults/chip-faults.component';
 import { CellTileComponent } from 'src/pages/bms-debug-page/components/cell-by-cell-heat-map/cell-tile/cell-tile.component';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
+import { FormTemplateComponent } from 'src/components/form-template/form-template.component';
+import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -264,6 +266,8 @@ import { PasswordModule } from 'primeng/password';
     ChipDiagnosticsComponent,
     ChipFaultsComponent,
     CellTileComponent,
+    FormTemplateComponent,
+    RunFormComponent,
     CarCommandComponent
   ],
   bootstrap: [AppContextComponent],
