@@ -38,7 +38,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
-  // label -> x,y
+  // label -> x,y (topic, data point)
   data!: Map<string, Map<number, number>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
