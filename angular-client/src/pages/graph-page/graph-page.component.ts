@@ -33,7 +33,7 @@ export default class GraphPageComponent implements OnInit {
   allRuns: Run[] = [];
   runsIsLoading = true;
   showSideBar = true;
-  showMultiYaxis = false;
+  showMultiYaxis = true;
 
   toggleMultiYaxis = () => {
     this.showMultiYaxis = !this.showMultiYaxis;
@@ -241,14 +241,6 @@ export default class GraphPageComponent implements OnInit {
       }
     ],
     placeholder: 'Select Range'
-  };
-
-  setMinutesToQuery = (minutes: number) => {
-    this.clearDataType();
-    this.minutesToQuery = minutes;
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.next({ label: '', data: [] });
-    });
   };
 
   private processHistoricalDataTypeSelection = (dataTypes: DataType[]) => {
