@@ -135,6 +135,10 @@ struct ScyllaArgs {
     /// Whether to disable sending of metadata over the socket to the client
     #[arg(long, env = "SCYLLA_SOCKET_DISABLE_METADATA")]
     no_metadata: bool,
+
+    /// The authentication password for privileged pages
+    #[arg(long, env = "SCYLLA_PASSWORD", default_value = "admin")]
+    password: String,
 }
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -362,6 +366,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/videos/update",
             post(video_streamer_controller::request_updated_videos),
+        )
+        .route(
+            "/authenticate",
+            post(car_command_controller::authenticate_password).layer(Extension(cli.password)),
         )
         .layer(Extension(db_send))
         .layer(Extension(OutputDirectory(cli.output_directory)))
