@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
 @Component({
@@ -7,8 +8,9 @@ import { Run } from 'src/utils/types.utils';
   styleUrl: './general-buttons.component.css'
 })
 export class GeneralButtonsComponent {
-  run = input<Run>();
+  historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
   onClearDataType = input.required<() => void>();
   onSetRealTime = input.required<() => void>();
+  selectorConfig = input.required<SelectorConfig>();
 }

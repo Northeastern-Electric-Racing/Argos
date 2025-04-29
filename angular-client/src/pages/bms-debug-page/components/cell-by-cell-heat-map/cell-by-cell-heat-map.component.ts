@@ -110,7 +110,7 @@ export class CellByCellHeatMapComponent implements OnInit {
   openCellView = () => {
     // use selected cell to open cell view
     if (this.selectedCell) {
-      this.dialogService.open(CellViewComponent, {
+      const cellView = this.dialogService.open(CellViewComponent, {
         data: {
           forSegment: this.currentSegment()
         },
@@ -118,6 +118,9 @@ export class CellByCellHeatMapComponent implements OnInit {
         draggable: true,
         closable: true,
         closeAriaLabel: 'Close'
+      });
+      cellView.onClose.subscribe(() => {
+        this.selectedCell = undefined;
       });
     }
   };
