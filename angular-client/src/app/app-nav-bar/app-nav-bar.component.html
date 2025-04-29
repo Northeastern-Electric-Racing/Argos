@@ -31,19 +31,24 @@
 
     <div style="display: flex; align-items: center">
       <hstack>
+        <current-run-display [navBarStyle]="true"></current-run-display>
         <toast-button
           [onClick]="this.onStartNewRun"
-          buttonLabel="Start New Run"
+          buttonLabel="New Run"
           popUpSeverity="success"
           popUpTitle="New Run Started"
           popUpDetails="Your new run has started successfully."
-          additionalStyles="height: 35px"
+          additionalStyles="height: 35px; width: 100px"
         />
-        <toast-button [onClick]="this.openRunForm" buttonLabel="Edit Currrent Run" additionalStyles="height: 35px" />
-        <current-run-display [navBarStyle]="true"></current-run-display>
+        <toast-button [onClick]="this.openRunForm" buttonLabel="Edit Runs" additionalStyles="height: 35px; width: 100px" />
       </hstack>
 
-      <typography variant="large-header" content="{{ time$ | async | date: 'HH:mm:ss' }}" style="margin-left: 20px" />
+      <typography
+        variant="large-header"
+        content="{{ time$ | async | date: 'HH:mm:ss' }}"
+        style="margin-left: 20px; margin-bottom: 5px"
+        additionalStyles="fontSize: 25px"
+      />
     </div>
   </nav>
 }

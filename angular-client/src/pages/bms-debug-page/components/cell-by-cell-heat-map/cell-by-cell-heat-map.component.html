@@ -35,18 +35,21 @@
     </hstack>
   } @else if (this.view.toString() === 'Voltage') {
     <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
-      @for (cell of betaCells.slice().reverse(); track cell) {
+      @for (cell of betaCells.slice().reverse(); track cell; let i = $index) {
+        @if (i !== 0) {
+          <cell-tile
+            [value]="cell.volt2"
+            [color]="this.getVoltColor(cell.volt2)"
+            (click)="this.cellClicked(cell)"
+            [currentView]="this.view"
+            [boxShadowColor]="this.isSelectedCell(cell)"
+            [upperTitle]="cell.cellNumbers?.[1]?.toString()"
+          ></cell-tile>
+        }
+
         <cell-tile
           [value]="cell.volt1"
           [color]="this.getVoltColor(cell.volt1)"
-          (click)="this.cellClicked(cell)"
-          [currentView]="this.view"
-          [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[1]?.toString()"
-        ></cell-tile>
-        <cell-tile
-          [value]="cell.volt2"
-          [color]="this.getVoltColor(cell.volt2)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
