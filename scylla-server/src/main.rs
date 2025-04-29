@@ -28,7 +28,6 @@ use scylla_server::{
         video_streamer_controller::{self},
         OutputDirectory, VideoSuffix,
     },
-    services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
     RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
     STATIC_RATE_LIMIT_VALUE,
@@ -36,7 +35,7 @@ use scylla_server::{
 use scylla_server::{
     db_handler,
     mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-    ClientData, RUN_ID,
+    ClientData,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{
@@ -136,10 +135,6 @@ struct ScyllaArgs {
     /// Whether to disable sending of metadata over the socket to the client
     #[arg(long, env = "SCYLLA_SOCKET_DISABLE_METADATA")]
     no_metadata: bool,
-
-    /// The authentication password for privileged pages
-    #[arg(long, env = "SCYLLA_PASSWORD", default_value = "admin")]
-    password: String,
 }
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -272,14 +267,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         token.clone(),
     ));
 
-    // creates the initial run
-    let curr_run =
-        run_service::create_run(&mut pool.get().await.unwrap(), chrono::offset::Utc::now())
-            .await
-            .expect("Could not create initial run!");
-    debug!("Configuring current run: {:?}", curr_run);
-
-    RUN_ID.store(curr_run.runId, Ordering::Relaxed);
     // run prod if this isnt present
     // create and spawn the mqtt processor
     info!("Running processor in MQTT (production) mode");
@@ -288,12 +275,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         token.clone(),
         MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
-            initial_run: curr_run.runId,
         },
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
     let client_sharable: Arc<AsyncClient> = Arc::new(client);
-    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop));
+    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone()));
 
     let app = Router::new()
         // DATA
@@ -374,10 +360,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/videos/update",
             post(video_streamer_controller::request_updated_videos),
-        )
-        .route(
-            "/authenticate",
-            post(car_command_controller::authenticate_password).layer(Extension(cli.password)),
         )
         .layer(Extension(db_send))
         .layer(Extension(OutputDirectory(cli.output_directory)))

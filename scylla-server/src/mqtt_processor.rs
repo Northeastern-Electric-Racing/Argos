@@ -4,6 +4,7 @@ use std::{
 };
 
 use chrono::TimeDelta;
+use diesel_async::{pooled_connection::bb8::Pool, AsyncPgConnection};
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
@@ -17,7 +18,7 @@ use tracing::{debug, instrument, trace, warn, Level};
 
 use crate::{
     controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata,
-    RateLimitMode, RATE_LIMIT_MODE, STATIC_RATE_LIMIT_VALUE,
+    services::run_service, RateLimitMode, RATE_LIMIT_MODE, STATIC_RATE_LIMIT_VALUE,
 };
 
 use super::ClientData;
@@ -40,8 +41,6 @@ pub struct MqttProcessor {
 pub struct MqttProcessorOptions {
     /// URI of the mqtt server
     pub mqtt_path: String,
-    /// the initial run id
-    pub initial_run: i32,
 }
 
 impl MqttProcessor {
@@ -92,7 +91,12 @@ impl MqttProcessor {
     /// This handles the reception of mqtt messages, will not return
     /// * `eventloop` - The eventloop returned by ::new to connect to.  The loop isnt sync so this is the best that can be done
     /// * `client` - The async mqttt v5 client to use for subscriptions
-    pub async fn process_mqtt(mut self, client: Arc<AsyncClient>, mut eventloop: EventLoop) {
+    pub async fn process_mqtt(
+        mut self,
+        client: Arc<AsyncClient>,
+        mut eventloop: EventLoop,
+        pool: Pool<AsyncPgConnection>,
+    ) {
         // let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
 
@@ -113,7 +117,7 @@ impl MqttProcessor {
                     Ok(Event::Incoming(Packet::Publish(msg))) => {
                         trace!("Received mqtt message: {:?}", msg);
                         // parse the message into the data and the node name it falls under
-                        let msg = match self.parse_msg(msg) {
+                        let msg = match self.parse_msg(msg, &pool).await {
                             Some(msg) => msg,
                             None => continue
                         };
@@ -149,7 +153,11 @@ impl MqttProcessor {
     /// * `msg` - The mqtt message to parse
     /// returns the ClientData, or the Err of something that can be debug printed
     #[instrument(skip(self), level = Level::TRACE)]
-    fn parse_msg(&mut self, msg: Publish) -> Option<ClientData> {
+    async fn parse_msg(
+        &mut self,
+        msg: Publish,
+        pool: &Pool<AsyncPgConnection>,
+    ) -> Option<ClientData> {
         let Ok(topic) = std::str::from_utf8(&msg.topic) else {
             warn!("Could not parse topic, topic: {:?}", msg.topic);
             return None;
@@ -250,6 +258,17 @@ impl MqttProcessor {
             } else {
                 unix_time
             };
+
+        if crate::RUN_ID.load(Ordering::Relaxed) == -1 {
+            // creates the initial run
+            let curr_run =
+                run_service::create_run(&mut pool.get().await.unwrap(), chrono::offset::Utc::now())
+                    .await
+                    .expect("Could not create initial run!");
+            debug!("Configuring current run: {:?}", curr_run);
+
+            crate::RUN_ID.store(curr_run.runId, Ordering::Relaxed);
+        }
 
         Some(ClientData {
             run_id: crate::RUN_ID.load(Ordering::Relaxed),
