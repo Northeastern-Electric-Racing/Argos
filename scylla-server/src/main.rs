@@ -28,7 +28,6 @@ use scylla_server::{
         video_streamer_controller::{self},
         OutputDirectory, VideoSuffix,
     },
-    services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
     RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
     STATIC_RATE_LIMIT_VALUE,
@@ -36,7 +35,7 @@ use scylla_server::{
 use scylla_server::{
     db_handler,
     mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-    ClientData, RUN_ID,
+    ClientData,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{
@@ -239,7 +238,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (mqtt_send, mqtt_receive) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
 
     // channel to pass the processed data to the batch uploading thread
     // TODO tune buffer size
@@ -251,18 +251,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive, io));
+        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive_socket, io));
     } else {
         task_tracker.spawn(socket_handler_with_metadata(
             token.clone(),
-            mqtt_receive,
+            mqtt_receive_socket,
             io,
         ));
     }
 
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_send.subscribe(), pool.clone())
+        db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
             .handling_loop(db_send.clone(), token.clone()),
     );
     // spawn the database inserter
@@ -272,28 +272,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         token.clone(),
     ));
 
-    // creates the initial run
-    let curr_run =
-        run_service::create_run(&mut pool.get().await.unwrap(), chrono::offset::Utc::now())
-            .await
-            .expect("Could not create initial run!");
-    debug!("Configuring current run: {:?}", curr_run);
-
-    RUN_ID.store(curr_run.runId, Ordering::Relaxed);
     // run prod if this isnt present
     // create and spawn the mqtt processor
     info!("Running processor in MQTT (production) mode");
     let (recv, opts) = MqttProcessor::new(
-        mqtt_send,
+        mqtt_send_db,
+        mqtt_send_socket,
         token.clone(),
         MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
-            initial_run: curr_run.runId,
         },
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
     let client_sharable: Arc<AsyncClient> = Arc::new(client);
-    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop));
+    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone()));
 
     let app = Router::new()
         // DATA
