@@ -234,7 +234,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (mqtt_send, mqtt_receive) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
 
     // channel to pass the processed data to the batch uploading thread
     // TODO tune buffer size
@@ -246,18 +247,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive, io));
+        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive_socket, io));
     } else {
         task_tracker.spawn(socket_handler_with_metadata(
             token.clone(),
-            mqtt_receive,
+            mqtt_receive_socket,
             io,
         ));
     }
 
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_send.subscribe(), pool.clone())
+        db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
             .handling_loop(db_send.clone(), token.clone()),
     );
     // spawn the database inserter
@@ -271,7 +272,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // create and spawn the mqtt processor
     info!("Running processor in MQTT (production) mode");
     let (recv, opts) = MqttProcessor::new(
-        mqtt_send,
+        mqtt_send_db,
+        mqtt_send_socket,
         token.clone(),
         MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
