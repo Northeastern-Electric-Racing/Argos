@@ -33,6 +33,11 @@ export default class GraphPageComponent implements OnInit {
   allRuns: Run[] = [];
   runsIsLoading = true;
   showSideBar = true;
+  showMultiYaxis = false;
+
+  toggleMultiYaxis = () => {
+    this.showMultiYaxis = !this.showMultiYaxis;
+  };
 
   toggleSideBar = () => {
     this.showSideBar = !this.showSideBar;

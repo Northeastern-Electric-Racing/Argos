@@ -16,6 +16,11 @@
           label="Toggle Sidebar"
           additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
         />
+        <argos-button
+          [onClick]="this.toggleMultiYaxis"
+          [label]="this.showMultiYaxis ? 'Mult Axis OFF' : 'Mult Axis ON'"
+          additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+        />
         @if (onFaultPage) {
           <fault-buttons [onClearData]="clearDataType" />
         } @else {
@@ -34,7 +39,12 @@
           <graph-sidebar [dataTypes]="dataTypes" [selectDataTypes]="this.setSelectedDataTypes" class="desktop-sidebar" />
         }
         <div class="right-container">
-          <graph [limitRange]="realTime === true" [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
+          <graph
+            [limitRange]="realTime === true"
+            [valuesSubject]="selectedDataTypeValuesSubject"
+            class="graph"
+            [showMultipleYAxes]="this.showMultiYaxis"
+          />
         </div>
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataTypes]="this.setSelectedDataTypes" class="mobile-sidebar" />
       </div>

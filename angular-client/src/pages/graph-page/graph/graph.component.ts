@@ -32,6 +32,7 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css']
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
+  showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
   options!: ChartOptions;
@@ -50,34 +51,35 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       yaxis: index // Assign each series to a y-axis index
     }));
 
-    const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
-      title: {
-        text: key.replace('0', ''),
-        style: {
-          color: 'grey',
-          fontSize: '20px',
-          fontWeight: 'bold'
-        }
-      },
-      labels: {
-        style: {
-          colors: '#fff'
-        }
-      },
-      opposite: index % 2 !== 0 // Alternate sides for each y-axis
-    }));
-
     this.chart.updateSeries(series);
 
-    // Update y-axis configurations
-    this.chart.updateOptions(
-      {
-        ...this.options,
-        yaxis: yaxisConfigs
-      },
-      false,
-      false
-    );
+    if (this.showMultipleYAxes()) {
+      const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
+        title: {
+          text: key.replace('0', ''),
+          style: {
+            color: 'grey',
+            fontSize: '20px',
+            fontWeight: 'bold'
+          }
+        },
+        labels: {
+          style: {
+            colors: '#fff'
+          }
+        },
+        opposite: index % 2 !== 0 // Alternate sides for each y-axis
+      }));
+      // Update y-axis configurations
+      this.chart.updateOptions(
+        {
+          ...this.options,
+          yaxis: yaxisConfigs
+        },
+        false,
+        false
+      );
+    }
 
     if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
