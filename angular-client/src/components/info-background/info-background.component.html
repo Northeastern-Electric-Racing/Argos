@@ -27,15 +27,15 @@
           }
         </div>
       }
-      @if (this.selectorConfig(); as selectorConfig) {
-        <div class="selector-container">
+      <hstack>
+        @for (selectorConfig of this.selectorConfigs(); track selectorConfig) {
           <select-dropdown
             [options]="selectorConfig.options"
             [placeholder]="selectorConfig.placeholder"
             [defaultValue]="selectorConfig.defaultValue"
           />
-        </div>
-      }
+        }
+      </hstack>
       @if (this.topRightInfo(); as topRightInfo) {
         <div class="top-right-info">
           <typography variant="info-subtitle" [content]="topRightInfo" additionalStyles="fontSize: 19px;" />

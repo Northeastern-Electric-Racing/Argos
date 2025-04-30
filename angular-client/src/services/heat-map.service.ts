@@ -5,7 +5,8 @@ import { Segment } from 'src/utils/bms.utils';
 
 export enum HeatMapView {
   Voltage = 'Voltage',
-  Temperature = 'Temperature'
+  Temperature = 'Temperature',
+  Balancing = 'Balancing'
 }
 
 @Injectable({
@@ -40,6 +41,16 @@ export class HeatMapService {
     if (!this.currentViewMap.get(segment)) {
       this.currentViewMap.set(segment, new BehaviorSubject<HeatMapView>(HeatMapView.Voltage));
     }
-    return this.currentViewMap.get(segment)?.value ?? HeatMapView.Voltage;
+    return this.currentViewMap.get(segment);
+  };
+
+  setAllSegViews = (view: HeatMapView) => {
+    this.currentViewMap.forEach((subject) => {
+      subject.next(view);
+    });
+  };
+
+  getAllSegViews = () => {
+    return this.currentViewMap.values();
   };
 }
