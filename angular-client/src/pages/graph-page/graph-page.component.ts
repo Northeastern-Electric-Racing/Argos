@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
@@ -25,6 +25,7 @@ export default class GraphPageComponent implements OnInit {
   private faultService = inject(FaultService);
   private router = inject(Router);
 
+  selectedDataTypes: DataType[] = [];
   dataTypes: DataType[] = [];
   dataTypesIsLoading = true;
   dataTypesIsError = false;
@@ -45,8 +46,6 @@ export default class GraphPageComponent implements OnInit {
 
   previousDataType?: DataType;
 
-  // this shit is only used for the fucking graph caption I hate it.
-  selectedDataType = new Subject<DataType[] | undefined>();
   selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
   currentValues: DataValue[] = [];
   selectedDataTypeValuesIsLoading = false;
@@ -116,6 +115,7 @@ export default class GraphPageComponent implements OnInit {
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Run #' + run.id;
+    this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
   // get real time ready
@@ -323,7 +323,7 @@ export default class GraphPageComponent implements OnInit {
    */
   setSelectedDataTypes = (dataTypes: DataType[]) => {
     this.clearDataType();
-    this.selectedDataType.next(dataTypes);
+    this.selectedDataTypes = dataTypes;
 
     this.selectedDataTypeValuesSubject = dataTypes.map((dt) => new BehaviorSubject<GraphInfo>({ label: dt.name, data: [] }));
 
@@ -350,7 +350,6 @@ export default class GraphPageComponent implements OnInit {
     this.subscriptions = [];
 
     // Reset all subjects and data
-    this.selectedDataType.next(undefined);
     this.selectedDataTypeValuesSubject.forEach((subject) => {
       subject.next({ label: '', data: [] });
       subject.complete();
