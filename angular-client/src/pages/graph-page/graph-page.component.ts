@@ -118,15 +118,28 @@ export default class GraphPageComponent implements OnInit {
     this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
+  onQueryTimeSelected = (queryTime: number) => {
+    this.run = undefined;
+    this.minutesToQuery = queryTime;
+    this.realTime = false;
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
+    this.rightHeader = 'Historical Range';
+    this.setSelectedDataTypes(this.selectedDataTypes);
+  };
+
   // get real time ready
   onSetRealtime = () => {
     this.queryDataTypes();
     this.run = undefined;
     this.minutesToQuery = undefined;
-
-    this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
-    if (this.onFaultPage) this.initFaultPage();
-    else this.initGeneralPage();
+    this.realTime = true;
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
+    this.rightHeader = 'Real Time';
+    this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
   /**
@@ -193,50 +206,43 @@ export default class GraphPageComponent implements OnInit {
       {
         name: '1 minute',
         function: () => {
-          this.minutesToQuery = 1;
-          this.realTime = false;
+          this.onQueryTimeSelected(1);
         }
       },
       {
         name: '2 minutes',
         function: () => {
-          this.minutesToQuery = 2;
-          this.realTime = false;
+          this.onQueryTimeSelected(2);
         }
       },
       {
         name: '5 minutes',
         function: () => {
-          this.minutesToQuery = 5;
-          this.realTime = false;
+          this.onQueryTimeSelected(5);
         }
       },
       {
         name: '10 minutes',
         function: () => {
-          this.minutesToQuery = 10;
-          this.realTime = false;
+          this.onQueryTimeSelected(10);
         }
       },
       {
         name: '15 minutes',
         function: () => {
-          this.minutesToQuery = 15;
-          this.realTime = false;
+          this.onQueryTimeSelected(15);
         }
       },
       {
         name: '30 minutes',
         function: () => {
-          this.minutesToQuery = 30;
-          this.realTime = false;
+          this.onQueryTimeSelected(30);
         }
       },
       {
         name: '1 hour',
         function: () => {
-          this.minutesToQuery = 60;
-          this.realTime = false;
+          this.onQueryTimeSelected(60);
         }
       }
     ],
