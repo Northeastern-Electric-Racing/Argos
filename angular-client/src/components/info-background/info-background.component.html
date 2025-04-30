@@ -27,15 +27,17 @@
           }
         </div>
       }
-      <hstack>
-        @for (selectorConfig of this.selectorConfigs(); track selectorConfig) {
-          <select-dropdown
-            [options]="selectorConfig.options"
-            [placeholder]="selectorConfig.placeholder"
-            [defaultValue]="selectorConfig.defaultValue"
-          />
-        }
-      </hstack>
+      @if (this.selectorConfigs().length !== 0) {
+        <hstack>
+          @for (selectorConfig of this.selectorConfigs(); track selectorConfig) {
+            <select-dropdown
+              [options]="selectorConfig.options"
+              [placeholder]="selectorConfig.placeholder"
+              [defaultValue]="selectorConfig.defaultValue"
+            />a
+          }
+        </hstack>
+      }
       @if (this.topRightInfo(); as topRightInfo) {
         <div class="top-right-info">
           <typography variant="info-subtitle" [content]="topRightInfo" additionalStyles="fontSize: 19px;" />
