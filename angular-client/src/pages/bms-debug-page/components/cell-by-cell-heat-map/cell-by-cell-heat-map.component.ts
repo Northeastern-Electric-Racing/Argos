@@ -6,6 +6,9 @@ import { AlphaCells, BetaCells, CellReading, CellService } from 'src/services/ce
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewComponent } from '../cell-view/cell-view.component';
+const formatAllSelectorName = (name: string) => {
+  return 'Set ALL Maps: ' + name;
+};
 
 @Component({
   selector: 'cell-by-cell-heat-map',
@@ -27,21 +30,34 @@ export class CellByCellHeatMapComponent implements OnInit {
     {
       name: HeatMapView.Temperature.toString(),
       function: () => {
-        this.view = HeatMapView.Temperature;
         this.heatMapService.setCurrentView(this.currentSegment(), HeatMapView.Temperature);
       }
     },
     {
       name: HeatMapView.Voltage.toString(),
       function: () => {
-        this.view = HeatMapView.Voltage;
         this.heatMapService.setCurrentView(this.currentSegment(), HeatMapView.Voltage);
+      }
+    },
+    {
+      name: HeatMapView.Balancing.toString(),
+      function: () => {
+        this.heatMapService.setCurrentView(this.currentSegment(), HeatMapView.Balancing);
       }
     }
   ];
-  selectorConfig: SelectorConfig = {
+  currentSegmentSelectorConfig: SelectorConfig = {
     options: this.cellViewSelectOptions,
     placeholder: 'Change View'
+  };
+  allSegSelectorConfig: SelectorConfig = {
+    options: this.cellViewSelectOptions.map((option) => ({
+      name: formatAllSelectorName(option.name),
+      function: () => {
+        this.heatMapService.setAllSegViews(option.name as HeatMapView);
+      }
+    })),
+    placeholder: 'Change ALL Segments'
   };
 
   constructor() {
@@ -54,6 +70,17 @@ export class CellByCellHeatMapComponent implements OnInit {
   ngOnInit(): void {
     this.alphaCells = this.cellService.getAlphaCellsBySegment(this.currentSegment());
     this.betaCells = this.cellService.getBetaCellsBySegment(this.currentSegment());
+    this.heatMapService.getCurrentView(this.currentSegment())?.subscribe((view) => {
+      this.view = view;
+      this.allSegSelectorConfig = {
+        ...this.allSegSelectorConfig,
+        defaultValue: view !== undefined ? formatAllSelectorName(view.toString()) : 'Change ALL Segments'
+      };
+      this.currentSegmentSelectorConfig = {
+        ...this.currentSegmentSelectorConfig,
+        defaultValue: view !== undefined ? view : 'Change View'
+      };
+    });
   }
 
   getTitle = () => {
@@ -82,6 +109,14 @@ export class CellByCellHeatMapComponent implements OnInit {
     const hslMainValue = Math.min(Math.max((value - 3.0) * 200, 0), 120);
 
     return `hsl(${hslMainValue}, 100%, 50%)`;
+  };
+
+  getBalancingColor = (value: boolean | undefined) => {
+    if (value === undefined) {
+      return 'grey';
+    }
+    // Math: red is false, green is true
+    return value ? '#4169e1' : 'yellow';
   };
 
   cellClicked = (cell: CellReading) => {

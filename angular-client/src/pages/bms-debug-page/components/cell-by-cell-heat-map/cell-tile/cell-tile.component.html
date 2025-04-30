@@ -7,13 +7,5 @@
 >
   <span style="position: absolute; top: 5px; left: 5px; font-size: 1vw; color: #2c2c2c">{{ this.upperTitle() }}</span>
 
-  <typography
-    variant="info-value"
-    [content]="this.getDisplayValue()"
-    [additionalStyles]="
-      this.sevenBoxLayout()
-        ? 'fontSize: 2.4vw; color: #2C2C2C;   margin-left: 10px;'
-        : 'fontSize: 2vw; color: #2C2C2C;   margin-left: 10px;'
-    "
-  />
+  <typography variant="info-value" [content]="this.getDisplayValue()" [additionalStyles]="this.getAdditionalStyles()" />
 </div>
