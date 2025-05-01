@@ -10,8 +10,9 @@ import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routing.module';
 
 interface NavItem {
+  id: string;
   label: string;
-  route: string;
+  onClick: () => void;
   icon: string;
 }
 
@@ -72,20 +73,55 @@ export class AppNavBarComponent implements OnInit {
     });
   };
 
-  navItems: NavItem[] = [
-    { label: 'Home', route: appRoutes.landingRoute(), icon: 'home' },
-    { label: 'Charging', route: appRoutes.chargingRoute(), icon: 'ev_station' },
-    { label: 'Graph', route: appRoutes.graphRoute(), icon: 'bar_chart' },
+  mostUsedNavItems: NavItem[] = [
+    { id: appRoutes.landingRoute(), label: 'Home', onClick: () => this.navigateTo(appRoutes.landingRoute()), icon: 'home' },
+    {
+      id: appRoutes.chargingRoute(),
+      label: 'Charging',
+      onClick: () => {
+        this.navigateTo(appRoutes.chargingRoute());
+      },
+      icon: 'ev_station'
+    },
+    {
+      id: appRoutes.graphRoute(),
+      label: 'Graph',
+      onClick: () => this.navigateTo(appRoutes.graphRoute()),
+      icon: 'bar_chart'
+    },
     // TODO: fix map
-    // { label: 'Map', route: appRoutes.mapRoute(), icon: 'map' },
-    { label: 'BMS', route: appRoutes.bmsRoute(), icon: 'action_key' },
-    { label: 'Faults', route: appRoutes.faultsRoute(), icon: 'error' },
-    { label: 'Camera', route: appRoutes.cameraRoute(), icon: 'linked_camera' },
-    { label: 'Commands', route: appRoutes.commandsRoute(), icon: 'electrical_services' }
+    // { label: 'Map', onClick: () => this.navigateTo(appRoutes.mapRoute()), icon: 'map' },
+    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
+    { id: appRoutes.faultsRoute(), label: 'Faults', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' }
+  ];
+
+  onlyDesktopNavItems: NavItem[] = [
+    ...this.mostUsedNavItems,
+    { id: 'More Options', label: 'More Options', onClick: () => this.sidebarService.openSidebar(), icon: 'more_horiz' }
+  ];
+
+  allNavItems: NavItem[] = [
+    ...this.mostUsedNavItems,
+    {
+      id: appRoutes.cameraRoute(),
+      label: 'Camera',
+      onClick: () => this.navigateTo(appRoutes.cameraRoute()),
+      icon: 'linked_camera'
+    },
+    {
+      id: appRoutes.commandsRoute(),
+      label: 'Commands',
+      onClick: () => this.navigateTo(appRoutes.commandsRoute()),
+      icon: 'electrical_services'
+    }
   ];
 
   navigateTo(route: string): void {
     this.selectedRoute = route;
     this.router.navigate([route]);
+  }
+
+  isSelected(navItem: NavItem) {
+    return navItem.id === this.selectedRoute;
   }
 }

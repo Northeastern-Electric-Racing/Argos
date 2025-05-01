@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
@@ -25,6 +25,7 @@ export default class GraphPageComponent implements OnInit {
   private faultService = inject(FaultService);
   private router = inject(Router);
 
+  selectedDataTypes: DataType[] = [];
   dataTypes: DataType[] = [];
   dataTypesIsLoading = true;
   dataTypesIsError = false;
@@ -45,8 +46,6 @@ export default class GraphPageComponent implements OnInit {
 
   previousDataType?: DataType;
 
-  // this shit is only used for the fucking graph caption I hate it.
-  selectedDataType = new Subject<DataType[] | undefined>();
   selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
   currentValues: DataValue[] = [];
   selectedDataTypeValuesIsLoading = false;
@@ -116,17 +115,33 @@ export default class GraphPageComponent implements OnInit {
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Run #' + run.id;
+    this.setSelectedDataTypes(this.selectedDataTypes);
+  };
+
+  onQueryTimeSelected = (queryTime: number) => {
+    this.run = undefined;
+    this.minutesToQuery = queryTime;
+    this.realTime = false;
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
+    this.rightHeader = 'Historical Range';
+    this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
   // get real time ready
   onSetRealtime = () => {
+    const { selectedDataTypes } = this;
     this.queryDataTypes();
+
     this.run = undefined;
     this.minutesToQuery = undefined;
-
-    this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
-    if (this.onFaultPage) this.initFaultPage();
-    else this.initGeneralPage();
+    this.realTime = true;
+    this.selectedDataTypeValuesIsLoading = false;
+    this.selectedDataTypeValuesIsError = false;
+    this.selectedDataTypeValuesError = undefined;
+    this.rightHeader = 'Real Time';
+    this.setSelectedDataTypes(selectedDataTypes);
   };
 
   /**
@@ -193,50 +208,43 @@ export default class GraphPageComponent implements OnInit {
       {
         name: '1 minute',
         function: () => {
-          this.minutesToQuery = 1;
-          this.realTime = false;
+          this.onQueryTimeSelected(1);
         }
       },
       {
         name: '2 minutes',
         function: () => {
-          this.minutesToQuery = 2;
-          this.realTime = false;
+          this.onQueryTimeSelected(2);
         }
       },
       {
         name: '5 minutes',
         function: () => {
-          this.minutesToQuery = 5;
-          this.realTime = false;
+          this.onQueryTimeSelected(5);
         }
       },
       {
         name: '10 minutes',
         function: () => {
-          this.minutesToQuery = 10;
-          this.realTime = false;
+          this.onQueryTimeSelected(10);
         }
       },
       {
         name: '15 minutes',
         function: () => {
-          this.minutesToQuery = 15;
-          this.realTime = false;
+          this.onQueryTimeSelected(15);
         }
       },
       {
         name: '30 minutes',
         function: () => {
-          this.minutesToQuery = 30;
-          this.realTime = false;
+          this.onQueryTimeSelected(30);
         }
       },
       {
         name: '1 hour',
         function: () => {
-          this.minutesToQuery = 60;
-          this.realTime = false;
+          this.onQueryTimeSelected(60);
         }
       }
     ],
@@ -323,7 +331,7 @@ export default class GraphPageComponent implements OnInit {
    */
   setSelectedDataTypes = (dataTypes: DataType[]) => {
     this.clearDataType();
-    this.selectedDataType.next(dataTypes);
+    this.selectedDataTypes = dataTypes;
 
     this.selectedDataTypeValuesSubject = dataTypes.map((dt) => new BehaviorSubject<GraphInfo>({ label: dt.name, data: [] }));
 
@@ -349,12 +357,6 @@ export default class GraphPageComponent implements OnInit {
     });
     this.subscriptions = [];
 
-    // Reset all subjects and data
-    this.selectedDataType.next(undefined);
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.next({ label: '', data: [] });
-      subject.complete();
-    });
     this.selectedDataTypeValuesSubject = [];
     this.currentValues = [];
     this.selectedDataTypeValuesIsLoading = false;
