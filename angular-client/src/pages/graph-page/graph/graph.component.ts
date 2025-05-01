@@ -223,8 +223,9 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         series: [],
         ...this.options
       });
-      this.chart.render();
-      this.updateChart();
+      this.chart.render().then(() => {
+        this.updateChart();
+      });
     }, 0);
   }
 

@@ -131,7 +131,9 @@ export default class GraphPageComponent implements OnInit {
 
   // get real time ready
   onSetRealtime = () => {
+    const { selectedDataTypes } = this;
     this.queryDataTypes();
+
     this.run = undefined;
     this.minutesToQuery = undefined;
     this.realTime = true;
@@ -139,7 +141,7 @@ export default class GraphPageComponent implements OnInit {
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Real Time';
-    this.setSelectedDataTypes(this.selectedDataTypes);
+    this.setSelectedDataTypes(selectedDataTypes);
   };
 
   /**
@@ -355,11 +357,6 @@ export default class GraphPageComponent implements OnInit {
     });
     this.subscriptions = [];
 
-    // Reset all subjects and data
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.next({ label: '', data: [] });
-      subject.complete();
-    });
     this.selectedDataTypeValuesSubject = [];
     this.currentValues = [];
     this.selectedDataTypeValuesIsLoading = false;

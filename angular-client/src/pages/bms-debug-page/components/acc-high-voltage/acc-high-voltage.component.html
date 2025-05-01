@@ -1,3 +1,8 @@
 <info-background [title]="this.getInfoBackgroundTitle()" svgIcon="battery_charging_2">
-  <info-value-display [value]="this.voltsHighValue" [unit]="'V'" subtitle="High Voltage"></info-value-display>
+  <info-value-display
+    [value]="this.voltsHighValue"
+    [unit]="'V'"
+    subtitle="High Voltage"
+    [precision]="3"
+  ></info-value-display>
 </info-background>
