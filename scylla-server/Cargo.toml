@@ -11,7 +11,7 @@ serde = "1.0.219"
 protobuf-codegen = "3.7.1"
 protobuf = { version = "3.7.1", features = ["with-bytes"] }
 tokio = { version = "1.44.2", features = ["full", "tracing"] }
-axum = { version = "0.8.3", features = ["multipart", "macros"] }
+axum = { version = "0.8.4", features = ["multipart", "macros"] }
 tower = { version = "0.5.2", features = ["timeout"] }
 tower-http = { version = "0.6.2", features = ["cors", "trace"] }
 socketioxide = { version = "0.16.2", features = ["tracing"] }
