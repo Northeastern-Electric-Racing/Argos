@@ -209,8 +209,7 @@ impl MqttProcessor {
         // extract the unix time
         // levels of time priority
         // - A: The time packaged in the protobuf, to microsecond precision
-        // - B: The time packaged in the MQTT header, to millisecond precision (hence the * 1000 on B)
-        // - C: The local scylla system time
+        // - B: The local scylla system time
         // note protobuf defaults to 0 for unfilled time, so consider it as an unset time
         let unix_time = if data.time_us > 0 {
             // A
@@ -223,31 +222,6 @@ impl MqttProcessor {
                 return (false, None);
             };
             unix_time
-        } else {
-            // B
-            match match msg
-                .properties
-                .unwrap_or_default()
-                .user_properties
-                .iter()
-                .find(|f| f.0 == "ts")
-            {
-                Some(val) => {
-                    let Ok(time_parsed) = val.1.parse::<i64>() else {
-                        warn!("Corrupted time in mqtt header, discarding message!");
-                        return (false, None);
-                    };
-                    chrono::DateTime::from_timestamp_millis(time_parsed)
-                }
-                None => None,
-            } {
-                Some(e) => e,
-                None => {
-                    // C
-                    debug!("Could not extract time, using system time!");
-                    chrono::offset::Utc::now()
-                }
-            }
         };
 
         // ts check for bad sources of time which may return 1970
@@ -255,6 +229,7 @@ impl MqttProcessor {
         let unix_clean =
             if unix_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
                 debug!("Timestamp before year 2000: {}", unix_time.to_string());
+                // C
                 let sys_time = chrono::offset::Utc::now();
                 if sys_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
                     warn!("System has no good time, discarding message!");
