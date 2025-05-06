@@ -210,18 +210,16 @@ impl MqttProcessor {
         // levels of time priority
         // - A: The time packaged in the protobuf, to microsecond precision
         // - B: The local scylla system time
-        // note protobuf defaults to 0 for unfilled time, so consider it as an unset time
-        let unix_time = if data.time_us > 0 {
-            // A
-            let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time_us as i64)
-            else {
-                warn!(
-                    "Corrupted time in protobuf: {}, discarding message!",
-                    data.time_us
-                );
-                return (false, None);
-            };
-            unix_time
+
+        // note protobuf defaults to 0 for unfilled time
+
+        // A
+        let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time_us as i64) else {
+            warn!(
+                "Corrupted time in protobuf: {}, discarding message!",
+                data.time_us
+            );
+            return (false, None);
         };
 
         // ts check for bad sources of time which may return 1970
@@ -229,7 +227,7 @@ impl MqttProcessor {
         let unix_clean =
             if unix_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
                 debug!("Timestamp before year 2000: {}", unix_time.to_string());
-                // C
+                // B
                 let sys_time = chrono::offset::Utc::now();
                 if sys_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
                     warn!("System has no good time, discarding message!");
