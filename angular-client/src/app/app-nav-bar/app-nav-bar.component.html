@@ -18,7 +18,7 @@
 } @else {
   <nav class="navbar">
     <div class="navbar-nav">
-      @for (navItem of mostUsedNavItems; track navItem) {
+      @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
           value="{{ navItem.label }}"
