@@ -20,7 +20,10 @@
   >
     <ng-template let-node pTemplate="default">
       <div class="tree-node-container">
-        <div [style]="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
+        <div
+          style="display: flex; align-items: center; justify-content: space-between"
+          (click)="this.onRowClick($event, node)"
+        >
           <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
           @if (node.children.length === 0) {
             <typography [content]="node.data.displayValue.value" variant="subheader" />
