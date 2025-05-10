@@ -42,7 +42,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   data!: Map<string, Map<number, number>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
-  timeRangeMs = 120000;
+  timeRangeMs = 60000; // 1 minute in ms
 
   updateChart = () => {
     const series = Array.from(this.data).map(([key, map], index) => ({
@@ -71,28 +71,21 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         opposite: index % 2 !== 0 // Alternate sides for each y-axis
       }));
       // Update y-axis configurations
-      this.chart.updateOptions(
-        {
-          ...this.options,
-          yaxis: yaxisConfigs
-        },
-        false,
-        false
-      );
+      this.chart.updateOptions({
+        ...this.options,
+        yaxis: yaxisConfigs
+      });
     }
 
     if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
-      this.chart.updateOptions(
-        {
-          ...this.options,
-          xaxis: {
-            range: this.timeRangeMs
-          }
-        },
-        false,
-        false
-      );
+      this.chart.updateOptions({
+        ...this.options,
+        xaxis: {
+          ...this.options.xaxis,
+          range: this.timeRangeMs
+        }
+      });
     }
 
     if (this.limitRange()) {
@@ -170,16 +163,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
           style: {
             colors: '#fff'
           },
-          formatter: (value) => {
-            return (
-              '' +
-              new Date(value).getHours() +
-              ':' +
-              ((new Date(value).getMinutes() < 10 ? '0' : '') + new Date(value).getMinutes()) +
-              ':' +
-              ((new Date(value).getSeconds() < 10 ? '0' : '') + new Date(value).getSeconds())
-            );
-          }
+          formatter: (val: string | number) => new Date(+val).toLocaleTimeString('en-US', { hour12: false })
         }
       },
       // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`

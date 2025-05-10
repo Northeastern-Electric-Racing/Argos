@@ -33,8 +33,11 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   searchFilter: string = '';
 
   treeNodes: TreeNode<Node>[] = [];
-  selectedNodes?: TreeNode<Node>[];
+  selectedNodes?: TreeNode<Node>[]; // still needed for p-tree binding
   treeInitialized = false;
+
+  // Local list of selected DataTypes
+  private selectedDataTypesList: DataType[] = [];
 
   /**
    * Initializes the nodes with the visibility toggle.
@@ -56,7 +59,8 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
         label: node.name,
         data: { ...node, displayValue },
         key: node.topicName,
-        children: node.nodes.value.map(mapToTreeNode)
+        children: node.nodes.value.map(mapToTreeNode),
+        selectable: node.nodes.value.length === 0
       };
     };
 
@@ -68,11 +72,12 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }
 
   clearSelections = () => {
-    this.selectedNodes = [];
     this.treeNodes.forEach((node) => {
       node.expanded = false;
     });
+    this.selectedDataTypesList = [];
     this.selectedDataTypes()([]);
+    this.selectedNodes = undefined;
   };
 
   transformDataTypeName(dataTypeName: string) {
@@ -80,37 +85,35 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }
 
   nodeSelect(event: TreeNodeSelectEvent) {
-    if ((event.node.children?.length ?? 0) !== 0) {
-      this.selectedNodes = this.selectedNodes?.filter((node) => node.label !== event.node.label);
-      event.node.expanded = !event.node.expanded;
-      return;
-    }
-
-    if (this.selectedNodes && this.selectedNodes.length > 0) {
-      const selectedDataTypes: DataType[] = [];
-      this.selectedNodes.forEach((node) => {
-        if (node.data && node.data.nodes.value.length === 0) {
-          selectedDataTypes.push(node.data.dataType);
-        } else if (node.data) {
-          node.expanded = !node.expanded;
-        }
-      });
-
-      if (selectedDataTypes.length > 0) {
-        this.selectedDataTypes()(selectedDataTypes);
-      }
+    const { node } = event;
+    // Only add if it's a leaf node (no children)
+    const dataType = node.data?.dataType;
+    if (dataType && !this.selectedDataTypesList.includes(dataType)) {
+      this.selectedDataTypesList.push(dataType);
+      this.selectedDataTypes()([...this.selectedDataTypesList]);
     }
   }
 
+  // this is so awesome and made by chat
+  onRowClick(evt: MouseEvent, node: TreeNode) {
+    if (node.children?.length !== 0) {
+      // parent row
+      evt.preventDefault();
+      evt.stopPropagation(); // keep selection engine out
+      node.expanded = !node.expanded; // toggle expanded state
+    }
+    /* leaf rows fall through → normal multi‑selection behaviour */
+  }
+
   onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    if (event.node.data && event.node.data.nodes.value.length === 0) {
-      const selectedDataTypes: DataType[] = [];
-      this.selectedNodes?.forEach((node) => {
-        if (node.label !== event.node.label && node.data !== undefined && node.data.nodes.value.length === 0) {
-          selectedDataTypes.push(node.data.dataType);
-        }
-      });
-      this.selectedDataTypes()(selectedDataTypes);
+    const { node } = event;
+    // Only remove if it's a leaf node (no children)
+    if (!node.children || node.children.length === 0) {
+      const dataType = node.data?.dataType;
+      if (dataType) {
+        this.selectedDataTypesList = this.selectedDataTypesList.filter((dt) => dt !== dataType);
+        this.selectedDataTypes()([...this.selectedDataTypesList]);
+      }
     }
   }
 }
