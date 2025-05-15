@@ -63,3 +63,5 @@ pub const fn map_dti_flt(index: usize) -> Option<&'static str> {
         _ => None,
     }
 }
+
+pub const METADATA_SOCKET_KEY: &str = "metadata";
