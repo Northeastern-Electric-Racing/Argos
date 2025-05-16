@@ -353,6 +353,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/insert/log",
             post(file_insertion_controller::insert_logger_file),
         )
+        .route(
+            "/insert/update_logger",
+            post(file_insertion_controller::request_logger_insert),
+        )
+        .route(
+            "/insert/update_serial",
+            post(file_insertion_controller::request_serial_insert),
+        )
         // VIDEO STREAMING
         .route(
             "/videos/{file_name}",

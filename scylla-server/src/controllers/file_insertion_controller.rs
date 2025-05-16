@@ -1,16 +1,22 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{Multipart, State},
-    Extension,
+    Extension, Json,
 };
 use axum_macros::debug_handler;
 use chrono::DateTime;
 use protobuf::CodedInputStream;
 use rangemap::RangeInclusiveMap;
+use rumqttc::v5::AsyncClient;
 use tokio::{fs, sync::mpsc};
 use tracing::{debug, info, trace, warn};
 
 use crate::{
-    error::ScyllaError, proto::playback_data, services::run_service, ClientData, PoolHandle,
+    error::ScyllaError,
+    proto::{playback_data, serverdata},
+    services::run_service,
+    ClientData, PoolHandle,
 };
 
 use super::OutputDirectory;
@@ -127,4 +133,43 @@ pub async fn insert_file(
 
     info!("Finished file insert request!");
     Ok("Successfully wrote data to files".to_string())
+}
+
+pub async fn request_logger_insert(
+    Extension(mqtt_client): Extension<Arc<AsyncClient>>,
+) -> Result<Json<String>, ScyllaError> {
+    let mut payload = serverdata::ServerData::new();
+    payload.values = vec![1.0];
+    mqtt_client
+        .publish(
+            "Scylla/Logger/Send",
+            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
+            false,
+            protobuf::Message::write_to_bytes(&payload)
+                .unwrap_or_else(|e| format!("failed to serialize {}", e).as_bytes().to_vec()),
+        )
+        .await
+        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+
+    Ok(Json::from(
+        "Sent Request to insert logger files".to_string(),
+    ))
+}
+pub async fn request_serial_insert(
+    Extension(mqtt_client): Extension<Arc<AsyncClient>>,
+) -> Result<Json<String>, ScyllaError> {
+    let mut payload = serverdata::ServerData::new();
+    payload.values = vec![1.0];
+    mqtt_client
+        .publish(
+            "Scylla/Serial/Send",
+            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
+            false,
+            protobuf::Message::write_to_bytes(&payload)
+                .unwrap_or_else(|e| format!("failed to serialize {}", e).as_bytes().to_vec()),
+        )
+        .await
+        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+
+    Ok(Json::from("Sent Request to insert serial logs".to_string()))
 }

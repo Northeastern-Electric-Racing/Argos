@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import {} from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';
-import { dataTypes } from 'src/utils/topic.utils';
+import { topics } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'acc-high-temp',
@@ -17,10 +17,10 @@ export class AccHighTempComponent implements OnInit {
   highTempChip: Chip | undefined = undefined;
 
   ngOnInit(): void {
-    this.storage.get(dataTypes.highTempValue()).subscribe((value) => {
+    this.storage.get(topics.highTempValue()).subscribe((value) => {
       this.highTemp = parseFloat(value.values[0]);
     });
-    this.storage.get(dataTypes.highTempChip()).subscribe((value) => {
+    this.storage.get(topics.highTempChip()).subscribe((value) => {
       const chipValue = parseInt(value.values[0]);
       if (chipValue % 2 === 0) {
         this.highTempChip = Chip.Alpha;
@@ -28,7 +28,7 @@ export class AccHighTempComponent implements OnInit {
         this.highTempChip = Chip.Beta;
       }
     });
-    this.storage.get(dataTypes.highTempCell()).subscribe((value) => {
+    this.storage.get(topics.highTempCell()).subscribe((value) => {
       this.highTempCell = parseInt(value.values[0]);
     });
   }

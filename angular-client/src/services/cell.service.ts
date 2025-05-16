@@ -8,7 +8,7 @@ import {
   allBetaBurnValues,
   allBetaThermValues,
   allBetaVoltValues,
-  dataTypes
+  topics
 } from 'src/utils/topic.utils';
 
 export type CellReading = {
@@ -103,7 +103,7 @@ export class CellService {
     this.perSegmentAlphaCells.map((segmentAlphaCells, index) => {
       const segmentNumber = numToSegmentType(index);
       allAlphaThermValues.forEach((therm, index) => {
-        this.storageService.get(dataTypes.alphaTemp(segmentNumber, therm)).subscribe((data) => {
+        this.storageService.get(topics.alphaTemp(segmentNumber, therm)).subscribe((data) => {
           const tempBtwnTwoCells = parseFloat(data.values[0]);
           const cellIndex = index;
           segmentAlphaCells[cellIndex].temp = tempBtwnTwoCells;
@@ -114,7 +114,7 @@ export class CellService {
       allAlphaVoltValues.forEach((therm, index) => {
         const constIndex = index;
         const cellIndex = Math.floor(constIndex / 2);
-        this.storageService.get(dataTypes.alphaVolt(segmentNumber, therm)).subscribe((data) => {
+        this.storageService.get(topics.alphaVolt(segmentNumber, therm)).subscribe((data) => {
           const voltage = parseFloat(data.values[0]);
           if (constIndex % 2 === 0) {
             segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
@@ -128,7 +128,7 @@ export class CellService {
       allAlphaBurnValues.forEach((burn, index) => {
         const constIndex = index;
         const cellIndex = Math.floor(constIndex / 2);
-        this.storageService.get(dataTypes.alphaBurning(segmentNumber, burn)).subscribe((data) => {
+        this.storageService.get(topics.alphaBurning(segmentNumber, burn)).subscribe((data) => {
           const balancing = parseInt(data.values[0]) === 1;
           segmentAlphaCells[cellIndex].cellNumbers = [cellIndex * 2, cellIndex * 2 + 1];
           if (constIndex % 2 === 0) {
@@ -146,7 +146,7 @@ export class CellService {
       const segmentNumber = numToSegmentType(index);
       allBetaThermValues.map((therm, index) => {
         const constIndex = index;
-        this.storageService.get(dataTypes.betaTemp(segmentNumber, therm)).subscribe((data) => {
+        this.storageService.get(topics.betaTemp(segmentNumber, therm)).subscribe((data) => {
           const tempBtwnTwoCells = parseFloat(data.values[0]);
           segmentBetaCells[constIndex].cellNumbers = [constIndex * 2, Math.min(constIndex * 2 + 1, 10)];
 
@@ -157,7 +157,7 @@ export class CellService {
       allBetaVoltValues.map((volt, index) => {
         const constIndex = index;
         const cellIndex = Math.floor(constIndex / 2);
-        this.storageService.get(dataTypes.betaVolt(segmentNumber, volt)).subscribe((data) => {
+        this.storageService.get(topics.betaVolt(segmentNumber, volt)).subscribe((data) => {
           const voltage = parseFloat(data.values[0]);
           segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
           if (constIndex % 2 === 0) {
@@ -171,7 +171,7 @@ export class CellService {
       allBetaBurnValues.map((burn, index) => {
         const constIndex = index;
         const cellIndex = Math.floor(constIndex / 2);
-        this.storageService.get(dataTypes.betaBurning(segmentNumber, burn)).subscribe((data) => {
+        this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
           const balancing = parseInt(data.values[0]) === 1;
           segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
           if (constIndex % 2 === 0) {

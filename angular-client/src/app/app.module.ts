@@ -149,6 +149,7 @@ import CarCommandComponent from 'src/pages/car-command-page/car-command.componen
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PasswordModule } from 'primeng/password';
+import { MessagesPerSecondComponent } from 'src/components/messages-per-second/messages-per-second.component';
 
 @NgModule({
   declarations: [
@@ -268,7 +269,8 @@ import { PasswordModule } from 'primeng/password';
     CellTileComponent,
     FormTemplateComponent,
     RunFormComponent,
-    CarCommandComponent
+    CarCommandComponent,
+    MessagesPerSecondComponent
   ],
   bootstrap: [AppContextComponent],
   imports: [

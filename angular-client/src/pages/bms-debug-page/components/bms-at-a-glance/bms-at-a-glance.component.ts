@@ -7,7 +7,7 @@ import {
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 import { getConnectionDotStatusColor } from 'src/utils/bms.utils';
-import { dataTypes } from 'src/utils/topic.utils';
+import { topics } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'bms-at-a-glance',
@@ -51,11 +51,11 @@ export class BmsAtAGlanceComponent implements OnInit {
       this.batteryConfig.percentage = this.chargeState;
     });
 
-    this.storage.get(dataTypes.accCCL()).subscribe((value) => {
+    this.storage.get(topics.accCCL()).subscribe((value) => {
       this.ccl = parseInt(value.values[0]);
     });
 
-    this.storage.get(dataTypes.accDCL()).subscribe((value) => {
+    this.storage.get(topics.accDCL()).subscribe((value) => {
       this.dcl = parseInt(value.values[0]);
     });
   }
