@@ -2,7 +2,7 @@ import { Component, effect, inject, input, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Chip } from 'src/utils/bms.utils';
-import { dataTypes } from 'src/utils/topic.utils';
+import { topics } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'chip-diagnostics',
@@ -43,19 +43,19 @@ export class ChipDiagnosticsComponent implements OnInit {
 
   subscribeToData(segment: number) {
     this.valueSubscriptions.push(
-      this.storage.get(dataTypes.vref(segment, this.chip())).subscribe((data) => {
+      this.storage.get(topics.vref(segment, this.chip())).subscribe((data) => {
         this.vRef = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.vres(segment, this.chip())).subscribe((data) => {
+      this.storage.get(topics.vres(segment, this.chip())).subscribe((data) => {
         this.vRes = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.vAnalog(segment, this.chip())).subscribe((data) => {
+      this.storage.get(topics.vAnalog(segment, this.chip())).subscribe((data) => {
         this.vAnalog = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.vDigital(segment, this.chip())).subscribe((data) => {
+      this.storage.get(topics.vDigital(segment, this.chip())).subscribe((data) => {
         this.vDigital = parseFloat(data.values[0]);
       }),
-      this.storage.get(dataTypes.boardTemp(segment, this.chip())).subscribe((data) => {
+      this.storage.get(topics.boardTemp(segment, this.chip())).subscribe((data) => {
         this.boardTemp = parseFloat(data.values[0]);
       })
     );

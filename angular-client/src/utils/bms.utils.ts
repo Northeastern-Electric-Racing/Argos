@@ -1,4 +1,4 @@
-import { dataTypes } from './topic.utils';
+import { topics } from './topic.utils';
 
 export enum Chip {
   Alpha = 0,
@@ -38,38 +38,38 @@ export type SegmentInfo = {
 };
 
 export const segment0: SegmentInfo = {
-  segmentTempKey: dataTypes.segmentTemp(Segment.Segment0),
-  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment0, Chip.Alpha),
-  betaChipTempKey: dataTypes.dieTemp(Segment.Segment0, Chip.Beta),
-  voltageKey: dataTypes.segmentVoltage(Segment.Segment0)
+  segmentTempKey: topics.segmentTemp(Segment.Segment0),
+  alphaChipTempKey: topics.dieTemp(Segment.Segment0, Chip.Alpha),
+  betaChipTempKey: topics.dieTemp(Segment.Segment0, Chip.Beta),
+  voltageKey: topics.segmentVoltage(Segment.Segment0)
 };
 
 export const segment1: SegmentInfo = {
-  segmentTempKey: dataTypes.segmentTemp(Segment.Segment1),
-  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment1, Chip.Alpha),
-  betaChipTempKey: dataTypes.dieTemp(Segment.Segment1, Chip.Beta),
-  voltageKey: dataTypes.segmentVoltage(Segment.Segment1)
+  segmentTempKey: topics.segmentTemp(Segment.Segment1),
+  alphaChipTempKey: topics.dieTemp(Segment.Segment1, Chip.Alpha),
+  betaChipTempKey: topics.dieTemp(Segment.Segment1, Chip.Beta),
+  voltageKey: topics.segmentVoltage(Segment.Segment1)
 };
 
 export const segment2: SegmentInfo = {
-  segmentTempKey: dataTypes.segmentTemp(Segment.Segment2),
-  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment2, Chip.Alpha),
-  betaChipTempKey: dataTypes.dieTemp(Segment.Segment2, Chip.Beta),
-  voltageKey: dataTypes.segmentVoltage(Segment.Segment2)
+  segmentTempKey: topics.segmentTemp(Segment.Segment2),
+  alphaChipTempKey: topics.dieTemp(Segment.Segment2, Chip.Alpha),
+  betaChipTempKey: topics.dieTemp(Segment.Segment2, Chip.Beta),
+  voltageKey: topics.segmentVoltage(Segment.Segment2)
 };
 
 export const segment3: SegmentInfo = {
-  segmentTempKey: dataTypes.segmentTemp(Segment.Segment3),
-  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment3, Chip.Alpha),
-  betaChipTempKey: dataTypes.dieTemp(Segment.Segment3, Chip.Beta),
-  voltageKey: dataTypes.segmentVoltage(Segment.Segment3)
+  segmentTempKey: topics.segmentTemp(Segment.Segment3),
+  alphaChipTempKey: topics.dieTemp(Segment.Segment3, Chip.Alpha),
+  betaChipTempKey: topics.dieTemp(Segment.Segment3, Chip.Beta),
+  voltageKey: topics.segmentVoltage(Segment.Segment3)
 };
 
 export const segment4: SegmentInfo = {
-  segmentTempKey: dataTypes.segmentTemp(Segment.Segment4),
-  alphaChipTempKey: dataTypes.dieTemp(Segment.Segment4, Chip.Alpha),
-  betaChipTempKey: dataTypes.dieTemp(Segment.Segment4, Chip.Beta),
-  voltageKey: dataTypes.segmentVoltage(Segment.Segment4)
+  segmentTempKey: topics.segmentTemp(Segment.Segment4),
+  alphaChipTempKey: topics.dieTemp(Segment.Segment4, Chip.Alpha),
+  betaChipTempKey: topics.dieTemp(Segment.Segment4, Chip.Beta),
+  voltageKey: topics.segmentVoltage(Segment.Segment4)
 };
 
 export const segmentInfoMap = {

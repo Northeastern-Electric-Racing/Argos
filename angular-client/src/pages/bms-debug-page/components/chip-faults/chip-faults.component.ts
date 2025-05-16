@@ -5,7 +5,7 @@ import { appRoutes } from 'src/app/app-routing.module';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';
-import { allChipFaults, dataTypes } from 'src/utils/topic.utils';
+import { allChipFaults, topics } from 'src/utils/topic.utils';
 import { FaultData } from 'src/utils/types.utils';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 
@@ -42,7 +42,7 @@ export class ChipFaultsComponent implements OnInit {
   subscribeToData(segment: number, chip: Chip = this.chip()) {
     allChipFaults.forEach((faultName) => {
       this.subscribtions.push(
-        this.storage.get(dataTypes.chipFault(segment, chip, faultName)).subscribe((data) => {
+        this.storage.get(topics.chipFault(segment, chip, faultName)).subscribe((data) => {
           if (parseInt(data.values[0]) === 0) return;
           const fault = this.chipFaultPipe.transform(data, chip, segment, faultName);
           if (!fault) return;

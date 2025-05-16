@@ -18,16 +18,7 @@ export const chipFault = (segment: Segment, chip: Chip, fault: ChipFault) =>
   `BMS/PerCell/${chipToString(chip)}/${segment}/Faults/${fault}`;
 export const accCCL = () => `BMS/Commands/Max_DC_Brake_Current_Target`;
 export const accDCL = () => `BMS/Commands/Max_DC_Current_Target`;
-// examples:
-/* 
-BMS/Cells/Volts_High_Value	V	1
-BMS/Cells/Volts_High_Chip		2
-BMS/Cells/Volts_High_Cell		3
-BMS/Cells/Volts_Low_Value	V	4
-BMS/Cells/Volts_Low_Chip		5
-BMS/Cells/Volts_Low_Cell		6
-BMS/Cells/Volts_Avg_Value
-*/
+export const msgsPerSecond = () => 'Argos/Message_Rate';
 export const pecErrorChip = () => `BMS/PerChip/PECErrorChip`;
 export const highVoltsChip = () => `BMS/Cells/Volts_High_Chip`;
 export const highVoltsCell = () => `BMS/Cells/Volts_High_Cell`;
@@ -44,7 +35,7 @@ export const lowTempChip = () => `BMS/Cells/Temp_Low_Chip`;
 export const lowTempCell = () => `BMS/Cells/Temp_Low_Cell`;
 export const tempAvgValue = () => `BMS/Cells/Temp_Avg_Value`;
 
-export const dataTypes = {
+export const topics = {
   alphaTemp,
   betaTemp,
   alphaVolt,
@@ -76,7 +67,8 @@ export const dataTypes = {
   lowTempValue,
   tempAvgValue,
   accCCL,
-  accDCL
+  accDCL,
+  msgsPerSecond
 };
 
 export const enum AlphaThermReading {

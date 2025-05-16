@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
 import Storage from 'src/services/storage.service';
 import { Chip, getConnectionDotStatusColor, Segment } from 'src/utils/bms.utils';
-import { dataTypes } from 'src/utils/topic.utils';
+import { topics } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'segment-at-a-glance',
@@ -47,19 +47,19 @@ export class SegmentAtAGlanceComponent {
   }
 
   subscribeToData = (segment: number) => {
-    this.storage.get(dataTypes.segmentTemp(segment)).subscribe((value) => {
+    this.storage.get(topics.segmentTemp(segment)).subscribe((value) => {
       this.temperature = parseFloat(value.values[0]);
       this.thermometerConfigSegment.currentValue = this.temperature;
     });
-    this.storage.get(dataTypes.dieTemp(segment, Chip.Alpha)).subscribe((value) => {
+    this.storage.get(topics.dieTemp(segment, Chip.Alpha)).subscribe((value) => {
       this.alphaChipTemp = parseFloat(value.values[0]);
       this.thermometerConfigAlphaChip.currentValue = this.alphaChipTemp;
     });
-    this.storage.get(dataTypes.dieTemp(segment, Chip.Beta)).subscribe((value) => {
+    this.storage.get(topics.dieTemp(segment, Chip.Beta)).subscribe((value) => {
       this.betaChipTemp = parseFloat(value.values[0]);
       this.thermometerConfigBetaChip.currentValue = this.betaChipTemp;
     });
-    this.storage.get(dataTypes.pecErrorChip()).subscribe((value) => {
+    this.storage.get(topics.pecErrorChip()).subscribe((value) => {
       const chip = parseInt(value.values[0]);
       if (chip % 2 === 0) {
         this.alphaCrc = parseInt(value.values[0]);

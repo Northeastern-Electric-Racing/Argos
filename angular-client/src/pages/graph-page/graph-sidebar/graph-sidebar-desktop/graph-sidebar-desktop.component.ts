@@ -2,12 +2,11 @@ import { Component, OnInit, OnDestroy, input, inject } from '@angular/core';
 import { DataType, Node } from 'src/utils/types.utils';
 import { FormControl, FormGroup } from '@angular/forms';
 import { BehaviorSubject, debounceTime, Subscription } from 'rxjs';
-import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
-import { dataTypeNamePipe } from 'src/utils/dataTypes.utils';
 import { TreeNode } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent } from 'primeng/tree';
+import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 
 /**
  * Sidebar component that displays the nodes and their data types.

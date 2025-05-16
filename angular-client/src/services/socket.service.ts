@@ -58,6 +58,19 @@ export default class SocketService {
       }
     });
 
+    this.socket.on('metadata', (message: string) => {
+      try {
+        const data = JSON.parse(message) as ServerData;
+        storage.setCurrentRunId(data.runId);
+
+        const key = data.name;
+        const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
+        storage.addValue(key, newValue);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
     this.socket.on('disconnect', () => {
       storage.setCurrentRunId(undefined);
     });

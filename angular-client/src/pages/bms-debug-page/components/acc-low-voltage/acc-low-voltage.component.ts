@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';
-import { dataTypes } from 'src/utils/topic.utils';
+import { topics } from 'src/utils/topic.utils';
 
 @Component({
   selector: 'acc-low-voltage',
@@ -15,10 +15,10 @@ export class AccLowVoltageComponent implements OnInit {
   voltsLowCell: number | undefined = undefined;
 
   ngOnInit(): void {
-    this.storage.get(dataTypes.lowVoltsValue()).subscribe((value) => {
+    this.storage.get(topics.lowVoltsValue()).subscribe((value) => {
       this.voltsLowValue = parseFloat(value.values[0]);
     });
-    this.storage.get(dataTypes.lowVoltsChip()).subscribe((value) => {
+    this.storage.get(topics.lowVoltsChip()).subscribe((value) => {
       const chipValue = parseInt(value.values[0]);
       if (chipValue % 2 === 0) {
         this.voltsLowChip = Chip.Alpha;
@@ -26,7 +26,7 @@ export class AccLowVoltageComponent implements OnInit {
         this.voltsLowChip = Chip.Beta;
       }
     });
-    this.storage.get(dataTypes.lowVoltsCell()).subscribe((value) => {
+    this.storage.get(topics.lowVoltsCell()).subscribe((value) => {
       this.voltsLowCell = parseInt(value.values[0]);
     });
   }
