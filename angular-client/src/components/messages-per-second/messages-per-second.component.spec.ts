@@ -9,8 +9,7 @@ describe('MessagesPerSecondComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MessagesPerSecondComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(MessagesPerSecondComponent);
     component = fixture.componentInstance;
