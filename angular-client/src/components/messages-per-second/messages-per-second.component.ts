@@ -14,12 +14,12 @@ export class MessagesPerSecondComponent {
   constructor() {
     this.storageService.get(topics.msgsPerSecond()).subscribe((data) => {
       const [firstValue] = data.values;
-      this.messagesPerSecond = parseFloat(firstValue);
+      this.messagesPerSecond = parseInt(firstValue);
     });
   }
 
   getDisplayNumber = () => {
-    return this.messagesPerSecond !== undefined ? this.messagesPerSecond.toFixed(1).toString() : 'N/A';
+    return this.messagesPerSecond !== undefined ? this.messagesPerSecond.toString() : 'N/A';
   };
   getDisplaySubheader = () => {
     return ' Msgs/Sec';
