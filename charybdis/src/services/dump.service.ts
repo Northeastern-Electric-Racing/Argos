@@ -132,7 +132,6 @@ export async function transformData(dumpFolder: string, dataBatchSize: number) {
         // Add a unique id for each row
         row.id = uuidv4();
         runIdToCloudIdMap.set(row.runId, row.id);
-        delete row.runId;
         rows.push(row);
       })
       .on("end", () => {

@@ -5,8 +5,9 @@ export interface CloudRun {
   id: string; // uuid
   runId: number; // based on the day of the run
   driverName: string;
+  locationName: string;
   notes: string;
-  time: Date;
+  time: string;
 }
 
 /**

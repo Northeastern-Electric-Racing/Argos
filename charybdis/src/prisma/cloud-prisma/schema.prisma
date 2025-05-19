@@ -17,7 +17,7 @@ model run {
   driverName   String?
   locationName String?
   notes        String?
-  time         DateTime @db.Timestamptz()
+  time         DateTime @unique @db.Timestamptz()
 
   data data[]
 

@@ -4,7 +4,7 @@ export interface CsvRunRow {
   that when a run upload fails, and we will be able to maintain access 
   and knowledge of the uuid mapping to our local runId.
   */
-  uuid: string;
+  id: string;
   runId: string;
   driverName: string;
   locationName: string;

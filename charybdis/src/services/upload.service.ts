@@ -4,9 +4,9 @@ import { CouldNotConnectToCloudDB } from "../errors/upload.errors";
 import { getDataCSVPath, storagePaths } from "../storage-paths";
 import { execSync } from "child_process";
 import { processCsvInBatches } from "../utils/csv.utils";
-import { LocalDataType } from "../types/local.types";
-import { CsvDataTypeRow } from "../types/csv.types";
-import { CloudDataType } from "../types/cloud.types";
+import { LocalDataType, LocalRun } from "../types/local.types";
+import { CsvDataTypeRow, CsvRunRow } from "../types/csv.types";
+import { CloudDataType, CloudRun } from "../types/cloud.types";
 
 const csvNames = {
   run: (path: string) => `${path}/run.csv`,
@@ -85,8 +85,27 @@ export async function processRunsWithData(dumpFolderPath: string) {
   const runsCsvPath = csvNames.run(dumpFolderPath);
 
   console.log("Processing Runs...");
-  execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "\\copy run(\\"driverName\\", \\"locationName\\",\\"notes\\",\\"time\\",\\"id\\") FROM '${runsCsvPath}' CSV HEADER;"`
+
+  await processCsvInBatches<CsvRunRow>(
+    runsCsvPath,
+    async (batch: CsvRunRow[]) => {
+      const cloudRuns: CloudRun[] = batch.map((localRun) => ({
+        id: localRun.id,
+        runId: parseInt(localRun.runId),
+        locationName: localRun.locationName,
+        notes: localRun.notes,
+        driverName: localRun.driverName,
+        time: localRun.time,
+      }));
+
+      cloudRuns.forEach((run) =>
+        execSync(
+          `psql ${process.env.CLOUD_DATABASE_URL} -c "INSERT INTO run(\\"runId\\", \\"driverName\\", \\"locationName\\",\\"notes\\",\\"time\\",\\"id\\") VALUES ('${run.runId}', '${run.driverName}', '${run.locationName}', '${run.notes}', '${run.time}', '${run.id}') ON CONFLICT (time) DO UPDATE SET id = EXCLUDED.id"`
+        )
+      );
+      console.log(`Inserted ${cloudRuns.length} run entries`);
+    },
+    100
   );
 
   console.log("Processed runs");
