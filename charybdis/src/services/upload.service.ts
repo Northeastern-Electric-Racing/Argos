@@ -112,57 +112,42 @@ export async function processRunsWithData(dumpFolderPath: string) {
 
   console.log("Begin Transaction");
 
-  execSync(`psql ${process.env.CLOUD_DATABASE_URL} -c "BEGIN;"`);
-
-  console.log("Drop index");
-
-  execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "ALTER TABLE data DROP CONSTRAINT IF EXISTS \\"data_pkey\\";"`
-  );
-
   console.log("Processing data, this may take a while...");
   const startTime = Date.now();
+
+  console.log("Creating Temporary Table");
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "DROP TABLE IF EXISTS data_temp;"`
+  );
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "CREATE TABLE IF NOT EXISTS data_temp (LIKE data INCLUDING ALL); ALTER TABLE data_temp DROP CONSTRAINT IF EXISTS data_temp_pkey;"`
+  );
+
+  console.log("Copying to temp table");
 
   execSync(
     `psql ${
       process.env.CLOUD_DATABASE_URL
-    } -c "\\copy data(\\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\") FROM '${getDataCSVPath(
+    } -c "\\copy data_temp(\\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\") FROM '${getDataCSVPath(
       dumpFolderPath
     )}' CSV HEADER;"`
   );
 
   console.log(`Data copying took: ${Date.now() - startTime}ms`);
-  const newStartTime = Date.now();
-  console.log(`Removing Duplicates`);
+  console.log("Copied to temp table. Upserting to data table");
 
   execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "CREATE INDEX IF NOT EXISTS idx_time_data_type_name ON data (\\"time\\", \\"dataTypeName\\");"`
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "INSERT INTO data (\\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\")
+      SELECT \\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\"
+      FROM data_temp
+      ON CONFLICT (time, \\"dataTypeName\\") DO NOTHING;"`
   );
 
-  execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "WITH duplicates AS (
-     SELECT ctid FROM (
-       SELECT ctid, ROW_NUMBER() OVER (PARTITION BY \\"time\\", \\"dataTypeName\\" ORDER BY ctid) AS rn
-       FROM data
-     ) sub WHERE rn > 1
-   )
-   DELETE FROM data WHERE ctid IN (SELECT ctid FROM duplicates);"`
-  );
+  console.log("Dropping temp table");
 
-  console.log(`Removing Duplicates took ${Date.now() - newStartTime}ms`);
-  console.log(`Recreating Constraints`);
-
-  execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "DROP INDEX IF EXISTS idx_time_data_type_name;"`
-  );
-
-  execSync(
-    `psql ${process.env.CLOUD_DATABASE_URL} -c "ALTER TABLE data ADD CONSTRAINT \\"data_pkey\\" PRIMARY KEY (\\"time\\",\\"dataTypeName\\");"`
-  );
-
-  console.log("Committing");
-
-  execSync(`psql ${process.env.CLOUD_DATABASE_URL} -c "COMMIT;"`);
+  execSync(`psql ${process.env.CLOUD_DATABASE_URL} -c "DROP TABLE data_temp"`);
 
   console.log(`Completed Data transfer took ${Date.now() - startTime}ms`);
 }
