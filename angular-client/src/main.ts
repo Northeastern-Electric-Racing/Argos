@@ -1,6 +1,3 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
-import { AppModule } from './app/app.module';
 import { DialogService, DynamicDialog } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
@@ -16,7 +13,6 @@ import { OrderListModule } from 'primeng/orderlist';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,19 +35,17 @@ import AppContextComponent from './app/context/app-context.component';
 
 bootstrapApplication(AppContextComponent, {
     providers: [
-        importProvidersFrom(BrowserModule, AppRoutingModule, CarouselModule, NgApexchartsModule, NgApexchartsModule, ToastModule, OrderListModule, ProgressSpinnerModule, MatIconModule, MatGridListModule, DynamicDialog, ButtonModule, MatIconModule, MatToolbarModule, MatButtonModule, MatInputModule, ReactiveFormsModule, MatCardModule, MatDividerModule, SidebarModule, MatSelectModule, MatFormFieldModule, FormsModule, SelectModule, AccordionModule, TableModule, TreeModule, InputTextModule, InputNumberModule, PasswordModule),
+        importProvidersFrom(BrowserModule, AppRoutingModule, CarouselModule, NgApexchartsModule, NgApexchartsModule, ToastModule, OrderListModule, ProgressSpinnerModule, MatIconModule, MatGridListModule, DynamicDialog, ButtonModule, MatToolbarModule, MatButtonModule, MatInputModule, ReactiveFormsModule, MatCardModule, MatDividerModule, SidebarModule, MatSelectModule, MatFormFieldModule, FormsModule, SelectModule, AccordionModule, TableModule, TreeModule, InputTextModule, InputNumberModule, PasswordModule),
         DialogService,
         MessageService,
         ChipFaultPipe,
         provideHttpClient(withInterceptorsFromDi()),
-        provideClientHydration(),
         provideAnimationsAsync(),
         providePrimeNG({
             theme: {
                 preset: "Lara"
             }
-        }),
-        provideAnimations()
+        }), provideClientHydration(),
     ]
 })
   .catch((err) => console.error(err));
