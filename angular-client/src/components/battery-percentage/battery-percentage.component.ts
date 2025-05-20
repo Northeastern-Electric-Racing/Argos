@@ -3,32 +3,27 @@ import Theme from 'src/services/theme.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
-  selector: 'battery-percentage',
-  templateUrl: 'battery-percentage.component.html',
-  styleUrls: ['battery-percentage.component.css'],
-  // TODO: this is just a dumb animation that changes the color of the nub, would like to make something actually
-  // cool or interesting in the future
-  animations: [
-    // metadata array
-    trigger('toggleClick', [
-      // trigger block
-      state(
-        'true',
-        style({
-          // final CSS following animation
-          backgroundColor: 'grey'
-        })
-      ),
-      state(
-        'false',
-        style({
-          backgroundColor: Theme.batteryBack
-        })
-      ),
-      transition('true => false', animate('1000ms linear')), // animation timing
-      transition('false => true', animate('1000ms linear'))
-    ])
-  ]
+    selector: 'battery-percentage',
+    templateUrl: 'battery-percentage.component.html',
+    styleUrls: ['battery-percentage.component.css'],
+    // TODO: this is just a dumb animation that changes the color of the nub, would like to make something actually
+    // cool or interesting in the future
+    animations: [
+        // metadata array
+        trigger('toggleClick', [
+            // trigger block
+            state('true', style({
+                // final CSS following animation
+                backgroundColor: 'grey'
+            })),
+            state('false', style({
+                backgroundColor: Theme.batteryBack
+            })),
+            transition('true => false', animate('1000ms linear')), // animation timing
+            transition('false => true', animate('1000ms linear'))
+        ])
+    ],
+    standalone: true
 })
 export class BatteryPercentageComponent implements OnInit {
   @Input() percentage!: number;

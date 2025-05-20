@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DynamicFormField } from '../form-template/form-template.component';
+import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
@@ -8,12 +8,17 @@ import APIService from 'src/services/api.service';
 import { MessageService } from 'primeng/api';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
-import { DropdownOption, SelectorConfig } from '../select-dropdown/select-dropdown.component';
+import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
+import LoadingPageComponent from '../loading-page/loading-page.component';
+
+
 
 @Component({
-  selector: 'run-form',
-  templateUrl: './run-form.component.html',
-  styleUrl: './run-form.component.css'
+    selector: 'run-form',
+    templateUrl: './run-form.component.html',
+    styleUrl: './run-form.component.css',
+    standalone: true,
+    imports: [ SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
 })
 export class RunFormComponent implements OnInit {
   public apiService = inject(APIService);

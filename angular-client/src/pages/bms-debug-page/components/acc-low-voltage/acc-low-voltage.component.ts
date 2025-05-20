@@ -2,11 +2,15 @@ import { Component, inject, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 
 @Component({
-  selector: 'acc-low-voltage',
-  templateUrl: './acc-low-voltage.component.html',
-  styleUrl: './acc-low-voltage.component.css'
+    selector: 'acc-low-voltage',
+    templateUrl: './acc-low-voltage.component.html',
+    styleUrl: './acc-low-voltage.component.css',
+    standalone: true,
+    imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
 })
 export class AccLowVoltageComponent implements OnInit {
   storage = inject(Storage);

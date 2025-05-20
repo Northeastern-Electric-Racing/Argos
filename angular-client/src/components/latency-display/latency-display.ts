@@ -1,11 +1,20 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+
+
+import { DividerComponent } from '../divider/divider';
+import TypographyComponent from '../typography/typography.component';
+import VStackComponent from '../vstack/vstack.component';
+import HStackComponent from '../hstack/hstack.component';
 
 @Component({
-  selector: 'latency-display',
-  templateUrl: './latency-display.html',
-  styleUrls: ['./latency-display.css']
+    selector: 'latency-display',
+    templateUrl: './latency-display.html',
+    styleUrls: ['./latency-display.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, DividerComponent, TypographyComponent, VStackComponent,HStackComponent]
 })
 export default class LatencyDisplayComponent implements OnInit {
   private storage = inject(Storage);

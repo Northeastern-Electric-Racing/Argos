@@ -1,8 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { CarouselPageEvent } from 'primeng/carousel';
+import { CarouselPageEvent, Carousel } from 'primeng/carousel';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Run } from 'src/utils/types.utils';
+import { PrimeTemplate } from 'primeng/api';
+import { MatGridList, MatGridTile } from '@angular/material/grid-list';
+
+
+import { Button } from 'primeng/button';
+import TypographyComponent from '../typography/typography.component';
 
 // the data for the dialog, basically just all the runs
 export interface DialogData {
@@ -10,9 +16,11 @@ export interface DialogData {
 }
 
 @Component({
-  selector: 'carousel',
-  templateUrl: 'carousel.component.html',
-  styleUrls: ['carousel.component.css']
+    selector: 'carousel',
+    templateUrl: 'carousel.component.html',
+    styleUrls: ['carousel.component.css'],
+    standalone: true,
+    imports: [Carousel, PrimeTemplate, MatGridList, MatGridTile, Button, TypographyComponent]
 })
 export class CarouselComponent {
   public dialogRef = inject(DynamicDialogRef);

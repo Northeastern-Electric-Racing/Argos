@@ -2,12 +2,16 @@ import { Component, Input, inject } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+import { GraphComponent } from '../graph/graph.component';
 
 @Component({
-  selector: 'info-graph',
-  templateUrl: './info-graph.component.html',
-  styleUrls: ['./info-graph.component.css'],
-  providers: [DialogService]
+    selector: 'info-graph',
+    templateUrl: './info-graph.component.html',
+    styleUrls: ['./info-graph.component.css'],
+    providers: [DialogService],
+    standalone: true,
+    imports: [InfoBackgroundComponent, GraphComponent]
 })
 export class InfoGraphComponent {
   public dialogService = inject(DialogService);

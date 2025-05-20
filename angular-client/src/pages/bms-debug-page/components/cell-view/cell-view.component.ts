@@ -3,11 +3,20 @@ import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { CellReading } from 'src/services/cell.service';
 import { HeatMapService } from 'src/services/heat-map.service';
 import { chipToString, Segment } from 'src/utils/bms.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+
+
+import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
+import { DividerComponent } from '../../../../components/divider/divider';
+import HStackComponent from 'src/components/hstack/hstack.component';
+import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
-  selector: 'cell-view',
-  templateUrl: './cell-view.component.html',
-  styleUrl: './cell-view.component.css'
+    selector: 'cell-view',
+    templateUrl: './cell-view.component.html',
+    styleUrl: './cell-view.component.css',
+    standalone: true,
+    imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, HStackComponent, VStackComponent]
 })
 export class CellViewComponent {
   private heatMapService = inject(HeatMapService);

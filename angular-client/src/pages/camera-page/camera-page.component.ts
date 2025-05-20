@@ -1,14 +1,20 @@
 import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { SelectChangeEvent } from 'primeng/select';
+import { SelectChangeEvent, Select } from 'primeng/select';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
 import MediaMTXWebRTCReader from 'src/utils/MediaMTXReader';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import TypographyComponent from 'src/components/typography/typography.component';
+
+
 @Component({
-  selector: 'camera-page',
-  templateUrl: './camera-page.component.html',
-  styleUrl: './camera-page.component.css'
+    selector: 'camera-page',
+    templateUrl: './camera-page.component.html',
+    styleUrl: './camera-page.component.css',
+    standalone: true,
+    imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
 })
 export class CameraPageComponent implements OnInit {
   private serverService = inject(APIService);

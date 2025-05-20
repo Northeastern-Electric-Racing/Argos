@@ -5,11 +5,14 @@ import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
+import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
-  selector: 'run-selector',
-  templateUrl: './run-selector.component.html',
-  styleUrls: ['./run-selector.component.css']
+    selector: 'run-selector',
+    templateUrl: './run-selector.component.html',
+    styleUrls: ['./run-selector.component.css'],
+    standalone: true,
+    imports: [ButtonComponent]
 })
 export class RunSelectorComponent implements OnInit {
   public dialogService = inject(DialogService);

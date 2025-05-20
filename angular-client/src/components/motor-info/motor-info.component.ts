@@ -2,13 +2,24 @@ import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+
+
+import { DividerComponent } from '../divider/divider';
+import PieChartComponent from '../pie-chart/pie-chart.component';
+import TypographyComponent from '../typography/typography.component';
+import HStackComponent from '../hstack/hstack.component';
+import VStackComponent from '../vstack/vstack.component';
+import ThermometerComponent from '../thermometer/thermometer.component';
 
 // need access motor temp, motor consumption, and motor cooling
 
 @Component({
-  selector: 'motor-info',
-  templateUrl: './motor-info.component.html',
-  styleUrls: ['./motor-info.component.css']
+    selector: 'motor-info',
+    templateUrl: './motor-info.component.html',
+    styleUrls: ['./motor-info.component.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, DividerComponent, PieChartComponent, TypographyComponent, HStackComponent,VStackComponent, ThermometerComponent]
 })
 export default class MotorInfoComponent implements OnInit {
   private storage = inject(Storage);

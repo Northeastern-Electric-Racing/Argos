@@ -6,8 +6,9 @@ import { Component } from '@angular/core';
  * <div header-right>Right side</div>
  */
 @Component({
-  selector: 'header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css']
+    selector: 'header',
+    templateUrl: './header.component.html',
+    styleUrls: ['./header.component.css'],
+    standalone: true
 })
 export default class HeaderComponent {}

@@ -2,6 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+import TypographyComponent from '../typography/typography.component';
+
+
 
 /**
  * Component that displays a percentage using a ring that is colored
@@ -9,9 +13,11 @@ import { floatPipe } from 'src/utils/pipes.utils';
  */
 
 @Component({
-  selector: 'steering-angle-display',
-  templateUrl: './steering-angle-display.component.html',
-  styleUrls: ['./steering-angle-display.component.css']
+    selector: 'steering-angle-display',
+    templateUrl: './steering-angle-display.component.html',
+    styleUrls: ['./steering-angle-display.component.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class SteeringAngleDisplayComponent implements OnInit {
   private storage = inject(Storage);

@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 
-import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill } from 'ng-apexcharts';
+import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
+import { NgStyle } from '@angular/common';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -11,9 +12,11 @@ export type ChartOptions = {
 };
 
 @Component({
-  selector: 'half-gauge',
-  templateUrl: 'half-gauge.component.html',
-  styleUrls: ['half-gauge.component.css']
+    selector: 'half-gauge',
+    templateUrl: 'half-gauge.component.html',
+    styleUrls: ['half-gauge.component.css'],
+    standalone: true,
+    imports: [NgStyle, NgApexchartsModule]
 })
 export default class HalfGaugeComponent implements OnInit {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

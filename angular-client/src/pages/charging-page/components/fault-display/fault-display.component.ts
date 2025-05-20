@@ -1,6 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+import VStackComponent from 'src/components/vstack/vstack.component';
+
+
 
 enum FaultType {
   BMS = 'BMS',
@@ -8,9 +13,11 @@ enum FaultType {
 }
 
 @Component({
-  selector: 'fault-display',
-  templateUrl: './fault-display.component.html',
-  styleUrls: ['./fault-display.component.css']
+    selector: 'fault-display',
+    templateUrl: './fault-display.component.html',
+    styleUrls: ['./fault-display.component.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export default class FaultDisplayComponent implements OnInit {
   private storage = inject(Storage);

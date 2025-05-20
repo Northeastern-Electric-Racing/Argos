@@ -6,13 +6,18 @@ import { HeatMapService } from 'src/services/heat-map.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
+import { Toast } from 'primeng/toast';
+import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
+import { RouterOutlet } from '@angular/router';
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
  */
 @Component({
-  selector: 'app-context',
-  templateUrl: './app-context.component.html'
+    selector: 'app-context',
+    templateUrl: './app-context.component.html',
+    standalone: true,
+    imports: [Toast, AppNavBarComponent, RouterOutlet]
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);

@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, inject, input, OnChanges, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { InputText } from 'primeng/inputtext';
+import { NgClass, NgIf } from '@angular/common';
+import { ButtonDirective } from 'primeng/button';
 
 type anyType = string | number | boolean | undefined;
 
@@ -22,9 +25,11 @@ export interface DynamicFormField {
 }
 
 @Component({
-  selector: 'form-template',
-  templateUrl: './form-template.component.html',
-  styleUrl: './form-template.component.css'
+    selector: 'form-template',
+    templateUrl: './form-template.component.html',
+    styleUrl: './form-template.component.css',
+    standalone: true,
+    imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
 })
 export class FormTemplateComponent implements OnInit, OnChanges {
   public config = inject(DynamicDialogConfig);

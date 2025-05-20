@@ -1,10 +1,18 @@
 import { Component, Input, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+import TypographyComponent from '../typography/typography.component';
+import HStackComponent from '../hstack/hstack.component';
+import VStackComponent from '../vstack/vstack.component';
+
+
 
 @Component({
-  selector: 'current-total-timer',
-  templateUrl: './current-total-timer.component.html',
-  styleUrls: ['./current-total-timer.component.css']
+    selector: 'current-total-timer',
+    templateUrl: './current-total-timer.component.html',
+    styleUrls: ['./current-total-timer.component.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export default class CurrentTotalTimerComponent {
   private storage = inject(Storage);

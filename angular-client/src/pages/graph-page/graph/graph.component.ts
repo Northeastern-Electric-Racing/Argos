@@ -27,9 +27,10 @@ type ChartOptions = {
 };
 
 @Component({
-  selector: 'graph',
-  templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css']
+    selector: 'graph',
+    templateUrl: './graph.component.html',
+    styleUrls: ['./graph.component.css'],
+    standalone: true
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
   showMultipleYAxes = input<boolean>(false);

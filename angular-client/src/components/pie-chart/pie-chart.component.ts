@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, Renderer2, OnInit, inject } from '@angular/core';
 
-import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill } from 'ng-apexcharts';
+import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
 import Theme from 'src/services/theme.service';
 
 export type ChartOptions = {
@@ -12,9 +12,11 @@ export type ChartOptions = {
 };
 
 @Component({
-  selector: 'pie-chart',
-  templateUrl: 'pie-chart.component.html',
-  styleUrls: ['pie-chart.component.css']
+    selector: 'pie-chart',
+    templateUrl: 'pie-chart.component.html',
+    styleUrls: ['pie-chart.component.css'],
+    standalone: true,
+    imports: [NgApexchartsModule]
 })
 export default class PieChartComponent implements OnInit {
   private renderer = inject(Renderer2);

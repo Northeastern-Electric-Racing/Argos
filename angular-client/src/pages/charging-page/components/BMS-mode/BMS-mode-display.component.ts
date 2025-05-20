@@ -2,6 +2,11 @@ import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+import VStackComponent from 'src/components/vstack/vstack.component';
+
+
 
 enum BMSMODE {
   DEFAULT = 0,
@@ -11,9 +16,11 @@ enum BMSMODE {
 }
 
 @Component({
-  selector: 'BMS-mode-display',
-  templateUrl: './BMS-mode-display.component.html',
-  styleUrls: ['./BMS-mode-display.component.css']
+    selector: 'BMS-mode-display',
+    templateUrl: './BMS-mode-display.component.html',
+    styleUrls: ['./BMS-mode-display.component.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent,]
 })
 export default class BMSModeDisplayComponent implements OnInit {
   private storage = inject(Storage);

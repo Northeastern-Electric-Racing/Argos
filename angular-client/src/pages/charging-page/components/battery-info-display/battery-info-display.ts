@@ -2,11 +2,18 @@ import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
 import Storage from 'src/services/storage.service';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import BatteryInfoDesktopComponent from './battery-info-desktop/battery-info-desktop.component';
+import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobile.component';
+
+
 
 @Component({
-  selector: 'battery-info-display',
-  templateUrl: './battery-info-display.html',
-  styleUrls: ['./battery-info-display.css']
+    selector: 'battery-info-display',
+    templateUrl: './battery-info-display.html',
+    styleUrls: ['./battery-info-display.css'],
+    standalone: true,
+    imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent,]
 })
 export class BatteryInfoDisplayComponent implements OnInit {
   private storage = inject(Storage);

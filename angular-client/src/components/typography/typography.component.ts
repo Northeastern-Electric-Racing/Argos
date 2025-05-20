@@ -12,9 +12,10 @@ import { StyleVariant } from 'src/utils/style-variant';
  * Add general styles to the Theme Service and classify it as a StyleVariant and link it in the switch statement.
  */
 @Component({
-  selector: 'typography',
-  templateUrl: './typography.component.html',
-  styleUrls: ['./typography.component.css']
+    selector: 'typography',
+    templateUrl: './typography.component.html',
+    styleUrls: ['./typography.component.css'],
+    standalone: true
 })
 export default class TypographyComponent implements OnInit {
   @Input() variant!: StyleVariant;

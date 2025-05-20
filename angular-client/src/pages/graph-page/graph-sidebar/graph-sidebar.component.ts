@@ -1,5 +1,9 @@
 import { Component, HostListener, Input, OnInit } from '@angular/core';
 import { DataType } from 'src/utils/types.utils';
+import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
+import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mobile.component';
+
+
 
 /**
  * Sidebar component wrapper that determines to display mobile or desktop sidebar.
@@ -7,9 +11,11 @@ import { DataType } from 'src/utils/types.utils';
  * @param selectDataType The function to call when a data type is selected.
  */
 @Component({
-  selector: 'graph-sidebar',
-  templateUrl: './graph-sidebar.component.html',
-  styleUrls: ['./graph-sidebar.component.css']
+    selector: 'graph-sidebar',
+    templateUrl: './graph-sidebar.component.html',
+    styleUrls: ['./graph-sidebar.component.css'],
+    standalone: true,
+    imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent]
 })
 export default class GraphSidebarComponent implements OnInit {
   @Input() dataTypes!: DataType[];

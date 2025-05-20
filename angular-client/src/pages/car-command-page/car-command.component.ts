@@ -6,6 +6,15 @@ import { updateVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
 import { DataType } from 'src/utils/types.utils';
 
+
+import { Password } from 'primeng/password';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { InputNumber } from 'primeng/inputnumber';
+import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
+import ErrorPageComponent from 'src/components/error-page/error-page.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+
 interface CarCommand {
   dataType: DataType;
   name: string;
@@ -13,9 +22,11 @@ interface CarCommand {
 }
 
 @Component({
-  selector: 'car-command',
-  templateUrl: './car-command.component.html',
-  styleUrls: ['./car-command.component.css']
+    selector: 'car-command',
+    templateUrl: './car-command.component.html',
+    styleUrls: ['./car-command.component.css'],
+    standalone: true,
+    imports: [ Password, ReactiveFormsModule, FormsModule, ButtonComponent, InputNumber, LoadingPageComponent, ErrorPageComponent, TypographyComponent]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);

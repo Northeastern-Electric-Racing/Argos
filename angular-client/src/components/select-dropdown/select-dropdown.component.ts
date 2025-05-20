@@ -1,5 +1,6 @@
 import { Component, input, OnInit, ViewChild } from '@angular/core';
-import { SelectChangeEvent } from 'primeng/select';
+import { SelectChangeEvent, Select } from 'primeng/select';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
   options: DropdownOption[];
@@ -12,9 +13,11 @@ export interface DropdownOption {
 }
 
 @Component({
-  selector: 'select-dropdown',
-  templateUrl: './select-dropdown.component.html',
-  styleUrl: './select-dropdown.component.css'
+    selector: 'select-dropdown',
+    templateUrl: './select-dropdown.component.html',
+    styleUrl: './select-dropdown.component.css',
+    standalone: true,
+    imports: [Select, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent implements OnInit {
   constructor() {}

@@ -1,6 +1,11 @@
 import { Component, input, Input } from '@angular/core';
 import Theme from 'src/services/theme.service';
-import { SelectorConfig } from '../select-dropdown/select-dropdown.component';
+import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
+import { MatIcon } from '@angular/material/icon';
+import TypographyComponent from '../typography/typography.component';
+import HStackComponent from '../hstack/hstack.component';
+
+
 
 /**
  * Component that is essentially the template/background for
@@ -13,9 +18,11 @@ interface ButtonInputs {
 }
 
 @Component({
-  selector: 'info-background',
-  templateUrl: './info-background.component.html',
-  styleUrls: ['./info-background.component.css']
+    selector: 'info-background',
+    templateUrl: './info-background.component.html',
+    styleUrls: ['./info-background.component.css'],
+    standalone: true,
+    imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent,]
 })
 export class InfoBackgroundComponent {
   icon = input<string>();
