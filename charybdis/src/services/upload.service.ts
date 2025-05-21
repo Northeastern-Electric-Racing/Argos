@@ -100,7 +100,7 @@ export async function processRunsWithData(dumpFolderPath: string) {
 
       cloudRuns.forEach((run) =>
         execSync(
-          `psql ${process.env.CLOUD_DATABASE_URL} -c "INSERT INTO run(\\"runId\\", \\"driverName\\", \\"locationName\\",\\"notes\\",\\"time\\",\\"id\\") VALUES ('${run.runId}', '${run.driverName}', '${run.locationName}', '${run.notes}', '${run.time}', '${run.id}') ON CONFLICT (time) DO UPDATE SET id = EXCLUDED.id"`
+          `psql ${process.env.CLOUD_DATABASE_URL} -c "INSERT INTO run(\\"runId\\", \\"driverName\\", \\"locationName\\",\\"notes\\",\\"time\\",\\"id\\") VALUES ('${run.runId}', '${run.driverName}', '${run.locationName}', '${run.notes}', '${run.time}', '${run.id}') ON CONFLICT (time) DO UPDATE SET id = EXCLUDED.id, \\"runId\\" = EXCLUDED.\\"runId\\""`
         )
       );
       console.log(`Inserted ${cloudRuns.length} run entries`);
