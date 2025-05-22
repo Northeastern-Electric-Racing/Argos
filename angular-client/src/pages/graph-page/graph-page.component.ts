@@ -18,7 +18,6 @@ import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-butto
 import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
-import { GraphComponent } from 'src/components/graph/graph.component';
 import CustomGraphComponent from './graph/graph.component';
 import GraphHeaderComponent from './graph-header/graph-header.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';

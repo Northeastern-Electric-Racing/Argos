@@ -5,7 +5,6 @@ import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import RaspberryPiDesktopComponent from './raspberry-pi-desktop-content/raspberry-pi-desktop.component';
 import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-pi-mobile.component';
-import TypographyComponent from '../typography/typography.component';
 
 @Component({
   selector: 'raspberry-pi',
