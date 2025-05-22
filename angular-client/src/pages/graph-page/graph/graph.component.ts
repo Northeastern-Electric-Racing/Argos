@@ -27,10 +27,10 @@ type ChartOptions = {
 };
 
 @Component({
-    selector: 'graph',
-    templateUrl: './graph.component.html',
-    styleUrls: ['./graph.component.css'],
-    standalone: true
+  selector: 'graph',
+  templateUrl: './graph.component.html',
+  styleUrls: ['./graph.component.css'],
+  standalone: true
 })
 export default class CustomGraphComponent implements OnChanges, OnInit {
   showMultipleYAxes = input<boolean>(false);
@@ -92,7 +92,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     if (this.limitRange()) {
       setTimeout(() => {
         this.updateChart();
-      }, 800);
+      }, 500);
     }
   };
 
@@ -141,7 +141,6 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         },
         animations: {
           enabled: false,
-          easing: 'linear',
           dynamicAnimation: {
             speed: 1000
           }
@@ -203,15 +202,14 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     };
 
     // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
-    setTimeout(() => {
-      this.chart = new ApexCharts(chartContainer, {
-        series: [],
-        ...this.options
-      });
-      this.chart.render().then(() => {
-        this.updateChart();
-      });
-    }, 0);
+
+    this.chart = new ApexCharts(chartContainer, {
+      series: [],
+      ...this.options
+    });
+    this.chart.render().then(() => {
+      this.updateChart();
+    });
   }
 
   ngOnChanges() {

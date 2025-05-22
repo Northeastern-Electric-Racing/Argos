@@ -1,8 +1,9 @@
-import { DialogService, DynamicDialog } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideClientHydration, BrowserModule, bootstrapApplication } from '@angular/platform-browser';
+import Lara from '@primeng/themes/aura';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -34,18 +35,48 @@ import { importProvidersFrom } from '@angular/core';
 import AppContextComponent from './app/context/app-context.component';
 
 bootstrapApplication(AppContextComponent, {
-    providers: [
-        importProvidersFrom(BrowserModule, AppRoutingModule, CarouselModule, NgApexchartsModule, NgApexchartsModule, ToastModule, OrderListModule, ProgressSpinnerModule, MatIconModule, MatGridListModule, DynamicDialog, ButtonModule, MatToolbarModule, MatButtonModule, MatInputModule, ReactiveFormsModule, MatCardModule, MatDividerModule, SidebarModule, MatSelectModule, MatFormFieldModule, FormsModule, SelectModule, AccordionModule, TableModule, TreeModule, InputTextModule, InputNumberModule, PasswordModule),
-        DialogService,
-        MessageService,
-        ChipFaultPipe,
-        provideHttpClient(withInterceptorsFromDi()),
-        provideAnimationsAsync(),
-        providePrimeNG({
-            theme: {
-                preset: "Lara"
-            }
-        }), provideClientHydration(),
-    ]
-})
-  .catch((err) => console.error(err));
+  providers: [
+    importProvidersFrom(
+      BrowserModule,
+      AppRoutingModule,
+      CarouselModule,
+      NgApexchartsModule,
+      NgApexchartsModule,
+      ToastModule,
+      OrderListModule,
+      ProgressSpinnerModule,
+      MatIconModule,
+      MatGridListModule,
+      DynamicDialogModule,
+      ButtonModule,
+      MatToolbarModule,
+      MatButtonModule,
+      MatInputModule,
+      ReactiveFormsModule,
+      MatCardModule,
+      MatDividerModule,
+      SidebarModule,
+      MatSelectModule,
+      MatFormFieldModule,
+      FormsModule,
+      SelectModule,
+      AccordionModule,
+      TableModule,
+      TreeModule,
+      InputTextModule,
+      InputNumberModule,
+      PasswordModule
+    ),
+    DialogService,
+    MessageService,
+    ChipFaultPipe,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Lara
+      }
+    }),
+    provideClientHydration()
+  ]
+}).catch((err) => console.error(err));

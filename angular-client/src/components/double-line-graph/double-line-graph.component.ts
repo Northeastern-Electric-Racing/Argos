@@ -33,11 +33,11 @@ type ChartOptions = {
 };
 
 @Component({
-    selector: 'double-line-graph',
-    templateUrl: './double-line-graph.component.html',
-    styleUrls: ['./double-line-graph.component.css'],
-    providers: [DialogService],
-    standalone: true
+  selector: 'double-line-graph',
+  templateUrl: './double-line-graph.component.html',
+  styleUrls: ['./double-line-graph.component.css'],
+  providers: [DialogService],
+  standalone: true
 })
 export class DoubleLineGraphComponent implements OnInit {
   public dialogService = inject(DialogService);
@@ -126,7 +126,6 @@ export class DoubleLineGraphComponent implements OnInit {
         },
         animations: {
           enabled: true,
-          easing: 'linear',
           dynamicAnimation: {
             speed: 1000
           }

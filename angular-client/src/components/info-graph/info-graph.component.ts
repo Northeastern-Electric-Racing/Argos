@@ -6,12 +6,12 @@ import { InfoBackgroundComponent } from '../info-background/info-background.comp
 import { GraphComponent } from '../graph/graph.component';
 
 @Component({
-    selector: 'info-graph',
-    templateUrl: './info-graph.component.html',
-    styleUrls: ['./info-graph.component.css'],
-    providers: [DialogService],
-    standalone: true,
-    imports: [InfoBackgroundComponent, GraphComponent]
+  selector: 'info-graph',
+  templateUrl: './info-graph.component.html',
+  styleUrls: ['./info-graph.component.css'],
+  providers: [DialogService],
+  standalone: true,
+  imports: [InfoBackgroundComponent, GraphComponent]
 })
 export class InfoGraphComponent {
   public dialogService = inject(DialogService);
