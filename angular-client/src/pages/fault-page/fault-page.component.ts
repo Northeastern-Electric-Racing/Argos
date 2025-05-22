@@ -4,7 +4,6 @@ import { appRoutes } from 'src/app/app-routing.module';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
-
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { Ripple } from 'primeng/ripple';
 import { TableModule } from 'primeng/table';
@@ -12,11 +11,11 @@ import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
-    selector: 'fault-page',
-    styleUrls: ['./fault-page.component.css'],
-    templateUrl: './fault-page.component.html',
-    standalone: true,
-    imports: [ Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
+  selector: 'fault-page',
+  styleUrls: ['./fault-page.component.css'],
+  templateUrl: './fault-page.component.html',
+  standalone: true,
+  imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {
   private faultService = inject(FaultService);

@@ -25,11 +25,11 @@ export interface DynamicFormField {
 }
 
 @Component({
-    selector: 'form-template',
-    templateUrl: './form-template.component.html',
-    styleUrl: './form-template.component.css',
-    standalone: true,
-    imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
+  selector: 'form-template',
+  templateUrl: './form-template.component.html',
+  styleUrl: './form-template.component.css',
+  standalone: true,
+  imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
 })
 export class FormTemplateComponent implements OnInit, OnChanges {
   public config = inject(DynamicDialogConfig);

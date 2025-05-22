@@ -7,14 +7,12 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
-
-
 @Component({
-    selector: 'faulted-status',
-    templateUrl: './faulted-status.component.html',
-    styleUrls: ['./faulted-status.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
+  selector: 'faulted-status',
+  templateUrl: './faulted-status.component.html',
+  styleUrls: ['./faulted-status.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class FaultedStatusComponent implements OnInit {
   @Input() displayLight: boolean = true;

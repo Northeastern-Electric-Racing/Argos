@@ -6,11 +6,11 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 
 @Component({
-    selector: 'acc-low-voltage',
-    templateUrl: './acc-low-voltage.component.html',
-    styleUrl: './acc-low-voltage.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
+  selector: 'acc-low-voltage',
+  templateUrl: './acc-low-voltage.component.html',
+  styleUrl: './acc-low-voltage.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
 })
 export class AccLowVoltageComponent implements OnInit {
   storage = inject(Storage);

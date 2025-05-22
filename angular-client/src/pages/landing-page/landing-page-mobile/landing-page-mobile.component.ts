@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 
-
 import { DriverComponent } from '../../../components/driver-component/driver-component';
 import { AccelerationGraphsComponent } from '../../../components/acceleration-graphs/acceleration-graphs.component';
 import { BatteryInfoDisplayComponent } from '../../charging-page/components/battery-info-display/battery-info-display';
@@ -14,11 +13,23 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 
 @Component({
-    selector: 'landing-page-mobile',
-    templateUrl: './landing-page-mobile.component.html',
-    styleUrls: ['./landing-page-mobile.component.css'],
-    standalone: true,
-    imports: [TypographyComponent, VStackComponent, SidebarToggleComponent, SpeedOverTimeDisplayComponent, DriverComponent, AccelerationGraphsComponent, BatteryInfoDisplayComponent, DatePipe, RasberryPiComponent, MotorInfoComponent,AccelerationOverTimeDisplayComponent]
+  selector: 'landing-page-mobile',
+  templateUrl: './landing-page-mobile.component.html',
+  styleUrls: ['./landing-page-mobile.component.css'],
+  standalone: true,
+  imports: [
+    TypographyComponent,
+    VStackComponent,
+    SidebarToggleComponent,
+    SpeedOverTimeDisplayComponent,
+    DriverComponent,
+    AccelerationGraphsComponent,
+    BatteryInfoDisplayComponent,
+    DatePipe,
+    RasberryPiComponent,
+    MotorInfoComponent,
+    AccelerationOverTimeDisplayComponent
+  ]
 })
 export default class LandingPageMobileComponent {
   @Input() time!: Date;

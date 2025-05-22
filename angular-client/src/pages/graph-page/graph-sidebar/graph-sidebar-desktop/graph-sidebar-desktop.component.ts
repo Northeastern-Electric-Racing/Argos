@@ -10,8 +10,6 @@ import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 
-
-
 /**
  * Sidebar component that displays the nodes and their data types.
  * @param nodes The nodes to display.
@@ -19,11 +17,11 @@ import TypographyComponent from 'src/components/typography/typography.component'
  *
  */
 @Component({
-    selector: 'graph-sidebar-desktop',
-    templateUrl: './graph-sidebar-desktop.component.html',
-    styleUrls: ['./graph-sidebar-desktop.component.css'],
-    standalone: true,
-    imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
+  selector: 'graph-sidebar-desktop',
+  templateUrl: './graph-sidebar-desktop.component.html',
+  styleUrls: ['./graph-sidebar-desktop.component.css'],
+  standalone: true,
+  imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);

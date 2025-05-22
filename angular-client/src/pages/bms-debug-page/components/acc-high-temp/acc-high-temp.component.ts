@@ -7,11 +7,11 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 
 @Component({
-    selector: 'acc-high-temp',
-    templateUrl: './acc-high-temp.component.html',
-    styleUrl: './acc-high-temp.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
+  selector: 'acc-high-temp',
+  templateUrl: './acc-high-temp.component.html',
+  styleUrl: './acc-high-temp.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
 })
 export class AccHighTempComponent implements OnInit {
   storage = inject(Storage);

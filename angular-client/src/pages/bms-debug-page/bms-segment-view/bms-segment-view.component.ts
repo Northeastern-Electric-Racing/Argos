@@ -10,11 +10,19 @@ import { ChipDiagnosticsComponent } from '../components/chip-diagnostics/chip-di
 import { ChipFaultsComponent } from '../components/chip-faults/chip-faults.component';
 
 @Component({
-    selector: 'bms-segment-view',
-    templateUrl: './bms-segment-view.component.html',
-    styleUrl: './bms-segment-view.component.css',
-    standalone: true,
-    imports: [MatGridList, MatGridTile, BmsHeaderComponent, SegmentAtAGlanceComponent, CellByCellHeatMapComponent, ChipDiagnosticsComponent, ChipFaultsComponent]
+  selector: 'bms-segment-view',
+  templateUrl: './bms-segment-view.component.html',
+  styleUrl: './bms-segment-view.component.css',
+  standalone: true,
+  imports: [
+    MatGridList,
+    MatGridTile,
+    BmsHeaderComponent,
+    SegmentAtAGlanceComponent,
+    CellByCellHeatMapComponent,
+    ChipDiagnosticsComponent,
+    ChipFaultsComponent
+  ]
 })
 export class BmsSegmentViewComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

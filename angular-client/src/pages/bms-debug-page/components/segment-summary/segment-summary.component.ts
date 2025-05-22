@@ -5,18 +5,17 @@ import Storage from 'src/services/storage.service';
 import { SegmentInfo, Segment, segmentInfoMap } from 'src/utils/bms.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
-
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 import { DividerComponent } from '../../../../components/divider/divider';
 import { ToastButtonComponent } from '../../../../components/toast-button/toast-button.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
-    selector: 'segment-summary',
-    templateUrl: './segment-summary.component.html',
-    styleUrl: './segment-summary.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
+  selector: 'segment-summary',
+  templateUrl: './segment-summary.component.html',
+  styleUrl: './segment-summary.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
 })
 export class SegmentSummaryComponent implements OnInit {
   private router = inject(Router);

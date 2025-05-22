@@ -2,8 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { Chip } from '../bms.utils';
 import { FaultData } from '../types.utils';
 @Pipe({
-    name: 'chipFault',
-    standalone: true
+  name: 'chipFault',
+  standalone: true
 })
 export class ChipFaultPipe implements PipeTransform {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

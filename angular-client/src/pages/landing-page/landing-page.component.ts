@@ -4,7 +4,6 @@ import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 
-
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { DateLocationComponent } from './components/date-location-display/date-location.component';
 import { CurrentRunDisplayComponent } from './components/current-run-display/current-run-display.component';
@@ -25,11 +24,28 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
  * Container for the landing page, obtains data from the storage service.
  */
 @Component({
-    selector: 'landing-page',
-    styleUrls: ['./landing-page.component.css'],
-    templateUrl: './landing-page.component.html',
-    standalone: true,
-    imports: [ LandingPageMobileComponent, MatGridList, MatGridTile, DateLocationComponent, CurrentRunDisplayComponent, ViewerDisplayComponent, DriverComponent, AccelerationGraphsComponent, BrakePressureDisplayComponent, RasberryPiComponent, AccelerationOverTimeDisplayComponent, SpeedOverTimeDisplayComponent, MotorInfoComponent,TorqueDisplayComponent, LatencyDisplayComponent, ConnectionDisplayComponent]
+  selector: 'landing-page',
+  styleUrls: ['./landing-page.component.css'],
+  templateUrl: './landing-page.component.html',
+  standalone: true,
+  imports: [
+    LandingPageMobileComponent,
+    MatGridList,
+    MatGridTile,
+    DateLocationComponent,
+    CurrentRunDisplayComponent,
+    ViewerDisplayComponent,
+    DriverComponent,
+    AccelerationGraphsComponent,
+    BrakePressureDisplayComponent,
+    RasberryPiComponent,
+    AccelerationOverTimeDisplayComponent,
+    SpeedOverTimeDisplayComponent,
+    MotorInfoComponent,
+    TorqueDisplayComponent,
+    LatencyDisplayComponent,
+    ConnectionDisplayComponent
+  ]
 })
 export default class LandingPageComponent implements OnInit {
   private storage = inject(Storage);

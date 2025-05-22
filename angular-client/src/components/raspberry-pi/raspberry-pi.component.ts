@@ -7,14 +7,12 @@ import RaspberryPiDesktopComponent from './raspberry-pi-desktop-content/raspberr
 import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-pi-mobile.component';
 import TypographyComponent from '../typography/typography.component';
 
-
-
 @Component({
-    selector: 'raspberry-pi',
-    templateUrl: './raspberry-pi.component.html',
-    styleUrls: ['./raspberry-pi.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent]
+  selector: 'raspberry-pi',
+  templateUrl: './raspberry-pi.component.html',
+  styleUrls: ['./raspberry-pi.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent]
 })
 export default class RasberryPiComponent implements OnInit {
   private storage = inject(Storage);

@@ -5,11 +5,11 @@ import TypographyComponent from '../typography/typography.component';
 import VStackComponent from '../vstack/vstack.component';
 
 @Component({
-    selector: 'messages-per-second',
-    templateUrl: './messages-per-second.component.html',
-    styleUrl: './messages-per-second.component.css',
-    imports: [TypographyComponent, VStackComponent],
-    standalone: true,
+  selector: 'messages-per-second',
+  templateUrl: './messages-per-second.component.html',
+  styleUrl: './messages-per-second.component.css',
+  imports: [TypographyComponent, VStackComponent],
+  standalone: true
 })
 export class MessagesPerSecondComponent {
   messagesPerSecond: number | undefined = undefined;

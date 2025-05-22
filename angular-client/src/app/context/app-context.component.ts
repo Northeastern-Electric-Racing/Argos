@@ -17,10 +17,10 @@ import TypographyComponent from 'src/components/typography/typography.component'
  * Container for the entire application, contains the socket service, API serivce, and storage service.
  */
 @Component({
-    selector: 'app-context',
-    templateUrl: './app-context.component.html',
-    standalone: true,
-    imports: [Toast, AppNavBarComponent, RouterOutlet]
+  selector: 'app-context',
+  templateUrl: './app-context.component.html',
+  standalone: true,
+  imports: [Toast, AppNavBarComponent, RouterOutlet]
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
@@ -32,7 +32,7 @@ export default class AppContextComponent implements OnInit {
   socket = io((environment as any).url || 'http://localhost:8000');
   socketService = new SocketService(this.socket);
 
-   constructor(
+  constructor(
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer
   ) {

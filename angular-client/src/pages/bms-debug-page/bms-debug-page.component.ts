@@ -10,11 +10,21 @@ import { SegmentSummaryComponent } from './components/segment-summary/segment-su
 import { CellByCellHeatMapComponent } from './components/cell-by-cell-heat-map/cell-by-cell-heat-map.component';
 
 @Component({
-    selector: 'app-bms-debug-page',
-    templateUrl: './bms-debug-page.component.html',
-    styleUrl: './bms-debug-page.component.css',
-    standalone: true,
-    imports: [MatGridList, MatGridTile, BmsHeaderComponent, BmsAtAGlanceComponent, AccHighVoltageComponent, AccLowVoltageComponent, AccHighTempComponent, SegmentSummaryComponent, CellByCellHeatMapComponent]
+  selector: 'app-bms-debug-page',
+  templateUrl: './bms-debug-page.component.html',
+  styleUrl: './bms-debug-page.component.css',
+  standalone: true,
+  imports: [
+    MatGridList,
+    MatGridTile,
+    BmsHeaderComponent,
+    BmsAtAGlanceComponent,
+    AccHighVoltageComponent,
+    AccLowVoltageComponent,
+    AccHighTempComponent,
+    SegmentSummaryComponent,
+    CellByCellHeatMapComponent
+  ]
 })
 export class BmsDebugPageComponent {
   time = new Date();

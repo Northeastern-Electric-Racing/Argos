@@ -5,19 +5,17 @@ import { MatIcon } from '@angular/material/icon';
 import { NgStyle } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 
-
-
 /**
  * Sidebar Card Component to display a card in the sidebar.
  * @param title The title of the card.
  * @param subtitle The subtitle of the card.
  */
 @Component({
-    selector: 'sidebar-card',
-    templateUrl: './sidebar-card.component.html',
-    styleUrls: ['./sidebar-card.component.css'],
-    standalone: true,
-    imports: [MatIcon, NgStyle, TypographyComponent]
+  selector: 'sidebar-card',
+  templateUrl: './sidebar-card.component.html',
+  styleUrls: ['./sidebar-card.component.css'],
+  standalone: true,
+  imports: [MatIcon, NgStyle, TypographyComponent]
 })
 export default class SidebarCardComponent implements OnInit {
   private storage = inject(Storage);

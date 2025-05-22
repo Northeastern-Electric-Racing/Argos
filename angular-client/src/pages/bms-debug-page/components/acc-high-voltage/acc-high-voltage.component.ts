@@ -6,11 +6,11 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 
 @Component({
-    selector: 'acc-high-voltage',
-    templateUrl: './acc-high-voltage.component.html',
-    styleUrl: './acc-high-voltage.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
+  selector: 'acc-high-voltage',
+  templateUrl: './acc-high-voltage.component.html',
+  styleUrl: './acc-high-voltage.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
 })
 export class AccHighVoltageComponent implements OnInit {
   storage = inject(Storage);

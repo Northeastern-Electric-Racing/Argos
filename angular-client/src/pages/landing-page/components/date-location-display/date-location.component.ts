@@ -6,18 +6,17 @@ import APIService from 'src/services/api.service';
 import { MessageService } from 'primeng/api';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
-
 import { DividerComponent } from '../../../../components/divider/divider';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
-    selector: 'date-location',
-    templateUrl: './date-location.component.html',
-    styleUrl: './date-location.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent]
+  selector: 'date-location',
+  templateUrl: './date-location.component.html',
+  styleUrl: './date-location.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent]
 })
 export class DateLocationComponent implements OnInit {
   private storage = inject(Storage);

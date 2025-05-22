@@ -7,14 +7,12 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
-
-
 @Component({
-    selector: 'charging-status',
-    templateUrl: './charging-status.component.html',
-    styleUrls: ['./charging-status.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
+  selector: 'charging-status',
+  templateUrl: './charging-status.component.html',
+  styleUrls: ['./charging-status.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class ChargingStatusComponent implements OnInit {
   @Input() displayLight: boolean = true;

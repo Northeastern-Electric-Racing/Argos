@@ -5,17 +5,16 @@ import { Chip } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
-
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
-    selector: 'chip-diagnostics',
-    templateUrl: './chip-diagnostics.component.html',
-    styleUrl: './chip-diagnostics.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
+  selector: 'chip-diagnostics',
+  templateUrl: './chip-diagnostics.component.html',
+  styleUrl: './chip-diagnostics.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
 })
 export class ChipDiagnosticsComponent implements OnInit {
   private storage = inject(Storage);

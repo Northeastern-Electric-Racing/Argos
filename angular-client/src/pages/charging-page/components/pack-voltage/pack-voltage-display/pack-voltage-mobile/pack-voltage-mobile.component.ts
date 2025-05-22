@@ -8,14 +8,12 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
-
-
 @Component({
-    selector: 'pack-voltage-mobile',
-    templateUrl: './pack-voltage-mobile.component.html',
-    styleUrls: ['./pack-voltage-mobile.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, PackVoltageGraphComponent, TypographyComponent, HStackComponent, VStackComponent]
+  selector: 'pack-voltage-mobile',
+  templateUrl: './pack-voltage-mobile.component.html',
+  styleUrls: ['./pack-voltage-mobile.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, PackVoltageGraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export default class PackVoltageMobileDisplayComponent {
   private storage = inject(Storage);

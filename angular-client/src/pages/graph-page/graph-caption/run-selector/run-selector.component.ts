@@ -8,11 +8,11 @@ import { MessageService } from 'primeng/api';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
-    selector: 'run-selector',
-    templateUrl: './run-selector.component.html',
-    styleUrls: ['./run-selector.component.css'],
-    standalone: true,
-    imports: [ButtonComponent]
+  selector: 'run-selector',
+  templateUrl: './run-selector.component.html',
+  styleUrls: ['./run-selector.component.css'],
+  standalone: true,
+  imports: [ButtonComponent]
 })
 export class RunSelectorComponent implements OnInit {
   public dialogService = inject(DialogService);

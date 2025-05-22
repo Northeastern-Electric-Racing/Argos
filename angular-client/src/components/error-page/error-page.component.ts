@@ -6,11 +6,11 @@ import TypographyComponent from '../typography/typography.component';
  * @param errorMessage The error message to display.
  */
 @Component({
-    selector: 'error-page',
-    templateUrl: './error-page.component.html',
-    styleUrls: ['./error-page.component.css'],
-    imports: [TypographyComponent],
-    standalone: true,
+  selector: 'error-page',
+  templateUrl: './error-page.component.html',
+  styleUrls: ['./error-page.component.css'],
+  imports: [TypographyComponent],
+  standalone: true
 })
 export default class ErrorPageComponent {
   @Input() errorMessage!: string;

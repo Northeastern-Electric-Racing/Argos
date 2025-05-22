@@ -2,7 +2,6 @@ import { Component, HostListener, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 
-
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import PackVoltageDisplayComponent from './components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
 import HighLowCellDisplayComponent from './components/high-low-cell/high-low-cell-display/high-low-cell-display.component';
@@ -18,11 +17,23 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
  * Container for the Charging page, obtains data from the storage service.
  */
 @Component({
-    selector: 'charging-page',
-    styleUrls: ['./charging-page.component.css'],
-    templateUrl: './charging-page.component.html',
-    standalone: true,
-    imports: [ ChargingPageMobileComponent, MatGridList, MatGridTile, PackVoltageDisplayComponent, HighLowCellDisplayComponent, CellTempDisplayComponent,FaultDisplayComponent,CurrentDisplayComponent, StateOfChargeDisplayComponent, PackTempComponent, CombinedStatusDisplayComponent]
+  selector: 'charging-page',
+  styleUrls: ['./charging-page.component.css'],
+  templateUrl: './charging-page.component.html',
+  standalone: true,
+  imports: [
+    ChargingPageMobileComponent,
+    MatGridList,
+    MatGridTile,
+    PackVoltageDisplayComponent,
+    HighLowCellDisplayComponent,
+    CellTempDisplayComponent,
+    FaultDisplayComponent,
+    CurrentDisplayComponent,
+    StateOfChargeDisplayComponent,
+    PackTempComponent,
+    CombinedStatusDisplayComponent
+  ]
 })
 export default class ChargingPageComponent implements OnInit {
   private storage = inject(Storage);

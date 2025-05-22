@@ -8,14 +8,12 @@ import { InfoBackgroundComponent } from '../info-background/info-background.comp
 import TypographyComponent from '../typography/typography.component';
 import VStackComponent from '../vstack/vstack.component';
 
-
-
 @Component({
-    selector: 'driver-component',
-    templateUrl: './driver-component.html',
-    styleUrls: ['./driver-component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
+  selector: 'driver-component',
+  templateUrl: './driver-component.html',
+  styleUrls: ['./driver-component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export class DriverComponent implements OnInit {
   private storage = inject(Storage);

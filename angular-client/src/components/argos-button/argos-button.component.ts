@@ -6,10 +6,10 @@ import { Component, input, OnInit } from '@angular/core';
  * Currently has one set button style but can be expanded to have more customizable styles
  */
 @Component({
-    selector: 'argos-button',
-    templateUrl: './argos-button.component.html',
-    styleUrls: ['./argos-button.component.css'],
-    standalone: true
+  selector: 'argos-button',
+  templateUrl: './argos-button.component.html',
+  styleUrls: ['./argos-button.component.css'],
+  standalone: true
 })
 export class ButtonComponent implements OnInit {
   label = input.required<string>();

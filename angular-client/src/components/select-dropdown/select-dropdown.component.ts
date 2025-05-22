@@ -13,11 +13,11 @@ export interface DropdownOption {
 }
 
 @Component({
-    selector: 'select-dropdown',
-    templateUrl: './select-dropdown.component.html',
-    styleUrl: './select-dropdown.component.css',
-    standalone: true,
-    imports: [Select, ReactiveFormsModule, FormsModule]
+  selector: 'select-dropdown',
+  templateUrl: './select-dropdown.component.html',
+  styleUrl: './select-dropdown.component.css',
+  standalone: true,
+  imports: [Select, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent implements OnInit {
   constructor() {}

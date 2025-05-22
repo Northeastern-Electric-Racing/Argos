@@ -2,7 +2,6 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { Component, Input } from '@angular/core';
 import { DataType, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
-
 import { AsyncPipe } from '@angular/common';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import SidebarCardComponent from '../sidebar-card/sidebar-card.component';
@@ -11,44 +10,57 @@ import SidebarCardComponent from '../sidebar-card/sidebar-card.component';
  * Node display component to display a card in the sidebar.
  */
 @Component({
-    selector: 'node-display',
-    templateUrl: './node-display.component.html',
-    styleUrls: ['./node-display.component.css'],
-    animations: [
-        trigger('toggleExpand', [
-            state('desktop-true', style({
-                height: '*',
-                opacity: 1,
-                transform: 'translateY(0)'
-            })),
-            state('desktop-false', style({
-                height: 0,
-                opacity: 0,
-                transform: 'translateY(-25%)'
-            }), { params: { dropDown: true } }),
-            state('mobile-true', style({
-                opacity: 1,
-                width: '*'
-            })),
-            state('mobile-false', style({
-                opacity: 0,
-                width: 0
-            })),
-            transition('desktop-false => desktop-true', [
-                style({
-                    height: 0,
-                    opacity: 0,
-                    transform: 'translateY(-25%)'
-                }),
-                animate('400ms')
-            ]),
-            transition('desktop-true => desktop-false', [animate('400ms')]),
-            transition('mobile-true => mobile-false', [animate('400ms')]),
-            transition('mobile-false => mobile-true', [animate('400ms')])
-        ])
-    ],
-    standalone: true,
-    imports: [ AsyncPipe, NodeFilterPipe, SidebarCardComponent]
+  selector: 'node-display',
+  templateUrl: './node-display.component.html',
+  styleUrls: ['./node-display.component.css'],
+  animations: [
+    trigger('toggleExpand', [
+      state(
+        'desktop-true',
+        style({
+          height: '*',
+          opacity: 1,
+          transform: 'translateY(0)'
+        })
+      ),
+      state(
+        'desktop-false',
+        style({
+          height: 0,
+          opacity: 0,
+          transform: 'translateY(-25%)'
+        }),
+        { params: { dropDown: true } }
+      ),
+      state(
+        'mobile-true',
+        style({
+          opacity: 1,
+          width: '*'
+        })
+      ),
+      state(
+        'mobile-false',
+        style({
+          opacity: 0,
+          width: 0
+        })
+      ),
+      transition('desktop-false => desktop-true', [
+        style({
+          height: 0,
+          opacity: 0,
+          transform: 'translateY(-25%)'
+        }),
+        animate('400ms')
+      ]),
+      transition('desktop-true => desktop-false', [animate('400ms')]),
+      transition('mobile-true => mobile-false', [animate('400ms')]),
+      transition('mobile-false => mobile-true', [animate('400ms')])
+    ])
+  ],
+  standalone: true,
+  imports: [AsyncPipe, NodeFilterPipe, SidebarCardComponent]
 })
 export default class NodeDisplayComponent {
   @Input() node!: NodeWithVisibilityToggle;

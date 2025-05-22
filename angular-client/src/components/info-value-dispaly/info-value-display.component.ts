@@ -29,11 +29,18 @@ export interface ConnectionDotConfig {
 export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConfig;
 
 @Component({
-    selector: 'info-value-display',
-    templateUrl: './info-value-display.component.html',
-    styleUrl: './info-value-display.component.css',
-    standalone: true,
-    imports: [BatteryPercentageComponent, ConnectionDotWithMessageComponent, TypographyComponent, ThermometerComponent, HStackComponent,VStackComponent]
+  selector: 'info-value-display',
+  templateUrl: './info-value-display.component.html',
+  styleUrl: './info-value-display.component.css',
+  standalone: true,
+  imports: [
+    BatteryPercentageComponent,
+    ConnectionDotWithMessageComponent,
+    TypographyComponent,
+    ThermometerComponent,
+    HStackComponent,
+    VStackComponent
+  ]
 })
 export class InfoValueDisplayComponent implements OnChanges {
   ngOnChanges(): void {

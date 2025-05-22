@@ -5,8 +5,6 @@ import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
 
-
-
 /**
  * Component that is essentially the template/background for
  * info displayed on the dashboard
@@ -18,11 +16,11 @@ interface ButtonInputs {
 }
 
 @Component({
-    selector: 'info-background',
-    templateUrl: './info-background.component.html',
-    styleUrls: ['./info-background.component.css'],
-    standalone: true,
-    imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent,]
+  selector: 'info-background',
+  templateUrl: './info-background.component.html',
+  styleUrls: ['./info-background.component.css'],
+  standalone: true,
+  imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent]
 })
 export class InfoBackgroundComponent {
   icon = input<string>();

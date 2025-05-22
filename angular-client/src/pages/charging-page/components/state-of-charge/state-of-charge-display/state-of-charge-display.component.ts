@@ -4,17 +4,16 @@ import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../../../../../components/info-background/info-background.component';
 
-
 import { BatteryPercentageComponent } from '../../../../../components/battery-percentage/battery-percentage.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
-    selector: 'state-of-charge-display',
-    templateUrl: './state-of-charge-display.component.html',
-    styleUrls: ['./state-of-charge-display.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, BatteryPercentageComponent, TypographyComponent, HStackComponent]
+  selector: 'state-of-charge-display',
+  templateUrl: './state-of-charge-display.component.html',
+  styleUrls: ['./state-of-charge-display.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, BatteryPercentageComponent, TypographyComponent, HStackComponent]
 })
 export default class StateOfChargeDisplayComponent implements OnInit {
   private storage = inject(Storage);

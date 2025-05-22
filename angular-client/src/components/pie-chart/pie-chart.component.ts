@@ -12,11 +12,11 @@ export type ChartOptions = {
 };
 
 @Component({
-    selector: 'pie-chart',
-    templateUrl: 'pie-chart.component.html',
-    styleUrls: ['pie-chart.component.css'],
-    standalone: true,
-    imports: [NgApexchartsModule]
+  selector: 'pie-chart',
+  templateUrl: 'pie-chart.component.html',
+  styleUrls: ['pie-chart.component.css'],
+  standalone: true,
+  imports: [NgApexchartsModule]
 })
 export default class PieChartComponent implements OnInit {
   private renderer = inject(Renderer2);

@@ -4,11 +4,11 @@ import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
 
 @Component({
-    selector: 'graph-dialog',
-    templateUrl: './graph-dialog.component.html',
-    providers: [DialogService],
-    standalone: true,
-    imports: [GraphComponent]
+  selector: 'graph-dialog',
+  templateUrl: './graph-dialog.component.html',
+  providers: [DialogService],
+  standalone: true,
+  imports: [GraphComponent]
 })
 export class GraphDialogComponent {
   public dialogService = inject(DialogService);

@@ -6,11 +6,11 @@ type JusitfyContent = 'space-between' | 'space-around' | 'space-evenly' | 'cente
 type AlignItems = 'center' | 'start' | 'end' | 'stretch';
 
 @Component({
-    selector: 'hstack',
-    templateUrl: './hstack.component.html',
-    styleUrls: ['./hstack.component.css'],
-    standalone: true,
-    imports: [NgStyle]
+  selector: 'hstack',
+  templateUrl: './hstack.component.html',
+  styleUrls: ['./hstack.component.css'],
+  standalone: true,
+  imports: [NgStyle]
 })
 export default class HStackComponent implements OnInit {
   @Input() spacing: string = '20px';

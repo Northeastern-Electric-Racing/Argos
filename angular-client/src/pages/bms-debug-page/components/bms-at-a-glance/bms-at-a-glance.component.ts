@@ -10,16 +10,15 @@ import { getConnectionDotStatusColor } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
-
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
-    selector: 'bms-at-a-glance',
-    templateUrl: './bms-at-a-glance.component.html',
-    styleUrl: './bms-at-a-glance.component.css',
-    standalone: true,
-    imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
+  selector: 'bms-at-a-glance',
+  templateUrl: './bms-at-a-glance.component.html',
+  styleUrl: './bms-at-a-glance.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
 })
 export class BmsAtAGlanceComponent implements OnInit {
   private storage = inject(Storage);

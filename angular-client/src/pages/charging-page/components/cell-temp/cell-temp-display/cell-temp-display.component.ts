@@ -5,7 +5,6 @@ import { GraphData } from 'src/utils/types.utils';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../../components/info-background/info-background.component';
 
-
 import { DividerComponent } from '../../../../../components/divider/divider';
 import CellTempMobileComponent from './cell-temp-mobile/cell-temp-mobile.component';
 import CellTempGraphComponent from '../cell-temp-graph/cell-temp-graph.component';
@@ -14,11 +13,19 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
-    selector: 'cell-temp-display',
-    templateUrl: './cell-temp-display.component.html',
-    styleUrls: ['./cell-temp-display.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, DividerComponent, CellTempMobileComponent, CellTempGraphComponent, TypographyComponent, VStackComponent,HStackComponent]
+  selector: 'cell-temp-display',
+  templateUrl: './cell-temp-display.component.html',
+  styleUrls: ['./cell-temp-display.component.css'],
+  standalone: true,
+  imports: [
+    InfoBackgroundComponent,
+    DividerComponent,
+    CellTempMobileComponent,
+    CellTempGraphComponent,
+    TypographyComponent,
+    VStackComponent,
+    HStackComponent
+  ]
 })
 export default class CellTempDisplayComponent implements OnInit {
   private storage = inject(Storage);

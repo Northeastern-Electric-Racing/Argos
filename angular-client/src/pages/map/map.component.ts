@@ -7,18 +7,17 @@ import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 import { Run } from 'src/utils/types.utils';
 
-
 import { RunSelectorComponent } from '../graph-page/graph-caption/run-selector/run-selector.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 
 @Component({
-    selector: 'map',
-    templateUrl: './map.component.html',
-    styleUrls: ['./map.component.css'],
-    standalone: true,
-    imports: [ RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent]
+  selector: 'map',
+  templateUrl: './map.component.html',
+  styleUrls: ['./map.component.css'],
+  standalone: true,
+  imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent]
 })
 export default class MapComponent implements OnInit {
   private map = inject(MapService);

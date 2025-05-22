@@ -6,7 +6,6 @@ import { Run } from 'src/utils/types.utils';
 import { PrimeTemplate } from 'primeng/api';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 
-
 import { Button } from 'primeng/button';
 import TypographyComponent from '../typography/typography.component';
 
@@ -16,11 +15,11 @@ export interface DialogData {
 }
 
 @Component({
-    selector: 'carousel',
-    templateUrl: 'carousel.component.html',
-    styleUrls: ['carousel.component.css'],
-    standalone: true,
-    imports: [Carousel, PrimeTemplate, MatGridList, MatGridTile, Button, TypographyComponent]
+  selector: 'carousel',
+  templateUrl: 'carousel.component.html',
+  styleUrls: ['carousel.component.css'],
+  standalone: true,
+  imports: [Carousel, PrimeTemplate, MatGridList, MatGridTile, Button, TypographyComponent]
 })
 export class CarouselComponent {
   public dialogRef = inject(DynamicDialogRef);

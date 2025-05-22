@@ -2,14 +2,12 @@ import { Component, input } from '@angular/core';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { HeatMapView } from 'src/services/heat-map.service';
 
-
-
 @Component({
-    selector: 'cell-tile',
-    templateUrl: './cell-tile.component.html',
-    styleUrl: './cell-tile.component.css',
-    standalone: true,
-    imports: [TypographyComponent]
+  selector: 'cell-tile',
+  templateUrl: './cell-tile.component.html',
+  styleUrl: './cell-tile.component.css',
+  standalone: true,
+  imports: [TypographyComponent]
 })
 export class CellTileComponent {
   value = input<number | undefined>();

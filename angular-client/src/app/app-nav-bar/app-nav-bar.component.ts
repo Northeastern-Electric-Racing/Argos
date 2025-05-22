@@ -10,7 +10,6 @@ import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routing.module';
 import { Sidebar } from 'primeng/sidebar';
 
-
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -27,11 +26,22 @@ interface NavItem {
 }
 
 @Component({
-    selector: 'app-nav-bar',
-    templateUrl: './app-nav-bar.component.html',
-    styleUrls: ['./app-nav-bar.component.css'],
-    standalone: true,
-    imports: [Sidebar, PrimeTemplate, CurrentRunDisplayComponent, ToastButtonComponent, MessagesPerSecondComponent, AsyncPipe, DatePipe, TypographyComponent, HStackComponent, SidebarChipComponent]
+  selector: 'app-nav-bar',
+  templateUrl: './app-nav-bar.component.html',
+  styleUrls: ['./app-nav-bar.component.css'],
+  standalone: true,
+  imports: [
+    Sidebar,
+    PrimeTemplate,
+    CurrentRunDisplayComponent,
+    ToastButtonComponent,
+    MessagesPerSecondComponent,
+    AsyncPipe,
+    DatePipe,
+    TypographyComponent,
+    HStackComponent,
+    SidebarChipComponent
+  ]
 })
 export class AppNavBarComponent implements OnInit {
   private serverService = inject(APIService);

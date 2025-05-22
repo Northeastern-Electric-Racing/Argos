@@ -6,13 +6,18 @@ import FaultedStatusComponent from '../../faulted-status/faulted-status.componen
 import ActiveStatusComponent from '../../active-status/active-status.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
-
-
 @Component({
-    selector: 'combined-status-mobile',
-    templateUrl: './combined-status-mobile.component.html',
-    styleUrls: ['./combined-status-mobile.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent,BalancingStatusComponent, ChargingStatusComponent, FaultedStatusComponent, ActiveStatusComponent, VStackComponent]
+  selector: 'combined-status-mobile',
+  templateUrl: './combined-status-mobile.component.html',
+  styleUrls: ['./combined-status-mobile.component.css'],
+  standalone: true,
+  imports: [
+    InfoBackgroundComponent,
+    BalancingStatusComponent,
+    ChargingStatusComponent,
+    FaultedStatusComponent,
+    ActiveStatusComponent,
+    VStackComponent
+  ]
 })
 export default class CombinedStatusMobileComponent {}

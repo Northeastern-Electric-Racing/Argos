@@ -8,11 +8,19 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import ThermometerComponent from 'src/components/thermometer/thermometer.component';
 
 @Component({
-    selector: 'raspberry-pi-mobile',
-    templateUrl: './raspberry-pi-mobile.component.html',
-    styleUrls: ['./raspberry-pi-mobile.component.css'],
-    standalone: true,
-    imports: [CircularPercentageComponent, DividerComponent, MatIcon, TypographyComponent, HStackComponent, VStackComponent, ThermometerComponent]
+  selector: 'raspberry-pi-mobile',
+  templateUrl: './raspberry-pi-mobile.component.html',
+  styleUrls: ['./raspberry-pi-mobile.component.css'],
+  standalone: true,
+  imports: [
+    CircularPercentageComponent,
+    DividerComponent,
+    MatIcon,
+    TypographyComponent,
+    HStackComponent,
+    VStackComponent,
+    ThermometerComponent
+  ]
 })
 export default class RaspberryPiMobileComponent {
   @Input() cpuUsage: number = 0;

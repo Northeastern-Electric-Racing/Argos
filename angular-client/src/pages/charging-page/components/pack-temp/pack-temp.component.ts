@@ -7,14 +7,12 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import ThermometerComponent from 'src/components/thermometer/thermometer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
-
-
 @Component({
-    selector: 'pack-temp',
-    templateUrl: './pack-temp.component.html',
-    styleUrls: ['./pack-temp.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, TypographyComponent, ThermometerComponent, HStackComponent]
+  selector: 'pack-temp',
+  templateUrl: './pack-temp.component.html',
+  styleUrls: ['./pack-temp.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, TypographyComponent, ThermometerComponent, HStackComponent]
 })
 export default class PackTempComponent implements OnInit {
   private storage = inject(Storage);

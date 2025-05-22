@@ -5,10 +5,10 @@ import Storage from 'src/services/storage.service';
 import { ButtonComponent } from '../argos-button/argos-button.component';
 
 @Component({
-    selector: 'more-details',
-    templateUrl: './more-details.component.html',
-    standalone: true,
-    imports: [ButtonComponent]
+  selector: 'more-details',
+  templateUrl: './more-details.component.html',
+  standalone: true,
+  imports: [ButtonComponent]
 })
 export default class MoreDetailsComponent {
   private router = inject(Router);

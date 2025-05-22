@@ -8,13 +8,12 @@ import MediaMTXWebRTCReader from 'src/utils/MediaMTXReader';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import TypographyComponent from 'src/components/typography/typography.component';
 
-
 @Component({
-    selector: 'camera-page',
-    templateUrl: './camera-page.component.html',
-    styleUrl: './camera-page.component.css',
-    standalone: true,
-    imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
+  selector: 'camera-page',
+  templateUrl: './camera-page.component.html',
+  styleUrl: './camera-page.component.css',
+  standalone: true,
+  imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
 })
 export class CameraPageComponent implements OnInit {
   private serverService = inject(APIService);

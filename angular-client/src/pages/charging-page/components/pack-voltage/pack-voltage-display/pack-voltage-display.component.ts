@@ -9,14 +9,18 @@ import PackVoltageGraphComponent from '../pack-voltage-graph/pack-voltage-graph.
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
-
-
 @Component({
-    selector: 'pack-voltage-display',
-    templateUrl: './pack-voltage-display.component.html',
-    styleUrls: ['./pack-voltage-display.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, PackVoltageMobileDisplayComponent, PackVoltageGraphComponent, TypographyComponent, HStackComponent]
+  selector: 'pack-voltage-display',
+  templateUrl: './pack-voltage-display.component.html',
+  styleUrls: ['./pack-voltage-display.component.css'],
+  standalone: true,
+  imports: [
+    InfoBackgroundComponent,
+    PackVoltageMobileDisplayComponent,
+    PackVoltageGraphComponent,
+    TypographyComponent,
+    HStackComponent
+  ]
 })
 export default class PackVoltageDisplayComponent implements OnInit {
   private storage = inject(Storage);

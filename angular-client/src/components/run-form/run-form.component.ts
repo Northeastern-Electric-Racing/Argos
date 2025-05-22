@@ -11,14 +11,12 @@ import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import LoadingPageComponent from '../loading-page/loading-page.component';
 
-
-
 @Component({
-    selector: 'run-form',
-    templateUrl: './run-form.component.html',
-    styleUrl: './run-form.component.css',
-    standalone: true,
-    imports: [ SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
+  selector: 'run-form',
+  templateUrl: './run-form.component.html',
+  styleUrl: './run-form.component.css',
+  standalone: true,
+  imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
 })
 export class RunFormComponent implements OnInit {
   public apiService = inject(APIService);

@@ -3,16 +3,15 @@ import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType } from 'src/utils/types.utils';
 
-
 import { NgTemplateOutlet } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
-    selector: 'graph-caption',
-    styleUrls: ['./graph-caption.component.css'],
-    templateUrl: './graph-caption.component.html',
-    standalone: true,
-    imports: [ NgTemplateOutlet, TypographyComponent]
+  selector: 'graph-caption',
+  styleUrls: ['./graph-caption.component.css'],
+  templateUrl: './graph-caption.component.html',
+  standalone: true,
+  imports: [NgTemplateOutlet, TypographyComponent]
 })
 export default class GraphInfoComponent implements OnInit {
   dataType = input.required<Subject<DataType[] | undefined>>();

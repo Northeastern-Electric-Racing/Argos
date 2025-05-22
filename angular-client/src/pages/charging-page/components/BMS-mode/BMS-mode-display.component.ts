@@ -6,8 +6,6 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
-
-
 enum BMSMODE {
   DEFAULT = 0,
   READY = 1,
@@ -16,11 +14,11 @@ enum BMSMODE {
 }
 
 @Component({
-    selector: 'BMS-mode-display',
-    templateUrl: './BMS-mode-display.component.html',
-    styleUrls: ['./BMS-mode-display.component.css'],
-    standalone: true,
-    imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent,]
+  selector: 'BMS-mode-display',
+  templateUrl: './BMS-mode-display.component.html',
+  styleUrls: ['./BMS-mode-display.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export default class BMSModeDisplayComponent implements OnInit {
   private storage = inject(Storage);
