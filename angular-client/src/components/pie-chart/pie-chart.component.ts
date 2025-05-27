@@ -32,7 +32,7 @@ export default class PieChartComponent implements OnInit {
     this.setChartWidth();
     setInterval(() => {
       this.setChartOptions();
-    }, 4000);
+    }, 2000);
   }
 
   setChartOptions() {
@@ -71,10 +71,6 @@ export default class PieChartComponent implements OnInit {
       labels,
       legend: {
         offsetX: 10
-      },
-      animations: {
-        enabled: false,
-        easing: 'linear'
       },
       title: {
         text: this.title()
