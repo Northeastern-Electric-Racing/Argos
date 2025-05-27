@@ -1,6 +1,9 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
+import { MatIcon } from '@angular/material/icon';
+import { NgStyle } from '@angular/common';
+import TypographyComponent from 'src/components/typography/typography.component';
 
 /**
  * Sidebar Card Component to display a card in the sidebar.
@@ -10,7 +13,9 @@ import { decimalPipe } from 'src/utils/pipes.utils';
 @Component({
   selector: 'sidebar-card',
   templateUrl: './sidebar-card.component.html',
-  styleUrls: ['./sidebar-card.component.css']
+  styleUrls: ['./sidebar-card.component.css'],
+  standalone: true,
+  imports: [MatIcon, NgStyle, TypographyComponent]
 })
 export default class SidebarCardComponent implements OnInit {
   private storage = inject(Storage);

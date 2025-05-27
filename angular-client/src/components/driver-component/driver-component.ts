@@ -4,11 +4,16 @@ import { DataTypeEnum } from 'src/data-type.enum';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 import { Run } from 'src/utils/types.utils';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+import TypographyComponent from '../typography/typography.component';
+import VStackComponent from '../vstack/vstack.component';
 
 @Component({
   selector: 'driver-component',
   templateUrl: './driver-component.html',
-  styleUrls: ['./driver-component.css']
+  styleUrls: ['./driver-component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export class DriverComponent implements OnInit {
   private storage = inject(Storage);

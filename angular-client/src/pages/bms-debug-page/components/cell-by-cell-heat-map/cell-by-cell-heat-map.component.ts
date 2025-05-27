@@ -6,6 +6,10 @@ import { AlphaCells, BetaCells, CellReading, CellService } from 'src/services/ce
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewComponent } from '../cell-view/cell-view.component';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+
+import { CellTileComponent } from './cell-tile/cell-tile.component';
+import HStackComponent from 'src/components/hstack/hstack.component';
 const formatAllSelectorName = (name: string) => {
   return 'Set ALL Maps: ' + name;
 };
@@ -13,7 +17,9 @@ const formatAllSelectorName = (name: string) => {
 @Component({
   selector: 'cell-by-cell-heat-map',
   templateUrl: './cell-by-cell-heat-map.component.html',
-  styleUrl: './cell-by-cell-heat-map.component.css'
+  styleUrl: './cell-by-cell-heat-map.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, CellTileComponent, HStackComponent]
 })
 export class CellByCellHeatMapComponent implements OnInit {
   private cellService = inject(CellService);

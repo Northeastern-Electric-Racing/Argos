@@ -1,4 +1,10 @@
 import { Component, input, OnChanges } from '@angular/core';
+import { BatteryPercentageComponent } from '../battery-percentage/battery-percentage.component';
+import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
+import TypographyComponent from '../typography/typography.component';
+import ThermometerComponent from '../thermometer/thermometer.component';
+import HStackComponent from '../hstack/hstack.component';
+import VStackComponent from '../vstack/vstack.component';
 
 export interface ThermometerConfig {
   type: 'thermometer-config';
@@ -25,7 +31,16 @@ export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConf
 @Component({
   selector: 'info-value-display',
   templateUrl: './info-value-display.component.html',
-  styleUrl: './info-value-display.component.css'
+  styleUrl: './info-value-display.component.css',
+  standalone: true,
+  imports: [
+    BatteryPercentageComponent,
+    ConnectionDotWithMessageComponent,
+    TypographyComponent,
+    ThermometerComponent,
+    HStackComponent,
+    VStackComponent
+  ]
 })
 export class InfoValueDisplayComponent implements OnChanges {
   ngOnChanges(): void {

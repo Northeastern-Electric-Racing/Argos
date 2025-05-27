@@ -4,11 +4,27 @@ import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-valu
 import Storage from 'src/services/storage.service';
 import { Chip, getConnectionDotStatusColor, Segment } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+
+import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
+import { ConnectionDotWithMessageComponent } from '../../../../components/connection-dot-with-message/connection-dot-with-message.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+import VStackComponent from 'src/components/vstack/vstack.component';
+import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'segment-at-a-glance',
   templateUrl: './segment-at-a-glance.component.html',
-  styleUrl: './segment-at-a-glance.component.css'
+  styleUrl: './segment-at-a-glance.component.css',
+  standalone: true,
+  imports: [
+    InfoBackgroundComponent,
+    InfoValueDisplayComponent,
+    ConnectionDotWithMessageComponent,
+    TypographyComponent,
+    VStackComponent,
+    HStackComponent
+  ]
 })
 export class SegmentAtAGlanceComponent {
   private storage = inject(Storage);

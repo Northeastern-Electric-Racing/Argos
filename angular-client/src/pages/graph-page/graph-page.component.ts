@@ -13,10 +13,32 @@ import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
 
+import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
+import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
+import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
+import HStackComponent from 'src/components/hstack/hstack.component';
+import CustomGraphComponent from './graph/graph.component';
+import GraphHeaderComponent from './graph-header/graph-header.component';
+import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
+import ErrorPageComponent from 'src/components/error-page/error-page.component';
+
 @Component({
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
-  styleUrls: ['./graph-page.component.css']
+  styleUrls: ['./graph-page.component.css'],
+  standalone: true,
+  imports: [
+    LoadingPageComponent,
+    ErrorPageComponent,
+    ButtonComponent,
+    FaultButtonsComponent,
+    GeneralButtonsComponent,
+    GraphSidebarComponent,
+    HStackComponent,
+    CustomGraphComponent,
+    GraphHeaderComponent
+  ]
 })
 export default class GraphPageComponent implements OnInit {
   private serverService = inject(APIService);

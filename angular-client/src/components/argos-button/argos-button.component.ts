@@ -8,7 +8,8 @@ import { Component, input, OnInit } from '@angular/core';
 @Component({
   selector: 'argos-button',
   templateUrl: './argos-button.component.html',
-  styleUrls: ['./argos-button.component.css']
+  styleUrls: ['./argos-button.component.css'],
+  standalone: true
 })
 export class ButtonComponent implements OnInit {
   label = input.required<string>();

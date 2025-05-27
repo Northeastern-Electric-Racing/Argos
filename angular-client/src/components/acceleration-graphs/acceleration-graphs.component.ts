@@ -3,6 +3,12 @@ import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+
+import { GraphComponent } from '../graph/graph.component';
+import TypographyComponent from '../typography/typography.component';
+import HStackComponent from '../hstack/hstack.component';
+import VStackComponent from '../vstack/vstack.component';
 
 /**
  * Component that displays acceleration data from the storage service
@@ -13,7 +19,9 @@ import { GraphData } from 'src/utils/types.utils';
 @Component({
   selector: 'acceleration-graphs',
   templateUrl: './acceleration-graphs.component.html',
-  styleUrls: ['./acceleration-graphs.component.css']
+  styleUrls: ['./acceleration-graphs.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, GraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export class AccelerationGraphsComponent implements OnInit {
   private storage = inject(Storage);

@@ -3,11 +3,16 @@ import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
+import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'balancing-status',
   templateUrl: './balancing-status.component.html',
-  styleUrls: ['./balancing-status.component.css']
+  styleUrls: ['./balancing-status.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class BalancingStatusComponent implements OnInit {
   @Input() displayLight: boolean = true;

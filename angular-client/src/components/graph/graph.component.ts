@@ -21,7 +21,8 @@ type ChartOptions = {
   selector: 'graph-component',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  providers: [DialogService]
+  providers: [DialogService],
+  standalone: true
 })
 export class GraphComponent implements OnInit {
   public dialogService = inject(DialogService);
@@ -87,7 +88,6 @@ export class GraphComponent implements OnInit {
         },
         animations: {
           enabled: false,
-          easing: 'linear',
           dynamicAnimation: {
             speed: 1000
           }

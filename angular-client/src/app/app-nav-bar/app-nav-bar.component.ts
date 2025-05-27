@@ -1,6 +1,6 @@
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { MessageService, PrimeTemplate } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
@@ -8,6 +8,15 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routing.module';
+import { Sidebar } from 'primeng/sidebar';
+
+import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
+import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
+import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import TypographyComponent from 'src/components/typography/typography.component';
+import HStackComponent from 'src/components/hstack/hstack.component';
+import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 
 interface NavItem {
   id: string;
@@ -19,7 +28,20 @@ interface NavItem {
 @Component({
   selector: 'app-nav-bar',
   templateUrl: './app-nav-bar.component.html',
-  styleUrls: ['./app-nav-bar.component.css']
+  styleUrls: ['./app-nav-bar.component.css'],
+  standalone: true,
+  imports: [
+    Sidebar,
+    PrimeTemplate,
+    CurrentRunDisplayComponent,
+    ToastButtonComponent,
+    MessagesPerSecondComponent,
+    AsyncPipe,
+    DatePipe,
+    TypographyComponent,
+    HStackComponent,
+    SidebarChipComponent
+  ]
 })
 export class AppNavBarComponent implements OnInit {
   private serverService = inject(APIService);

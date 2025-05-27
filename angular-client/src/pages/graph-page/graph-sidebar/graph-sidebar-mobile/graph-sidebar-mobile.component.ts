@@ -4,6 +4,10 @@ import { Observable, of } from 'rxjs';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
+import { AsyncPipe } from '@angular/common';
+import NodeDisplayComponent from '../node-display/node-display.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
@@ -33,7 +37,9 @@ import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils'
         )
       ])
     ])
-  ]
+  ],
+  standalone: true,
+  imports: [AsyncPipe, NodeDisplayComponent, TypographyComponent]
 })
 export default class GraphSidebarMobileComponent implements OnInit {
   @Input() dataTypes!: DataType[];

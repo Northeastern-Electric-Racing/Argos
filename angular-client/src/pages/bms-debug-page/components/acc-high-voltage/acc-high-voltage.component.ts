@@ -2,11 +2,15 @@ import { Component, inject, OnInit } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 
 @Component({
   selector: 'acc-high-voltage',
   templateUrl: './acc-high-voltage.component.html',
-  styleUrl: './acc-high-voltage.component.css'
+  styleUrl: './acc-high-voltage.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
 })
 export class AccHighVoltageComponent implements OnInit {
   storage = inject(Storage);

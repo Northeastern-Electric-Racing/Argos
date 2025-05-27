@@ -2,11 +2,13 @@ import { Component, OnInit, OnDestroy, input, inject } from '@angular/core';
 import { DataType, Node } from 'src/utils/types.utils';
 import { FormControl, FormGroup } from '@angular/forms';
 import { BehaviorSubject, debounceTime, Subscription } from 'rxjs';
-import { TreeNode } from 'primeng/api';
+import { TreeNode, PrimeTemplate } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent } from 'primeng/tree';
+import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
+import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import TypographyComponent from 'src/components/typography/typography.component';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -17,7 +19,9 @@ import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 @Component({
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
-  styleUrls: ['./graph-sidebar-desktop.component.css']
+  styleUrls: ['./graph-sidebar-desktop.component.css'],
+  standalone: true,
+  imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);

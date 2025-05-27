@@ -1,9 +1,12 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import TypographyComponent from '../typography/typography.component';
 
 @Component({
   selector: 'switch',
   templateUrl: './switch.component.html',
-  styleUrls: ['./switch.component.css']
+  styleUrls: ['./switch.component.css'],
+  standalone: true,
+  imports: [TypographyComponent]
 })
 export class SwitchComponent implements OnInit {
   @Input() isOn: boolean = false;

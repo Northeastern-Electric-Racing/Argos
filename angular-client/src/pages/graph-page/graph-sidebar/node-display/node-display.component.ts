@@ -2,6 +2,10 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { Component, Input } from '@angular/core';
 import { DataType, NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
+import { AsyncPipe } from '@angular/common';
+import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
+import SidebarCardComponent from '../sidebar-card/sidebar-card.component';
+
 /**
  * Node display component to display a card in the sidebar.
  */
@@ -54,7 +58,9 @@ import { DataType, NodeWithVisibilityToggle } from 'src/utils/types.utils';
       transition('mobile-true => mobile-false', [animate('400ms')]),
       transition('mobile-false => mobile-true', [animate('400ms')])
     ])
-  ]
+  ],
+  standalone: true,
+  imports: [AsyncPipe, NodeFilterPipe, SidebarCardComponent]
 })
 export default class NodeDisplayComponent {
   @Input() node!: NodeWithVisibilityToggle;

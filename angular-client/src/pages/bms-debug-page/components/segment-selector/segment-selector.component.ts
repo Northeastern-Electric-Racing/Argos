@@ -3,11 +3,18 @@ import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routing.module';
 import { DropdownOption } from 'src/components/select-dropdown/select-dropdown.component';
 import { allSegments } from 'src/utils/bms.utils';
+import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+
+import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
   selector: 'segment-selector',
   templateUrl: './segment-selector.component.html',
-  styleUrl: './segment-selector.component.css'
+  styleUrl: './segment-selector.component.css',
+  standalone: true,
+  imports: [InfoBackgroundComponent, SelectDropdownComponent, TypographyComponent, VStackComponent]
 })
 export class SegmentSelectorComponent implements OnInit {
   public router = inject(Router);
