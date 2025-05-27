@@ -1,20 +1,16 @@
 import { prisma as cloudPrisma } from "../prisma/cloud-prisma/prisma";
-import { LocalDataType } from "../types/local.types";
-import { CloudData, CloudDataType, CloudRun } from "../types/cloud.types";
-import { CsvDataRow, CsvDataTypeRow, CsvRunRow } from "../types/csv.types";
-import { readCsvFile } from "../utils/csv.utils";
-import { csvToCloudData } from "../transformers/csv.transformer";
 import { getMostRecentDownloadFolderPath } from "./audit.service";
+import { CouldNotConnectToCloudDB } from "../errors/upload.errors";
+import { getDataCSVPath, storagePaths } from "../storage-paths";
+import { execSync } from "child_process";
 import { processCsvInBatches } from "../utils/csv.utils";
-import {
-  RunsUploadError,
-  CouldNotConnectToCloudDB,
-} from "../errors/upload.errors";
-import { storagePaths } from "../storage-paths";
+import { LocalDataType, LocalRun } from "../types/local.types";
+import { CsvDataTypeRow, CsvRunRow } from "../types/csv.types";
+import { CloudDataType, CloudRun } from "../types/cloud.types";
 
 const csvNames = {
   run: (path: string) => `${path}/run.csv`,
-  data: (path: string, runId: number) => `${path}/data/run-${runId}-data.csv`,
+  data: (path: string) => `${path}/data/data.csv`,
   data_type: (path: string) => `${path}/data_type.csv`,
 };
 
@@ -27,9 +23,8 @@ async function checkDbConnection() {
 }
 
 export async function uploadToCloud(
-  dataBatchSize: number,
-  dataTypeBatchSize: number,
-  dumpFolderPaths: string[] | undefined
+  dumpFolderPaths: string[] | undefined,
+  dataTypeBatchSize: number
 ) {
   if (!dumpFolderPaths) {
     dumpFolderPaths = [await getMostRecentDownloadFolderPath()];
@@ -43,7 +38,7 @@ export async function uploadToCloud(
     console.info("Processing data types...");
     await processDataType(dumpFolderPath, dataTypeBatchSize);
     console.info("Startin Run uploads...");
-    await processRunsWithData(dumpFolderPath, dataBatchSize);
+    await processRunsWithData(dumpFolderPath);
 
     console.log(
       `CSV to Cloud transfer complete for ${dumpFolderPath}, time taken: ${
@@ -73,7 +68,6 @@ export async function processDataType(
       const cloudDataTypes: CloudDataType[] = batch.map((localDataType) => ({
         name: localDataType.name,
         unit: localDataType.unit,
-        nodeName: localDataType.nodeName,
       }));
 
       await cloudPrisma.data_type.createMany({
@@ -84,77 +78,76 @@ export async function processDataType(
     },
     batchSize
   );
+  console.log("Completed processing data types.");
 }
 
-export async function processRunsWithData(
-  dumpFolderPath: string,
-  dataBatchSize: number
-) {
+export async function processRunsWithData(dumpFolderPath: string) {
   const runsCsvPath = csvNames.run(dumpFolderPath);
-  const runs: CsvRunRow[] = await readCsvFile<CsvRunRow>(runsCsvPath);
 
-  for (const run of runs) {
-    let cloudRun: CloudRun = {
-      id: run.uuid,
-      runId: Number(run.runId),
-      driverName: run.driverName,
-      notes: run.notes,
-      time: new Date(run.time),
-    };
+  console.log("Processing Runs...");
 
-    await cloudPrisma.run.upsert({
-      where: { id: cloudRun.id },
-      create: cloudRun,
-      update: cloudRun,
-    });
+  await processCsvInBatches<CsvRunRow>(
+    runsCsvPath,
+    async (batch: CsvRunRow[]) => {
+      const cloudRuns: CloudRun[] = batch.map((localRun) => ({
+        id: localRun.id,
+        runId: parseInt(localRun.runId),
+        locationName: localRun.locationName,
+        notes: localRun.notes,
+        driverName: localRun.driverName,
+        time: localRun.time,
+      }));
 
-    await processCsvDataFile(
-      cloudRun.id,
-      cloudRun.runId,
-      dumpFolderPath,
-      dataBatchSize
-    );
-  }
-}
-
-export async function processCsvDataFile(
-  uuid: string,
-  runId: number,
-  dumpFolderPath: string,
-  batchSize: number
-): Promise<number> {
-  let dataForRun = 0;
-  let csvDataPath = csvNames.data(dumpFolderPath, runId);
-  let startTime = new Date();
-  await processCsvInBatches<CsvDataRow>(
-    csvDataPath,
-    async (batch) => {
-      let startTime = new Date();
-      const cloudData: CloudData[] = batch.map((localData: CsvDataRow) =>
-        csvToCloudData(localData, uuid)
+      cloudRuns.forEach((run) =>
+        execSync(
+          `psql ${process.env.CLOUD_DATABASE_URL} -c "INSERT INTO run(\\"runId\\", \\"driverName\\", \\"locationName\\",\\"notes\\",\\"time\\",\\"id\\") VALUES ('${run.runId}', '${run.driverName}', '${run.locationName}', '${run.notes}', '${run.time}', '${run.id}') ON CONFLICT (time) DO UPDATE SET id = EXCLUDED.id, \\"runId\\" = EXCLUDED.\\"runId\\""`
+        )
       );
-
-      let numOfData = cloudData.length;
-      await cloudPrisma.data.createMany({
-        data: cloudData,
-        skipDuplicates: true,
-      });
-
-      dataForRun += numOfData;
-
-      console.log(
-        `Inserted ${numOfData} data entries, time taken: ${
-          new Date().getTime() - startTime.getTime()
-        }ms`
-      );
+      console.log(`Inserted ${cloudRuns.length} run entries`);
     },
-    batchSize
+    100
   );
 
-  console.log(
-    `Total data uploaded for RUN ${runId}: ${dataForRun}, time taken: ${
-      new Date().getTime() - startTime.getTime()
-    }ms`
+  console.log("Processed runs");
+
+  console.log("Begin Transaction");
+
+  console.log("Processing data, this may take a while...");
+  const startTime = Date.now();
+
+  console.log("Creating Temporary Table");
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "DROP TABLE IF EXISTS data_temp;"`
   );
-  return dataForRun;
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "CREATE TABLE IF NOT EXISTS data_temp (LIKE data INCLUDING ALL); ALTER TABLE data_temp DROP CONSTRAINT IF EXISTS data_temp_pkey;"`
+  );
+
+  console.log("Copying to temp table");
+
+  execSync(
+    `psql ${
+      process.env.CLOUD_DATABASE_URL
+    } -c "\\copy data_temp(\\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\") FROM '${getDataCSVPath(
+      dumpFolderPath
+    )}' CSV HEADER;"`
+  );
+
+  console.log(`Data copying took: ${Date.now() - startTime}ms`);
+  console.log("Copied to temp table. Upserting to data table");
+
+  execSync(
+    `psql ${process.env.CLOUD_DATABASE_URL} -c "INSERT INTO data (\\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\")
+      SELECT \\"values\\",\\"time\\",\\"dataTypeName\\",\\"runId\\"
+      FROM data_temp
+      ON CONFLICT (time, \\"dataTypeName\\") DO NOTHING;"`
+  );
+
+  console.log("Dropping temp table");
+
+  execSync(`psql ${process.env.CLOUD_DATABASE_URL} -c "DROP TABLE data_temp"`);
+
+  console.log(`Completed Data transfer took ${Date.now() - startTime}ms`);
 }

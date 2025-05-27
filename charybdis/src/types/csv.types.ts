@@ -4,7 +4,7 @@ export interface CsvRunRow {
   that when a run upload fails, and we will be able to maintain access 
   and knowledge of the uuid mapping to our local runId.
   */
-  uuid: string;
+  id: string;
   runId: string;
   driverName: string;
   locationName: string;
@@ -22,7 +22,6 @@ export interface CsvDataRow {
 export interface CsvDataTypeRow {
   name: string;
   unit: string;
-  nodeName: string;
 }
 
 export interface AuditLogEntry {

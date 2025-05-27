@@ -1,0 +1,16 @@
+<hstack>
+  <run-selector [selectRun]="onRunSelected()" />
+  @if (historicalOn()) {
+    <argos-button [onClick]="onSetRealTime()" label="Realtime" additionalStyles="border: 1.4px solid #000" />
+  }
+  <argos-button
+    [onClick]="onClearDataType()"
+    label="Clear Graph"
+    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+  />
+  <select-dropdown
+    [options]="this.selectorConfig().options"
+    [placeholder]="selectorConfig().placeholder"
+    [defaultValue]="selectorConfig().defaultValue"
+  />
+</hstack>

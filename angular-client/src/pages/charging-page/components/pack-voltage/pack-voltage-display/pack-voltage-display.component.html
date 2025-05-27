@@ -1,7 +1,7 @@
 @if (isDesktop) {
   <info-background svgIcon="electric_meter" title="Pack. Voltage" [button]="resetGraphButton">
     <hstack>
-      <hstack style="width: 15%">
+      <hstack style="width: 15%; margin-bottom: 40px">
         <typography variant="info-value" [content]="voltage.toString() + 'V'" />
       </hstack>
       <pack-voltage-graph style="width: 80%; padding-bottom: 30px" [packVoltData]="packVoltData" />

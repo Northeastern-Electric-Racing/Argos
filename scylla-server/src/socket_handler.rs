@@ -6,11 +6,11 @@ use socketioxide::SocketIo;
 use std::{collections::HashMap, sync::atomic::Ordering, time::Duration};
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 
 use crate::metadata_structs::{
     map_dti_flt, FaultData, Node, TimerData, DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP,
-    FAULT_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
+    FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
 };
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
@@ -44,6 +44,7 @@ pub async fn socket_handler_with_metadata(
     let mut view_interval = tokio::time::interval(Duration::from_secs(3));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
+    let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
 
     // init timers
     let mut timer_map: HashMap<String, TimerData> = HashMap::new();
@@ -58,14 +59,17 @@ pub async fn socket_handler_with_metadata(
         );
     }
 
-    // init faults
+    // init faults, only cirtical faults, as of 3/31 can JSON
     let fault_regex_bms: Regex =
-        Regex::new(r"BMS\/Status\/F\/(.*)").expect("Could not compile regex!");
+        Regex::new(r"BMS\/Faults\/(.*)").expect("Could not compile regex!");
     let fault_regex_charger: Regex =
         Regex::new(r"Charger\/Box\/F_(.*)").expect("Could not compile regex!");
     let fault_regex_mpu: Regex =
-        Regex::new(r"MPU\/Fault\/F_(.*)").expect("Could not compile regex!");
+        Regex::new(r"MPU\/Fault\/Critical\/(.*)").expect("Could not compile regex!");
     let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
+
+    let mut msg_cnt = 0u64;
+    let mut last_instant = tokio::time::Instant::now();
 
     loop {
         tokio::select! {
@@ -74,6 +78,7 @@ pub async fn socket_handler_with_metadata(
                 break;
             },
             Ok(data) = data_channel.recv() => {
+                msg_cnt += 1;
                 send_socket_msg(
                     &data,
                     &mut upload_counter,
@@ -111,8 +116,27 @@ pub async fn socket_handler_with_metadata(
                         &item,
                         &mut upload_counter,
                         &io,
-                        DATA_SOCKET_KEY,
+                        METADATA_SOCKET_KEY,
                     ).await;
+            },
+            _ = message_rate_interval.tick() => {
+                let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
+                info!("Updating message rate to be {} msg/sec", rate);
+                let item = ClientData {
+                    name: "Argos/Message_Rate".to_string(),
+                    unit: "".to_string(),
+                    run_id: crate::RUN_ID.load(Ordering::Relaxed),
+                    timestamp: chrono::offset::Utc::now(),
+                    values: vec![rate]
+                };
+                send_socket_msg(
+                        &item,
+                        &mut upload_counter,
+                        &io,
+                        METADATA_SOCKET_KEY,
+                    ).await;
+                msg_cnt = 0;
+                last_instant = tokio::time::Instant::now();
             }
         }
     }

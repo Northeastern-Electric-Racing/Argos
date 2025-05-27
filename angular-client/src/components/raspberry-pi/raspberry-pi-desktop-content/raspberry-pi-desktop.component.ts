@@ -1,9 +1,26 @@
 import { Component, Input } from '@angular/core';
+import { CircularPercentageComponent } from '../../circular-percentage/circular-percentage.component';
+import { DividerComponent } from '../../divider/divider';
+import { MatIcon } from '@angular/material/icon';
+import TypographyComponent from 'src/components/typography/typography.component';
+import HStackComponent from 'src/components/hstack/hstack.component';
+import VStackComponent from 'src/components/vstack/vstack.component';
+import ThermometerComponent from 'src/components/thermometer/thermometer.component';
 
 @Component({
   selector: 'raspberry-pi-desktop',
   templateUrl: './raspberry-pi-desktop.component.html',
-  styleUrls: ['./raspberry-pi-desktop.component.css']
+  styleUrls: ['./raspberry-pi-desktop.component.css'],
+  standalone: true,
+  imports: [
+    CircularPercentageComponent,
+    DividerComponent,
+    MatIcon,
+    TypographyComponent,
+    HStackComponent,
+    VStackComponent,
+    ThermometerComponent
+  ]
 })
 export default class RaspberryPiDesktopComponent {
   @Input() cpuUsage: number = 0;

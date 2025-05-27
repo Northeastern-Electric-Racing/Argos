@@ -1,5 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, Input } from '@angular/core';
 import Theme from 'src/services/theme.service';
+import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
+import { MatIcon } from '@angular/material/icon';
+import TypographyComponent from '../typography/typography.component';
+import HStackComponent from '../hstack/hstack.component';
 
 /**
  * Component that is essentially the template/background for
@@ -14,13 +18,19 @@ interface ButtonInputs {
 @Component({
   selector: 'info-background',
   templateUrl: './info-background.component.html',
-  styleUrls: ['./info-background.component.css']
+  styleUrls: ['./info-background.component.css'],
+  standalone: true,
+  imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent]
 })
 export class InfoBackgroundComponent {
-  @Input() icon?: string;
-  @Input() svgIcon?: string;
-  @Input() backgroundColor?: string = Theme.infoBackground;
-  @Input() title!: string;
-  @Input() onClick!: (() => void) | undefined;
+  icon = input<string>();
+  svgIcon = input<string>();
+  backgroundColor = input<Theme>(Theme.infoBackground);
+  title = input<string>();
+  onClick = input<(() => void) | undefined>(undefined);
   @Input() button?: ButtonInputs;
+  selectorConfigs = input<SelectorConfig[]>([]);
+  topRightInfo = input<string | undefined>(undefined);
+
+  slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
 }

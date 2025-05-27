@@ -1,4 +1,6 @@
-import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { Component, HostListener, input, OnInit } from '@angular/core';
+import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import TypographyComponent from 'src/components/typography/typography.component';
 
 /**
  * Graph Header Component to display the graph page header.
@@ -7,10 +9,12 @@ import { Component, HostListener, Input, OnInit } from '@angular/core';
 @Component({
   selector: 'graph-header',
   templateUrl: './graph-header.component.html',
-  styleUrls: ['./graph-header.component.css']
+  styleUrls: ['./graph-header.component.css'],
+  standalone: true,
+  imports: [TypographyComponent, SidebarToggleComponent]
 })
 export default class GraphHeaderComponent implements OnInit {
-  @Input() runId?: number;
+  rightHeader = input.required<string>();
   isMobile = window.innerWidth <= 768;
 
   time = new Date();

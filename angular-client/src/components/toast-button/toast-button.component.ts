@@ -6,7 +6,8 @@ export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
 @Component({
   selector: 'toast-button',
   templateUrl: './toast-button.component.html',
-  styleUrls: ['./toast-button.component.css']
+  styleUrls: ['./toast-button.component.css'],
+  standalone: true
 })
 export class ToastButtonComponent implements OnInit {
   private messageService = inject(MessageService);

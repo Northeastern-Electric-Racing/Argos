@@ -3,7 +3,8 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'thermometer',
   templateUrl: './thermometer.component.html',
-  styleUrls: ['./thermometer.component.css']
+  styleUrls: ['./thermometer.component.css'],
+  standalone: true
 })
 export default class ThermometerComponent {
   @Input() temperature: number = 0;

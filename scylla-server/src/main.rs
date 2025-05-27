@@ -1,4 +1,6 @@
 use std::{
+    fs,
+    path::Path,
     sync::{atomic::Ordering, Arc},
     time::Duration,
 };
@@ -23,8 +25,9 @@ use scylla_server::{
         self,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
+        video_streamer_controller::{self},
+        OutputDirectory, VideoSuffix,
     },
-    services::run_service::{self},
     socket_handler::{socket_handler, socket_handler_with_metadata},
     RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
     STATIC_RATE_LIMIT_VALUE,
@@ -32,7 +35,7 @@ use scylla_server::{
 use scylla_server::{
     db_handler,
     mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-    ClientData, RUN_ID,
+    ClientData,
 };
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{
@@ -45,7 +48,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{debug, info, level_filters::LevelFilter};
+use tracing::{debug, info, level_filters::LevelFilter, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 
 #[cfg(not(target_env = "msvc"))]
@@ -112,18 +115,55 @@ struct ScyllaArgs {
     )]
     socketio_discard_percent: u8,
 
+    /// The output directory to store the .cap and .mp4 files coming in from the odysseus daemon
+    #[arg(
+        short = 'o',
+        long,
+        env = "SCYLLA_FILE_OUTPUT_DIRECTORY",
+        default_value = "files" // Do not use absolute file path unless you mean to
+    )]
+    output_directory: String,
+
+    /// The suffix to find video files by
+    #[arg(short = 's', long, env = "SCYLLA_VIDEO_SUFFIX", default_value = ".mp4")]
+    video_suffix: String,
+
+    /// The port to bind scylla to
+    #[arg(short = 'p', long, env = "SCYLLA_PORT", default_value = "8000")]
+    port: u16,
+
     /// Whether to disable sending of metadata over the socket to the client
     #[arg(long, env = "SCYLLA_SOCKET_DISABLE_METADATA")]
     no_metadata: bool,
+
+    /// The authentication password for privileged pages
+    #[arg(long, env = "SCYLLA_PASSWORD", default_value = "admin")]
+    password: String,
 }
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
+fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
+    let dir_path = Path::new(path);
+    if !dir_path.exists() {
+        fs::create_dir_all(dir_path)?;
+        println!("Directory created: {}", path);
+    } else {
+        println!("Directory already exists: {}", path);
+    }
+
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = ScyllaArgs::parse();
 
     println!("Initializing scylla server...");
+
+    if let Err(e) = ensure_directory_exists(cli.output_directory.as_str()) {
+        eprintln!("Failed to create directory: {}", e);
+    }
 
     #[cfg(feature = "top")]
     {
@@ -167,11 +207,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let conn: AsyncPgConnection = AsyncPgConnection::establish(&db_url).await?;
     let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
         AsyncConnectionWrapper::from(conn);
-    tokio::task::spawn_blocking(move || {
-        async_wrapper.run_pending_migrations(MIGRATIONS).unwrap();
-    })
+    tokio::task::spawn_blocking(
+        move || match async_wrapper.run_pending_migrations(MIGRATIONS) {
+            Ok(_res) => info!("Successfully migrated DB!"),
+            Err(e) => warn!("Encountered Error: {}", e),
+        },
+    )
     .await?;
-    info!("Successfully migrated DB!");
 
     info!("Initializing database connections...");
     let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
@@ -196,7 +238,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // channel to pass the mqtt data
     // TODO tune buffer size
-    let (mqtt_send, mqtt_receive) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
 
     // channel to pass the processed data to the batch uploading thread
     // TODO tune buffer size
@@ -208,18 +251,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive, io));
+        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive_socket, io));
     } else {
         task_tracker.spawn(socket_handler_with_metadata(
             token.clone(),
-            mqtt_receive,
+            mqtt_receive_socket,
             io,
         ));
     }
 
     // spawn the database handler
     task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_send.subscribe(), pool.clone())
+        db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
             .handling_loop(db_send.clone(), token.clone()),
     );
     // spawn the database inserter
@@ -229,34 +272,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         token.clone(),
     ));
 
-    // creates the initial run
-    let curr_run =
-        run_service::create_run(&mut pool.get().await.unwrap(), chrono::offset::Utc::now())
-            .await
-            .expect("Could not create initial run!");
-    debug!("Configuring current run: {:?}", curr_run);
-
-    RUN_ID.store(curr_run.runId, Ordering::Relaxed);
     // run prod if this isnt present
     // create and spawn the mqtt processor
     info!("Running processor in MQTT (production) mode");
     let (recv, opts) = MqttProcessor::new(
-        mqtt_send,
+        mqtt_send_db,
+        mqtt_send_socket,
         token.clone(),
         MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
-            initial_run: curr_run.runId,
         },
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
     let client_sharable: Arc<AsyncClient> = Arc::new(client);
-    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop));
+    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone()));
 
     let app = Router::new()
         // DATA
         .route(
             "/data/{dataTypeName}/{runId}",
-            get(controllers::data_controller::get_data),
+            get(controllers::data_controller::get_data_by_run_id),
+        )
+        .route(
+            "/data/{dataTypeName}",
+            get(controllers::data_controller::get_data_by_timing),
         )
         // DATA TYPE
         .route("/datatypes", get(data_type_controller::get_all_data_types))
@@ -275,7 +314,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // CAR CONFIG
         .route(
             "/config/set/{configKey}",
-            post(car_command_controller::send_config_command).layer(Extension(client_sharable)),
+            post(car_command_controller::send_config_command),
         )
         // SCYLLA CONFIG
         .route(
@@ -310,7 +349,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         // FILE INSERT
         .route("/insert/file", post(file_insertion_controller::insert_file))
+        .route(
+            "/insert/log",
+            post(file_insertion_controller::insert_logger_file),
+        )
+        .route(
+            "/insert/update_logger",
+            post(file_insertion_controller::request_logger_insert),
+        )
+        .route(
+            "/insert/update_serial",
+            post(file_insertion_controller::request_serial_insert),
+        )
+        // VIDEO STREAMING
+        .route(
+            "/videos/{file_name}",
+            get(video_streamer_controller::stream_video),
+        )
+        .route(
+            "/videos",
+            get(video_streamer_controller::get_videos)
+                .layer(Extension(VideoSuffix(cli.video_suffix))),
+        )
+        .route(
+            "/videos/update",
+            post(video_streamer_controller::request_updated_videos),
+        )
+        .route(
+            "/authenticate",
+            post(car_command_controller::authenticate_password).layer(Extension(cli.password)),
+        )
         .layer(Extension(db_send))
+        .layer(Extension(OutputDirectory(cli.output_directory)))
+        .layer(Extension(client_sharable))
         .layer(DefaultBodyLimit::disable())
         // for CORS handling
         .layer(
@@ -329,7 +400,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(TraceLayer::new_for_http())
         .with_state(pool.clone());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000")
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", cli.port))
         .await
         .expect("Could not bind to 8000!");
     let axum_token = token.clone();

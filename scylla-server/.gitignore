@@ -24,3 +24,6 @@ prisma.rs
 serverdata.rs
 command_data.rs
 playback_data.rs
+
+# Databse
+database/**/*.csv

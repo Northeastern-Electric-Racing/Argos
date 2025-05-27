@@ -2,11 +2,16 @@ import { Component, HostListener, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
+import RaspberryPiDesktopComponent from './raspberry-pi-desktop-content/raspberry-pi-desktop.component';
+import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-pi-mobile.component';
 
 @Component({
   selector: 'raspberry-pi',
   templateUrl: './raspberry-pi.component.html',
-  styleUrls: ['./raspberry-pi.component.css']
+  styleUrls: ['./raspberry-pi.component.css'],
+  standalone: true,
+  imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent]
 })
 export default class RasberryPiComponent implements OnInit {
   private storage = inject(Storage);

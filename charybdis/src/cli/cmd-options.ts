@@ -1,4 +1,8 @@
-import { deleteAllDownloads, dumpLocalDb } from "../services/dump.service";
+import {
+  deleteAllDownloads,
+  dumpLocalDb,
+  transformData,
+} from "../services/dump.service";
 import { uploadToCloud } from "../services/upload.service";
 import {
   batchPresetOptionsDialogue,
@@ -8,17 +12,13 @@ import {
   uploadDumpFolderDialogue,
 } from "./cli-interactive";
 import {
-  getDownloadDataBatch,
-  getDownloadDataTypeBatch,
   getDumpFoldersForUpload,
-  getUploadDataBatch,
+  getTransformingDataBatch,
   getUploadDataTypeBatch,
   setCloudDbUrl,
-  setDownloadDataBatch,
-  setDownloadDataTypeBatch,
   setDumpFoldersForUpload,
   setLocalDbUrl,
-  setUploadDataBatch,
+  setTransformDataBatch,
   setUploadDataTypeBatch,
 } from "./settings";
 import { updatePrismaClient as updateCloudPrismaClient } from "../prisma/cloud-prisma/prisma";
@@ -71,13 +71,13 @@ export const MAIN_DIALOGUE_OPTIONS = {
 
 // general command options for both interactive CLI and command line arguments based CLI
 export const COMMAND_OPTIONS = {
-  dump: async () =>
-    await dumpLocalDb(getDownloadDataBatch(), getDownloadDataTypeBatch()),
+  dump: async () => await dumpLocalDb(getTransformingDataBatch()),
   upload: async () =>
-    await uploadToCloud(
-      getUploadDataBatch(),
-      getUploadDataTypeBatch(),
-      getDumpFoldersForUpload()
+    await uploadToCloud(getDumpFoldersForUpload(), getUploadDataTypeBatch()),
+  transform: async () =>
+    await transformData(
+      await getMostRecentDownloadFolderPath(),
+      getTransformingDataBatch()
     ),
   "delete-all-downloads": async () => await deleteAllDownloads(),
 };
@@ -96,11 +96,8 @@ export const DIALOGE_COMMAND_OPTIONS = addDialgueWrapper(
 
 // Batch size update options for interactive CLI and command line arguments based CLI
 export const BATCH_SIZE_OPTIONS = {
-  "download-data-batch-size": async (size: number) =>
-    setDownloadDataBatch(size),
-  "download-data-type-batch-size": async (size: number) =>
-    setDownloadDataTypeBatch(size),
-  "upload-data-batch-size": async (size: number) => setUploadDataBatch(size),
+  "transform-data-batch-size": async (size: number) =>
+    setTransformDataBatch(size),
   "upload-data-type-batch-size": async (size: number) =>
     setUploadDataTypeBatch(size),
 };

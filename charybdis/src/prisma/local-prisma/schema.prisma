@@ -34,6 +34,7 @@ model data {
   run          run       @relation(fields: [runId], references: [runId])
 
   @@id([time, dataTypeName])
+  @@index([runId, dataTypeName])
 }
 
 model data_type {

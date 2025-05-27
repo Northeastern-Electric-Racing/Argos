@@ -28,7 +28,8 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
       transition('true => false', animate('1000ms linear')), // animation timing
       transition('false => true', animate('1000ms linear'))
     ])
-  ]
+  ],
+  standalone: true
 })
 export class BatteryPercentageComponent implements OnInit {
   @Input() percentage!: number;

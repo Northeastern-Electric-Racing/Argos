@@ -6,13 +6,10 @@ import {
   DIALOG_UPLOAD_DUMP_FOLDER_OPTIONS,
   DIALOGE_COMMAND_OPTIONS,
   MAIN_DIALOGUE_OPTIONS,
-  UPLOAD_DUMP_FOLDER_OPTIONS,
 } from "./cmd-options";
 import {
-  getDownloadDataBatch,
-  getDownloadDataTypeBatch,
   getDumpFoldersForUpload,
-  getUploadDataBatch,
+  getTransformingDataBatch,
   getUploadDataTypeBatch,
 } from "./settings";
 import {
@@ -60,9 +57,7 @@ export async function commandDialog() {
 export async function batchPresetOptionsDialogue() {
   console.log(
     `Current batch settings:\n`,
-    `download data per batch: ${getDownloadDataBatch()}\n`,
-    `download data_type per batch: ${getDownloadDataTypeBatch()}\n`,
-    `upload data per batch: ${getUploadDataBatch()}\n`,
+    `Transform data in batches of: ${getTransformingDataBatch()}\n`,
     `upload data_type per batch: ${getUploadDataTypeBatch()}\n`
   );
   const batchChoice = await select({

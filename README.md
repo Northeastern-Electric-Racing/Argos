@@ -33,6 +33,12 @@ Only used when deploying to the router for testing or comp.
 
 Please see [Compose Profiles](./compose/README.md) to for more info on docker deployment abstractions.
 
+### Starting out
+
+connect to the router and ssh in. (link to confluence?)
+
+Run: `./argos.sh router -d up` to start all stuff up for data collection
+
 ### Codegen Protobuf Types (client only)
 
 Server protobuf generation is automatic. See below for client protobuf generation.

@@ -1,8 +1,6 @@
 // Batch settings
-let downloadDataBatch = 49000;
-let downloadDataTypeBatch = 1000;
-let uploadDataBatch = 100000;
-let uploadDataTypeBatch = 100000;
+let downloadDataBatch = 1000000;
+let uploadDataTypeBatch = 1000;
 let dumpFoldersForUpload: string[] | undefined = undefined;
 
 // Database URLs
@@ -33,57 +31,21 @@ export function getDumpFoldersForUpload(): string[] | undefined {
   return dumpFoldersForUpload;
 }
 /**
- * Change the batch size for downloading data (the table in the database)
+ * Change the batch size for transforming downloaded data (the table in the database)
  *
  * @param size - The new batch size
  */
-export function setDownloadDataBatch(size: number) {
+export function setTransformDataBatch(size: number) {
   downloadDataBatch = size;
 }
 
 /**
- * Get the batch size for downloading data.
+ * Get the batch size for trasnforming data.
  *
  * @returns The batch size
  */
-export function getDownloadDataBatch(): number {
+export function getTransformingDataBatch(): number {
   return Number(downloadDataBatch);
-}
-
-/**
- * Change the batch size for downloading data (the table in the database)
- *
- * @param size - The new batch size
- */
-export function setDownloadDataTypeBatch(size: number) {
-  downloadDataTypeBatch = size;
-}
-
-/**
- * Get the batch size for downloading data.
- *
- * @returns The batch size
- */
-export function getDownloadDataTypeBatch(): number {
-  return Number(downloadDataTypeBatch);
-}
-
-/**
- * Change the batch size for uploading data (the table in the database)
- *
- * @param size - The new batch size
- */
-export function setUploadDataBatch(size: number) {
-  uploadDataBatch = size;
-}
-
-/**
- * Get the batch size for uploading data.
- *
- * @returns The batch size
- */
-export function getUploadDataBatch(): number {
-  return Number(uploadDataBatch);
 }
 
 /**

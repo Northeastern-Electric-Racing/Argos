@@ -1,0 +1,59 @@
+<div [style]="{ paddingLeft: '20px' }">
+  <typography variant="large-header" content="Car Commands" />
+  @if (isError) {
+    <div>
+      <error-page [errorMessage]="error!.message" />
+    </div>
+  } @else {
+    @if (!carCommands || isLoading) {
+      <div>
+        <loading-page />
+      </div>
+    } @else {
+      @if (!isAuthenticated) {
+        <div [style]="{ display: 'flex', width: '100%', justifyContent: 'center', gap: '20px' }">
+          <div [style]="{ textAlign: 'center' }">
+            <div [style]="{ marginBottom: '20px' }">
+              <label [style]="{ marginRight: '20px' }" for="password">Enter Password</label>
+              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+            </div>
+            <argos-button label="Authenticate" [onClick]="authenticatePw" />
+          </div>
+        </div>
+      } @else {
+        <div>
+          <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" class="top-right-button" />
+
+          @for (command of carCommands; track command) {
+            <div
+              [style]="{
+                textAlign: 'center',
+                display: 'flex',
+                verticalAlign: 'middle',
+                alignItems: 'center',
+                gap: '5px',
+                marginBottom: '20px'
+              }"
+            >
+              <div [style]="{ textAlign: 'left' }">
+                <h3>{{ command.name }}</h3>
+                <div [style]="{ display: 'flex', alignItems: 'center', gap: '20px' }">
+                  <div>
+                    @for (value of command.values; track i; let i = $index) {
+                      <div [style]="{ marginBottom: '5px' }">
+                        <label [style]="{ marginRight: '5px' }" [for]="getOptionId(command.name, i)">{{ i }}</label>
+                        <p-inputnumber [(ngModel)]="command.values[i]" [inputId]="getOptionId(command.name, i)" />
+                      </div>
+                    }
+                  </div>
+
+                  <argos-button label="Send Command" [onClick]="sendCarCommand.bind(this, command.name, command.values)" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+</div>

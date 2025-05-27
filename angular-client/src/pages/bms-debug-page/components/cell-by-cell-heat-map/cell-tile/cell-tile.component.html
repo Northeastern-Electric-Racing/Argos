@@ -1,0 +1,11 @@
+<div
+  [class]="this.sevenBoxLayout() ? 'cell-tile-seven-view' : 'cell-tile-full-view'"
+  [style.background-color]="this.color()"
+  [style.box-shadow]="this.boxShadowColor() ? '0px 0px 30px ' + this.color() + ', 0px 0px 50px rgba(0, 0, 0, 0.5)' : ''"
+  [style.border]="this.boxShadowColor() ? '5px solid black' : 'none'"
+  style="position: relative"
+>
+  <span style="position: absolute; top: 5px; left: 5px; font-size: 1vw; color: #2c2c2c">{{ this.upperTitle() }}</span>
+
+  <typography variant="info-value" [content]="this.getDisplayValue()" [additionalStyles]="this.getAdditionalStyles()" />
+</div>

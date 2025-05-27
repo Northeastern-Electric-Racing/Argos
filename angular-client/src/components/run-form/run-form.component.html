@@ -1,0 +1,11 @@
+@if (!this.templateReady) {
+  <loading-page />
+} @else {
+  <select-dropdown
+    [options]="this.selectorConfig.options"
+    [placeholder]="this.selectorConfig.placeholder"
+    [defaultValue]="this.selectorConfig.defaultValue"
+  >
+  </select-dropdown>
+  <form-template [fields]="this.inputFields" />
+}

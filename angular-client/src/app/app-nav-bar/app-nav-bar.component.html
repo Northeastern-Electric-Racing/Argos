@@ -1,15 +1,15 @@
-@if (isMobile) {
+@if (isMobile || this.sidebarVisible) {
   <p-sidebar [(visible)]="sidebarVisible">
     <ng-template pTemplate="header">
       <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
     </ng-template>
     <ng-template pTemplate="content">
-      @for (navItem of navItems; track navItem) {
+      @for (navItem of allNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
           value="{{ navItem.label }}"
-          [active]="selectedRoute === navItem.route"
-          (click)="navigateTo(navItem.route)"
+          [active]="this.isSelected(navItem)"
+          (click)="navItem.onClick()"
         >
         </sidebar-chip>
       }
@@ -18,27 +18,38 @@
 } @else {
   <nav class="navbar">
     <div class="navbar-nav">
-      @for (navItem of navItems; track navItem) {
+      @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
           value="{{ navItem.label }}"
-          [active]="selectedRoute === navItem.route"
-          (click)="navigateTo(navItem.route)"
+          [active]="this.isSelected(navItem)"
+          (click)="navItem.onClick()"
         >
         </sidebar-chip>
       }
     </div>
 
     <div style="display: flex; align-items: center">
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 35px"
+      <hstack>
+        <current-run-display [navBarStyle]="true"></current-run-display>
+        <toast-button
+          [onClick]="this.onStartNewRun"
+          buttonLabel="New Run"
+          popUpSeverity="success"
+          popUpTitle="New Run Started"
+          popUpDetails="Your new run has started successfully."
+          additionalStyles="height: 35px; width: 100px"
+        />
+        <toast-button [onClick]="this.openRunForm" buttonLabel="Edit Runs" additionalStyles="height: 35px; width: 100px" />
+      </hstack>
+
+      <typography
+        variant="large-header"
+        content="{{ time$ | async | date: 'HH:mm:ss' }}"
+        style="margin-left: 20px; margin-bottom: 5px"
+        additionalStyles="fontSize: 25px"
       />
-      <typography variant="large-header" content="{{ time$ | async | date: 'HH:mm:ss' }}" style="margin-left: 20px" />
+      <messages-per-second style="margin-left: 10px" />
     </div>
   </nav>
 }

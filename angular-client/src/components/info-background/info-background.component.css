@@ -11,11 +11,20 @@ mat-icon {
   width: 100%;
 }
 
+.container.sliced-left-corner {
+  padding: 15px 12px 12px 15px;
+  clip-path: polygon(125px 0, 100% 0, 100% 100%, 0 100%, 0 145px);
+}
+
 .title-container {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+.title.sliced-left-corner {
+  padding-left: 120px;
 }
 
 .title {

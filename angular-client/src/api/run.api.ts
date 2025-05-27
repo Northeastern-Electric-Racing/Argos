@@ -29,3 +29,11 @@ export const getRunById = (id: number): Promise<Response> => {
 export const startNewRun = () => {
   return fetch(urls.startNewRun(), { method: 'POST' });
 };
+
+export const startNewRunWithData = (driver: string, location: string, notes: string) => {
+  return fetch(urls.startNewRunWithData(driver, location, notes));
+};
+
+export const updateRun = (id: number, driver: string, location: string, notes: string) => {
+  return fetch(urls.updateRun(id, driver, location, notes), { method: 'POST' });
+};

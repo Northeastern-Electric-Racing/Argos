@@ -1,7 +1,7 @@
 @if (isMobile) {
   <div>
-    <graph-sidebar-mobile [dataTypes]="dataTypes" [selectDataType]="selectDataType" [onRunSelected]="onRunSelected" />
+    <graph-sidebar-mobile [dataTypes]="dataTypes" [selectedDataTypes]="this.selectDataTypes" />
   </div>
 } @else {
-  <graph-sidebar-desktop [dataTypes]="dataTypes" [selectDataType]="selectDataType" />
+  <graph-sidebar-desktop [dataTypes]="dataTypes" [selectedDataTypes]="this.selectDataTypes" />
 }

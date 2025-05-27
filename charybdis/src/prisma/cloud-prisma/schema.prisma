@@ -12,18 +12,21 @@ datasource db {
 }
 
 model run {
-  id         String   @id @default(uuid())
-  runId      Int      @default(autoincrement())
-  driverName String
-  notes      String
-  time       DateTime @db.Timestamptz()
+  id           String   @id @default(uuid())
+  runId        Int      @default(autoincrement())
+  driverName   String?
+  locationName String?
+  notes        String?
+  time         DateTime @unique @db.Timestamptz()
 
   data data[]
+
+  @@unique([runId, time], name: "unique_run_time")
 }
 
 model data {
   values Float[]
-  time   BigInt  @db.BigInt
+  time   DateTime @db.Timestamptz()
 
   dataTypeName String
   dataType     data_type @relation(fields: [dataTypeName], references: [name])

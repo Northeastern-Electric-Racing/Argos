@@ -1,4 +1,10 @@
-import { Component, input, OnChanges, OnInit } from '@angular/core';
+import { Component, input, OnChanges } from '@angular/core';
+import { BatteryPercentageComponent } from '../battery-percentage/battery-percentage.component';
+import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
+import TypographyComponent from '../typography/typography.component';
+import ThermometerComponent from '../thermometer/thermometer.component';
+import HStackComponent from '../hstack/hstack.component';
+import VStackComponent from '../vstack/vstack.component';
 
 export interface ThermometerConfig {
   type: 'thermometer-config';
@@ -25,15 +31,26 @@ export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConf
 @Component({
   selector: 'info-value-display',
   templateUrl: './info-value-display.component.html',
-  styleUrl: './info-value-display.component.css'
+  styleUrl: './info-value-display.component.css',
+  standalone: true,
+  imports: [
+    BatteryPercentageComponent,
+    ConnectionDotWithMessageComponent,
+    TypographyComponent,
+    ThermometerComponent,
+    HStackComponent,
+    VStackComponent
+  ]
 })
-export class InfoValueDisplayComponent implements OnInit, OnChanges {
+export class InfoValueDisplayComponent implements OnChanges {
   ngOnChanges(): void {
     this.formattedValue = (this.value()?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
   }
   containerStyle = input<string>('');
   valueUnitContainerStyle = input<string>('');
   value = input<number>();
+  valueStyle = input<string>('');
+  boolValue = input<boolean>();
   precision = input<number>(1);
   subtitle = input<string>('');
   subtitleStyle = input<string>('');
@@ -44,11 +61,14 @@ export class InfoValueDisplayComponent implements OnInit, OnChanges {
   widget = input<WidgetConfig>();
   enableWidget = input<boolean>(true);
 
-  ngOnInit(): void {
-    console.log('Info Value Display');
-  }
-
   getStatusMessage = (connectDotConfig: ConnectionDotConfig): (() => string) => {
     return connectDotConfig.getStatusMessage ? connectDotConfig.getStatusMessage : () => '';
+  };
+
+  getSubtitleStyle = (): string => {
+    if (this.unit() === '' && this.boolValue() === undefined) {
+      return this.subtitleStyle() + 'margin-top: 1vh';
+    }
+    return this.subtitleStyle();
   };
 }

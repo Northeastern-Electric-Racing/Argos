@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -17,6 +19,12 @@ pub enum ScyllaError {
     EmptyResult,
     /// A setting change was requested with an invalid parameter
     InvalidSetting(String),
+    /// An invalid request was made
+    HttpError(StatusCode, String),
+    /// An error when writing or retrieving a file was made
+    FileError(String),
+    /// An error when receiving or sending an mqtt message
+    MqttError(String),
 }
 
 impl From<diesel::result::Error> for ScyllaError {
@@ -50,10 +58,19 @@ impl IntoResponse for ScyllaError {
                 "Fetched an empty result that should not be!".to_string(),
             ),
             ScyllaError::InvalidSetting(reason) => (StatusCode::BAD_REQUEST, reason),
+            ScyllaError::HttpError(code, reason) => (code, reason),
+            ScyllaError::FileError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
+            ScyllaError::MqttError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
         };
 
         warn!("Routing error: {}: {}", status, reason);
 
         (status, reason).into_response()
+    }
+}
+
+impl Debug for ScyllaError {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(())
     }
 }

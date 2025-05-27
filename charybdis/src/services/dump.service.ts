@@ -1,22 +1,25 @@
 import { prisma as localPrisma } from "../prisma/local-prisma/prisma";
 import * as fs from "fs";
 import * as path from "path";
-import { LocalRun } from "../types/local.types";
-import { DOWNLOADS_PATH, storagePaths } from "../storage-paths";
 import {
-  CouldNotConnectToLocalDB,
-  DataDumpFailed,
-  DataTypeDumpFailed,
-  RunDumpFailed,
-} from "../errors/dump.errors";
-import { appendToCsv, prependToCsv } from "../utils/csv.utils";
+  DOWNLOADS_PATH,
+  getDataCSVPath,
+  getRunCsvPath,
+  getTempDataCSVPath,
+  getTempRunCsvPath,
+  storagePaths,
+} from "../storage-paths";
+import { CouldNotConnectToLocalDB } from "../errors/dump.errors";
 import {
   createFile,
   createFolder,
   createMeaningfulFileName,
 } from "../utils/filesystem.utils";
 import { writeAuditLog } from "./audit.service";
-import { localRunToCsvRunRow } from "../transformers/local.transformer";
+import { execSync } from "child_process";
+import * as csv from "fast-csv";
+import { LocalData, LocalRun } from "../types/local.types";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Initalizes the dump file structure, for a new dump, creating all necessary folders and non-state oriented files.
@@ -32,7 +35,9 @@ async function initializeDumpFileStructure(): Promise<string> {
   await createFile(storagePaths.getAuditLogCsvPath());
   await createFile(storagePaths.getDataTypeCsvPath(dumpFolderPath));
   await createFile(storagePaths.getRunCsvPath(dumpFolderPath));
+  await createFile(storagePaths.getTempRunCsvPath(dumpFolderPath));
   await createFolder(storagePaths.getDataFolderPath(dumpFolderPath));
+  await createFile(storagePaths.getTempDataCSVPath(dumpFolderPath));
   return dumpFolderPath;
 }
 
@@ -55,173 +60,176 @@ async function checkDbConnection() {
  * @param batchSize the number of data types to fetch per batch
  * @param csvPath the path to the CSV file to write the data types to.
  */
-async function dumpDataTypeToCsv(batchSize: number, csvPath: string) {
-  let moreData = true;
-  let cursor: { name: string } | undefined;
-  let csvWriteStream = fs.createWriteStream(csvPath, { flags: "a" });
+function dumpDataTypeToCsv(csvPath: string) {
+  let startTime = new Date();
 
-  while (moreData) {
-    const dataTypes = await localPrisma.data_type.findMany({
-      // order by is important to ensure we don't grab the same data
-      // twice while batch querying.
-      orderBy: {
-        name: "asc",
-      },
-      cursor,
-      skip: cursor ? 1 : 0, // skip the cursor itself if we already have one
-      take: batchSize,
-    });
+  execSync(
+    `psql ${process.env.LOCAL_DATABASE_URL} -c "\\copy data_type TO '${csvPath}' CSV HEADER"`
+  );
 
-    if (dataTypes.length === 0) {
-      moreData = false;
-    } else {
-      // Update cursor
-      cursor = {
-        name: dataTypes[dataTypes.length - 1].name,
-      };
-      appendToCsv(csvWriteStream, dataTypes);
-      console.log(`Fetched ${dataTypes.length} Data Types`);
-    }
-  }
+  console.log(
+    `Completed data type dump in ${Date.now() - startTime.getTime()}ms`
+  );
 }
 
 /**
- * Dumps each run and then it's data, and so on, to a CSV file.
+ * Dumps all the runs to a file, then dumps all of the data to a separate file, then assigns a unique id to all runs
  *
  * @param dumpFolder the current dump folder (to store the run and data CSVs in)
- * @param dataPerBatch the number of data rows to fetch per batch
  *
  * @throws {DataDumpFailed} if the data dump fails, with the error message included.
  * @throws {RunDumpFailed} if there is failure while fetching and writing a run to the CSV.
  */
-async function dumpRunsAndDataToCsv(dumpFolder: string, dataPerBatch: number) {
+async function dumpRunsAndDataToCsv(
+  dumpFolder: string,
+  dataTransformingBatchSize: number
+) {
   // variables used for tracking current run and data
-  let moreRuns = true;
-  let cursor: { runId: number } | undefined;
-  let totalRunsFetched = 0;
-  let totalDataFetched = 0;
-  let csvWriteStream = fs.createWriteStream(
-    storagePaths.getRunCsvPath(dumpFolder),
-    { flags: "a" }
-  );
+
   let startTime = new Date();
 
-  while (moreRuns) {
-    // FETCH A RUN
-    // find the first run after the cursor (the next run to proccess)
-    const mostRecentRun = await localPrisma.run.findFirst({
-      orderBy: {
-        runId: `asc`,
-      },
-      cursor,
-      skip: cursor ? 1 : 0, // skip the cursor which we already got last loop
-    });
-
-    // if a local run is no longer found after the cursor, we are done
-    if (!mostRecentRun) {
-      moreRuns = false;
-      continue;
-    } else {
-      // Update cursor, this is where we will start of next loop
-      cursor = {
-        runId: mostRecentRun.runId,
-      };
-
-      // convert to the csv type before inserting (allowing us to create a uuid)
-      const csvRunRow = localRunToCsvRunRow(mostRecentRun);
-
-      appendToCsv(csvWriteStream, [csvRunRow]);
-      console.log(`Inserted run ${csvRunRow.runId} to run.csv`);
-      totalRunsFetched += 1;
-    }
-
-    // DUMP DATA FOR THIS RUN
-    let dataDumpStart = new Date();
-    totalDataFetched += await dumpDataByRun(
-      mostRecentRun!.runId,
-      dataPerBatch,
-      dumpFolder
-    );
-    console.log(
-      `Data dump for run ${mostRecentRun!.runId} took: ${
-        new Date().getTime() - dataDumpStart.getTime()
-      }ms`
-    );
-  }
+  execSync(
+    `psql ${
+      process.env.LOCAL_DATABASE_URL
+    } -c "\\copy run TO '${getTempRunCsvPath(dumpFolder)}' CSV HEADER;"`
+  );
 
   console.log(
-    `Total runs fetched: ${totalRunsFetched}, time taken: ${
+    `Fetched All Runs, time taken: ${
       new Date().getTime() - startTime.getTime()
     }ms`
   );
+
+  const dataTime = new Date();
+
+  console.log("Getting Data, this may take a while...");
+
+  dumpData(dumpFolder);
+
   console.log(
-    `Total data fetched: ${totalDataFetched}, time taken: ${
-      new Date().getTime() - startTime.getTime()
+    `Fetched All Data, time taken: ${
+      new Date().getTime() - dataTime.getTime()
     }ms`
   );
+
+  console.log("Transforming Data");
+
+  await transformData(dumpFolder, dataTransformingBatchSize);
+
+  console.log(`Total time: ${new Date().getTime() - startTime.getTime()}ms`);
+}
+
+export async function transformData(dumpFolder: string, dataBatchSize: number) {
+  const runIdToCloudIdMap = new Map<string, string>();
+
+  await new Promise((resolve) => {
+    const ws = fs.createWriteStream(getRunCsvPath(dumpFolder));
+
+    let rows: LocalRun[] = [];
+    fs.createReadStream(getTempRunCsvPath(dumpFolder))
+      .pipe(csv.parse({ headers: true }))
+      .on("data", (row) => {
+        // Add a unique id for each row
+        row.id = uuidv4();
+        runIdToCloudIdMap.set(row.runId, row.id);
+        rows.push(row);
+      })
+      .on("end", () => {
+        csv
+          .write(rows, { headers: true })
+          .pipe(ws)
+          .on("finish", () => {
+            console.log("File saved with unique IDs!");
+            resolve(null);
+          });
+      });
+  });
+
+  await new Promise((resolve) => {
+    const ws = fs.createWriteStream(getDataCSVPath(dumpFolder));
+    ws.write("values,time,dataTypeName,runId\n"); // headers
+
+    let buffer: string[] = [];
+    let processing = false;
+    let ended = false;
+
+    const flushBuffer = () => {
+      if (buffer.length === 0 || processing) return;
+      processing = true;
+
+      const chunk = buffer.join("");
+      const length = buffer.length;
+      buffer = [];
+
+      ws.write(chunk, () => {
+        console.log(`Flushed ${length} Rows`);
+        processing = false;
+
+        // Check if we need to flush more after finishing a write
+        if (ended && buffer.length > 0) {
+          flushBuffer();
+        } else if (ended) {
+          console.log("Runs Updated");
+          resolve(null);
+        }
+      });
+    };
+
+    fs.createReadStream(getTempDataCSVPath(dumpFolder))
+      .pipe(csv.parse({ headers: true }))
+      .on("data", (row) => {
+        // Add a unique id for each row
+        row.runId = runIdToCloudIdMap.get(row.runId);
+        // JS Dates only work with maximum precision of miliseconds,
+        // however psql / prisma doesnt care about that as long as its in iso form,
+        // so manually add the microseconds into the date string
+        const miliseconds = Number(BigInt(row.time) / 1000n);
+        const date = new Date(miliseconds);
+        const formattedISODate = `${date.toISOString().split("Z")[0]}${Number(
+          BigInt(row.time) % 1000n
+        )}Z`;
+        row.time = formattedISODate;
+        const formattedRow =
+          [
+            `"${row.values}"`,
+            formattedISODate,
+            row.dataTypeName,
+            row.runId,
+          ].join(",") + "\n";
+        buffer.push(formattedRow);
+        if (buffer.length > dataBatchSize) {
+          flushBuffer();
+        }
+      })
+      .on("end", () => {
+        ended = true;
+        flushBuffer();
+      });
+  });
 }
 
 /**
- * Dump the data for a specific run to a CSV file.
- *
- * In case you aren't aware of our data structure (which can be reasoned from the storage-paths.ts file),
- * we have a data folder, that contains a csv file containing all the data for a specific run. The
- * naming convention for this file is run-{runId}-data.csv.
+ * Dump all of the data from the local database to a data file
  *
  * See the csv.types.ts file for the structure of each row in the CSV file.
  *
- * @param runId the ID of the run to dump the data for (used to fetch the data)
- * @param batchSize the number of data rows to fetch per batch
  * @param dumpFolderPath the path to the dump folder (used to store the CSV file)
  *
  * @returns the total number of data rows fetched for the run
  */
-async function dumpDataByRun(
-  runId: number,
-  batchSize: number,
-  dumpFolderPath: string
-): Promise<number> {
-  let moreData = true;
-  let offset = 0;
-  let totalDataFetched = 0;
-  let csvWriteStream = fs.createWriteStream(
-    storagePaths.getDataByRunCsvPath(dumpFolderPath, runId),
-    { flags: "a" }
-  );
+function dumpData(dumpFolderPath: string): void {
   let startTime = new Date();
-
-  console.log(`Fetching data for run ${runId}...`);
-  while (moreData) {
-    let dataChunkStartTime = new Date();
-    const dataChunk = await localPrisma.data.findMany({
-      where: { runId },
-      take: batchSize,
-      skip: offset, // skip the previously seen data
-      orderBy: [{ time: "asc" }, { dataTypeName: "asc" }],
-    });
-
-    if (dataChunk.length === 0) {
-      moreData = false;
-    } else {
-      offset += dataChunk.length; // move offset by the amount of data we just read
-      appendToCsv(csvWriteStream, dataChunk);
-      totalDataFetched += dataChunk.length;
-      console.log(
-        `Inserted ${
-          dataChunk.length
-        } rows to run-${runId}-data.csv, time taken: ${
-          new Date().getTime() - dataChunkStartTime.getTime()
-        }ms`
-      );
-    }
-  }
+  execSync(
+    `psql ${
+      process.env.LOCAL_DATABASE_URL
+    } -c "\\copy data TO '${getTempDataCSVPath(dumpFolderPath)}' CSV HEADER;"`
+  );
 
   console.log(
-    `Total data fetched for run ${runId}: ${totalDataFetched}, total time taken: ${
+    `Total Fetched all data. total time taken: ${
       new Date().getTime() - startTime.getTime()
     }ms`
   );
-  return totalDataFetched;
 }
 
 /**
@@ -252,8 +260,8 @@ export async function deleteAllDownloads(): Promise<void> {
 /**
  * Dumps the local database to CSV files in the downloads folder.
  *
- * @param dataTypesPerBatch the number of data types to fetch per batch
- * @param dataPerBatch the number of data rows to fetch per batch
+ * @param dataTransformingBatchSize The size of the batch that we will locally store in memory before flushing to
+ * file stream when transforming data runs
  *
  * @throws {CouldNotConnectToLocalDB} if the local database cannot be connected to
  * @throws {DataTypeDumpFailed} if the data type dump fails, with the error message included.
@@ -261,8 +269,7 @@ export async function deleteAllDownloads(): Promise<void> {
  * @throws {RunDumpFailed} if there is failure while fetching and writing a run to the CSV.
  */
 export async function dumpLocalDb(
-  dataPerBatch: number,
-  dataTypesPerBatch: number
+  dataTransformingBatchSize: number
 ): Promise<void> {
   console.log("Checking database connection...");
   // check that we can actually connect to the database
@@ -272,13 +279,10 @@ export async function dumpLocalDb(
   try {
     console.log("Starting dump process...");
     console.log("Dumping each Run with its Data...");
-    await dumpRunsAndDataToCsv(dumpFolderPath, dataPerBatch);
+    await dumpRunsAndDataToCsv(dumpFolderPath, dataTransformingBatchSize);
     console.log("Data Types dump...");
     // we want to dump data types
-    await dumpDataTypeToCsv(
-      dataTypesPerBatch,
-      storagePaths.getDataTypeCsvPath(dumpFolderPath)
-    );
+    await dumpDataTypeToCsv(storagePaths.getDataTypeCsvPath(dumpFolderPath));
   } catch (error) {
     // if we fail in any of the functions above... then we record the dump as a failure
     await writeAuditLog({

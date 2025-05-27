@@ -5,6 +5,12 @@
 **/.env
 scylla-server-typescript/src/prisma/mydatabase.db
 scylla-server-typescript/src/prisma/mydatabase.db-journal
+scylla-server/files
+<<<<<<< Updated upstream
+=======
+scylla-server/target
+backups
+>>>>>>> Stashed changes
 
 # Xcode
 #

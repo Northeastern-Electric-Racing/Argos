@@ -12,7 +12,7 @@ pub async fn get_all_runs(db: &mut Database<'_>) -> Result<Vec<Run>, diesel::res
 
 /// Gets the latest run (highest run id)
 /// * `db` - The prisma client to make the call to
-///     returns: The latest run or the QueryError propogated by the db
+///   returns: The latest run or the QueryError propogated by the db
 pub async fn get_latest_run(db: &mut Database<'_>) -> Result<Run, diesel::result::Error> {
     run.order(runId.desc()).first::<Run>(db).await
 }
@@ -64,7 +64,7 @@ pub async fn create_run_with_id(
 /// * `driver` - The driver's name
 /// * `location` - The location of the runs
 /// * `run_notes` - The notes written for the run
-///     returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the QueryError propogated by the db
 pub async fn create_run_with_data(
     db: &mut Database<'_>,
     timestamp: DateTime<Utc>,

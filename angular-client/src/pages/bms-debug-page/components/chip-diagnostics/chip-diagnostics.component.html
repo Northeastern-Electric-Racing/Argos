@@ -1,0 +1,22 @@
+<info-background [title]="this.title" svgIcon="battery_charging_2">
+  <hstack alignItems="start" justifyContent="start">
+    <vstack align="start">
+      <hstack spacing="7vw" justifyContent="space-evenly">
+        <div style="margin-right: -4vw"></div>
+        <info-value-display [value]="this.vRef" unit="V" subtitle="VRef" [precision]="2"></info-value-display>
+        <info-value-display [value]="this.vRes" unit="V" subtitle="VRes" [precision]="2"></info-value-display>
+        <info-value-display [value]="this.vAnalog" unit="V" subtitle="VAnalog" [precision]="2"></info-value-display>
+      </hstack>
+      <hstack spacing="7vw" justifyContent="space-evenly">
+        <div style="margin-right: -4vw"></div>
+        <info-value-display [value]="this.vDigital" unit="V" subtitle="VDigital" [precision]="2"></info-value-display>
+        <info-value-display
+          [value]="this.boardTemp"
+          unit="C"
+          subtitle="Board Temperature"
+          [precision]="2"
+        ></info-value-display>
+      </hstack>
+    </vstack>
+  </hstack>
+</info-background>
