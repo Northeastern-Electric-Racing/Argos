@@ -6,7 +6,7 @@
           <typography variant="info-value" [content]="motorTemp.toString() + '°'" />
           <typography variant="info-unit" [content]="'C'" />
           <div class="thermometer-container">
-            <thermometer [temperature]= "motorTemp" [min]="-15" [max]="30" />
+            <thermometer [temperature]="motorTemp" [min]="-15" [max]="30" />
           </div>
         </hstack>
         <typography variant="info-subtitle" content="Motor Temp" />
@@ -21,11 +21,11 @@
               <typography variant="info-value" [content]="getTotalUsage([motorUsage, coolUsage]).toString()" />
               <typography variant="info-unit" [content]="'kWh'" />
             </hstack>
-            <typography variant="info-subtitle" content="Motor Usage" />
+            <typography variant="info-subtitle" content="Total Motor Usage" />
           </vstack>
         </hstack>
       </vstack>
     </hstack>
-    <pie-chart style="margin-top: -40px" [data]="piechartData" />
+    <pie-chart style="margin-right: -45px; margin-top: -20px" [data]="piechartData" title="Current Motor Usage" />
   </div>
 </info-background>

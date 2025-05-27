@@ -23,7 +23,6 @@ export enum DataTypeEnum {
   PUMPS = 'MPU/Current/Pumps',
   LV_BOARDS = 'MPU/Current/LV_Boards',
 
-
   // DTI
   MOTOR_TEMP = 'DTI/Temps/Motor_Temperature',
 
