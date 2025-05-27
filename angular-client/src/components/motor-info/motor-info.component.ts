@@ -32,10 +32,10 @@ export default class MotorInfoComponent implements OnInit, OnDestroy {
   motorUsage: number = 100;
   coolUsage: number = 0;
   motorTemp: number = 0;
-  motorController: number = 25;
-  lvBoards: number = 25;
-  battboxFans: number = 25;
-  pumps: number = 25;
+  motorController: number = 0;
+  lvBoards: number = 0;
+  battboxFans: number = 0;
+  pumps: number = 0;
   private subscriptions: Subscription[] = [];
 
   piechartData: { value: number; name: string }[] = [];
