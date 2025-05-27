@@ -18,6 +18,10 @@ export enum DataTypeEnum {
 
   // MPU
   SPEED = 'MPU/State/Speed',
+  MOTOR_CONTROLLER = 'MPU/Current/Motor_Controller',
+  BATTBOX_FANS = 'MPU/Current/Battbox_Fans',
+  PUMPS = 'MPU/Current/Pumps',
+  LV_BOARDS = 'MPU/Current/LV_Boards',
 
   // DTI
   MOTOR_TEMP = 'DTI/Temps/Motor_Temperature',

@@ -1,5 +1,4 @@
-import { Component, ElementRef, Input, Renderer2, OnInit, inject } from '@angular/core';
-
+import { Component, ElementRef, Input, Renderer2, OnInit, inject, input } from '@angular/core';
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
 import Theme from 'src/services/theme.service';
 
@@ -9,6 +8,7 @@ export type ChartOptions = {
   labels: string[];
   plotOptions: ApexPlotOptions;
   fill: ApexFill;
+  title: ApexTitleSubtitle;
 };
 
 @Component({
@@ -25,13 +25,14 @@ export default class PieChartComponent implements OnInit {
   public chartOptions!: Partial<ChartOptions> | any;
   @Input() data: { value: number; name: string }[] = [];
   @Input() backgroundColor: string = Theme.infoBackground;
+  title = input<string>('Pie Chart');
   currentWidth: number = 0;
 
   ngOnInit() {
     this.setChartWidth();
-    setTimeout(() => {
+    setInterval(() => {
       this.setChartOptions();
-    });
+    }, 2000);
   }
 
   setChartOptions() {
@@ -51,13 +52,16 @@ export default class PieChartComponent implements OnInit {
           }
         }
       },
-      colors: ['#ce2727', '#2799ce', '#3cba40', '#ba3cb4', '#efce29'],
+      colors: ['#ce2727', '#2799ce', '#3cba40', '#ba3cb4', '#808080'],
       chart: {
         width: '100%',
         type: 'pie',
         background: this.backgroundColor,
         redrawOnParentResize: true,
-        foreColor: '#ffffff'
+        foreColor: '#ffffff',
+        animations: {
+          enabled: false
+        }
       },
       dataLabels: {
         style: {
@@ -67,6 +71,9 @@ export default class PieChartComponent implements OnInit {
       labels,
       legend: {
         offsetX: 10
+      },
+      title: {
+        text: this.title()
       }
     };
   }
