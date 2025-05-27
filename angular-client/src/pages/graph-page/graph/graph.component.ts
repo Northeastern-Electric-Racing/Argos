@@ -1,4 +1,4 @@
-import { Component, input, OnChanges, OnInit } from '@angular/core';
+import { Component, input, OnChanges, OnDestroy, OnInit } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexXAxis,
@@ -10,7 +10,7 @@ import {
   ApexFill,
   ApexLegend
 } from 'ng-apexcharts';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { GraphInfo } from 'src/utils/types.utils';
 
 type ChartOptions = {
@@ -32,7 +32,7 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css'],
   standalone: true
 })
-export default class CustomGraphComponent implements OnChanges, OnInit {
+export default class CustomGraphComponent implements OnChanges, OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
@@ -44,6 +44,13 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   timeDiffMs: number = 0;
   isSliding: boolean = false;
   timeRangeMs = 60000; // 1 minute in ms
+  private timeOuts: NodeJS.Timeout[] = [];
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.chart.destroy();
+    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+  }
 
   updateChart = () => {
     const series = Array.from(this.data).map(([key, map], index) => ({
@@ -90,9 +97,11 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     }
 
     if (this.limitRange()) {
-      setTimeout(() => {
-        this.updateChart();
-      }, 500);
+      this.timeOuts.push(
+        setTimeout(() => {
+          this.updateChart();
+        }, 500)
+      );
     }
   };
 
@@ -122,10 +131,13 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     }
   };
 
+  subscriptions: Subscription[] = [];
+
   ngOnInit(): void {
     this.data = new Map();
+    this;
     this.valuesSubject().forEach((graphInfo) => {
-      graphInfo.subscribe(this.graphInfoCallback);
+      this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
     });
 
     const chartContainer = document.getElementById('chart-container');
@@ -215,7 +227,6 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
   ngOnChanges() {
     this.data = new Map();
     this.isSliding = false;
-
     //set range to undefined... why?
     this.chart.updateOptions({
       ...this.options,
@@ -224,9 +235,8 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         range: undefined
       }
     });
-
     this.valuesSubject().forEach((graphInfo) => {
-      graphInfo.subscribe(this.graphInfoCallback);
+      this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
     });
   }
 }

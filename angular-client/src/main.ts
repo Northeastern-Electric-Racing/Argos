@@ -31,7 +31,7 @@ import { TreeModule } from 'primeng/tree';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PasswordModule } from 'primeng/password';
-import { importProvidersFrom } from '@angular/core';
+import { importProvidersFrom, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import AppContextComponent from './app/context/app-context.component';
 
 bootstrapApplication(AppContextComponent, {
@@ -77,6 +77,7 @@ bootstrapApplication(AppContextComponent, {
         preset: Lara
       }
     }),
-    provideClientHydration()
+    provideClientHydration(),
+    provideExperimentalZonelessChangeDetection()
   ]
 }).catch((err) => console.error(err));

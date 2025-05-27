@@ -23,12 +23,13 @@ export default class PieChartComponent implements OnInit {
   private el = inject(ElementRef);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public chartOptions!: Partial<ChartOptions> | any;
-  @Input() data: { value: number; name: string }[] = [];
+  data = input.required<{ value: number; name: string }[]>();
   @Input() backgroundColor: string = Theme.infoBackground;
   title = input<string>('Pie Chart');
   currentWidth: number = 0;
 
   ngOnInit() {
+    this.setChartOptions();
     this.setChartWidth();
     setInterval(() => {
       this.setChartOptions();
@@ -36,13 +37,17 @@ export default class PieChartComponent implements OnInit {
   }
 
   setChartOptions() {
-    const labels = this.data.map((item) => {
+    const labels = this.data().map((item) => {
       return item.name;
     });
-    const series = this.data.map((item) => {
+    const series = this.data().map((item) => {
       return item.value;
     });
 
+    if (series.length === 0) {
+      this.chartOptions = {};
+      return;
+    }
     this.chartOptions = {
       series,
       plotOptions: {
