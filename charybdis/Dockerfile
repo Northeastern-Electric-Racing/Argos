@@ -10,8 +10,9 @@ COPY package.json yarn.lock package-lock.json ./
 # Install dependencies using both npm and yarn
 RUN npm install && yarn install
 
-# Copy the rest of the application files
 COPY . .
+
+RUN apt-get -y update && apt-get install -y postgresql-client
 
 # Expose necessary ports (optional)
 EXPOSE 3000
