@@ -7,9 +7,9 @@ import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/s
 import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewComponent } from '../cell-view/cell-view.component';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-
 import { CellTileComponent } from './cell-tile/cell-tile.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
+
 const formatAllSelectorName = (name: string) => {
   return 'Set ALL Maps: ' + name;
 };
