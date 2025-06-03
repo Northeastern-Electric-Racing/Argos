@@ -1,6 +1,5 @@
 import { Component, effect, inject, input, OnInit } from '@angular/core';
 import { Segment } from 'src/utils/bms.utils';
-import { Subscription } from 'rxjs';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { AlphaCells, BetaCells, CellReading, CellService } from 'src/services/cell.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
@@ -26,8 +25,6 @@ export class CellByCellHeatMapComponent implements OnInit {
   private heatMapService = inject(HeatMapService);
   private dialogService = inject(DialogService);
   currentSegment = input.required<Segment>();
-  alphaSubscriptions: Subscription[] = [];
-  betaSubscriptions: Subscription[] = [];
   alphaCells!: Readonly<AlphaCells>;
   betaCells!: Readonly<BetaCells>;
   view = HeatMapView.Voltage;
