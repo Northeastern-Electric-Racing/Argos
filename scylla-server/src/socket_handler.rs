@@ -1,17 +1,20 @@
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
+use rustc_hash::FxHashMap;
 use serde::Serialize;
 use socketioxide::SocketIo;
-use std::{collections::HashMap, sync::atomic::Ordering, time::Duration};
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use std::{sync::atomic::Ordering, time::Duration};
+use tokio::sync::{broadcast, RwLock};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, trace, warn};
 
 use crate::metadata_structs::{
     map_dti_flt, FaultData, Node, TimerData, DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP,
     FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
 };
+use crate::rule_structs::{RuleManager, RULE_SOCKET_KEY};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -36,9 +39,12 @@ pub async fn socket_handler(
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
+    rules_manager: Arc<RwLock<RuleManager>>,
     io: SocketIo,
 ) {
     let mut upload_counter = 0u8;
+
+    // BEGIN METADATA
 
     // INTERVAL TIMERS for periodic things to be sent
     let mut view_interval = tokio::time::interval(Duration::from_secs(3));
@@ -47,7 +53,7 @@ pub async fn socket_handler_with_metadata(
     let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
 
     // init timers
-    let mut timer_map: HashMap<String, TimerData> = HashMap::new();
+    let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
     for item in TIMERS_TOPICS {
         timer_map.insert(
             item.to_string(),
@@ -68,6 +74,8 @@ pub async fn socket_handler_with_metadata(
         Regex::new(r"MPU\/Fault\/Critical\/(.*)").expect("Could not compile regex!");
     let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
 
+    // END METADATA
+
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
 
@@ -85,7 +93,12 @@ pub async fn socket_handler_with_metadata(
                     &io,
                     DATA_SOCKET_KEY,
                 ).await;
-                handle_socket_msg(data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                let Ok(Some(notif)) = rules_manager.write().await.handle_msg(data) else {
+                    continue;
+                };
+                trace!("Sending notification: {}", notif.id);
+                send_socket_msg(&notif, &mut upload_counter, &io, RULE_SOCKET_KEY).await;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -121,7 +134,7 @@ pub async fn socket_handler_with_metadata(
             },
             _ = message_rate_interval.tick() => {
                 let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
-                info!("Updating message rate to be {} msg/sec", rate);
+                debug!("Updating message rate to be {} msg/sec", rate);
                 let item = ClientData {
                     name: "Argos/Message_Rate".to_string(),
                     unit: "".to_string(),
@@ -144,11 +157,11 @@ pub async fn socket_handler_with_metadata(
 
 /// Handles parsing and creating metadata for a newly received socket message.
 fn handle_socket_msg(
-    data: ClientData,
+    data: &ClientData,
     fault_regex_mpu: &Regex,
     fault_regex_bms: &Regex,
     fault_regex_charger: &Regex,
-    timer_map: &mut HashMap<String, TimerData>,
+    timer_map: &mut FxHashMap<String, TimerData>,
     fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
 ) {
     // check to see if we fit a timer case, and then act upon it

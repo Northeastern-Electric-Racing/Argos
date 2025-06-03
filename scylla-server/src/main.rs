@@ -24,10 +24,13 @@ use scylla_server::{
     controllers::{
         self,
         car_command_controller::{self},
-        data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
+        data_type_controller, file_insertion_controller,
+        rule_controller::add_rule,
+        run_controller, scylla_config_controller,
         video_streamer_controller::{self},
         OutputDirectory, VideoSuffix,
     },
+    rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
     RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
     STATIC_RATE_LIMIT_VALUE,
@@ -40,7 +43,7 @@ use scylla_server::{
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{
     signal,
-    sync::{broadcast, mpsc},
+    sync::{broadcast, mpsc, RwLock},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
@@ -245,6 +248,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO tune buffer size
     let (db_send, db_receive) = mpsc::channel::<Vec<ClientData>>(1000);
 
+    // the rules manager
+    let rules_manager = Arc::new(RwLock::new(RuleManager::new()));
+
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
     let task_tracker = TaskTracker::new();
@@ -256,6 +262,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         task_tracker.spawn(socket_handler_with_metadata(
             token.clone(),
             mqtt_receive_socket,
+            rules_manager.clone(),
             io,
         ));
     }
@@ -288,101 +295,119 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone()));
 
     let app = Router::new()
-        // DATA
-        .route(
-            "/data/{dataTypeName}/{runId}",
-            get(controllers::data_controller::get_data_by_run_id),
+        .merge(
+            Router::new()
+                // DATA
+                .route(
+                    "/data/{dataTypeName}/{runId}",
+                    get(controllers::data_controller::get_data_by_run_id),
+                )
+                .route(
+                    "/data/{dataTypeName}",
+                    get(controllers::data_controller::get_data_by_timing),
+                )
+                // DATA TYPE
+                .route("/datatypes", get(data_type_controller::get_all_data_types))
+                .route("/runs", get(run_controller::get_all_runs))
+                .route("/runs/latest", get(run_controller::get_latest_run))
+                .route("/runs/{id}", get(run_controller::get_run_by_id))
+                .route("/runs/new", post(run_controller::new_run))
+                .route(
+                    "/runs/new/{driver}/{location}/{notes}",
+                    post(run_controller::new_run_with_data),
+                )
+                .route(
+                    "/runs/update/{id}/{driver}/{location}/{notes}",
+                    post(run_controller::update_run_with_data),
+                ),
         )
-        .route(
-            "/data/{dataTypeName}",
-            get(controllers::data_controller::get_data_by_timing),
+        .merge(
+            Router::new()
+                // CAR CONFIG
+                .route(
+                    "/config/set/{configKey}",
+                    post(car_command_controller::send_config_command),
+                )
+                .layer(Extension(client_sharable)),
         )
-        // DATA TYPE
-        .route("/datatypes", get(data_type_controller::get_all_data_types))
-        .route("/runs", get(run_controller::get_all_runs))
-        .route("/runs/latest", get(run_controller::get_latest_run))
-        .route("/runs/{id}", get(run_controller::get_run_by_id))
-        .route("/runs/new", post(run_controller::new_run))
-        .route(
-            "/runs/new/{driver}/{location}/{notes}",
-            post(run_controller::new_run_with_data),
+        .merge(
+            Router::new()
+                // SCYLLA CONFIG
+                .route(
+                    "/scylla/get_settings",
+                    get(scylla_config_controller::get_settings),
+                )
+                // DATA_UPLOAD_DISABLE --
+                .route(
+                    "/scylla/upload/disable",
+                    put(scylla_config_controller::disable_data_upload),
+                )
+                .route(
+                    "/scylla/upload/enable",
+                    put(scylla_config_controller::enable_data_upload),
+                )
+                // --
+                .route(
+                    "/scylla/batch_time/{time_sec}",
+                    put(scylla_config_controller::batch_upsert_set),
+                )
+                .route(
+                    "/scylla/ratelimit_mode/{mode_idex}",
+                    put(scylla_config_controller::rate_limit_mode_set),
+                )
+                .route(
+                    "/scylla/static_ratelimit_time/{time_ms}",
+                    put(scylla_config_controller::static_ratelimit_time_set),
+                )
+                .route(
+                    "/scylla/socket_discard_percent/{discard_perc}",
+                    put(scylla_config_controller::socket_discard_percent_set),
+                ),
         )
-        .route(
-            "/runs/update/{id}/{driver}/{location}/{notes}",
-            post(run_controller::update_run_with_data),
+        .merge(
+            Router::new()
+                // FILE INSERT
+                .route("/insert/file", post(file_insertion_controller::insert_file))
+                .route(
+                    "/insert/log",
+                    post(file_insertion_controller::insert_logger_file).layer(Extension(db_send)),
+                )
+                .route(
+                    "/insert/update_logger",
+                    post(file_insertion_controller::request_logger_insert),
+                )
+                .route(
+                    "/insert/update_serial",
+                    post(file_insertion_controller::request_serial_insert),
+                )
+                // VIDEO STREAMING
+                .route(
+                    "/videos/{file_name}",
+                    get(video_streamer_controller::stream_video),
+                )
+                .route(
+                    "/videos",
+                    get(video_streamer_controller::get_videos)
+                        .layer(Extension(VideoSuffix(cli.video_suffix))),
+                )
+                .route(
+                    "/videos/update",
+                    post(video_streamer_controller::request_updated_videos),
+                )
+                .route(
+                    "/authenticate",
+                    post(car_command_controller::authenticate_password)
+                        .layer(Extension(cli.password)),
+                )
+                .layer(Extension(OutputDirectory(cli.output_directory)))
+                .layer(DefaultBodyLimit::disable()),
         )
-        // CAR CONFIG
-        .route(
-            "/config/set/{configKey}",
-            post(car_command_controller::send_config_command),
+        .merge(
+            Router::new()
+                .route("/rules/add", put(add_rule))
+                //.route("/rules/delete/{rule_id}", post()).route("/rules/poll")
+                .layer(Extension(rules_manager)),
         )
-        // SCYLLA CONFIG
-        .route(
-            "/scylla/get_settings",
-            get(scylla_config_controller::get_settings),
-        )
-        // DATA_UPLOAD_DISABLE --
-        .route(
-            "/scylla/upload/disable",
-            put(scylla_config_controller::disable_data_upload),
-        )
-        .route(
-            "/scylla/upload/enable",
-            put(scylla_config_controller::enable_data_upload),
-        )
-        // --
-        .route(
-            "/scylla/batch_time/{time_sec}",
-            put(scylla_config_controller::batch_upsert_set),
-        )
-        .route(
-            "/scylla/ratelimit_mode/{mode_idex}",
-            put(scylla_config_controller::rate_limit_mode_set),
-        )
-        .route(
-            "/scylla/static_ratelimit_time/{time_ms}",
-            put(scylla_config_controller::static_ratelimit_time_set),
-        )
-        .route(
-            "/scylla/socket_discard_percent/{discard_perc}",
-            put(scylla_config_controller::socket_discard_percent_set),
-        )
-        // FILE INSERT
-        .route("/insert/file", post(file_insertion_controller::insert_file))
-        .route(
-            "/insert/log",
-            post(file_insertion_controller::insert_logger_file),
-        )
-        .route(
-            "/insert/update_logger",
-            post(file_insertion_controller::request_logger_insert),
-        )
-        .route(
-            "/insert/update_serial",
-            post(file_insertion_controller::request_serial_insert),
-        )
-        // VIDEO STREAMING
-        .route(
-            "/videos/{file_name}",
-            get(video_streamer_controller::stream_video),
-        )
-        .route(
-            "/videos",
-            get(video_streamer_controller::get_videos)
-                .layer(Extension(VideoSuffix(cli.video_suffix))),
-        )
-        .route(
-            "/videos/update",
-            post(video_streamer_controller::request_updated_videos),
-        )
-        .route(
-            "/authenticate",
-            post(car_command_controller::authenticate_password).layer(Extension(cli.password)),
-        )
-        .layer(Extension(db_send))
-        .layer(Extension(OutputDirectory(cli.output_directory)))
-        .layer(Extension(client_sharable))
-        .layer(DefaultBodyLimit::disable())
         // for CORS handling
         .layer(
             CorsLayer::new()
