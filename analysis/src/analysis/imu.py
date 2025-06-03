@@ -13,8 +13,8 @@ from pyqtgraph.Qt import QtGui
 
 def main():
     pwd = os.getcwd()
-    start_time = "06-01-2025 22:07:50"
-    end_time = "06-01-2025 22:09:10"
+    start_time = "06-01-2025 21:00:08"
+    end_time = "06-01-2025 21:01:50"
 
     result = make_request(
         f"\\COPY (SELECT values[1] / 10000 as \"X\",  values[2] / 10000 as \"Y\", values[3] / 10000 as \"Z\", time FROM data WHERE \"dataTypeName\"='MSB/FR/Accel' AND time > '{start_time}' AND time < '{end_time}') to '{pwd}/data/data.csv' WITH CSV HEADER;"
@@ -32,8 +32,8 @@ def main():
     x, y, time_stamps = x[valid], y[valid], time_stamps[valid]
 
     # window_length must be odd and <= len(data), polyorder < window_length
-    window_length = 11  # choose odd number ~ size of smoothing window
-    polyorder = 3  # polynomial order
+    window_length = 29  # choose odd number ~ size of smoothing window
+    polyorder = 5  # polynomial order
 
     x_smooth = savgol_filter(x, window_length, polyorder)
     y_smooth = savgol_filter(y, window_length, polyorder)
@@ -82,26 +82,28 @@ def main():
     frame_idx = 0
     n_frames = len(x)
 
-    def update():
+    def schedule_next():
         nonlocal frame_idx
-        elapsed = time.time() - start_wall_time
-
-        # Advance frame while next frame's time <= elapsed
-        while frame_idx < n_frames and time_deltas[frame_idx] <= elapsed:
-            frame_idx += 1
-
         if frame_idx >= n_frames:
-            timer.stop()
             return
 
-        # Plot current frame (previous frame index because frame_idx advanced)
-        idx = max(frame_idx - 1, 0)
-        dot.setData([x_smooth[idx]], [y_smooth[idx]])
-        timestamp_text.setText(f"Time: {time_deltas[idx]:.2f} s")
+        now = time.time()
+        target_time = start_wall_time + time_deltas[frame_idx]
+        wait_ms = max(0, int((target_time - now) * 1000))
 
-    timer = QtCore.QTimer()
-    timer.timeout.connect(update)
-    timer.start(10)  # Check every 10 ms for new frame to render
+        QtCore.QTimer.singleShot(wait_ms, update)
+
+    def update():
+        nonlocal frame_idx
+        if frame_idx >= n_frames:
+            return
+
+        dot.setData([x_smooth[frame_idx]], [y_smooth[frame_idx]])
+        timestamp_text.setText(f"Time: {time_deltas[frame_idx]:.2f} s")
+        frame_idx += 1
+        schedule_next()
+
+    schedule_next()
 
     QtWidgets.QApplication.instance().exec_()
 
