@@ -1,3 +1,5 @@
+use chrono::DateTime;
+use chrono::Utc;
 use evalexpr::{
     eval_boolean_with_context, ContextWithMutableVariables, DefaultNumericTypes, HashMapContext,
 };
@@ -5,6 +7,7 @@ use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use tracing::trace;
 use std::time::Duration;
 use tracing::warn;
 
@@ -20,13 +23,15 @@ pub struct RuleNotification {
     pub id: String,
     pub topic: String,
     pub values: Vec<f32>,
+    pub time: DateTime<Utc>,
 }
 
 #[serde_as]
 #[derive(Deserialize)]
+/// A single modular rule, can be serial/deserialized
 pub struct Rule {
     id: String,
-    topic: String,
+    pub topic: String,
     #[serde_as(as = "DurationSeconds<u64>")]
     debounce_time: Duration,
     expr: String,
@@ -39,6 +44,7 @@ pub struct Rule {
 }
 
 impl Rule {
+    /// create a new rule
     pub fn new(
         id: String,
         topic: String,
@@ -56,6 +62,7 @@ impl Rule {
         }
     }
 
+    /// process an event of seeing this topic, with the given values
     fn process_seen(&self, values: &[f32]) -> Option<bool> {
         let mut context: HashMapContext<DefaultNumericTypes> =
             HashMapContext::<DefaultNumericTypes>::new();
@@ -80,6 +87,8 @@ impl Rule {
         }
     }
 
+    /// process a tick (seeing this topic)
+    /// returns a boolean of whether the rule was triggered, or None if err
     pub fn tick(&mut self, values: &[f32]) -> Option<bool> {
         if self.during_cooldown {
             // check cooldown should still be happening then bail if so
@@ -95,6 +104,7 @@ impl Rule {
                 self.last_seen = None;
             }
         }
+        // process whether we have seen it, abort if error
         let res = self.process_seen(values)?;
 
         // if we have triggered and we arent during cooldown
@@ -113,10 +123,7 @@ impl Rule {
     }
 }
 
-enum ClientRuleState {
-    Alive(Vec<Rule>),
-    Inactive,
-}
+/// errors seen in the rule manager
 pub enum RuleManagerError {
     NoMatchingRule,
     NoSuchClient,
@@ -124,18 +131,10 @@ pub enum RuleManagerError {
     Failure,
 }
 
-pub enum RulesStateChange {
-    /// client_id, rule
-    AddRule(String, Rule),
-    /// client_id, rule_id
-    DeleteRule(String, String),
-    /// client_id
-    DeleteClient(String),
-}
-
+/// the rule manager
 pub struct RuleManager {
-    /// <client_id, client_rules>
-    clients_map: FxHashMap<String, ClientRuleState>,
+    /// <client_id, <rule_id, rule>>
+    clients_map: FxHashMap<String, FxHashMap<String, Rule>>,
     /// <topic, Vec<client_id>>
     rules_lookup: FxHashMap<String, Vec<String>>,
 }
@@ -153,40 +152,47 @@ impl RuleManager {
         }
     }
 
-    /// Handles a new socket message, returning a RuleNotification if action should be taken
+    /// Handles a new socket message, returning a RuleNotification for one to many clients if action should be taken
     pub fn handle_msg(
         &mut self,
-        data: ClientData,
-    ) -> Result<Option<RuleNotification>, RuleManagerError> {
+        data: &ClientData,
+    ) -> Result<Option<Vec<(String, RuleNotification)>>, RuleManagerError> {
         let Some(clients) = self.rules_lookup.get(&data.name) else {
+            trace!("(normal) Could not find rule in rule cache: {}", data.name);
             return Err(RuleManagerError::NoMatchingRule);
         };
+        let mut notifications: Vec<(String, RuleNotification)> = Vec::new();
         for client_want in clients {
-            let Some(rule_state) = self.clients_map.get_mut(client_want) else {
+            let Some(rules) = self.clients_map.get_mut(client_want) else {
                 warn!("Client cached but not found!");
                 return Err(RuleManagerError::Failure);
             };
-            let ClientRuleState::Alive(rules) = rule_state else {
-                warn!("Rule cached but not found");
-                return Err(RuleManagerError::Failure);
-            };
-            for rule in rules {
+            for rule in rules.values_mut() {
                 if rule.topic == data.name {
+                    // return rule failure if underlying tick fails
                     let Some(is_triggered) = rule.tick(&data.values) else {
                         return Err(RuleManagerError::RuleFailure);
                     };
                     if is_triggered {
-                        return Ok(Some(RuleNotification {
-                            id: rule.id.clone(),
-                            topic: rule.topic.clone(),
-                            values: data.values,
-                        }));
+                        notifications.push((
+                            client_want.to_string(),
+                            RuleNotification {
+                                id: rule.id.clone(),
+                                topic: rule.topic.clone(),
+                                values: data.values.clone(),
+                                time: data.timestamp,
+                            },
+                        ));
                     }
                 }
             }
         }
-
-        Ok(None)
+        // pass back the results
+        if notifications.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(notifications))
+        }
     }
 
     /// Adds a rule, creating or activating the client if needed
@@ -204,13 +210,14 @@ impl RuleManager {
 
         // push rule, make client active and push rule, or create client and push rule
         match self.clients_map.get_mut(&client) {
-            Some(client) => match client {
-                ClientRuleState::Alive(rules) => rules.push(rule),
-                ClientRuleState::Inactive => *client = ClientRuleState::Alive(vec![rule]),
-            },
+            Some(client) => {
+                client.insert(rule.id.clone(), rule);
+            }
+
             None => {
-                self.clients_map
-                    .insert(client, ClientRuleState::Alive(vec![rule]));
+                let mut map = FxHashMap::default();
+                map.insert(rule.id.clone(), rule);
+                self.clients_map.insert(client, map);
             }
         };
 
@@ -224,27 +231,24 @@ impl RuleManager {
         rule_id: String,
     ) -> Result<(), RuleManagerError> {
         // first, find the rules from the clients map
-        let Some(data) = self.clients_map.get_mut(&client_id) else {
+        let Some(rules) = self.clients_map.get_mut(&client_id) else {
             warn!("Could not find client {}", client_id);
             return Err(RuleManagerError::NoSuchClient);
         };
 
-        // unwrap the rules
-        let ClientRuleState::Alive(rules) = data else {
-            warn!("Could not find rule to delete: {}", rule_id);
+        let Some(removed) = rules.remove(&rule_id) else {
+            warn!("Could not find rule: {}", rule_id);
             return Err(RuleManagerError::NoMatchingRule);
         };
 
-        // retain all rules but one with the ID
-        rules.retain(|rule| rule.id != rule_id);
-
         // now, yeet the rule from the lookup cache
-        let Some(clients) = self.rules_lookup.get_mut(&rule_id) else {
+        let Some(clients) = self.rules_lookup.get_mut(&removed.topic) else {
             warn!("Could not find rule in cache!");
             return Err(RuleManagerError::Failure);
         };
         // remove the client from the cache for that topic, deleting rule from cache if necessary
         clients.retain(|client| *client != client_id);
+        // delete client from cache is normal, the client could still exist without rules in client_map
         if clients.is_empty() {
             self.rules_lookup.remove(&rule_id);
         }
@@ -255,26 +259,21 @@ impl RuleManager {
     /// deletes a client, and all of its rules
     pub fn delete_client(&mut self, client_id: String) -> Result<(), RuleManagerError> {
         // first, yeet from clients map
-        let Some(client_rules) = self.clients_map.remove(&client_id) else {
+        let Some(rules) = self.clients_map.remove(&client_id) else {
             warn!("Could not find client to delete: {}", client_id);
             return Err(RuleManagerError::NoSuchClient);
         };
 
         // now, yeet the topics from the lookup
-        match client_rules {
-            ClientRuleState::Alive(rules) => {
-                for rule in rules {
-                    let Some(client_list) = self.rules_lookup.get_mut(&rule.topic) else {
-                        warn!("Could not find topic in rule lookup table!");
-                        return Err(RuleManagerError::Failure);
-                    };
-                    client_list.retain(|client| *client != client_id);
-                    if client_list.is_empty() {
-                        self.rules_lookup.remove(&rule.topic);
-                    }
-                }
+        for rule in rules.values() {
+            let Some(client_list) = self.rules_lookup.get_mut(&rule.topic) else {
+                warn!("Could not find topic in rule lookup table!");
+                return Err(RuleManagerError::Failure);
+            };
+            client_list.retain(|client| *client != client_id);
+            if client_list.is_empty() {
+                self.rules_lookup.remove(&rule.topic);
             }
-            ClientRuleState::Inactive => return Ok(()),
         }
 
         Ok(())

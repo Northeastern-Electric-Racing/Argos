@@ -3,6 +3,8 @@ use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
 use serde::Serialize;
+use socketioxide::extract::SocketRef;
+use socketioxide::socket::Sid;
 use socketioxide::SocketIo;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
@@ -47,7 +49,7 @@ pub async fn socket_handler_with_metadata(
     // BEGIN METADATA
 
     // INTERVAL TIMERS for periodic things to be sent
-    let mut view_interval = tokio::time::interval(Duration::from_secs(3));
+    let mut view_interval = tokio::time::interval(Duration::from_millis(500));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
     let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
@@ -76,6 +78,32 @@ pub async fn socket_handler_with_metadata(
 
     // END METADATA
 
+    // BEGIN rules
+    // socket_map must not be written outside of these closures.
+    // a map of client_ids to their respective socket IDs for identifying where notifications go
+    let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
+        Arc::new(RwLock::new(FxHashMap::default()));
+    let writable_socket_map = client_socket_map.clone();
+    io.ns("/", |socket: SocketRef| async move {
+        // unfortunate locking and ref counting due to the async closures
+        // extracting the Authorization as a normal http header bc idk how socketio does it
+        // format from client should be 'Authorization':'<clientid>'
+        let mut owned = writable_socket_map.write().await;
+        let header = socket.req_parts().headers.get("Authorization");
+        if let Some(header) = header {
+            if let Ok(header) = header.to_str() {
+                let header = header.to_owned();
+                owned.insert(header.clone(), socket.id);
+                drop(owned);
+
+                // ensure we remove from the write map of
+                socket.on_disconnect(async move || {
+                    writable_socket_map.write().await.remove(&header);
+                });
+            }
+        }
+    });
+
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
 
@@ -94,11 +122,8 @@ pub async fn socket_handler_with_metadata(
                     DATA_SOCKET_KEY,
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                let Ok(Some(notif)) = rules_manager.write().await.handle_msg(data) else {
-                    continue;
-                };
-                trace!("Sending notification: {}", notif.id);
-                send_socket_msg(&notif, &mut upload_counter, &io, RULE_SOCKET_KEY).await;
+
+                handle_rule_stuff(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -152,6 +177,40 @@ pub async fn socket_handler_with_metadata(
                 last_instant = tokio::time::Instant::now();
             }
         }
+    }
+}
+
+async fn handle_rule_stuff(
+    data: &ClientData,
+    rule_manager: &Arc<RwLock<RuleManager>>,
+    client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
+    io: &SocketIo,
+) {
+    let Ok(Some(notifs)) = rule_manager.write().await.handle_msg(data) else {
+        return;
+    };
+    for notification in notifs {
+        let read_clients = client_socket_map.read().await;
+        let Some(sid) = read_clients.get(&notification.0) else {
+            warn!("Could not find client to deliver notification, deleting client");
+            let _ = rule_manager.write().await.delete_client(notification.0);
+            return;
+        };
+        warn!(
+            "Sending notification of {} to {}",
+            notification.1.topic, notification.0
+        );
+        let Some(socket) = io.get_socket(*sid) else {
+            warn!("Could not find client socket, deleting client");
+            let _ = rule_manager.write().await.delete_client(notification.0);
+            return;
+        };
+        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
+            warn!(
+                "Could not send rule notification to {}, err {}",
+                notification.0, err
+            );
+        };
     }
 }
 

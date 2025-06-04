@@ -25,7 +25,7 @@ use scylla_server::{
         self,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller,
-        rule_controller::add_rule,
+        rule_controller::{add_rule, delete_rule},
         run_controller, scylla_config_controller,
         video_streamer_controller::{self},
         OutputDirectory, VideoSuffix,
@@ -405,6 +405,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(
             Router::new()
                 .route("/rules/add", put(add_rule))
+                .route("/rules/delete/{rule_id}", post(delete_rule))
                 //.route("/rules/delete/{rule_id}", post()).route("/rules/poll")
                 .layer(Extension(rules_manager)),
         )
