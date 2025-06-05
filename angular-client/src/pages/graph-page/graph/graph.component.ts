@@ -36,6 +36,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
+  isPaused = input<boolean>(false);
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
@@ -74,6 +75,11 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }
 
   updateChart = () => {
+    // Skip chart updates if paused
+    if (this.isPaused()) {
+      return;
+    }
+
     const series = Array.from(this.data).map(([key, map], index) => ({
       name: key,
       data: Array.from(map),
@@ -121,12 +127,17 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.timeOuts.push(
         setTimeout(() => {
           this.updateChart();
-        }, 500)
+        }, 1)
       );
     }
   };
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
+    // Skip processing if paused
+    if (this.isPaused()) {
+      return;
+    }
+
     const values = info?.data ?? [];
     if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
@@ -171,7 +182,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         animations: {
           enabled: false,
           dynamicAnimation: {
-            speed: 1000
+            speed: 1
           }
         }
       },
@@ -204,6 +215,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         }
       },
       tooltip: {
+        enabled: true,
+        // Make the tooltip “follow” your cursor as you hover
+        followCursor: true,
+        // If you’d rather show a shared tooltip for multiple series, set shared: true
+        shared: false,
+        intersect: false,
         x: {
           //format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'

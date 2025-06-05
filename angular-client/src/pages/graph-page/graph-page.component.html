@@ -21,6 +21,13 @@
             label="Toggle Mult Yaxis"
             additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 160px;"
           />
+          @if (realTime === true) {
+            <argos-button
+              [onClick]="this.togglePause"
+              [label]="isPaused ? 'Play' : 'Pause'"
+              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 80px;"
+            />
+          }
 
           @if (onFaultPage) {
             <fault-buttons [onClearData]="clearDataType" />
@@ -52,6 +59,7 @@
             [valuesSubject]="selectedDataTypeValuesSubject"
             class="graph"
             [showMultipleYAxes]="this.showMultiYaxis"
+            [isPaused]="this.isPaused"
           />
         </div>
         <graph-sidebar [dataTypes]="dataTypes!" [selectDataTypes]="this.setSelectedDataTypes" class="mobile-sidebar" />

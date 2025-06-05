@@ -18,7 +18,6 @@ import { GeneralButtonsComponent } from './graph-caption/general-buttons/general
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import CustomGraphComponent from './graph/graph.component';
-import GraphHeaderComponent from './graph-header/graph-header.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
@@ -37,7 +36,6 @@ import TypographyComponent from '../../components/typography/typography.componen
     GraphSidebarComponent,
     HStackComponent,
     CustomGraphComponent,
-    GraphHeaderComponent,
     TypographyComponent
   ]
 })
@@ -58,6 +56,7 @@ export default class GraphPageComponent implements OnInit {
   runsIsLoading = true;
   showSideBar = true;
   showMultiYaxis = false;
+  isPaused = false;
 
   toggleMultiYaxis = () => {
     this.showMultiYaxis = !this.showMultiYaxis;
@@ -65,6 +64,11 @@ export default class GraphPageComponent implements OnInit {
 
   toggleSideBar = () => {
     this.showSideBar = !this.showSideBar;
+  };
+
+  togglePause = () => {
+    this.isPaused = !this.isPaused;
+    console.log('Graph paused state:', this.isPaused);
   };
 
   previousDataType?: DataType;
@@ -220,6 +224,11 @@ export default class GraphPageComponent implements OnInit {
 
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
+            // Skip processing if paused
+            if (this.isPaused) {
+              return;
+            }
+
             const now = new Date();
             const lastMinute = now.getTime() - 60000; // Keep 1 minute of data
             const storedValues = graphInfo.data;
