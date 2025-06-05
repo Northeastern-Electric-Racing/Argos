@@ -12,7 +12,6 @@ import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
-
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
@@ -56,7 +55,7 @@ export default class GraphPageComponent implements OnInit {
   allRuns: Run[] = [];
   runsIsLoading = true;
   showSideBar = true;
-  showMultiYaxis = true;
+  showMultiYaxis = false;
 
   toggleMultiYaxis = () => {
     this.showMultiYaxis = !this.showMultiYaxis;
@@ -69,7 +68,6 @@ export default class GraphPageComponent implements OnInit {
   previousDataType?: DataType;
 
   selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
-  currentValues: DataValue[] = [];
   selectedDataTypeValuesIsLoading = false;
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
@@ -130,17 +128,29 @@ export default class GraphPageComponent implements OnInit {
 
   // reset shit when a run is selected.
   onRunSelected = (run: Run) => {
+    console.log('Switching to run mode:', run.id);
+
+    // Clear existing state first
+    this.clearDataType();
+
     this.run = run;
     this.realTime = false;
+    this.minutesToQuery = undefined;
     this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Run #' + run.id;
-    this.setSelectedDataTypes(this.selectedDataTypes);
+
+    this.setSelectedDataTypes([...this.selectedDataTypes]);
   };
 
   onQueryTimeSelected = (queryTime: number) => {
+    console.log('Switching to historical mode:', queryTime, 'minutes');
+
+    // Clear existing state first
+    this.clearDataType();
+
     this.run = undefined;
     this.minutesToQuery = queryTime;
     this.realTime = false;
@@ -148,22 +158,25 @@ export default class GraphPageComponent implements OnInit {
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Historical Range';
-    this.setSelectedDataTypes(this.selectedDataTypes);
+
+    this.setSelectedDataTypes([...this.selectedDataTypes]);
   };
 
   // get real time ready
   onSetRealtime = () => {
-    const { selectedDataTypes } = this;
-    this.queryDataTypes();
+    // Clear existing state first
+    this.clearDataType();
 
     this.run = undefined;
-    this.minutesToQuery = undefined;
     this.realTime = true;
+    this.minutesToQuery = undefined;
+    this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Real Time';
-    this.setSelectedDataTypes(selectedDataTypes);
+
+    this.setSelectedDataTypes([...this.selectedDataTypes]);
   };
 
   /**
@@ -188,35 +201,57 @@ export default class GraphPageComponent implements OnInit {
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
+    console.log(
+      'Processing real-time data type selection for:',
+      dataTypes.map((dt) => dt.name)
+    );
+
     const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
+
     dataTypes.forEach((dataType) => {
       const key = dataType.name;
       const graphInfo = dataTypeValues.find((dtV) => dtV.label === key);
       const valuesSubject = this.storage.get(key);
+
       if (graphInfo !== undefined) {
+        console.log(`Setting up real-time subscription for ${key}`);
+
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
             const now = new Date();
-            const lastMinute = now.getTime() - 60000;
+            const lastMinute = now.getTime() - 60000; // Keep 1 minute of data
             const storedValues = graphInfo.data;
+
+            // Process new values
             value.values.forEach((val, i) => {
               const graphData = { x: +value.time, y: +val, label: dataType.name };
-              if (storedValues[i]) storedValues[i].push(graphData);
-              else storedValues[i] = [graphData];
+              if (storedValues[i]) {
+                storedValues[i].push(graphData);
+                // Limit stored values to prevent memory buildup
+                if (storedValues[i].length > 500) {
+                  storedValues[i] = storedValues[i].slice(-400); // Keep last 400 points
+                }
+              } else {
+                storedValues[i] = [graphData];
+              }
             });
+
+            // Filter out old data points
             const nextValue = storedValues.map((val) => {
               return val.filter((v) => {
                 return new Date(v.x).getTime() > lastMinute;
               });
             });
 
-            this.currentValues.push(value);
-            this.selectedDataTypeValuesSubject.forEach((subject) => {
-              subject.next({
+            // Update the subject
+            const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === dataType.name);
+            if (targetSubject) {
+              console.log(`Updating real-time data for ${key}`, nextValue);
+              targetSubject.next({
                 label: dataType.name,
                 data: nextValue
               });
-            });
+            }
           })
         );
       }
@@ -280,6 +315,7 @@ export default class GraphPageComponent implements OnInit {
     dataTypes.forEach((dataType) => {
       let queryFn: () => Promise<Response>;
       if (this.run !== undefined) {
+        console.log('Processing historical data type selection for run:', this.run.id, 'and data type:', dataType.name);
         queryFn = () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id);
       } else if (this.minutesToQuery !== undefined) {
         const realMinutes = this.minutesToQuery;
@@ -312,10 +348,8 @@ export default class GraphPageComponent implements OnInit {
         this.selectedDataTypeValuesIsLoading = isLoading;
       });
 
-      /* ---- data handler ------------------------------------------------------- */
       dataQueryResponse.data.subscribe((data) => {
         if (data) {
-          /* ---------- reshape → GraphData[][] (unchanged logic) ---------------- */
           const graphData: GraphData[][] = [];
           data.forEach((dataValue) => {
             dataValue.values.forEach((val, i) => {
@@ -327,7 +361,6 @@ export default class GraphPageComponent implements OnInit {
             });
           });
 
-          /* ---------- push into the BehaviorSubject that matches by .label ----- */
           let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
 
           if (!target) {
@@ -337,11 +370,6 @@ export default class GraphPageComponent implements OnInit {
           }
 
           target.next({ label: dataType.name, data: graphData });
-
-          /* ---------- keep raw values if you use them elsewhere ---------------- */
-          this.currentValues.push(...data);
-          // If you still have a single-value subject called currentValue, keep this:
-          // this.currentValue?.next(data[data.length - 1]);
         }
       });
     });
@@ -371,18 +399,29 @@ export default class GraphPageComponent implements OnInit {
   };
 
   clearDataType: () => void = () => {
+    console.log('Clearing data type - unsubscribing from', this.subscriptions.length, 'subscriptions');
+
     // Unsubscribe from all previous subscriptions
     this.subscriptions.forEach((sub) => {
-      if (sub) {
+      if (sub && !sub.closed) {
         sub.unsubscribe();
       }
     });
     this.subscriptions = [];
 
+    // Clear and complete existing subjects to prevent memory leaks
+    this.selectedDataTypeValuesSubject.forEach((subject) => {
+      if (subject && !subject.closed) {
+        subject.complete();
+      }
+    });
     this.selectedDataTypeValuesSubject = [];
-    this.currentValues = [];
+
+    // Reset loading states
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
+
+    console.log('Data type cleared successfully');
   };
 }

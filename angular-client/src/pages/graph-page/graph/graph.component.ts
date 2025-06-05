@@ -1,4 +1,4 @@
-import { Component, input, OnChanges, OnDestroy, OnInit } from '@angular/core';
+import { Component, effect, input, OnDestroy, OnInit } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexXAxis,
@@ -32,7 +32,7 @@ type ChartOptions = {
   styleUrls: ['./graph.component.css'],
   standalone: true
 })
-export default class CustomGraphComponent implements OnChanges, OnInit, OnDestroy {
+export default class CustomGraphComponent implements OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
@@ -45,6 +45,27 @@ export default class CustomGraphComponent implements OnChanges, OnInit, OnDestro
   isSliding: boolean = false;
   timeRangeMs = 60000; // 1 minute in ms
   private timeOuts: NodeJS.Timeout[] = [];
+
+  constructor() {
+    effect(() => {
+      this.data = new Map();
+      this.subscriptions.forEach((sub) => sub.unsubscribe());
+      this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+      this.valuesSubject().forEach((graphInfo) => {
+        this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
+      });
+
+      this.chart.updateOptions({
+        ...this.options,
+        xaxis: {
+          ...this.options.xaxis,
+          range: undefined
+        }
+      });
+
+      this.updateChart();
+    });
+  }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
@@ -135,10 +156,6 @@ export default class CustomGraphComponent implements OnChanges, OnInit, OnDestro
 
   ngOnInit(): void {
     this.data = new Map();
-    this;
-    this.valuesSubject().forEach((graphInfo) => {
-      this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
-    });
 
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) return;
@@ -222,21 +239,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit, OnDestro
     this.chart.render().then(() => {
       this.updateChart();
     });
-  }
 
-  ngOnChanges() {
-    this.data = new Map();
-    this.isSliding = false;
-    //set range to undefined... why?
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: undefined
-      }
-    });
-    this.valuesSubject().forEach((graphInfo) => {
-      this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
-    });
+    this.showMultipleYAxes.apply(this.updateChart());
   }
 }
