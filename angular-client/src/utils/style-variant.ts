@@ -15,4 +15,8 @@ export type StyleVariant =
   | 'info-value'
   | 'info-unit'
   | 'sidebar-label'
-  | 'x-large-title';
+  | 'x-large-title'
+  | 'info-value-small'
+  | 'info-value-large'
+  | 'info-unit-small'
+  | 'info-unit-large';

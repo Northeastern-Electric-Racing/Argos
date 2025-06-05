@@ -8,6 +8,7 @@ import { AccLowVoltageComponent } from './components/acc-low-voltage/acc-low-vol
 import { AccHighTempComponent } from './components/acc-high-temp/acc-high-temp.component';
 import { SegmentSummaryComponent } from './components/segment-summary/segment-summary.component';
 import { CellByCellHeatMapComponent } from './components/cell-by-cell-heat-map/cell-by-cell-heat-map.component';
+import { BmsAtAGlanceReDesignComponent } from './components/bms-at-a-glance-redesign/bms-at-a-glance-redesign.component';
 
 @Component({
   selector: 'app-bms-debug-page',
@@ -19,11 +20,13 @@ import { CellByCellHeatMapComponent } from './components/cell-by-cell-heat-map/c
     MatGridTile,
     BmsHeaderComponent,
     BmsAtAGlanceComponent,
+    BmsAtAGlanceReDesignComponent,
     AccHighVoltageComponent,
     AccLowVoltageComponent,
     AccHighTempComponent,
     SegmentSummaryComponent,
-    CellByCellHeatMapComponent
+    CellByCellHeatMapComponent,
+    BmsAtAGlanceReDesignComponent
   ]
 })
 export class BmsDebugPageComponent {

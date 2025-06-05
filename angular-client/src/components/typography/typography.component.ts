@@ -58,8 +58,20 @@ export default class TypographyComponent implements OnInit {
       case 'info-value':
         this.style = Theme.infoValue;
         break;
+      case 'info-value-small':
+        this.style = Theme.infoValueSmall;
+        break;
+      case 'info-value-large':
+        this.style = Theme.infoValueLarge;
+        break;
       case 'info-unit':
         this.style = Theme.infoUnit;
+        break;
+      case 'info-unit-small':
+        this.style = Theme.infoUnitSmall;
+        break;
+      case 'info-unit-large':
+        this.style = Theme.infoUnitLarge;
         break;
       case 'sidebar-label':
         this.style = Theme.sidebarLabel;

@@ -5,6 +5,7 @@ import TypographyComponent from '../typography/typography.component';
 import ThermometerComponent from '../thermometer/thermometer.component';
 import HStackComponent from '../hstack/hstack.component';
 import VStackComponent from '../vstack/vstack.component';
+import { StyleVariant } from 'src/utils/style-variant';
 
 export interface ThermometerConfig {
   type: 'thermometer-config';
@@ -56,6 +57,7 @@ export class InfoValueDisplayComponent implements OnChanges {
   subtitleStyle = input<string>('');
   unit = input<string>('');
   formattedValue = '-';
+  size = input<'small' | 'medium' | 'large'>('medium');
 
   // Consolidated widget input
   widget = input<WidgetConfig>();
@@ -71,4 +73,28 @@ export class InfoValueDisplayComponent implements OnChanges {
     }
     return this.subtitleStyle();
   };
+
+  getInfoValueVariant(): StyleVariant {
+    switch (this.size()) {
+      case 'small':
+        return 'info-value-small';
+      case 'large':
+        return 'info-value-large';
+      case 'medium':
+      default:
+        return 'info-value';
+    }
+  }
+
+  getInfoUnitVariant(): StyleVariant {
+    switch (this.size()) {
+      case 'small':
+        return 'info-unit-small';
+      case 'large':
+        return 'info-unit-large';
+      case 'medium':
+      default:
+        return 'info-unit';
+    }
+  }
 }
