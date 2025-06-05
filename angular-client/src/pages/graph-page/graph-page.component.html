@@ -9,9 +9,8 @@
     </div>
   } @else {
     <div class="container">
-      <graph-header class="graph-header" [rightHeader]="rightHeader" />
-      <hstack alignItems="start" style="align-self: flex-start" spacing="0px">
-        <hstack>
+      <hstack alignItems="start" justifyContent="space-between" style="align-self: flex-start; width: 100%" spacing="0px">
+        <hstack spacing="0px">
           <argos-button
             [onClick]="this.toggleSideBar"
             label="Toggle Sidebar"
@@ -22,19 +21,25 @@
             label="Toggle Mult Yaxis"
             additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 160px;"
           />
+
+          @if (onFaultPage) {
+            <fault-buttons [onClearData]="clearDataType" />
+          } @else {
+            <general-buttons
+              [onRunSelected]="onRunSelected"
+              [onClearDataType]="clearDataType"
+              [onSetRealTime]="onSetRealtime"
+              [historicalOn]="this.run !== undefined || this.minutesToQuery !== undefined"
+              [selectorConfig]="this.queryMinutesConfig"
+            />
+          }
         </hstack>
 
-        @if (onFaultPage) {
-          <fault-buttons [onClearData]="clearDataType" />
-        } @else {
-          <general-buttons
-            [onRunSelected]="onRunSelected"
-            [onClearDataType]="clearDataType"
-            [onSetRealTime]="onSetRealtime"
-            [historicalOn]="this.run !== undefined || this.minutesToQuery !== undefined"
-            [selectorConfig]="this.queryMinutesConfig"
-          />
-        }
+        <typography
+          variant="large-header"
+          additionalStyles="margin-top: 5px; margin-bottom: 0px; padding-right: 15px;"
+          [content]="this.rightHeader"
+        />
       </hstack>
 
       <div class="content-div">

@@ -21,6 +21,7 @@ import CustomGraphComponent from './graph/graph.component';
 import GraphHeaderComponent from './graph-header/graph-header.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
+import TypographyComponent from '../../components/typography/typography.component';
 
 @Component({
   selector: 'graph-page',
@@ -36,7 +37,8 @@ import ErrorPageComponent from 'src/components/error-page/error-page.component';
     GraphSidebarComponent,
     HStackComponent,
     CustomGraphComponent,
-    GraphHeaderComponent
+    GraphHeaderComponent,
+    TypographyComponent
   ]
 })
 export default class GraphPageComponent implements OnInit {
