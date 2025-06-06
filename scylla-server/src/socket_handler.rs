@@ -191,12 +191,12 @@ async fn handle_rule_stuff(
     };
     for notification in notifs {
         let read_clients = client_socket_map.read().await;
-        let Some(sid) = read_clients.get(&notification.0) else {
+        let Some(sid) = read_clients.get(&notification.0 .0) else {
             warn!("Could not find client to deliver notification, deleting client");
             let _ = rule_manager.write().await.delete_client(notification.0);
             return;
         };
-        warn!(
+        debug!(
             "Sending notification of {} to {}",
             notification.1.topic, notification.0
         );

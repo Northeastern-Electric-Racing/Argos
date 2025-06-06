@@ -1,14 +1,17 @@
 use chrono::DateTime;
 use chrono::Utc;
+use derive_more::AsRef;
+use derive_more::Display;
 use evalexpr::{
     eval_boolean_with_context, ContextWithMutableVariables, DefaultNumericTypes, HashMapContext,
 };
 use rustc_hash::FxHashMap;
+use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DurationSeconds;
-use tracing::trace;
 use std::time::Duration;
+use tracing::trace;
 use tracing::warn;
 
 use crate::ClientData;
@@ -18,10 +21,30 @@ static ASCII_LOWER: [char; 26] = [
     't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
+/// cooldown time
+const COOLDOWN_TIME: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// socket key for sending rule notification events
+pub const RULE_SOCKET_KEY: &str = "rule_notify";
+
+// since client IDs, rule IDs, and topics are scattered about, wrap them here
+
+/// a client_id, add to derives to get more string features
+#[derive(PartialEq, Eq, Hash, Display, Clone, AsRef)]
+pub struct ClientId(pub String);
+
+/// a Rule ID, add to derives to get more string features
+#[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
+pub struct RuleId(pub String);
+
+/// a MQTT topic to trigger on, add to derives to get more string features
+#[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
+pub struct Topic(String);
+
 #[derive(Serialize)]
 pub struct RuleNotification {
-    pub id: String,
-    pub topic: String,
+    pub id: RuleId,
+    pub topic: Topic,
     pub values: Vec<f32>,
     pub time: DateTime<Utc>,
 }
@@ -30,8 +53,8 @@ pub struct RuleNotification {
 #[derive(Deserialize)]
 /// A single modular rule, can be serial/deserialized
 pub struct Rule {
-    id: String,
-    pub topic: String,
+    id: RuleId,
+    pub topic: Topic,
     #[serde_as(as = "DurationSeconds<u64>")]
     debounce_time: Duration,
     expr: String,
@@ -45,12 +68,7 @@ pub struct Rule {
 
 impl Rule {
     /// create a new rule
-    pub fn new(
-        id: String,
-        topic: String,
-        debounce_time: std::time::Duration,
-        expr: String,
-    ) -> Self {
+    pub fn new(id: RuleId, topic: Topic, debounce_time: std::time::Duration, expr: String) -> Self {
         Self {
             id,
             topic,
@@ -92,10 +110,11 @@ impl Rule {
     pub fn tick(&mut self, values: &[f32]) -> Option<bool> {
         if self.during_cooldown {
             // check cooldown should still be happening then bail if so
-            if tokio::time::Instant::now()
-                - self.last_seen.expect("Dont know when cooldown started")
-                < std::time::Duration::from_secs(60)
-            {
+            let Some(last_seen) = self.last_seen else {
+                warn!("Don't know when cooldown began!");
+                return None;
+            };
+            if tokio::time::Instant::now() - last_seen < COOLDOWN_TIME {
                 return Some(false);
             } else {
                 // end cooldown, restart counting
@@ -113,7 +132,10 @@ impl Rule {
             // if this is the first time we see it
             if self.first_seen.is_none() {
                 self.first_seen = Some(tokio::time::Instant::now());
-            } else if self.last_seen.unwrap() - self.first_seen.unwrap() > self.debounce_time {
+            } else if self.last_seen.expect("impossible last seen")
+                - self.first_seen.expect("impossible first seen")
+                > self.debounce_time
+            {
                 // we have a winner, lets cleanup and enter cooldown state
                 self.during_cooldown = true;
                 return Some(true);
@@ -134,9 +156,9 @@ pub enum RuleManagerError {
 /// the rule manager
 pub struct RuleManager {
     /// <client_id, <rule_id, rule>>
-    clients_map: FxHashMap<String, FxHashMap<String, Rule>>,
+    clients_map: FxHashMap<ClientId, FxHashMap<RuleId, Rule>>,
     /// <topic, Vec<client_id>>
-    rules_lookup: FxHashMap<String, Vec<String>>,
+    rules_lookup: FxHashMap<Topic, FxHashSet<ClientId>>,
 }
 impl Default for RuleManager {
     fn default() -> Self {
@@ -156,29 +178,39 @@ impl RuleManager {
     pub fn handle_msg(
         &mut self,
         data: &ClientData,
-    ) -> Result<Option<Vec<(String, RuleNotification)>>, RuleManagerError> {
-        let Some(clients) = self.rules_lookup.get(&data.name) else {
+    ) -> Result<Option<Vec<(ClientId, RuleNotification)>>, RuleManagerError> {
+        // TODO uneccessary clone
+        let topic = Topic(data.name.clone());
+
+        let Some(clients) = self.rules_lookup.get(&topic) else {
             trace!("(normal) Could not find rule in rule cache: {}", data.name);
             return Err(RuleManagerError::NoMatchingRule);
         };
-        let mut notifications: Vec<(String, RuleNotification)> = Vec::new();
+        let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
+
+        // warning if the clients is empty we havent been cleaning right
+        if clients.is_empty() {
+            warn!("Empty rule cache entry for {}!", data.name);
+        }
+
         for client_want in clients {
             let Some(rules) = self.clients_map.get_mut(client_want) else {
                 warn!("Client cached but not found!");
                 return Err(RuleManagerError::Failure);
             };
+
             for rule in rules.values_mut() {
-                if rule.topic == data.name {
+                if rule.topic == topic {
                     // return rule failure if underlying tick fails
                     let Some(is_triggered) = rule.tick(&data.values) else {
                         return Err(RuleManagerError::RuleFailure);
                     };
                     if is_triggered {
                         notifications.push((
-                            client_want.to_string(),
+                            client_want.clone(),
                             RuleNotification {
                                 id: rule.id.clone(),
-                                topic: rule.topic.clone(),
+                                topic: topic.clone(),
                                 values: data.values.clone(),
                                 time: data.timestamp,
                             },
@@ -196,15 +228,16 @@ impl RuleManager {
     }
 
     /// Adds a rule, creating or activating the client if needed
-    pub fn add_rule(&mut self, client: String, rule: Rule) -> Result<(), RuleManagerError> {
+    pub fn add_rule(&mut self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
         // go through the topics and add to rules lookup table
         match self.rules_lookup.get_mut(&rule.topic) {
             Some(rules) => {
-                rules.push(client.clone());
+                rules.insert(client.clone());
             }
             None => {
-                self.rules_lookup
-                    .insert(rule.topic.clone(), vec![client.clone()]);
+                let mut new_set = FxHashSet::default();
+                new_set.insert(client.clone());
+                self.rules_lookup.insert(rule.topic.clone(), new_set);
             }
         }
 
@@ -227,8 +260,8 @@ impl RuleManager {
     /// Deletes a rule, leaving the client existing and active no matter what
     pub fn delete_rule(
         &mut self,
-        client_id: String,
-        rule_id: String,
+        client_id: ClientId,
+        rule_id: RuleId,
     ) -> Result<(), RuleManagerError> {
         // first, find the rules from the clients map
         let Some(rules) = self.clients_map.get_mut(&client_id) else {
@@ -241,43 +274,52 @@ impl RuleManager {
             return Err(RuleManagerError::NoMatchingRule);
         };
 
-        // now, yeet the rule from the lookup cache
-        let Some(clients) = self.rules_lookup.get_mut(&removed.topic) else {
-            warn!("Could not find rule in cache!");
-            return Err(RuleManagerError::Failure);
-        };
-        // remove the client from the cache for that topic, deleting rule from cache if necessary
-        clients.retain(|client| *client != client_id);
-        // delete client from cache is normal, the client could still exist without rules in client_map
-        if clients.is_empty() {
-            self.rules_lookup.remove(&rule_id);
-        }
+        // now, yeet the rule from the lookup cache, ONLY IF the client doesnt have any rules with the given topic left
+        let lookup_preserve = rules.values().find(|rule| rule.topic == removed.topic);
+
+        if lookup_preserve.is_none() {
+            let Some(clients) = self.rules_lookup.get_mut(&removed.topic) else {
+                warn!("Could not find rule in cache!");
+                return Err(RuleManagerError::Failure);
+            };
+            // remove the client from the cache for that topic, deleting rule from cache if necessary
+            clients.retain(|client| *client != client_id);
+            // delete client from cache is normal, the client could still exist without rules in client_map
+            if clients.is_empty() {
+                self.rules_lookup.remove(&removed.topic);
+            }
+        } // else we dont touch the lookup cache
 
         Ok(())
     }
 
     /// deletes a client, and all of its rules
-    pub fn delete_client(&mut self, client_id: String) -> Result<(), RuleManagerError> {
+    pub fn delete_client(&mut self, client_id: ClientId) -> Result<(), RuleManagerError> {
         // first, yeet from clients map
         let Some(rules) = self.clients_map.remove(&client_id) else {
             warn!("Could not find client to delete: {}", client_id);
             return Err(RuleManagerError::NoSuchClient);
         };
 
-        // now, yeet the topics from the lookup
-        for rule in rules.values() {
-            let Some(client_list) = self.rules_lookup.get_mut(&rule.topic) else {
+        // now, for each unique topic found amongst the rules, yeet it from the lookup
+        // this uses a hashset to de-dup the rules to avoid annoying warnings
+        for rule in rules
+            .into_iter()
+            .map(|rule| rule.1.topic)
+            .collect::<FxHashSet<Topic>>()
+        {
+            warn!("DELETING {}", rule);
+            let Some(client_list) = self.rules_lookup.get_mut(&rule) else {
                 warn!("Could not find topic in rule lookup table!");
                 return Err(RuleManagerError::Failure);
             };
             client_list.retain(|client| *client != client_id);
+            // remove the whole entry if no clients exist for the topic
             if client_list.is_empty() {
-                self.rules_lookup.remove(&rule.topic);
+                self.rules_lookup.remove(&rule);
             }
         }
 
         Ok(())
     }
 }
-
-pub const RULE_SOCKET_KEY: &str = "rule_notify";

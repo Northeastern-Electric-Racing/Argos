@@ -413,7 +413,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(
             CorsLayer::new()
                 // allow `GET`
-                .allow_methods([Method::GET, Method::POST])
+                .allow_methods([Method::GET, Method::POST, Method::PUT])
                 // allow requests from any origin
                 .allow_origin(Any),
         )
