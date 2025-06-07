@@ -176,19 +176,25 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.rightHeader = `Real Time`;
 
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
-    runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.runsIsLoading = isLoading;
-    });
-    runsQueryResponse.error.subscribe((error) => {
-      if (error) {
-        this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
-      }
-    });
-    runsQueryResponse.data.subscribe((data) => {
-      if (data) {
-        this.allRuns = data;
-      }
-    });
+    this.subscriptions.push(
+      runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+        this.runsIsLoading = isLoading;
+      })
+    );
+    this.subscriptions.push(
+      runsQueryResponse.error.subscribe((error) => {
+        if (error) {
+          this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+        }
+      })
+    );
+    this.subscriptions.push(
+      runsQueryResponse.data.subscribe((data) => {
+        if (data) {
+          this.allRuns = data;
+        }
+      })
+    );
   };
   private initFaultPage = () => {
     this.renderFaultPage = true;
@@ -199,7 +205,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     if (!this.selectedFault) {
       this.router.navigate([appRoutes.faultsRoute()]);
     }
-    selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault));
+    this.subscriptions.push(selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault)));
     this.rightHeader = `Fault: ${this.selectedFault?.name}`;
   };
 
@@ -219,7 +225,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Run #' + run.id;
 
-    this.setSelectedDataTypes([...this.selectedDataTypes]);
+    this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
   onQueryTimeSelected = (queryTime: number) => {
@@ -235,7 +241,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Historical Range';
 
-    this.setSelectedDataTypes([...this.selectedDataTypes]);
+    this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
   // get real time ready
@@ -252,7 +258,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Real Time';
 
-    this.setSelectedDataTypes([...this.selectedDataTypes]);
+    this.setSelectedDataTypes(this.selectedDataTypes);
   };
 
   /**
@@ -260,20 +266,26 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
    */
   private queryDataTypes() {
     const dataTypesQueryResponse = this.serverService.query<DataType[]>(getAllDatatypes);
-    dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.dataTypesIsLoading = isLoading;
-    });
-    dataTypesQueryResponse.error.subscribe((error) => {
-      if (error) {
-        this.dataTypesIsError = true;
-        this.dataTypesError = error;
-      }
-    });
-    dataTypesQueryResponse.data.subscribe((data) => {
-      if (data) {
-        this.dataTypes = data;
-      }
-    });
+    this.subscriptions.push(
+      dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+        this.dataTypesIsLoading = isLoading;
+      })
+    );
+    this.subscriptions.push(
+      dataTypesQueryResponse.error.subscribe((error) => {
+        if (error) {
+          this.dataTypesIsError = true;
+          this.dataTypesError = error;
+        }
+      })
+    );
+    this.subscriptions.push(
+      dataTypesQueryResponse.data.subscribe((data) => {
+        if (data) {
+          this.dataTypes = data;
+        }
+      })
+    );
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
@@ -296,33 +308,33 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
             const lastMinute = now.getTime() - 60000; // Keep 1 minute of data
             const storedValues = graphInfo.data;
 
-            // Process new values
+            // Process new values and filter in one pass for better performance
             value.values.forEach((val, i) => {
               const graphData = { x: +value.time, y: +val, label: dataType.name };
+
               if (storedValues[i]) {
                 storedValues[i].push(graphData);
-                // Limit stored values to prevent memory buildup
-                if (storedValues[i].length > 500) {
-                  storedValues[i] = storedValues[i].slice(-400); // Keep last 400 points
+
+                // Efficiently filter and limit in one operation
+                const filtered = storedValues[i].filter((v) => new Date(v.x).getTime() > lastMinute);
+
+                // Limit to prevent memory buildup (keep last 400 points if over 500)
+                if (filtered.length > 500) {
+                  storedValues[i] = filtered.slice(-400);
+                } else {
+                  storedValues[i] = filtered;
                 }
               } else {
                 storedValues[i] = [graphData];
               }
             });
 
-            // Filter out old data points
-            const nextValue = storedValues.map((val) => {
-              return val.filter((v) => {
-                return new Date(v.x).getTime() > lastMinute;
-              });
-            });
-
-            // Update the subject
+            // Update the subject with the already filtered data
             const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === dataType.name);
             if (targetSubject) {
               targetSubject.next({
                 label: dataType.name,
-                data: nextValue
+                data: storedValues
               });
             }
           })
@@ -359,41 +371,48 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
       const dataQueryResponse = this.serverService.query<DataValue[]>(queryFn);
 
-      dataQueryResponse.error.subscribe((error) => {
-        if (error) {
-          this.selectedDataTypeValuesIsError = true;
-          this.selectedDataTypeValuesError = error;
-        }
-      });
-
-      dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-        this.selectedDataTypeValuesIsLoading = isLoading;
-      });
-
-      dataQueryResponse.data.subscribe((data) => {
-        if (data) {
-          const graphData: GraphData[][] = [];
-          data.forEach((dataValue) => {
-            dataValue.values.forEach((val, i) => {
-              if (graphData[i]) {
-                graphData[i].push({ x: +dataValue.time, y: +val });
-              } else {
-                graphData[i] = [{ x: +dataValue.time, y: +val }];
-              }
-            });
-          });
-
-          let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
-
-          if (!target) {
-            // (shouldn’t normally happen, but keep it safe)
-            target = new BehaviorSubject<GraphInfo>({ label: dataType.name, data: [] });
-            this.selectedDataTypeValuesSubject.push(target);
+      // Track all subscriptions to prevent memory leaks
+      this.subscriptions.push(
+        dataQueryResponse.error.subscribe((error) => {
+          if (error) {
+            this.selectedDataTypeValuesIsError = true;
+            this.selectedDataTypeValuesError = error;
           }
+        })
+      );
 
-          target.next({ label: dataType.name, data: graphData });
-        }
-      });
+      this.subscriptions.push(
+        dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+          this.selectedDataTypeValuesIsLoading = isLoading;
+        })
+      );
+
+      this.subscriptions.push(
+        dataQueryResponse.data.subscribe((data) => {
+          if (data) {
+            const graphData: GraphData[][] = [];
+            data.forEach((dataValue) => {
+              dataValue.values.forEach((val, i) => {
+                if (graphData[i]) {
+                  graphData[i].push({ x: +dataValue.time, y: +val });
+                } else {
+                  graphData[i] = [{ x: +dataValue.time, y: +val }];
+                }
+              });
+            });
+
+            let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
+
+            if (!target) {
+              // (shouldn't normally happen, but keep it safe)
+              target = new BehaviorSubject<GraphInfo>({ label: dataType.name, data: [] });
+              this.selectedDataTypeValuesSubject.push(target);
+            }
+
+            target.next({ label: dataType.name, data: graphData });
+          }
+        })
+      );
     });
   };
 
@@ -433,7 +452,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesSubject.forEach((subject) => {
       subject.complete();
     });
-    this.selectedDataTypeValuesSubject.length = 0;
+    this.selectedDataTypeValuesSubject = []; // More explicit reset
 
     // Reset loading states
     this.selectedDataTypeValuesIsLoading = false;

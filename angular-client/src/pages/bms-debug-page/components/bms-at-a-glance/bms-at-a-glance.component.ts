@@ -1,4 +1,5 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import {
   BatteryConfig,
   ConnectionDotConfig,
@@ -20,8 +21,9 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
 })
-export class BmsAtAGlanceComponent implements OnInit {
+export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
   voltage: number = 0;
   temperature: number = 0;
   chargeState: number = 0;
@@ -43,26 +45,28 @@ export class BmsAtAGlanceComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storage.get(DataTypeEnum.PACK_VOLTAGE).subscribe((value) => {
-      this.voltage = parseInt(value.values[0]);
-    });
+    this.subscriptions.push(
+      this.storage.get(DataTypeEnum.PACK_VOLTAGE).subscribe((value) => {
+        this.voltage = parseInt(value.values[0]);
+      }),
+      this.storage.get(DataTypeEnum.PACK_TEMP).subscribe((value) => {
+        this.temperature = parseInt(value.values[0]);
+        this.thermometerConfig.currentValue = this.temperature;
+      }),
+      this.storage.get(DataTypeEnum.STATE_OF_CHARGE).subscribe((value) => {
+        this.chargeState = parseInt(value.values[0]);
+        this.batteryConfig.percentage = this.chargeState;
+      }),
+      this.storage.get(topics.accCCL()).subscribe((value) => {
+        this.ccl = parseInt(value.values[0]);
+      }),
+      this.storage.get(topics.accDCL()).subscribe((value) => {
+        this.dcl = parseInt(value.values[0]);
+      })
+    );
+  }
 
-    this.storage.get(DataTypeEnum.PACK_TEMP).subscribe((value) => {
-      this.temperature = parseInt(value.values[0]);
-      this.thermometerConfig.currentValue = this.temperature;
-    });
-
-    this.storage.get(DataTypeEnum.STATE_OF_CHARGE).subscribe((value) => {
-      this.chargeState = parseInt(value.values[0]);
-      this.batteryConfig.percentage = this.chargeState;
-    });
-
-    this.storage.get(topics.accCCL()).subscribe((value) => {
-      this.ccl = parseInt(value.values[0]);
-    });
-
-    this.storage.get(topics.accDCL()).subscribe((value) => {
-      this.dcl = parseInt(value.values[0]);
-    });
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 }

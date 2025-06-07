@@ -54,7 +54,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.realTime();
       this.clearGraph();
       this.valuesSubject();
-      this.chart.updateSeries([]);
+      if (this.chart) {
+        this.chart.updateSeries([]);
+      }
       this.previousDataLength = 0;
       this.data = new Map();
     });
@@ -79,10 +81,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         }));
 
         // Update y-axis configurations
-        this.chart.updateOptions({
-          ...this.options,
-          yaxis: yaxisConfigs
-        });
+        if (this.chart) {
+          this.chart.updateOptions({
+            ...this.options,
+            yaxis: yaxisConfigs
+          });
+        }
       } else {
         this.chart.updateOptions({
           ...this.options,
@@ -93,8 +97,14 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
+      // Clean up existing subscriptions
       this.subscriptions.forEach((sub) => sub.unsubscribe());
+      this.subscriptions = [];
+
+      // Clean up existing timeouts
       this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+      this.timeOuts = [];
+
       this.valuesSubject().forEach((graphInfo) => {
         if (this.isPaused()) {
           return;
@@ -107,9 +117,18 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clean up subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
-    this.chart.destroy();
+    this.subscriptions = [];
+
+    // Clean up timeouts
     this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+    this.timeOuts = [];
+
+    // Destroy chart and clear data
+    if (this.chart) {
+      this.chart.destroy();
+    }
     this.data.clear();
   }
 
