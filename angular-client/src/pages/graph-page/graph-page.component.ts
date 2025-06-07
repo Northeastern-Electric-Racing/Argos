@@ -62,12 +62,21 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   allRuns: Run[] = [];
   runsIsLoading = true;
 
-  // STATE VARIABLES (UI focused), defaults set here override in any relavent functions if neccesary
+  // UI state variables
   showSideBar = true;
   toggleSideBar = () => {
     console.log('selectedDataTypes', this.selectedDataTypes);
     this.showSideBar = !this.showSideBar;
   };
+  selectedFault?: FaultData;
+  onFaultPage: boolean = false;
+  renderFaultPage = false;
+  rightHeader: string = '';
+
+  // GRAPH State variables
+  realTime: boolean = true;
+  run?: Run;
+  minutesToQuery: number | undefined = undefined;
   showMultiYaxis = false;
   toggleMultiYaxis = () => {
     this.showMultiYaxis = !this.showMultiYaxis;
@@ -76,12 +85,55 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   togglePause = () => {
     this.isPaused = !this.isPaused;
   };
-  selectedFault?: FaultData;
-  onFaultPage: boolean = false;
-  realTime: boolean = true;
-  renderFaultPage = false;
-  rightHeader: string = '';
-  run?: Run;
+
+  // Selector config for querying time ranges form now.
+  queryMinutesConfig: SelectorConfig = {
+    options: [
+      {
+        name: '1 minute',
+        function: () => {
+          this.onQueryTimeSelected(1);
+        }
+      },
+      {
+        name: '2 minutes',
+        function: () => {
+          this.onQueryTimeSelected(2);
+        }
+      },
+      {
+        name: '5 minutes',
+        function: () => {
+          this.onQueryTimeSelected(5);
+        }
+      },
+      {
+        name: '10 minutes',
+        function: () => {
+          this.onQueryTimeSelected(10);
+        }
+      },
+      {
+        name: '15 minutes',
+        function: () => {
+          this.onQueryTimeSelected(15);
+        }
+      },
+      {
+        name: '30 minutes',
+        function: () => {
+          this.onQueryTimeSelected(30);
+        }
+      },
+      {
+        name: '1 hour',
+        function: () => {
+          this.onQueryTimeSelected(60);
+        }
+      }
+    ],
+    placeholder: 'Select Range'
+  };
 
   // store the values for each selected data type.
   // When we are in live mode the data  is constantly udpated.
@@ -277,56 +329,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
         );
       }
     });
-  };
-
-  minutesToQuery: number | undefined = undefined;
-
-  queryMinutesConfig: SelectorConfig = {
-    options: [
-      {
-        name: '1 minute',
-        function: () => {
-          this.onQueryTimeSelected(1);
-        }
-      },
-      {
-        name: '2 minutes',
-        function: () => {
-          this.onQueryTimeSelected(2);
-        }
-      },
-      {
-        name: '5 minutes',
-        function: () => {
-          this.onQueryTimeSelected(5);
-        }
-      },
-      {
-        name: '10 minutes',
-        function: () => {
-          this.onQueryTimeSelected(10);
-        }
-      },
-      {
-        name: '15 minutes',
-        function: () => {
-          this.onQueryTimeSelected(15);
-        }
-      },
-      {
-        name: '30 minutes',
-        function: () => {
-          this.onQueryTimeSelected(30);
-        }
-      },
-      {
-        name: '1 hour',
-        function: () => {
-          this.onQueryTimeSelected(60);
-        }
-      }
-    ],
-    placeholder: 'Select Range'
   };
 
   private processHistoricalDataTypeSelection = (dataTypes: DataType[]) => {
