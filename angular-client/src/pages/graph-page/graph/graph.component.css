@@ -6,3 +6,8 @@
 .apexcharts-tooltip {
   pointer-events: none;
 }
+
+/* Temp fix for styling of download (svg / png / csv) menu */
+::ng-deep .apexcharts-menu-item {
+  color: black !important;
+}

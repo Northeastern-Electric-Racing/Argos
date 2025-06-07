@@ -51,18 +51,30 @@
 
       <div class="content-div">
         @if (this.showSideBar) {
-          <graph-sidebar [dataTypes]="dataTypes" [selectDataTypes]="this.setSelectedDataTypes" class="desktop-sidebar" />
+          <graph-sidebar
+            [dataTypes]="dataTypes"
+            [selectDataTypes]="this.setSelectedDataTypes"
+            [currentSelectedDataTypes]="this.selectedDataTypes"
+            class="desktop-sidebar"
+          />
         }
         <div class="right-container">
           <graph
             [limitRange]="realTime === true"
+            [realTime]="this.realTime === true"
             [valuesSubject]="selectedDataTypeValuesSubject"
             class="graph"
             [showMultipleYAxes]="this.showMultiYaxis"
             [isPaused]="this.isPaused"
+            [clearGraph]="this.clearGraph"
           />
         </div>
-        <graph-sidebar [dataTypes]="dataTypes!" [selectDataTypes]="this.setSelectedDataTypes" class="mobile-sidebar" />
+        <graph-sidebar
+          [dataTypes]="dataTypes!"
+          [selectDataTypes]="this.setSelectedDataTypes"
+          [currentSelectedDataTypes]="this.selectedDataTypes"
+          class="mobile-sidebar"
+        />
       </div>
     </div>
   }

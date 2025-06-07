@@ -28,6 +28,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   dataTypes = input<DataType[]>([]);
   selectedDataTypes = input.required<(dataTypes: DataType[]) => void>();
   nodes: Node[] = [];
+  currentSelectedDataTypes = input.required<DataType[]>();
 
   filterForm: FormGroup = new FormGroup({
     searchFilter: new FormControl<string>('')
@@ -68,6 +69,12 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     };
 
     this.treeNodes = this.nodes.map(mapToTreeNode);
+    this.selectedNodes = this.treeNodes.filter(
+      (node) => node.data && this.currentSelectedDataTypes().includes(node.data.dataType)
+    );
+    console.log('Current selected data types:', this.currentSelectedDataTypes());
+    console.log('Tree nodes initialized:', this.treeNodes);
+    console.log('Selected nodes initialized:', this.selectedNodes);
   }
 
   ngOnDestroy(): void {

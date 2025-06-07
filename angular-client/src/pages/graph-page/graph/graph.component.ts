@@ -37,6 +37,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
   isPaused = input<boolean>(false);
+  realTime = input<boolean>(false);
+  clearGraph = input<boolean>(false);
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
@@ -49,19 +51,55 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
   constructor() {
     effect(() => {
+      this.realTime();
+      this.clearGraph();
+      this.valuesSubject();
+      this.chart.updateSeries([]);
+      this.previousDataLength = 0;
       this.data = new Map();
+    });
+
+    effect(() => {
+      if (this.showMultipleYAxes()) {
+        const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
+          title: {
+            text: key.replace('0', ''),
+            style: {
+              color: 'grey',
+              fontSize: '20px',
+              fontWeight: 'bold'
+            }
+          },
+          labels: {
+            style: {
+              colors: '#fff'
+            }
+          },
+          opposite: index % 2 !== 0 // Alternate sides for each y-axis
+        }));
+
+        // Update y-axis configurations
+        this.chart.updateOptions({
+          ...this.options,
+          yaxis: yaxisConfigs
+        });
+      } else {
+        this.chart.updateOptions({
+          ...this.options,
+          xaxis: {
+            ...this.options.xaxis
+          }
+        });
+      }
+    });
+    effect(() => {
       this.subscriptions.forEach((sub) => sub.unsubscribe());
       this.timeOuts.forEach((timeout) => clearTimeout(timeout));
       this.valuesSubject().forEach((graphInfo) => {
-        this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
-      });
-
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis,
-          range: undefined
+        if (this.isPaused()) {
+          return;
         }
+        this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
       });
 
       this.updateChart();
@@ -72,11 +110,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.chart.destroy();
     this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+    this.data.clear();
   }
 
   updateChart = () => {
     // Skip chart updates if paused
-    if (this.isPaused()) {
+    if (this.isPaused() && this.limitRange()) {
       return;
     }
 
@@ -88,30 +127,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     this.chart.updateSeries(series);
 
-    if (this.showMultipleYAxes()) {
-      const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
-        title: {
-          text: key.replace('0', ''),
-          style: {
-            color: 'grey',
-            fontSize: '20px',
-            fontWeight: 'bold'
-          }
-        },
-        labels: {
-          style: {
-            colors: '#fff'
-          }
-        },
-        opposite: index % 2 !== 0 // Alternate sides for each y-axis
-      }));
-      // Update y-axis configurations
-      this.chart.updateOptions({
-        ...this.options,
-        yaxis: yaxisConfigs
-      });
-    }
-
     if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
       this.isSliding = true;
       this.chart.updateOptions({
@@ -122,14 +137,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         }
       });
     }
-
-    if (this.limitRange()) {
-      this.timeOuts.push(
-        setTimeout(() => {
-          this.updateChart();
-        }, 1)
-      );
-    }
   };
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
@@ -139,7 +146,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     }
 
     const values = info?.data ?? [];
-    if (values.length === 0) this.data = new Map();
+    // if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
       let line: Map<number, number>;
       const label = (info?.label ?? '') + ' ' + i;
@@ -158,9 +165,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     if (this.limitRange() && !this.isSliding) {
       const times = Array.from(Array.from(this.data.values())[0]?.keys());
       this.timeDiffMs = times[times.length - 1] - times[0];
-    } else if (this.limitRange() !== true) {
-      this.updateChart();
     }
+
+    this.updateChart();
   };
 
   subscriptions: Subscription[] = [];

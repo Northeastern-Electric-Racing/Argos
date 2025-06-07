@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subscription } from 'rxjs';
@@ -39,55 +39,60 @@ import TypographyComponent from '../../components/typography/typography.componen
     TypographyComponent
   ]
 })
-export default class GraphPageComponent implements OnInit {
+export default class GraphPageComponent implements OnInit, OnDestroy {
   private serverService = inject(APIService);
   private storage = inject(Storage);
   private toastService = inject(MessageService);
   private faultService = inject(FaultService);
-  private router = inject(Router);
+  private router = inject(Router); // for fault page navigation
 
+  // keep track of the subscriptions, that way we cancel all subs anywhere anytime
+  subscriptions: Subscription[] = [];
+
+  // the local tracking of selected data types
   selectedDataTypes: DataType[] = [];
+
+  // available data types queried from the server
   dataTypes: DataType[] = [];
   dataTypesIsLoading = true;
   dataTypesIsError = false;
   dataTypesError?: Error;
 
+  // all Runs queried from the server
   allRuns: Run[] = [];
   runsIsLoading = true;
-  showSideBar = true;
-  showMultiYaxis = false;
-  isPaused = false;
 
+  // STATE VARIABLES (UI focused), defaults set here override in any relavent functions if neccesary
+  showSideBar = true;
+  toggleSideBar = () => {
+    console.log('selectedDataTypes', this.selectedDataTypes);
+    this.showSideBar = !this.showSideBar;
+  };
+  showMultiYaxis = false;
   toggleMultiYaxis = () => {
     this.showMultiYaxis = !this.showMultiYaxis;
   };
-
-  toggleSideBar = () => {
-    this.showSideBar = !this.showSideBar;
-  };
-
+  isPaused = false;
   togglePause = () => {
     this.isPaused = !this.isPaused;
-    console.log('Graph paused state:', this.isPaused);
   };
-
-  previousDataType?: DataType;
-
-  selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
-  selectedDataTypeValuesIsLoading = false;
-  selectedDataTypeValuesIsError = false;
-  selectedDataTypeValuesError?: Error;
-  subscriptions: Subscription[] = [];
-
-  onFaultPage?: boolean;
   selectedFault?: FaultData;
-
-  realTime?: boolean;
-  run?: Run;
-
+  onFaultPage: boolean = false;
+  realTime: boolean = true;
   renderFaultPage = false;
   rightHeader: string = '';
+  run?: Run;
 
+  // store the values for each selected data type.
+  // When we are in live mode the data  is constantly udpated.
+  // The Behvaorial subject is update just a single time when querying for data.
+  // these should always be reset when switching between modes.
+  selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
+  selectedDataTypeValuesIsLoading = false; // specifically used for querying updates.
+  selectedDataTypeValuesIsError = false;
+  selectedDataTypeValuesError?: Error;
+
+  // Run when page starts up
   ngOnInit(): void {
     this.queryDataTypes();
     this.run = undefined;
@@ -97,23 +102,25 @@ export default class GraphPageComponent implements OnInit {
     else this.initGeneralPage();
   }
 
-  private initFaultPage = () => {
-    this.realTime = undefined;
-    this.renderFaultPage = true;
+  // All memory in use should be discarded here.
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => {
+      sub.unsubscribe();
+    });
+    this.selectedDataTypeValuesSubject.forEach((subject) => {
+      subject.complete();
+    });
+    this.selectedDataTypeValuesSubject = [];
+    this.selectedDataTypeValuesSubject.length = 0;
+  }
 
-    const selectedFaultSubscription = this.faultService.getSelectedFault();
-    this.selectedFault = selectedFaultSubscription.value;
-    if (!this.selectedFault) {
-      this.router.navigate([appRoutes.faultsRoute()]);
-    }
-    selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault));
-    this.rightHeader = `Fault: ${this.selectedFault?.name}`;
-  };
-
+  // INITIALIZE PAGES (NgOninit options)
   private initGeneralPage = () => {
+    // init
     this.realTime = true;
     this.selectedFault = undefined;
     this.renderFaultPage = false;
+    this.minutesToQuery = undefined;
     this.rightHeader = `Real Time`;
 
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
@@ -131,10 +138,22 @@ export default class GraphPageComponent implements OnInit {
       }
     });
   };
+  private initFaultPage = () => {
+    this.renderFaultPage = true;
+    this.minutesToQuery = undefined;
+
+    const selectedFaultSubscription = this.faultService.getSelectedFault();
+    this.selectedFault = selectedFaultSubscription.value;
+    if (!this.selectedFault) {
+      this.router.navigate([appRoutes.faultsRoute()]);
+    }
+    selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault));
+    this.rightHeader = `Fault: ${this.selectedFault?.name}`;
+  };
 
   // reset shit when a run is selected.
   onRunSelected = (run: Run) => {
-    console.log('Switching to run mode:', run.id);
+    this.isPaused = false;
 
     // Clear existing state first
     this.clearDataType();
@@ -152,11 +171,10 @@ export default class GraphPageComponent implements OnInit {
   };
 
   onQueryTimeSelected = (queryTime: number) => {
-    console.log('Switching to historical mode:', queryTime, 'minutes');
-
     // Clear existing state first
     this.clearDataType();
 
+    this.isPaused = false;
     this.run = undefined;
     this.minutesToQuery = queryTime;
     this.realTime = false;
@@ -207,11 +225,6 @@ export default class GraphPageComponent implements OnInit {
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
-    console.log(
-      'Processing real-time data type selection for:',
-      dataTypes.map((dt) => dt.name)
-    );
-
     const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
 
     dataTypes.forEach((dataType) => {
@@ -220,8 +233,6 @@ export default class GraphPageComponent implements OnInit {
       const valuesSubject = this.storage.get(key);
 
       if (graphInfo !== undefined) {
-        console.log(`Setting up real-time subscription for ${key}`);
-
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
             // Skip processing if paused
@@ -257,7 +268,6 @@ export default class GraphPageComponent implements OnInit {
             // Update the subject
             const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === dataType.name);
             if (targetSubject) {
-              console.log(`Updating real-time data for ${key}`, nextValue);
               targetSubject.next({
                 label: dataType.name,
                 data: nextValue
@@ -326,7 +336,6 @@ export default class GraphPageComponent implements OnInit {
     dataTypes.forEach((dataType) => {
       let queryFn: () => Promise<Response>;
       if (this.run !== undefined) {
-        console.log('Processing historical data type selection for run:', this.run.id, 'and data type:', dataType.name);
         queryFn = () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id);
       } else if (this.minutesToQuery !== undefined) {
         const realMinutes = this.minutesToQuery;
@@ -409,30 +418,25 @@ export default class GraphPageComponent implements OnInit {
     }
   };
 
-  clearDataType: () => void = () => {
-    console.log('Clearing data type - unsubscribing from', this.subscriptions.length, 'subscriptions');
+  clearGraph = false;
 
+  clearDataType: () => void = () => {
     // Unsubscribe from all previous subscriptions
     this.subscriptions.forEach((sub) => {
-      if (sub && !sub.closed) {
-        sub.unsubscribe();
-      }
+      sub.unsubscribe();
     });
     this.subscriptions = [];
 
     // Clear and complete existing subjects to prevent memory leaks
     this.selectedDataTypeValuesSubject.forEach((subject) => {
-      if (subject && !subject.closed) {
-        subject.complete();
-      }
+      subject.complete();
     });
-    this.selectedDataTypeValuesSubject = [];
+    this.selectedDataTypeValuesSubject.length = 0;
 
     // Reset loading states
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
-
-    console.log('Data type cleared successfully');
+    this.clearGraph = true;
   };
 }
