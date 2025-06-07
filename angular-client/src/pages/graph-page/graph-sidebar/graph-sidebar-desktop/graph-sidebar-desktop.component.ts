@@ -69,9 +69,45 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     };
 
     this.treeNodes = this.nodes.map(mapToTreeNode);
-    this.selectedNodes = this.treeNodes.filter(
-      (node) => node.data && this.currentSelectedDataTypes().includes(node.data.dataType)
-    );
+    // Helper function to find selected nodes in the tree and expand their parent nodes
+    const findSelectedNodes = (nodes: TreeNode<Node>[]): TreeNode<Node>[] => {
+      const selected: TreeNode<Node>[] = [];
+
+      // Map to track if a node contains selected children
+      const containsSelectedNode = new Map<TreeNode<Node>, boolean>();
+
+      // First pass: find all selected nodes
+      const findSelected = (nodes: TreeNode<Node>[], parents: TreeNode<Node>[] = []): void => {
+        for (const node of nodes) {
+          // Check if this is a leaf node and matches a selected data type
+          if (node.selectable && node.data?.dataType && this.currentSelectedDataTypes().includes(node.data.dataType)) {
+            selected.push(node);
+
+            // Mark all parents as containing selected nodes
+            parents.forEach((parent) => containsSelectedNode.set(parent, true));
+          }
+
+          // Continue searching children
+          if (node.children && node.children.length > 0) {
+            findSelected(node.children as TreeNode<Node>[], [...parents, node]);
+          }
+        }
+      };
+
+      // Find selected nodes and track their parents
+      findSelected(nodes);
+
+      // Expand all parent nodes that contain selected children
+      containsSelectedNode.forEach((hasSelectedChild, node) => {
+        if (hasSelectedChild) {
+          node.expanded = true;
+        }
+      });
+
+      return selected;
+    };
+
+    this.selectedNodes = findSelectedNodes(this.treeNodes);
     console.log('Current selected data types:', this.currentSelectedDataTypes());
     console.log('Tree nodes initialized:', this.treeNodes);
     console.log('Selected nodes initialized:', this.selectedNodes);
