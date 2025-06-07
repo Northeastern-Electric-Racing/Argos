@@ -146,13 +146,15 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     this.chart.updateSeries(series);
 
-    if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
+    if (this.limitRange() && !this.isSliding) {
       this.isSliding = true;
       this.chart.updateOptions({
         ...this.options,
         xaxis: {
           ...this.options.xaxis,
-          range: this.timeRangeMs
+          // set range to slightly smaller than the length of the
+          // get the first key available in the data, and use it to set the range
+          max: 100
         }
       });
     }
@@ -177,6 +179,11 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       value.forEach((val) => {
         if (!line.has(val.x)) {
           line.set(val.x, +val.y.toFixed(3));
+        }
+        // if there are more than 60 data points in live mode, remove the oldest one
+        if (this.realTime() && line.size > 300) {
+          const [oldestKey] = Array.from(line.keys()).sort((a, b) => a - b);
+          line.delete(oldestKey);
         }
       });
     });

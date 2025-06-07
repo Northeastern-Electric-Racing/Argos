@@ -304,8 +304,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               return;
             }
 
-            const now = new Date();
-            const lastMinute = now.getTime() - 60000; // Keep 1 minute of data
             const storedValues = graphInfo.data;
 
             // Process new values and filter in one pass for better performance
@@ -315,14 +313,11 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               if (storedValues[i]) {
                 storedValues[i].push(graphData);
 
-                // Efficiently filter and limit in one operation
-                const filtered = storedValues[i].filter((v) => new Date(v.x).getTime() > lastMinute);
-
                 // Limit to prevent memory buildup (keep last 400 points if over 500)
-                if (filtered.length > 500) {
-                  storedValues[i] = filtered.slice(-400);
-                } else {
-                  storedValues[i] = filtered;
+                if (storedValues[i].length > 50) {
+                  console.log('Most recent data point time:', graphData.x);
+                  storedValues[i].shift();
+                  console.log(`Removed oldest data point with time ${storedValues[i][0].x} for data type ${dataType.name}`);
                 }
               } else {
                 storedValues[i] = [graphData];
