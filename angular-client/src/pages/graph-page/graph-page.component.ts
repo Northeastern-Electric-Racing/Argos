@@ -146,15 +146,21 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   selectedDataTypeValuesIsLoading = false; // specifically used for querying updates.
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
-  dataPoints: number = 150;
+  dataPoints: number = 300;
+  dataPointsChanged = false;
   yAxisMin: number | null = null; // used for y-axis min
   yAxisMax: number | null = null; // used for y-axis max
   graphConfig = {
+    maxPoints: this.dataPoints,
     yMin: this.yAxisMin,
     yMax: this.yAxisMax
   };
   onGraphConfigChange = () => {
+    if (this.realTime) {
+      this.onSetRealtime();
+    }
     this.graphConfig = {
+      maxPoints: this.dataPoints,
       yMin: this.yAxisMin,
       yMax: this.yAxisMax
     };
@@ -255,7 +261,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
-    this.rightHeader = 'Historical Range';
+    this.rightHeader = 'Hist Range';
 
     this.setSelectedDataTypes(this.selectedDataTypes);
   };
@@ -330,7 +336,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
                 storedValues[i].push(graphData);
 
                 // Limit to prevent memory buildup
-                if (storedValues[i].length > 100) {
+                if (storedValues[i].length > this.dataPoints) {
                   storedValues[i].shift();
                 }
               } else {

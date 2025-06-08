@@ -48,8 +48,34 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   isSliding: boolean = false;
   timeRangeMs = 60000; // 1 minute in ms
   private timeOuts: NodeJS.Timeout[] = [];
+  graphConfig = input.required<{ maxPoints: number; yMin: number | null; yMax: number | null }>();
 
   constructor() {
+    effect(() => {
+      const config = this.graphConfig();
+      if (this.chart && config) {
+        // Update Y-axis bounds
+        const yAxisOptions: Partial<ApexYAxis> = {
+          labels: {
+            style: {
+              colors: '#fff'
+            }
+          }
+        };
+
+        if (config.yMin !== null) {
+          yAxisOptions.min = config.yMin;
+        }
+        if (config.yMax !== null) {
+          yAxisOptions.max = config.yMax;
+        }
+
+        this.chart.updateOptions({
+          yaxis: yAxisOptions
+        });
+      }
+    });
+
     effect(() => {
       this.realTime();
       this.clearGraph();
@@ -152,9 +178,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         ...this.options,
         xaxis: {
           ...this.options.xaxis,
-          // set range to slightly smaller than the length of the
-          // get the first key available in the data, and use it to set the range
-          max: 100
+          // TODO: does this do anything?... maybe not needed
+          max: this.graphConfig().maxPoints
         }
       });
     }
@@ -181,7 +206,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
           line.set(val.x, +val.y.toFixed(3));
         }
         // if there are more than 60 data points in live mode, remove the oldest one
-        if (this.realTime() && line.size > 300) {
+        if (this.realTime() && line.size > this.graphConfig().maxPoints) {
           const [oldestKey] = Array.from(line.keys()).sort((a, b) => a - b);
           line.delete(oldestKey);
         }
