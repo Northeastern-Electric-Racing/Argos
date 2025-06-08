@@ -21,6 +21,8 @@ import CustomGraphComponent from './graph/graph.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'graph-page',
@@ -36,7 +38,9 @@ import TypographyComponent from '../../components/typography/typography.componen
     GraphSidebarComponent,
     HStackComponent,
     CustomGraphComponent,
-    TypographyComponent
+    TypographyComponent,
+    InputNumberModule,
+    FormsModule
   ]
 })
 export default class GraphPageComponent implements OnInit, OnDestroy {
@@ -142,6 +146,19 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   selectedDataTypeValuesIsLoading = false; // specifically used for querying updates.
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
+  dataPoints: number = 150;
+  yAxisMin: number | null = null; // used for y-axis min
+  yAxisMax: number | null = null; // used for y-axis max
+  graphConfig = {
+    yMin: this.yAxisMin,
+    yMax: this.yAxisMax
+  };
+  onGraphConfigChange = () => {
+    this.graphConfig = {
+      yMin: this.yAxisMin,
+      yMax: this.yAxisMax
+    };
+  };
 
   // Run when page starts up
   ngOnInit(): void {
