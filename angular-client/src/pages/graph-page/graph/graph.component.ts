@@ -43,7 +43,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   chart!: ApexCharts;
   previousDataLength: number = 0;
   // label -> x,y (topic, data point)
-  data!: Map<string, Map<number, number>>;
+  data!: Map<string, Array<{ x: number; y: number }>>;
   timeDiffMs: number = 0;
   isSliding: boolean = false;
   timeRangeMs = 60000; // 1 minute in ms
@@ -177,9 +177,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.chart.updateOptions({
         ...this.options,
         xaxis: {
-          ...this.options.xaxis,
-          // TODO: does this do anything?... maybe not needed
-          max: this.graphConfig().maxPoints
+          ...this.options.xaxis
+          // // TODO: does this do anything?... maybe not needed
+          // max: this.graphConfig().maxPoints
         }
       });
     }
@@ -194,21 +194,19 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     const values = info?.data ?? [];
     // if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
-      let line: Map<number, number>;
+      let line: Array<{ x: number; y: number }>;
       const label = (info?.label ?? '') + ' ' + i;
       if (!this.data.has(label)) {
-        line = this.data.set(label, new Map<number, number>()).get(label)!;
+        line = this.data.set(label, []).get(label)!;
       } else {
         line = this.data.get(label)!;
       }
       value.forEach((val) => {
-        if (!line.has(val.x)) {
-          line.set(val.x, +val.y.toFixed(3));
+        if (!line.some((v) => v.x === val.x)) {
+          line.push({ x: val.x, y: +val.y.toFixed(3) });
         }
-        // if there are more than 60 data points in live mode, remove the oldest one
-        if (this.realTime() && line.size > this.graphConfig().maxPoints) {
-          const [oldestKey] = Array.from(line.keys()).sort((a, b) => a - b);
-          line.delete(oldestKey);
+        if (this.realTime() && line.length > this.graphConfig().maxPoints) {
+          line.shift();
         }
       });
     });
