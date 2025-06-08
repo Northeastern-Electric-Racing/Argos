@@ -65,7 +65,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   // UI state variables
   showSideBar = true;
   toggleSideBar = () => {
-    console.log('selectedDataTypes', this.selectedDataTypes);
     this.showSideBar = !this.showSideBar;
   };
   selectedFault?: FaultData;
@@ -313,11 +312,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               if (storedValues[i]) {
                 storedValues[i].push(graphData);
 
-                // Limit to prevent memory buildup (keep last 400 points if over 500)
-                if (storedValues[i].length > 50) {
-                  console.log('Most recent data point time:', graphData.x);
+                // Limit to prevent memory buildup
+                if (storedValues[i].length > 100) {
                   storedValues[i].shift();
-                  console.log(`Removed oldest data point with time ${storedValues[i][0].x} for data type ${dataType.name}`);
                 }
               } else {
                 storedValues[i] = [graphData];
