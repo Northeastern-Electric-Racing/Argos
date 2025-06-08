@@ -1,15 +1,14 @@
 import { Component, effect, inject, input, OnInit } from '@angular/core';
 import { Segment } from 'src/utils/bms.utils';
-import { Subscription } from 'rxjs';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { AlphaCells, BetaCells, CellReading, CellService } from 'src/services/cell.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewComponent } from '../cell-view/cell-view.component';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-
 import { CellTileComponent } from './cell-tile/cell-tile.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
+
 const formatAllSelectorName = (name: string) => {
   return 'Set ALL Maps: ' + name;
 };
@@ -26,8 +25,6 @@ export class CellByCellHeatMapComponent implements OnInit {
   private heatMapService = inject(HeatMapService);
   private dialogService = inject(DialogService);
   currentSegment = input.required<Segment>();
-  alphaSubscriptions: Subscription[] = [];
-  betaSubscriptions: Subscription[] = [];
   alphaCells!: Readonly<AlphaCells>;
   betaCells!: Readonly<BetaCells>;
   view = HeatMapView.Voltage;

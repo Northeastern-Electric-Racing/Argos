@@ -1,4 +1,5 @@
-import { Component, HostListener, Input, OnInit, inject } from '@angular/core';
+import { Component, HostListener, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 
@@ -41,21 +42,32 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
     SidebarToggleComponent
   ]
 })
-export default class ChargingPageMobileComponent implements OnInit {
+export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
+  private timeInterval!: NodeJS.Timeout;
   @Input() time = new Date();
   location: string = 'No Location Set';
   mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
-    setInterval(() => {
+    this.timeInterval = setInterval(() => {
       this.time = new Date();
     }, 1000);
 
-    this.storage.get(DataTypeEnum.LOCATION).subscribe((value) => {
-      [this.location] = value.values || ['No Location Set'];
-    });
+    this.subscriptions.push(
+      this.storage.get(DataTypeEnum.LOCATION).subscribe((value) => {
+        [this.location] = value.values || ['No Location Set'];
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    if (this.timeInterval) {
+      clearInterval(this.timeInterval);
+    }
   }
 
   @HostListener('window:resize', ['$event'])

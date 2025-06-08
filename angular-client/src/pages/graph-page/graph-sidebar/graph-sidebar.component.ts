@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { Component, HostListener, input, OnInit } from '@angular/core';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mobile.component';
@@ -16,8 +16,9 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
   imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent]
 })
 export default class GraphSidebarComponent implements OnInit {
-  @Input() dataTypes!: DataType[];
-  @Input() selectDataTypes!: (dataTypes: DataType[]) => void;
+  dataTypes = input.required<DataType[]>();
+  selectDataTypes = input.required<(dataTypes: DataType[]) => void>();
+  currentSelectedDataTypes = input<DataType[]>([]);
 
   isMobile!: boolean;
 
@@ -25,6 +26,7 @@ export default class GraphSidebarComponent implements OnInit {
 
   ngOnInit() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
+    console.log('GraphSidebarComponent initialized:', this.currentSelectedDataTypes());
   }
 
   @HostListener('window:resize', ['$event'])

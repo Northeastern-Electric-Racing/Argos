@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit } from '@angular/core';
+import { Component, effect, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Chip } from 'src/utils/bms.utils';
@@ -16,7 +16,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
 })
-export class ChipDiagnosticsComponent implements OnInit {
+export class ChipDiagnosticsComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   chip = input.required<Chip>();
   segment = input.required<number>();
@@ -66,5 +66,9 @@ export class ChipDiagnosticsComponent implements OnInit {
         this.boardTemp = parseFloat(data.values[0]);
       })
     );
+  }
+
+  ngOnDestroy(): void {
+    this.valueSubscriptions.forEach((sub) => sub.unsubscribe());
   }
 }
