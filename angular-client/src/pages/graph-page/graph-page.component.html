@@ -13,21 +13,56 @@
         <hstack spacing="0px">
           <argos-button
             [onClick]="this.toggleSideBar"
-            label="Toggle Sidebar"
-            additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+            label="Tog Sidebar"
+            additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 80px;"
           />
           <argos-button
             [onClick]="this.toggleMultiYaxis"
-            label="Toggle Mult Yaxis"
-            additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 160px;"
+            label="Tog Mult Yaxis"
+            additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 80px;"
           />
           @if (realTime === true) {
             <argos-button
               [onClick]="this.togglePause"
               [label]="isPaused ? 'Play' : 'Pause'"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 80px;"
+              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 50px;"
             />
           }
+
+          <!-- Graph Configuration Inputs -->
+          <div style="display: flex; align-items: center; gap: 5px; margin-left: 15px">
+            <label style="color: #fff; font-size: 12px">X (mins):</label>
+            <p-inputNumber
+              [(ngModel)]="timeRangeMinutes"
+              mode="decimal"
+              [minFractionDigits]="1"
+              [maxFractionDigits]="3"
+              [step]="0.1"
+              styleClass="time-range-input"
+              inputStyleClass="text-xs p-4"
+              inputId="minmaxfraction"
+              placeholder="Auto"
+              (onInput)="onGraphConfigChange()"
+            ></p-inputNumber>
+
+            <label style="color: #fff; font-size: 12px">Y Min:</label>
+            <p-inputNumber
+              [(ngModel)]="yAxisMin"
+              styleClass="y-axis-input"
+              inputStyleClass="text-xs p-1"
+              placeholder="Auto"
+              (onInput)="onGraphConfigChange()"
+            ></p-inputNumber>
+
+            <label style="color: #fff; font-size: 12px">Y Max:</label>
+            <p-inputNumber
+              [(ngModel)]="yAxisMax"
+              styleClass="y-axis-input"
+              inputStyleClass="text-xs p-1"
+              placeholder="Auto"
+              (onInput)="onGraphConfigChange()"
+            ></p-inputNumber>
+          </div>
 
           @if (onFaultPage) {
             <fault-buttons [onClearData]="clearDataType" />
@@ -67,6 +102,7 @@
             [showMultipleYAxes]="this.showMultiYaxis"
             [isPaused]="this.isPaused"
             [clearGraph]="this.clearGraph"
+            [graphConfig]="this.graphConfig"
           />
         </div>
         <graph-sidebar
