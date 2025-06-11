@@ -1,0 +1,11 @@
+<p-floatlabel>
+  <input
+    pInputText
+    type="number"
+    [id]="label() + '-input'"
+    [ngModel]="localValue()"
+    (ngModelChange)="onValueChange($event)"
+    autocomplete="off"
+  />
+  <label [for]="label() + '-input'">{{ label() }}</label>
+</p-floatlabel>

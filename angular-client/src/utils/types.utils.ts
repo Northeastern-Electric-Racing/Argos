@@ -20,6 +20,17 @@ export type DataType = {
 };
 
 /**
+ * Frontend type of Scylla Settings
+ */
+export type ScyllaSettings = {
+  data_upload_disabled: boolean;
+  batch_upsert_time: number;
+  ratelimit_mode: number;
+  static_ratelimit_time: number;
+  socket_discard_percent: number;
+};
+
+/**
  * Frontend type of a Run
  */
 export type Run = {
