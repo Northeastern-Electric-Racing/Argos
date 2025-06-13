@@ -9,8 +9,8 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
 use crate::metadata_structs::{
-    map_dti_flt, FaultData, Node, TimerData, DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP,
-    FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
+    map_dti_flt, FaultData, Node, TimerData, TotalTimerData, DATA_SOCKET_KEY, FAULT_BINS,
+    FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
 };
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
@@ -55,6 +55,7 @@ pub async fn socket_handler_with_metadata(
                 topic: item,
                 last_change: DateTime::UNIX_EPOCH,
                 last_value: 0.0f32,
+                total_time_per_value_map: HashMap::new(),
             },
         );
     }
@@ -100,7 +101,6 @@ pub async fn socket_handler_with_metadata(
                 for item in timer_map.values() {
                     send_socket_msg(item, &mut upload_counter, &io, TIMER_SOCKET_KEY).await;
                 }
-
             },
             _ = view_interval.tick() => {
                     trace!("Updating viewership data!");
@@ -157,6 +157,24 @@ fn handle_socket_msg(
         trace!("Triggering timer: {}", data.name);
         let new_val = *data.values.first().unwrap_or(&-1f32);
         if time.last_value != new_val {
+            let prev_val = time
+                .total_time_per_value_map
+                .get_mut(&time.last_value.to_string());
+            let new_total_val = TotalTimerData {
+                start_time: time.last_change,
+                end_time: Utc::now(),
+            };
+            if let Some(prev_val) = prev_val {
+                let mut new_vec = prev_val.to_vec();
+                new_vec.push(new_total_val);
+                time.total_time_per_value_map
+                    .insert(time.last_value.to_string(), new_vec);
+            } else if time.last_change.timestamp_millis() != 0 {
+                let new_vec = vec![new_total_val];
+                time.total_time_per_value_map
+                    .insert(time.last_value.to_string(), new_vec);
+            }
+
             time.last_value = new_val;
             time.last_change = Utc::now();
         }

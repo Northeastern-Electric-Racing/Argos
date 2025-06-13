@@ -1,5 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
-import Storage from 'src/services/storage.service';
+import { Component, Input } from '@angular/core';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
@@ -13,7 +12,6 @@ import VStackComponent from '../vstack/vstack.component';
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export default class CurrentTotalTimerComponent {
-  private storage = inject(Storage);
   @Input() currentTime: number = 0;
   @Input() totalTime: number = 0;
 

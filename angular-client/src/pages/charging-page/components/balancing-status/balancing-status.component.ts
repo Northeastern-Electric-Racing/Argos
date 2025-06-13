@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
-import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
@@ -26,41 +25,33 @@ export default class BalancingStatusComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.STATUS_BALANCING).subscribe((value) => {
-        const statusBalancingValue = floatPipe(value.values[0]);
+      this.storage.getTimerData(DataTypeEnum.STATUS_BALANCING).subscribe((value) => {
+        const statusBalancingValue = value.last_value;
         if (this.isBalancing) {
           if (!(statusBalancingValue === 1)) {
             this.isBalancing = false;
-            this.stopTimer();
-            this.resetCurrentSecs();
           }
         } else if (statusBalancingValue === 1) {
           this.isBalancing = true;
-          this.startTimer();
         }
+
+        this.currentSeconds = (Date.now() - value.last_change) / 1000;
+        this.totalSeconds = Math.round(
+          value.total_time_per_value_map[value.last_value].reduce(
+            (acc, currVal) => acc + (currVal.end_time - currVal.start_time),
+            0
+          ) /
+            1000 +
+            this.currentSeconds
+        );
+
+        console.log(value.total_time_per_value_map);
       })
     );
   }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
-    this.stopTimer();
-  }
-
-  startTimer() {
-    this.intervalId = setInterval(() => {
-      this.currentSeconds++;
-      this.totalSeconds++;
-      sessionStorage.setItem('balancing-total-seconds', this.totalSeconds.toString());
-    }, 1000);
-  }
-
-  stopTimer() {
-    clearInterval(this.intervalId);
-  }
-
-  resetCurrentSecs() {
-    this.currentSeconds = 0;
   }
 
   getBatteryStatus(connected: boolean) {
