@@ -1,4 +1,4 @@
-import { Component, effect, EventEmitter, input, Output, signal } from '@angular/core';
+import { Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { FloatLabel } from 'primeng/floatlabel';
@@ -12,20 +12,5 @@ import { FloatLabel } from 'primeng/floatlabel';
 })
 export default class SettingInputComponent {
   label = input.required<string>();
-  value = input<number | undefined>();
-
-  @Output() valueChange = new EventEmitter<number>();
-
-  localValue = signal(this.value());
-
-  constructor() {
-    effect(() => {
-      this.localValue.set(this.value());
-    });
-  }
-
-  onValueChange(newVal: number) {
-    this.localValue.set(newVal);
-    this.valueChange.emit(newVal);
-  }
+  value = model<number | undefined>();
 }
