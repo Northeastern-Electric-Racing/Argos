@@ -18,7 +18,7 @@
         </div>
       </mat-grid-tile>
       @for (segment of segments; track segment) {
-        <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="16">
+        <mat-grid-tile [colspan]="2" [rowspan]="4">
           <segment-summary [segmentNumber]="segment" style="height: 100%; width: 100%" />
         </mat-grid-tile>
       }

@@ -1,3 +1,9 @@
+.divider {
+  width: 2px;
+  height: 50px;
+  background-color: #555;
+}
+
 .thermometer-container {
   display: flex;
   justify-content: center;
