@@ -44,13 +44,18 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   previousDataLength: number = 0;
   // label -> x,y (topic, data point)
   data!: Map<string, Array<{ x: number; y: number }>>;
-  timeDiffMs: number = 0;
   isSliding: boolean = false;
-  timeRangeMs = 60000; // 1 minute in ms
+  timeRangeMs: number | undefined = undefined;
   private timeOuts: NodeJS.Timeout[] = [];
   graphConfig = input.required<{ maxPoints: number; yMin: number | null; yMax: number | null }>();
+  range = input<number | undefined>(undefined);
 
   constructor() {
+    effect(() => {
+      if (this.isPaused()) {
+        this.resetRange();
+      }
+    });
     effect(() => {
       const config = this.graphConfig();
       if (this.chart && config) {
@@ -73,6 +78,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         this.chart.updateOptions({
           yaxis: yAxisOptions
         });
+        this.resetRange();
       }
     });
 
@@ -172,17 +178,13 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     this.chart.updateSeries(series);
 
-    if (this.limitRange() && !this.isSliding) {
-      this.isSliding = true;
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis
-          // // TODO: does this do anything?... maybe not needed
-          // max: this.graphConfig().maxPoints
-        }
-      });
-    }
+    this.chart.updateOptions({
+      ...this.options,
+      xaxis: {
+        ...this.options.xaxis,
+        range: this.timeRangeMs
+      }
+    });
   };
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
@@ -205,16 +207,18 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         if (!line.some((v) => v.x === val.x)) {
           line.push({ x: val.x, y: +val.y.toFixed(3) });
         }
+
         if (this.realTime() && line.length > this.graphConfig().maxPoints) {
-          line.shift();
+          const shiftedPoint = line.shift()?.x; // Remove the oldest point
+          // THE BELOW IS A SOMEWHAT TEMP FIX, ULTIMATELY THIS SHOULD BE MORE DYNAMIC AND BE OFFERED AS A CONFIG OPTION
+          // Calculate the actual time range: difference between newest and oldest remaining points
+          const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
+          // Update time range if this is larger than current range
+          this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
+          console.log(`Updated time range: ${this.timeRangeMs}`);
         }
       });
     });
-
-    if (this.limitRange() && !this.isSliding) {
-      const times = Array.from(Array.from(this.data.values())[0]?.keys());
-      this.timeDiffMs = times[times.length - 1] - times[0];
-    }
 
     this.updateChart();
   };
@@ -314,5 +318,15 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     });
 
     this.showMultipleYAxes.apply(this.updateChart());
+  }
+
+  resetRange() {
+    this.timeRangeMs = undefined;
+    this.chart.updateOptions({
+      xaxis: {
+        ...this.options.xaxis,
+        range: undefined
+      }
+    });
   }
 }
