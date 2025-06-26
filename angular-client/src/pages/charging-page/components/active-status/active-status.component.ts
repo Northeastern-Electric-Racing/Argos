@@ -2,7 +2,6 @@ import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
-import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
@@ -23,36 +22,28 @@ export default class ActiveStatusComponent implements OnInit {
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.BMS_MODE).subscribe((value) => {
-      const statusStateValue = floatPipe(value.values[0]);
+    this.storage.getTimerData(DataTypeEnum.BMS_MODE).subscribe((value) => {
+      const statusStateValue = value.last_value;
       if (this.isActive) {
         if (!(statusStateValue === 2)) {
           this.isActive = false;
-          this.stopTimer();
-          this.resetCurrentSecs();
         }
       } else if (statusStateValue === 2) {
         this.isActive = true;
-        this.startTimer();
       }
+
+      this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      this.totalSeconds = Math.round(
+        value.total_time_per_value_map[value.last_value].reduce(
+          (acc, currVal) => acc + (currVal.end_time - currVal.start_time),
+          0
+        ) /
+          1000 +
+          this.currentSeconds
+      );
     });
   }
 
-  startTimer() {
-    this.intervalId = setInterval(() => {
-      this.currentSeconds++;
-      this.totalSeconds++;
-      sessionStorage.setItem('active-total-seconds', this.totalSeconds.toString());
-    }, 1000);
-  }
-
-  stopTimer() {
-    clearInterval(this.intervalId);
-  }
-
-  resetCurrentSecs() {
-    this.currentSeconds = 0;
-  }
   getStatusColor(isActive: boolean) {
     return isActive ? 'green' : Theme.infoBackground;
   }

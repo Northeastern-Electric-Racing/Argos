@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io-client';
-import { DataValue, ServerData } from 'src/utils/socket.utils';
+import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { FaultData } from 'src/utils/types.utils';
@@ -66,6 +66,16 @@ export default class SocketService {
         const key = data.name;
         const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
+    this.socket.on('timers', (message: string) => {
+      try {
+        const data = JSON.parse(message) as TimerData;
+        const key = data.topic;
+        storage.addTimerValue(key, data);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }

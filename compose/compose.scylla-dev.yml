@@ -10,8 +10,8 @@
         service: client
       build:
         context: ../angular-client
-        args:
-            BACKEND_URL: http://localhost:8000
+      environment:
+        BACKEND_URL: http://192.168.100.11:8000
 
     siren:
         extends:

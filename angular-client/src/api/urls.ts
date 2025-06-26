@@ -1,8 +1,7 @@
-import { environment } from 'src/environment/environment';
 import { Timing } from 'src/utils/types.utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const baseURL = (environment as any).url || 'http://localhost:8000';
+const baseURL = (window as any).__env?.BACKEND_URL;
 
 /* Datatypes */
 const getAllDatatypes = () => `${baseURL}/datatypes`;
