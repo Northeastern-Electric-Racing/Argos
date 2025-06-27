@@ -1,10 +1,10 @@
-use std::{fs, io::SeekFrom, sync::Arc, vec};
+use std::{io::SeekFrom, sync::Arc, vec};
 
 use axum::{
+    Extension, Json,
     body::{Body, BodyDataStream},
     extract::Path,
-    http::{header, HeaderMap, Response, StatusCode},
-    Extension, Json,
+    http::{HeaderMap, Response, StatusCode, header},
 };
 use rumqttc::v5::AsyncClient;
 use tokio::{
@@ -77,7 +77,7 @@ pub async fn stream_video(
         .header(header::CONTENT_LENGTH, (end - start + 1).to_string())
         .header(
             header::CONTENT_RANGE,
-            format!("bytes {}-{}/{}", start, end, file_length),
+            format!("bytes {start}-{end}/{file_length}"),
         )
         .header(header::ACCEPT_RANGES, "bytes")
         .body(body)
@@ -92,15 +92,20 @@ pub async fn get_videos(
     Extension(video_suffix): Extension<VideoSuffix>,
 ) -> Result<Json<Vec<String>>, ScyllaError> {
     let mut file_paths: Vec<String> = vec![];
-    let entries = fs::read_dir(output_directory.0)
-        .map_err(|err| ScyllaError::FileError(format!("Error reading directory: {}", err)))?;
+    let mut entries = tokio::fs::read_dir(output_directory.0)
+        .await
+        .map_err(|err| ScyllaError::FileError(format!("Error reading directory: {err}")))?;
 
-    for entry in entries.filter_map(Result::ok) {
+    while let Some(entry) = entries
+        .next_entry()
+        .await
+        .map_err(|err| ScyllaError::FileError(format!("Error reading directory: {err}")))?
+    {
         let file_name = entry.file_name();
         let file_name_str = file_name.to_string_lossy();
 
         if file_name_str.ends_with(video_suffix.0.as_str()) {
-            file_paths.push(file_name_str.to_string())
+            file_paths.push(file_name_str.to_string());
         }
     }
 
@@ -118,10 +123,10 @@ pub async fn request_updated_videos(
             rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
             false,
             protobuf::Message::write_to_bytes(&payload)
-                .unwrap_or_else(|e| format!("failed to serialize {}", e).as_bytes().to_vec()),
+                .unwrap_or_else(|e| format!("failed to serialize {e}").as_bytes().to_vec()),
         )
         .await
-        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {err}")))?;
 
     Ok(Json::from("Sent Request to update videos".to_string()))
 }

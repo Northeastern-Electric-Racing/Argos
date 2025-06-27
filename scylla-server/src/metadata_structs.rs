@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use ::serde::Serialize;
-use chrono::{serde::ts_milliseconds, DateTime, TimeDelta, Utc};
+use chrono::{DateTime, TimeDelta, Utc, serde::ts_milliseconds};
 
 pub const DATA_SOCKET_KEY: &str = "data";
 
@@ -59,6 +59,7 @@ pub const FAULT_SOCKET_KEY: &str = "faults";
 pub const FAULT_MIN_REG_GAP: TimeDelta = TimeDelta::seconds(8);
 
 pub const FAULT_BINS: &[&str] = &["DTI/Fault/FaultCode"];
+#[must_use]
 pub const fn map_dti_flt(index: usize) -> Option<&'static str> {
     match index {
         0 => None,

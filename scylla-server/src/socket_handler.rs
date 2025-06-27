@@ -9,8 +9,9 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
 use crate::metadata_structs::{
-    map_dti_flt, FaultData, Node, TimerData, TotalTimerData, DATA_SOCKET_KEY, FAULT_BINS,
-    FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
+    DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData,
+    METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
+    map_dti_flt,
 };
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
@@ -22,7 +23,7 @@ pub async fn socket_handler(
     let mut upload_counter = 0u8;
     loop {
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
@@ -50,7 +51,7 @@ pub async fn socket_handler_with_metadata(
     let mut timer_map: HashMap<String, TimerData> = HashMap::new();
     for item in TIMERS_TOPICS {
         timer_map.insert(
-            item.to_string(),
+            (*item).to_string(),
             TimerData {
                 topic: item,
                 last_change: DateTime::UNIX_EPOCH,
@@ -74,7 +75,7 @@ pub async fn socket_handler_with_metadata(
 
     loop {
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
@@ -86,7 +87,7 @@ pub async fn socket_handler_with_metadata(
                     &io,
                     DATA_SOCKET_KEY,
                 ).await;
-                handle_socket_msg(data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -94,7 +95,7 @@ pub async fn socket_handler_with_metadata(
                     &mut upload_counter,
                         &io,
                         FAULT_SOCKET_KEY,
-                ).await
+                ).await;
             },
             _ = timers_interval.tick() => {
                 trace!("Sending Timers Intervals!");
@@ -107,7 +108,7 @@ pub async fn socket_handler_with_metadata(
                     let sockets_cnt = io.sockets().len() as f32;
                     let item = ClientData {
                         name: "Argos/Viewers".to_string(),
-                        unit: "".to_string(),
+                        unit: String::new(),
                         run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now(),
                         values: vec![sockets_cnt]
@@ -124,7 +125,7 @@ pub async fn socket_handler_with_metadata(
                 info!("Updating message rate to be {} msg/sec", rate);
                 let item = ClientData {
                     name: "Argos/Message_Rate".to_string(),
-                    unit: "".to_string(),
+                    unit: String::new(),
                     run_id: crate::RUN_ID.load(Ordering::Relaxed),
                     timestamp: chrono::offset::Utc::now(),
                     values: vec![rate]
@@ -144,7 +145,7 @@ pub async fn socket_handler_with_metadata(
 
 /// Handles parsing and creating metadata for a newly received socket message.
 fn handle_socket_msg(
-    data: ClientData,
+    data: &ClientData,
     fault_regex_mpu: &Regex,
     fault_regex_bms: &Regex,
     fault_regex_charger: &Regex,
@@ -165,7 +166,7 @@ fn handle_socket_msg(
                 end_time: Utc::now(),
             };
             if let Some(prev_val) = prev_val {
-                let mut new_vec = prev_val.to_vec();
+                let mut new_vec = prev_val.clone();
                 new_vec.push(new_total_val);
                 time.total_time_per_value_map
                     .insert(time.last_value.to_string(), new_vec);
@@ -252,16 +253,16 @@ async fn send_socket_msg<T>(
             )
             .await
         {
-            Ok(_) => (),
+            Ok(()) => (),
             Err(err) => match err {
                 socketioxide::BroadcastError::Socket(e) => {
                     trace!("Socket: Transmit error: {:?}", e);
                 }
                 socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err)
+                    warn!("Socket: Serialize error: {}", err);
                 }
                 socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err)
+                    warn!("Socket: Adapter error: {}", err);
                 }
             },
         }

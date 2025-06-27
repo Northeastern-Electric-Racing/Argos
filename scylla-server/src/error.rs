@@ -45,11 +45,11 @@ impl IntoResponse for ScyllaError {
         let (status, reason) = match self {
             ScyllaError::ConnError(error) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Could not connect to db: {}", error),
+                format!("Could not connect to db: {error}"),
             ),
             ScyllaError::DbError(error) => (
                 StatusCode::BAD_REQUEST,
-                format!("Misc query error: {}", error),
+                format!("Misc query error: {error}"),
             ),
             ScyllaError::InvalidEncoding(reason) => (StatusCode::UNPROCESSABLE_ENTITY, reason),
             ScyllaError::CommFailure(reason) => (StatusCode::BAD_GATEWAY, reason),
@@ -59,8 +59,9 @@ impl IntoResponse for ScyllaError {
             ),
             ScyllaError::InvalidSetting(reason) => (StatusCode::BAD_REQUEST, reason),
             ScyllaError::HttpError(code, reason) => (code, reason),
-            ScyllaError::FileError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
-            ScyllaError::MqttError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
+            ScyllaError::FileError(reason) | ScyllaError::MqttError(reason) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, reason)
+            }
         };
 
         warn!("Routing error: {}: {}", status, reason);

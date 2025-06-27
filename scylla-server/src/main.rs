@@ -1,43 +1,41 @@
 use std::{
     fs,
     path::Path,
-    sync::{atomic::Ordering, Arc},
+    sync::{Arc, atomic::Ordering},
     time::Duration,
 };
 
 use axum::{
+    Extension, Router,
     extract::DefaultBodyLimit,
     http::Method,
     routing::{get, post, put},
-    Extension, Router,
 };
 use clap::Parser;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{
-    pooled_connection::{bb8::Pool, AsyncDieselConnectionManager},
     AsyncConnection, AsyncPgConnection,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
+    BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode, SOCKET_DISCARD_PERCENT,
+    STATIC_RATE_LIMIT_VALUE,
     controllers::{
-        self,
+        self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller, run_controller, scylla_config_controller,
         video_streamer_controller::{self},
-        OutputDirectory, VideoSuffix,
     },
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
-    STATIC_RATE_LIMIT_VALUE,
 };
 use scylla_server::{
-    db_handler,
+    ClientData, db_handler,
     mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-    ClientData,
 };
-use socketioxide::{extract::SocketRef, SocketIo};
+use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::{
     signal,
     sync::{broadcast, mpsc},
@@ -49,7 +47,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::{debug, info, level_filters::LevelFilter, warn};
-use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt::format::FmtSpan};
 
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
@@ -145,24 +143,25 @@ const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
     let dir_path = Path::new(path);
-    if !dir_path.exists() {
-        fs::create_dir_all(dir_path)?;
-        println!("Directory created: {}", path);
+    if dir_path.exists() {
+        println!("Directory already exists: {path}");
     } else {
-        println!("Directory already exists: {}", path);
+        fs::create_dir_all(dir_path)?;
+        println!("Directory created: {path}");
     }
 
     Ok(())
 }
 
 #[tokio::main]
+#[allow(clippy::too_many_lines)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = ScyllaArgs::parse();
 
     println!("Initializing scylla server...");
 
     if let Err(e) = ensure_directory_exists(cli.output_directory.as_str()) {
-        eprintln!("Failed to create directory: {}", e);
+        eprintln!("Failed to create directory: {e}");
     }
 
     #[cfg(feature = "top")]
@@ -233,7 +232,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ack_timeout(Duration::from_millis(1500)) // this should be well below the time to fill max buffer size above
         .build_layer();
     io.ns("/", |s: SocketRef| {
-        s.on_disconnect(|_: SocketRef| debug!("Socket: Client disconnected from socket"))
+        s.on_disconnect(|_: SocketRef| debug!("Socket: Client disconnected from socket"));
     });
 
     // channel to pass the mqtt data
@@ -279,7 +278,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         mqtt_send_db,
         mqtt_send_socket,
         token.clone(),
-        MqttProcessorOptions {
+        &MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
         },
     );
@@ -407,7 +406,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(async {
         axum::serve(listener, app)
             .with_graceful_shutdown(async move {
-                _ = axum_token.cancelled().await;
+                () = axum_token.cancelled().await;
             })
             .await
             .expect("Failed shutdown init for axum");

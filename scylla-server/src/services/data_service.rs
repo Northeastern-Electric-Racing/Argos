@@ -1,8 +1,8 @@
 use crate::{
+    ClientData, Database,
     controllers::data_controller::Timing,
     models::{Data, DataInsert},
-    schema::data::dsl::*,
-    ClientData, Database,
+    schema::data::dsl::{data, dataTypeName, runId, time},
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -32,8 +32,8 @@ pub async fn get_data_by_timing(
     data_type_name: String,
     timing: Timing,
 ) -> Result<Vec<Data>, diesel::result::Error> {
-    let higher_end: i64 = (timing.time * 1000) + (timing.after * 60 * 1000000); // minutes to microsseconds
-    let lower_end: i64 = (timing.time * 1000) - (timing.before * 60 * 1000000); // minutes to microsseconds
+    let higher_end: i64 = (timing.time * 1000) + (timing.after * 60 * 1_000_000); // minutes to microsseconds
+    let lower_end: i64 = (timing.time * 1000) - (timing.before * 60 * 1_000_000); // minutes to microsseconds
 
     data.filter(
         dataTypeName
@@ -51,7 +51,7 @@ pub async fn get_data_by_timing(
 /// * `unix_time` - The time im miliseconds since unix epoch of the message
 /// * `data_type_name` - The name of the data type, note this data type must already exist!
 /// * `rin_id` - The run id to assign the data point to, note this run must already exist!
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the `QueryError` propogated by the db
 pub async fn add_data(
     db: &mut Database<'_>,
     client_data: ClientData,

@@ -1,6 +1,8 @@
 use chrono::serde::ts_milliseconds;
 
+#[allow(clippy::unused_async)]
 pub mod controllers;
+
 pub mod error;
 pub mod services;
 
@@ -15,6 +17,7 @@ pub mod models;
 #[allow(non_snake_case)]
 pub mod schema;
 
+#[allow(clippy::pedantic)]
 pub mod proto;
 
 pub mod transformers;

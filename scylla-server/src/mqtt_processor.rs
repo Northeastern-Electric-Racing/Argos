@@ -1,24 +1,25 @@
 use std::{
-    sync::{atomic::Ordering, Arc},
+    sync::{Arc, atomic::Ordering},
     time::{Duration, SystemTime},
 };
 
 use chrono::TimeDelta;
-use diesel_async::{pooled_connection::bb8::Pool, AsyncPgConnection};
+use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
-    mqttbytes::v5::{Packet, Publish},
     AsyncClient, Event, EventLoop, MqttOptions,
+    mqttbytes::v5::{Packet, Publish},
 };
 use rustc_hash::FxHashMap;
 use tokio::{sync::broadcast, time::Instant};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, instrument, trace, warn, Level};
+use tracing::{Level, debug, instrument, trace, warn};
 
 use crate::{
+    RATE_LIMIT_MODE, RateLimitMode, STATIC_RATE_LIMIT_VALUE,
     controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata,
-    services::run_service, RateLimitMode, RATE_LIMIT_MODE, STATIC_RATE_LIMIT_VALUE,
+    services::run_service,
 };
 
 use super::ClientData;
@@ -50,12 +51,13 @@ impl MqttProcessor {
     /// * `socket_channel` - The mpsc channel to send the socket data to
     /// * `cancel_token` - The token which indicates cancellation of the task
     /// * `opts` - The mqtt processor options to use
-    ///   Returns the instance and options to create a client, which is then used in the process_mqtt loop
+    ///   Returns the instance and options to create a client, which is then used in the `process_mqtt` loop
+    #[must_use]
     pub fn new(
         db_channel: broadcast::Sender<ClientData>,
         socket_channel: broadcast::Sender<ClientData>,
         cancel_token: CancellationToken,
-        opts: MqttProcessorOptions,
+        opts: &MqttProcessorOptions,
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
@@ -93,7 +95,7 @@ impl MqttProcessor {
     }
 
     /// This handles the reception of mqtt messages, will not return
-    /// * `eventloop` - The eventloop returned by ::new to connect to.  The loop isnt sync so this is the best that can be done
+    /// * `eventloop` - The eventloop returned by `::new` to connect to.  The loop isnt sync so this is the best that can be done
     /// * `client` - The async mqttt v5 client to use for subscriptions
     pub async fn process_mqtt(
         mut self,
@@ -113,7 +115,7 @@ impl MqttProcessor {
         loop {
             #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
-                _ = self.cancel_token.cancelled() => {
+                () = self.cancel_token.cancelled() => {
                     debug!("Shutting down MQTT processor!");
                     break;
                 },
@@ -125,9 +127,9 @@ impl MqttProcessor {
                         if let Some(msg) = msg {
                             latency_ringbuffer.push(chrono::offset::Utc::now() - msg.timestamp);
                             if send_db {
-                                self.send_db_msg(msg.clone()).await;
+                                self.send_db_msg(msg.clone());
                             }
-                            self.send_channel_msg(msg.clone()).await;
+                            self.send_channel_msg(msg.clone());
                         }
                     },
                     Err(msg) => trace!("Received mqtt error: {:?}", msg),
@@ -190,10 +192,9 @@ impl MqttProcessor {
                 {
                     trace!("Static rate limit skipping message with topic {}", topic);
                     return (false, None);
-                } else {
-                    // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
-                    self.rate_limiter.insert(topic.to_string(), Instant::now());
                 }
+                // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
+                self.rate_limiter.insert(topic.to_string(), Instant::now());
             } else {
                 // here is the first insertion of the topic (the first time we receive the topic in scylla's lifetime)
                 self.rate_limiter.insert(topic.to_string(), Instant::now());
@@ -225,11 +226,11 @@ impl MqttProcessor {
         // ts check for bad sources of time which may return 1970
         // if both system time and packet timestamp are before year 2000, the message cannot be recorded
         let unix_clean =
-            if unix_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
+            if unix_time < chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap() {
                 debug!("Timestamp before year 2000: {}", unix_time.to_string());
                 // B
                 let sys_time = chrono::offset::Utc::now();
-                if sys_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
+                if sys_time < chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap() {
                     warn!("System has no good time, discarding message!");
                     return (
                         false,
@@ -271,7 +272,7 @@ impl MqttProcessor {
 
     /// Send a message to the channel, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    async fn send_db_msg(&self, client_data: ClientData) {
+    fn send_db_msg(&self, client_data: ClientData) {
         if let Err(err) = self.db_channel.send(client_data) {
             warn!("Error sending through channel: {:?}", err);
         }
@@ -279,7 +280,7 @@ impl MqttProcessor {
 
     /// Send a message to the socket channel, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    async fn send_channel_msg(&self, client_data: ClientData) {
+    fn send_channel_msg(&self, client_data: ClientData) {
         if let Err(err) = self.socket_channel.send(client_data) {
             warn!("Error sending through channel: {:?}", err);
         }
