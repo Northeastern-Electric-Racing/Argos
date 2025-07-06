@@ -1,0 +1,4 @@
+window.__env = {
+  BACKEND_URL: '$BACKEND_URL',
+  MAP_ACCESS_TOKEN: '$MAP_ACCESS_TOKEN'
+};

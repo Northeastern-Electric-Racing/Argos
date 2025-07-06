@@ -29,7 +29,7 @@
       }
       @if (this.selectorConfigs().length !== 0) {
         <hstack>
-          @for (selectorConfig of this.selectorConfigs(); track selectorConfig) {
+          @for (selectorConfig of this.selectorConfigs(); track selectorConfig.defaultValue) {
             <select-dropdown
               [options]="selectorConfig.options"
               [placeholder]="selectorConfig.placeholder"

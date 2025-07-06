@@ -9,7 +9,7 @@
     styleClass="w-full md:w-[30rem]"
     (onNodeSelect)="nodeSelect($event)"
     (onNodeUnselect)="onNodeUnselect($event)"
-    [(selection)]="selectedNodes"
+    [(selection)]="this.selectedNodes"
     [filter]="true"
     filterPlaceholder="Select Data Type"
     styleClass="w-full"

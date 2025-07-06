@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { DataValue, StorageMap } from 'src/utils/socket.utils';
+import { DataValue, StorageMap, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 
 /**
  * Service for interacting with the storage
@@ -8,12 +8,15 @@ import { DataValue, StorageMap } from 'src/utils/socket.utils';
 @Injectable({ providedIn: 'root' })
 export default class Storage {
   private storage: StorageMap;
+  private timerStorage: TimerStorageMap;
+
   private currentRunId = new BehaviorSubject<number | undefined>(undefined);
 
   private resolution: number = 100;
 
   constructor() {
     this.storage = new Map<string, Subject<DataValue>>();
+    this.timerStorage = new Map<string, Subject<TimerData>>();
   }
 
   public get = (key: string): Subject<DataValue> => {
@@ -45,5 +48,20 @@ export default class Storage {
 
   public getResolution = (): number => {
     return this.resolution;
+  };
+
+  public getTimerData = (key: string): Subject<TimerData> => {
+    const subject = this.timerStorage.get(key);
+    if (!subject) {
+      const subject = new Subject<TimerData>();
+      this.timerStorage.set(key, subject);
+      return subject;
+    }
+    return subject;
+  };
+
+  public addTimerValue = (key: string, value: TimerData) => {
+    const subject = this.getTimerData(key);
+    subject.next(value);
   };
 }

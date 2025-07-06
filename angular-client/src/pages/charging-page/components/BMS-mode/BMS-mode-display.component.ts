@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -20,8 +21,9 @@ enum BMSMODE {
   standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
-export default class BMSModeDisplayComponent implements OnInit {
+export default class BMSModeDisplayComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
   bmsMode: BMSMODE = 1;
 
   // Mapping object for colors
@@ -33,9 +35,15 @@ export default class BMSModeDisplayComponent implements OnInit {
   };
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.BMS_MODE).subscribe((value) => {
-      this.bmsMode = floatPipe(value.values[0]) as BMSMODE;
-    });
+    this.subscriptions.push(
+      this.storage.get(DataTypeEnum.BMS_MODE).subscribe((value) => {
+        this.bmsMode = floatPipe(value.values[0]) as BMSMODE;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   getBMSModeString(): string {

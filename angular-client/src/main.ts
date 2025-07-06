@@ -31,8 +31,9 @@ import { TreeModule } from 'primeng/tree';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PasswordModule } from 'primeng/password';
-import { importProvidersFrom } from '@angular/core';
+import { importProvidersFrom, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import AppContextComponent from './app/context/app-context.component';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 bootstrapApplication(AppContextComponent, {
   providers: [
@@ -65,7 +66,8 @@ bootstrapApplication(AppContextComponent, {
       TreeModule,
       InputTextModule,
       InputNumberModule,
-      PasswordModule
+      PasswordModule,
+      ToggleSwitchModule
     ),
     DialogService,
     MessageService,
@@ -77,6 +79,7 @@ bootstrapApplication(AppContextComponent, {
         preset: Lara
       }
     }),
-    provideClientHydration()
+    provideClientHydration(),
+    provideExperimentalZonelessChangeDetection()
   ]
 }).catch((err) => console.error(err));

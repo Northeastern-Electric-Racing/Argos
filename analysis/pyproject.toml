@@ -19,6 +19,7 @@ scipy = "^1.15.3"
 
 [tool.poetry.scripts]
 imu-playback = "analysis.imu:main"
+total-rotations = "analysis.rotations:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -72,18 +72,7 @@ export default class MotorInfoComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Calculate total usage of the four components
-    const totalUsed = this.motorController + this.battboxFans + this.pumps + this.lvBoards;
-    // Calculate the remaining unused portion out of 20
-    const remainingUnused = Math.max(0, 20 - totalUsed);
-
-    this.piechartData = [
-      { value: this.motorController, name: 'Motor Controller' },
-      { value: this.battboxFans, name: 'Battbox Fans' },
-      { value: this.pumps, name: 'Pumps' },
-      { value: this.lvBoards, name: 'LV Boards' },
-      { value: remainingUnused, name: 'None' }
-    ];
+    this.updatePieChart();
   }
 
   updatePieChart() {

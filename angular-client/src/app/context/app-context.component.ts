@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { io } from 'socket.io-client';
-import { environment } from 'src/environment/environment';
 import { CellService } from 'src/services/cell.service';
-import { HeatMapService } from 'src/services/heat-map.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
@@ -11,6 +9,7 @@ import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
+import { EnvService } from 'src/services/env.service';
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -24,11 +23,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
   private cellService = new CellService(this.storage);
-  private heatmapService = inject(HeatMapService);
   private faultService = inject(FaultService);
-  private chipFaultPipe = inject(FaultService);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  socket = io((environment as any).url || 'http://localhost:8000');
+  private envService = inject(EnvService);
+  socket = io(this.envService.backendUrl);
   socketService = new SocketService(this.socket);
 
   constructor(

@@ -1,15 +1,14 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService, PrimeTemplate } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { interval, map, Observable, startWith } from 'rxjs';
+import { interval, map, Observable, startWith, Subscription } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routing.module';
 import { Sidebar } from 'primeng/sidebar';
-
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -43,12 +42,13 @@ interface NavItem {
     SidebarChipComponent
   ]
 })
-export class AppNavBarComponent implements OnInit {
+export class AppNavBarComponent implements OnInit, OnDestroy {
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private dialogService = inject(DialogService);
+  private subscribtions: Subscription[] = [];
 
   ref: DynamicDialogRef | undefined;
 
@@ -58,11 +58,19 @@ export class AppNavBarComponent implements OnInit {
   isMobile = false;
 
   ngOnInit(): void {
-    this.sidebarService.isOpen.subscribe((isOpen) => {
-      this.sidebarVisible = isOpen;
-    });
+    this.subscribtions.push(
+      this.sidebarService.isOpen.subscribe((isOpen) => {
+        this.sidebarVisible = isOpen;
+      })
+    );
     this.selectedRoute = window.location.pathname;
     this.isMobile = window.innerWidth <= 768;
+  }
+
+  ngOnDestroy(): void {
+    this.subscribtions.forEach((sub) => {
+      sub.unsubscribe();
+    });
   }
 
   // on resize, set the screen width
@@ -78,12 +86,16 @@ export class AppNavBarComponent implements OnInit {
 
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
-    runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.newRunIsLoading = isLoading;
-    });
-    runsQueryResponse.error.subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
-    });
+    this.subscribtions.push(
+      runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+        this.newRunIsLoading = isLoading;
+      })
+    );
+    this.subscribtions.push(
+      runsQueryResponse.error.subscribe((error) => {
+        error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      })
+    );
   };
 
   openRunForm = () => {

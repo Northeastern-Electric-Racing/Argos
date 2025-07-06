@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
@@ -12,27 +13,34 @@ import { InfoValueDisplayComponent } from '../../../../components/info-value-dis
   standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent]
 })
-export class AccLowVoltageComponent implements OnInit {
+export class AccLowVoltageComponent implements OnInit, OnDestroy {
   storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
   voltsLowValue: number | undefined = undefined;
   voltsLowChip: Chip | undefined = undefined;
   voltsLowCell: number | undefined = undefined;
 
   ngOnInit(): void {
-    this.storage.get(topics.lowVoltsValue()).subscribe((value) => {
-      this.voltsLowValue = parseFloat(value.values[0]);
-    });
-    this.storage.get(topics.lowVoltsChip()).subscribe((value) => {
-      const chipValue = parseInt(value.values[0]);
-      if (chipValue % 2 === 0) {
-        this.voltsLowChip = Chip.Alpha;
-      } else {
-        this.voltsLowChip = Chip.Beta;
-      }
-    });
-    this.storage.get(topics.lowVoltsCell()).subscribe((value) => {
-      this.voltsLowCell = parseInt(value.values[0]);
-    });
+    this.subscriptions.push(
+      this.storage.get(topics.lowVoltsValue()).subscribe((value) => {
+        this.voltsLowValue = parseFloat(value.values[0]);
+      }),
+      this.storage.get(topics.lowVoltsChip()).subscribe((value) => {
+        const chipValue = parseInt(value.values[0]);
+        if (chipValue % 2 === 0) {
+          this.voltsLowChip = Chip.Alpha;
+        } else {
+          this.voltsLowChip = Chip.Beta;
+        }
+      }),
+      this.storage.get(topics.lowVoltsCell()).subscribe((value) => {
+        this.voltsLowCell = parseInt(value.values[0]);
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   getInfoBackgroundTitle = () => {
