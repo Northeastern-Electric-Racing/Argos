@@ -63,7 +63,7 @@ pub async fn socket_handler_with_metadata(
                 topic: item,
                 last_change: DateTime::UNIX_EPOCH,
                 last_value: 0.0f32,
-                total_time_per_value_map: HashMap::new(),
+                total_time_per_value_map: FxHashMap::default(),
             },
         );
     }

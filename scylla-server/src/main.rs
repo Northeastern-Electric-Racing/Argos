@@ -150,9 +150,9 @@ fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
     let dir_path = Path::new(path);
     if !dir_path.exists() {
         fs::create_dir_all(dir_path)?;
-        println!("Directory created: {}", path);
+        println!("Directory created: {path}");
     } else {
-        println!("Directory already exists: {}", path);
+        println!("Directory already exists: {path}");
     }
 
     Ok(())
@@ -165,7 +165,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Initializing scylla server...");
 
     if let Err(e) = ensure_directory_exists(cli.output_directory.as_str()) {
-        eprintln!("Failed to create directory: {}", e);
+        eprintln!("Failed to create directory: {e}");
     }
 
     #[cfg(feature = "top")]

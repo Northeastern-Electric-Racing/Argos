@@ -52,7 +52,7 @@ pub async fn send_config_command(
     // publish the message to the topic that calypso's encoder is susbcribed to
     if let Err(err) = client
         .publish(
-            format!("{}{}", CALYPSO_BIDIR_CMD_PREFIX, key),
+            format!("{CALYPSO_BIDIR_CMD_PREFIX}{key}"),
             rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
             false,
             bytes,

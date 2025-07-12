@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use ::serde::Serialize;
 use chrono::{serde::ts_milliseconds, DateTime, TimeDelta, Utc};
+use rustc_hash::FxHashMap;
 
 pub const DATA_SOCKET_KEY: &str = "data";
 
@@ -23,7 +22,7 @@ pub struct TimerData {
     /// the value at the above time
     pub last_value: f32,
     /// The total amount of time that a value for this topic has been that value. String value of value stored as key
-    pub total_time_per_value_map: HashMap<String, Vec<TotalTimerData>>,
+    pub total_time_per_value_map: FxHashMap<String, Vec<TotalTimerData>>,
 }
 pub const TIMER_SOCKET_KEY: &str = "timers";
 pub const TIMERS_TOPICS: &[&str] = &[
