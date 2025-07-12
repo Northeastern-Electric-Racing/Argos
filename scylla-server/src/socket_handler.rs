@@ -90,7 +90,7 @@ pub async fn socket_handler_with_metadata(
         // extracting the Authorization as a normal http header bc idk how socketio does it
         // format from client should be 'Authorization':'<clientid>'
         let mut owned = writable_socket_map.write().await;
-        let header = socket.req_parts().headers.get("Authorization");
+        let header = socket.req_parts().headers.get("NERAuthorization");
         if let Some(header) = header {
             if let Ok(header) = header.to_str() {
                 let header = header.to_owned();
@@ -102,6 +102,8 @@ pub async fn socket_handler_with_metadata(
                     writable_socket_map.write().await.remove(&header);
                 });
             }
+        } else {
+            warn!("Unauthenticated client connected, will not get notifications!");
         }
     });
 
