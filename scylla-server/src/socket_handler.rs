@@ -90,19 +90,29 @@ pub async fn socket_handler_with_metadata(
         // extracting the Authorization as a normal http header bc idk how socketio does it
         // format from client should be 'Authorization':'<clientid>'
         let mut owned = writable_socket_map.write().await;
-        println!("Headers: {:?}", socket.req_parts().headers);
-        let header = socket.req_parts().headers.get("nerpass");
+        debug!("Headers: {:?}", socket.req_parts().headers);
+        let header = socket
+            .req_parts()
+            .headers
+            .iter()
+            .find(|&key| key.0.as_str().starts_with("nerpass"));
         if let Some(header) = header {
-            if let Ok(header) = header.to_str() {
-                let header = header.to_owned();
-                owned.insert(header.clone(), socket.id);
-                drop(owned);
+            let header = header.to_owned();
+            let header_str = header.0.to_string();
+            let Some(split_pos) = header_str.char_indices().nth(8) else {
+                warn!("Could not parse key: {:?}", header);
+                return;
+            };
+            let key = &header_str[split_pos.0..];
+            let key_owned = key.to_string();
+            warn!("Inserting {}", key_owned);
+            owned.insert(key_owned.clone(), socket.id);
+            drop(owned);
 
-                // ensure we remove from the write map of
-                socket.on_disconnect(async move || {
-                    writable_socket_map.write().await.remove(&header);
-                });
-            }
+            // ensure we remove from the write map of
+            socket.on_disconnect(async move || {
+                writable_socket_map.write().await.remove(&key_owned);
+            });
         } else {
             warn!("Unauthenticated client connected, will not get notifications!");
         }
