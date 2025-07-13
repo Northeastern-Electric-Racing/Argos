@@ -91,7 +91,7 @@ pub async fn socket_handler_with_metadata(
         // format from client should be 'Authorization':'<clientid>'
         let mut owned = writable_socket_map.write().await;
         println!("Headers: {:?}", socket.req_parts().headers);
-        let header = socket.req_parts().headers.get("NERAuthorization");
+        let header = socket.req_parts().headers.get("nerpass");
         if let Some(header) = header {
             if let Ok(header) = header.to_str() {
                 let header = header.to_owned();
