@@ -3,7 +3,7 @@ use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
 use serde::Serialize;
-use socketioxide::extract::SocketRef;
+use socketioxide::extract::{SocketRef, TryData};
 use socketioxide::socket::Sid;
 use socketioxide::SocketIo;
 use std::sync::Arc;
@@ -85,38 +85,38 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
-    io.ns("/", |socket: SocketRef| async move {
-        // unfortunate locking and ref counting due to the async closures
-        // extracting the Authorization as a normal http header bc idk how socketio does it
-        // format from client should be 'Authorization':'<clientid>'
-        let mut owned = writable_socket_map.write().await;
-        debug!("Headers: {:?}", socket.req_parts().headers);
-        let header = socket
-            .req_parts()
-            .headers
-            .iter()
-            .find(|&key| key.0.as_str().starts_with("nerpass"));
-        if let Some(header) = header {
-            let header = header.to_owned();
-            let header_str = header.0.to_string();
-            let Some(split_pos) = header_str.char_indices().nth(8) else {
-                warn!("Could not parse key: {:?}", header);
-                return;
+    io.ns(
+        "/",
+        |socket: SocketRef, TryData(auth): TryData<FxHashMap<String, String>>| async move {
+            // unfortunate locking and ref counting due to the async closures
+            // format should be map with string nerpass as key and value as client id starting with v1-
+            let mut owned = writable_socket_map.write().await;
+            let client_id = match auth {
+                Ok(auth) => match auth.get("nerpass") {
+                    Some(id) => id.clone(),
+                    None => {
+                        warn!("Could not find nerpass in auth, client unauthenticated");
+                        return;
+                    }
+                },
+                Err(e) => {
+                    warn!("Could not extract auth, client unauthenticated: {}", e);
+                    return;
+                }
             };
-            let key = &header_str[split_pos.0..];
-            let key_owned = key.to_string();
-            warn!("Inserting {}", key_owned);
-            owned.insert(key_owned.clone(), socket.id);
+
+            debug!(
+                "Establishing auth connection with {} -- socket {}",
+                client_id, socket.id
+            );
+            owned.insert(client_id.clone(), socket.id);
             drop(owned);
 
-            // ensure we remove from the write map of
             socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&key_owned);
+                writable_socket_map.write().await.remove(&client_id);
             });
-        } else {
-            warn!("Unauthenticated client connected, will not get notifications!");
-        }
-    });
+        },
+    );
 
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
