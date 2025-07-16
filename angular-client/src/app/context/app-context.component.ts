@@ -25,7 +25,7 @@ export default class AppContextComponent implements OnInit {
   private cellService = new CellService(this.storage);
   private faultService = inject(FaultService);
   private envService = inject(EnvService);
-  socket = io(this.envService.backendUrl);
+  socket = io(this.envService.backendUrl, { auth: { token: 'some random token' } });
   socketService = new SocketService(this.socket);
 
   constructor(
