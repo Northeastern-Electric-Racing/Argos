@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use socketioxide::extract::{SocketRef, TryData};
 use socketioxide::socket::Sid;
 use socketioxide::SocketIo;
@@ -36,6 +36,11 @@ pub async fn socket_handler(
             }
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct AuthData {
+    token: String,
 }
 
 pub async fn socket_handler_with_metadata(
@@ -87,18 +92,20 @@ pub async fn socket_handler_with_metadata(
     let writable_socket_map = client_socket_map.clone();
     io.ns(
         "/",
-        |socket: SocketRef, TryData(auth): TryData<FxHashMap<String, String>>| async move {
+        |socket: SocketRef, TryData(auth): TryData<AuthData>| async move {
             // unfortunate locking and ref counting due to the async closures
             // format should be map with string nerpass as key and value as client id starting with v1-
+            println!(
+                "Socket connected on {} namespace with id and auth data: {} {:?}",
+                socket.ns(),
+                socket.id,
+                auth
+            );
+
             let mut owned = writable_socket_map.write().await;
             let client_id = match auth {
-                Ok(auth) => match auth.get("nerpass") {
-                    Some(id) => id.clone(),
-                    None => {
-                        warn!("Could not find nerpass in auth, client unauthenticated");
-                        return;
-                    }
-                },
+                Ok(auth) => auth,
+
                 Err(e) => {
                     warn!("Could not extract auth, client unauthenticated: {}", e);
                     return;
@@ -107,13 +114,13 @@ pub async fn socket_handler_with_metadata(
 
             debug!(
                 "Establishing auth connection with {} -- socket {}",
-                client_id, socket.id
+                client_id.token, socket.id
             );
-            owned.insert(client_id.clone(), socket.id);
+            owned.insert(client_id.token.clone(), socket.id);
             drop(owned);
 
             socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id);
+                writable_socket_map.write().await.remove(&client_id.token);
             });
         },
     );
