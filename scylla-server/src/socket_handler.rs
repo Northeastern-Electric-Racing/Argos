@@ -94,14 +94,6 @@ pub async fn socket_handler_with_metadata(
         "/",
         |socket: SocketRef, TryData(auth): TryData<AuthData>| async move {
             // unfortunate locking and ref counting due to the async closures
-            // format should be map with string nerpass as key and value as client id starting with v1-
-            println!(
-                "Socket connected on {} namespace with id and auth data: {} {:?}",
-                socket.ns(),
-                socket.id,
-                auth
-            );
-
             let mut owned = writable_socket_map.write().await;
             let client_id = match auth {
                 Ok(auth) => auth,
