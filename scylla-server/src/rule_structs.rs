@@ -156,7 +156,7 @@ pub enum RuleManagerError {
 /// the rule manager
 pub struct RuleManager {
     /// <client_id, <rule_id, rule>>
-    clients_map: FxHashMap<ClientId, FxHashMap<RuleId, Rule>>,
+    clients_map: FxHashMap<ClientId, FxHashMap<Topic, Vec<Rule>>>,
     /// <topic, Vec<client_id>>
     rules_lookup: FxHashMap<Topic, FxHashSet<ClientId>>,
 }
@@ -199,8 +199,8 @@ impl RuleManager {
                 return Err(RuleManagerError::Failure);
             };
 
-            for rule in rules.values_mut() {
-                if rule.topic == topic {
+            if let Some(rule_set) = rules.get_mut(&topic) {
+                for rule in rule_set {
                     // return rule failure if underlying tick fails
                     let Some(is_triggered) = rule.tick(&data.values) else {
                         return Err(RuleManagerError::RuleFailure);
@@ -243,13 +243,16 @@ impl RuleManager {
 
         // push rule, make client active and push rule, or create client and push rule
         match self.clients_map.get_mut(&client) {
-            Some(client) => {
-                client.insert(rule.id.clone(), rule);
-            }
+            Some(client) => match client.get_mut(&rule.topic) {
+                Some(set) => set.push(rule),
+                None => {
+                    client.insert(rule.topic.clone(), vec![rule]);
+                }
+            },
 
             None => {
                 let mut map = FxHashMap::default();
-                map.insert(rule.id.clone(), rule);
+                map.insert(rule.topic.clone(), vec![rule]);
                 self.clients_map.insert(client, map);
             }
         };
@@ -269,15 +272,23 @@ impl RuleManager {
             return Err(RuleManagerError::NoSuchClient);
         };
 
-        let Some(removed) = rules.remove(&rule_id) else {
+        let mut removed: Option<Rule> = None;
+        for rule_vals in rules.values_mut() {
+            let Some(pos) = rule_vals.iter().position(|a| a.id == rule_id) else {
+                break;
+            };
+            removed = Some(rule_vals.remove(pos));
+        }
+
+        let Some(removed) = removed else {
             warn!("Could not find rule: {}", rule_id);
             return Err(RuleManagerError::NoMatchingRule);
         };
 
         // now, yeet the rule from the lookup cache, ONLY IF the client doesnt have any rules with the given topic left
-        let lookup_preserve = rules.values().find(|rule| rule.topic == removed.topic);
+        let lookup_preserve = rules.contains_key(&removed.topic);
 
-        if lookup_preserve.is_none() {
+        if !lookup_preserve {
             let Some(clients) = self.rules_lookup.get_mut(&removed.topic) else {
                 warn!("Could not find rule in cache!");
                 return Err(RuleManagerError::Failure);
@@ -303,20 +314,16 @@ impl RuleManager {
 
         // now, for each unique topic found amongst the rules, yeet it from the lookup
         // this uses a hashset to de-dup the rules to avoid annoying warnings
-        for rule in rules
-            .into_iter()
-            .map(|rule| rule.1.topic)
-            .collect::<FxHashSet<Topic>>()
-        {
+        for rule in rules.keys() {
             warn!("DELETING {}", rule);
-            let Some(client_list) = self.rules_lookup.get_mut(&rule) else {
+            let Some(client_list) = self.rules_lookup.get_mut(rule) else {
                 warn!("Could not find topic in rule lookup table!");
                 return Err(RuleManagerError::Failure);
             };
             client_list.retain(|client| *client != client_id);
             // remove the whole entry if no clients exist for the topic
             if client_list.is_empty() {
-                self.rules_lookup.remove(&rule);
+                self.rules_lookup.remove(rule);
             }
         }
 
