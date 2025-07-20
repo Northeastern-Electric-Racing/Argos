@@ -136,7 +136,7 @@ pub async fn socket_handler_with_metadata(
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
 
-                handle_rule_stuff(&data, &rules_manager, &client_socket_map, &io).await;
+                handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -192,7 +192,8 @@ pub async fn socket_handler_with_metadata(
     }
 }
 
-async fn handle_rule_stuff(
+/// Handles triggering rules based on a recieved datapoint
+async fn handle_rule_processing(
     data: &ClientData,
     rule_manager: &Arc<RwLock<RuleManager>>,
     client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
