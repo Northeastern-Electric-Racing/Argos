@@ -1,4 +1,5 @@
 pub mod car_command_controller;
+pub mod rule_controller;
 pub mod scylla_config_controller;
 
 pub mod data_controller;

@@ -8,6 +8,7 @@ pub mod db_handler;
 pub mod mqtt_processor;
 
 pub mod metadata_structs;
+pub mod rule_structs;
 pub mod socket_handler;
 
 #[allow(non_snake_case)]

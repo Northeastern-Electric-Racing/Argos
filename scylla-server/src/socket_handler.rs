@@ -1,17 +1,22 @@
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
-use serde::Serialize;
+use rustc_hash::FxHashMap;
+use serde::{Deserialize, Serialize};
+use socketioxide::extract::{SocketRef, TryData};
+use socketioxide::socket::Sid;
 use socketioxide::SocketIo;
-use std::{collections::HashMap, sync::atomic::Ordering, time::Duration};
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use std::{sync::atomic::Ordering, time::Duration};
+use tokio::sync::{broadcast, RwLock};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, trace, warn};
 
 use crate::metadata_structs::{
     map_dti_flt, FaultData, Node, TimerData, TotalTimerData, DATA_SOCKET_KEY, FAULT_BINS,
     FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
 };
+use crate::rule_structs::{RuleManager, RULE_SOCKET_KEY};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -33,21 +38,29 @@ pub async fn socket_handler(
     }
 }
 
+#[derive(Debug, Deserialize)]
+struct AuthData {
+    token: String,
+}
+
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
+    rules_manager: Arc<RwLock<RuleManager>>,
     io: SocketIo,
 ) {
     let mut upload_counter = 0u8;
 
+    // BEGIN METADATA
+
     // INTERVAL TIMERS for periodic things to be sent
-    let mut view_interval = tokio::time::interval(Duration::from_secs(3));
+    let mut view_interval = tokio::time::interval(Duration::from_millis(500));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
     let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
 
     // init timers
-    let mut timer_map: HashMap<String, TimerData> = HashMap::new();
+    let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
     for item in TIMERS_TOPICS {
         timer_map.insert(
             item.to_string(),
@@ -55,7 +68,7 @@ pub async fn socket_handler_with_metadata(
                 topic: item,
                 last_change: DateTime::UNIX_EPOCH,
                 last_value: 0.0f32,
-                total_time_per_value_map: HashMap::new(),
+                total_time_per_value_map: FxHashMap::default(),
             },
         );
     }
@@ -68,6 +81,41 @@ pub async fn socket_handler_with_metadata(
     let fault_regex_mpu: Regex =
         Regex::new(r"MPU\/Fault\/Critical\/(.*)").expect("Could not compile regex!");
     let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
+
+    // END METADATA
+
+    // BEGIN rules
+    // socket_map must not be written outside of these closures.
+    // a map of client_ids to their respective socket IDs for identifying where notifications go
+    let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
+        Arc::new(RwLock::new(FxHashMap::default()));
+    let writable_socket_map = client_socket_map.clone();
+    io.ns(
+        "/",
+        |socket: SocketRef, TryData(auth): TryData<AuthData>| async move {
+            // unfortunate locking and ref counting due to the async closures
+            let mut owned = writable_socket_map.write().await;
+            let client_id = match auth {
+                Ok(auth) => auth,
+
+                Err(e) => {
+                    warn!("Could not extract auth, client unauthenticated: {}", e);
+                    return;
+                }
+            };
+
+            debug!(
+                "Establishing auth connection with {} -- socket {}",
+                client_id.token, socket.id
+            );
+            owned.insert(client_id.token.clone(), socket.id);
+            drop(owned);
+
+            socket.on_disconnect(async move || {
+                writable_socket_map.write().await.remove(&client_id.token);
+            });
+        },
+    );
 
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
@@ -86,7 +134,9 @@ pub async fn socket_handler_with_metadata(
                     &io,
                     DATA_SOCKET_KEY,
                 ).await;
-                handle_socket_msg(data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+
+                handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -121,7 +171,7 @@ pub async fn socket_handler_with_metadata(
             },
             _ = message_rate_interval.tick() => {
                 let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
-                info!("Updating message rate to be {} msg/sec", rate);
+                debug!("Updating message rate to be {} msg/sec", rate);
                 let item = ClientData {
                     name: "Argos/Message_Rate".to_string(),
                     unit: "".to_string(),
@@ -142,13 +192,48 @@ pub async fn socket_handler_with_metadata(
     }
 }
 
+/// Handles triggering rules based on a recieved datapoint
+async fn handle_rule_processing(
+    data: &ClientData,
+    rule_manager: &Arc<RwLock<RuleManager>>,
+    client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
+    io: &SocketIo,
+) {
+    let Ok(Some(notifs)) = rule_manager.write().await.handle_msg(data) else {
+        return;
+    };
+    for notification in notifs {
+        let read_clients = client_socket_map.read().await;
+        let Some(sid) = read_clients.get(&notification.0 .0) else {
+            warn!("Could not find client to deliver notification, deleting client");
+            let _ = rule_manager.write().await.delete_client(notification.0);
+            return;
+        };
+        debug!(
+            "Sending notification of {} to {}",
+            notification.1.topic, notification.0
+        );
+        let Some(socket) = io.get_socket(*sid) else {
+            warn!("Could not find client socket, deleting client");
+            let _ = rule_manager.write().await.delete_client(notification.0);
+            return;
+        };
+        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
+            warn!(
+                "Could not send rule notification to {}, err {}",
+                notification.0, err
+            );
+        };
+    }
+}
+
 /// Handles parsing and creating metadata for a newly received socket message.
 fn handle_socket_msg(
-    data: ClientData,
+    data: &ClientData,
     fault_regex_mpu: &Regex,
     fault_regex_bms: &Regex,
     fault_regex_charger: &Regex,
-    timer_map: &mut HashMap<String, TimerData>,
+    timer_map: &mut FxHashMap<String, TimerData>,
     fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
 ) {
     // check to see if we fit a timer case, and then act upon it
