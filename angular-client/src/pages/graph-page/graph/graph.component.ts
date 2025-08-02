@@ -62,15 +62,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     effect(() => {
       const config = this.graphConfig();
       if (this.chart && config) {
-        // Update Y-axis bounds
-        const yAxisOptions: Partial<ApexYAxis> = {};
-
-        if (config.yMin !== null) {
-          yAxisOptions.min = config.yMin;
-        }
-        if (config.yMax !== null) {
-          yAxisOptions.max = config.yMax;
-        }
         this.options.yaxis = [
           {
             ...this.options.yaxis,
@@ -79,8 +70,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
                 colors: '#fff'
               }
             },
-            max: yAxisOptions.max,
-            min: yAxisOptions.min
+            max: config.yMax === null ? undefined : config.yMax,
+            min: config.yMin === null ? undefined : config.yMin
           }
         ];
 
