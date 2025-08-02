@@ -148,8 +148,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   selectedDataTypeValuesError?: Error;
   dataPoints: number = 300;
   dataPointsChanged = false;
-  yAxisMin: number | null = null; // used for y-axis min
-  yAxisMax: number | null = null; // used for y-axis max
+  yAxisMin: number | null = null;
+  yAxisMax: number | null = null;
   graphConfig = {
     maxPoints: this.dataPoints,
     yMin: this.yAxisMin,
