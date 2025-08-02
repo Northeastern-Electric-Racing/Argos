@@ -323,8 +323,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.chart.render().then(() => {
       this.updateChart();
     });
-
-    // this.showMultipleYAxes.apply(this.updateChart());
   }
 
   resetRange() {

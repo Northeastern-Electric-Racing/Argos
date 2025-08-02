@@ -26,7 +26,6 @@ export default class GraphSidebarComponent implements OnInit {
 
   ngOnInit() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
-    console.log('GraphSidebarComponent initialized:', this.currentSelectedDataTypes());
   }
 
   @HostListener('window:resize', ['$event'])

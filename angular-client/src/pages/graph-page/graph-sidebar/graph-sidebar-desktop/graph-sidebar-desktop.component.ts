@@ -108,9 +108,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     };
 
     this.selectedNodes = findSelectedNodes(this.treeNodes);
-    console.log('Current selected data types:', this.currentSelectedDataTypes());
-    console.log('Tree nodes initialized:', this.treeNodes);
-    console.log('Selected nodes initialized:', this.selectedNodes);
   }
 
   ngOnDestroy(): void {
