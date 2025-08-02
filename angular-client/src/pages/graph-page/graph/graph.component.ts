@@ -1,4 +1,4 @@
-import { Component, effect, input, OnDestroy, OnInit } from '@angular/core';
+import { Component, effect, input, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexXAxis,
@@ -8,7 +8,8 @@ import {
   ApexGrid,
   ApexTooltip,
   ApexFill,
-  ApexLegend
+  ApexLegend,
+  ApexYAxis
 } from 'ng-apexcharts';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { GraphInfo } from 'src/utils/types.utils';
@@ -16,7 +17,7 @@ import { GraphInfo } from 'src/utils/types.utils';
 type ChartOptions = {
   chart: ApexChart;
   xaxis: ApexXAxis;
-  yaxis: ApexYAxis;
+  yaxis: ApexYAxis[];
   dataLabels: ApexDataLabels;
   markers: ApexMarkers;
   grid: ApexGrid;
@@ -30,7 +31,8 @@ type ChartOptions = {
   selector: 'graph',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class CustomGraphComponent implements OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
@@ -49,6 +51,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   private timeOuts: NodeJS.Timeout[] = [];
   graphConfig = input.required<{ maxPoints: number; yMin: number | null; yMax: number | null }>();
   range = input<number | undefined>(undefined);
+  subscriptions: Subscription[] = [];
 
   constructor() {
     effect(() => {
@@ -60,13 +63,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       const config = this.graphConfig();
       if (this.chart && config) {
         // Update Y-axis bounds
-        const yAxisOptions: Partial<ApexYAxis> = {
-          labels: {
-            style: {
-              colors: '#fff'
-            }
-          }
-        };
+        const yAxisOptions: Partial<ApexYAxis> = {};
 
         if (config.yMin !== null) {
           yAxisOptions.min = config.yMin;
@@ -74,10 +71,20 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         if (config.yMax !== null) {
           yAxisOptions.max = config.yMax;
         }
+        this.options.yaxis = [
+          {
+            ...this.options.yaxis,
+            labels: {
+              style: {
+                colors: '#fff'
+              }
+            },
+            max: yAxisOptions.max,
+            min: yAxisOptions.min
+          }
+        ];
 
-        this.chart.updateOptions({
-          yaxis: yAxisOptions
-        });
+        this.chart.updateOptions(this.options);
         this.resetRange();
       }
     });
@@ -95,7 +102,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     effect(() => {
       if (this.showMultipleYAxes()) {
-        const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
+        const yaxisConfigs: Partial<ApexYAxis>[] = Array.from(this.data.keys()).map((key, index) => ({
           title: {
             text: key.replace('0', ''),
             style: {
@@ -114,18 +121,20 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
         // Update y-axis configurations
         if (this.chart) {
-          this.chart.updateOptions({
-            ...this.options,
-            yaxis: yaxisConfigs
-          });
+          this.options.yaxis = yaxisConfigs;
+          this.chart.updateOptions(this.options);
         }
       } else {
-        this.chart.updateOptions({
-          ...this.options,
-          xaxis: {
-            ...this.options.xaxis
+        this.options.yaxis = [
+          {
+            labels: {
+              style: {
+                colors: '#fff'
+              }
+            }
           }
-        });
+        ];
+        this.chart.updateOptions(this.options);
       }
     });
     effect(() => {
@@ -203,6 +212,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       } else {
         line = this.data.get(label)!;
       }
+
       value.forEach((val) => {
         if (!line.some((v) => v.x === val.x)) {
           line.push({ x: val.x, y: +val.y.toFixed(3) });
@@ -215,15 +225,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
           const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
           // Update time range if this is larger than current range
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
-          console.log(`Updated time range: ${this.timeRangeMs}`);
         }
       });
     });
 
     this.updateChart();
   };
-
-  subscriptions: Subscription[] = [];
 
   ngOnInit(): void {
     this.data = new Map();
@@ -267,13 +274,15 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         }
       },
       // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
-      yaxis: {
-        labels: {
-          style: {
-            colors: '#fff'
+      yaxis: [
+        {
+          labels: {
+            style: {
+              colors: '#fff'
+            }
           }
         }
-      },
+      ],
       tooltip: {
         enabled: true,
         // Make the tooltip “follow” your cursor as you hover
@@ -307,8 +316,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
-
     this.chart = new ApexCharts(chartContainer, {
       series: [],
       ...this.options
@@ -317,12 +324,13 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.updateChart();
     });
 
-    this.showMultipleYAxes.apply(this.updateChart());
+    // this.showMultipleYAxes.apply(this.updateChart());
   }
 
   resetRange() {
     this.timeRangeMs = undefined;
     this.chart.updateOptions({
+      ...this.options,
       xaxis: {
         ...this.options.xaxis,
         range: undefined
