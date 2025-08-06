@@ -38,14 +38,6 @@ export class CellViewComponent {
     });
   }
 
-  // ngOnInit(): void {
-  //   this.segment = this.forSegment();
-  //   this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
-  //     console.log('data', data);
-  //     this.cellViewData = data;
-  //   });
-  // }
-
   getTitle = (): string => {
     const title = `Seg ${this.segment + 1}: Cell View`;
     return title;

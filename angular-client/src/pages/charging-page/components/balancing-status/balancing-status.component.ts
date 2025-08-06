@@ -44,8 +44,6 @@ export default class BalancingStatusComponent implements OnInit, OnDestroy {
             1000 +
             this.currentSeconds
         );
-
-        console.log(value.total_time_per_value_map);
       })
     );
   }

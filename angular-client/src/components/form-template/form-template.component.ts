@@ -88,7 +88,6 @@ export class FormTemplateComponent implements OnInit, OnChanges {
 
   onSubmit() {
     if (this.form.valid) {
-      console.log('form submitted');
       this.closeForm();
     } else {
       this.markAllFieldsAsTouched();

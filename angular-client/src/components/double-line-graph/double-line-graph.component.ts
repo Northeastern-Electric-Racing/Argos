@@ -211,7 +211,6 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const chartContainer = document.getElementById(this.graphContainerId);
       if (!chartContainer) {
-        console.log('Container with id ' + this.graphContainerId + ' not found');
         return;
       }
 
