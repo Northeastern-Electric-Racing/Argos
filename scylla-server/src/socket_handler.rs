@@ -265,7 +265,6 @@ fn handle_socket_msg(
                     .insert(time.last_value.to_string(), new_vec);
             }
 
-            // updated the 
             time.last_value = new_val;
             time.last_change = Utc::now();
         }
