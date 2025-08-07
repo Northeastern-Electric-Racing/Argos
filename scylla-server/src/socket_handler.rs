@@ -242,13 +242,18 @@ fn handle_socket_msg(
         trace!("Triggering timer: {}", data.name);
         let new_val = *data.values.first().unwrap_or(&-1f32);
         if time.last_value != new_val {
+            // retrieves previous total time for the last value
             let prev_val = time
                 .total_time_per_value_map
                 .get_mut(&time.last_value.to_string());
+            // create a record of the time the last value started, and record that it has now ended.
             let new_total_val = TotalTimerData {
                 start_time: time.last_change,
                 end_time: Utc::now(),
             };
+            // insert the record, into the total record for the given value
+            // (e.g. '0' was on from 10:00 to 10:15, is added to the vec
+            // of all the previous)
             if let Some(prev_val) = prev_val {
                 let mut new_vec = prev_val.to_vec();
                 new_vec.push(new_total_val);
@@ -260,6 +265,7 @@ fn handle_socket_msg(
                     .insert(time.last_value.to_string(), new_vec);
             }
 
+            // updated the 
             time.last_value = new_val;
             time.last_change = Utc::now();
         }

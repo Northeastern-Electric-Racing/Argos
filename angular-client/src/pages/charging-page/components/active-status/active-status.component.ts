@@ -27,18 +27,16 @@ export default class ActiveStatusComponent implements OnInit {
       if (this.isActive) {
         if (!(statusStateValue === 2)) {
           this.isActive = false;
+          this.currentSeconds = 0;
         }
       } else if (statusStateValue === 2) {
         this.isActive = true;
       }
-
-      this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      if (statusStateValue === 2) {
+        this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      }
       this.totalSeconds = Math.round(
-        value.total_time_per_value_map[value.last_value].reduce(
-          (acc, currVal) => acc + (currVal.end_time - currVal.start_time),
-          0
-        ) /
-          1000 +
+        value.total_time_per_value_map[2].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) / 1000 +
           this.currentSeconds
       );
     });
