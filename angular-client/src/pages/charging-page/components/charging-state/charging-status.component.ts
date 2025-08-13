@@ -27,17 +27,17 @@ export default class ChargingStatusComponent implements OnInit {
       if (this.isCharging) {
         if (chargingControlValue === 1) {
           this.isCharging = false;
+          this.currentSeconds = 0;
         }
       } else if (chargingControlValue === 0) {
         this.isCharging = true;
       }
-      this.currentSeconds = (Date.now() - value.last_change) / 1000;
+
+      if (chargingControlValue === 0) {
+        this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      }
       this.totalSeconds = Math.round(
-        value.total_time_per_value_map[value.last_value].reduce(
-          (acc, currVal) => acc + (currVal.end_time - currVal.start_time),
-          0
-        ) /
-          1000 +
+        value.total_time_per_value_map[0].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) / 1000 +
           this.currentSeconds
       );
     });

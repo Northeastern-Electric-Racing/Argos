@@ -27,18 +27,18 @@ export default class FaultedStatusComponent implements OnInit {
       if (this.isFaulted) {
         if (!(statusStateValue === 3)) {
           this.isFaulted = false;
+          this.currentSeconds = 0;
         }
       } else if (statusStateValue === 3) {
         this.isFaulted = true;
       }
 
-      this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      if (statusStateValue === 3) {
+        this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      }
+
       this.totalSeconds = Math.round(
-        value.total_time_per_value_map[value.last_value].reduce(
-          (acc, currVal) => acc + (currVal.end_time - currVal.start_time),
-          0
-        ) /
-          1000 +
+        value.total_time_per_value_map[3].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) / 1000 +
           this.currentSeconds
       );
     });

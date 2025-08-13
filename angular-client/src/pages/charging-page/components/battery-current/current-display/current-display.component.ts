@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
-import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -18,7 +17,7 @@ export default class CurrentDisplayComponent implements OnInit {
 
   ngOnInit() {
     this.storage.get(DataTypeEnum.CURRENT).subscribe((value) => {
-      this.amps = floatPipe(value.values[0]);
+      this.amps = parseFloat(value.values[0]);
     });
   }
 }
