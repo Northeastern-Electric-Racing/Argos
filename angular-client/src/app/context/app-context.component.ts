@@ -89,6 +89,7 @@ export default class AppContextComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService);
   }

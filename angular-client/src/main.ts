@@ -76,7 +76,10 @@ bootstrapApplication(AppContextComponent, {
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
-        preset: Lara
+        preset: Lara,
+        options: {
+          darkModeSelector: '.dark-mode-always'
+        }
       }
     }),
     provideClientHydration(),
