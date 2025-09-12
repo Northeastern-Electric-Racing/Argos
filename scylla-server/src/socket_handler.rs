@@ -66,8 +66,8 @@ pub async fn socket_handler_with_metadata(
             item.to_string(),
             TimerData {
                 topic: item,
-                last_change: DateTime::UNIX_EPOCH,
-                last_value: 0.0f32,
+                last_change: chrono::offset::Utc::now(), // ensure that UTC offset is now 
+                last_value: -0.0f32, // create a value that isn't possibly in the range of statuses
                 total_time_per_value_map: FxHashMap::default(),
             },
         );
