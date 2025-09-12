@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
@@ -66,7 +66,7 @@ pub async fn socket_handler_with_metadata(
             item.to_string(),
             TimerData {
                 topic: item,
-                last_change: chrono::offset::Utc::now(), // ensure that UTC offset is now 
+                last_change: chrono::offset::Utc::now(), // ensure that UTC offset is now
                 last_value: -0.0f32, // create a value that isn't possibly in the range of statuses
                 total_time_per_value_map: FxHashMap::default(),
             },
