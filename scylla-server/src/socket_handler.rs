@@ -139,6 +139,14 @@ pub async fn socket_handler_with_metadata(
                 handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
+                // Expire faults that haven't been seen for too long
+                let current_time = Utc::now();
+                for item in fault_ringbuffer.iter_mut() {
+                    if !item.expired && (current_time - item.last_seen) > FAULT_MIN_REG_GAP {
+                        item.expired = true;
+                    }
+                }
+                
                 send_socket_msg(
                     &fault_ringbuffer.to_vec(),
                     &mut upload_counter,
@@ -296,13 +304,13 @@ fn handle_socket_msg(
     for item in fault_ringbuffer.iter_mut() {
         // if a fault of the same type is in the queue, and not expired
         if item.name == flt_txt && node.clone() == item.node && !item.expired {
-            // update the last seen metric
-            item.last_seen = data.timestamp;
-            // if the time since the last fault is greater than [FAULT_MIN_REG_GAP], mark this fault as expired
+            // check if enough time has passed since the fault was last seen to expire it
             if (data.timestamp - item.last_seen) > FAULT_MIN_REG_GAP {
                 item.expired = true;
             } else {
-                // otherwise, if the fault isnt expired, ensure we dont create a duplicate fault
+                // if the fault is still active, update the last seen metric
+                item.last_seen = data.timestamp;
+                // ensure we dont create a duplicate fault
                 should_push = false;
             }
         }
