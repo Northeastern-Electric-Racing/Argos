@@ -13,6 +13,7 @@ import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
+import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
@@ -39,7 +40,8 @@ interface NavItem {
     DatePipe,
     TypographyComponent,
     HStackComponent,
-    SidebarChipComponent
+    SidebarChipComponent,
+    MatIcon
   ]
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
@@ -107,8 +109,14 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     });
   };
 
+  homeNavItem: NavItem = {
+    id: appRoutes.landingRoute(),
+    label: 'Home',
+    onClick: () => this.navigateTo(appRoutes.landingRoute()),
+    icon: 'logo'
+  };
+
   mostUsedNavItems: NavItem[] = [
-    { id: appRoutes.landingRoute(), label: 'Home', onClick: () => this.navigateTo(appRoutes.landingRoute()), icon: 'home' },
     {
       id: appRoutes.chargingRoute(),
       label: 'Charging',
@@ -125,8 +133,8 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     },
     // TODO: fix map
     // { label: 'Map', onClick: () => this.navigateTo(appRoutes.mapRoute()), icon: 'map' },
-    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
-    { id: appRoutes.faultsRoute(), label: 'Faults', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' }
+    { id: appRoutes.faultsRoute(), label: 'Fault', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' },
+    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' }
   ];
 
   onlyDesktopNavItems: NavItem[] = [
@@ -135,6 +143,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   allNavItems: NavItem[] = [
+    this.homeNavItem,
     ...this.mostUsedNavItems,
     {
       id: appRoutes.cameraRoute(),

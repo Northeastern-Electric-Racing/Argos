@@ -22,8 +22,11 @@ export class MessagesPerSecondComponent {
     });
   }
 
+  shouldDisplay = () => {
+    return this.messagesPerSecond !== undefined;
+  };
   getDisplayNumber = () => {
-    return this.messagesPerSecond !== undefined ? this.messagesPerSecond.toString() : 'N/A';
+    return this.messagesPerSecond !== undefined ? this.messagesPerSecond.toString() : '';
   };
   getDisplaySubheader = () => {
     return ' Msgs/Sec';

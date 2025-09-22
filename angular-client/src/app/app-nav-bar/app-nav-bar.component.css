@@ -21,9 +21,27 @@
   font-weight: bold;
 }
 
+.home-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.navbar .home-logo .mat-icon,
+.navbar .home-logo-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 40px;
+}
+
 /* Nav items container – using flex gap for spacing */
 .navbar-nav {
   display: flex;
+  flex: 1;
 }
 
 /* Style for each sidebar-chip when used as a nav item */

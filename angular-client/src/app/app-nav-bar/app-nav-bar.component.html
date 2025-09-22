@@ -17,6 +17,9 @@
   </p-sidebar>
 } @else {
   <nav class="navbar">
+    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+      <mat-icon [svgIcon]="this.homeNavItem.icon" class="home-logo-icon" />
+    </div>
     <div class="navbar-nav">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
