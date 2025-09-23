@@ -12,7 +12,7 @@ env:
 # There is a single job in this workflow. It's configured to run on the 22.04 version of Ubuntu (TODO: configure for new latests).
 jobs:
   build-and-push-image:
-    runs-on: arc-runner-set
+    runs-on: docker-runners
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
