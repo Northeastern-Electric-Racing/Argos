@@ -1,49 +1,47 @@
 name: Scylla CI
 
 on:
-   push:
-      branches:
-         - main
-         - develop
-   pull_request:
-      branches:
-         - main
-         - develop
-         - 'feature/**'
-
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+      - "feature/**"
 
 defaults:
-    run:
-        working-directory: scylla-server
-
+  run:
+    working-directory: scylla-server
 
 jobs:
-   build:
-      runs-on: ubuntu-latest
+  build:
+    runs-on: arc-runner-set
 
-      steps:
-         - name: Setup Rust
-           uses: actions/checkout@v5
-           with:
-            submodules: recursive
-         - name: Clippy
-           run: cargo clippy --all-targets
-         - name: Fmt
-           run: cargo fmt --check
-         - name: Start DB
-           working-directory: compose
-           run: docker compose up -d odyssey-db
-         - name: Build
-           run: cargo build --verbose
-         - name: Run # so we can migrate the database, run for a little than bail
-           env:
-             DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
-           run: |
-                cargo run & ID=$!; sleep 10s; kill $ID
-         - name: Test
-           env:
-             DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
-           run: cargo test -- --test-threads=1
-         - name: Cleanup
-           working-directory: compose
-           run: docker compose down
+    steps:
+      - name: Setup Rust
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - name: Clippy
+        run: cargo clippy --all-targets
+      - name: Fmt
+        run: cargo fmt --check
+      - name: Start DB
+        working-directory: compose
+        run: docker compose up -d odyssey-db
+      - name: Build
+        run: cargo build --verbose
+      - name: Run # so we can migrate the database, run for a little than bail
+        env:
+          DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
+        run: |
+          cargo run & ID=$!; sleep 10s; kill $ID
+      - name: Test
+        env:
+          DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
+        run: cargo test -- --test-threads=1
+      - name: Cleanup
+        working-directory: compose
+        run: docker compose down

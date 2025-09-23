@@ -12,7 +12,7 @@ on:
 
 jobs:
   run-prettier-check:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     timeout-minutes: 10
     steps:
       - name: Checkout repository

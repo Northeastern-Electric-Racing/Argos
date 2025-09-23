@@ -4,8 +4,6 @@ name: Create and publish client docker image
 on:
   workflow_dispatch:
 
-
-
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
@@ -14,12 +12,12 @@ env:
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
   build-and-push-image:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
       packages: write
-      # 
+      #
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.11.1

@@ -1,5 +1,5 @@
 name: Build
-on: 
+on:
   push:
     branches:
       - main
@@ -8,10 +8,10 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+      - "feature/**"
 jobs:
   run-build:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     timeout-minutes: 10
     steps:
       - name: Checkout code
