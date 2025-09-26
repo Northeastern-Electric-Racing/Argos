@@ -1,10 +1,9 @@
 import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { MessageService, PrimeTemplate } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith, Subscription } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
-import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routing.module';
@@ -17,6 +16,8 @@ import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
+import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
+import { filter } from 'rxjs/operators';
 
 interface NavItem {
   id: string;
@@ -53,6 +54,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   private subscribtions: Subscription[] = [];
 
   ref: DynamicDialogRef | undefined;
+  menuRef: DynamicDialogRef | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -65,14 +67,19 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
         this.sidebarVisible = isOpen;
       })
     );
-    this.selectedRoute = window.location.pathname;
     this.isMobile = window.innerWidth <= 768;
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
+      this.selectedRoute = event.url;
+    });
   }
 
   ngOnDestroy(): void {
     this.subscribtions.forEach((sub) => {
       sub.unsubscribe();
     });
+    if (this.menuRef) {
+      this.menuRef.close();
+    }
   }
 
   // on resize, set the screen width
@@ -86,6 +93,30 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     map(() => new Date())
   );
 
+  toggleMenu() {
+    if (this.menuRef) {
+      this.menuRef.close();
+      this.menuRef = undefined;
+    } else {
+      this.openMenu();
+    }
+  }
+
+  openMenu() {
+    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
+      showHeader: false,
+      modal: true,
+      dismissableMask: true,
+      styleClass: 'nav-options-dialog',
+      baseZIndex: 10000,
+      width: 'auto'
+    });
+
+    this.menuRef.onClose.subscribe(() => {
+      this.menuRef = undefined;
+    });
+  }
+
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
     this.subscribtions.push(
@@ -98,15 +129,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
         error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       })
     );
-  };
-
-  openRunForm = () => {
-    this.ref = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
   };
 
   homeNavItem: NavItem = {
@@ -137,10 +159,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' }
   ];
 
-  onlyDesktopNavItems: NavItem[] = [
-    ...this.mostUsedNavItems,
-    { id: 'More Options', label: 'More Options', onClick: () => this.sidebarService.openSidebar(), icon: 'more_horiz' }
-  ];
+  onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
 
   allNavItems: NavItem[] = [
     this.homeNavItem,

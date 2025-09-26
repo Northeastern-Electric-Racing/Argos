@@ -40,7 +40,7 @@
 
 /* Nav items container – using flex gap for spacing */
 .navbar-nav {
-  display: flex;
+  display: inline-flex;
   flex: 1;
 }
 
@@ -70,6 +70,46 @@
 .sidebar-chip i.material-icons {
   font-size: 20px;
   margin-right: 0.5rem;
+}
+
+.navbar-menu {
+  cursor: pointer;
+  /* margin-left: 16px;
+  margin-right: 16px; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.navbar-menu mat-icon {
+  width: 48px;
+  height: 48px;
+  transition: color 0.2s ease;
+}
+
+/* Target the SVG inside mat-icon */
+.navbar-menu:hover mat-icon ::ng-deep svg,
+.navbar-menu.selected mat-icon ::ng-deep svg {
+  fill: #ef4345;
+}
+
+/* Dialog positioning only */
+::ng-deep .nav-options-dialog.p-dialog {
+  position: fixed !important;
+  top: 70px !important;
+  right: 10px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+::ng-deep .nav-options-dialog .p-dialog-content {
+  padding: 0 !important;
+}
+
+::ng-deep .p-dialog-mask {
+  background: transparent !important;
 }
 
 :host {
