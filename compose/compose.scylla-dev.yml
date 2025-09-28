@@ -1,19 +1,25 @@
- services:    
-    scylla-server: # do not run scylla
-        entrypoint: ["echo", "DISABLED"]
-        restart: "no"
-        
+services:
+  scylla-server: # do not run scylla
+    entrypoint: ["echo", "DISABLED"]
+    restart: "no"
 
-    client:
-      extends:
-        file: ../angular-client/compose.client.yml
-        service: client
-      build:
-        context: ../angular-client
-      environment:
-        BACKEND_URL: http://192.168.100.11:8000
+  client:
+    extends:
+      file: ../angular-client/compose.client.yml
+      service: client
+    build:
+      context: ../angular-client
+    environment:
+      BACKEND_URL: http://192.168.100.11:8000
 
-    siren:
-        extends:
-            file: ../siren-base/compose.siren.yml
-            service: siren
+  siren:
+    extends:
+      file: ../siren-base/compose.siren.yml
+      service: siren
+
+  calypso:
+    extends:
+      file: ./compose.calypso.yml
+      service: calypso
+    depends_on:
+      - siren
