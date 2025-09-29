@@ -1,8 +1,4 @@
-use crate::{
-    models::Data,
-    schema::data::dsl::*,
-    Database,
-};
+use crate::{models::Data, schema::data::dsl::*, Database};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
@@ -70,7 +66,7 @@ pub fn calculate_auto_sampling_rate(total_count: i64) -> u32 {
 
     // Calculate sampling rate to get close to MAX_POINTS_TO_RETURN
     let sampling_rate = (total_count as f64 / MAX_POINTS_TO_RETURN as f64).ceil() as u32;
-    
+
     // Ensure we don't sample more aggressively than necessary
     sampling_rate.max(1)
 }
@@ -88,12 +84,12 @@ pub async fn get_data_by_run_id_with_auto_downsampling(
 ) -> Result<Vec<Data>, diesel::result::Error> {
     // First, check the data size
     let total_count = get_data_point_count(db, data_type_name.clone(), run_id).await?;
-    
+
     if total_count <= LARGE_DATASET_THRESHOLD {
         // Small dataset - return all data without downsampling
         return crate::services::data_service::get_data_by_run_id(db, data_type_name, run_id).await;
     }
-    
+
     // Large dataset - apply auto-downsampling
     let sampling_rate = calculate_auto_sampling_rate(total_count);
     get_downsampled_data_by_run_id(db, data_type_name, run_id, sampling_rate).await

@@ -32,8 +32,8 @@ impl Default for DownsamplingInfo {
         Self {
             is_downsampled: false,
             sampling_rate: 1,
-            original_count: None,    // Unknown until data is processed
-            returned_count: None,    // Unknown until data is processed
+            original_count: None, // Unknown until data is processed
+            returned_count: None, // Unknown until data is processed
         }
     }
 }
