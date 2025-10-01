@@ -20,7 +20,7 @@ tokio-util = { version=  "0.7.16", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
 console-subscriber = { version = "0.4.1", optional = true }
-ringbuffer = "0.15.0"
+ringbuffer = "0.16.0"
 axum-extra = { version = "0.10.0", features = ["query", "typed-header"] }
 clap = { version = "4.5.42", features = ["derive", "env"] }
 chrono = { version = "0.4.41", features = ["serde"] }
