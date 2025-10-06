@@ -1,8 +1,10 @@
 <div class="menu-container">
   <div class="menu-grid">
-    <div *ngFor="let item of menuItems" class="menu-item" (click)="item.onclick()" [attr.data-id]="item.id">
-      <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
-      <span class="menu-label">{{ item.label }}</span>
-    </div>
+    @for (menuItem of menuItems; track menuItem) {
+      <div class="menu-item" (click)="menuItem.onClick()" [attr.data-id]="menuItem.id">
+        <mat-icon class="menu-icon" [svgIcon]="menuItem.icon"/>
+        <span class="menu-label">{{ menuItem.label }}</span>
+      </div>
+    }
   </div>
 </div>

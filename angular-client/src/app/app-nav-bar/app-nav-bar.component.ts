@@ -18,8 +18,9 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
 import { filter } from 'rxjs/operators';
+import { RunFormComponent } from 'src/components/run-form/run-form.component';
 
-interface NavItem {
+export interface NavItem {
   id: string;
   label: string;
   onClick: () => void;
@@ -55,6 +56,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   ref: DynamicDialogRef | undefined;
   menuRef: DynamicDialogRef | undefined;
+  editRunRef: DynamicDialogRef | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -93,30 +95,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     map(() => new Date())
   );
 
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
-
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto'
-    });
-
-    this.menuRef.onClose.subscribe(() => {
-      this.menuRef = undefined;
-    });
-  }
-
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
     this.subscribtions.push(
@@ -129,6 +107,15 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
         error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       })
     );
+  };
+
+  openRunForm = () => {
+    this.editRunRef = this.dialogService.open(RunFormComponent, {
+      width: '550px',
+      header: 'Edit Run',
+      closable: true,
+      closeAriaLabel: 'Close'
+    });
   };
 
   homeNavItem: NavItem = {
@@ -153,22 +140,40 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       onClick: () => this.navigateTo(appRoutes.graphRoute()),
       icon: 'bar_chart'
     },
-    // TODO: fix map
-    // { label: 'Map', onClick: () => this.navigateTo(appRoutes.mapRoute()), icon: 'map' },
     { id: appRoutes.faultsRoute(), label: 'Fault', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' },
     { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' }
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
 
-  allNavItems: NavItem[] = [
-    this.homeNavItem,
-    ...this.mostUsedNavItems,
+  toggleMenu() {
+    if (this.menuRef) {
+      this.menuRef.close();
+      this.menuRef = undefined;
+    } else {
+      this.openMenu();
+    }
+  }
+
+  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems];
+  navMenuItems: NavItem[] = [
+    {
+      id: appRoutes.mapRoute(),
+      label: 'Map',
+      onClick: () => this.navigateTo(appRoutes.mapRoute()),
+      icon: 'map'
+    },
     {
       id: appRoutes.cameraRoute(),
       label: 'Camera',
       onClick: () => this.navigateTo(appRoutes.cameraRoute()),
       icon: 'linked_camera'
+    },
+    {
+      id: '',
+      label: 'Edit Runs',
+      onClick: this.openRunForm,
+      icon: 'edit'
     },
     {
       id: appRoutes.commandsRoute(),
@@ -177,6 +182,24 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       icon: 'electrical_services'
     }
   ];
+
+  openMenu() {
+    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
+      showHeader: false,
+      modal: true,
+      dismissableMask: true,
+      styleClass: 'nav-options-dialog',
+      baseZIndex: 10000,
+      width: 'auto',
+      data: {
+        items: this.navMenuItems
+      }
+    });
+
+    this.menuRef.onClose.subscribe(() => {
+      this.menuRef = undefined;
+    });
+  }
 
   navigateTo(route: string): void {
     this.selectedRoute = route;

@@ -19,6 +19,7 @@
   cursor: pointer;
   min-height: 80px;
   user-select: none;
+  transition: color 0.2s ease-in-out;
 }
 
 .menu-icon {
@@ -35,10 +36,6 @@
   line-height: 1.2;
 }
 
-.menu-item:hover .menu-icon {
-  color: #ef4345;
-}
-
-.menu-item:hover .menu-label {
+.menu-item:hover {
   color: #ef4345;
 }

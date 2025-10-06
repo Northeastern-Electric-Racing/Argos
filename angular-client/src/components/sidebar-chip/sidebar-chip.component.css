@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  transition: background-color 0.3s; /* Smooth hover effect */
+  transition: color 0.2s;
 }
 
 .chip:hover {
@@ -17,4 +17,10 @@
 /* New: When a chip is active, it keeps the hover style */
 .chip.active {
   color: #ef4345;
+}
+
+.chip .mat-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
 }

@@ -18,7 +18,7 @@
 } @else {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">
-      <mat-icon [svgIcon]="this.homeNavItem.icon" class="home-logo-icon" />
+      <mat-icon [svgIcon]="this.homeNavItem.icon" />
     </div>
     <div class="navbar-nav">
       @for (navItem of onlyDesktopNavItems; track navItem) {
@@ -39,7 +39,6 @@
         popUpSeverity="success"
         popUpTitle="New Run Started"
         popUpDetails="Your new run has started successfully."
-        icon="360"
         additionalStyles="height: 36px; width: 150px"
       />
       <current-run-display [navBarStyle]="true" />
@@ -50,7 +49,7 @@
       />
       <messages-per-second />
       <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
-        <mat-icon [svgIcon]="'menu'" />
+        <mat-icon [svgIcon]="'apps'" />
       </div>
     </hstack>
   </nav>
