@@ -4,12 +4,9 @@ use axum::{
 };
 use serde::Deserialize;
 
-use crate::{
-    error::ScyllaError,
-    services::{data_service, downsampling_service},
-    transformers::data_transformer::PublicData,
-    PoolHandle,
+use crate::{error::ScyllaError, services::data_service, transformers::data_transformer::PublicData, PoolHandle
 };
+
 
 #[derive(Deserialize)]
 pub struct Timing {
@@ -26,7 +23,7 @@ pub async fn get_data_by_run_id(
 ) -> Result<Json<Vec<PublicData>>, ScyllaError> {
     let mut db = pool.get().await?;
 
-    let data = downsampling_service::get_data_by_run_id_with_auto_downsampling(
+    let data_by_time = data_service::get_data_by_run_id_with_auto_downsampling(
         &mut db,
         data_type_name.clone(),
         run_id,
@@ -35,11 +32,11 @@ pub async fn get_data_by_run_id(
 
     // Get the total count for metadata
     let total_count =
-        downsampling_service::get_data_point_count(&mut db, data_type_name.clone(), run_id).await?;
-    let returned_count = data.len() as u32;
+        data_service::get_data_point_count(&mut db, data_type_name.clone(), run_id).await?;
+    let returned_count = data_by_time.len() as u32;
 
     // Transform data
-    let mut transformed_data: Vec<PublicData> = data
+    let mut transformed_data: Vec<PublicData> = data_by_time
         .into_iter()
         .map(|d| {
             let mut public_data = PublicData::from(d);
@@ -48,7 +45,7 @@ pub async fn get_data_by_run_id(
             public_data.downsampling_info = if returned_count < total_count as u32 {
                 crate::transformers::data_transformer::DownsamplingInfo {
                     is_downsampled: true,
-                    sampling_rate: downsampling_service::calculate_auto_sampling_rate(total_count),
+                    sampling_rate: data_service::calculate_auto_sampling_rate(total_count),
                     original_count: Some(total_count as u32),
                     returned_count: Some(returned_count),
                 }
@@ -76,10 +73,10 @@ pub async fn get_data_by_timing(
     Query(timing): Query<Timing>,
 ) -> Result<Json<Vec<PublicData>>, ScyllaError> {
     let mut db = pool.get().await?;
-    let data = data_service::get_data_by_timing(&mut db, data_type_name, timing).await?;
+    let data_by_time = data_service::get_data_by_timing(&mut db, data_type_name, timing).await?;
 
     // map data to frontend data types according to the From func of the client struct
-    let mut transformed_data: Vec<PublicData> = data.into_iter().map(PublicData::from).collect();
+    let mut transformed_data: Vec<PublicData> = data_by_time.into_iter().map(PublicData::from).collect();
     transformed_data.sort();
 
     Ok(Json::from(transformed_data))
