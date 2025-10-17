@@ -163,11 +163,16 @@ pub async fn get_data_by_run_id_with_auto_downsampling(
 
     if total_count <= LARGE_DATASET_THRESHOLD {
         // Small dataset - return all data without downsampling
-         return Ok((total_count, crate::services::data_service::get_data_by_run_id(db, data_type_name, run_id).await?));
-
+        return Ok((
+            total_count,
+            crate::services::data_service::get_data_by_run_id(db, data_type_name, run_id).await?,
+        ));
     }
 
     // Large dataset - apply auto-downsampling
     let sampling_rate = calculate_auto_sampling_rate(total_count);
-    return Ok((total_count, get_downsampled_data_by_run_id(db, data_type_name, run_id, sampling_rate).await?))
+    return Ok((
+        total_count,
+        get_downsampled_data_by_run_id(db, data_type_name, run_id, sampling_rate).await?,
+    ));
 }
