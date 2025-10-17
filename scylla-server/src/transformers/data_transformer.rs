@@ -10,6 +10,32 @@ pub struct PublicData {
     #[serde(rename = "time")]
     pub time_ms: i64,
     pub values: Vec<f32>,
+    // downsampling info - always present
+    pub downsampling_info: DownsamplingInfo,
+}
+
+/// Information about downsampling applied to the dataset
+#[derive(Serialize, Debug)]
+pub struct DownsamplingInfo {
+    #[serde(rename = "isDownsampled")]
+    pub is_downsampled: bool,
+    #[serde(rename = "samplingRate")]
+    pub sampling_rate: u32,
+    #[serde(rename = "originalCount")]
+    pub original_count: Option<u32>,
+    #[serde(rename = "returnedCount")]
+    pub returned_count: Option<u32>,
+}
+
+impl Default for DownsamplingInfo {
+    fn default() -> Self {
+        Self {
+            is_downsampled: false,
+            sampling_rate: 1,
+            original_count: None, // Unknown until data is processed
+            returned_count: None, // Unknown until data is processed
+        }
+    }
 }
 
 // custom impls to avoid comparing values fields
@@ -41,6 +67,7 @@ impl From<crate::models::Data> for PublicData {
             time_ms: chrono::DateTime::from_timestamp_micros(value.time)
                 .unwrap()
                 .timestamp_millis(),
+            downsampling_info: DownsamplingInfo::default(), // Default: no downsampling
         }
     }
 }
@@ -51,6 +78,7 @@ impl From<ClientData> for PublicData {
         PublicData {
             time_ms: value.timestamp.timestamp_millis(),
             values: value.values,
+            downsampling_info: DownsamplingInfo::default(), // Default: no downsampling
         }
     }
 }
