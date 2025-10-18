@@ -17,11 +17,8 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
 })
 export default class GraphSidebarComponent implements OnInit {
   dataTypes = input.required<DataType[]>();
-  selectDataTypes = input.required<(dataTypes: DataType[]) => void>();
-  currentSelectedDataTypes = input<DataType[]>([]);
 
   isMobile!: boolean;
-
   mobileThreshold = 768;
 
   ngOnInit() {

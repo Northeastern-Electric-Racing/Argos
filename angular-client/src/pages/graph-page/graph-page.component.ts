@@ -23,6 +23,7 @@ import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FormsModule } from '@angular/forms';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 @Component({
   selector: 'graph-page',
@@ -49,6 +50,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private toastService = inject(MessageService);
   private faultService = inject(FaultService);
   private router = inject(Router); // for fault page navigation
+  private topicSelectionService = inject(TopicSelectionService);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime
   subscriptions: Subscription[] = [];
@@ -174,6 +176,13 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
     if (this.onFaultPage) this.initFaultPage();
     else this.initGeneralPage();
+
+    this.subscriptions.push(
+      this.topicSelectionService.selectedTopics$.subscribe((topics) => {
+        // Mirror service → existing method (keeps current graph logic intact)
+        this.setSelectedDataTypes(topics);
+      })
+    );
   }
 
   // All memory in use should be discarded here.
@@ -452,6 +461,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
         detail: 'No run selected. Please select a run or choose “Real Time”.'
       });
     }
+    this.topicSelectionService.set(this.selectedDataTypes);
   };
 
   clearGraph = false;

@@ -9,6 +9,7 @@ import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -24,11 +25,10 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
+  private topicSelectionService = inject(TopicSelectionService);
   private storage = inject(Storage);
   dataTypes = input<DataType[]>([]);
-  selectedDataTypes = input.required<(dataTypes: DataType[]) => void>();
   nodes: Node[] = [];
-  currentSelectedDataTypes = input.required<DataType[]>();
 
   filterForm: FormGroup = new FormGroup({
     searchFilter: new FormControl<string>('')
@@ -80,7 +80,13 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
       const findSelected = (nodes: TreeNode<Node>[], parents: TreeNode<Node>[] = []): void => {
         for (const node of nodes) {
           // Check if this is a leaf node and matches a selected data type
-          if (node.selectable && node.data?.dataType && this.currentSelectedDataTypes().includes(node.data.dataType)) {
+          // if (node.selectable && node.data?.dataType && this.currentSelectedDataTypes().includes(node.data.dataType)) {
+          //   selected.push(node);
+
+          //   // Mark all parents as containing selected nodes
+          //   parents.forEach((parent) => containsSelectedNode.set(parent, true));
+          // }
+          if (node.selectable && node.data?.dataType && this.topicSelectionService.selected.includes(node.data.dataType)) {
             selected.push(node);
 
             // Mark all parents as containing selected nodes
@@ -114,12 +120,18 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     this.filterFormSubsription.unsubscribe();
   }
 
+  // clearSelections = () => {
+  //   this.treeNodes.forEach((node) => {
+  //     node.expanded = false;
+  //   });
+  //   this.selectedDataTypesList = [];
+  //   this.selectedDataTypes()([]);
+  //   this.selectedNodes = undefined;
+  // };
   clearSelections = () => {
-    this.treeNodes.forEach((node) => {
-      node.expanded = false;
-    });
+    this.treeNodes.forEach((n) => (n.expanded = false));
     this.selectedDataTypesList = [];
-    this.selectedDataTypes()([]);
+    this.topicSelectionService.clear(); // publish
     this.selectedNodes = undefined;
   };
 
@@ -127,13 +139,21 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     return dataTypeNamePipe(dataTypeName);
   }
 
+  // nodeSelect(event: TreeNodeSelectEvent) {
+  //   const { node } = event;
+  //   // Only add if it's a leaf node (no children)
+  //   const dataType = node.data?.dataType;
+  //   if (dataType && !this.selectedDataTypesList.includes(dataType)) {
+  //     this.selectedDataTypesList.push(dataType);
+  //     this.selectedDataTypes()([...this.selectedDataTypesList]);
+  //   }
+  // }
+
   nodeSelect(event: TreeNodeSelectEvent) {
-    const { node } = event;
-    // Only add if it's a leaf node (no children)
-    const dataType = node.data?.dataType;
-    if (dataType && !this.selectedDataTypesList.includes(dataType)) {
-      this.selectedDataTypesList.push(dataType);
-      this.selectedDataTypes()([...this.selectedDataTypesList]);
+    const dt = event.node.data?.dataType;
+    if (dt && !this.selectedDataTypesList.includes(dt)) {
+      this.selectedDataTypesList.push(dt);
+      this.topicSelectionService.add(dt); // publish
     }
   }
 
@@ -148,15 +168,22 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     /* leaf rows fall through → normal multi‑selection behaviour */
   }
 
+  // onNodeUnselect(event: TreeNodeUnSelectEvent) {
+  //   const { node } = event;
+  //   // Only remove if it's a leaf node (no children)
+  //   if (!node.children || node.children.length === 0) {
+  //     const dataType = node.data?.dataType;
+  //     if (dataType) {
+  //       this.selectedDataTypesList = this.selectedDataTypesList.filter((dt) => dt !== dataType);
+  //       this.selectedDataTypes()([...this.selectedDataTypesList]);
+  //     }
+  //   }
+  // }
   onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const { node } = event;
-    // Only remove if it's a leaf node (no children)
-    if (!node.children || node.children.length === 0) {
-      const dataType = node.data?.dataType;
-      if (dataType) {
-        this.selectedDataTypesList = this.selectedDataTypesList.filter((dt) => dt !== dataType);
-        this.selectedDataTypes()([...this.selectedDataTypesList]);
-      }
+    const dt = event.node.data?.dataType;
+    if (dt) {
+      this.selectedDataTypesList = this.selectedDataTypesList.filter((x) => x !== dt);
+      this.topicSelectionService.remove(dt); // publish
     }
   }
 }
