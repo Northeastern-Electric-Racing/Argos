@@ -16,6 +16,7 @@ export class CurrentRunDisplayComponent implements OnInit {
   private storage = inject(Storage);
   currentRun: number = 0;
   navBarStyle = input<boolean>(false);
+  small = input<boolean>(false);
 
   ngOnInit() {
     this.storage.getCurrentRunId().subscribe((runId) => {

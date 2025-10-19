@@ -62,6 +62,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   selectedRoute: string = window.location.pathname;
   sidebarVisible = false;
   isMobile = false;
+  isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
 
   ngOnInit(): void {
     this.subscribtions.push(
@@ -88,7 +89,9 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   @HostListener('window:resize', ['$event'])
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
+    this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
   }
+
   newRunIsLoading = false;
   time$: Observable<Date> = interval(1000).pipe(
     startWith(0),

@@ -25,8 +25,10 @@
         <sidebar-chip
           icon="{{ navItem.icon }}"
           value="{{ navItem.label }}"
+          [small]="this.isWindowSmall"
           [active]="this.isSelected(navItem)"
           (click)="navItem.onClick()"
+          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
         >
         </sidebar-chip>
       }
@@ -39,11 +41,11 @@
         popUpSeverity="success"
         popUpTitle="New Run Started"
         popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 150px"
+        additionalStyles="height: 36px; width: 130px"
       />
-      <current-run-display [navBarStyle]="true" />
+      <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
-        variant="large-header"
+        [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
         content="{{ time$ | async | date: 'HH:mm:ss' }}"
         additionalStyles="fontSize: 36px"
       />
