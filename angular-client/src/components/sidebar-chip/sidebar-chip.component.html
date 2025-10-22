@@ -1,4 +1,9 @@
 <div class="chip" [class.active]="active">
-  <mat-icon style="margin-right: 10px" [svgIcon]="icon" />
-  <typography variant="sidebar-label" [content]="value" />
+  <mat-icon
+    style="margin-right: 10px"
+    [svgIcon]="icon"
+    [style.width]="small ? '24px' : '36px'"
+    [style.height]="small ? '24px' : '36px'"
+  />
+  <typography class="label" [variant]="small ? 'sidebar-label' : 'header'" [content]="value" />
 </div>

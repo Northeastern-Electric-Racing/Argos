@@ -108,3 +108,20 @@ body {
   border-radius: 0 0 5px 5px !important;
   margin: 0px;
 }
+
+/* Navbar options dropdown */
+.nav-options-dialog.p-dialog {
+  position: fixed !important;
+  top: 70px !important;
+  right: 10px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+.nav-options-dialog .p-dialog-content {
+  padding: 0 !important;
+}
+
+.p-dialog-mask:has(.nav-options-dialog) {
+  background: transparent !important;
+}

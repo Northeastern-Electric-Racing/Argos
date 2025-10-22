@@ -17,39 +17,42 @@
   </p-sidebar>
 } @else {
   <nav class="navbar">
+    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+      <mat-icon [svgIcon]="this.homeNavItem.icon" />
+    </div>
     <div class="navbar-nav">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
           value="{{ navItem.label }}"
+          [small]="this.isWindowSmall"
           [active]="this.isSelected(navItem)"
           (click)="navItem.onClick()"
+          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
         >
         </sidebar-chip>
       }
     </div>
 
-    <div style="display: flex; align-items: center">
-      <hstack>
-        <current-run-display [navBarStyle]="true"></current-run-display>
-        <toast-button
-          [onClick]="this.onStartNewRun"
-          buttonLabel="New Run"
-          popUpSeverity="success"
-          popUpTitle="New Run Started"
-          popUpDetails="Your new run has started successfully."
-          additionalStyles="height: 35px; width: 100px"
-        />
-        <toast-button [onClick]="this.openRunForm" buttonLabel="Edit Runs" additionalStyles="height: 35px; width: 100px" />
-      </hstack>
-
-      <typography
-        variant="large-header"
-        content="{{ time$ | async | date: 'HH:mm:ss' }}"
-        style="margin-left: 20px; margin-bottom: 5px"
-        additionalStyles="fontSize: 25px"
+    <hstack>
+      <toast-button
+        [onClick]="this.onStartNewRun"
+        buttonLabel="Start New Run"
+        popUpSeverity="success"
+        popUpTitle="New Run Started"
+        popUpDetails="Your new run has started successfully."
+        additionalStyles="height: 36px; width: 130px"
       />
-      <messages-per-second style="margin-left: 10px" />
-    </div>
+      <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
+      <typography
+        [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
+        content="{{ time$ | async | date: 'HH:mm:ss' }}"
+        additionalStyles="fontSize: 36px"
+      />
+      <messages-per-second />
+      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
+        <mat-icon [svgIcon]="'apps'" />
+      </div>
+    </hstack>
   </nav>
 }

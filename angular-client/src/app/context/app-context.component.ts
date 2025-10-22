@@ -53,6 +53,7 @@ export default class AppContextComponent implements OnInit {
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_full.svg')
       )
       .addSvgIcon('menu', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/menu.svg'))
+      .addSvgIcon('logo', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/logo.svg'))
       .addSvgIcon('home', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/home.svg'))
       .addSvgIcon('bar_chart', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bar_chart.svg'))
       .addSvgIcon('search', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search.svg'))
@@ -85,7 +86,8 @@ export default class AppContextComponent implements OnInit {
       )
       .addSvgIcon('error', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/alert-triangle.svg'))
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'))
-      .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'));
+      .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'))
+      .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'));
   }
 
   ngOnInit(): void {

@@ -8,7 +8,6 @@
   align-self: center;
   align-items: center;
   background-color: #2c2c2c;
-  /* color: #e54648ae */
   margin-bottom: 1rem;
   padding-left: 10px;
   padding-right: 10px;
@@ -21,37 +20,45 @@
   font-weight: bold;
 }
 
+.home-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 4px;
+  transition: fill 0.2s ease-in-out;
+}
+
+.home-logo .mat-icon {
+  width: 48px;
+  height: 48px;
+}
+
 /* Nav items container – using flex gap for spacing */
 .navbar-nav {
-  display: flex;
-}
-
-/* Style for each sidebar-chip when used as a nav item */
-.sidebar-chip {
   display: inline-flex;
+  flex: 1;
+}
+
+.navbar-menu {
+  cursor: pointer;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 8px;
   border-radius: 4px;
-  cursor: pointer; /* shows pointer cursor */
-  transition: background-color 0.2s ease-in-out;
-  user-select: none; /* prevents text selection */
 }
 
-/* Hover effect for the entire chip (icon + text) */
-.sidebar-chip:hover {
-  background-color: #b30000; /* slightly dark red */
+.navbar-menu mat-icon {
+  width: 48px;
+  height: 48px;
+  transition: color 0.2s ease;
 }
 
-/* Optional: ensure inner elements don’t capture pointer events,
-   so that hovering anywhere on the chip triggers the hover state */
-.sidebar-chip i.material-icons,
-.sidebar-chip span {
-  pointer-events: none;
-}
-
-/* Adjust icon spacing */
-.sidebar-chip i.material-icons {
-  font-size: 20px;
-  margin-right: 0.5rem;
+.navbar-menu.selected,
+.navbar-menu:hover {
+  color: #ef4345;
 }
 
 :host {
