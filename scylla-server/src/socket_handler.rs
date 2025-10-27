@@ -80,7 +80,7 @@ pub async fn socket_handler_with_metadata(
         Regex::new(r"Charger\/Box\/F_(.*)").expect("Could not compile regex!");
     let fault_regex_mpu: Regex =
         Regex::new(r"MPU\/Fault\/Critical\/(.*)").expect("Could not compile regex!");
-    let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
+    let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(100);
 
     // END METADATA
 
@@ -288,22 +288,28 @@ fn handle_socket_msg(
         return;
     };
 
+    // flt_text is the fault text name
     trace!("Matched on {}, {:?}", flt_txt, node);
 
     // default to sending a new fault
+    //fault_ringbuffer is basically json of the most recent error
     let mut should_push = true;
     // iterate through current faults
     for item in fault_ringbuffer.iter_mut() {
         // if a fault of the same type is in the queue, and not expired
+
         if item.name == flt_txt && node.clone() == item.node && !item.expired {
             // update the last seen metric
-            item.last_seen = data.timestamp;
+            should_push = false;
             // if the time since the last fault is greater than [FAULT_MIN_REG_GAP], mark this fault as expired
-            if (data.timestamp - item.last_seen) > FAULT_MIN_REG_GAP {
+
+            if (item.last_seen - data.timestamp) > FAULT_MIN_REG_GAP {
                 item.expired = true;
+                should_push = true;
             } else {
                 // otherwise, if the fault isnt expired, ensure we dont create a duplicate fault
                 should_push = false;
+                item.last_seen = data.timestamp;
             }
         }
     }
