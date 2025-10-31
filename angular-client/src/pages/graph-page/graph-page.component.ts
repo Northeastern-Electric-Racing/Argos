@@ -10,6 +10,7 @@ import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.c
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
@@ -49,11 +50,14 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   private toastService = inject(MessageService);
   private faultService = inject(FaultService);
+  private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
   private topicSelectionService = inject(TopicSelectionService);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime
   subscriptions: Subscription[] = [];
+  // Separate subscription for topic selection service (should never be cleared)
+  private topicSelectionSubscription?: Subscription;
 
   // the local tracking of selected data types
   selectedDataTypes: DataType[] = [];
@@ -173,6 +177,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.queryDataTypes();
     this.run = undefined;
 
+    // Subscribe to the topic selection service
+    // This subscription persists for the lifetime of the component
+    this.topicSelectionSubscription = this.topicSelectionService.getSelectedDataTypes().subscribe((dataTypes) => {
+      // Only process if we have data types AND they're different from current selection
+      if (dataTypes.length > 0 || this.selectedDataTypes.length > 0) {
+        this.processDataTypeSelection(dataTypes);
+      }
+    });
+
     this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
     if (this.onFaultPage) this.initFaultPage();
     else this.initGeneralPage();
@@ -187,9 +200,14 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
   // All memory in use should be discarded here.
   ngOnDestroy(): void {
+    // Unsubscribe from data subscriptions
     this.subscriptions.forEach((sub) => {
       sub.unsubscribe();
     });
+    // Unsubscribe from topic selection service
+    if (this.topicSelectionSubscription) {
+      this.topicSelectionSubscription.unsubscribe();
+    }
     this.selectedDataTypeValuesSubject.forEach((subject) => {
       subject.complete();
     });
@@ -256,7 +274,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Run #' + run.id;
 
-    this.setSelectedDataTypes(this.selectedDataTypes);
+    // Re-apply current selection from service to trigger data load for this run
+    const currentSelection = this.topicSelectionService.getSelectedDataTypes().value;
+    this.processDataTypeSelection(currentSelection);
   };
 
   onQueryTimeSelected = (queryTime: number) => {
@@ -272,7 +292,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Hist Range';
 
-    this.setSelectedDataTypes(this.selectedDataTypes);
+    // Re-apply current selection from service to trigger data load for this time range
+    const currentSelection = this.topicSelectionService.getSelectedDataTypes().value;
+    this.processDataTypeSelection(currentSelection);
   };
 
   // get real time ready
@@ -289,7 +311,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesError = undefined;
     this.rightHeader = 'Real Time';
 
-    this.setSelectedDataTypes(this.selectedDataTypes);
+    // Re-apply current selection from service to trigger real-time data subscription
+    const currentSelection = this.topicSelectionService.getSelectedDataTypes().value;
+    this.processDataTypeSelection(currentSelection);
   };
 
   /**
@@ -441,10 +465,21 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   };
 
   /**
-   * Sets the selected data type.
-   * @param dataType The data type to set.
+   * Sets the selected data type through the service.
+   * This updates the shared service state, which will trigger the subscription
+   * in ngOnInit to process the selection change.
+   * @param dataTypes Array of data types to set as selected
    */
   setSelectedDataTypes = (dataTypes: DataType[]) => {
+    this.topicSelectionService.setSelectedDataTypes(dataTypes);
+  };
+
+  /**
+   * Processes data type selection changes from the service.
+   * This is called when the service emits a new selection.
+   * @param dataTypes The new array of selected data types
+   */
+  private processDataTypeSelection = (dataTypes: DataType[]) => {
     this.clearDataType();
     this.selectedDataTypes = dataTypes;
 
@@ -458,7 +493,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       this.toastService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No run selected. Please select a run or choose “Real Time”.'
+        detail: 'No run selected. Please select a run or choose "Real Time".'
       });
     }
     this.topicSelectionService.set(this.selectedDataTypes);
