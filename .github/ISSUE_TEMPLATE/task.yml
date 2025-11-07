@@ -1,6 +1,6 @@
 name: Task
 description: Create a task that a developer can complete.
-title: '[Area] - Short Description'
+title: "Short Description"
 body:
   - type: textarea
     id: description
