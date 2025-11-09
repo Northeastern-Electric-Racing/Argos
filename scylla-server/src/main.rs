@@ -235,8 +235,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ping_timeout(Duration::from_secs(5)) // may be unecessary
         .ack_timeout(Duration::from_millis(1500)) // this should be well below the time to fill max buffer size above
         .build_layer();
-    io.ns("/", |s: SocketRef| {
-        s.on_disconnect(|_: SocketRef| debug!("Socket: Client disconnected from socket"))
+    io.ns("/", async |s: SocketRef| {
+        s.on_disconnect(async |_: SocketRef| debug!("Socket: Client disconnected from socket"))
     });
 
     // channel to pass the mqtt data
