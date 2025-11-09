@@ -308,14 +308,13 @@ fn handle_socket_msg(
                 should_push = true;
             } else {
                 // otherwise, if the fault isnt expired, ensure we dont create a duplicate fault
-                should_push = false;
                 item.last_seen = data.timestamp;
             }
         }
     }
     // send a new fault if no message matches and is not expired
     if should_push {
-        fault_ringbuffer.push(FaultData {
+        fault_ringbuffer.enqueue(FaultData {
             node,
             name: flt_txt.to_string(),
             occured_at: data.timestamp,

@@ -123,7 +123,7 @@ impl MqttProcessor {
                         // parse the message into the data and the node name it falls under
                         let (send_db, msg) = self.parse_msg(msg, &pool).await;
                         if let Some(msg) = msg {
-                            latency_ringbuffer.push(chrono::offset::Utc::now() - msg.timestamp);
+                            latency_ringbuffer.enqueue(chrono::offset::Utc::now() - msg.timestamp);
                             if send_db {
                                 self.send_db_msg(msg.clone()).await;
                             }
