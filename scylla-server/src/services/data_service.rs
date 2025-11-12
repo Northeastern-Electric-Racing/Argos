@@ -85,37 +85,6 @@ pub async fn add_many(
 pub const LARGE_DATASET_THRESHOLD: i64 = 10000; // 10k points
 pub const MAX_POINTS_TO_RETURN: u32 = 5000; // Max points to return
 
-/// Get downsampled data points for a run with simple "every Nth point" sampling
-/// * `db` - The database connection to use
-/// * `data_type_name` - The name of the data type to query
-/// * `run_id` - The run ID to get data for
-/// * `sampling_rate` - The sampling rate (every Nth point to keep)
-///   returns: A result containing the downsampled data or the QueryError propagated by the db
-pub async fn get_downsampled_data_by_run_id(
-    db: &mut Database<'_>,
-    data_type_name: &str,
-    run_id: i32,
-    sampling_rate: u32,
-) -> Result<Vec<Data>, diesel::result::Error> {
-    // Get all data points first (ordered by time)
-    let all_data = data
-        .filter(runId.eq(run_id).and(dataTypeName.eq(data_type_name)))
-        .order(time_col.asc())
-        .load::<Data>(db)
-        .await?;
-
-    // Simple downsampling: keep every Nth point
-    // Expand to other downsampling algorithms later
-    let downsampled: Vec<Data> = all_data
-        .into_iter()
-        .enumerate()
-        .filter(|(index, _)| index % sampling_rate as usize == 0)
-        .map(|(_, data_point)| data_point)
-        .collect();
-
-    Ok(downsampled)
-}
-
 pub async fn get_mean_downsampled_data_by_run_id(
     db: &mut Database<'_>,
     data_type_name: &str,
@@ -127,8 +96,9 @@ pub async fn get_mean_downsampled_data_by_run_id(
         .order(time_col.asc())
         .load::<crate::models::Data>(db)
         .await?;
+    let type_name = data_type_name.to_string();
 
-    let mut out: Vec<(i64, Vec<f32>)> =
+    let mut out: Vec<Data> =
         Vec::with_capacity((all_data.len() + sampling_rate - 1) / sampling_rate);
     for chunk in all_data.chunks(sampling_rate) {
         if chunk.is_empty() {
@@ -147,23 +117,20 @@ pub async fn get_mean_downsampled_data_by_run_id(
                 }
             }
         }
-        let mean_values: Vec<f32> = sum_values
+        let mean_values: Vec<Option<f32>> = sum_values
             .iter()
-            .map(|sum| sum / chunk.len() as f32)
+            .map(|&sum| Some(sum / chunk.len() as f32))
             .collect();
 
-        out.push((mean_time, mean_values));
+        out.push(Data {
+            runId: run_id,
+            dataTypeName: type_name.clone(),
+            time: mean_time,
+            values: mean_values,
+        });
     }
 
-    Ok(out
-        .iter()
-        .map(|(mean_time, mean_values)| Data {
-            runId: run_id,
-            dataTypeName: data_type_name.to_string(),
-            time: *mean_time,
-            values: mean_values.iter().cloned().map(Some).collect(),
-        })
-        .collect())
+    Ok(out)
 }
 
 #[derive(QueryableByName)]
@@ -174,7 +141,7 @@ struct AggRow {
     values: Vec<f64>,
 }
 
-pub async fn get_mean_downsampled_data_by_run_id_raw_sql_query(
+pub async fn get_mean_downsampled_data_by_run_id_raw(
     db: &mut Database<'_>,
     data_type_name: &str,
     run_id: i32,
@@ -307,17 +274,14 @@ pub async fn get_data_by_run_id_with_auto_downsampling(
         ));
     }
 
-    // Large dataset - apply auto-downsampling
-    let sampling_rate = calculate_auto_sampling_rate(total_count);
-    let start = Instant::now();
-    let downsampled_data = get_mean_downsampled_data_by_run_id_raw_sql_query(
-        db,
-        &data_type_name,
-        run_id,
-        sampling_rate as usize,
-    )
-    .await?;
-    let elapsed_ms = start.elapsed().as_millis();
-    tracing::Span::current().record("elapsed_ms", elapsed_ms as u64);
-    return Ok((total_count, downsampled_data));
+    return Ok((
+        total_count,
+        get_mean_downsampled_data_by_run_id_raw(
+            db,
+            &data_type_name,
+            run_id,
+            calculate_auto_sampling_rate(total_count) as usize,
+        )
+        .await?,
+    ));
 }
