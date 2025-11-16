@@ -26,7 +26,7 @@ async fn test_data_service() -> Result<(), ScyllaError> {
     // node_service::upsert_node(&db, TEST_KEYWORD.to_owned()).await?;
     data_type_service::upsert_data_type(&mut db, TEST_KEYWORD.to_owned(), "joe_mama".to_owned())
         .await?;
-    data_service::get_data_by_run_id(&mut db, TEST_KEYWORD.to_owned(), 0).await?;
+    data_service::get_data_by_run_id(&mut db, &TEST_KEYWORD.to_owned(), 0).await?;
 
     Ok(())
 }
@@ -75,7 +75,7 @@ async fn test_data_fetch_empty() -> Result<(), ScyllaError> {
     let mut db = pool.get().await.unwrap();
 
     // should be empty, nothing was added to run
-    let data = data_service::get_data_by_run_id(&mut db, TEST_KEYWORD.to_owned(), 0).await?;
+    let data = data_service::get_data_by_run_id(&mut db, &TEST_KEYWORD.to_owned(), 0).await?;
 
     assert!(data.is_empty());
 
