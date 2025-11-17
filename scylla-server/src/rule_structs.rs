@@ -10,7 +10,10 @@ use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use std::borrow::Borrow;
+use std::hash::Hash;
 use std::time::Duration;
+use tokio::sync::RwLock;
 use tracing::trace;
 use tracing::warn;
 
@@ -20,6 +23,76 @@ static ASCII_LOWER: [char; 26] = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
     't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
+
+struct BiMultiMap<L, R> {
+    left_to_right: FxHashMap<L, FxHashSet<R>>,
+    right_to_left: FxHashMap<R, FxHashSet<L>>,
+}
+
+#[allow(dead_code)]
+impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
+    pub fn new() -> Self {
+        Self {
+            left_to_right: FxHashMap::default(),
+            right_to_left: FxHashMap::default(),
+        }
+    }
+
+    pub fn get_right(&self, left: &L) -> Option<&FxHashSet<R>> {
+        self.left_to_right.get(left)
+    }
+
+    pub fn get_left(&self, right: &R) -> Option<&FxHashSet<L>> {
+        self.right_to_left.get(right)
+    }
+
+    pub fn get_right_mut(&mut self, left: &L) -> Option<&mut FxHashSet<R>> {
+        self.left_to_right.get_mut(left)
+    }
+
+    pub fn get_left_mut(&mut self, right: &R) -> Option<&mut FxHashSet<L>> {
+        self.right_to_left.get_mut(right)
+    }
+
+    pub fn insert(&mut self, left: &L, right: &R) {
+        self.left_to_right
+            .entry(left.clone())
+            .or_insert_with(FxHashSet::default)
+            .insert(right.clone());
+        self.right_to_left
+            .entry(right.clone())
+            .or_insert_with(FxHashSet::default)
+            .insert(left.clone());
+    }
+
+    /// remove all mappings for a given left key, if none left keys remain for a right key, remove that right key as well
+    pub fn remove_left(&mut self, left: &L) {
+        if let Some(rights) = self.left_to_right.remove(left) {
+            for right in rights {
+                if let Some(lefts) = self.right_to_left.get_mut(&right) {
+                    lefts.remove(left);
+                    if lefts.is_empty() {
+                        self.right_to_left.remove(&right);
+                    }
+                }
+            }
+        }
+    }
+
+    /// remove all mappings for a given right key, if none right keys remain for a left key, remove that left key as well
+    pub fn remove_right(&mut self, right: &R) {
+        if let Some(lefts) = self.right_to_left.remove(right) {
+            for left in lefts {
+                if let Some(rights) = self.left_to_right.get_mut(&left) {
+                    rights.remove(right);
+                    if rights.is_empty() {
+                        self.left_to_right.remove(&left);
+                    }
+                }
+            }
+        }
+    }
+}
 
 /// cooldown time
 const COOLDOWN_TIME: std::time::Duration = std::time::Duration::from_secs(60);
@@ -40,6 +113,18 @@ pub struct RuleId(pub String);
 /// a MQTT topic to trigger on, add to derives to get more string features
 #[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
 pub struct Topic(String);
+
+impl Borrow<str> for Topic {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Borrow<String> for Topic {
+    fn borrow(&self) -> &String {
+        &self.0
+    }
+}
 
 #[derive(Serialize)]
 pub struct RuleNotification {
@@ -155,10 +240,12 @@ pub enum RuleManagerError {
 
 /// the rule manager
 pub struct RuleManager {
-    /// <client_id, <rule_id, rule>>
-    clients_map: FxHashMap<ClientId, FxHashMap<Topic, Vec<Rule>>>,
-    /// <topic, Vec<client_id>>
-    rules_lookup: FxHashMap<Topic, FxHashSet<ClientId>>,
+    /// <rule_id, rule>
+    rules: RwLock<FxHashMap<RuleId, Rule>>,
+    /// <topic, Vec<rule_id>>
+    topic_index: RwLock<FxHashMap<Topic, FxHashSet<RuleId>>>,
+    /// bimap<client_id, rule_id>
+    subscriptions: RwLock<BiMultiMap<ClientId, RuleId>>,
 }
 impl Default for RuleManager {
     fn default() -> Self {
@@ -169,164 +256,152 @@ impl Default for RuleManager {
 impl RuleManager {
     pub fn new() -> Self {
         Self {
-            clients_map: FxHashMap::default(),
-            rules_lookup: FxHashMap::default(),
+            rules: RwLock::new(FxHashMap::default()),
+            topic_index: RwLock::new(FxHashMap::default()),
+            subscriptions: RwLock::new(BiMultiMap::new()),
         }
     }
 
     /// Handles a new socket message, returning a RuleNotification for one to many clients if action should be taken
-    pub fn handle_msg(
-        &mut self,
+    pub async fn handle_msg(
+        &self,
         data: &ClientData,
     ) -> Result<Option<Vec<(ClientId, RuleNotification)>>, RuleManagerError> {
-        // TODO uneccessary clone
-        let topic = Topic(data.name.clone());
-
-        let Some(clients) = self.rules_lookup.get(&topic) else {
-            trace!("(normal) Could not find rule in rule cache: {}", data.name);
-            return Err(RuleManagerError::NoMatchingRule);
+        // Read from topic to rule index and drop lock immediately
+        let rule_ids = {
+            let topic_index_read = self.topic_index.read().await;
+            match topic_index_read.get(&data.name) {
+                Some(rule_ids) => rule_ids.clone(),
+                None => {
+                    trace!("Could not find rule in topic -> rule index: {}", data.name);
+                    return Err(RuleManagerError::NoMatchingRule);
+                }
+            }
         };
+
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
 
-        // warning if the clients is empty we havent been cleaning right
-        if clients.is_empty() {
-            warn!("Empty rule cache entry for {}!", data.name);
-        }
-
-        for client_want in clients {
-            let Some(rules) = self.clients_map.get_mut(client_want) else {
-                warn!("Client cached but not found!");
-                return Err(RuleManagerError::Failure);
+        for rule_id in rule_ids {
+            let rule_triggered = {
+                let mut rules_write = self.rules.write().await;
+                let Some(rule) = rules_write.get_mut(&rule_id) else {
+                    trace!("Could not find rule in rules map: {}", rule_id);
+                    return Err(RuleManagerError::NoMatchingRule);
+                };
+                let Some(triggered) = rule.tick(&data.values) else {
+                    return Err(RuleManagerError::RuleFailure);
+                };
+                triggered
             };
 
-            if let Some(rule_set) = rules.get_mut(&topic) {
-                for rule in rule_set {
-                    // return rule failure if underlying tick fails
-                    let Some(is_triggered) = rule.tick(&data.values) else {
-                        return Err(RuleManagerError::RuleFailure);
-                    };
-                    if is_triggered {
-                        notifications.push((
-                            client_want.clone(),
-                            RuleNotification {
-                                id: rule.id.clone(),
-                                topic: topic.clone(),
-                                values: data.values.clone(),
-                                time: data.timestamp,
-                            },
-                        ));
+            let clients = {
+                let subscriptions_read = self.subscriptions.read().await;
+                // get all clients subscribed to this rule
+                match subscriptions_read.get_left(&rule_id) {
+                    Some(clients) => clients.clone(),
+                    None => {
+                        trace!(
+                            "(indexed) Could not find clients for rule in subscriptions bimap: {}",
+                            data.name
+                        );
+                        return Err(RuleManagerError::NoMatchingRule);
                     }
+                }
+            };
+
+            // Clients should never be empty
+            if clients.is_empty() {
+                warn!("Empty subscriptions entry for rule {}!", rule_id);
+            }
+
+            // Push notifications for all clients who are subscribed to this rule
+            if rule_triggered {
+                for client in clients {
+                    notifications.push((
+                        client.clone(),
+                        RuleNotification {
+                            id: rule_id.clone(),
+                            topic: Topic(data.name.clone()),
+                            values: data.values.clone(),
+                            time: data.timestamp,
+                        },
+                    ));
                 }
             }
         }
-        // pass back the results
-        if notifications.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(notifications))
-        }
+        Ok(Some(notifications))
     }
 
     /// Adds a rule, creating or activating the client if needed
-    pub fn add_rule(&mut self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
-        // go through the topics and add to rules lookup table
-        match self.rules_lookup.get_mut(&rule.topic) {
-            Some(rules) => {
-                rules.insert(client.clone());
-            }
-            None => {
-                let mut new_set = FxHashSet::default();
-                new_set.insert(client.clone());
-                self.rules_lookup.insert(rule.topic.clone(), new_set);
-            }
-        }
+    pub async fn add_rule(&self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
+        // Add to subscriptions bimap
+        self.subscriptions
+            .write()
+            .await
+            .insert(&client, &rule.id.clone());
 
-        // push rule, make client active and push rule, or create client and push rule
-        match self.clients_map.get_mut(&client) {
-            Some(client) => match client.get_mut(&rule.topic) {
-                Some(set) => set.push(rule),
-                None => {
-                    client.insert(rule.topic.clone(), vec![rule]);
-                }
-            },
+        // Add to topic index
+        self.topic_index
+            .write()
+            .await
+            .entry(rule.topic.clone())
+            .or_insert(FxHashSet::default())
+            .insert(rule.id.clone());
 
-            None => {
-                let mut map = FxHashMap::default();
-                map.insert(rule.topic.clone(), vec![rule]);
-                self.clients_map.insert(client, map);
-            }
-        };
-
+        // Add to rules lookup
+        self.rules.write().await.insert(rule.id.clone(), rule);
         Ok(())
     }
 
-    /// Deletes a rule, leaving the client existing and active no matter what
-    pub fn delete_rule(
-        &mut self,
+    /// Deletes a rule from client, if no more clients exist for the rule, delete it entirely
+    pub async fn delete_rule(
+        &self,
         client_id: ClientId,
         rule_id: RuleId,
     ) -> Result<(), RuleManagerError> {
-        // first, find the rules from the clients map
-        let Some(rules) = self.clients_map.get_mut(&client_id) else {
-            warn!("Could not find client {}", client_id);
-            return Err(RuleManagerError::NoSuchClient);
+        // Remove rule from client
+        let no_more_clients = {
+            let mut subscriptions_write = self.subscriptions.write().await;
+            let Some(rules) = subscriptions_write.get_right_mut(&client_id) else {
+                warn!(
+                    "Could not find client in subscriptions bimap to delete rule: {}",
+                    client_id
+                );
+                return Err(RuleManagerError::NoSuchClient); // Keep this early return
+            };
+            rules.remove(&rule_id);
+            if rules.is_empty() {
+                subscriptions_write.remove_left(&client_id);
+                true
+            } else {
+                false
+            }
         };
 
-        let mut removed: Option<Rule> = None;
-        for rule_vals in rules.values_mut() {
-            let Some(pos) = rule_vals.iter().position(|a| a.id == rule_id) else {
-                break;
-            };
-            removed = Some(rule_vals.remove(pos));
+        // If no more clients exist for this rule, delete it from rules and topic index
+        // Gaurd
+        if !no_more_clients {
+            return Ok(());
         }
 
-        let Some(removed) = removed else {
-            warn!("Could not find rule: {}", rule_id);
-            return Err(RuleManagerError::NoMatchingRule);
-        };
-
-        // now, yeet the rule from the lookup cache, ONLY IF the client doesnt have any rules with the given topic left
-        let lookup_preserve = rules.contains_key(&removed.topic);
-
-        if !lookup_preserve {
-            let Some(clients) = self.rules_lookup.get_mut(&removed.topic) else {
-                warn!("Could not find rule in cache!");
-                return Err(RuleManagerError::Failure);
-            };
-            // remove the client from the cache for that topic, deleting rule from cache if necessary
-            clients.retain(|client| *client != client_id);
-            // delete client from cache is normal, the client could still exist without rules in client_map
-            if clients.is_empty() {
-                self.rules_lookup.remove(&removed.topic);
+        // Remove from topic index and rules map
+        let topic = match self.rules.read().await.get(&rule_id) {
+            Some(rule) => rule.topic.clone(),
+            None => {
+                warn!("No matching rule found for rule_id {}", rule_id);
+                return Err(RuleManagerError::NoMatchingRule);
             }
-        } // else we dont touch the lookup cache
+        };
+        self.topic_index.write().await.remove(&topic);
+        self.rules.write().await.remove(&rule_id);
 
         Ok(())
     }
 
     /// deletes a client, and all of its rules
-    pub fn delete_client(&mut self, client_id: ClientId) -> Result<(), RuleManagerError> {
-        // first, yeet from clients map
-        let Some(rules) = self.clients_map.remove(&client_id) else {
-            warn!("Could not find client to delete: {}", client_id);
-            return Err(RuleManagerError::NoSuchClient);
-        };
-
-        // now, for each unique topic found amongst the rules, yeet it from the lookup
-        // this uses a hashset to de-dup the rules to avoid annoying warnings
-        for rule in rules.keys() {
-            warn!("DELETING {}", rule);
-            let Some(client_list) = self.rules_lookup.get_mut(rule) else {
-                warn!("Could not find topic in rule lookup table!");
-                return Err(RuleManagerError::Failure);
-            };
-            client_list.retain(|client| *client != client_id);
-            // remove the whole entry if no clients exist for the topic
-            if client_list.is_empty() {
-                self.rules_lookup.remove(rule);
-            }
-        }
-
+    pub async fn delete_client(&self, client_id: ClientId) -> Result<(), RuleManagerError> {
+        // Just remove using bi multi map
+        self.subscriptions.write().await.remove_left(&client_id);
         Ok(())
     }
 }
