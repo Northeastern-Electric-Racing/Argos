@@ -24,7 +24,7 @@ static ASCII_LOWER: [char; 26] = [
     't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-struct BiMultiMap<L, R> {
+pub struct BiMultiMap<L, R> {
     left_to_right: FxHashMap<L, FxHashSet<R>>,
     right_to_left: FxHashMap<R, FxHashSet<L>>,
 }
@@ -65,31 +65,51 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
             .insert(left.clone());
     }
 
-    /// remove all mappings for a given left key, if none left keys remain for a right key, remove that right key as well
-    pub fn remove_left(&mut self, left: &L) {
+    /// Remove all mappings for a given left key, if none left keys remain for a right key, remove that right key as well.
+    /// returns: optional set of empty rights that no longer map to any lefts
+    pub fn remove_left(&mut self, left: &L) -> Option<FxHashSet<R>> {
+        let mut empty_rights = FxHashSet::default();
+
         if let Some(rights) = self.left_to_right.remove(left) {
             for right in rights {
                 if let Some(lefts) = self.right_to_left.get_mut(&right) {
                     lefts.remove(left);
                     if lefts.is_empty() {
                         self.right_to_left.remove(&right);
+                        empty_rights.insert(right);
                     }
                 }
             }
         }
+
+        if empty_rights.is_empty() {
+            None
+        } else {
+            Some(empty_rights)
+        }
     }
 
-    /// remove all mappings for a given right key, if none right keys remain for a left key, remove that left key as well
-    pub fn remove_right(&mut self, right: &R) {
+    /// Remove all mappings for a given right key, if none right keys remain for a left key, remove that left key as well.
+    /// returns: optional set of empty lefts that no longer map to any rights
+    pub fn remove_right(&mut self, right: &R) -> Option<FxHashSet<L>> {
+        let mut empty_lefts = FxHashSet::default();
+
         if let Some(lefts) = self.right_to_left.remove(right) {
             for left in lefts {
                 if let Some(rights) = self.left_to_right.get_mut(&left) {
                     rights.remove(right);
                     if rights.is_empty() {
                         self.left_to_right.remove(&left);
+                        empty_lefts.insert(left);
                     }
                 }
             }
+        }
+
+        if empty_lefts.is_empty() {
+            None
+        } else {
+            Some(empty_lefts)
         }
     }
 }
@@ -268,19 +288,15 @@ impl RuleManager {
         data: &ClientData,
     ) -> Result<Option<Vec<(ClientId, RuleNotification)>>, RuleManagerError> {
         // Read from topic to rule index and drop lock immediately
-        let rule_ids = {
-            let topic_index_read = self.topic_index.read().await;
-            match topic_index_read.get(&data.name) {
-                Some(rule_ids) => rule_ids.clone(),
-                None => {
-                    trace!("Could not find rule in topic -> rule index: {}", data.name);
-                    return Err(RuleManagerError::NoMatchingRule);
-                }
+        let rule_ids = match self.topic_index.read().await.get(&data.name) {
+            Some(rule_ids) => rule_ids.clone(),
+            None => {
+                trace!("Could not find rule in topic -> rule index: {}", data.name);
+                return Err(RuleManagerError::NoMatchingRule);
             }
         };
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
-
         for rule_id in rule_ids {
             let rule_triggered = {
                 let mut rules_write = self.rules.write().await;
@@ -294,18 +310,19 @@ impl RuleManager {
                 triggered
             };
 
-            let clients = {
-                let subscriptions_read = self.subscriptions.read().await;
-                // get all clients subscribed to this rule
-                match subscriptions_read.get_left(&rule_id) {
-                    Some(clients) => clients.clone(),
-                    None => {
-                        trace!(
-                            "(indexed) Could not find clients for rule in subscriptions bimap: {}",
-                            data.name
-                        );
-                        return Err(RuleManagerError::NoMatchingRule);
-                    }
+            if !rule_triggered {
+                continue;
+            }
+
+            // get all clients subscribed to this rule
+            let clients = match self.subscriptions.read().await.get_left(&rule_id) {
+                Some(clients) => clients.clone(),
+                None => {
+                    trace!(
+                        "(indexed) Could not find clients for rule in subscriptions bimap: {}",
+                        data.name
+                    );
+                    return Err(RuleManagerError::NoMatchingRule);
                 }
             };
 
@@ -315,21 +332,24 @@ impl RuleManager {
             }
 
             // Push notifications for all clients who are subscribed to this rule
-            if rule_triggered {
-                for client in clients {
-                    notifications.push((
-                        client.clone(),
-                        RuleNotification {
-                            id: rule_id.clone(),
-                            topic: Topic(data.name.clone()),
-                            values: data.values.clone(),
-                            time: data.timestamp,
-                        },
-                    ));
-                }
+            for client in clients {
+                notifications.push((
+                    client.clone(),
+                    RuleNotification {
+                        id: rule_id.clone(),
+                        topic: Topic(data.name.clone()),
+                        values: data.values.clone(),
+                        time: data.timestamp,
+                    },
+                ));
             }
         }
-        Ok(Some(notifications))
+
+        if notifications.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(notifications))
+        }
     }
 
     /// Adds a rule, creating or activating the client if needed
@@ -371,6 +391,8 @@ impl RuleManager {
             };
             rules.remove(&rule_id);
             if rules.is_empty() {
+                // Remove client. Since client is no longer subscribed to any rule
+                // no rules are removed as well as a side effect
                 subscriptions_write.remove_left(&client_id);
                 true
             } else {
@@ -398,10 +420,27 @@ impl RuleManager {
         Ok(())
     }
 
-    /// deletes a client, and all of its rules
+    /// Deletes a client, and all of its rules.
+    /// Removes rules that are no longer subscribed to if needed.
     pub async fn delete_client(&self, client_id: ClientId) -> Result<(), RuleManagerError> {
-        // Just remove using bi multi map
-        self.subscriptions.write().await.remove_left(&client_id);
+        // Removing from left returns rules that no longer have clients
+        let empty_rules_op = self.subscriptions.write().await.remove_left(&client_id);
+
+        if empty_rules_op.is_none() {
+            return Ok(());
+        }
+
+        // If there are empty rules (i.e. no clients are subscribed to rule) remove that rule from topic index and rules map
+        let empty_rules = empty_rules_op.unwrap();
+        for rule_id in empty_rules {
+            let mut rules_write = self.rules.write().await;
+            let Some(rule) = rules_write.get(&rule_id) else {
+                warn!("No matching rule found for rule_id {}", rule_id);
+                return Err(RuleManagerError::NoMatchingRule);
+            };
+            self.topic_index.write().await.remove(&rule.topic);
+            rules_write.remove(&rule_id);
+        }
         Ok(())
     }
 }
