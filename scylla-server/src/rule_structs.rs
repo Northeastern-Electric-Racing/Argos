@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DurationSeconds;
 use std::borrow::Borrow;
+use std::collections::HashSet;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -353,8 +354,8 @@ impl RuleManager {
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
         for rule_id in rule_ids {
-            let (rule_triggered, clients) = tokio::join!(
-                async {
+            let (rule_triggered, clients) = {
+                let triggered_future = async {
                     let mut rules_write = self.rules.write().await;
                     let Some(rule) = rules_write.get_mut(&rule_id) else {
                         trace!("Could not find rule in rules map: {}", rule_id);
@@ -365,29 +366,45 @@ impl RuleManager {
                     } else {
                         Err(RuleManagerError::RuleFailure)
                     }
-                },
-                async {
+                };
+
+                let clients_future = async {
                     match self.subscriptions.read().await.get_left(&rule_id) {
                         Some(clients) => Ok(clients.clone()),
                         None => {
                             trace!(
-                                "(indexed) Could not find clients for rule in subscriptions bimap: {}",
+                                "Could not find clients for rule in subscriptions bimap: {}",
                                 data.name
                             );
                             return Err(RuleManagerError::NoMatchingRule);
                         }
                     }
+                };
+
+                tokio::pin!(triggered_future);
+                tokio::pin!(clients_future);
+
+                // Check which operation finished first
+                tokio::select! {
+                    triggered_result = &mut triggered_future => {
+                        match triggered_result? {
+                            true => (Ok(true), clients_future.await),
+                            false => (Ok(false), Ok(FxHashSet::default())),
+                        }
+                    },
+                    clients_result = &mut clients_future => {
+                        let triggered_result = triggered_future.await;
+                        (triggered_result, clients_result)
+                    }
                 }
-            );
-            // TODO: should we use concurrency here? We sometimes do not need clients if the rule isn't triggered
+            };
 
             let triggered = rule_triggered?;
-            let clients = clients?;
-
             if !triggered {
                 continue;
             }
 
+            let clients = clients?;
             // Clients should never be empty
             if clients.is_empty() {
                 warn!("Empty subscriptions entry for rule {}!", rule_id);
@@ -443,7 +460,8 @@ impl RuleManager {
         Ok(())
     }
 
-    /// Deletes a rule from client, if no more clients exist for the rule, delete it entirely
+    /// Deletes a rule from client, if no more clients exist for the rule, delete it entirely. \
+    /// If no more rules exist for that client, the client is also removed.
     pub async fn delete_rule(
         &self,
         client_id: ClientId,
