@@ -388,33 +388,40 @@ impl RuleManager {
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
         for rule_id in rule_ids {
-            let rule_triggered = {
-                let mut rules_write = self.rules.write().await;
-                let Some(rule) = rules_write.get_mut(&rule_id) else {
-                    trace!("Could not find rule in rules map: {}", rule_id);
-                    return Err(RuleManagerError::NoMatchingRule);
-                };
-                let Some(triggered) = rule.tick(&data.values) else {
-                    return Err(RuleManagerError::RuleFailure);
-                };
-                triggered
-            };
+            let (rule_triggered, clients) = tokio::join!(
+                async {
+                    let mut rules_write = self.rules.write().await;
+                    let Some(rule) = rules_write.get_mut(&rule_id) else {
+                        trace!("Could not find rule in rules map: {}", rule_id);
+                        return Err(RuleManagerError::NoMatchingRule);
+                    };
+                    if let Some(triggered) = rule.tick(&data.values) {
+                        Ok(triggered)
+                    } else {
+                        Err(RuleManagerError::RuleFailure)
+                    }
+                },
+                async {
+                    match self.subscriptions.read().await.get_left(&rule_id) {
+                        Some(clients) => Ok(clients.clone()),
+                        None => {
+                            trace!(
+                                "(indexed) Could not find clients for rule in subscriptions bimap: {}",
+                                data.name
+                            );
+                            return Err(RuleManagerError::NoMatchingRule);
+                        }
+                    }
+                }
+            );
+            // TODO: should we use concurrency here? We sometimes do not need clients if the rule isn't triggered
 
-            if !rule_triggered {
+            let triggered = rule_triggered?;
+            let clients = clients?;
+
+            if !triggered {
                 continue;
             }
-
-            // get all clients subscribed to this rule
-            let clients = match self.subscriptions.read().await.get_left(&rule_id) {
-                Some(clients) => clients.clone(),
-                None => {
-                    trace!(
-                        "(indexed) Could not find clients for rule in subscriptions bimap: {}",
-                        data.name
-                    );
-                    return Err(RuleManagerError::NoMatchingRule);
-                }
-            };
 
             // Clients should never be empty
             if clients.is_empty() {
@@ -444,22 +451,30 @@ impl RuleManager {
 
     /// Adds a rule, creating or activating the client if needed
     pub async fn add_rule(&self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
-        // Add to subscriptions bimap
-        self.subscriptions
-            .write()
-            .await
-            .insert(&client, &rule.id.clone());
+        let rule_id = rule.id.clone();
+        let topic = rule.topic.clone();
 
-        // Add to topic index
-        self.topic_index
-            .write()
-            .await
-            .entry(rule.topic.clone())
-            .or_insert(FxHashSet::default())
-            .insert(rule.id.clone());
+        // Run all three writes concurrently
+        let ((), (), ()) = tokio::join!(
+            async {
+                // Add to subscriptions bimap
+                self.subscriptions.write().await.insert(&client, &rule_id);
+            },
+            async {
+                // Add to topic index
+                self.topic_index
+                    .write()
+                    .await
+                    .entry(topic)
+                    .or_insert(FxHashSet::default())
+                    .insert(rule_id.clone());
+            },
+            async {
+                // Add to rules lookup
+                self.rules.write().await.insert(rule_id.clone(), rule);
+            }
+        );
 
-        // Add to rules lookup
-        self.rules.write().await.insert(rule.id.clone(), rule);
         Ok(())
     }
 
@@ -531,27 +546,42 @@ impl RuleManager {
         &self,
         rule_id: &RuleId,
     ) -> Result<(), RuleManagerError> {
-        let mut rules_map_write = self.rules.write().await;
-        let Some(rule) = rules_map_write.get(rule_id) else {
-            warn!("No matching topic found for rule_id {}", rule_id);
-            return Err(RuleManagerError::NoMatchingRule);
+        let topic = {
+            let rules_read = self.rules.read().await;
+            let Some(rule) = rules_read.get(rule_id) else {
+                warn!("No matching topic found for rule_id {}", rule_id);
+                return Err(RuleManagerError::NoMatchingRule);
+            };
+            rule.topic.clone()
         };
 
-        let mut topic_index_write = self.topic_index.write().await;
-        let Some(rule_ids_for_topic) = topic_index_write.get_mut(&rule.topic) else {
-            warn!("No matching topic found for rule_id {}", rule_id);
-            return Err(RuleManagerError::NoMatchingRule);
-        };
+        let (topic_result, rules_result) = tokio::join!(
+            async {
+                // Remove rule from topic index
+                let mut topic_index_write = self.topic_index.write().await;
+                let Some(rule_ids_for_topic) = topic_index_write.get_mut(&topic) else {
+                    warn!("No matching topic found for rule_id {}", rule_id);
+                    return Err(RuleManagerError::NoMatchingRule);
+                };
+                // Remove rule from topic and if none left remove topic
+                rule_ids_for_topic.remove(rule_id);
+                if rule_ids_for_topic.is_empty() {
+                    topic_index_write.remove(&topic);
+                }
+                Ok(())
+            },
+            async {
+                if self.rules.write().await.remove(rule_id).is_none() {
+                    warn!("No matching rule found for rule_id {}", rule_id);
+                    Err(RuleManagerError::NoMatchingRule)
+                } else {
+                    Ok(())
+                }
+            }
+        );
 
-        // Remove rule from topic and if none left remove topic
-        rule_ids_for_topic.remove(rule_id);
-        if rule_ids_for_topic.is_empty() {
-            topic_index_write.remove(&rule.topic);
-        }
-
-        // Remove rule from rules map
-        rules_map_write.remove(rule_id);
-
+        topic_result?;
+        rules_result?;
         Ok(())
     }
 }
