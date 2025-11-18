@@ -17,6 +17,7 @@ use tokio::sync::RwLock;
 use tracing::trace;
 use tracing::warn;
 
+use crate::rule_structs::BiMapRemoveResult::*;
 use crate::ClientData;
 
 static ASCII_LOWER: [char; 26] = [
@@ -24,7 +25,26 @@ static ASCII_LOWER: [char; 26] = [
     't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub struct BiMultiMap<L, R> {
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+struct BiMapCleanupData<L, R> {
+    /// left keys that were thrown out
+    lefts: Option<FxHashSet<L>>,
+    /// right keys that were thrown out
+    rights: Option<FxHashSet<R>>,
+}
+
+#[derive(Debug, Clone)]
+enum BiMapRemoveResult<L, R> {
+    /// Removed succesfully, and also removed any empty mappings \
+    /// Contains the data that was thrown out from the map because they were unused.
+    RemovedWithCleanUp(BiMapCleanupData<L, R>),
+    /// Removed succesfully, no empty mappings to clean up
+    RemovedOnly,
+    NothingToRemove,
+}
+
+struct BiMultiMap<L, R> {
     left_to_right: FxHashMap<L, FxHashSet<R>>,
     right_to_left: FxHashMap<R, FxHashSet<L>>,
 }
@@ -46,14 +66,6 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
         self.right_to_left.get(right)
     }
 
-    pub fn get_right_mut(&mut self, left: &L) -> Option<&mut FxHashSet<R>> {
-        self.left_to_right.get_mut(left)
-    }
-
-    pub fn get_left_mut(&mut self, right: &R) -> Option<&mut FxHashSet<L>> {
-        self.right_to_left.get_mut(right)
-    }
-
     pub fn insert(&mut self, left: &L, right: &R) {
         self.left_to_right
             .entry(left.clone())
@@ -65,51 +77,129 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
             .insert(left.clone());
     }
 
-    /// Remove all mappings for a given left key, if none left keys remain for a right key, remove that right key as well.
-    /// returns: optional set of empty rights that no longer map to any lefts
-    pub fn remove_left(&mut self, left: &L) -> Option<FxHashSet<R>> {
+    /// Remove all mappings for a given left key, if none left keys remain for a right key, remove that right key as well. \
+    /// Returns: BiMapRemoveResult with optional set of empty rights that were cleaned from map.
+    pub fn remove_left(&mut self, left: &L) -> BiMapRemoveResult<L, R> {
+        let Some(rights) = self.left_to_right.remove(left) else {
+            return NothingToRemove;
+        };
+
         let mut empty_rights = FxHashSet::default();
 
-        if let Some(rights) = self.left_to_right.remove(left) {
-            for right in rights {
-                if let Some(lefts) = self.right_to_left.get_mut(&right) {
-                    lefts.remove(left);
-                    if lefts.is_empty() {
-                        self.right_to_left.remove(&right);
-                        empty_rights.insert(right);
-                    }
+        for right in rights {
+            if let Some(lefts) = self.right_to_left.get_mut(&right) {
+                lefts.remove(left);
+                if lefts.is_empty() {
+                    self.right_to_left.remove(&right);
+                    empty_rights.insert(right);
                 }
             }
         }
 
         if empty_rights.is_empty() {
-            None
+            RemovedOnly
         } else {
-            Some(empty_rights)
+            RemovedWithCleanUp(BiMapCleanupData {
+                lefts: None,
+                rights: Some(empty_rights),
+            })
         }
     }
 
-    /// Remove all mappings for a given right key, if none right keys remain for a left key, remove that left key as well.
-    /// returns: optional set of empty lefts that no longer map to any rights
-    pub fn remove_right(&mut self, right: &R) -> Option<FxHashSet<L>> {
+    /// Remove all mappings for a given right key, if none right keys remain for a left key, remove that left key as well. \
+    /// Returns: BiMapRemoveResult with optional set of empty lefts that were cleaned from map.
+    pub fn remove_right(&mut self, right: &R) -> BiMapRemoveResult<L, R> {
+        let Some(lefts) = self.right_to_left.remove(right) else {
+            return NothingToRemove;
+        };
+
         let mut empty_lefts = FxHashSet::default();
 
-        if let Some(lefts) = self.right_to_left.remove(right) {
-            for left in lefts {
-                if let Some(rights) = self.left_to_right.get_mut(&left) {
-                    rights.remove(right);
-                    if rights.is_empty() {
-                        self.left_to_right.remove(&left);
-                        empty_lefts.insert(left);
-                    }
+        for left in lefts {
+            if let Some(rights) = self.left_to_right.get_mut(&left) {
+                rights.remove(right);
+                if rights.is_empty() {
+                    self.left_to_right.remove(&left);
+                    empty_lefts.insert(left);
                 }
             }
         }
 
         if empty_lefts.is_empty() {
-            None
+            RemovedOnly
         } else {
-            Some(empty_lefts)
+            RemovedWithCleanUp(BiMapCleanupData {
+                lefts: Some(empty_lefts),
+                rights: None,
+            })
+        }
+    }
+
+    /// Remove a specific mapping from left to right, cleaning up empty entries as needed.\
+    /// Returns: BiMapRemoveresult with optional right that was cleaned from map.
+    pub fn remove_right_from_left(&mut self, left: &L, right: &R) -> BiMapRemoveResult<L, R> {
+        let Some(rights) = self.left_to_right.get_mut(left) else {
+            return NothingToRemove;
+        };
+
+        if !rights.remove(right) {
+            return NothingToRemove;
+        }
+
+        if rights.is_empty() {
+            // Kick out this left because it doesn't have any rights (?)
+            self.left_to_right.remove(left);
+        }
+
+        if let Some(lefts) = self.right_to_left.get_mut(right) {
+            lefts.remove(left);
+            if lefts.is_empty() {
+                self.right_to_left.remove(right);
+                // TODO: make inline ?
+                let mut set = FxHashSet::default();
+                set.insert(right.clone());
+                RemovedWithCleanUp(BiMapCleanupData {
+                    lefts: None,
+                    rights: Some(set),
+                })
+            } else {
+                RemovedOnly
+            }
+        } else {
+            NothingToRemove
+        }
+    }
+
+    /// Remove a specific mapping from right to left, cleaning up empty entries as needed. \
+    /// Returns: BiMapRemoveresult with optional left that was cleaned from map.
+    pub fn remove_left_from_right(&mut self, right: &R, left: &L) -> BiMapRemoveResult<L, R> {
+        let Some(lefts) = self.right_to_left.get_mut(right) else {
+            return NothingToRemove;
+        };
+
+        if !lefts.remove(left) {
+            return NothingToRemove;
+        }
+
+        if lefts.is_empty() {
+            self.right_to_left.remove(right);
+        }
+
+        if let Some(rights) = self.left_to_right.get_mut(left) {
+            rights.remove(right);
+            if rights.is_empty() {
+                self.left_to_right.remove(left);
+                let mut set = FxHashSet::default();
+                set.insert(left.clone());
+                RemovedWithCleanUp(BiMapCleanupData {
+                    lefts: Some(set),
+                    rights: None,
+                })
+            } else {
+                RemovedOnly
+            }
+        } else {
+            NothingToRemove
         }
     }
 }
@@ -289,7 +379,7 @@ impl RuleManager {
     ) -> Result<Option<Vec<(ClientId, RuleNotification)>>, RuleManagerError> {
         // Read from topic to rule index and drop lock immediately
         let rule_ids = match self.topic_index.read().await.get(&data.name) {
-            Some(rule_ids) => rule_ids.clone(),
+            Some(rule_ids) => rule_ids.clone(), // Clone so we can drop resource
             None => {
                 trace!("Could not find rule in topic -> rule index: {}", data.name);
                 return Err(RuleManagerError::NoMatchingRule);
@@ -380,67 +470,88 @@ impl RuleManager {
         rule_id: RuleId,
     ) -> Result<(), RuleManagerError> {
         // Remove rule from client
-        let no_more_clients = {
-            let mut subscriptions_write = self.subscriptions.write().await;
-            let Some(rules) = subscriptions_write.get_right_mut(&client_id) else {
+        match self
+            .subscriptions
+            .write()
+            .await
+            .remove_right_from_left(&client_id, &rule_id)
+        {
+            RemovedWithCleanUp(clean_up_data) => {
+                let BiMapCleanupData {
+                    rights: Some(_), ..
+                } = clean_up_data
+                else {
+                    unreachable!(); // remove_right_from_left always returns Some in rights if cleanup happened
+                                    // TODO: make this better
+                };
+                // Delete rule from topic_index and rules maps
+                self.delete_rule_from_topic_and_rule_cache(&rule_id).await
+            }
+            RemovedOnly => Ok(()),
+            NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete rule: {}",
                     client_id
                 );
-                return Err(RuleManagerError::NoSuchClient); // Keep this early return
-            };
-            rules.remove(&rule_id);
-            if rules.is_empty() {
-                // Remove client. Since client is no longer subscribed to any rule
-                // no rules are removed as well as a side effect
-                subscriptions_write.remove_left(&client_id);
-                true
-            } else {
-                false
+                Err(RuleManagerError::NoSuchClient)
             }
-        };
-
-        // If no more clients exist for this rule, delete it from rules and topic index
-        // Gaurd
-        if !no_more_clients {
-            return Ok(());
         }
-
-        // Remove from topic index and rules map
-        let topic = match self.rules.read().await.get(&rule_id) {
-            Some(rule) => rule.topic.clone(),
-            None => {
-                warn!("No matching rule found for rule_id {}", rule_id);
-                return Err(RuleManagerError::NoMatchingRule);
-            }
-        };
-        self.topic_index.write().await.remove(&topic);
-        self.rules.write().await.remove(&rule_id);
-
-        Ok(())
     }
 
     /// Deletes a client, and all of its rules.
     /// Removes rules that are no longer subscribed to if needed.
     pub async fn delete_client(&self, client_id: ClientId) -> Result<(), RuleManagerError> {
         // Removing from left returns rules that no longer have clients
-        let empty_rules_op = self.subscriptions.write().await.remove_left(&client_id);
+        match self.subscriptions.write().await.remove_left(&client_id) {
+            RemovedWithCleanUp(clean_up_data) => {
+                let BiMapCleanupData {
+                    rights: Some(rule_ids),
+                    ..
+                } = clean_up_data
+                else {
+                    unreachable!(); // remove_left always returns Some in rights if cleanup happened
+                };
+                for rule_id in rule_ids {
+                    self.delete_rule_from_topic_and_rule_cache(&rule_id).await?;
+                }
+                Ok(())
+            }
+            RemovedOnly => Ok(()),
+            NothingToRemove => {
+                warn!(
+                    "Could not find client in subscriptions bimap to delete client: {}",
+                    client_id
+                );
+                Err(RuleManagerError::NoSuchClient)
+            }
+        }
+    }
 
-        if empty_rules_op.is_none() {
-            return Ok(());
+    async fn delete_rule_from_topic_and_rule_cache(
+        &self,
+        rule_id: &RuleId,
+    ) -> Result<(), RuleManagerError> {
+        let mut rules_map_write = self.rules.write().await;
+        let Some(rule) = rules_map_write.get(rule_id) else {
+            warn!("No matching topic found for rule_id {}", rule_id);
+            return Err(RuleManagerError::NoMatchingRule);
+        };
+
+        let mut topic_index_write = self.topic_index.write().await;
+        let Some(rule_ids_for_topic) = topic_index_write.get_mut(&rule.topic) else {
+            warn!("No matching topic found for rule_id {}", rule_id);
+            return Err(RuleManagerError::NoMatchingRule);
+        };
+
+        // Remove rule from topic and if none left remove topic
+        rule_ids_for_topic.remove(rule_id);
+        if rule_ids_for_topic.is_empty() {
+            topic_index_write.remove(&rule.topic);
         }
 
-        // If there are empty rules (i.e. no clients are subscribed to rule) remove that rule from topic index and rules map
-        let empty_rules = empty_rules_op.unwrap();
-        for rule_id in empty_rules {
-            let mut rules_write = self.rules.write().await;
-            let Some(rule) = rules_write.get(&rule_id) else {
-                warn!("No matching rule found for rule_id {}", rule_id);
-                return Err(RuleManagerError::NoMatchingRule);
-            };
-            self.topic_index.write().await.remove(&rule.topic);
-            rules_write.remove(&rule_id);
-        }
+        // Remove rule from rules map
+        rules_map_write.remove(rule_id);
+
         Ok(())
     }
 }
