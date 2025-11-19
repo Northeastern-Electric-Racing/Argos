@@ -490,7 +490,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
         detail: 'No run selected. Please select a run or choose "Real Time".'
       });
     }
-    this.topicSelectionService.set(this.selectedDataTypes);
   };
 
   clearGraph = false;

@@ -81,7 +81,7 @@ export default class NodeDisplayComponent {
   onSelect(node: NodeWithVisibilityToggle) {
     this.toggleSubnodeVisibility(node);
     if (node.nodes.value.length === 0) {
-      this.topicSelection.add(node.dataType); // Use service instead
+      this.topicSelection.addDataType(node.dataType);
     }
   }
 }

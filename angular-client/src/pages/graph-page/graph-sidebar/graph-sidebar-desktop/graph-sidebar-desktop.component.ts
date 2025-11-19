@@ -86,7 +86,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
           //   // Mark all parents as containing selected nodes
           //   parents.forEach((parent) => containsSelectedNode.set(parent, true));
           // }
-          if (node.selectable && node.data?.dataType && this.topicSelectionService.selected.includes(node.data.dataType)) {
+          if (node.selectable && node.data?.dataType && this.topicSelectionService.isSelected(node.data.dataType)) {
             selected.push(node);
 
             // Mark all parents as containing selected nodes
@@ -131,7 +131,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   clearSelections = () => {
     this.treeNodes.forEach((n) => (n.expanded = false));
     this.selectedDataTypesList = [];
-    this.topicSelectionService.clear(); // publish
+    this.topicSelectionService.clearSelection();
     this.selectedNodes = undefined;
   };
 
@@ -153,7 +153,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     const dt = event.node.data?.dataType;
     if (dt && !this.selectedDataTypesList.includes(dt)) {
       this.selectedDataTypesList.push(dt);
-      this.topicSelectionService.add(dt); // publish
+      this.topicSelectionService.addDataType(dt);
     }
   }
 
@@ -183,7 +183,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     const dt = event.node.data?.dataType;
     if (dt) {
       this.selectedDataTypesList = this.selectedDataTypesList.filter((x) => x !== dt);
-      this.topicSelectionService.remove(dt); // publish
+      this.topicSelectionService.removeDataType(dt);
     }
   }
 }
