@@ -43,7 +43,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
 })
 export default class GraphSidebarMobileComponent implements OnInit {
   @Input() dataTypes!: DataType[];
-  @Input() selectedDataTypes!: (dataTypes: DataType[]) => void;
   nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
   showSelection = false;
   nodes!: Node[];

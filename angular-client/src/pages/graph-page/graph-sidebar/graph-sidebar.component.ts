@@ -6,7 +6,6 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
 /**
  * Sidebar component wrapper that determines to display mobile or desktop sidebar.
  * @param nodes The nodes to display on the sidebar.
- * @param selectDataType The function to call when a data type is selected.
  */
 @Component({
   selector: 'graph-sidebar',
@@ -17,7 +16,6 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
 })
 export default class GraphSidebarComponent implements OnInit {
   dataTypes = input.required<DataType[]>();
-  selectDataTypes = input.required<(dataTypes: DataType[]) => void>();
   currentSelectedDataTypes = input<DataType[]>([]);
 
   isMobile!: boolean;

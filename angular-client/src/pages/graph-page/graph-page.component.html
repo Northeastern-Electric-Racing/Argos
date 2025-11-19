@@ -90,7 +90,6 @@
         @if (this.showSideBar) {
           <graph-sidebar
             [dataTypes]="dataTypes"
-            [selectDataTypes]="this.setSelectedDataTypes"
             [currentSelectedDataTypes]="this.selectedDataTypes"
             class="desktop-sidebar"
           />
@@ -109,7 +108,6 @@
         </div>
         <graph-sidebar
           [dataTypes]="dataTypes!"
-          [selectDataTypes]="this.setSelectedDataTypes"
           [currentSelectedDataTypes]="this.selectedDataTypes"
           class="mobile-sidebar"
         />

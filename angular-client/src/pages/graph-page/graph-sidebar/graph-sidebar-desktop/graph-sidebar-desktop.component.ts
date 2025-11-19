@@ -4,6 +4,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { BehaviorSubject, debounceTime, Subscription } from 'rxjs';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
 import Storage from 'src/services/storage.service';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
@@ -25,8 +26,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
 })
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
+  private topicSelectionService = inject(TopicSelectionService);
   dataTypes = input<DataType[]>([]);
-  selectedDataTypes = input.required<(dataTypes: DataType[]) => void>();
   nodes: Node[] = [];
   currentSelectedDataTypes = input.required<DataType[]>();
 
@@ -119,7 +120,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
       node.expanded = false;
     });
     this.selectedDataTypesList = [];
-    this.selectedDataTypes()([]);
+    this.topicSelectionService.clearSelection();
     this.selectedNodes = undefined;
   };
 
@@ -133,7 +134,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     const dataType = node.data?.dataType;
     if (dataType && !this.selectedDataTypesList.includes(dataType)) {
       this.selectedDataTypesList.push(dataType);
-      this.selectedDataTypes()([...this.selectedDataTypesList]);
+      this.topicSelectionService.setSelectedDataTypes([...this.selectedDataTypesList]);
     }
   }
 
@@ -155,7 +156,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
       const dataType = node.data?.dataType;
       if (dataType) {
         this.selectedDataTypesList = this.selectedDataTypesList.filter((dt) => dt !== dataType);
-        this.selectedDataTypes()([...this.selectedDataTypesList]);
+        this.topicSelectionService.setSelectedDataTypes([...this.selectedDataTypesList]);
       }
     }
   }
