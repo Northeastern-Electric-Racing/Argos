@@ -11,7 +11,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DurationSeconds;
 use std::borrow::Borrow;
-use std::collections::HashSet;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -354,7 +353,7 @@ impl RuleManager {
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
         for rule_id in rule_ids {
-            let (rule_triggered, clients) = {
+            let (triggered_result, clients_result) = {
                 let triggered_future = async {
                     let mut rules_write = self.rules.write().await;
                     let Some(rule) = rules_write.get_mut(&rule_id) else {
@@ -368,18 +367,8 @@ impl RuleManager {
                     }
                 };
 
-                let clients_future = async {
-                    match self.subscriptions.read().await.get_left(&rule_id) {
-                        Some(clients) => Ok(clients.clone()),
-                        None => {
-                            trace!(
-                                "Could not find clients for rule in subscriptions bimap: {}",
-                                data.name
-                            );
-                            return Err(RuleManagerError::NoMatchingRule);
-                        }
-                    }
-                };
+                let clients_future =
+                    async { self.subscriptions.read().await.get_left(&rule_id).cloned() };
 
                 tokio::pin!(triggered_future);
                 tokio::pin!(clients_future);
@@ -389,29 +378,25 @@ impl RuleManager {
                     triggered_result = &mut triggered_future => {
                         match triggered_result? {
                             true => (Ok(true), clients_future.await),
-                            false => (Ok(false), Ok(FxHashSet::default())),
+                            false => (Ok(false), None),
                         }
                     },
                     clients_result = &mut clients_future => {
-                        let triggered_result = triggered_future.await;
-                        (triggered_result, clients_result)
+                        match clients_result {
+                            Some(_) => (triggered_future.await, clients_result),
+                            None => (Ok(false), None)
+                        }
                     }
                 }
             };
 
-            let triggered = rule_triggered?;
-            if !triggered {
+            let triggered = triggered_result?;
+            if !triggered || clients_result.is_none() {
                 continue;
             }
 
-            let clients = clients?;
-            // Clients should never be empty
-            if clients.is_empty() {
-                warn!("Empty subscriptions entry for rule {}!", rule_id);
-            }
-
             // Push notifications for all clients who are subscribed to this rule
-            for client in clients {
+            for client in clients_result.unwrap() {
                 notifications.push((
                     client.clone(),
                     RuleNotification {
@@ -437,7 +422,7 @@ impl RuleManager {
         let topic = rule.topic.clone();
 
         // Run all three writes concurrently
-        let ((), (), ()) = tokio::join!(
+        tokio::join!(
             async {
                 // Add to subscriptions bimap
                 self.subscriptions.write().await.insert(&client, &rule_id);
@@ -474,11 +459,7 @@ impl RuleManager {
             .await
             .remove_right_from_left(&client_id, &rule_id)
         {
-            RemovedWithCleanUp(rule_id) => {
-                // No more clients for this rule, delete it from topic and rule cache
-                self.delete_rule_from_topic_and_rule_cache(&rule_id).await
-            }
-            RemovedOnly => Ok(()),
+            RemovedWithCleanUp(_) | RemovedOnly => Ok(()),
             NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete rule: {}",
@@ -494,13 +475,7 @@ impl RuleManager {
     pub async fn delete_client(&self, client_id: ClientId) -> Result<(), RuleManagerError> {
         // Removing from left returns rules that no longer have clients
         match self.subscriptions.write().await.remove_left(&client_id) {
-            RemovedWithCleanUp(rule_ids) => {
-                for rule_id in rule_ids {
-                    self.delete_rule_from_topic_and_rule_cache(&rule_id).await?;
-                }
-                Ok(())
-            }
-            RemovedOnly => Ok(()),
+            RemovedWithCleanUp(_) | RemovedOnly => Ok(()),
             NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete client: {}",
@@ -509,48 +484,5 @@ impl RuleManager {
                 Err(RuleManagerError::NoSuchClient)
             }
         }
-    }
-
-    async fn delete_rule_from_topic_and_rule_cache(
-        &self,
-        rule_id: &RuleId,
-    ) -> Result<(), RuleManagerError> {
-        let topic = {
-            let rules_read = self.rules.read().await;
-            let Some(rule) = rules_read.get(rule_id) else {
-                warn!("No matching topic found for rule_id {}", rule_id);
-                return Err(RuleManagerError::NoMatchingRule);
-            };
-            rule.topic.clone()
-        };
-
-        let (topic_result, rules_result) = tokio::join!(
-            async {
-                // Remove rule from topic index
-                let mut topic_index_write = self.topic_index.write().await;
-                let Some(rule_ids_for_topic) = topic_index_write.get_mut(&topic) else {
-                    warn!("No matching topic found for rule_id {}", rule_id);
-                    return Err(RuleManagerError::NoMatchingRule);
-                };
-                // Remove rule from topic and if none left remove topic
-                rule_ids_for_topic.remove(rule_id);
-                if rule_ids_for_topic.is_empty() {
-                    topic_index_write.remove(&topic);
-                }
-                Ok(())
-            },
-            async {
-                if self.rules.write().await.remove(rule_id).is_none() {
-                    warn!("No matching rule found for rule_id {}", rule_id);
-                    Err(RuleManagerError::NoMatchingRule)
-                } else {
-                    Ok(())
-                }
-            }
-        );
-
-        topic_result?;
-        rules_result?;
-        Ok(())
     }
 }
