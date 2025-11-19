@@ -24,7 +24,6 @@ import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FormsModule } from '@angular/forms';
-import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 @Component({
   selector: 'graph-page',
@@ -52,12 +51,11 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
-  private topicSelectionService = inject(TopicSelectionService);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime
   subscriptions: Subscription[] = [];
-  // Separate subscription for topic selection service (should never be cleared)
-  private topicSelectionSubscription?: Subscription;
+  // Persistent subscriptions that should not be cleared when switching data modes
+  persistentSubscriptions: Subscription[] = [];
 
   // the local tracking of selected data types
   selectedDataTypes: DataType[] = [];
@@ -177,37 +175,33 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.queryDataTypes();
     this.run = undefined;
 
-    // Subscribe to the topic selection service
-    // This subscription persists for the lifetime of the component
-    this.topicSelectionSubscription = this.topicSelectionService.getSelectedDataTypes().subscribe((dataTypes) => {
-      // Only process if we have data types AND they're different from current selection
-      if (dataTypes.length > 0 || this.selectedDataTypes.length > 0) {
-        this.processDataTypeSelection(dataTypes);
-      }
-    });
+    // Subscribe to the topic selection service (persistent - should not be cleared)
+    this.persistentSubscriptions.push(
+      this.topicSelectionService.getSelectedDataTypes().subscribe((dataTypes) => {
+        // Only process if we have data types AND they're different from current selection
+        if (dataTypes.length > 0 || this.selectedDataTypes.length > 0) {
+          this.processDataTypeSelection(dataTypes);
+        }
+      })
+    );
 
     this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
     if (this.onFaultPage) this.initFaultPage();
     else this.initGeneralPage();
-
-    this.subscriptions.push(
-      this.topicSelectionService.selectedTopics$.subscribe((topics) => {
-        // Mirror service → existing method (keeps current graph logic intact)
-        this.setSelectedDataTypes(topics);
-      })
-    );
   }
 
   // All memory in use should be discarded here.
   ngOnDestroy(): void {
-    // Unsubscribe from data subscriptions
+    // Clean up regular subscriptions
     this.subscriptions.forEach((sub) => {
       sub.unsubscribe();
     });
-    // Unsubscribe from topic selection service
-    if (this.topicSelectionSubscription) {
-      this.topicSelectionSubscription.unsubscribe();
-    }
+
+    // Clean up persistent subscriptions
+    this.persistentSubscriptions.forEach((sub) => {
+      sub.unsubscribe();
+    });
+
     this.selectedDataTypeValuesSubject.forEach((subject) => {
       subject.complete();
     });
@@ -225,19 +219,19 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.rightHeader = `Real Time`;
 
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
-    this.subscriptions.push(
+    this.persistentSubscriptions.push(
       runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
         this.runsIsLoading = isLoading;
       })
     );
-    this.subscriptions.push(
+    this.persistentSubscriptions.push(
       runsQueryResponse.error.subscribe((error) => {
         if (error) {
           this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
         }
       })
     );
-    this.subscriptions.push(
+    this.persistentSubscriptions.push(
       runsQueryResponse.data.subscribe((data) => {
         if (data) {
           this.allRuns = data;
@@ -254,7 +248,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     if (!this.selectedFault) {
       this.router.navigate([appRoutes.faultsRoute()]);
     }
-    this.subscriptions.push(selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault)));
+    this.persistentSubscriptions.push(selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault)));
     this.rightHeader = `Fault: ${this.selectedFault?.name}`;
   };
 
@@ -321,12 +315,12 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
    */
   private queryDataTypes() {
     const dataTypesQueryResponse = this.serverService.query<DataType[]>(getAllDatatypes);
-    this.subscriptions.push(
+    this.persistentSubscriptions.push(
       dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
         this.dataTypesIsLoading = isLoading;
       })
     );
-    this.subscriptions.push(
+    this.persistentSubscriptions.push(
       dataTypesQueryResponse.error.subscribe((error) => {
         if (error) {
           this.dataTypesIsError = true;
@@ -334,7 +328,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
         }
       })
     );
-    this.subscriptions.push(
+    this.persistentSubscriptions.push(
       dataTypesQueryResponse.data.subscribe((data) => {
         if (data) {
           this.dataTypes = data;
