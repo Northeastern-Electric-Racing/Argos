@@ -26,7 +26,7 @@ static ASCII_LOWER: [char; 26] = [
 ];
 
 #[derive(Debug, Clone)]
-enum BiMapRemoveResult<T> {
+pub enum BiMapRemoveResult<T> {
     /// Removed succesfully, and also removed any empty mappings \
     /// Contains the data that was thrown out from the map because they were unused.
     RemovedWithCleanUp(T),
@@ -35,7 +35,7 @@ enum BiMapRemoveResult<T> {
     NothingToRemove,
 }
 
-struct BiMultiMap<L, R> {
+pub struct BiMultiMap<L, R> {
     left_to_right: FxHashMap<L, FxHashSet<R>>,
     right_to_left: FxHashMap<R, FxHashSet<L>>,
 }
@@ -187,7 +187,7 @@ pub struct RuleId(pub String);
 
 /// a MQTT topic to trigger on, add to derives to get more string features
 #[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
-pub struct Topic(String);
+pub struct Topic(pub String);
 
 impl Borrow<str> for Topic {
     fn borrow(&self) -> &str {
@@ -210,7 +210,7 @@ pub struct RuleNotification {
 }
 
 #[serde_as]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 /// A single modular rule, can be serial/deserialized
 pub struct Rule {
     id: RuleId,
@@ -306,6 +306,7 @@ impl Rule {
 }
 
 /// errors seen in the rule manager
+#[derive(Debug)]
 pub enum RuleManagerError {
     NoMatchingRule,
     NoSuchClient,
@@ -354,19 +355,21 @@ impl RuleManager {
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
         for rule_id in rule_ids {
             let (triggered_result, clients_result) = {
+                // Future for if rule was triggered
                 let triggered_future = async {
-                    let mut rules_write = self.rules.write().await;
-                    let Some(rule) = rules_write.get_mut(&rule_id) else {
-                        trace!("Could not find rule in rules map: {}", rule_id);
-                        return Err(RuleManagerError::NoMatchingRule);
-                    };
-                    if let Some(triggered) = rule.tick(&data.values) {
-                        Ok(triggered)
+                    if let Some(rule) = self.rules.write().await.get_mut(&rule_id) {
+                        if let Some(triggered) = rule.tick(&data.values) {
+                            Ok(triggered)
+                        } else {
+                            Err(RuleManagerError::RuleFailure)
+                        }
                     } else {
-                        Err(RuleManagerError::RuleFailure)
+                        trace!("Could not find rule in rules map: {}", rule_id);
+                        Err(RuleManagerError::NoMatchingRule)
                     }
                 };
 
+                // Future for getting subscribed clients
                 let clients_future =
                     async { self.subscriptions.read().await.get_left(&rule_id).cloned() };
 
@@ -445,7 +448,7 @@ impl RuleManager {
         Ok(())
     }
 
-    /// Deletes a rule from client, if no more clients exist for the rule, delete it entirely. \
+    /// Deletes a rule from client. \
     /// If no more rules exist for that client, the client is also removed.
     pub async fn delete_rule(
         &self,
@@ -484,5 +487,15 @@ impl RuleManager {
                 Err(RuleManagerError::NoSuchClient)
             }
         }
+    }
+
+    pub async fn get_all_rules(&self) -> Vec<Rule> {
+        self.rules
+            .read()
+            .await
+            .values()
+            .into_iter()
+            .map(|rule| rule.clone())
+            .collect()
     }
 }
