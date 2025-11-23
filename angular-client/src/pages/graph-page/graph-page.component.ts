@@ -459,16 +459,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   };
 
   /**
-   * Sets the selected data type through the service.
-   * This updates the shared service state, which will trigger the subscription
-   * in ngOnInit to process the selection change.
-   * @param dataTypes Array of data types to set as selected
-   */
-  setSelectedDataTypes = (dataTypes: DataType[]) => {
-    this.topicSelectionService.setSelectedDataTypes(dataTypes);
-  };
-
-  /**
    * Processes data type selection changes from the service.
    * This is called when the service emits a new selection.
    * @param dataTypes The new array of selected data types

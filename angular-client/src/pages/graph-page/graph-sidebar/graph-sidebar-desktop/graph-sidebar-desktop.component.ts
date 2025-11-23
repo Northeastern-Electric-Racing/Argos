@@ -80,12 +80,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
       const findSelected = (nodes: TreeNode<Node>[], parents: TreeNode<Node>[] = []): void => {
         for (const node of nodes) {
           // Check if this is a leaf node and matches a selected data type
-          // if (node.selectable && node.data?.dataType && this.currentSelectedDataTypes().includes(node.data.dataType)) {
-          //   selected.push(node);
-
-          //   // Mark all parents as containing selected nodes
-          //   parents.forEach((parent) => containsSelectedNode.set(parent, true));
-          // }
           if (node.selectable && node.data?.dataType && this.topicSelectionService.isSelected(node.data.dataType)) {
             selected.push(node);
 
@@ -120,14 +114,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     this.filterFormSubsription.unsubscribe();
   }
 
-  // clearSelections = () => {
-  //   this.treeNodes.forEach((node) => {
-  //     node.expanded = false;
-  //   });
-  //   this.selectedDataTypesList = [];
-  //   this.selectedDataTypes()([]);
-  //   this.selectedNodes = undefined;
-  // };
   clearSelections = () => {
     this.treeNodes.forEach((n) => (n.expanded = false));
     this.selectedDataTypesList = [];
@@ -138,16 +124,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   transformDataTypeName(dataTypeName: string) {
     return dataTypeNamePipe(dataTypeName);
   }
-
-  // nodeSelect(event: TreeNodeSelectEvent) {
-  //   const { node } = event;
-  //   // Only add if it's a leaf node (no children)
-  //   const dataType = node.data?.dataType;
-  //   if (dataType && !this.selectedDataTypesList.includes(dataType)) {
-  //     this.selectedDataTypesList.push(dataType);
-  //     this.selectedDataTypes()([...this.selectedDataTypesList]);
-  //   }
-  // }
 
   nodeSelect(event: TreeNodeSelectEvent) {
     const dt = event.node.data?.dataType;
@@ -168,17 +144,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     /* leaf rows fall through → normal multi‑selection behaviour */
   }
 
-  // onNodeUnselect(event: TreeNodeUnSelectEvent) {
-  //   const { node } = event;
-  //   // Only remove if it's a leaf node (no children)
-  //   if (!node.children || node.children.length === 0) {
-  //     const dataType = node.data?.dataType;
-  //     if (dataType) {
-  //       this.selectedDataTypesList = this.selectedDataTypesList.filter((dt) => dt !== dataType);
-  //       this.selectedDataTypes()([...this.selectedDataTypesList]);
-  //     }
-  //   }
-  // }
   onNodeUnselect(event: TreeNodeUnSelectEvent) {
     const dt = event.node.data?.dataType;
     if (dt) {
