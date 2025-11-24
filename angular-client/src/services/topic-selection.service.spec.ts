@@ -147,4 +147,3 @@ describe('TopicSelectionService', () => {
     });
   });
 });
-

@@ -51,9 +51,7 @@ export class TopicSelectionService {
    */
   addDataTypes = (dataTypes: DataType[]) => {
     const currentSelection = this.selectedDataTypes.value;
-    const newDataTypes = dataTypes.filter(
-      (dt) => !currentSelection.some((existing) => existing.name === dt.name)
-    );
+    const newDataTypes = dataTypes.filter((dt) => !currentSelection.some((existing) => existing.name === dt.name));
     if (newDataTypes.length > 0) {
       this.selectedDataTypes.next([...currentSelection, ...newDataTypes]);
     }
@@ -121,4 +119,3 @@ export class TopicSelectionService {
     return this.selectedDataTypes.value.length;
   };
 }
-
