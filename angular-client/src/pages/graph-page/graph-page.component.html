@@ -88,12 +88,13 @@
 
       <div class="content-div">
         @if (this.showSideBar) {
-          <graph-sidebar
+          <!-- <graph-sidebar
             [dataTypes]="dataTypes"
             [selectDataTypes]="this.setSelectedDataTypes"
             [currentSelectedDataTypes]="this.selectedDataTypes"
             class="desktop-sidebar"
-          />
+          /> -->
+          <graph-sidebar [dataTypes]="dataTypes" class="desktop-sidebar" />
         }
         <div class="right-container">
           <graph
@@ -107,12 +108,13 @@
             [graphConfig]="this.graphConfig"
           />
         </div>
-        <graph-sidebar
+        <!-- <graph-sidebar
           [dataTypes]="dataTypes!"
           [selectDataTypes]="this.setSelectedDataTypes"
           [currentSelectedDataTypes]="this.selectedDataTypes"
           class="mobile-sidebar"
-        />
+        /> -->
+        <graph-sidebar [dataTypes]="dataTypes!" class="mobile-sidebar" />
       </div>
     </div>
   }

@@ -1,10 +1,11 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, Input } from '@angular/core';
-import { DataType, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+import { Component, Input, inject } from '@angular/core';
+import { NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
 import { AsyncPipe } from '@angular/common';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import SidebarCardComponent from '../sidebar-card/sidebar-card.component';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 /**
  * Node display component to display a card in the sidebar.
@@ -66,7 +67,8 @@ export default class NodeDisplayComponent {
   @Input() node!: NodeWithVisibilityToggle;
   @Input() isDesktop: boolean = true;
   @Input() searchFilter: string = '';
-  @Input() selectDataTypes!: (dataType: DataType[]) => void;
+
+  private topicSelection = inject(TopicSelectionService);
 
   /**
    * Toggles Visibility whenever a node is selected
@@ -79,7 +81,7 @@ export default class NodeDisplayComponent {
   onSelect(node: NodeWithVisibilityToggle) {
     this.toggleSubnodeVisibility(node);
     if (node.nodes.value.length === 0) {
-      this.selectDataTypes([node.dataType]);
+      this.topicSelection.addDataType(node.dataType);
     }
   }
 }
