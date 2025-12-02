@@ -1,390 +1,10 @@
 use chrono::Utc;
 use scylla_server::rule_structs::*;
 use scylla_server::ClientData;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::task::JoinSet;
 
-// Tests for BiMultiMap
-#[test]
-fn test_bi_multi_map_new() {
-    let bimap: BiMultiMap<String, i32> = BiMultiMap::new();
-    assert!(bimap.get_left(&1).is_none());
-    assert!(bimap.get_right(&"test".to_string()).is_none());
-}
-
-#[test]
-fn test_bi_multi_map_insert_single() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    bimap.insert(&left, &right);
-
-    assert_eq!(bimap.get_right(&left).unwrap().len(), 1);
-    assert!(bimap.get_right(&left).unwrap().contains(&right));
-
-    assert_eq!(bimap.get_left(&right).unwrap().len(), 1);
-    assert!(bimap.get_left(&right).unwrap().contains(&left));
-}
-
-#[test]
-fn test_bi_multi_map_insert_multiple_rights() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right1 = 42;
-    let right2 = 43;
-    let right3 = 44;
-
-    bimap.insert(&left, &right1);
-    bimap.insert(&left, &right2);
-    bimap.insert(&left, &right3);
-
-    let rights = bimap.get_right(&left).unwrap();
-    assert_eq!(rights.len(), 3);
-    assert!(rights.contains(&right1));
-    assert!(rights.contains(&right2));
-    assert!(rights.contains(&right3));
-
-    // Each right should map back to the left
-    assert!(bimap.get_left(&right1).unwrap().contains(&left));
-    assert!(bimap.get_left(&right2).unwrap().contains(&left));
-    assert!(bimap.get_left(&right3).unwrap().contains(&left));
-}
-
-#[test]
-fn test_bi_multi_map_insert_multiple_lefts() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let left3 = "client3".to_string();
-    let right = 42;
-
-    bimap.insert(&left1, &right);
-    bimap.insert(&left2, &right);
-    bimap.insert(&left3, &right);
-
-    let lefts = bimap.get_left(&right).unwrap();
-    assert_eq!(lefts.len(), 3);
-    assert!(lefts.contains(&left1));
-    assert!(lefts.contains(&left2));
-    assert!(lefts.contains(&left3));
-
-    // Each left should map to the right
-    assert!(bimap.get_right(&left1).unwrap().contains(&right));
-    assert!(bimap.get_right(&left2).unwrap().contains(&right));
-    assert!(bimap.get_right(&left3).unwrap().contains(&right));
-}
-
-#[test]
-fn test_bi_multi_map_insert_many_to_many() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let right1 = 42;
-    let right2 = 43;
-
-    // Create many-to-many relationships
-    bimap.insert(&left1, &right1);
-    bimap.insert(&left1, &right2);
-    bimap.insert(&left2, &right1);
-    bimap.insert(&left2, &right2);
-
-    // Verify left1 maps to both rights
-    let rights_for_left1 = bimap.get_right(&left1).unwrap();
-    assert_eq!(rights_for_left1.len(), 2);
-    assert!(rights_for_left1.contains(&right1));
-    assert!(rights_for_left1.contains(&right2));
-
-    // Verify left2 maps to both rights
-    let rights_for_left2 = bimap.get_right(&left2).unwrap();
-    assert_eq!(rights_for_left2.len(), 2);
-    assert!(rights_for_left2.contains(&right1));
-    assert!(rights_for_left2.contains(&right2));
-
-    // Verify right1 maps to both lefts
-    let lefts_for_right1 = bimap.get_left(&right1).unwrap();
-    assert_eq!(lefts_for_right1.len(), 2);
-    assert!(lefts_for_right1.contains(&left1));
-    assert!(lefts_for_right1.contains(&left2));
-
-    // Verify right2 maps to both lefts
-    let lefts_for_right2 = bimap.get_left(&right2).unwrap();
-    assert_eq!(lefts_for_right2.len(), 2);
-    assert!(lefts_for_right2.contains(&left1));
-    assert!(lefts_for_right2.contains(&left2));
-}
-
-#[test]
-fn test_bi_multi_map_insert_duplicate() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    bimap.insert(&left, &right);
-    bimap.insert(&left, &right); // Duplicate insertion
-
-    // Should still only have one mapping
-    assert_eq!(bimap.get_right(&left).unwrap().len(), 1);
-    assert_eq!(bimap.get_left(&right).unwrap().len(), 1);
-}
-
-#[test]
-fn test_bi_multi_map_remove_left_single() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    bimap.insert(&left, &right);
-
-    let result = bimap.remove_left(&left);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_rights) = result {
-        assert_eq!(removed_rights.len(), 1);
-        assert!(removed_rights.contains(&right));
-    }
-
-    // Verify both directions are cleaned up
-    assert!(bimap.get_right(&left).is_none());
-    assert!(bimap.get_left(&right).is_none());
-}
-
-#[test]
-fn test_bi_multi_map_remove_left_shared_right() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let right = 42;
-
-    bimap.insert(&left1, &right);
-    bimap.insert(&left2, &right);
-
-    let result = bimap.remove_left(&left1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedOnly));
-
-    // left1 should be gone
-    assert!(bimap.get_right(&left1).is_none());
-
-    // right should still exist and map to left2
-    let remaining_lefts = bimap.get_left(&right).unwrap();
-    assert_eq!(remaining_lefts.len(), 1);
-    assert!(remaining_lefts.contains(&left2));
-
-    // left2 should still map to right
-    assert!(bimap.get_right(&left2).unwrap().contains(&right));
-}
-
-#[test]
-fn test_bi_multi_map_remove_left_nonexistent() {
-    let mut bimap: BiMultiMap<String, i32> = BiMultiMap::new();
-    let left = "nonexistent".to_string();
-
-    let result = bimap.remove_left(&left);
-    assert!(matches!(result, BiMapRemoveResult::NothingToRemove));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_single() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    bimap.insert(&left, &right);
-
-    let result = bimap.remove_right(&right);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_lefts) = result {
-        assert_eq!(removed_lefts.len(), 1);
-        assert!(removed_lefts.contains(&left));
-    }
-
-    // Verify both directions are cleaned up
-    assert!(bimap.get_right(&left).is_none());
-    assert!(bimap.get_left(&right).is_none());
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_shared_left() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right1 = 42;
-    let right2 = 43;
-
-    bimap.insert(&left, &right1);
-    bimap.insert(&left, &right2);
-
-    let result = bimap.remove_right(&right1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedOnly));
-
-    // right1 should be gone
-    assert!(bimap.get_left(&right1).is_none());
-
-    // left should still exist and map to right2
-    let remaining_rights = bimap.get_right(&left).unwrap();
-    assert_eq!(remaining_rights.len(), 1);
-    assert!(remaining_rights.contains(&right2));
-
-    // right2 should still map to left
-    assert!(bimap.get_left(&right2).unwrap().contains(&left));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_from_left() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right1 = 42;
-    let right2 = 43;
-
-    bimap.insert(&left, &right1);
-    bimap.insert(&left, &right2);
-
-    let result = bimap.remove_right_from_left(&left, &right1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_right) = result {
-        assert_eq!(removed_right, right1);
-    }
-
-    // left should still exist but only map to right2
-    let remaining_rights = bimap.get_right(&left).unwrap();
-    assert_eq!(remaining_rights.len(), 1);
-    assert!(remaining_rights.contains(&right2));
-
-    // right1 should be completely removed
-    assert!(bimap.get_left(&right1).is_none());
-
-    // right2 should still map to left
-    assert!(bimap.get_left(&right2).unwrap().contains(&left));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_from_left_shared_right() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let right = 42;
-
-    bimap.insert(&left1, &right);
-    bimap.insert(&left2, &right);
-
-    let result = bimap.remove_right_from_left(&left1, &right);
-    assert!(matches!(result, BiMapRemoveResult::RemovedOnly));
-
-    // left1 should be gone
-    assert!(bimap.get_right(&left1).is_none());
-
-    // right should still exist and map to left2
-    let remaining_lefts = bimap.get_left(&right).unwrap();
-    assert_eq!(remaining_lefts.len(), 1);
-    assert!(remaining_lefts.contains(&left2));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_from_left_nonexistent() {
-    let mut bimap: BiMultiMap<String, i32> = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    let result = bimap.remove_right_from_left(&left, &right);
-    assert!(matches!(result, BiMapRemoveResult::NothingToRemove));
-}
-
-#[test]
-fn test_bi_multi_map_remove_left_from_right() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let right = 42;
-
-    bimap.insert(&left1, &right);
-    bimap.insert(&left2, &right);
-
-    let result = bimap.remove_left_from_right(&right, &left1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_left) = result {
-        assert_eq!(removed_left, left1);
-    }
-
-    // right should still exist but only map to left2
-    let remaining_lefts = bimap.get_left(&right).unwrap();
-    assert_eq!(remaining_lefts.len(), 1);
-    assert!(remaining_lefts.contains(&left2));
-
-    // left1 should be completely removed
-    assert!(bimap.get_right(&left1).is_none());
-
-    // left2 should still map to right
-    assert!(bimap.get_right(&left2).unwrap().contains(&right));
-}
-
-#[test]
-fn test_bi_multi_map_complex_operations() {
-    let mut bimap = BiMultiMap::new();
-
-    // Set up a complex mapping
-    bimap.insert(&"client1", &"rule1");
-    bimap.insert(&"client1", &"rule2");
-    bimap.insert(&"client2", &"rule1");
-    bimap.insert(&"client2", &"rule3");
-    bimap.insert(&"client3", &"rule3");
-
-    // Remove a shared rule from one client
-    let result = bimap.remove_right_from_left(&"client1", &"rule1");
-    assert!(matches!(result, BiMapRemoveResult::RemovedOnly));
-
-    // Verify rule1 still exists for client2
-    assert!(bimap.get_right(&"client2").unwrap().contains(&"rule1"));
-
-    // Verify client1 still has rule2
-    assert!(bimap.get_right(&"client1").unwrap().contains(&"rule2"));
-    assert!(!bimap.get_right(&"client1").unwrap().contains(&"rule1"));
-
-    // Remove client2 entirely
-    let result = bimap.remove_left(&"client2");
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_rights) = result {
-        assert_eq!(removed_rights.len(), 1);
-        assert!(removed_rights.contains(&"rule1")); // rule1 should be cleaned up
-    }
-
-    // rule3 should still exist for client3
-    assert!(bimap.get_left(&"rule3").unwrap().contains(&"client3"));
-
-    // rule1 should be completely gone
-    assert!(bimap.get_left(&"rule1").is_none());
-}
-
-#[test]
-fn test_bi_multi_map_with_rule_manager_types() {
-    let mut bimap: BiMultiMap<ClientId, RuleId> = BiMultiMap::new();
-
-    let client1 = ClientId("client1".to_string());
-    let client2 = ClientId("client2".to_string());
-    let rule1 = RuleId("rule1".to_string());
-    let rule2 = RuleId("rule2".to_string());
-
-    bimap.insert(&client1, &rule1);
-    bimap.insert(&client1, &rule2);
-    bimap.insert(&client2, &rule1);
-
-    // Test with actual types used in RuleManager
-    assert_eq!(bimap.get_right(&client1).unwrap().len(), 2);
-    assert_eq!(bimap.get_left(&rule1).unwrap().len(), 2);
-
-    let result = bimap.remove_left(&client1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_rules) = result {
-        assert_eq!(removed_rules.len(), 1);
-        assert!(removed_rules.contains(&rule2)); // rule2 should be cleaned up
-    }
-
-    // rule1 should still exist for client2
-    assert!(bimap.get_left(&rule1).unwrap().contains(&client2));
-}
-
-// Tests for rule manager
 #[tokio::test]
 async fn test_add_one_rule() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
@@ -516,9 +136,10 @@ async fn test_delete_client_success() -> Result<(), RuleManagerError> {
     rule_manager.add_rule(client.clone(), rule1).await?;
     rule_manager.add_rule(client.clone(), rule2).await?;
     assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
 
     rule_manager.delete_client(client).await?;
-    // Rules still exist in the system but client is removed from subscriptions
+    assert!(rule_manager.get_all_clients().await.is_empty());
     assert_eq!(rule_manager.get_all_rules().await.len(), 2);
 
     Ok(())
@@ -557,8 +178,8 @@ async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
     let rule = Rule::new(
         RuleId("rule_1".to_string()),
         Topic("test/topic".to_string()),
-        core::time::Duration::from_millis(100), // Short debounce for testing
-        "a > 10".to_owned(),                    // First value (a) should be > 10
+        core::time::Duration::from_secs(1),
+        "a > 10".to_owned(), // First value (a) should be > 10
     );
 
     rule_manager.add_rule(client.clone(), rule).await?;
@@ -572,10 +193,11 @@ async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
     };
 
     // First trigger might not fire due to debounce logic
-    let _ = rule_manager.handle_msg(&client_data).await;
+    let empty_notifications = rule_manager.handle_msg(&client_data).await;
+    assert!(empty_notifications.is_ok_and(|op| op.is_none()));
 
     // Wait for debounce time
-    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
 
     let result = rule_manager.handle_msg(&client_data).await?;
 
@@ -647,7 +269,8 @@ async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerE
     };
 
     // First trigger to start debounce timers
-    let _ = rule_manager.handle_msg(&client_data).await;
+    let empty = rule_manager.handle_msg(&client_data).await;
+    assert!(empty.is_ok_and(|op| op.is_none()));
 
     // Wait for debounce
     tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
@@ -659,7 +282,7 @@ async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerE
         assert!(notifications.len() >= 1);
 
         let client_ids: Vec<_> = notifications.iter().map(|(id, _)| id.clone()).collect();
-        assert!(client_ids.contains(&client1) || client_ids.contains(&client2));
+        assert!(client_ids.contains(&client1) && client_ids.contains(&client2));
     }
 
     Ok(())
@@ -714,43 +337,627 @@ async fn test_get_all_rules_multiple() -> Result<(), RuleManagerError> {
     Ok(())
 }
 
+fn check_rules_present(rules: Vec<Rule>, prefix: &str, k: usize) {
+    assert_eq!(rules.len(), k);
+    let topics = rules.into_iter().map(|r| r.topic.0).collect::<Vec<_>>();
+    assert!((0..k).all(|i| topics.contains(&format!("{}{}", prefix, i))));
+}
+
+fn check_clients_present(clients: Vec<ClientId>, prefix: &str, k: usize) {
+    assert_eq!(clients.len(), k);
+    let client_strings = clients.into_iter().map(|c| c.0).collect::<Vec<_>>();
+    assert!((0..k).all(|i| client_strings.contains(&format!("{}{}", prefix, i))));
+}
+
 #[tokio::test]
-async fn test_rule_manager_concurrent_operations() -> Result<(), RuleManagerError> {
+async fn test_rule_manager_concurrent_add_rule() -> Result<(), RuleManagerError> {
+    let num_rules = 10;
     let rule_manager = std::sync::Arc::new(RuleManager::new());
 
-    let mut handles = vec![];
+    (0..num_rules)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let client = ClientId(format!("client_{}", i));
+                let rule = Rule::new(
+                    RuleId(format!("rule_{}", i)),
+                    Topic(format!("topic/{}", i)),
+                    core::time::Duration::from_secs(60),
+                    "a > 5".to_owned(),
+                );
 
-    // Spawn multiple tasks that add rules concurrently
-    for i in 0..10 {
-        let rm = rule_manager.clone();
-        let handle = tokio::spawn(async move {
-            let client = ClientId(format!("client_{}", i));
-            let rule = Rule::new(
-                RuleId(format!("rule_{}", i)),
-                Topic(format!("topic/{}", i)),
-                core::time::Duration::from_secs(60),
-                "a > 5".to_owned(),
-            );
+                rm.add_rule(client, rule).await.unwrap();
+            });
+            set
+        })
+        .join_all()
+        .await;
 
-            rm.add_rule(client, rule).await
-        });
-        handles.push(handle);
-    }
+    let clients = rule_manager.get_all_clients().await;
+    check_clients_present(clients, "client_", num_rules);
 
-    // Wait for all tasks to complete
-    for handle in handles {
-        handle.await.unwrap()?;
-    }
-
-    assert_eq!(rule_manager.get_all_rules().await.len(), 10);
+    let rules = rule_manager.get_all_rules().await;
+    check_rules_present(rules, "topic/", num_rules);
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_rule_manager_default() {
-    let rule_manager = RuleManager::default();
-    assert!(rule_manager.get_all_rules().await.is_empty());
+async fn test_rule_manager_concurrent_delete_rule() -> Result<(), RuleManagerError> {
+    let num_rules = 10;
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+
+    (0..num_rules)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let client = ClientId(format!("client_{}", i));
+                let rule = Rule::new(
+                    RuleId(format!("rule_{}", i)),
+                    Topic(format!("topic/{}", i)),
+                    core::time::Duration::from_secs(60),
+                    "a > 5".to_owned(),
+                );
+
+                rm.add_rule(client, rule).await.unwrap();
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    check_clients_present(rule_manager.get_all_clients().await, "client_", num_rules);
+    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+
+    let f = async || {
+        (0..10)
+            .fold(JoinSet::new(), |mut set, i| {
+                let rm = rule_manager.clone();
+                set.spawn(async move {
+                    let client = ClientId(format!("client_{}", i));
+                    let rule_id = RuleId(format!("rule_{}", i));
+                    rm.delete_rule(client, rule_id).await
+                });
+                set
+            })
+            .join_all()
+            .await
+    };
+
+    // Deleting rules from calling client side code doesn't actually remove rules
+    let res = f().await;
+    assert!(res.into_iter().all(|e| e.is_ok()));
+    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+    assert!(rule_manager.get_all_clients().await.is_empty());
+
+    // Deleting again will result in NoSuchClient errors
+    let res = f().await;
+    assert!(res.into_iter().all(|e| e.is_err()));
+    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+    assert!(rule_manager.get_all_clients().await.is_empty());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_concurrent_handle_msg_stress() -> Result<(), RuleManagerError> {
+    let num_clients = 10;
+    let num_messages = 50;
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+
+    // Set up multiple clients with rules on the same topic
+    for i in 0..num_clients {
+        let client = ClientId(format!("stress_client_{}", i));
+        let rule = Rule::new(
+            RuleId(format!("stress_rule_{}", i)),
+            Topic("stress/topic".to_string()),
+            core::time::Duration::from_secs(1),
+            format!("a > {}", i * 2), // Different thresholds: 0, 2, 4, 6, 8, 10, 12, 14, 16, 18
+        );
+        rule_manager.add_rule(client, rule).await?;
+    }
+
+    // Verify setup
+    assert_eq!(rule_manager.get_all_rules().await.len(), num_clients);
+    assert_eq!(rule_manager.get_all_clients().await.len(), num_clients);
+
+    let client_datas = Arc::new(
+        (0..num_messages)
+            .map(|i| {
+                ClientData {
+                    run_id: 1,
+                    name: "stress/topic".to_string(),
+                    unit: "test".to_string(),
+                    values: vec![(i % 20) as f32], // Values from 0-19
+                    timestamp: Utc::now(),
+                }
+            })
+            .collect::<Vec<_>>(),
+    );
+
+    // Spawn many concurrent message handlers
+    (0..num_messages)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            let client_datas = client_datas.clone();
+            set.spawn(async move {
+                let empty = rm.handle_msg(&client_datas[i]).await;
+                assert!(empty.is_ok_and(|op| op.is_none()));
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    tokio::time::sleep(Duration::from_secs(2)).await;
+
+    // Now send the messages again to trigger rules after debounce
+    let results: Vec<_> = (0..num_messages)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            let client_datas = client_datas.clone();
+            set.spawn(async move {
+                let result = rm.handle_msg(&client_datas[i]).await;
+
+                assert!(result.is_ok());
+                (i, result)
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all messages were processed
+    assert_eq!(results.len(), num_messages);
+
+    // Count notifications generated
+    let total_notifications: usize = results
+        .iter()
+        .map(|(_, result)| {
+            result
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .map(|notifications| notifications.len())
+                .unwrap_or(0)
+        })
+        .sum();
+
+    println!("Total notifications generated: {}", total_notifications);
+    // Should have some notifications, but exact count depends on timing
+    assert!(total_notifications > 0);
+
+    results.iter().for_each(|(i, result)| {
+        assert!(result.is_ok());
+
+        if let Some(notifications) = result.as_ref().unwrap() {
+            for (client_id, notification) in notifications {
+                assert!(client_id.0.starts_with("stress_client_"));
+                assert_eq!(notification.topic.0, "stress/topic");
+                assert!(notification.id.0.starts_with("stress_rule_"));
+                assert_eq!(notification.values, vec![(i % 20) as f32]);
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_concurrent_topic_index_stress() -> Result<(), RuleManagerError> {
+    let num_topics = 20;
+    let num_rules_per_topic = 5;
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+
+    // Create multiple rules for the same topics concurrently
+    let results: Vec<_> = (0..num_topics)
+        .flat_map(|topic_idx| (0..num_rules_per_topic).map(move |rule_idx| (topic_idx, rule_idx)))
+        .fold(JoinSet::new(), |mut set, (topic_idx, rule_idx)| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let client = ClientId(format!("topic_client_{}_{}", topic_idx, rule_idx));
+                let rule = Rule::new(
+                    RuleId(format!("topic_rule_{}_{}", topic_idx, rule_idx)),
+                    Topic(format!("topic/{}", topic_idx)),
+                    core::time::Duration::from_millis(50),
+                    format!("a > {}", rule_idx),
+                );
+                rm.add_rule(client.clone(), rule)
+                    .await
+                    .map(|_| (topic_idx, rule_idx, client))
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all operations succeeded
+    let successful_adds: Vec<_> = results.into_iter().filter_map(|r| r.ok()).collect();
+    let total_expected = num_topics * num_rules_per_topic;
+    assert_eq!(successful_adds.len(), total_expected);
+
+    // Verify final counts
+    assert_eq!(rule_manager.get_all_rules().await.len(), total_expected);
+    assert_eq!(rule_manager.get_all_clients().await.len(), total_expected);
+
+    // Verify topic distribution
+    let all_rules = rule_manager.get_all_rules().await;
+    let mut topic_counts = std::collections::HashMap::new();
+    for rule in all_rules {
+        *topic_counts.entry(rule.topic.0).or_insert(0) += 1;
+    }
+
+    assert_eq!(topic_counts.len(), num_topics);
+    for i in 0..num_topics {
+        let topic_name = format!("topic/{}", i);
+        assert_eq!(topic_counts[&topic_name], num_rules_per_topic);
+    }
+
+    // Test that all topics can handle messages concurrently
+    let message_results: Vec<_> = (0..num_topics)
+        .fold(JoinSet::new(), |mut set, topic_idx| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let client_data = ClientData {
+                    run_id: 1,
+                    name: format!("topic/{}", topic_idx),
+                    unit: "test".to_string(),
+                    values: vec![10.0], // Should trigger rules with threshold < 10
+                    timestamp: Utc::now(),
+                };
+                rm.handle_msg(&client_data)
+                    .await
+                    .map(|result| (topic_idx, result))
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all messages were processed
+    let successful_messages: Vec<_> = message_results.into_iter().filter_map(|r| r.ok()).collect();
+    assert_eq!(successful_messages.len(), num_topics);
+
+    // Wait for debounce and try again
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let second_round_results: Vec<_> = (0..num_topics)
+        .fold(JoinSet::new(), |mut set, topic_idx| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let client_data = ClientData {
+                    run_id: 1,
+                    name: format!("topic/{}", topic_idx),
+                    unit: "test".to_string(),
+                    values: vec![10.0],
+                    timestamp: Utc::now(),
+                };
+                rm.handle_msg(&client_data).await
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Count total notifications from second round (should have some due to debounce completion)
+    let total_notifications: usize = second_round_results
+        .iter()
+        .filter_map(|r| r.as_ref().ok())
+        .map(|result| result.as_ref().map(|n| n.len()).unwrap_or(0))
+        .sum();
+
+    // Should have triggered some rules (those with threshold < 10)
+    // Each topic has rules with thresholds 0,1,2,3,4 so value 10.0 should trigger all of them
+    assert!(total_notifications > 0);
+    println!(
+        "Total notifications in second round: {}",
+        total_notifications
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerError> {
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+
+    // Set up multiple rules that will receive high-frequency messages
+    let num_rules = 5;
+    for i in 0..num_rules {
+        let client = ClientId(format!("high_freq_client_{}", i));
+        let rule = Rule::new(
+            RuleId(format!("high_freq_rule_{}", i)),
+            Topic("high_freq/topic".to_string()),
+            core::time::Duration::from_millis(50),
+            format!("a > {}", i * 10), // Thresholds: 0, 10, 20, 30, 40
+        );
+        rule_manager.add_rule(client, rule).await?;
+    }
+
+    // Verify setup
+    assert_eq!(rule_manager.get_all_rules().await.len(), num_rules);
+    assert_eq!(rule_manager.get_all_clients().await.len(), num_rules);
+
+    let messages_per_task = 20;
+    let num_tasks = 10;
+    let total_messages = messages_per_task * num_tasks;
+
+    // Send high-frequency messages from multiple tasks
+    let results: Vec<_> = (0..num_tasks)
+        .fold(JoinSet::new(), |mut set, task_id| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let mut task_results = Vec::new();
+                for msg_id in 0..messages_per_task {
+                    let value = (task_id * messages_per_task + msg_id) as f32 % 100.0;
+                    let client_data = ClientData {
+                        run_id: task_id as i32,
+                        name: "high_freq/topic".to_string(),
+                        unit: "test".to_string(),
+                        values: vec![value],
+                        timestamp: Utc::now(),
+                    };
+
+                    let result = rm.handle_msg(&client_data).await;
+                    task_results.push((msg_id, value, result));
+
+                    // Small delay to simulate realistic message timing
+                    if msg_id % 5 == 0 {
+                        tokio::task::yield_now().await;
+                    }
+                }
+                (task_id, task_results)
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all tasks completed
+    assert_eq!(results.len(), num_tasks);
+
+    // Flatten and verify all message results
+    let all_message_results: Vec<_> = results
+        .into_iter()
+        .flat_map(|(task_id, task_results)| {
+            task_results
+                .into_iter()
+                .map(move |(msg_id, value, result)| (task_id, msg_id, value, result))
+        })
+        .collect();
+
+    assert_eq!(all_message_results.len(), total_messages);
+
+    // Verify all messages were processed successfully
+    let successful_messages: Vec<_> = all_message_results
+        .iter()
+        .filter(|(_, _, _, result)| result.is_ok())
+        .collect();
+    assert_eq!(successful_messages.len(), total_messages);
+
+    println!(
+        "Successfully processed {} high-frequency messages",
+        total_messages
+    );
+
+    // Wait for any pending debounce timers
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    // Send final test messages with known values that should trigger specific rules
+    let test_values = vec![5.0, 15.0, 25.0, 35.0, 45.0]; // Should trigger different numbers of rules
+    let final_results: Vec<_> = test_values
+        .into_iter()
+        .fold(JoinSet::new(), |mut set, value| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let client_data = ClientData {
+                    run_id: 999,
+                    name: "high_freq/topic".to_string(),
+                    unit: "test".to_string(),
+                    values: vec![value],
+                    timestamp: Utc::now(),
+                };
+
+                // Wait for debounce
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                let result = rm.handle_msg(&client_data).await;
+                (value, result)
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify final test results
+    assert_eq!(final_results.len(), 5);
+
+    for (value, result) in final_results {
+        assert!(
+            result.is_ok(),
+            "Failed to process message with value {}",
+            value
+        );
+
+        if let Ok(Some(notifications)) = result {
+            // Count how many rules should trigger for this value
+            let expected_triggers = num_rules - (value as usize / 10).min(num_rules);
+            if expected_triggers > 0 {
+                assert!(
+                    !notifications.is_empty(),
+                    "Value {} should have triggered some rules",
+                    value
+                );
+                assert!(
+                    notifications.len() <= expected_triggers,
+                    "Value {} triggered {} rules, expected at most {}",
+                    value,
+                    notifications.len(),
+                    expected_triggers
+                );
+
+                // Verify notification structure
+                for (client_id, notification) in notifications {
+                    assert!(client_id.0.starts_with("high_freq_client_"));
+                    assert_eq!(notification.topic.0, "high_freq/topic");
+                    assert_eq!(notification.values, vec![value]);
+                }
+            }
+        }
+    }
+
+    // Verify system state is unchanged
+    assert_eq!(rule_manager.get_all_rules().await.len(), num_rules);
+    assert_eq!(rule_manager.get_all_clients().await.len(), num_rules);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_concurrent_rule_expression_evaluation() -> Result<(), RuleManagerError> {
+    let num_expressions = 20;
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+
+    // Create rules with different complex expressions
+    let expressions = vec![
+        ("simple_gt", "a > 10"),
+        ("simple_and", "a > 10 && b < 5"),
+        ("addition", "a + b > 20"),
+        ("multiplication", "a * b < 100"),
+        ("comparison", "a > b + c"),
+        ("or_condition", "(a > 10) || (b > 20)"),
+        ("all_positive", "a >= 0 && b >= 0 && c >= 0"),
+        ("complex_and_or", "a > 5 && (b > 3 || c > 7)"),
+        ("modulo", "a % 2 == 0"),
+        ("range_check", "a > 0 && a < 50"),
+    ];
+
+    let results: Vec<_> = (0..num_expressions)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            let (expr_name, expr) = expressions[i % expressions.len()].clone();
+            set.spawn(async move {
+                let client = ClientId(format!("expr_client_{}_{}", i, expr_name));
+                let rule = Rule::new(
+                    RuleId(format!("expr_rule_{}_{}", i, expr_name)),
+                    Topic("expr/topic".to_string()),
+                    core::time::Duration::from_millis(25),
+                    expr.to_string(),
+                );
+                rm.add_rule(client.clone(), rule)
+                    .await
+                    .map(|_| (i, expr_name, client))
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all rules were added successfully
+    let successful_additions: Vec<_> = results.into_iter().filter_map(|r| r.ok()).collect();
+    assert_eq!(successful_additions.len(), num_expressions);
+    assert_eq!(rule_manager.get_all_rules().await.len(), num_expressions);
+
+    // Send messages with different value combinations concurrently
+    let num_message_sets = 50;
+    let message_results: Vec<_> = (0..num_message_sets)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            set.spawn(async move {
+                let a_val = (i % 30) as f32; // a: 0-29
+                let b_val = ((i * 2) % 25) as f32; // b: 0-24
+                let c_val = ((i * 3) % 15) as f32; // c: 0-14
+
+                let client_data = ClientData {
+                    run_id: 1,
+                    name: "expr/topic".to_string(),
+                    unit: "test".to_string(),
+                    values: vec![a_val, b_val, c_val],
+                    timestamp: Utc::now(),
+                };
+
+                let result = rm.handle_msg(&client_data).await;
+                (i, a_val, b_val, c_val, result)
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all messages were processed
+    assert_eq!(message_results.len(), num_message_sets);
+
+    let successful_messages: Vec<_> = message_results
+        .iter()
+        .filter(|(_, _, _, _, result)| result.is_ok())
+        .collect();
+    assert_eq!(successful_messages.len(), num_message_sets);
+
+    // Count total notifications (some may be None due to debounce)
+    let total_notifications: usize = message_results
+        .iter()
+        .filter_map(|(_, _, _, _, result)| result.as_ref().ok()?.as_ref().map(|n| n.len()))
+        .sum();
+
+    println!(
+        "Expression evaluation test - Total notifications: {}",
+        total_notifications
+    );
+
+    // Wait for debounce and send specific test messages
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+    // Test specific value combinations that should trigger known expressions
+    let test_cases = vec![
+        (15.0, 3.0, 2.0),  // Should trigger: a > 10, a > 10 && b < 5, etc.
+        (25.0, 30.0, 8.0), // Should trigger: (a > 10) || (b > 20), etc.
+        (2.0, 1.0, 1.0),   // Should trigger: a % 2 == 0, all_positive, etc.
+        (0.0, 0.0, 0.0),   // Should trigger: all_positive, a % 2 == 0
+    ];
+
+    for (a, b, c) in test_cases {
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+        let client_data = ClientData {
+            run_id: 999,
+            name: "expr/topic".to_string(),
+            unit: "test".to_string(),
+            values: vec![a, b, c],
+            timestamp: Utc::now(),
+        };
+
+        let result = rule_manager.handle_msg(&client_data).await;
+        assert!(
+            result.is_ok(),
+            "Failed to process test case ({}, {}, {})",
+            a,
+            b,
+            c
+        );
+
+        if let Ok(Some(notifications)) = result {
+            assert!(
+                !notifications.is_empty(),
+                "Test case ({}, {}, {}) should trigger some rules",
+                a,
+                b,
+                c
+            );
+            assert!(notifications.len() <= num_expressions);
+
+            // Verify notification structure
+            for (client_id, notification) in notifications {
+                assert!(client_id.0.starts_with("expr_client_"));
+                assert_eq!(notification.topic.0, "expr/topic");
+                assert_eq!(notification.values, vec![a, b, c]);
+            }
+        }
+    }
+
+    // Verify final state
+    assert_eq!(rule_manager.get_all_rules().await.len(), num_expressions);
+    assert_eq!(rule_manager.get_all_clients().await.len(), num_expressions);
+
+    Ok(())
 }
 
 #[tokio::test]

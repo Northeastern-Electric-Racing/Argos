@@ -49,6 +49,14 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
         }
     }
 
+    pub fn lefts(&self) -> Vec<L> {
+        self.left_to_right.keys().cloned().collect()
+    }
+
+    pub fn rights(&self) -> Vec<R> {
+        self.right_to_left.keys().cloned().collect()
+    }
+
     pub fn get_right(&self, left: &L) -> Option<&FxHashSet<R>> {
         self.left_to_right.get(left)
     }
@@ -497,5 +505,9 @@ impl RuleManager {
             .into_iter()
             .map(|rule| rule.clone())
             .collect()
+    }
+
+    pub async fn get_all_clients(&self) -> Vec<ClientId> {
+        self.subscriptions.read().await.lefts()
     }
 }
