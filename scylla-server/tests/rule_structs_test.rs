@@ -1,6 +1,7 @@
 use chrono::Utc;
 use scylla_server::rule_structs::*;
 use scylla_server::ClientData;
+use std::sync::Arc;
 use tokio::task::JoinSet;
 
 #[tokio::test]
@@ -84,7 +85,7 @@ async fn test_delete_client_success() -> Result<(), RuleManagerError> {
 
 #[tokio::test]
 async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
+    let rule_manager = Arc::new(RuleManager::new());
     let client = ClientId("test_client".to_string());
 
     let rule = Rule::new(
@@ -123,7 +124,7 @@ async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
 
 #[tokio::test]
 async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
+    let rule_manager = Arc::new(RuleManager::new());
     let client1 = ClientId("client1".to_string());
     let client2 = ClientId("client2".to_string());
 
