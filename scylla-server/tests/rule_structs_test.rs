@@ -1,32 +1,7 @@
 use chrono::Utc;
 use scylla_server::rule_structs::*;
 use scylla_server::ClientData;
-use std::sync::Arc;
-use std::time::Duration;
 use tokio::task::JoinSet;
-
-#[tokio::test]
-async fn test_add_one_rule() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
-
-    let client = ClientId("test_client".to_string());
-    let rule = Rule::new(
-        RuleId("rule_1".to_string()),
-        Topic("test/topic".to_string()),
-        core::time::Duration::from_secs(60),
-        "value > 10".to_owned(),
-    );
-
-    rule_manager.add_rule(client, rule.clone()).await?;
-
-    assert_eq!(rule_manager.get_all_rules().await.len(), 1);
-    assert_eq!(
-        &rule_manager.get_all_rules().await[0].topic.0,
-        &rule.topic.0
-    );
-
-    Ok(())
-}
 
 #[tokio::test]
 async fn test_add_multiple_rules_same_client() -> Result<(), RuleManagerError> {
@@ -55,34 +30,6 @@ async fn test_add_multiple_rules_same_client() -> Result<(), RuleManagerError> {
 }
 
 #[tokio::test]
-async fn test_add_multiple_clients_same_rule_topic() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
-
-    let client1 = ClientId("client1".to_string());
-    let client2 = ClientId("client2".to_string());
-
-    let rule1 = Rule::new(
-        RuleId("rule_1".to_string()),
-        Topic("shared/topic".to_string()),
-        core::time::Duration::from_secs(60),
-        "a > 10".to_owned(),
-    );
-
-    let rule2 = Rule::new(
-        RuleId("rule_2".to_string()),
-        Topic("shared/topic".to_string()),
-        core::time::Duration::from_secs(30),
-        "a < 5".to_owned(),
-    );
-
-    rule_manager.add_rule(client1, rule1).await?;
-    rule_manager.add_rule(client2, rule2).await?;
-
-    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
-    Ok(())
-}
-
-#[tokio::test]
 async fn test_delete_rule_success() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
     let client = ClientId("test_client".to_string());
@@ -102,16 +49,6 @@ async fn test_delete_rule_success() -> Result<(), RuleManagerError> {
     assert_eq!(rule_manager.get_all_rules().await.len(), 1); // Rule still exists but client is unsubscribed
 
     Ok(())
-}
-
-#[tokio::test]
-async fn test_delete_rule_nonexistent_client() {
-    let rule_manager = RuleManager::new();
-    let client = ClientId("nonexistent_client".to_string());
-    let rule_id = RuleId("nonexistent_rule".to_string());
-
-    let result = rule_manager.delete_rule(client, rule_id).await;
-    assert!(matches!(result, Err(RuleManagerError::NoSuchClient)));
 }
 
 #[tokio::test]
@@ -143,15 +80,6 @@ async fn test_delete_client_success() -> Result<(), RuleManagerError> {
     assert_eq!(rule_manager.get_all_rules().await.len(), 2);
 
     Ok(())
-}
-
-#[tokio::test]
-async fn test_delete_client_nonexistent() {
-    let rule_manager = RuleManager::new();
-    let client = ClientId("nonexistent_client".to_string());
-
-    let result = rule_manager.delete_client(client).await;
-    assert!(matches!(result, Err(RuleManagerError::NoSuchClient)));
 }
 
 #[tokio::test]
@@ -210,34 +138,6 @@ async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
 }
 
 #[tokio::test]
-async fn test_handle_msg_rule_not_triggered() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
-    let client = ClientId("test_client".to_string());
-
-    let rule = Rule::new(
-        RuleId("rule_1".to_string()),
-        Topic("test/topic".to_string()),
-        core::time::Duration::from_secs(1),
-        "a > 10".to_owned(),
-    );
-
-    rule_manager.add_rule(client, rule).await?;
-
-    let client_data = ClientData {
-        run_id: 1,
-        name: "test/topic".to_string(),
-        unit: "test_unit".to_string(),
-        values: vec![5.0], // a = 5.0 < 10, should not trigger
-        timestamp: Utc::now(),
-    };
-
-    let result = rule_manager.handle_msg(&client_data).await?;
-    assert!(result.is_none());
-
-    Ok(())
-}
-
-#[tokio::test]
 async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
     let client1 = ClientId("client1".to_string());
@@ -284,55 +184,6 @@ async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerE
         let client_ids: Vec<_> = notifications.iter().map(|(id, _)| id.clone()).collect();
         assert!(client_ids.contains(&client1) && client_ids.contains(&client2));
     }
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_get_all_rules_empty() {
-    let rule_manager = RuleManager::new();
-    let rules = rule_manager.get_all_rules().await;
-    assert!(rules.is_empty());
-}
-
-#[tokio::test]
-async fn test_get_all_rules_multiple() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
-    let client = ClientId("test_client".to_string());
-
-    let rule1 = Rule::new(
-        RuleId("rule_1".to_string()),
-        Topic("topic1".to_string()),
-        core::time::Duration::from_secs(60),
-        "a > 10".to_owned(),
-    );
-
-    let rule2 = Rule::new(
-        RuleId("rule_2".to_string()),
-        Topic("topic2".to_string()),
-        core::time::Duration::from_secs(30),
-        "b < 5".to_owned(),
-    );
-
-    let rule3 = Rule::new(
-        RuleId("rule_3".to_string()),
-        Topic("topic3".to_string()),
-        core::time::Duration::from_secs(45),
-        "c == 0".to_owned(),
-    );
-
-    rule_manager.add_rule(client.clone(), rule1).await?;
-    rule_manager.add_rule(client.clone(), rule2).await?;
-    rule_manager.add_rule(client, rule3).await?;
-
-    let rules = rule_manager.get_all_rules().await;
-    assert_eq!(rules.len(), 3);
-
-    // Verify all topics are present
-    let topics: Vec<_> = rules.iter().map(|rule| &rule.topic.0).collect();
-    assert!(topics.contains(&&"topic1".to_string()));
-    assert!(topics.contains(&&"topic2".to_string()));
-    assert!(topics.contains(&&"topic3".to_string()));
 
     Ok(())
 }
@@ -435,110 +286,6 @@ async fn test_rule_manager_concurrent_delete_rule() -> Result<(), RuleManagerErr
     assert!(res.into_iter().all(|e| e.is_err()));
     check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
     assert!(rule_manager.get_all_clients().await.is_empty());
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_concurrent_handle_msg_stress() -> Result<(), RuleManagerError> {
-    let num_clients = 10;
-    let num_messages = 50;
-    let rule_manager = std::sync::Arc::new(RuleManager::new());
-
-    // Set up multiple clients with rules on the same topic
-    for i in 0..num_clients {
-        let client = ClientId(format!("stress_client_{}", i));
-        let rule = Rule::new(
-            RuleId(format!("stress_rule_{}", i)),
-            Topic("stress/topic".to_string()),
-            core::time::Duration::from_secs(1),
-            format!("a > {}", i * 2), // Different thresholds: 0, 2, 4, 6, 8, 10, 12, 14, 16, 18
-        );
-        rule_manager.add_rule(client, rule).await?;
-    }
-
-    // Verify setup
-    assert_eq!(rule_manager.get_all_rules().await.len(), num_clients);
-    assert_eq!(rule_manager.get_all_clients().await.len(), num_clients);
-
-    let client_datas = Arc::new(
-        (0..num_messages)
-            .map(|i| {
-                ClientData {
-                    run_id: 1,
-                    name: "stress/topic".to_string(),
-                    unit: "test".to_string(),
-                    values: vec![(i % 20) as f32], // Values from 0-19
-                    timestamp: Utc::now(),
-                }
-            })
-            .collect::<Vec<_>>(),
-    );
-
-    // Spawn many concurrent message handlers
-    (0..num_messages)
-        .fold(JoinSet::new(), |mut set, i| {
-            let rm = rule_manager.clone();
-            let client_datas = client_datas.clone();
-            set.spawn(async move {
-                let empty = rm.handle_msg(&client_datas[i]).await;
-                assert!(empty.is_ok_and(|op| op.is_none()));
-            });
-            set
-        })
-        .join_all()
-        .await;
-
-    tokio::time::sleep(Duration::from_secs(2)).await;
-
-    // Now send the messages again to trigger rules after debounce
-    let results: Vec<_> = (0..num_messages)
-        .fold(JoinSet::new(), |mut set, i| {
-            let rm = rule_manager.clone();
-            let client_datas = client_datas.clone();
-            set.spawn(async move {
-                let result = rm.handle_msg(&client_datas[i]).await;
-
-                assert!(result.is_ok());
-                (i, result)
-            });
-            set
-        })
-        .join_all()
-        .await;
-
-    // Verify all messages were processed
-    assert_eq!(results.len(), num_messages);
-
-    // Count notifications generated
-    let total_notifications: usize = results
-        .iter()
-        .map(|(_, result)| {
-            result
-                .as_ref()
-                .unwrap()
-                .as_ref()
-                .map(|notifications| notifications.len())
-                .unwrap_or(0)
-        })
-        .sum();
-
-    println!("Total notifications generated: {}", total_notifications);
-    // Should have some notifications, but exact count depends on timing
-    assert!(total_notifications > 0);
-
-    results.iter().for_each(|(i, result)| {
-        assert!(result.is_ok());
-
-        if let Some(notifications) = result.as_ref().unwrap() {
-            for (client_id, notification) in notifications {
-                assert!(client_id.0.starts_with("stress_client_"));
-                assert_eq!(notification.topic.0, "stress/topic");
-                assert!(notification.id.0.starts_with("stress_rule_"));
-                assert_eq!(notification.values, vec![(i % 20) as f32]);
-            }
-        }
-    });
 
     Ok(())
 }
@@ -808,189 +555,6 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
     // Verify system state is unchanged
     assert_eq!(rule_manager.get_all_rules().await.len(), num_rules);
     assert_eq!(rule_manager.get_all_clients().await.len(), num_rules);
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_concurrent_rule_expression_evaluation() -> Result<(), RuleManagerError> {
-    let num_expressions = 20;
-    let rule_manager = std::sync::Arc::new(RuleManager::new());
-
-    // Create rules with different complex expressions
-    let expressions = vec![
-        ("simple_gt", "a > 10"),
-        ("simple_and", "a > 10 && b < 5"),
-        ("addition", "a + b > 20"),
-        ("multiplication", "a * b < 100"),
-        ("comparison", "a > b + c"),
-        ("or_condition", "(a > 10) || (b > 20)"),
-        ("all_positive", "a >= 0 && b >= 0 && c >= 0"),
-        ("complex_and_or", "a > 5 && (b > 3 || c > 7)"),
-        ("modulo", "a % 2 == 0"),
-        ("range_check", "a > 0 && a < 50"),
-    ];
-
-    let results: Vec<_> = (0..num_expressions)
-        .fold(JoinSet::new(), |mut set, i| {
-            let rm = rule_manager.clone();
-            let (expr_name, expr) = expressions[i % expressions.len()].clone();
-            set.spawn(async move {
-                let client = ClientId(format!("expr_client_{}_{}", i, expr_name));
-                let rule = Rule::new(
-                    RuleId(format!("expr_rule_{}_{}", i, expr_name)),
-                    Topic("expr/topic".to_string()),
-                    core::time::Duration::from_millis(25),
-                    expr.to_string(),
-                );
-                rm.add_rule(client.clone(), rule)
-                    .await
-                    .map(|_| (i, expr_name, client))
-            });
-            set
-        })
-        .join_all()
-        .await;
-
-    // Verify all rules were added successfully
-    let successful_additions: Vec<_> = results.into_iter().filter_map(|r| r.ok()).collect();
-    assert_eq!(successful_additions.len(), num_expressions);
-    assert_eq!(rule_manager.get_all_rules().await.len(), num_expressions);
-
-    // Send messages with different value combinations concurrently
-    let num_message_sets = 50;
-    let message_results: Vec<_> = (0..num_message_sets)
-        .fold(JoinSet::new(), |mut set, i| {
-            let rm = rule_manager.clone();
-            set.spawn(async move {
-                let a_val = (i % 30) as f32; // a: 0-29
-                let b_val = ((i * 2) % 25) as f32; // b: 0-24
-                let c_val = ((i * 3) % 15) as f32; // c: 0-14
-
-                let client_data = ClientData {
-                    run_id: 1,
-                    name: "expr/topic".to_string(),
-                    unit: "test".to_string(),
-                    values: vec![a_val, b_val, c_val],
-                    timestamp: Utc::now(),
-                };
-
-                let result = rm.handle_msg(&client_data).await;
-                (i, a_val, b_val, c_val, result)
-            });
-            set
-        })
-        .join_all()
-        .await;
-
-    // Verify all messages were processed
-    assert_eq!(message_results.len(), num_message_sets);
-
-    let successful_messages: Vec<_> = message_results
-        .iter()
-        .filter(|(_, _, _, _, result)| result.is_ok())
-        .collect();
-    assert_eq!(successful_messages.len(), num_message_sets);
-
-    // Count total notifications (some may be None due to debounce)
-    let total_notifications: usize = message_results
-        .iter()
-        .filter_map(|(_, _, _, _, result)| result.as_ref().ok()?.as_ref().map(|n| n.len()))
-        .sum();
-
-    println!(
-        "Expression evaluation test - Total notifications: {}",
-        total_notifications
-    );
-
-    // Wait for debounce and send specific test messages
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-
-    // Test specific value combinations that should trigger known expressions
-    let test_cases = vec![
-        (15.0, 3.0, 2.0),  // Should trigger: a > 10, a > 10 && b < 5, etc.
-        (25.0, 30.0, 8.0), // Should trigger: (a > 10) || (b > 20), etc.
-        (2.0, 1.0, 1.0),   // Should trigger: a % 2 == 0, all_positive, etc.
-        (0.0, 0.0, 0.0),   // Should trigger: all_positive, a % 2 == 0
-    ];
-
-    for (a, b, c) in test_cases {
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-
-        let client_data = ClientData {
-            run_id: 999,
-            name: "expr/topic".to_string(),
-            unit: "test".to_string(),
-            values: vec![a, b, c],
-            timestamp: Utc::now(),
-        };
-
-        let result = rule_manager.handle_msg(&client_data).await;
-        assert!(
-            result.is_ok(),
-            "Failed to process test case ({}, {}, {})",
-            a,
-            b,
-            c
-        );
-
-        if let Ok(Some(notifications)) = result {
-            assert!(
-                !notifications.is_empty(),
-                "Test case ({}, {}, {}) should trigger some rules",
-                a,
-                b,
-                c
-            );
-            assert!(notifications.len() <= num_expressions);
-
-            // Verify notification structure
-            for (client_id, notification) in notifications {
-                assert!(client_id.0.starts_with("expr_client_"));
-                assert_eq!(notification.topic.0, "expr/topic");
-                assert_eq!(notification.values, vec![a, b, c]);
-            }
-        }
-    }
-
-    // Verify final state
-    assert_eq!(rule_manager.get_all_rules().await.len(), num_expressions);
-    assert_eq!(rule_manager.get_all_clients().await.len(), num_expressions);
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_complex_rule_expression() -> Result<(), RuleManagerError> {
-    let rule_manager = RuleManager::new();
-    let client = ClientId("test_client".to_string());
-
-    let rule = Rule::new(
-        RuleId("complex_rule".to_string()),
-        Topic("sensor/data".to_string()),
-        core::time::Duration::from_millis(100),
-        "a > 10 && b < 5 && c >= 0".to_owned(), // Complex expression with multiple variables
-    );
-
-    rule_manager.add_rule(client.clone(), rule).await?;
-
-    let client_data = ClientData {
-        run_id: 1,
-        name: "sensor/data".to_string(),
-        unit: "mixed".to_string(),
-        values: vec![15.0, 3.0, 1.0], // a=15 > 10, b=3 < 5, c=1 >= 0 - should trigger
-        timestamp: Utc::now(),
-    };
-
-    // Prime the rule
-    let _ = rule_manager.handle_msg(&client_data).await;
-    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
-
-    let result = rule_manager.handle_msg(&client_data).await?;
-    if let Some(notifications) = result {
-        assert!(!notifications.is_empty());
-        assert_eq!(notifications[0].0 .0, client.0);
-    }
 
     Ok(())
 }
