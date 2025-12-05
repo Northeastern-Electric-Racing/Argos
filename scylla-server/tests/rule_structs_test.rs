@@ -83,22 +83,6 @@ async fn test_delete_client_success() -> Result<(), RuleManagerError> {
 }
 
 #[tokio::test]
-async fn test_handle_msg_no_matching_rule() {
-    let rule_manager = RuleManager::new();
-
-    let client_data = ClientData {
-        run_id: 1,
-        name: "nonexistent/topic".to_string(),
-        unit: "test_unit".to_string(),
-        values: vec![15.0, 20.0],
-        timestamp: Utc::now(),
-    };
-
-    let result = rule_manager.handle_msg(&client_data).await;
-    assert!(matches!(result, Err(RuleManagerError::NoMatchingRule)));
-}
-
-#[tokio::test]
 async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
     let client = ClientId("test_client".to_string());

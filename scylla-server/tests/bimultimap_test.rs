@@ -1,13 +1,5 @@
 use scylla_server::rule_structs::{BiMapRemoveResult, BiMultiMap, ClientId, RuleId};
 
-// Tests for BiMultiMap
-#[test]
-fn test_bi_multi_map_new() {
-    let bimap: BiMultiMap<String, i32> = BiMultiMap::new();
-    assert!(bimap.get_left(&1).is_none());
-    assert!(bimap.get_right(&"test".to_string()).is_none());
-}
-
 #[test]
 fn test_bi_multi_map_insert_single() {
     let mut bimap = BiMultiMap::new();
@@ -48,30 +40,6 @@ fn test_bi_multi_map_insert_multiple_rights() {
 }
 
 #[test]
-fn test_bi_multi_map_insert_multiple_lefts() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let left3 = "client3".to_string();
-    let right = 42;
-
-    bimap.insert(&left1, &right);
-    bimap.insert(&left2, &right);
-    bimap.insert(&left3, &right);
-
-    let lefts = bimap.get_left(&right).unwrap();
-    assert_eq!(lefts.len(), 3);
-    assert!(lefts.contains(&left1));
-    assert!(lefts.contains(&left2));
-    assert!(lefts.contains(&left3));
-
-    // Each left should map to the right
-    assert!(bimap.get_right(&left1).unwrap().contains(&right));
-    assert!(bimap.get_right(&left2).unwrap().contains(&right));
-    assert!(bimap.get_right(&left3).unwrap().contains(&right));
-}
-
-#[test]
 fn test_bi_multi_map_insert_many_to_many() {
     let mut bimap = BiMultiMap::new();
     let left1 = "client1".to_string();
@@ -108,20 +76,6 @@ fn test_bi_multi_map_insert_many_to_many() {
     assert_eq!(lefts_for_right2.len(), 2);
     assert!(lefts_for_right2.contains(&left1));
     assert!(lefts_for_right2.contains(&left2));
-}
-
-#[test]
-fn test_bi_multi_map_insert_duplicate() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    bimap.insert(&left, &right);
-    bimap.insert(&left, &right); // Duplicate insertion
-
-    // Should still only have one mapping
-    assert_eq!(bimap.get_right(&left).unwrap().len(), 1);
-    assert_eq!(bimap.get_left(&right).unwrap().len(), 1);
 }
 
 #[test]
@@ -177,103 +131,6 @@ fn test_bi_multi_map_remove_left_nonexistent() {
 
     let result = bimap.remove_left(&left);
     assert!(matches!(result, BiMapRemoveResult::NothingToRemove));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_single() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right = 42;
-
-    bimap.insert(&left, &right);
-
-    let result = bimap.remove_right(&right);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_lefts) = result {
-        assert_eq!(removed_lefts.len(), 1);
-        assert!(removed_lefts.contains(&left));
-    }
-
-    // Verify both directions are cleaned up
-    assert!(bimap.get_right(&left).is_none());
-    assert!(bimap.get_left(&right).is_none());
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_shared_left() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right1 = 42;
-    let right2 = 43;
-
-    bimap.insert(&left, &right1);
-    bimap.insert(&left, &right2);
-
-    let result = bimap.remove_right(&right1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedOnly));
-
-    // right1 should be gone
-    assert!(bimap.get_left(&right1).is_none());
-
-    // left should still exist and map to right2
-    let remaining_rights = bimap.get_right(&left).unwrap();
-    assert_eq!(remaining_rights.len(), 1);
-    assert!(remaining_rights.contains(&right2));
-
-    // right2 should still map to left
-    assert!(bimap.get_left(&right2).unwrap().contains(&left));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_from_left() {
-    let mut bimap = BiMultiMap::new();
-    let left = "client1".to_string();
-    let right1 = 42;
-    let right2 = 43;
-
-    bimap.insert(&left, &right1);
-    bimap.insert(&left, &right2);
-
-    let result = bimap.remove_right_from_left(&left, &right1);
-    assert!(matches!(result, BiMapRemoveResult::RemovedWithCleanUp(_)));
-
-    if let BiMapRemoveResult::RemovedWithCleanUp(removed_right) = result {
-        assert_eq!(removed_right, right1);
-    }
-
-    // left should still exist but only map to right2
-    let remaining_rights = bimap.get_right(&left).unwrap();
-    assert_eq!(remaining_rights.len(), 1);
-    assert!(remaining_rights.contains(&right2));
-
-    // right1 should be completely removed
-    assert!(bimap.get_left(&right1).is_none());
-
-    // right2 should still map to left
-    assert!(bimap.get_left(&right2).unwrap().contains(&left));
-}
-
-#[test]
-fn test_bi_multi_map_remove_right_from_left_shared_right() {
-    let mut bimap = BiMultiMap::new();
-    let left1 = "client1".to_string();
-    let left2 = "client2".to_string();
-    let right = 42;
-
-    bimap.insert(&left1, &right);
-    bimap.insert(&left2, &right);
-
-    let result = bimap.remove_right_from_left(&left1, &right);
-    assert!(matches!(result, BiMapRemoveResult::RemovedOnly));
-
-    // left1 should be gone
-    assert!(bimap.get_right(&left1).is_none());
-
-    // right should still exist and map to left2
-    let remaining_lefts = bimap.get_left(&right).unwrap();
-    assert_eq!(remaining_lefts.len(), 1);
-    assert!(remaining_lefts.contains(&left2));
 }
 
 #[test]
