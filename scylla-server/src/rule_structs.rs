@@ -12,10 +12,8 @@ use serde_with::serde_as;
 use serde_with::DurationSeconds;
 use std::borrow::Borrow;
 use std::hash::Hash;
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tokio::task::JoinSet;
 use tracing::trace;
 use tracing::warn;
 
@@ -350,7 +348,7 @@ impl RuleManager {
 
     /// Handles a new socket message, returning a RuleNotification for one to many clients if action should be taken
     pub async fn handle_msg(
-        self: &Arc<Self>,
+        &self,
         data: &ClientData,
     ) -> Result<Option<Vec<(ClientId, RuleNotification)>>, RuleManagerError> {
         // Read from topic to rule index and drop lock immediately
@@ -362,90 +360,65 @@ impl RuleManager {
             }
         };
 
-        let data = Arc::new(data.clone());
-        let notifications = rule_ids
-            .into_iter()
-            .fold(JoinSet::new(), |mut set, rule_id| {
-                let data = data.clone();
-                let self_ref = self.clone();
-                set.spawn(async move {
-                    let triggered_fut = async {
-                        if let Some(rule) = self_ref.rules.write().await.get_mut(&rule_id) {
-                            if let Some(triggered) = rule.tick(&data.values) {
-                                Ok(triggered)
-                            } else {
-                                Err(RuleManagerError::RuleFailure)
-                            }
+        let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
+        for rule_id in rule_ids {
+            let (triggered_result, clients_result) = {
+                // Future for if rule was triggered
+                let triggered_future = async {
+                    if let Some(rule) = self.rules.write().await.get_mut(&rule_id) {
+                        if let Some(triggered) = rule.tick(&data.values) {
+                            Ok(triggered)
                         } else {
-                            trace!("Could not find rule in rules map: {}", rule_id);
-                            Err(RuleManagerError::NoMatchingRule)
+                            Err(RuleManagerError::RuleFailure)
                         }
-                    };
-
-                    // Future for getting subscribed clients
-                    let clients_fut = async {
-                        self_ref
-                            .subscriptions
-                            .read()
-                            .await
-                            .get_left(&rule_id)
-                            .cloned()
-                    };
-
-                    tokio::pin!(triggered_fut);
-                    tokio::pin!(clients_fut);
-
-                    // Check which operation finished first
-                    let rule_id = rule_id.clone();
-                    tokio::select! {
-                        triggered_result = &mut triggered_fut => {
-                            match triggered_result {
-                                Ok(true) => (Ok(true), clients_fut.await, rule_id),
-                                Ok(false) => (Ok(false), None, rule_id),
-                                _ => (triggered_result, None, rule_id),
-                            }
-                        },
-                        clients_result = &mut clients_fut => {
-                            match clients_result {
-                                Some(_) => (triggered_fut.await, clients_result, rule_id),
-                                None => (Ok(false), None, rule_id)
-                            }
-                        }
+                    } else {
+                        trace!("Could not find rule in rules map: {}", rule_id);
+                        Err(RuleManagerError::NoMatchingRule)
                     }
-                });
-                set
-            })
-            .join_all()
-            .await
-            .into_iter()
-            .filter_map(|(triggered_res, clients_op, rule_id)| {
-                let Ok(triggered) = triggered_res else {
-                    return Some(Err(triggered_res.unwrap_err()));
                 };
 
-                if !triggered || clients_op.is_none() {
-                    None
-                } else {
-                    Some(Ok(clients_op
-                        .unwrap()
-                        .into_iter()
-                        .map(|client| {
-                            (
-                                client,
-                                RuleNotification {
-                                    id: rule_id.clone(),
-                                    topic: Topic(data.name.clone()),
-                                    values: data.values.clone(),
-                                    time: data.timestamp,
-                                },
-                            )
-                        })
-                        .collect::<Vec<_>>()))
+                // Future for getting subscribed clients
+                let clients_future =
+                    async { self.subscriptions.read().await.get_left(&rule_id).cloned() };
+
+                tokio::pin!(triggered_future);
+                tokio::pin!(clients_future);
+
+                // Check which operation finished first
+                tokio::select! {
+                    triggered_result = &mut triggered_future => {
+                        match triggered_result? {
+                            true => (Ok(true), clients_future.await),
+                            false => (Ok(false), None),
+                        }
+                    },
+                    clients_result = &mut clients_future => {
+                        match clients_result {
+                            Some(_) => (triggered_future.await, clients_result),
+                            None => (Ok(false), None)
+                        }
+                    }
                 }
-            })
-            .flatten()
-            .flatten()
-            .collect::<Vec<_>>();
+            };
+
+            let triggered = triggered_result?;
+            if !triggered || clients_result.is_none() {
+                continue;
+            }
+
+            // Push notifications for all clients who are subscribed to this rule
+            for client in clients_result.unwrap() {
+                notifications.push((
+                    client.clone(),
+                    RuleNotification {
+                        id: rule_id.clone(),
+                        topic: Topic(data.name.clone()),
+                        values: data.values.clone(),
+                        time: data.timestamp,
+                    },
+                ));
+            }
+        }
 
         if notifications.is_empty() {
             Ok(None)
