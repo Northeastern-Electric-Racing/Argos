@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   odyssey-db:
@@ -7,14 +7,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
-    command: 
+    command:
       - "postgres"
       - "-c"
       - "shared_buffers=256MB"
     ports:
-      - 5432:5432  # Exposed for external access if needed
+      - 5432:5432 # Exposed for external access if needed
     expose:
-      - 5432  # Allow inter-container communication
+      - 5432 # Allow inter-container communication
     volumes:
       - db-data:/var/lib/postgresql/data
     cpu_shares: 1024
@@ -40,3 +40,4 @@ services:
 
 volumes:
   db-data:
+  grafana_storage:

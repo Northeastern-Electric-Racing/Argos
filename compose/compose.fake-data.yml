@@ -1,15 +1,22 @@
 services:
-    scylla-server: # do not run scylla
-        entrypoint: ["echo", "DISABLED"]
-        restart: "no"
-    siren:
-        extends:
-            file: ../siren-base/compose.siren.yml
-            service: siren
+  scylla-server: # do not run scylla
+    entrypoint: ["echo", "DISABLED"]
+    restart: "no"
+  siren:
+    extends:
+      file: ../siren-base/compose.siren.yml
+      service: siren
 
-    calypso:
-        extends:
-            file: ./compose.calypso.yml
-            service: calypso
-        depends_on:
-            - siren
+  grafana:
+    extends:
+      file: ../siren-base/compose.grafana.yml
+      service: grafana
+    depends_on:
+      - siren
+
+  calypso:
+    extends:
+      file: ./compose.calypso.yml
+      service: calypso
+    depends_on:
+      - siren
