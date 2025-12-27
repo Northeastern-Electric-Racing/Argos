@@ -7,6 +7,7 @@ pub mod services;
 pub mod db_handler;
 pub mod mqtt_processor;
 
+pub mod grafana_handler;
 pub mod metadata_structs;
 pub mod rule_structs;
 pub mod socket_handler;
@@ -97,6 +98,42 @@ impl From<ClientData> for models::DataInsert {
             dataTypeName: val.name,
             time: val.timestamp.timestamp_micros(),
             runId: val.run_id,
+        }
+    }
+}
+
+impl ClientData {
+    /// Converts ClientData to Influx Line Protocol
+    /// Skips tags, handles multi-value points by sending as name_idex
+    fn to_influx_lp(&self) -> String {
+        if self.values.len() == 1 {
+            format!(
+                "{} {}={} {}",
+                self.name,
+                self.name,
+                self.values.first().unwrap_or(&-1.0),
+                self.timestamp.timestamp_nanos_opt().unwrap_or(0)
+            )
+        } else {
+            let mut res = format!("{} ", self.name);
+            for i in 0..self.values.len() {
+                res.push_str(&format!(
+                    "{}_{}={}",
+                    self.name,
+                    i,
+                    self.values
+                        .get(i)
+                        .expect("Impossible OOB on Grafana multi-point sender")
+                ));
+            }
+            res.push_str(
+                &self
+                    .timestamp
+                    .timestamp_nanos_opt()
+                    .unwrap_or(0)
+                    .to_string(),
+            );
+            res
         }
     }
 }

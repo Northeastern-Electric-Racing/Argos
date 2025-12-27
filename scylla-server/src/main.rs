@@ -31,6 +31,7 @@ use scylla_server::{
         run_controller, scylla_config_controller,
         video_streamer_controller::{self},
     },
+    grafana_handler::grafana_live_handler,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
 };
@@ -140,6 +141,38 @@ struct ScyllaArgs {
     /// The authentication password for privileged pages
     #[arg(long, env = "SCYLLA_PASSWORD", default_value = "admin")]
     password: String,
+
+    /// Whether enable outputting data to Grafana Live
+    #[arg(long, env = "SCYLLA_GRAFANA_LIVE")]
+    grafana_live: bool,
+
+    /// The URL for Grafana to dump live data (if in use)
+    #[arg(
+        long,
+        env = "SCYLLA_GRAFANA_LIVE_URL",
+        default_value = "ws://localhost:3000"
+    )]
+    grafana_live_url: String,
+
+    /// The admin service account token to use for Grafana Live (if in use)
+    #[arg(long, env = "SCYLLA_GRAFANA_LIVE_TOKEN")]
+    grafana_live_token: Option<String>,
+
+    /// The measurement name to use for Grafana Live (if in use)
+    #[arg(
+        long,
+        env = "SCYLLA_GRAFANA_LIVE_MEASUREMENT_NAME",
+        default_value = "Odyssey"
+    )]
+    grafana_live_measurement: String,
+
+    /// The socket name to use for Grafana Live (if in use)
+    #[arg(
+        long,
+        env = "SCYLLA_GRAFANA_LIVE_SOCKET_NAME",
+        default_value = "scylla_server"
+    )]
+    grafana_live_socket: String,
 }
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -263,6 +296,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             rules_manager.clone(),
             io,
         ));
+    }
+    if cli.grafana_live {
+        match cli.grafana_live_token {
+            Some(gf_token) => {
+                task_tracker.spawn(grafana_live_handler(
+                    token.clone(),
+                    mqtt_send_socket.subscribe(),
+                    cli.grafana_live_url,
+                    gf_token,
+                    cli.grafana_live_socket,
+                    cli.grafana_live_measurement,
+                ));
+            }
+            None => warn!("Grafana token is required to use Grafana Live!"),
+        }
     }
 
     // spawn the database handler

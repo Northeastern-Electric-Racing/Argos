@@ -34,6 +34,9 @@ rustc-hash = "2.1.1"
 evalexpr = "13.0.0"
 serde_with = "3.14.1"
 derive_more = { version = "2.0.1", features = ["as_ref", "display"] }
+tokio-tungstenite = "0.28.0"
+futures-util = "0.3.31"
+tungstenite = "0.28.0"
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.6"
 
