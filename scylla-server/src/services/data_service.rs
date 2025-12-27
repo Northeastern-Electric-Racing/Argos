@@ -1,12 +1,12 @@
 use crate::{
+    ClientData, Database,
     controllers::data_controller::Timing,
     models::{Data, DataInsert},
     schema::data::dsl::{data, dataTypeName, runId, time},
-    ClientData, Database,
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use tracing::{instrument, warn, Level};
+use tracing::{Level, instrument, warn};
 
 /// Get datapoints that mach criteria
 /// * `db` - The database connection to use
@@ -103,8 +103,7 @@ pub async fn get_mean_downsampled_data_by_run_id(
         .await?;
     let type_name = data_type_name.to_string();
 
-    let mut out: Vec<Data> =
-        Vec::with_capacity((all_data.len() + sampling_rate - 1) / sampling_rate);
+    let mut out: Vec<Data> = Vec::with_capacity(all_data.len().div_ceil(sampling_rate));
     for chunk in all_data.chunks(sampling_rate) {
         if chunk.is_empty() {
             continue;

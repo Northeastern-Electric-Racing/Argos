@@ -1,7 +1,7 @@
 [package]
 name = "scylla-server"
 version = "0.0.1"
-edition = "2021"
+edition = "2024"
 default-run = "scylla-server"
 
 [dependencies]
@@ -58,4 +58,3 @@ strip = false
 [[bin]]
 name = "scylla-server"
 path = "src/main.rs"
-

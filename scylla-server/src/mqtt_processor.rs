@@ -1,24 +1,25 @@
 use std::{
-    sync::{atomic::Ordering, Arc},
+    sync::{Arc, atomic::Ordering},
     time::{Duration, SystemTime},
 };
 
 use chrono::TimeDelta;
-use diesel_async::{pooled_connection::bb8::Pool, AsyncPgConnection};
+use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
 use protobuf::Message;
 use ringbuffer::RingBuffer;
 use rumqttc::v5::{
-    mqttbytes::v5::{Packet, Publish},
     AsyncClient, Event, EventLoop, MqttOptions,
+    mqttbytes::v5::{Packet, Publish},
 };
 use rustc_hash::FxHashMap;
 use tokio::{sync::broadcast, time::Instant};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, instrument, trace, warn, Level};
+use tracing::{Level, debug, instrument, trace, warn};
 
 use crate::{
+    RATE_LIMIT_MODE, RateLimitMode, STATIC_RATE_LIMIT_VALUE,
     controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata,
-    services::run_service, RateLimitMode, RATE_LIMIT_MODE, STATIC_RATE_LIMIT_VALUE,
+    services::run_service,
 };
 
 use super::ClientData;

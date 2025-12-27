@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use axum::{debug_handler, extract::Path, Extension, Json};
+use axum::{Extension, Json, debug_handler, extract::Path};
 use axum_extra::{
-    headers::{authorization::Basic, Authorization},
     TypedHeader,
+    headers::{Authorization, authorization::Basic},
 };
 use tokio::sync::RwLock;
 use tracing::debug;

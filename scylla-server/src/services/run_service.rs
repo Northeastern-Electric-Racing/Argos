@@ -1,4 +1,4 @@
-use crate::{models::Run, schema::run::dsl::*, Database};
+use crate::{Database, models::Run, schema::run::dsl::*};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use diesel_async::{
-    pooled_connection::{bb8::Pool, AsyncDieselConnectionManager},
     AsyncPgConnection, RunQueryDsl,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
 use dotenvy::dotenv;
 use scylla_server::schema::{data, data_type, run};

@@ -6,10 +6,10 @@ use tokio::sync::{broadcast, mpsc};
 use tokio::time::Duration;
 
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, instrument, trace, warn, Level};
+use tracing::{Level, debug, info, instrument, trace, warn};
 
 use crate::services::{data_service, data_type_service};
-use crate::{ClientData, PoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE};
+use crate::{BATCH_UPSERT_TIME, ClientData, DATA_UPLOAD_DISABLE, PoolHandle};
 
 /// A few threads to manage the processing and inserting of special types,
 /// upserting of metadata for data, and batch uploading the database
