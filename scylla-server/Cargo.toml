@@ -33,7 +33,7 @@ diesel-async = { version = "0.6.1", features = ["postgres", "bb8", "async-connec
 rustc-hash = "2.1.1"
 evalexpr = "13.0.0"
 serde_with = "3.14.1"
-derive_more = { version = "2.0.1", features = ["as_ref", "display"] }
+derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.6"
 
