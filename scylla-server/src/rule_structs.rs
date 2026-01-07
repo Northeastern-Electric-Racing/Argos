@@ -368,7 +368,10 @@ impl RuleManager {
             }
             let clients = clients_op.unwrap();
 
-            let triggered = match self.rules.write().await
+            let triggered = match self
+                .rules
+                .write()
+                .await
                 .get_mut(&rule_id)
                 .map(|rule| rule.tick(&data.values))
             {
@@ -408,7 +411,10 @@ impl RuleManager {
     /// Adds a rule, creating or activating the client if needed
     pub async fn add_rule(&self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
         // Add to subscriptions bimap
-        self.subscriptions.write().await.insert(&client, &rule.id.clone());
+        self.subscriptions
+            .write()
+            .await
+            .insert(&client, &rule.id.clone());
 
         // Add to topic index
         self.topic_index
