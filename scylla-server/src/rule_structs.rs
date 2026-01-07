@@ -40,7 +40,6 @@ pub struct BiMultiMap<L, R> {
     right_to_left: FxHashMap<R, FxHashSet<L>>,
 }
 
-#[allow(dead_code)]
 impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
     pub fn new() -> Self {
         Self {
@@ -355,59 +354,38 @@ impl RuleManager {
         let rule_ids = match self.topic_index.read().await.get(&data.name) {
             Some(rule_ids) => rule_ids.clone(), // Clone so we can drop resource
             None => {
-                trace!("Could not find rule in topic -> rule index: {}", data.name);
+                warn!("Could not find rule in topic -> rule index: {}", data.name);
                 return Err(RuleManagerError::NoMatchingRule);
             }
         };
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
         for rule_id in rule_ids {
-            let (triggered_result, clients_result) = {
-                // Future for if rule was triggered
-                let triggered_future = async {
-                    if let Some(rule) = self.rules.write().await.get_mut(&rule_id) {
-                        if let Some(triggered) = rule.tick(&data.values) {
-                            Ok(triggered)
-                        } else {
-                            Err(RuleManagerError::RuleFailure)
-                        }
-                    } else {
-                        trace!("Could not find rule in rules map: {}", rule_id);
-                        Err(RuleManagerError::NoMatchingRule)
-                    }
-                };
+            let clients_op = self.subscriptions.read().await.get_left(&rule_id).cloned();
 
-                // Future for getting subscribed clients
-                let clients_future =
-                    async { self.subscriptions.read().await.get_left(&rule_id).cloned() };
+            if clients_op.is_none() {
+                continue;
+            }
+            let clients = clients_op.unwrap();
 
-                tokio::pin!(triggered_future);
-                tokio::pin!(clients_future);
-
-                // Check which operation finished first
-                tokio::select! {
-                    triggered_result = &mut triggered_future => {
-                        match triggered_result? {
-                            true => (Ok(true), clients_future.await),
-                            false => (Ok(false), None),
-                        }
-                    },
-                    clients_result = &mut clients_future => {
-                        match clients_result {
-                            Some(_) => (triggered_future.await, clients_result),
-                            None => (Ok(false), None)
-                        }
-                    }
+            let triggered = match self.rules.write().await
+                .get_mut(&rule_id)
+                .map(|rule| rule.tick(&data.values))
+            {
+                Some(Some(val)) => val,
+                // Rule tick failed
+                Some(None) => return Err(RuleManagerError::RuleFailure),
+                None => {
+                    warn!("Could not find rule in rules map: {}", rule_id);
+                    return Err(RuleManagerError::NoMatchingRule);
                 }
             };
 
-            let triggered = triggered_result?;
-            if !triggered || clients_result.is_none() {
+            if !triggered {
                 continue;
             }
 
-            // Push notifications for all clients who are subscribed to this rule
-            for client in clients_result.unwrap() {
+            for client in clients {
                 notifications.push((
                     client.clone(),
                     RuleNotification {
@@ -429,29 +407,19 @@ impl RuleManager {
 
     /// Adds a rule, creating or activating the client if needed
     pub async fn add_rule(&self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
-        let rule_id = rule.id.clone();
-        let topic = rule.topic.clone();
+        // Add to subscriptions bimap
+        self.subscriptions.write().await.insert(&client, &rule.id.clone());
 
-        // Run all three writes concurrently
-        tokio::join!(
-            async {
-                // Add to subscriptions bimap
-                self.subscriptions.write().await.insert(&client, &rule_id);
-            },
-            async {
-                // Add to topic index
-                self.topic_index
-                    .write()
-                    .await
-                    .entry(topic)
-                    .or_insert(FxHashSet::default())
-                    .insert(rule_id.clone());
-            },
-            async {
-                // Add to rules lookup
-                self.rules.write().await.insert(rule_id.clone(), rule);
-            }
-        );
+        // Add to topic index
+        self.topic_index
+            .write()
+            .await
+            .entry(rule.topic.clone())
+            .or_insert(FxHashSet::default())
+            .insert(rule.id.clone());
+
+        // Add to rules lookup
+        self.rules.write().await.insert(rule.id.clone(), rule);
 
         Ok(())
     }

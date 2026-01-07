@@ -163,7 +163,7 @@ async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerE
 
     if let Some(notifications) = result {
         // Both rules should trigger since 15.0 > 10 and 15.0 > 5
-        assert!(notifications.len() >= 1);
+        assert_eq!(notifications.len(), 2);
 
         let client_ids: Vec<_> = notifications.iter().map(|(id, _)| id.clone()).collect();
         assert!(client_ids.contains(&client1) && client_ids.contains(&client2));
@@ -511,7 +511,7 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
 
         if let Ok(Some(notifications)) = result {
             // Count how many rules should trigger for this value
-            let expected_triggers = num_rules - (value as usize / 10).min(num_rules);
+            let expected_triggers = ((value as usize / 10).min(num_rules - 1)) + 1;
             if expected_triggers > 0 {
                 assert!(
                     !notifications.is_empty(),
