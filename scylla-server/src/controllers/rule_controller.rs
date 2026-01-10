@@ -5,7 +5,6 @@ use axum_extra::{
     headers::{authorization::Basic, Authorization},
     TypedHeader,
 };
-use tokio::sync::RwLock;
 use tracing::debug;
 
 use crate::{
@@ -16,7 +15,7 @@ use crate::{
 #[debug_handler]
 pub async fn add_rule(
     TypedHeader(auth): TypedHeader<Authorization<Basic>>,
-    Extension(rules_manager): Extension<Arc<RwLock<RuleManager>>>,
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule): Json<Rule>,
 ) -> Result<Json<String>, ScyllaError> {
     debug!(
@@ -25,9 +24,8 @@ pub async fn add_rule(
         auth.username().to_string()
     );
     match rules_manager
-        .write()
-        .await
         .add_rule(ClientId(auth.username().to_string()), rule)
+        .await
     {
         Ok(_) => Ok(Json::from("Rule added!".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
@@ -37,7 +35,7 @@ pub async fn add_rule(
 #[debug_handler]
 pub async fn delete_rule(
     TypedHeader(auth): TypedHeader<Authorization<Basic>>,
-    Extension(rules_manager): Extension<Arc<RwLock<RuleManager>>>,
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
     Path(rule_id): Path<String>,
 ) -> Result<(), ScyllaError> {
     debug!(
@@ -46,9 +44,8 @@ pub async fn delete_rule(
         auth.username().to_string()
     );
     match rules_manager
-        .write()
-        .await
         .delete_rule(ClientId(auth.username().to_string()), RuleId(rule_id))
+        .await
     {
         Ok(_) => Ok(()),
         Err(err) => Err(ScyllaError::RuleError(err)),

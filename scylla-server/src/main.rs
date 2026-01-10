@@ -43,7 +43,7 @@ use scylla_server::{
 use socketioxide::{extract::SocketRef, SocketIo};
 use tokio::{
     signal,
-    sync::{broadcast, mpsc, RwLock},
+    sync::{broadcast, mpsc},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
@@ -249,7 +249,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (db_send, db_receive) = mpsc::channel::<Vec<ClientData>>(1000);
 
     // the rules manager
-    let rules_manager = Arc::new(RwLock::new(RuleManager::new()));
+    let rules_manager = Arc::new(RuleManager::new());
 
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
