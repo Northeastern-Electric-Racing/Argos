@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
@@ -51,6 +51,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
+  private route = inject(ActivatedRoute);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime
   subscriptions: Subscription[] = [];
@@ -182,6 +183,14 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
         if (dataTypes.length > 0 || this.selectedDataTypes.length > 0) {
           this.processDataTypeSelection(dataTypes);
         }
+        this.updateUrl(dataTypes);
+      })
+    );
+
+    // Subscribe to URL changes to sync back to service
+    this.persistentSubscriptions.push(
+      this.route.queryParamMap.subscribe((params) => {
+        this.syncUrlToService(params);
       })
     );
 
@@ -332,9 +341,34 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       dataTypesQueryResponse.data.subscribe((data) => {
         if (data) {
           this.dataTypes = data;
+          // Once the datatypes are actually loaded, sync to url
+          this.syncUrlToService(this.route.snapshot.queryParamMap);
+          this.updateUrl(this.topicSelectionService.getSelectedDataTypes().value);
         }
       })
     );
+  }
+
+  private syncUrlToService(params: ParamMap) {
+    if (this.dataTypes.length === 0) return;
+
+    const topicNames = new Set(params.get('topics')?.split(',') ?? []);
+    const topics = this.dataTypes.filter((dt) => topicNames.has(dt.name));
+
+    this.topicSelectionService.setSelectedDataTypes(topics);
+  }
+
+  private updateUrl(selectedDataTypes: DataType[]) {
+    if (this.dataTypes.length === 0) return;
+
+    const topics = selectedDataTypes.map((dt) => dt.name).join(',') || null;
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { topics },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
