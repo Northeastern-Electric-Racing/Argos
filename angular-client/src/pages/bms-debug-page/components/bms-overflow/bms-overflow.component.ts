@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -14,18 +15,25 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })
-export class BmsOverflowComponent implements OnInit {
+export class BmsOverflowComponent implements OnInit, OnDestroy {
   storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
   overflowID: number | undefined = undefined;
 
   ngOnInit(): void {
-    this.storage.get(DataTypeEnum.PER_CELL_OVERFLOWID).subscribe((value) => {
-      if (parseFloat(value.time) > Date.now() - 4000) {
-        this.overflowID = parseInt(value.values[0]);
-      } else {
-        this.overflowID = undefined;
-      }
-    });
+    this.subscriptions.push(
+      this.storage.get(DataTypeEnum.PER_CELL_OVERFLOWID).subscribe((value) => {
+        if (parseFloat(value.time) > Date.now() - 4000) {
+          this.overflowID = parseInt(value.values[0]);
+        } else {
+          this.overflowID = undefined;
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   getStatusColor = (): string => {

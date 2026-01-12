@@ -6,6 +6,8 @@ use axum::{
 };
 use tracing::warn;
 
+use crate::rule_structs::RuleManagerError;
+
 pub enum ScyllaError {
     /// Deseil error
     DbError(diesel::result::Error),
@@ -25,6 +27,8 @@ pub enum ScyllaError {
     FileError(String),
     /// An error when receiving or sending an mqtt message
     MqttError(String),
+    /// An error from interacting with rules
+    RuleError(RuleManagerError),
 }
 
 impl From<diesel::result::Error> for ScyllaError {
@@ -45,11 +49,11 @@ impl IntoResponse for ScyllaError {
         let (status, reason) = match self {
             ScyllaError::ConnError(error) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Could not connect to db: {}", error),
+                format!("Could not connect to db: {error}"),
             ),
             ScyllaError::DbError(error) => (
                 StatusCode::BAD_REQUEST,
-                format!("Misc query error: {}", error),
+                format!("Misc query error: {error}"),
             ),
             ScyllaError::InvalidEncoding(reason) => (StatusCode::UNPROCESSABLE_ENTITY, reason),
             ScyllaError::CommFailure(reason) => (StatusCode::BAD_GATEWAY, reason),
@@ -61,6 +65,21 @@ impl IntoResponse for ScyllaError {
             ScyllaError::HttpError(code, reason) => (code, reason),
             ScyllaError::FileError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
             ScyllaError::MqttError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
+            ScyllaError::RuleError(err_type) => match err_type {
+                RuleManagerError::NoMatchingRule => {
+                    (StatusCode::NOT_FOUND, "No rule found".to_owned())
+                }
+                RuleManagerError::NoSuchClient => {
+                    (StatusCode::NOT_FOUND, "No client found".to_owned())
+                }
+                RuleManagerError::RuleFailure => {
+                    (StatusCode::INTERNAL_SERVER_ERROR, "Rule failure".to_owned())
+                }
+                RuleManagerError::Failure => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Rule management failure".to_owned(),
+                ),
+            },
         };
 
         warn!("Routing error: {}: {}", status, reason);

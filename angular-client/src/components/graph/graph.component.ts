@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -24,7 +24,7 @@ type ChartOptions = {
   providers: [DialogService],
   standalone: true
 })
-export class GraphComponent implements OnInit {
+export class GraphComponent implements OnInit, OnDestroy {
   public dialogService = inject(DialogService);
   @Input() data!: GraphData[];
   @Input() color!: string; // Must be hex
@@ -36,6 +36,7 @@ export class GraphComponent implements OnInit {
   timeDiffMs: number = 0;
   isSliding: boolean = false;
   timeRangeMs: number = 120000; // 2 minutes in ms
+  timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
       header: this.title,
@@ -70,9 +71,11 @@ export class GraphComponent implements OnInit {
       });
     }
 
-    setTimeout(() => {
-      this.updateChart();
-    }, 800);
+    this.timeOuts.push(
+      setTimeout(() => {
+        this.updateChart();
+      }, 800)
+    );
   };
 
   ngOnInit(): void {
@@ -163,20 +166,28 @@ export class GraphComponent implements OnInit {
     };
 
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
-    setTimeout(() => {
-      const chartContainer = document.getElementById(this.graphContainerId);
-      if (!chartContainer) {
-        console.log('Container with id ' + this.graphContainerId + ' not found');
-        return;
-      }
+    this.timeOuts.push(
+      setTimeout(() => {
+        const chartContainer = document.getElementById(this.graphContainerId);
+        if (!chartContainer) {
+          return;
+        }
 
-      this.chart = new ApexCharts(chartContainer, {
-        series: [{ data: [] }],
-        ...this.options
-      });
+        this.chart = new ApexCharts(chartContainer, {
+          series: [{ data: [] }],
+          ...this.options
+        });
 
-      this.chart.render();
-      this.updateChart();
-    }, 100);
+        this.chart.render();
+        this.updateChart();
+      }, 100)
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.chart.destroy();
+    this.timeOuts.forEach((timeout) => {
+      clearTimeout(timeout);
+    });
   }
 }

@@ -1,0 +1,10 @@
+<div class="menu-container">
+  <div class="menu-grid">
+    @for (menuItem of menuItems; track menuItem) {
+      <div class="menu-item" (click)="menuItem.onClick()" [attr.data-id]="menuItem.id">
+        <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
+        <span class="menu-label">{{ menuItem.label }}</span>
+      </div>
+    }
+  </div>
+</div>

@@ -1,4 +1,5 @@
-import { Component, inject, input, OnInit } from '@angular/core';
+import { Component, inject, input, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routing.module';
 import Storage from 'src/services/storage.service';
@@ -17,9 +18,10 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
 })
-export class SegmentSummaryComponent implements OnInit {
+export class SegmentSummaryComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
   segmentNumber = input.required<Segment>();
   temperature!: number;
   alphaChipTemp!: number;
@@ -33,18 +35,20 @@ export class SegmentSummaryComponent implements OnInit {
   subscribeAndUpdateTemperature = () => {
     const segmentInfo = this.getRelevantKeys();
 
-    this.storage.get(segmentInfo.segmentTempKey).subscribe((value) => {
-      this.temperature = parseFloat(value.values[0]);
-    });
-    this.storage.get(segmentInfo.alphaChipTempKey).subscribe((value) => {
-      this.alphaChipTemp = parseFloat(value.values[0]);
-    });
-    this.storage.get(segmentInfo.betaChipTempKey).subscribe((value) => {
-      this.betaChipTemp = parseFloat(value.values[0]);
-    });
-    this.storage.get(segmentInfo.voltageKey).subscribe((value) => {
-      this.voltage = parseFloat(value.values[0]);
-    });
+    this.subscriptions.push(
+      this.storage.get(segmentInfo.segmentTempKey).subscribe((value) => {
+        this.temperature = parseFloat(value.values[0]);
+      }),
+      this.storage.get(segmentInfo.alphaChipTempKey).subscribe((value) => {
+        this.alphaChipTemp = parseFloat(value.values[0]);
+      }),
+      this.storage.get(segmentInfo.betaChipTempKey).subscribe((value) => {
+        this.betaChipTemp = parseFloat(value.values[0]);
+      }),
+      this.storage.get(segmentInfo.voltageKey).subscribe((value) => {
+        this.voltage = parseFloat(value.values[0]);
+      })
+    );
   };
 
   /**
@@ -57,4 +61,8 @@ export class SegmentSummaryComponent implements OnInit {
   getRelevantKeys = (): SegmentInfo => {
     return segmentInfoMap[this.segmentNumber()];
   };
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
 }

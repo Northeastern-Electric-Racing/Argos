@@ -1,8 +1,7 @@
-import { environment } from 'src/environment/environment';
 import { Timing } from 'src/utils/types.utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const baseURL = (environment as any).url || 'http://localhost:8000';
+const baseURL = (window as any).__env?.BACKEND_URL;
 
 /* Datatypes */
 const getAllDatatypes = () => `${baseURL}/datatypes`;
@@ -39,6 +38,15 @@ const carCommandConfig = (key: string, values: number[]) =>
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
 
+/* Scylla Settings */
+const scyllaSettings = () => `${baseURL}/scylla/get_settings`;
+const enableUpload = () => `${baseURL}/scylla/upload/enable`;
+const disableUpload = () => `${baseURL}/scylla/upload/disable`;
+const setBatchTime = (batchTime: number) => `${baseURL}/scylla/batch_time/${batchTime}`;
+const setRateLimitMode = (mode: number) => `${baseURL}/scylla/ratelimit_mode/${mode}`;
+const setRateLimitTime = (time: number) => `${baseURL}/scylla/static_ratelimit_time/${time}`;
+const setDiscardPercentage = (percentage: number) => `${baseURL}/scylla/socket_discard_percent/${percentage}`;
+
 export const urls = {
   getAllDatatypes,
 
@@ -59,5 +67,13 @@ export const urls = {
   updateVideos,
 
   carCommandConfig,
-  authenticate
+  authenticate,
+
+  scyllaSettings,
+  enableUpload,
+  disableUpload,
+  setBatchTime,
+  setRateLimitMode,
+  setRateLimitTime,
+  setDiscardPercentage
 };

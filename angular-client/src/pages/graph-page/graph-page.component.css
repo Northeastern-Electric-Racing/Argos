@@ -5,7 +5,6 @@
 .container {
   display: flex;
   flex-flow: column;
-  height: 90vh;
 }
 
 .graph-header {
@@ -16,7 +15,6 @@
   flex: 1 1 auto;
   display: flex;
   flex-flow: row;
-  height: 90vh;
   width: 100%;
 }
 
@@ -46,6 +44,23 @@
   margin-bottom: 8px;
   margin-right: 8px;
   margin-left: 8px;
+}
+
+/* PrimeNG InputNumber width customization */
+::ng-deep .time-range-input {
+  width: 80px !important;
+}
+
+::ng-deep .time-range-input .p-inputnumber-input {
+  width: 100% !important;
+}
+
+::ng-deep .y-axis-input {
+  width: 60px !important;
+}
+
+::ng-deep .y-axis-input .p-inputnumber-input {
+  width: 100% !important;
 }
 
 @media (max-width: 768px) {

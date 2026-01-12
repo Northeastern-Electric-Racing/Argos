@@ -14,6 +14,24 @@ Please install by searching that id(s) in vs code extensions.
 
 rust analysizer: `rust-lang.rust-analyzer`
 
+##### Windows only
+
+Download PostgreSQL: (https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
+
+In powershell run:
+
+1. $env:PQ_LIB_DIR = "C:\ProgramFiles\PostgreSQL\18\lib"
+2. [System.Environment]::SetEnvironmentVariable("PQ_LIB_DIR", "C:\ProgramFiles\PostgreSQL\18\lib", "User")
+
+Make sure that the file path is correct and points to your PostgreSQL's lib folder before you run these commands.
+Your file path may not match the ones above exactly, but will look similar.
+
+In scylla-server run:
+
+```
+cargo clean
+```
+
 ### Run the app
 
 In scylla-server run:

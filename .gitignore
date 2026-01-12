@@ -8,6 +8,7 @@ scylla-server-typescript/src/prisma/mydatabase.db-journal
 scylla-server/files
 scylla-server/target
 backups
+/target
 
 # Xcode
 #
@@ -103,3 +104,4 @@ iOSInjectionProject/
 # user compose override
 compose.override.yml
 **/.DS_Store
+**/.vs

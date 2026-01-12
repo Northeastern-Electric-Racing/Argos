@@ -2,7 +2,6 @@ import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
-import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
@@ -23,35 +22,25 @@ export default class ChargingStatusComponent implements OnInit {
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.CHARGING).subscribe((value) => {
-      const chargingControlValue = floatPipe(value.values[0]);
+    this.storage.getTimerData(DataTypeEnum.CHARGING).subscribe((value) => {
+      const chargingControlValue = value.last_value;
       if (this.isCharging) {
         if (chargingControlValue === 1) {
           this.isCharging = false;
-          this.stopTimer();
-          this.resetCurrentSecs();
+          this.currentSeconds = 0;
         }
       } else if (chargingControlValue === 0) {
         this.isCharging = true;
-        this.startTimer();
       }
+
+      if (chargingControlValue === 0) {
+        this.currentSeconds = (Date.now() - value.last_change) / 1000;
+      }
+      this.totalSeconds = Math.round(
+        value.total_time_per_value_map[0].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) / 1000 +
+          this.currentSeconds
+      );
     });
-  }
-
-  startTimer() {
-    this.intervalId = setInterval(() => {
-      this.currentSeconds++;
-      this.totalSeconds++;
-      sessionStorage.setItem('charging-total-seconds', this.totalSeconds.toString());
-    }, 1000);
-  }
-
-  stopTimer() {
-    clearInterval(this.intervalId);
-  }
-
-  resetCurrentSecs() {
-    this.currentSeconds = 0;
   }
 
   getChargingState(connected: boolean) {

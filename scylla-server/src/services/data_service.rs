@@ -1,11 +1,12 @@
 use crate::{
     controllers::data_controller::Timing,
     models::{Data, DataInsert},
-    schema::data::dsl::*,
+    schema::data::dsl::{data, dataTypeName, runId, time},
     ClientData, Database,
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use tracing::{instrument, warn, Level};
 
 /// Get datapoints that mach criteria
 /// * `db` - The database connection to use
@@ -14,7 +15,7 @@ use diesel_async::RunQueryDsl;
 ///   returns: A result containing the data or the error propogated by the db
 pub async fn get_data_by_run_id(
     db: &mut Database<'_>,
-    data_type_name: String,
+    data_type_name: &str,
     run_id: i32,
 ) -> Result<Vec<Data>, diesel::result::Error> {
     data.filter(runId.eq(run_id).and(dataTypeName.eq(data_type_name)))
@@ -76,4 +77,134 @@ pub async fn add_many(
         .on_conflict_do_nothing()
         .execute(db)
         .await
+}
+
+// constants for auto-downsampling
+pub const LARGE_DATASET_THRESHOLD: i64 = 10000; // 10k points
+pub const MAX_POINTS_TO_RETURN: u32 = 5000; // Max points to return
+
+/// Get mean downsampled data for a run and data type
+/// * `db` - The database connection to use
+/// * `data_type_name` - The name of the data type to query
+/// * `run_id` - The run ID to get data for
+/// * `sampling_rate` - The sampling rate to use for downsampling
+///   returns: A result containing the downsampled data or the QueryError propagated by the db
+#[instrument(level = Level::DEBUG, skip(db))]
+pub async fn get_mean_downsampled_data_by_run_id(
+    db: &mut Database<'_>,
+    data_type_name: &str,
+    run_id: i32,
+    sampling_rate: usize,
+) -> Result<Vec<Data>, diesel::result::Error> {
+    let all_data = data
+        .filter(runId.eq(run_id).and(dataTypeName.eq(data_type_name)))
+        .order(time.asc())
+        .load::<crate::models::Data>(db)
+        .await?;
+    let type_name = data_type_name.to_string();
+
+    let mut out: Vec<Data> =
+        Vec::with_capacity((all_data.len() + sampling_rate - 1) / sampling_rate);
+    for chunk in all_data.chunks(sampling_rate) {
+        if chunk.is_empty() {
+            continue;
+        }
+
+        let sum_time: i128 = chunk.iter().map(|d| d.time as i128).sum();
+        let mean_time: i64 = (sum_time / chunk.len() as i128) as i64;
+
+        let min_values_len = chunk.iter().map(|d| d.values.len()).min().unwrap_or(0);
+        let mut sum_values: Vec<f32> = vec![0.0; min_values_len];
+        for d in chunk {
+            for (i, &v) in d.values.iter().take(min_values_len).enumerate() {
+                if let Some(value) = v {
+                    sum_values[i] += value;
+                } else {
+                    warn!("Encountered None value while downsampling data!");
+                }
+            }
+        }
+        let mean_values: Vec<Option<f32>> = sum_values
+            .iter()
+            .map(|&sum| Some(sum / chunk.len() as f32))
+            .collect();
+
+        out.push(Data {
+            runId: run_id,
+            dataTypeName: type_name.clone(),
+            time: mean_time,
+            values: mean_values,
+        });
+    }
+
+    Ok(out)
+}
+
+/// Calculate the total number of data points for a run and data type
+/// * `db` - The database connection to use
+/// * `data_type_name` - The name of the data type to count
+/// * `run_id` - The run ID to count data for
+///   returns: A result containing the count or the QueryError propagated by the db
+pub async fn get_data_point_count(
+    db: &mut Database<'_>,
+    data_type_name: &str,
+    run_id: i32,
+) -> Result<i64, diesel::result::Error> {
+    let count = data
+        .filter(runId.eq(run_id).and(dataTypeName.eq(data_type_name)))
+        .count()
+        .get_result(db)
+        .await?;
+
+    Ok(count)
+}
+
+/// Calculate optimal sampling rate based on data point count
+/// * `total_count` - The total number of data points in the dataset
+///   returns: The sampling rate to use (1 for no downsampling, >1 for downsampling)
+pub fn calculate_auto_sampling_rate(total_count: i64) -> u32 {
+    if total_count <= LARGE_DATASET_THRESHOLD {
+        return 1; // No downsampling needed
+    }
+
+    // Calculate sampling rate to get close to MAX_POINTS_TO_RETURN
+    let sampling_rate = (total_count as f64 / MAX_POINTS_TO_RETURN as f64).ceil() as u32;
+
+    // Ensure we don't sample more aggressively than necessary
+    sampling_rate.max(1)
+}
+
+/// Get data with automatic downsampling if needed
+/// Returns the same Vec<Data> as the original service, but potentially downsampled
+/// * `db` - The database connection to use
+/// * `data_type_name` - The name of the data type to query
+/// * `run_id` - The run ID to get data for
+///   returns: A result containing the data (downsampled if large) or the QueryError propagated by the db
+#[instrument(level = Level::TRACE, skip(db))]
+pub async fn get_data_by_run_id_with_auto_downsampling(
+    db: &mut Database<'_>,
+    data_type_name: String,
+    run_id: i32,
+) -> Result<(i64, Vec<Data>), diesel::result::Error> {
+    // First, check the data size
+    let total_count = get_data_point_count(db, &data_type_name, run_id).await?;
+
+    if total_count <= LARGE_DATASET_THRESHOLD {
+        // Small dataset - return all data without downsampling
+        return Ok((
+            total_count,
+            crate::services::data_service::get_data_by_run_id(db, &data_type_name, run_id).await?,
+        ));
+    }
+
+    return Ok((
+        total_count,
+        get_mean_downsampled_data_by_run_id(
+            db,
+            &data_type_name,
+            run_id,
+            calculate_auto_sampling_rate(total_count) as usize,
+        )
+        .await?,
+    ));
 }

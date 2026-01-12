@@ -1,22 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import * as mapboxgl from 'mapbox-gl';
-import { environment } from 'src/environment/environment';
 import { DataValue } from 'src/utils/socket.utils';
 import { Coordinate } from 'src/utils/types.utils';
+import { EnvService } from './env.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
   map!: mapboxgl.Map;
+  private envService = inject(EnvService);
 
   buildMap = (contianer: string) => {
     this.map = new mapboxgl.Map({
       container: contianer,
       zoom: 0,
       center: [0, 0],
-      accessToken: environment.mapbox.accessToken
+      accessToken: this.envService.mapboxToken
     });
     this.map.addControl(new mapboxgl.NavigationControl());
   };

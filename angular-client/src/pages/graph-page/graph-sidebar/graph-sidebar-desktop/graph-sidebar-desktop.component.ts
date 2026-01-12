@@ -9,6 +9,7 @@ import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -24,9 +25,9 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
+  private topicSelectionService = inject(TopicSelectionService);
   private storage = inject(Storage);
   dataTypes = input<DataType[]>([]);
-  selectedDataTypes = input.required<(dataTypes: DataType[]) => void>();
   nodes: Node[] = [];
 
   filterForm: FormGroup = new FormGroup({
@@ -68,6 +69,45 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     };
 
     this.treeNodes = this.nodes.map(mapToTreeNode);
+    // Helper function to find selected nodes in the tree and expand their parent nodes
+    const findSelectedNodes = (nodes: TreeNode<Node>[]): TreeNode<Node>[] => {
+      const selected: TreeNode<Node>[] = [];
+
+      // Map to track if a node contains selected children
+      const containsSelectedNode = new Map<TreeNode<Node>, boolean>();
+
+      // First pass: find all selected nodes
+      const findSelected = (nodes: TreeNode<Node>[], parents: TreeNode<Node>[] = []): void => {
+        for (const node of nodes) {
+          // Check if this is a leaf node and matches a selected data type
+          if (node.selectable && node.data?.dataType && this.topicSelectionService.isSelected(node.data.dataType)) {
+            selected.push(node);
+
+            // Mark all parents as containing selected nodes
+            parents.forEach((parent) => containsSelectedNode.set(parent, true));
+          }
+
+          // Continue searching children
+          if (node.children && node.children.length > 0) {
+            findSelected(node.children as TreeNode<Node>[], [...parents, node]);
+          }
+        }
+      };
+
+      // Find selected nodes and track their parents
+      findSelected(nodes);
+
+      // Expand all parent nodes that contain selected children
+      containsSelectedNode.forEach((hasSelectedChild, node) => {
+        if (hasSelectedChild) {
+          node.expanded = true;
+        }
+      });
+
+      return selected;
+    };
+
+    this.selectedNodes = findSelectedNodes(this.treeNodes);
   }
 
   ngOnDestroy(): void {
@@ -75,11 +115,9 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }
 
   clearSelections = () => {
-    this.treeNodes.forEach((node) => {
-      node.expanded = false;
-    });
+    this.treeNodes.forEach((n) => (n.expanded = false));
     this.selectedDataTypesList = [];
-    this.selectedDataTypes()([]);
+    this.topicSelectionService.clearSelection();
     this.selectedNodes = undefined;
   };
 
@@ -88,12 +126,10 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }
 
   nodeSelect(event: TreeNodeSelectEvent) {
-    const { node } = event;
-    // Only add if it's a leaf node (no children)
-    const dataType = node.data?.dataType;
-    if (dataType && !this.selectedDataTypesList.includes(dataType)) {
-      this.selectedDataTypesList.push(dataType);
-      this.selectedDataTypes()([...this.selectedDataTypesList]);
+    const dt = event.node.data?.dataType;
+    if (dt && !this.selectedDataTypesList.includes(dt)) {
+      this.selectedDataTypesList.push(dt);
+      this.topicSelectionService.addDataType(dt);
     }
   }
 
@@ -109,14 +145,10 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }
 
   onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const { node } = event;
-    // Only remove if it's a leaf node (no children)
-    if (!node.children || node.children.length === 0) {
-      const dataType = node.data?.dataType;
-      if (dataType) {
-        this.selectedDataTypesList = this.selectedDataTypesList.filter((dt) => dt !== dataType);
-        this.selectedDataTypes()([...this.selectedDataTypesList]);
-      }
+    const dt = event.node.data?.dataType;
+    if (dt) {
+      this.selectedDataTypesList = this.selectedDataTypesList.filter((x) => x !== dt);
+      this.topicSelectionService.removeDataType(dt);
     }
   }
 }

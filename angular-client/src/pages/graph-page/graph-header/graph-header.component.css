@@ -1,7 +1,22 @@
-.header-left {
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+[header-left] {
   margin-left: 0px;
   display: flex;
   flex-direction: row;
+  align-items: center;
+}
+
+[header-right] {
+  margin-right: 15px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 a {
@@ -9,7 +24,11 @@ a {
 }
 
 @media screen and (max-width: 768px) {
-  .header-left {
+  [header-left] {
     margin-left: 0px;
+  }
+
+  [header-right] {
+    margin-right: 10px;
   }
 }

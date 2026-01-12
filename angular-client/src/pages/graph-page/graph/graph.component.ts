@@ -1,4 +1,4 @@
-import { Component, input, OnChanges, OnInit } from '@angular/core';
+import { Component, effect, input, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexXAxis,
@@ -8,15 +8,16 @@ import {
   ApexGrid,
   ApexTooltip,
   ApexFill,
-  ApexLegend
+  ApexLegend,
+  ApexYAxis
 } from 'ng-apexcharts';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { GraphInfo } from 'src/utils/types.utils';
 
 type ChartOptions = {
   chart: ApexChart;
   xaxis: ApexXAxis;
-  yaxis: ApexYAxis;
+  yaxis: ApexYAxis[];
   dataLabels: ApexDataLabels;
   markers: ApexMarkers;
   grid: ApexGrid;
@@ -30,22 +31,145 @@ type ChartOptions = {
   selector: 'graph',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export default class CustomGraphComponent implements OnChanges, OnInit {
+export default class CustomGraphComponent implements OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
   limitRange = input(true);
+  isPaused = input<boolean>(false);
+  realTime = input<boolean>(false);
+  clearGraph = input<boolean>(false);
   options!: ChartOptions;
   chart!: ApexCharts;
   previousDataLength: number = 0;
   // label -> x,y (topic, data point)
-  data!: Map<string, Map<number, number>>;
-  timeDiffMs: number = 0;
+  data!: Map<string, Array<{ x: number; y: number }>>;
   isSliding: boolean = false;
-  timeRangeMs = 60000; // 1 minute in ms
+  timeRangeMs: number | undefined = undefined;
+  private timeOuts: NodeJS.Timeout[] = [];
+  graphConfig = input.required<{ maxPoints: number; yMin: number | null; yMax: number | null }>();
+  range = input<number | undefined>(undefined);
+  subscriptions: Subscription[] = [];
+
+  constructor() {
+    effect(() => {
+      if (this.isPaused()) {
+        this.resetRange();
+      }
+    });
+    effect(() => {
+      const config = this.graphConfig();
+      if (this.chart && config) {
+        this.options.yaxis = [
+          {
+            ...this.options.yaxis,
+            labels: {
+              style: {
+                colors: '#fff'
+              }
+            },
+            max: config.yMax === null ? undefined : config.yMax,
+            min: config.yMin === null ? undefined : config.yMin
+          }
+        ];
+
+        this.chart.updateOptions(this.options);
+        this.resetRange();
+      }
+    });
+
+    effect(() => {
+      this.realTime();
+      this.clearGraph();
+      this.valuesSubject();
+      if (this.chart) {
+        this.chart.updateSeries([]);
+      }
+      this.previousDataLength = 0;
+      this.data = new Map();
+    });
+
+    effect(() => {
+      if (this.showMultipleYAxes()) {
+        const yaxisConfigs: Partial<ApexYAxis>[] = Array.from(this.data.keys()).map((key, index) => ({
+          title: {
+            text: key.replace('0', ''),
+            style: {
+              color: 'grey',
+              fontSize: '20px',
+              fontWeight: 'bold'
+            }
+          },
+          labels: {
+            style: {
+              colors: '#fff'
+            }
+          },
+          opposite: index % 2 !== 0 // Alternate sides for each y-axis
+        }));
+
+        // Update y-axis configurations
+        if (this.chart) {
+          this.options.yaxis = yaxisConfigs;
+          this.chart.updateOptions(this.options);
+        }
+      } else {
+        this.options.yaxis = [
+          {
+            labels: {
+              style: {
+                colors: '#fff'
+              }
+            }
+          }
+        ];
+        this.chart.updateOptions(this.options);
+      }
+    });
+    effect(() => {
+      // Clean up existing subscriptions
+      this.subscriptions.forEach((sub) => sub.unsubscribe());
+      this.subscriptions = [];
+
+      // Clean up existing timeouts
+      this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+      this.timeOuts = [];
+
+      this.valuesSubject().forEach((graphInfo) => {
+        if (this.isPaused()) {
+          return;
+        }
+        this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
+      });
+
+      this.updateChart();
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscriptions
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions = [];
+
+    // Clean up timeouts
+    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+    this.timeOuts = [];
+
+    // Destroy chart and clear data
+    if (this.chart) {
+      this.chart.destroy();
+    }
+    this.data.clear();
+  }
 
   updateChart = () => {
+    // Skip chart updates if paused
+    if (this.isPaused() && this.limitRange()) {
+      return;
+    }
+
     const series = Array.from(this.data).map(([key, map], index) => ({
       name: key,
       data: Array.from(map),
@@ -54,79 +178,53 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
 
     this.chart.updateSeries(series);
 
-    if (this.showMultipleYAxes()) {
-      const yaxisConfigs = Array.from(this.data.keys()).map((key, index) => ({
-        title: {
-          text: key.replace('0', ''),
-          style: {
-            color: 'grey',
-            fontSize: '20px',
-            fontWeight: 'bold'
-          }
-        },
-        labels: {
-          style: {
-            colors: '#fff'
-          }
-        },
-        opposite: index % 2 !== 0 // Alternate sides for each y-axis
-      }));
-      // Update y-axis configurations
-      this.chart.updateOptions({
-        ...this.options,
-        yaxis: yaxisConfigs
-      });
-    }
-
-    if (this.limitRange() && !this.isSliding && this.timeDiffMs > this.timeRangeMs) {
-      this.isSliding = true;
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis,
-          range: this.timeRangeMs
-        }
-      });
-    }
-
-    if (this.limitRange()) {
-      setTimeout(() => {
-        this.updateChart();
-      }, 500);
-    }
+    this.chart.updateOptions({
+      ...this.options,
+      xaxis: {
+        ...this.options.xaxis,
+        range: this.timeRangeMs
+      }
+    });
   };
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
+    // Skip processing if paused
+    if (this.isPaused()) {
+      return;
+    }
+
     const values = info?.data ?? [];
-    if (values.length === 0) this.data = new Map();
+    // if (values.length === 0) this.data = new Map();
     values.forEach((value, i) => {
-      let line: Map<number, number>;
+      let line: Array<{ x: number; y: number }>;
       const label = (info?.label ?? '') + ' ' + i;
       if (!this.data.has(label)) {
-        line = this.data.set(label, new Map<number, number>()).get(label)!;
+        line = this.data.set(label, []).get(label)!;
       } else {
         line = this.data.get(label)!;
       }
+
       value.forEach((val) => {
-        if (!line.has(val.x)) {
-          line.set(val.x, +val.y.toFixed(3));
+        if (!line.some((v) => v.x === val.x)) {
+          line.push({ x: val.x, y: +val.y.toFixed(3) });
+        }
+
+        if (this.realTime() && line.length > this.graphConfig().maxPoints) {
+          const shiftedPoint = line.shift()?.x; // Remove the oldest point
+          // THE BELOW IS A SOMEWHAT TEMP FIX, ULTIMATELY THIS SHOULD BE MORE DYNAMIC AND BE OFFERED AS A CONFIG OPTION
+          // Calculate the actual time range: difference between newest and oldest remaining points
+          const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
+          // Update time range if this is larger than current range
+          this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
       });
     });
 
-    if (this.limitRange() && !this.isSliding) {
-      const times = Array.from(Array.from(this.data.values())[0]?.keys());
-      this.timeDiffMs = times[times.length - 1] - times[0];
-    } else if (!this.limitRange()) {
-      this.updateChart();
-    }
+    this.updateChart();
   };
 
   ngOnInit(): void {
     this.data = new Map();
-    this.valuesSubject().forEach((graphInfo) => {
-      graphInfo.subscribe(this.graphInfoCallback);
-    });
 
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) return;
@@ -142,7 +240,7 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         animations: {
           enabled: false,
           dynamicAnimation: {
-            speed: 1000
+            speed: 1
           }
         }
       },
@@ -167,14 +265,22 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
         }
       },
       // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
-      yaxis: {
-        labels: {
-          style: {
-            colors: '#fff'
+      yaxis: [
+        {
+          labels: {
+            style: {
+              colors: '#fff'
+            }
           }
         }
-      },
+      ],
       tooltip: {
+        enabled: true,
+        // Make the tooltip “follow” your cursor as you hover
+        followCursor: true,
+        // If you’d rather show a shared tooltip for multiple series, set shared: true
+        shared: false,
+        intersect: false,
         x: {
           //format by hours and minutes and seconds
           format: 'M/d/yy, h:mm:ss'
@@ -201,8 +307,6 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
       }
     };
 
-    // Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
-
     this.chart = new ApexCharts(chartContainer, {
       series: [],
       ...this.options
@@ -212,21 +316,14 @@ export default class CustomGraphComponent implements OnChanges, OnInit {
     });
   }
 
-  ngOnChanges() {
-    this.data = new Map();
-    this.isSliding = false;
-
-    //set range to undefined... why?
+  resetRange() {
+    this.timeRangeMs = undefined;
     this.chart.updateOptions({
       ...this.options,
       xaxis: {
         ...this.options.xaxis,
         range: undefined
       }
-    });
-
-    this.valuesSubject().forEach((graphInfo) => {
-      graphInfo.subscribe(this.graphInfoCallback);
     });
   }
 }

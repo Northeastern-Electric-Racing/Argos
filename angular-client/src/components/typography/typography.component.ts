@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { StyleVariant } from 'src/utils/style-variant';
 
@@ -17,46 +17,47 @@ import { StyleVariant } from 'src/utils/style-variant';
   styleUrls: ['./typography.component.css'],
   standalone: true
 })
-export default class TypographyComponent implements OnInit {
-  @Input() variant!: StyleVariant;
-  @Input() content?: string | string[] | null;
-  @Input() additionalStyles?: string;
-  style!: string;
+export default class TypographyComponent {
+  variant = input.required<StyleVariant>();
+  content = input<string | string[] | null>();
+  additionalStyles = input<string>('');
 
-  ngOnInit(): void {
-    switch (this.variant) {
+  style = computed(() => {
+    let baseStyle: string = '';
+
+    switch (this.variant()) {
       case 'header':
-        this.style = Theme.header;
+        baseStyle = Theme.header;
         break;
       case 'secondary-header':
-        this.style = Theme.secondaryHeader;
+        baseStyle = Theme.secondaryHeader;
         break;
       case 'xx-large-title':
-        this.style = Theme.xxLargeHeader;
+        baseStyle = Theme.xxLargeHeader;
         break;
       case 'large-header':
-        this.style = Theme.largeHeader;
+        baseStyle = Theme.largeHeader;
         break;
       case 'large-secondary-header':
-        this.style = Theme.largeSecondaryHeader;
+        baseStyle = Theme.largeSecondaryHeader;
         break;
       case 'subheader':
-        this.style = Theme.subheader;
+        baseStyle = Theme.subheader;
         break;
       case 'info-title':
-        this.style = Theme.infoTitle;
+        baseStyle = Theme.infoTitle;
         break;
       case 'info-subtitle':
-        this.style = Theme.infoSubtitle;
+        baseStyle = Theme.infoSubtitle;
         break;
       case 'value':
-        this.style = Theme.value;
+        baseStyle = Theme.value;
         break;
       case 'info-value-mobile':
-        this.style = Theme.infoValueMobile;
+        baseStyle = Theme.infoValueMobile;
         break;
       case 'info-value':
-        this.style = Theme.infoValue;
+        baseStyle = Theme.infoValue;
         break;
       case 'info-value-small':
         this.style = Theme.infoValueSmall;
@@ -65,7 +66,7 @@ export default class TypographyComponent implements OnInit {
         this.style = Theme.infoValueLarge;
         break;
       case 'info-unit':
-        this.style = Theme.infoUnit;
+        baseStyle = Theme.infoUnit;
         break;
       case 'info-unit-small':
         this.style = Theme.infoUnitSmall;
@@ -74,15 +75,19 @@ export default class TypographyComponent implements OnInit {
         this.style = Theme.infoUnitLarge;
         break;
       case 'sidebar-label':
-        this.style = Theme.sidebarLabel;
+        baseStyle = Theme.sidebarLabel;
         break;
       case 'x-large-title':
-        this.style = Theme.xLargeHeader;
+        baseStyle = Theme.xLargeHeader;
+        break;
+      default:
+        baseStyle = '';
         break;
     }
 
-    if (this.additionalStyles) {
-      this.style += this.additionalStyles;
+    if (this.additionalStyles()) {
+      baseStyle += this.additionalStyles();
     }
-  }
+    return baseStyle;
+  });
 }

@@ -57,3 +57,9 @@ Then run `npm install` to install all the most recent modules.
 ### Developing with Data
 
 Refer to top level `Argos/REAMDE.md` for how to setup mock data locally.
+
+### Env Variables
+
+To update dev env variables, just change the values in assets/env.js
+
+To set prod env variables, change the associated docker composes environment variables. The only relevant one is backend_url

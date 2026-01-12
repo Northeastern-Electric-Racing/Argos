@@ -1,6 +1,6 @@
 name: Epic
 description: A collection of many tasks
-title: '[Area] - Short Description'
+title: "[Area] - Short Description"
 labels: [epic]
 body:
   - type: textarea
@@ -23,7 +23,7 @@ body:
     id: user-story
     attributes:
       label: User Story
-      value: 'As a _____, I want _____, so that _____.'
+      value: "As a _____, I want _____, so that _____."
     validations:
       required: true
   - type: textarea
@@ -62,10 +62,3 @@ body:
     validations:
       required: true
   - type: textarea
-    id: tickets
-    attributes:
-      label: Tickets
-      description: What tickets will be a part of this epic?
-      value: " - [ ] #\n - [ ] #"
-    validations:
-      required: true

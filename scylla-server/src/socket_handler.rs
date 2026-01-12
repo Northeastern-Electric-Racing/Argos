@@ -1,17 +1,22 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
-use serde::Serialize;
+use rustc_hash::FxHashMap;
+use serde::{Deserialize, Serialize};
+use socketioxide::extract::{SocketRef, TryData};
+use socketioxide::socket::Sid;
 use socketioxide::SocketIo;
-use std::{collections::HashMap, sync::atomic::Ordering, time::Duration};
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use std::{sync::atomic::Ordering, time::Duration};
+use tokio::sync::{broadcast, RwLock};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, trace, warn};
 
 use crate::metadata_structs::{
-    map_dti_flt, FaultData, Node, TimerData, DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP,
-    FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
+    map_dti_flt, FaultData, Node, TimerData, TotalTimerData, DATA_SOCKET_KEY, FAULT_BINS,
+    FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
 };
+use crate::rule_structs::{RuleManager, RULE_SOCKET_KEY};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -33,28 +38,37 @@ pub async fn socket_handler(
     }
 }
 
+#[derive(Debug, Deserialize)]
+struct AuthData {
+    token: String,
+}
+
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
+    rules_manager: Arc<RuleManager>,
     io: SocketIo,
 ) {
     let mut upload_counter = 0u8;
 
+    // BEGIN METADATA
+
     // INTERVAL TIMERS for periodic things to be sent
-    let mut view_interval = tokio::time::interval(Duration::from_secs(3));
+    let mut view_interval = tokio::time::interval(Duration::from_millis(500));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
     let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
 
     // init timers
-    let mut timer_map: HashMap<String, TimerData> = HashMap::new();
+    let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
     for item in TIMERS_TOPICS {
         timer_map.insert(
             item.to_string(),
             TimerData {
                 topic: item,
-                last_change: DateTime::UNIX_EPOCH,
-                last_value: 0.0f32,
+                last_change: chrono::offset::Utc::now(), // ensure that UTC offset is now
+                last_value: -1.0f32, // create a value that isn't possibly in the range of statuses
+                total_time_per_value_map: FxHashMap::default(),
             },
         );
     }
@@ -66,7 +80,42 @@ pub async fn socket_handler_with_metadata(
         Regex::new(r"Charger\/Box\/F_(.*)").expect("Could not compile regex!");
     let fault_regex_mpu: Regex =
         Regex::new(r"MPU\/Fault\/Critical\/(.*)").expect("Could not compile regex!");
-    let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(25);
+    let mut fault_ringbuffer = AllocRingBuffer::<FaultData>::new(100);
+
+    // END METADATA
+
+    // BEGIN rules
+    // socket_map must not be written outside of these closures.
+    // a map of client_ids to their respective socket IDs for identifying where notifications go
+    let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
+        Arc::new(RwLock::new(FxHashMap::default()));
+    let writable_socket_map = client_socket_map.clone();
+    io.ns(
+        "/",
+        |socket: SocketRef, TryData(auth): TryData<AuthData>| async move {
+            // unfortunate locking and ref counting due to the async closures
+            let mut owned = writable_socket_map.write().await;
+            let client_id = match auth {
+                Ok(auth) => auth,
+
+                Err(e) => {
+                    warn!("Could not extract auth, client unauthenticated: {}", e);
+                    return;
+                }
+            };
+
+            debug!(
+                "Establishing auth connection with {} -- socket {}",
+                client_id.token, socket.id
+            );
+            owned.insert(client_id.token.clone(), socket.id);
+            drop(owned);
+
+            socket.on_disconnect(async move || {
+                writable_socket_map.write().await.remove(&client_id.token);
+            });
+        },
+    );
 
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
@@ -85,7 +134,9 @@ pub async fn socket_handler_with_metadata(
                     &io,
                     DATA_SOCKET_KEY,
                 ).await;
-                handle_socket_msg(data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+
+                handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -100,7 +151,6 @@ pub async fn socket_handler_with_metadata(
                 for item in timer_map.values() {
                     send_socket_msg(item, &mut upload_counter, &io, TIMER_SOCKET_KEY).await;
                 }
-
             },
             _ = view_interval.tick() => {
                     trace!("Updating viewership data!");
@@ -121,7 +171,7 @@ pub async fn socket_handler_with_metadata(
             },
             _ = message_rate_interval.tick() => {
                 let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
-                info!("Updating message rate to be {} msg/sec", rate);
+                debug!("Updating message rate to be {} msg/sec", rate);
                 let item = ClientData {
                     name: "Argos/Message_Rate".to_string(),
                     unit: "".to_string(),
@@ -142,13 +192,48 @@ pub async fn socket_handler_with_metadata(
     }
 }
 
+/// Handles triggering rules based on a recieved datapoint
+async fn handle_rule_processing(
+    data: &ClientData,
+    rule_manager: &Arc<RuleManager>,
+    client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
+    io: &SocketIo,
+) {
+    let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
+        return;
+    };
+    for notification in notifs {
+        let read_clients = client_socket_map.read().await;
+        let Some(sid) = read_clients.get(&notification.0 .0) else {
+            warn!("Could not find client to deliver notification, deleting client");
+            let _ = rule_manager.delete_client(notification.0).await;
+            return;
+        };
+        debug!(
+            "Sending notification of {} to {}",
+            notification.1.topic, notification.0
+        );
+        let Some(socket) = io.get_socket(*sid) else {
+            warn!("Could not find client socket, deleting client");
+            let _ = rule_manager.delete_client(notification.0).await;
+            return;
+        };
+        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
+            warn!(
+                "Could not send rule notification to {}, err {}",
+                notification.0, err
+            );
+        };
+    }
+}
+
 /// Handles parsing and creating metadata for a newly received socket message.
 fn handle_socket_msg(
-    data: ClientData,
+    data: &ClientData,
     fault_regex_mpu: &Regex,
     fault_regex_bms: &Regex,
     fault_regex_charger: &Regex,
-    timer_map: &mut HashMap<String, TimerData>,
+    timer_map: &mut FxHashMap<String, TimerData>,
     fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
 ) {
     // check to see if we fit a timer case, and then act upon it
@@ -157,6 +242,29 @@ fn handle_socket_msg(
         trace!("Triggering timer: {}", data.name);
         let new_val = *data.values.first().unwrap_or(&-1f32);
         if time.last_value != new_val {
+            // retrieves previous total time for the last value
+            let prev_val = time
+                .total_time_per_value_map
+                .get_mut(&time.last_value.to_string());
+            // create a record of the time the last value started, and record that it has now ended.
+            let new_total_val = TotalTimerData {
+                start_time: time.last_change,
+                end_time: Utc::now(),
+            };
+            // insert the record, into the total record for the given value
+            // (e.g. '0' was on from 10:00 to 10:15, is added to the vec
+            // of all the previous)
+            if let Some(prev_val) = prev_val {
+                let mut new_vec = prev_val.to_vec();
+                new_vec.push(new_total_val);
+                time.total_time_per_value_map
+                    .insert(time.last_value.to_string(), new_vec);
+            } else if time.last_change.timestamp_millis() != 0 {
+                let new_vec = vec![new_total_val];
+                time.total_time_per_value_map
+                    .insert(time.last_value.to_string(), new_vec);
+            }
+
             time.last_value = new_val;
             time.last_change = Utc::now();
         }
@@ -180,28 +288,33 @@ fn handle_socket_msg(
         return;
     };
 
+    // flt_text is the fault text name
     trace!("Matched on {}, {:?}", flt_txt, node);
 
     // default to sending a new fault
+    //fault_ringbuffer is basically json of the most recent error
     let mut should_push = true;
     // iterate through current faults
     for item in fault_ringbuffer.iter_mut() {
         // if a fault of the same type is in the queue, and not expired
+
         if item.name == flt_txt && node.clone() == item.node && !item.expired {
             // update the last seen metric
-            item.last_seen = data.timestamp;
+            should_push = false;
             // if the time since the last fault is greater than [FAULT_MIN_REG_GAP], mark this fault as expired
-            if (data.timestamp - item.last_seen) > FAULT_MIN_REG_GAP {
+
+            if (item.last_seen - data.timestamp) > FAULT_MIN_REG_GAP {
                 item.expired = true;
+                should_push = true;
             } else {
                 // otherwise, if the fault isnt expired, ensure we dont create a duplicate fault
-                should_push = false;
+                item.last_seen = data.timestamp;
             }
         }
     }
     // send a new fault if no message matches and is not expired
     if should_push {
-        fault_ringbuffer.push(FaultData {
+        fault_ringbuffer.enqueue(FaultData {
             node,
             name: flt_txt.to_string(),
             occured_at: data.timestamp,

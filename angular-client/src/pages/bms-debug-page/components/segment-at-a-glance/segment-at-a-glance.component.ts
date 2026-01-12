@@ -1,4 +1,4 @@
-import { Component, effect, HostListener, inject, input } from '@angular/core';
+import { Component, effect, HostListener, inject, input, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
 import Storage from 'src/services/storage.service';
@@ -26,7 +26,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     HStackComponent
   ]
 })
-export class SegmentAtAGlanceComponent {
+export class SegmentAtAGlanceComponent implements OnDestroy {
   private storage = inject(Storage);
   segmentNumber = input.required<Segment>();
   voltage: number = 0;
@@ -63,26 +63,28 @@ export class SegmentAtAGlanceComponent {
   }
 
   subscribeToData = (segment: number) => {
-    this.storage.get(topics.segmentTemp(segment)).subscribe((value) => {
-      this.temperature = parseFloat(value.values[0]);
-      this.thermometerConfigSegment.currentValue = this.temperature;
-    });
-    this.storage.get(topics.dieTemp(segment, Chip.Alpha)).subscribe((value) => {
-      this.alphaChipTemp = parseFloat(value.values[0]);
-      this.thermometerConfigAlphaChip.currentValue = this.alphaChipTemp;
-    });
-    this.storage.get(topics.dieTemp(segment, Chip.Beta)).subscribe((value) => {
-      this.betaChipTemp = parseFloat(value.values[0]);
-      this.thermometerConfigBetaChip.currentValue = this.betaChipTemp;
-    });
-    this.storage.get(topics.pecErrorChip()).subscribe((value) => {
-      const chip = parseInt(value.values[0]);
-      if (chip % 2 === 0) {
-        this.alphaCrc = parseInt(value.values[0]);
-      } else {
-        this.betaCrc = parseInt(value.values[0]);
-      }
-    });
+    this.valueSubscriptions.push(
+      this.storage.get(topics.segmentTemp(segment)).subscribe((value) => {
+        this.temperature = parseFloat(value.values[0]);
+        this.thermometerConfigSegment.currentValue = this.temperature;
+      }),
+      this.storage.get(topics.dieTemp(segment, Chip.Alpha)).subscribe((value) => {
+        this.alphaChipTemp = parseFloat(value.values[0]);
+        this.thermometerConfigAlphaChip.currentValue = this.alphaChipTemp;
+      }),
+      this.storage.get(topics.dieTemp(segment, Chip.Beta)).subscribe((value) => {
+        this.betaChipTemp = parseFloat(value.values[0]);
+        this.thermometerConfigBetaChip.currentValue = this.betaChipTemp;
+      }),
+      this.storage.get(topics.pecErrorChip()).subscribe((value) => {
+        const chip = parseInt(value.values[0]);
+        if (chip % 2 === 0) {
+          this.alphaCrc = parseInt(value.values[0]);
+        } else {
+          this.betaCrc = parseInt(value.values[0]);
+        }
+      })
+    );
   };
 
   getAlphaCrcColor = (): string => {
@@ -99,4 +101,8 @@ export class SegmentAtAGlanceComponent {
     type: 'connection-dot-config',
     getStatusColor: this.getStatusColor
   };
+
+  ngOnDestroy(): void {
+    this.valueSubscriptions.forEach((sub) => sub.unsubscribe());
+  }
 }

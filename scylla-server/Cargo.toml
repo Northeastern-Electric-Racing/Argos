@@ -5,32 +5,35 @@ edition = "2021"
 default-run = "scylla-server"
 
 [dependencies]
-diesel = { version = "2.2.9", features = ["postgres", "chrono"] }
+diesel = { version = "2.2.12", features = ["postgres", "chrono"] }
 dotenvy = "0.15"
-serde = "1.0.219"
+serde = "1.0.228"
 protobuf-codegen = "3.7.1"
 protobuf = { version = "3.7.1", features = ["with-bytes"] }
-tokio = { version = "1.45.1", features = ["full", "tracing"] }
-axum = { version = "0.8.4", features = ["multipart", "macros"] }
+tokio = { version = "1.47.1", features = ["full", "tracing"] }
+axum = { version = "0.8.8", features = ["multipart", "macros"] }
 tower = { version = "0.5.2", features = ["timeout"] }
-tower-http = { version = "0.6.5", features = ["cors", "trace"] }
-socketioxide = { version = "0.17.1", features = ["tracing"] }
+tower-http = { version = "0.6.7", features = ["cors", "trace"] }
+socketioxide = { version = "0.18.0", features = ["tracing"] }
 rumqttc = { git = "https://github.com/bytebeamio/rumqtt", branch = "main"}
-tokio-util = { version=  "0.7.15", features = ["full"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["ansi", "env-filter"] }
-console-subscriber = { version = "0.4.1", optional = true }
-ringbuffer = "0.15.0"
-clap = { version = "4.5.39", features = ["derive", "env"] }
-axum-extra = { version = "0.10.0", features = ["query"] }
+tokio-util = { version=  "0.7.16", features = ["full"] }
+tracing = "0.1.43"
+tracing-subscriber = { version = "0.3.22", features = ["ansi", "env-filter"] }
+console-subscriber = { version = "0.5.0", optional = true }
+ringbuffer = "0.16.0"
+axum-extra = { version = "0.12.2", features = ["query", "typed-header"] }
+clap = { version = "4.5.42", features = ["derive", "env"] }
 chrono = { version = "0.4.41", features = ["serde"] }
-serde_json = "1.0.140"
+serde_json = "1.0.148"
 diesel_migrations = { version = "2.2.0", features = ["postgres"] }
 regex = "1.11.1"
-rangemap = "1.5.1"
+rangemap = "1.7.1"
 axum-macros = "0.5.0"
-diesel-async = { version = "0.5.2", features = ["postgres", "bb8", "async-connection-wrapper", "sync-connection-wrapper", "tokio"] }
+diesel-async = { version = "0.6.1", features = ["postgres", "bb8", "async-connection-wrapper", "sync-connection-wrapper", "tokio"] }
 rustc-hash = "2.1.1"
+evalexpr = "13.0.0"
+serde_with = "3.14.1"
+derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.6"
 

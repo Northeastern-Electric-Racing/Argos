@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexAxisChartSeries,
@@ -39,7 +39,7 @@ type ChartOptions = {
   providers: [DialogService],
   standalone: true
 })
-export class DoubleLineGraphComponent implements OnInit {
+export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   public dialogService = inject(DialogService);
   @Input() data1!: GraphData[];
   @Input() color1!: string; // Must be hex
@@ -56,6 +56,7 @@ export class DoubleLineGraphComponent implements OnInit {
   timeDiffMs: number = 0;
   isSliding: boolean = false;
   timeRangeMs: number = 120000; // 2 minutes in ms
+  timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
       header: this.header,
@@ -66,6 +67,11 @@ export class DoubleLineGraphComponent implements OnInit {
       }
     });
   };
+
+  ngOnDestroy(): void {
+    this.chart.destroy();
+    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+  }
 
   updateChart = () => {
     this.series = [
@@ -96,9 +102,11 @@ export class DoubleLineGraphComponent implements OnInit {
     }
 
     this.chart.updateSeries(this.series);
-    setTimeout(() => {
-      this.updateChart();
-    }, 800);
+    this.timeOuts.push(
+      setTimeout(() => {
+        this.updateChart();
+      }, 800)
+    );
   };
 
   ngOnInit(): void {
@@ -203,7 +211,6 @@ export class DoubleLineGraphComponent implements OnInit {
     setTimeout(() => {
       const chartContainer = document.getElementById(this.graphContainerId);
       if (!chartContainer) {
-        console.log('Container with id ' + this.graphContainerId + ' not found');
         return;
       }
 

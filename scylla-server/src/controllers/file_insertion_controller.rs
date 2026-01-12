@@ -128,7 +128,7 @@ pub async fn insert_file(
 
         fs::write(format!("{}/{}", output_directory.0, name), data)
             .await
-            .map_err(|e| ScyllaError::FileError(format!("Failed to write file {}", e)))?;
+            .map_err(|e| ScyllaError::FileError(format!("Failed to write file {e}")))?;
     }
 
     info!("Finished file insert request!");
@@ -146,10 +146,10 @@ pub async fn request_logger_insert(
             rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
             false,
             protobuf::Message::write_to_bytes(&payload)
-                .unwrap_or_else(|e| format!("failed to serialize {}", e).as_bytes().to_vec()),
+                .unwrap_or_else(|e| format!("failed to serialize {e}").as_bytes().to_vec()),
         )
         .await
-        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {err}")))?;
 
     Ok(Json::from(
         "Sent Request to insert logger files".to_string(),
@@ -166,10 +166,10 @@ pub async fn request_serial_insert(
             rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
             false,
             protobuf::Message::write_to_bytes(&payload)
-                .unwrap_or_else(|e| format!("failed to serialize {}", e).as_bytes().to_vec()),
+                .unwrap_or_else(|e| format!("failed to serialize {e}").as_bytes().to_vec()),
         )
         .await
-        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {}", err)))?;
+        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {err}")))?;
 
     Ok(Json::from("Sent Request to insert serial logs".to_string()))
 }

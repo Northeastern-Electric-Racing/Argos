@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { io } from 'socket.io-client';
-import { environment } from 'src/environment/environment';
 import { CellService } from 'src/services/cell.service';
-import { HeatMapService } from 'src/services/heat-map.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
@@ -11,6 +9,7 @@ import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
+import { EnvService } from 'src/services/env.service';
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -24,11 +23,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
   private cellService = new CellService(this.storage);
-  private heatmapService = inject(HeatMapService);
   private faultService = inject(FaultService);
-  private chipFaultPipe = inject(FaultService);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  socket = io((environment as any).url || 'http://localhost:8000');
+  private envService = inject(EnvService);
+  socket = io(this.envService.backendUrl, { auth: { token: 'some random token' } });
   socketService = new SocketService(this.socket);
 
   constructor(
@@ -56,6 +53,7 @@ export default class AppContextComponent implements OnInit {
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_full.svg')
       )
       .addSvgIcon('menu', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/menu.svg'))
+      .addSvgIcon('logo', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/logo.svg'))
       .addSvgIcon('home', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/home.svg'))
       .addSvgIcon('bar_chart', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/bar_chart.svg'))
       .addSvgIcon('search', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/search.svg'))
@@ -88,10 +86,12 @@ export default class AppContextComponent implements OnInit {
       )
       .addSvgIcon('error', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/alert-triangle.svg'))
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'))
-      .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'));
+      .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'))
+      .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'));
   }
 
   ngOnInit(): void {
+    document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService);
   }
