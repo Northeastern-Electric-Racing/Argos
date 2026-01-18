@@ -217,7 +217,7 @@ pub struct RuleNotification {
 }
 
 #[serde_as]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Serialize, Clone)]
 /// A single modular rule, can be serial/deserialized
 pub struct Rule {
     id: RuleId,

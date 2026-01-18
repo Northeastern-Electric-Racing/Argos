@@ -51,3 +51,11 @@ pub async fn delete_rule(
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
 }
+
+#[debug_handler]
+pub async fn get_all_rules(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+) -> Json<Vec<Rule>> {
+    debug!("Fetching all rules");
+    Json(rules_manager.get_all_rules().await)
+}
