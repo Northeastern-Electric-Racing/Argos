@@ -406,7 +406,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Router::new()
                 .route("/rules/add", put(add_rule))
                 .route("/rules/delete/{rule_id}", post(delete_rule))
-                .route("/rules", get(get_all_rules))
+                .route("/rules/{requesting_client_id}", get(get_all_rules))
                 //.route("/rules/delete/{rule_id}", post()).route("/rules/poll")
                 .layer(Extension(rules_manager)),
         )

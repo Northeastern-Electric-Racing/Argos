@@ -9,7 +9,7 @@ use tracing::debug;
 
 use crate::{
     error::ScyllaError,
-    rule_structs::{ClientId, Rule, RuleId, RuleManager},
+    rule_structs::{ClientId, Rule, RuleId, RuleManager, RulesResponse},
 };
 
 #[debug_handler]
@@ -54,8 +54,16 @@ pub async fn delete_rule(
 
 #[debug_handler]
 pub async fn get_all_rules(
+    Path(requesting_client_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
-) -> Json<Vec<Rule>> {
-    debug!("Fetching all rules");
-    Json(rules_manager.get_all_rules().await)
+) -> Json<RulesResponse> {
+    debug!("Fetching all rules for client: {}", requesting_client_id);
+    
+    let client_id = if requesting_client_id.is_empty() {
+        None
+    } else {
+        Some(ClientId(requesting_client_id))
+    };
+    
+    Json(rules_manager.get_all_rules_with_subscription_status(client_id).await)
 }
