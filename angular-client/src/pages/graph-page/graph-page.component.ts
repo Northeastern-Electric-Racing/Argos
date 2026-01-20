@@ -155,10 +155,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   dataPointsChanged = false;
   yAxisMin: number | null = null;
   yAxisMax: number | null = null;
+  // Range mode: 'time' for time-based range, 'points' for data point-based range
+  rangeMode: 'time' | 'points' = 'time'; // Default to time-based
+  timeRangeSeconds: number = 60; // Default to 60 seconds (1 minute)
   graphConfig = {
     maxPoints: this.dataPoints,
     yMin: this.yAxisMin,
-    yMax: this.yAxisMax
+    yMax: this.yAxisMax,
+    rangeMode: this.rangeMode,
+    timeRangeMs: this.timeRangeSeconds * 1000
   };
   onGraphConfigChange = () => {
     if (this.realTime) {
@@ -167,8 +172,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.graphConfig = {
       maxPoints: this.dataPoints,
       yMin: this.yAxisMin,
-      yMax: this.yAxisMax
+      yMax: this.yAxisMax,
+      rangeMode: this.rangeMode,
+      timeRangeMs: this.timeRangeSeconds * 1000
     };
+  };
+
+  toggleRangeMode = () => {
+    this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
+    this.onGraphConfigChange();
   };
 
   // Run when page starts up

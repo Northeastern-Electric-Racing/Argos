@@ -49,7 +49,13 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   isSliding: boolean = false;
   timeRangeMs: number | undefined = undefined;
   private timeOuts: NodeJS.Timeout[] = [];
-  graphConfig = input.required<{ maxPoints: number; yMin: number | null; yMax: number | null }>();
+  graphConfig = input.required<{ 
+    maxPoints: number; 
+    yMin: number | null; 
+    yMax: number | null;
+    rangeMode: 'time' | 'points';
+    timeRangeMs: number;
+  }>();
   range = input<number | undefined>(undefined);
   subscriptions: Subscription[] = [];
 
@@ -178,11 +184,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     this.chart.updateSeries(series);
 
+    // Use time-based range if in time mode, otherwise use calculated timeRangeMs from point-based logic
+    const effectiveRange = this.graphConfig().rangeMode === 'time' 
+      ? this.graphConfig().timeRangeMs 
+      : this.timeRangeMs;
+
     this.chart.updateOptions({
       ...this.options,
       xaxis: {
         ...this.options.xaxis,
-        range: this.timeRangeMs
+        range: effectiveRange
       }
     });
   };
@@ -209,13 +220,24 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
           line.push({ x: val.x, y: +val.y.toFixed(3) });
         }
 
-        if (this.realTime() && line.length > this.graphConfig().maxPoints) {
-          const shiftedPoint = line.shift()?.x; // Remove the oldest point
-          // THE BELOW IS A SOMEWHAT TEMP FIX, ULTIMATELY THIS SHOULD BE MORE DYNAMIC AND BE OFFERED AS A CONFIG OPTION
-          // Calculate the actual time range: difference between newest and oldest remaining points
-          const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
-          // Update time range if this is larger than current range
-          this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
+        if (this.realTime()) {
+          const config = this.graphConfig();
+          
+          if (config.rangeMode === 'time') {
+            // Time-based trimming: remove points older than timeRangeMs
+            const cutoffTime = val.x - config.timeRangeMs;
+            while (line.length > 0 && line[0].x < cutoffTime) {
+              line.shift();
+            }
+          } else {
+            // Point-based trimming: keep only maxPoints
+            if (line.length > config.maxPoints) {
+              const shiftedPoint = line.shift()?.x;
+              // Calculate the actual time range for point-based mode
+              const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
+              this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
+            }
+          }
         }
       });
     });
