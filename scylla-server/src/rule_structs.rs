@@ -324,8 +324,8 @@ pub struct ClientRule {
 #[derive(Serialize, Clone)]
 /// Response containing all rules with subscription status
 pub struct RulesResponse {
-    pub requesting_client_id: String,
-    pub rules: Vec<ClientRule>,
+    pub requesting_client_id: ClientId,
+    pub client_rules: Vec<ClientRule>,
 }
 
 /// errors seen in the rule manager
@@ -499,15 +499,10 @@ impl RuleManager {
 
     pub async fn get_all_rules_with_subscription_status(
         &self,
-        requesting_client_id: Option<ClientId>,
+        requesting_client_id: ClientId,
     ) -> RulesResponse {
         let rules_guard = self.rules.read().await;
         let subscriptions_guard = self.subscriptions.read().await;
-
-        let client_id_str = requesting_client_id
-            .as_ref()
-            .map(|id| id.0.clone())
-            .unwrap_or_default();
 
         let rules = rules_guard
             .iter()
@@ -517,11 +512,7 @@ impl RuleManager {
                     .cloned()
                     .unwrap_or_default();
 
-                let is_subscribed = if let Some(ref client_id) = requesting_client_id {
-                    subscribers.contains(client_id)
-                } else {
-                    false
-                };
+                let is_subscribed = subscribers.contains(&requesting_client_id);
 
                 ClientRule {
                     rule: rule.clone(),
@@ -532,8 +523,8 @@ impl RuleManager {
             .collect();
 
         RulesResponse {
-            requesting_client_id: client_id_str,
-            rules,
+            requesting_client_id: requesting_client_id,
+            client_rules: rules,
         }
     }
 
