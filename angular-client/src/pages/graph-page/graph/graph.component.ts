@@ -49,9 +49,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   isSliding: boolean = false;
   timeRangeMs: number | undefined = undefined;
   private timeOuts: NodeJS.Timeout[] = [];
-  graphConfig = input.required<{ 
-    maxPoints: number; 
-    yMin: number | null; 
+  graphConfig = input.required<{
+    maxPoints: number;
+    yMin: number | null;
     yMax: number | null;
     rangeMode: 'time' | 'points';
     timeRangeMs: number;
@@ -185,9 +185,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.chart.updateSeries(series);
 
     // Use time-based range if in time mode, otherwise use calculated timeRangeMs from point-based logic
-    const effectiveRange = this.graphConfig().rangeMode === 'time' 
-      ? this.graphConfig().timeRangeMs 
-      : this.timeRangeMs;
+    const effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
 
     this.chart.updateOptions({
       ...this.options,
@@ -222,21 +220,19 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
         if (this.realTime()) {
           const config = this.graphConfig();
-          
+
           if (config.rangeMode === 'time') {
             // Time-based trimming: remove points older than timeRangeMs
             const cutoffTime = val.x - config.timeRangeMs;
             while (line.length > 0 && line[0].x < cutoffTime) {
               line.shift();
             }
-          } else {
+          } else if (line.length > config.maxPoints) {
             // Point-based trimming: keep only maxPoints
-            if (line.length > config.maxPoints) {
-              const shiftedPoint = line.shift()?.x;
-              // Calculate the actual time range for point-based mode
-              const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
-              this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
-            }
+            const shiftedPoint = line.shift()?.x;
+            // Calculate the actual time range for point-based mode
+            const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
+            this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
           }
         }
       });
