@@ -354,7 +354,6 @@ impl RuleManager {
         let rule_ids = match self.topic_index.read().await.get(&data.name) {
             Some(rule_ids) => rule_ids.clone(), // Clone so we can drop resource
             None => {
-                warn!("Could not find rule in topic -> rule index: {}", data.name);
                 return Err(RuleManagerError::NoMatchingRule);
             }
         };
