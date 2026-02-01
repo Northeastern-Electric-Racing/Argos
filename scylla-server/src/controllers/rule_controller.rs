@@ -53,19 +53,22 @@ pub async fn delete_rule(
 }
 
 #[debug_handler]
-pub async fn get_all_server_rules(
+pub async fn get_all_rules(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
 ) -> Json<Vec<Rule>> {
     debug!("Fetching all rules");
     Json(rules_manager.get_all_rules().await)
 }
 
-
 #[debug_handler]
-pub async fn get_all_rules(
+pub async fn get_all_rules_with_client_info(
     Path(client_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
-) -> Result<Json<RulesResponse>, ScyllaError>{
+) -> Result<Json<RulesResponse>, ScyllaError> {
     debug!("Fetching all rules");
-    Ok(Json(rules_manager.get_all_rules_with_subscription_status(ClientId(client_id)).await))
+    Ok(Json(
+        rules_manager
+            .get_all_rules_with_subscription_status(ClientId(client_id))
+            .await,
+    ))
 }
