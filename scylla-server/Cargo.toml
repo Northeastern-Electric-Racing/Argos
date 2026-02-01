@@ -23,7 +23,7 @@ console-subscriber = { version = "0.5.0", optional = true }
 ringbuffer = "0.16.0"
 axum-extra = { version = "0.12.2", features = ["query", "typed-header"] }
 clap = { version = "4.5.42", features = ["derive", "env"] }
-chrono = { version = "0.4.41", features = ["serde"] }
+chrono = { version = "0.4.43", features = ["serde"] }
 serde_json = "1.0.148"
 diesel_migrations = { version = "2.2.0", features = ["postgres"] }
 regex = "1.11.1"
