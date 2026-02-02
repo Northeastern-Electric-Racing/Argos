@@ -185,7 +185,7 @@ pub const RULE_SOCKET_KEY: &str = "rule_notify";
 // since client IDs, rule IDs, and topics are scattered about, wrap them here
 
 /// a client_id, add to derives to get more string features
-#[derive(PartialEq, Eq, Hash, Display, Clone, AsRef)]
+#[derive(PartialEq, Eq, Hash, Display, Clone, AsRef, Serialize)]
 pub struct ClientId(pub String);
 
 /// a Rule ID, add to derives to get more string features
@@ -217,7 +217,7 @@ pub struct RuleNotification {
 }
 
 #[serde_as]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Serialize, Clone)]
 /// A single modular rule, can be serial/deserialized
 pub struct Rule {
     id: RuleId,
@@ -310,6 +310,22 @@ impl Rule {
         }
         Some(false)
     }
+}
+
+#[derive(Serialize, Clone)]
+/// Rule with subscription information
+pub struct ClientRule {
+    #[serde(flatten)]
+    pub rule: Rule,
+    pub subscribers: Vec<ClientId>,
+    pub is_subscribed: bool,
+}
+
+#[derive(Serialize, Clone)]
+/// Response containing all rules with subscription status
+pub struct RulesResponse {
+    pub requesting_client_id: ClientId,
+    pub client_rules: Vec<ClientRule>,
 }
 
 /// errors seen in the rule manager
@@ -478,6 +494,37 @@ impl RuleManager {
             .into_iter()
             .map(|rule| rule.clone())
             .collect()
+    }
+
+    pub async fn get_all_rules_with_subscription_status(
+        &self,
+        requesting_client_id: ClientId,
+    ) -> RulesResponse {
+        let rules_guard = self.rules.read().await;
+        let subscriptions_guard = self.subscriptions.read().await;
+
+        let rules = rules_guard
+            .iter()
+            .map(|(rule_id, rule)| {
+                let subscribers = subscriptions_guard
+                    .get_left(rule_id)
+                    .cloned()
+                    .unwrap_or_default();
+
+                let is_subscribed = subscribers.contains(&requesting_client_id);
+
+                ClientRule {
+                    rule: rule.clone(),
+                    subscribers: subscribers.into_iter().collect(),
+                    is_subscribed,
+                }
+            })
+            .collect();
+
+        RulesResponse {
+            requesting_client_id: requesting_client_id,
+            client_rules: rules,
+        }
     }
 
     pub async fn get_all_clients(&self) -> Vec<ClientId> {
