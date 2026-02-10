@@ -157,7 +157,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   yAxisMax: number | null = null;
   // Range mode: 'time' for time-based range, 'points' for data point-based range
   rangeMode: 'time' | 'points' = 'time'; // Default to time-based
-  timeRangeSeconds: number = 60; // Default to 60 seconds (1 minute)
+  timeRangeSeconds: number = 30; // Default to 30 seconds
   graphConfig = {
     maxPoints: this.dataPoints,
     yMin: this.yAxisMin,
@@ -528,7 +528,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   };
 
-  clearGraph = false;
+  clearGraph = 0;
 
   clearDataType: () => void = () => {
     // Unsubscribe from all previous subscriptions
@@ -547,6 +547,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
-    this.clearGraph = true;
+    this.clearGraph++;
   };
 }
