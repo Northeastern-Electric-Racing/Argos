@@ -384,14 +384,12 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
-    const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
-
     dataTypes.forEach((dataType) => {
       const key = dataType.name;
-      const graphInfo = dataTypeValues.find((dtV) => dtV.label === key);
+      const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === key);
       const valuesSubject = this.storage.get(key);
 
-      if (graphInfo !== undefined) {
+      if (targetSubject !== undefined) {
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
             // Skip processing if paused
@@ -399,32 +397,14 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               return;
             }
 
-            const storedValues = graphInfo.data;
-
-            // Process new values and filter in one pass for better performance
-            value.values.forEach((val, i) => {
-              const graphData = { x: +value.time, y: +val, label: dataType.name };
-
-              if (storedValues[i]) {
-                storedValues[i].push(graphData);
-
-                // Limit to prevent memory buildup
-                if (storedValues[i].length > this.dataPoints) {
-                  storedValues[i].shift();
-                }
-              } else {
-                storedValues[i] = [graphData];
-              }
+            const newPoints: GraphData[][] = value.values.map((val) => {
+              return [{ x: +value.time, y: +val }];
             });
 
-            // Update the subject with the already filtered data
-            const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === dataType.name);
-            if (targetSubject) {
-              targetSubject.next({
-                label: dataType.name,
-                data: storedValues
-              });
-            }
+            targetSubject.next({
+              label: dataType.name,
+              data: newPoints
+            });
           })
         );
       }

@@ -61,11 +61,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   clearGraph = input<number>(0);
   options!: ChartOptions;
   chart!: ApexCharts;
-  previousDataLength: number = 0;
   // label -> x,y (topic, data point)
   data!: Map<string, Array<{ x: number; y: number }>>;
-  // label -> set of seen x-values for O(1) duplicate detection
-  dataKeys!: Map<string, Set<number>>;
   isSliding: boolean = false;
   timeRangeMs: number | undefined = undefined;
   private timeOuts: NodeJS.Timeout[] = [];
@@ -113,9 +110,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       if (this.chart) {
         this.chart.updateSeries([]);
       }
-      this.previousDataLength = 0;
       this.data = new Map();
-      this.dataKeys = new Map();
       this.timeRangeMs = undefined;
     });
 
@@ -190,7 +185,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.chart.destroy();
     }
     this.data.clear();
-    this.dataKeys.clear();
   }
 
   updateChart = () => {
@@ -199,24 +193,29 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const series = Array.from(this.data).map(([key, map], index) => ({
+    const series = Array.from(this.data).map(([key, points], index) => ({
       name: key,
-      data: Array.from(map),
-      yaxis: index // Assign each series to a y-axis index
+      data: points, // pass by reference — no copy needed, Apex clones internally
+      yaxis: index
     }));
-
-    this.chart.updateSeries(series);
 
     // Use time-based range if in time mode, otherwise use calculated timeRangeMs from point-based logic
     const effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
 
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: effectiveRange
-      }
-    });
+    // Single updateOptions call with series included — avoids two separate re-renders
+    // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
+    this.chart.updateOptions(
+      {
+        ...this.options,
+        series,
+        xaxis: {
+          ...this.options.xaxis,
+          range: effectiveRange
+        }
+      },
+      false, // redraw (default is false)
+      false // animate (default is true)
+    );
   };
 
   graphInfoCallback = (info: GraphInfo | undefined) => {
@@ -231,47 +230,44 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       const label = (info?.label ?? '') + ' ' + i;
       if (!this.data.has(label)) {
         this.data.set(label, []);
-        this.dataKeys.set(label, new Set());
       }
       const line = this.data.get(label)!;
-      const keys = this.dataKeys.get(label)!;
 
       value.forEach((val) => {
-        // O(1) duplicate check via Set
-        if (!keys.has(val.x)) {
-          const point = { x: val.x, y: +val.y.toFixed(3) };
-          keys.add(val.x);
+        const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
 
-          // Fast path: in-order append (the common case)
-          if (line.length === 0 || val.x >= line[line.length - 1].x) {
-            line.push(point);
-          } else {
-            // Out of order: binary search for correct sorted position
-            const idx = binarySearchInsertIndex(line, val.x);
-            line.splice(idx, 0, point);
-          }
-        }
-
-        if (this.realTime()) {
-          const config = this.graphConfig();
-
-          if (config.rangeMode === 'time') {
-            // Time-based trimming: bulk-remove points outside the time range + 10% buffer
-            const buffer = config.timeRangeMs * 0.1;
-            const cutoff = val.x - config.timeRangeMs - buffer;
-            while (line.length > 0 && line[0].x < cutoff) {
-              keys.delete(line.shift()!.x);
-            }
-          } else if (line.length > config.maxPoints * 1.1) {
-            // Point-based trimming: keep maxPoints + 10% buffer
-            const shiftedPoint = line.shift();
-            if (shiftedPoint) keys.delete(shiftedPoint.x);
-            // Calculate the actual time range for point-based mode
-            const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint.x : 0;
-            this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
-          }
+        // Fast path: in-order append (the common case)
+        if (line.length === 0 || val.x >= line[line.length - 1].x) {
+          line.push(point);
+        } else {
+          // Out of order: binary search for correct sorted position
+          const idx = binarySearchInsertIndex(line, val.x);
+          line.splice(idx, 0, point);
         }
       });
+
+      // Trim after processing all points in this series batch
+      if (this.realTime() && line.length > 0) {
+        const config = this.graphConfig();
+        const latestX = line[line.length - 1].x;
+
+        if (config.rangeMode === 'time') {
+          // Time-based trimming: bulk-remove points outside the time range + 10% buffer
+          const buffer = config.timeRangeMs * 0.1;
+          const cutoff = latestX - config.timeRangeMs - buffer;
+          // Binary search for first point >= cutoff for O(log n) bulk trim
+          const trimIdx = binarySearchInsertIndex(line, cutoff);
+          if (trimIdx > 0) {
+            line.splice(0, trimIdx);
+          }
+        } else if (line.length > config.maxPoints * 1.1) {
+          // Point-based trimming: keep maxPoints
+          const excess = line.length - config.maxPoints;
+          const [shiftedPoint] = line.splice(0, excess);
+          const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
+          this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
+        }
+      }
     });
 
     this.updateChart();
@@ -279,7 +275,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.data = new Map();
-    this.dataKeys = new Map();
 
     const chartContainer = document.getElementById('chart-container');
     if (!chartContainer) return;
