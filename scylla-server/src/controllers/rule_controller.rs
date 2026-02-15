@@ -72,3 +72,17 @@ pub async fn get_all_rules_with_client_info(
             .await,
     ))
 }
+
+#[debug_handler]
+pub async fn check_rule(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(rule): Json<Rule>,
+) -> Result<Json<bool>, ScyllaError> {
+    debug!("Checking if rule exists: {} - {}", rule.topic, rule.expression);
+    let exists = rules_manager
+        .get_all_rules()
+        .await
+        .iter()
+        .any(|r| r.topic == rule.topic && r.expression == rule.expression);
+    Ok(Json(exists))
+}
