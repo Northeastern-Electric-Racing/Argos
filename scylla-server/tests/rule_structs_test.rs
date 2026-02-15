@@ -535,6 +535,66 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
             }
         }
     }
+    #[tokio::test]
+    async fn test_check_rule_exists() -> Result<(), RuleManagerError> {
+        let rule_manager = RuleManager::new();
+        let client = ClientId("test_client".to_string());
+
+        let rule = Rule::new(
+            RuleId("rule_1".to_string()),
+            Topic("test/topic".to_string()),
+            core::time::Duration::from_secs(60),
+            "a > 10".to_owned(),
+        );
+
+        rule_manager.add_rule(client, rule).await?;
+
+        assert!(rule_manager.check_rule(&Topic("test/topic".to_string()), "a > 10").await);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_check_rule_wrong_expr() -> Result<(), RuleManagerError> {
+        let rule_manager = RuleManager::new();
+        let client = ClientId("test_client".to_string());
+
+        let rule = Rule::new(
+            RuleId("rule_1".to_string()),
+            Topic("test/topic".to_string()),
+            core::time::Duration::from_secs(60),
+            "a > 10".to_owned(),
+        );
+
+        rule_manager.add_rule(client, rule).await?;
+
+        assert!(!rule_manager.check_rule(&Topic("test/topic".to_string()), "a > 20").await);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_check_rule_wrong_topic() -> Result<(), RuleManagerError> {
+        let rule_manager = RuleManager::new();
+        let client = ClientId("test_client".to_string());
+
+        let rule = Rule::new(
+            RuleId("rule_1".to_string()),
+            Topic("test/topic".to_string()),
+            core::time::Duration::from_secs(60),
+            "a > 10".to_owned(),
+        );
+
+        rule_manager.add_rule(client, rule).await?;
+
+        assert!(!rule_manager.check_rule(&Topic("wrong/topic".to_string()), "a > 10").await);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_check_rule_empty_manager() {
+        let rule_manager = RuleManager::new();
+
+        assert!(!rule_manager.check_rule(&Topic("test/topic".to_string()), "a > 10").await);
+    }
 
     // Verify system state is unchanged
     assert_eq!(rule_manager.get_all_rules().await.len(), num_rules);

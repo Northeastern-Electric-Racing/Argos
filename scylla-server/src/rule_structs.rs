@@ -247,6 +247,10 @@ impl Rule {
         }
     }
 
+    pub fn expr(&self) -> &str {
+        &self.expr
+    }
+
     /// process an event of seeing this topic, with the given values
     fn process_seen(&self, values: &[f32]) -> Option<bool> {
         let mut context: HashMapContext<DefaultNumericTypes> =
@@ -485,7 +489,13 @@ impl RuleManager {
             }
         }
     }
-
+    pub async fn check_rule(&self, topic: &Topic, expr: &str) -> bool {
+        self.rules
+            .read()
+            .await
+            .values()
+            .any(|rule| rule.topic == *topic && rule.expr() == expr)
+    }
     pub async fn get_all_rules(&self) -> Vec<Rule> {
         self.rules
             .read()
