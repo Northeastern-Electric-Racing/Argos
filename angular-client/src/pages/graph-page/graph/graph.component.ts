@@ -12,6 +12,7 @@ import {
   ApexYAxis
 } from 'ng-apexcharts';
 import { Subscription } from 'rxjs';
+import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 
 type ChartOptions = {
@@ -211,7 +212,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
       value.forEach((val) => {
         const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
-        line.push(point);
+
+        // if the point is in order according to it's timestamp, just push it to the end of the line
+        if (line.length === 0 || val.x >= line.at(-1)!.x) {
+          line.push(point);
+        } else {
+          // Out of order: binary search for correct sorted position
+          // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
+          const idx = binarySearchInsertIndex(line, val.x);
+          line.splice(idx, 0, point);
+        }
       });
 
       // Trim after processing all points in this series batch
@@ -220,15 +230,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         const latestX = line[line.length - 1].x;
 
         if (config.rangeMode === 'time') {
-          // Time-based trimming: remove point if outside the time range + 10% buffer
+          // remove point if outside the time range + 10% buffer (for better UX)
           const buffer = config.timeRangeMs * 0.1;
           const cutoff = latestX - config.timeRangeMs - buffer;
           if (line[0].x < cutoff) {
             line.shift();
           }
         } else if (line.length > config.maxPoints * 1.1) {
-          // Point-based trimming: keep maxPoints
           const shiftedPoint = line.shift();
+          // point based trim requires is to calculate the max time range we can show that
+          // doesn't show points being deleted. So we default to smallest range.
           const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
