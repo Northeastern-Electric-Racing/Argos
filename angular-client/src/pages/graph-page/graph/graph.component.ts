@@ -14,26 +14,6 @@ import {
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { GraphInfo } from 'src/utils/types.utils';
 
-/**
- * Binary search for the insertion index to keep `arr` sorted by `x`.
- * Returns the index at which `x` should be inserted.
- */
-function binarySearchInsertIndex(arr: { x: number }[], x: number): number {
-  let lo = 0;
-  let hi = arr.length;
-  while (lo < hi) {
-    // shift right, same as mid = Math.floor((lo + hi) / 2) but avoids potential overflow
-    // interesting article: https://research.google/blog/extra-extra-read-all-about-it-nearly-all-binary-searches-and-mergesorts-are-broken/
-    const mid = (lo + hi) >>> 1;
-    if (arr[mid].x < x) {
-      lo = mid + 1;
-    } else {
-      hi = mid;
-    }
-  }
-  return lo;
-}
-
 type ChartOptions = {
   chart: ApexChart;
   xaxis: ApexXAxis;
@@ -237,15 +217,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
       value.forEach((val) => {
         const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
-
-        // Fast path: in-order append (the common case)
-        if (line.length === 0 || val.x >= line[line.length - 1].x) {
-          line.push(point);
-        } else {
-          // Out of order: binary search for correct sorted position
-          const idx = binarySearchInsertIndex(line, val.x);
-          line.splice(idx, 0, point);
-        }
+        line.push(point);
       });
 
       // Trim after processing all points in this series batch
@@ -254,18 +226,15 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         const latestX = line[line.length - 1].x;
 
         if (config.rangeMode === 'time') {
-          // Time-based trimming: bulk-remove points outside the time range + 10% buffer
+          // Time-based trimming: remove point if outside the time range + 10% buffer
           const buffer = config.timeRangeMs * 0.1;
           const cutoff = latestX - config.timeRangeMs - buffer;
-          // Binary search for first point >= cutoff for O(log n) bulk trim
-          const trimIdx = binarySearchInsertIndex(line, cutoff);
-          if (trimIdx > 0) {
-            line.splice(0, trimIdx);
+          if (line[0].x < cutoff) {
+            line.shift();
           }
         } else if (line.length > config.maxPoints * 1.1) {
           // Point-based trimming: keep maxPoints
-          const excess = line.length - config.maxPoints;
-          const [shiftedPoint] = line.splice(0, excess);
+          const shiftedPoint = line.shift();
           const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
