@@ -38,33 +38,17 @@
                 additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 90px; font-size: 11px;"
               />
 
-              @if (rangeMode === 'time') {
-                <label style="color: #fff; font-size: 12px">X (sec):</label>
-                <p-inputNumber
-                  [(ngModel)]="this.timeRangeSeconds"
-                  mode="decimal"
-                  [min]="1"
-                  [step]="1"
-                  styleClass="time-range-input"
-                  inputStyleClass="text-xs p-4"
-                  placeholder="30"
-                  (onInput)="onGraphConfigChange()"
-                ></p-inputNumber>
-              } @else {
-                <label style="color: #fff; font-size: 12px">X (points):</label>
-                <p-inputNumber
-                  [(ngModel)]="this.dataPoints"
-                  mode="decimal"
-                  [minFractionDigits]="1"
-                  [maxFractionDigits]="3"
-                  [step]="0.1"
-                  styleClass="time-range-input"
-                  inputStyleClass="text-xs p-4"
-                  inputId="minmaxfraction"
-                  placeholder="Auto"
-                  (onInput)="onGraphConfigChange()"
-                ></p-inputNumber>
-              }
+              <label style="color: #fff; font-size: 12px">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
+              <p-inputNumber
+                [(ngModel)]="rangeValue"
+                mode="decimal"
+                [min]="1"
+                [step]="1"
+                styleClass="time-range-input"
+                inputStyleClass="text-xs p-4"
+                [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
+                (onInput)="onGraphConfigChange()"
+              ></p-inputNumber>
             }
 
             <label style="color: #fff; font-size: 12px">Y Min:</label>

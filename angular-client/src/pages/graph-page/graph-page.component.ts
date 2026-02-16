@@ -151,7 +151,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   selectedDataTypeValuesIsLoading = false; // specifically used for querying updates.
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
-  dataPoints: number = 300;
+  dataPoints: number = 100;
   dataPointsChanged = false;
   yAxisMin: number | null = null;
   yAxisMax: number | null = null;
@@ -177,6 +177,17 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       timeRangeMs: this.timeRangeSeconds * 1000
     };
   };
+  // Getter/setter to allow same function input for ngModel in template.
+  get rangeValue(): number {
+    return this.rangeMode === 'time' ? this.timeRangeSeconds : this.dataPoints;
+  }
+  set rangeValue(val: number) {
+    if (this.rangeMode === 'time') {
+      this.timeRangeSeconds = val;
+    } else {
+      this.dataPoints = val;
+    }
+  }
 
   toggleRangeMode = () => {
     this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
