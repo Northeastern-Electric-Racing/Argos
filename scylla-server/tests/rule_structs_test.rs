@@ -586,7 +586,9 @@ async fn test_subscribe_rules_success() -> Result<(), RuleManagerError> {
         RuleId("rule_3".to_string()),
     ];
 
-    rule_manager.subscribe_rules(client2.clone(), rule_ids).await?;
+    rule_manager
+        .subscribe_rules(client2.clone(), rule_ids)
+        .await?;
 
     // Verify client2 is now subscribed
     let clients = rule_manager.get_all_clients().await;
@@ -666,7 +668,9 @@ async fn test_subscribe_rules_concurrent() -> Result<(), RuleManagerError> {
     }
 
     // Prepare all rule IDs
-    let all_rule_ids: Vec<RuleId> = (0..num_rules).map(|i| RuleId(format!("rule_{}", i))).collect();
+    let all_rule_ids: Vec<RuleId> = (0..num_rules)
+        .map(|i| RuleId(format!("rule_{}", i)))
+        .collect();
 
     // Concurrently subscribe multiple clients to all rules
     let results: Vec<_> = (0..num_clients)
