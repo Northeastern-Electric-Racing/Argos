@@ -2,12 +2,13 @@
 
 Added `POST /rules/unsubscribe` endpoint for batch rule unsubscription. Takes `rule_ids` and `client_id` in request body.
 
-Implementation removes subscriptions and automatically deletes orphaned rules (rules with no remaining subscribers). O(n) time complexity as specified.
+Implementation removes subscriptions while keeping rules available for future re-subscription. O(n) time complexity as specified.
 
 ## Test Cases
 
 - Success case with partial unsubscription (rule remains if other clients subscribed)
-- Full cleanup when last subscriber unsubscribes
+- Orphaned rules remain available (not deleted)
+- Orphaned rule resubscription
 - Nonexistent rule handling (no-op)
 - Empty list edge case
 
