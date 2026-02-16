@@ -14,7 +14,6 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tracing::trace;
 use tracing::warn;
 
 use crate::rule_structs::BiMapRemoveResult::*;
@@ -529,5 +528,30 @@ impl RuleManager {
 
     pub async fn get_all_clients(&self) -> Vec<ClientId> {
         self.subscriptions.read().await.lefts()
+    }
+
+    /// Subscribe a client to multiple existing rules
+    pub async fn subscribe_rules(
+        &self,
+        client_id: ClientId,
+        rule_ids: Vec<RuleId>,
+    ) -> Result<(), RuleManagerError> {
+        let rules_guard = self.rules.read().await;
+
+        // First, verify all rules exist
+        for rule_id in &rule_ids {
+            if !rules_guard.contains_key(rule_id) {
+                return Err(RuleManagerError::NoMatchingRule);
+            }
+        }
+        drop(rules_guard);
+
+        // Now subscribe to all rules
+        let mut subscriptions = self.subscriptions.write().await;
+        for rule_id in rule_ids {
+            subscriptions.insert(&client_id, &rule_id);
+        }
+
+        Ok(())
     }
 }
