@@ -51,10 +51,20 @@ export type GraphData = {
   y: number;
 };
 
-export type GraphInfo = {
+interface GraphInfoBase {
   label: string;
+}
+
+export interface GraphInfo extends GraphInfoBase {
   data: GraphData[][];
-};
+}
+
+// Used for both live and historical graphs,
+// because the historical graph may also need to update
+// from time to time in the future.
+export interface ObservableGraphInfo extends GraphInfoBase {
+  updates: BehaviorSubject<GraphData[][]>;
+}
 
 export type DoubleGraphData = {
   x1: number;

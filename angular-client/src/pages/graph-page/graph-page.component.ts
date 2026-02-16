@@ -12,7 +12,7 @@ import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, FaultData, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
+import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
@@ -147,7 +147,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   // When we are in live mode the data  is constantly udpated.
   // The Behvaorial subject is update just a single time when querying for data.
   // these should always be reset when switching between modes.
-  selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
+  selectedDataTypeValuesSubject: ObservableGraphInfo[] = [];
   selectedDataTypeValuesIsLoading = false; // specifically used for querying updates.
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
@@ -223,8 +223,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       sub.unsubscribe();
     });
 
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.complete();
+    this.selectedDataTypeValuesSubject.forEach((item) => {
+      item.updates.complete();
     });
     this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesSubject.length = 0;
@@ -386,10 +386,10 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
     dataTypes.forEach((dataType) => {
       const key = dataType.name;
-      const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === key);
+      const target = this.selectedDataTypeValuesSubject.find((s) => s.label === key);
       const valuesSubject = this.storage.get(key);
 
-      if (targetSubject !== undefined) {
+      if (target !== undefined) {
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
             // Skip processing if paused
@@ -401,10 +401,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               return [{ x: +value.time, y: +val }];
             });
 
-            targetSubject.next({
-              label: dataType.name,
-              data: newPoints
-            });
+            target.updates.next(newPoints);
           })
         );
       }
@@ -469,15 +466,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               });
             });
 
-            let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
+            let target = this.selectedDataTypeValuesSubject.find((s) => s.label === dataType.name);
 
             if (!target) {
               // (shouldn't normally happen, but keep it safe)
-              target = new BehaviorSubject<GraphInfo>({ label: dataType.name, data: [] });
+              target = { label: dataType.name, updates: new BehaviorSubject<GraphData[][]>([]) };
               this.selectedDataTypeValuesSubject.push(target);
             }
 
-            target.next({ label: dataType.name, data: graphData });
+            target.updates.next(graphData);
           }
         })
       );
@@ -493,7 +490,10 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.clearDataType();
     this.selectedDataTypes = dataTypes;
 
-    this.selectedDataTypeValuesSubject = dataTypes.map((dt) => new BehaviorSubject<GraphInfo>({ label: dt.name, data: [] }));
+    this.selectedDataTypeValuesSubject = dataTypes.map((dt) => ({
+      label: dt.name,
+      updates: new BehaviorSubject<GraphData[][]>([])
+    }));
 
     if (this.realTime) {
       this.processRealTimeDataTypeSelection(dataTypes);
@@ -518,8 +518,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.subscriptions = [];
 
     // Clear and complete existing subjects to prevent memory leaks
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.complete();
+    this.selectedDataTypeValuesSubject.forEach((item) => {
+      item.updates.complete();
     });
     this.selectedDataTypeValuesSubject = []; // More explicit reset
 

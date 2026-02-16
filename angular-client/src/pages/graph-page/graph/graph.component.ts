@@ -11,8 +11,8 @@ import {
   ApexLegend,
   ApexYAxis
 } from 'ng-apexcharts';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { GraphInfo } from 'src/utils/types.utils';
+import { Subscription } from 'rxjs';
+import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 
 type ChartOptions = {
   chart: ApexChart;
@@ -36,7 +36,7 @@ type ChartOptions = {
 })
 export default class CustomGraphComponent implements OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
-  valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
+  valuesSubject = input.required<ObservableGraphInfo[]>();
   limitRange = input(true);
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
@@ -142,11 +142,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.timeOuts.forEach((timeout) => clearTimeout(timeout));
       this.timeOuts = [];
 
-      this.valuesSubject().forEach((graphInfo) => {
-        if (this.isPaused()) {
-          return;
-        }
-        this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
+      this.valuesSubject().forEach(({ label, updates }) => {
+        this.subscriptions.push(updates.subscribe((data) => this.graphInfoCallback({ label, data })));
       });
 
       this.updateChart();
@@ -200,20 +197,17 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     );
   };
 
-  graphInfoCallback = (info: GraphInfo | undefined) => {
+  graphInfoCallback = (info: GraphInfo) => {
     // Skip processing if paused
     if (this.isPaused()) {
       return;
     }
-
-    const values = info?.data ?? [];
-    // if (values.length === 0) this.data = new Map();
-    values.forEach((value, i) => {
-      const label = (info?.label ?? '') + ' ' + i;
-      if (!this.data.has(label)) {
-        this.data.set(label, []);
+    info.data.forEach((value, i) => {
+      const seriesLabel = info.label + ' ' + i;
+      if (!this.data.has(seriesLabel)) {
+        this.data.set(seriesLabel, []);
       }
-      const line = this.data.get(label)!;
+      const line = this.data.get(seriesLabel)!;
 
       value.forEach((val) => {
         const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
