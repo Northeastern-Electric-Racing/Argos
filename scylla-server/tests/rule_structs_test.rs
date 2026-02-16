@@ -542,3 +542,126 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_unsubscribe_rules_success() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client1 = ClientId("client1".to_string());
+    let client2 = ClientId("client2".to_string());
+
+    // Create rules via client1
+    let rule1 = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    let rule2 = Rule::new(
+        RuleId("rule_2".to_string()),
+        Topic("topic/2".to_string()),
+        core::time::Duration::from_secs(30),
+        "b < 5".to_owned(),
+    );
+
+    rule_manager.add_rule(client1.clone(), rule1).await?;
+    rule_manager.add_rule(client1.clone(), rule2).await?;
+    rule_manager
+        .add_rule(
+            client2.clone(),
+            Rule::new(
+                RuleId("rule_1".to_string()),
+                Topic("topic/1".to_string()),
+                core::time::Duration::from_secs(60),
+                "a > 10".to_owned(),
+            ),
+        )
+        .await?;
+
+    // Verify initial state: 2 rules, 2 clients
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 2);
+
+    // Client1 unsubscribes from rule_1
+    rule_manager
+        .unsubscribe_rules(client1.clone(), vec![RuleId("rule_1".to_string())])
+        .await?;
+
+    // Rule 1 should still exist (client2 subscribed), 2 clients remain
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 2);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_with_cleanup() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Create rules
+    let rule1 = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    let rule2 = Rule::new(
+        RuleId("rule_2".to_string()),
+        Topic("topic/2".to_string()),
+        core::time::Duration::from_secs(30),
+        "b < 5".to_owned(),
+    );
+
+    rule_manager.add_rule(client.clone(), rule1).await?;
+    rule_manager.add_rule(client.clone(), rule2).await?;
+
+    // Verify initial state
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
+
+    // Unsubscribe from both rules
+    rule_manager
+        .unsubscribe_rules(
+            client.clone(),
+            vec![RuleId("rule_1".to_string()), RuleId("rule_2".to_string())],
+        )
+        .await?;
+
+    // Both rules should be deleted (no subscribers), client removed
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 0);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_nonexistent() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Try to unsubscribe from rules that don't exist - should succeed (no-op)
+    rule_manager
+        .unsubscribe_rules(
+            client,
+            vec![
+                RuleId("nonexistent_1".to_string()),
+                RuleId("nonexistent_2".to_string()),
+            ],
+        )
+        .await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_empty_list() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Unsubscribe from empty list - should succeed
+    rule_manager.unsubscribe_rules(client, vec![]).await?;
+
+    Ok(())
+}
