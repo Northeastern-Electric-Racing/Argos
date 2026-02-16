@@ -175,7 +175,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     const series = Array.from(this.data).map(([key, points], index) => ({
       name: key,
-      data: points, // pass by reference — no copy needed, Apex clones internally
+      data: points,
       yaxis: index
     }));
 
