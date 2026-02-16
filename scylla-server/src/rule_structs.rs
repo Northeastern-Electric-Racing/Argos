@@ -530,46 +530,17 @@ impl RuleManager {
         self.subscriptions.read().await.lefts()
     }
 
-    /// Unsubscribe a client from multiple rules and cleanup orphaned rules
+    /// Unsubscribe a client from multiple rules
     pub async fn unsubscribe_rules(
         &self,
         client_id: ClientId,
         rule_ids: Vec<RuleId>,
     ) -> Result<(), RuleManagerError> {
         let mut subscriptions = self.subscriptions.write().await;
-        let mut orphaned_rules = FxHashSet::default();
 
-        // Remove subscriptions and track orphaned rules
+        // Remove subscriptions (rules remain even if no subscribers)
         for rule_id in rule_ids {
-            match subscriptions.remove_right_from_left(&client_id, &rule_id) {
-                RemovedWithCleanUp(cleaned_rule) => {
-                    orphaned_rules.insert(cleaned_rule);
-                }
-                RemovedOnly => {}
-                NothingToRemove => {
-                    // Client wasn't subscribed to this rule, continue
-                }
-            }
-        }
-
-        drop(subscriptions);
-
-        // Clean up orphaned rules from rules map and topic index
-        if !orphaned_rules.is_empty() {
-            let mut rules = self.rules.write().await;
-            let mut topic_index = self.topic_index.write().await;
-
-            for orphaned_rule_id in orphaned_rules {
-                if let Some(rule) = rules.remove(&orphaned_rule_id) {
-                    // Remove from topic index
-                    if let Some(rule_ids) = topic_index.get_mut(&rule.topic) {
-                        rule_ids.remove(&orphaned_rule_id);
-                        if rule_ids.is_empty() {
-                            topic_index.remove(&rule.topic);
-                        }
-                    }
-                }
-            }
+            subscriptions.remove_right_from_left(&client_id, &rule_id);
         }
 
         Ok(())
