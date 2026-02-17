@@ -14,7 +14,6 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tracing::trace;
 use tracing::warn;
 
 use crate::rule_structs::BiMapRemoveResult::*;
