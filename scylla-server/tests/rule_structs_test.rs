@@ -544,6 +544,88 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
 }
 
 #[tokio::test]
+async fn test_edit_rule_preserves_subscriptions_concurrent() -> Result<(), RuleManagerError> {
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+    let num_clients = 10;
+    let rule_id = RuleId("shared_rule".to_string());
+
+    // Add the same rule for multiple clients concurrently
+    (0..num_clients)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            let rid = rule_id.clone();
+            set.spawn(async move {
+                let client = ClientId(format!("client_{}", i));
+                let rule = Rule::new(
+                    rid,
+                    Topic("shared/topic".to_string()),
+                    core::time::Duration::from_millis(100),
+                    "a > 10".to_owned(),
+                );
+                rm.add_rule(client, rule).await
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all clients were added
+    let clients_before = rule_manager.get_all_clients().await;
+    assert_eq!(clients_before.len(), num_clients);
+
+    // Perform concurrent edits on the same rule
+    let num_edits = 20;
+    let edit_results: Vec<_> = (0..num_edits)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            let rid = rule_id.clone();
+            set.spawn(async move {
+                let new_expr = format!("a > {}", 10 + i);
+                let new_debounce = core::time::Duration::from_millis(100 + i * 10);
+                rm.edit_rule(rid, new_expr, new_debounce).await
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // All edits should succeed
+    assert!(edit_results.iter().all(|r| r.is_ok()));
+
+    // Verify all clients are still subscribed after concurrent edits
+    let clients_after = rule_manager.get_all_clients().await;
+    assert_eq!(clients_after.len(), num_clients);
+
+    // Check subscription status for each client
+    for i in 0..num_clients {
+        let client = ClientId(format!("client_{}", i));
+        let rules_response = rule_manager
+            .get_all_rules_with_subscription_status(client.clone())
+            .await;
+
+        let rule_info = rules_response
+            .client_rules
+            .iter()
+            .find(|cr| cr.rule.id == rule_id)
+            .expect("Rule should exist");
+
+        assert!(rule_info.is_subscribed);
+        assert_eq!(rule_info.subscribers.len(), num_clients);
+    }
+
+    // Verify the rule exists and has been edited (will have one of the concurrent edit values)
+    let all_rules = rule_manager.get_all_rules().await;
+    assert_eq!(all_rules.len(), 1);
+    let final_rule = &all_rules[0];
+    assert_eq!(final_rule.id, rule_id);
+    assert_eq!(final_rule.topic.0, "shared/topic");
+
+    // Expression should match one of the edits (a > 10..29)
+    assert!(final_rule.expr.starts_with("a > "));
+
+    Ok(())
+}
+
 async fn test_subscribe_rules_success() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
     let client1 = ClientId("client1".to_string());

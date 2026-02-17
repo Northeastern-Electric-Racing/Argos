@@ -6,6 +6,9 @@ use axum_extra::{
     TypedHeader,
 };
 use serde::Deserialize;
+use serde_with::serde_as;
+use serde_with::DurationSeconds;
+use std::time::Duration;
 use tracing::debug;
 
 use crate::{
@@ -78,6 +81,29 @@ pub async fn get_all_rules_with_client_info(
             .get_all_rules_with_subscription_status(ClientId(client_id))
             .await,
     ))
+}
+
+#[serde_as]
+#[derive(Deserialize)]
+pub struct EditRulePayload {
+    pub expr: String,
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub debounce_time: Duration,
+}
+
+#[debug_handler]
+pub async fn edit_rule(
+    Path(rule_id): Path<String>,
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(EditRulePayload {
+        expr,
+        debounce_time,
+    }): Json<EditRulePayload>,
+) -> Result<(), ScyllaError> {
+    rules_manager
+        .edit_rule(RuleId(rule_id), expr, debounce_time)
+        .await
+        .map_err(|e| ScyllaError::RuleError(e))
 }
 
 #[debug_handler]

@@ -188,7 +188,7 @@ pub const RULE_SOCKET_KEY: &str = "rule_notify";
 pub struct ClientId(pub String);
 
 /// a Rule ID, add to derives to get more string features
-#[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Display, Debug, Clone, Serialize, Deserialize)]
 pub struct RuleId(pub String);
 
 /// a MQTT topic to trigger on, add to derives to get more string features
@@ -219,11 +219,11 @@ pub struct RuleNotification {
 #[derive(Deserialize, Serialize, Clone)]
 /// A single modular rule, can be serial/deserialized
 pub struct Rule {
-    id: RuleId,
+    pub id: RuleId,
     pub topic: Topic,
     #[serde_as(as = "DurationSeconds<u64>")]
     debounce_time: Duration,
-    expr: String,
+    pub expr: String,
     #[serde(skip)]
     last_seen: Option<tokio::time::Instant>,
     #[serde(skip)]
@@ -483,6 +483,24 @@ impl RuleManager {
                 Err(RuleManagerError::NoSuchClient)
             }
         }
+    }
+
+    pub async fn edit_rule(
+        &self,
+        rule_id: RuleId,
+        expr: String,
+        debounce_time: Duration,
+    ) -> Result<(), RuleManagerError> {
+        let mut rules_guard = self.rules.write().await;
+        let Some(old_rule) = rules_guard.remove(&rule_id) else {
+            warn!("Could not find rule with rule_id: {rule_id} to edit!");
+            return Err(RuleManagerError::NoMatchingRule);
+        };
+        rules_guard.insert(
+            rule_id,
+            Rule::new(old_rule.id, old_rule.topic, debounce_time, expr),
+        );
+        Ok(())
     }
 
     pub async fn get_all_rules(&self) -> Vec<Rule> {
