@@ -87,7 +87,6 @@ pub struct EditRulePayload {
 
 #[debug_handler]
 pub async fn edit_rule(
-    TypedHeader(auth): TypedHeader<Authorization<Basic>>,
     Path(rule_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(EditRulePayload {
