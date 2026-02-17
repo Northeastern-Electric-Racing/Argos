@@ -12,7 +12,7 @@ import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
-import { DataType, FaultData, GraphData, GraphInfo, Run } from 'src/utils/types.utils';
+import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
@@ -147,18 +147,23 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   // When we are in live mode the data  is constantly udpated.
   // The Behvaorial subject is update just a single time when querying for data.
   // these should always be reset when switching between modes.
-  selectedDataTypeValuesSubject = [new BehaviorSubject<GraphInfo>({ label: '', data: [] })];
+  selectedDataTypeValuesSubject: ObservableGraphInfo[] = [];
   selectedDataTypeValuesIsLoading = false; // specifically used for querying updates.
   selectedDataTypeValuesIsError = false;
   selectedDataTypeValuesError?: Error;
-  dataPoints: number = 300;
+  dataPoints: number = 100;
   dataPointsChanged = false;
   yAxisMin: number | null = null;
   yAxisMax: number | null = null;
+  // Range mode: 'time' for time-based range, 'points' for data point-based range
+  rangeMode: 'time' | 'points' = 'time'; // Default to time-based
+  timeRangeSeconds: number = 30; // Default to 30 seconds
   graphConfig = {
     maxPoints: this.dataPoints,
     yMin: this.yAxisMin,
-    yMax: this.yAxisMax
+    yMax: this.yAxisMax,
+    rangeMode: this.rangeMode,
+    timeRangeMs: this.timeRangeSeconds * 1000
   };
   onGraphConfigChange = () => {
     if (this.realTime) {
@@ -167,8 +172,26 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.graphConfig = {
       maxPoints: this.dataPoints,
       yMin: this.yAxisMin,
-      yMax: this.yAxisMax
+      yMax: this.yAxisMax,
+      rangeMode: this.rangeMode,
+      timeRangeMs: this.timeRangeSeconds * 1000
     };
+  };
+  // Getter/setter to allow same function input for ngModel in template.
+  get rangeValue(): number {
+    return this.rangeMode === 'time' ? this.timeRangeSeconds : this.dataPoints;
+  }
+  set rangeValue(val: number) {
+    if (this.rangeMode === 'time') {
+      this.timeRangeSeconds = val;
+    } else {
+      this.dataPoints = val;
+    }
+  }
+
+  toggleRangeMode = () => {
+    this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
+    this.onGraphConfigChange();
   };
 
   // Run when page starts up
@@ -211,8 +234,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       sub.unsubscribe();
     });
 
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.complete();
+    this.selectedDataTypeValuesSubject.forEach((item) => {
+      item.updates.complete();
     });
     this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesSubject.length = 0;
@@ -372,14 +395,12 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   }
 
   private processRealTimeDataTypeSelection = (dataTypes: DataType[]) => {
-    const dataTypeValues = this.selectedDataTypeValuesSubject.map((subject) => subject.getValue());
-
     dataTypes.forEach((dataType) => {
       const key = dataType.name;
-      const graphInfo = dataTypeValues.find((dtV) => dtV.label === key);
+      const target = this.selectedDataTypeValuesSubject.find((s) => s.label === key);
       const valuesSubject = this.storage.get(key);
 
-      if (graphInfo !== undefined) {
+      if (target !== undefined) {
         this.subscriptions.push(
           valuesSubject.subscribe((value: DataValue) => {
             // Skip processing if paused
@@ -387,32 +408,11 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               return;
             }
 
-            const storedValues = graphInfo.data;
-
-            // Process new values and filter in one pass for better performance
-            value.values.forEach((val, i) => {
-              const graphData = { x: +value.time, y: +val, label: dataType.name };
-
-              if (storedValues[i]) {
-                storedValues[i].push(graphData);
-
-                // Limit to prevent memory buildup
-                if (storedValues[i].length > this.dataPoints) {
-                  storedValues[i].shift();
-                }
-              } else {
-                storedValues[i] = [graphData];
-              }
+            const newPoints: GraphData[][] = value.values.map((val) => {
+              return [{ x: +value.time, y: +val }];
             });
 
-            // Update the subject with the already filtered data
-            const targetSubject = this.selectedDataTypeValuesSubject.find((s) => s.getValue().label === dataType.name);
-            if (targetSubject) {
-              targetSubject.next({
-                label: dataType.name,
-                data: storedValues
-              });
-            }
+            target.updates.next(newPoints);
           })
         );
       }
@@ -477,15 +477,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
               });
             });
 
-            let target = this.selectedDataTypeValuesSubject.find((subj) => subj.getValue().label === dataType.name);
+            let target = this.selectedDataTypeValuesSubject.find((s) => s.label === dataType.name);
 
             if (!target) {
               // (shouldn't normally happen, but keep it safe)
-              target = new BehaviorSubject<GraphInfo>({ label: dataType.name, data: [] });
+              target = { label: dataType.name, updates: new BehaviorSubject<GraphData[][]>([]) };
               this.selectedDataTypeValuesSubject.push(target);
             }
 
-            target.next({ label: dataType.name, data: graphData });
+            target.updates.next(graphData);
           }
         })
       );
@@ -501,7 +501,10 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.clearDataType();
     this.selectedDataTypes = dataTypes;
 
-    this.selectedDataTypeValuesSubject = dataTypes.map((dt) => new BehaviorSubject<GraphInfo>({ label: dt.name, data: [] }));
+    this.selectedDataTypeValuesSubject = dataTypes.map((dt) => ({
+      label: dt.name,
+      updates: new BehaviorSubject<GraphData[][]>([])
+    }));
 
     if (this.realTime) {
       this.processRealTimeDataTypeSelection(dataTypes);
@@ -516,7 +519,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   };
 
-  clearGraph = false;
+  clearGraph = 0;
 
   clearDataType: () => void = () => {
     // Unsubscribe from all previous subscriptions
@@ -526,8 +529,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.subscriptions = [];
 
     // Clear and complete existing subjects to prevent memory leaks
-    this.selectedDataTypeValuesSubject.forEach((subject) => {
-      subject.complete();
+    this.selectedDataTypeValuesSubject.forEach((item) => {
+      item.updates.complete();
     });
     this.selectedDataTypeValuesSubject = []; // More explicit reset
 
@@ -535,6 +538,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
-    this.clearGraph = true;
+    this.clearGraph++;
   };
 }

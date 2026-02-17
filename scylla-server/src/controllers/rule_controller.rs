@@ -16,6 +16,12 @@ use crate::{
     rule_structs::{ClientId, Rule, RuleId, RuleManager, RulesResponse},
 };
 
+#[derive(Deserialize)]
+pub struct SubscribeRulesRequest {
+    rule_ids: Vec<String>,
+    client_id: String,
+}
+
 #[debug_handler]
 pub async fn add_rule(
     TypedHeader(auth): TypedHeader<Authorization<Basic>>,
@@ -98,4 +104,26 @@ pub async fn edit_rule(
         .edit_rule(RuleId(rule_id), expr, debounce_time)
         .await
         .map_err(|e| ScyllaError::RuleError(e))
+}
+
+#[debug_handler]
+pub async fn subscribe_rules(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(request): Json<SubscribeRulesRequest>,
+) -> Result<Json<String>, ScyllaError> {
+    debug!(
+        "Subscribing client {} to {} rules",
+        request.client_id,
+        request.rule_ids.len()
+    );
+
+    let rule_ids: Vec<RuleId> = request.rule_ids.into_iter().map(RuleId).collect();
+
+    match rules_manager
+        .subscribe_rules(ClientId(request.client_id), rule_ids)
+        .await
+    {
+        Ok(_) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
+        Err(err) => Err(ScyllaError::RuleError(err)),
+    }
 }

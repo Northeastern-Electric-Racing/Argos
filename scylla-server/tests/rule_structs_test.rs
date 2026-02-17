@@ -619,8 +619,164 @@ async fn test_edit_rule_preserves_subscriptions_concurrent() -> Result<(), RuleM
     let final_rule = &all_rules[0];
     assert_eq!(final_rule.id, rule_id);
     assert_eq!(final_rule.topic.0, "shared/topic");
+
     // Expression should match one of the edits (a > 10..29)
     assert!(final_rule.expr.starts_with("a > "));
+
+    Ok(())
+}
+
+async fn test_subscribe_rules_success() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client1 = ClientId("client1".to_string());
+    let client2 = ClientId("client2".to_string());
+
+    // Create rules via client1
+    let rule1 = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    let rule2 = Rule::new(
+        RuleId("rule_2".to_string()),
+        Topic("topic/2".to_string()),
+        core::time::Duration::from_secs(30),
+        "b < 5".to_owned(),
+    );
+
+    let rule3 = Rule::new(
+        RuleId("rule_3".to_string()),
+        Topic("topic/3".to_string()),
+        core::time::Duration::from_secs(45),
+        "c == 7".to_owned(),
+    );
+
+    rule_manager.add_rule(client1.clone(), rule1).await?;
+    rule_manager.add_rule(client1.clone(), rule2).await?;
+    rule_manager.add_rule(client1.clone(), rule3).await?;
+
+    // Verify initial state
+    assert_eq!(rule_manager.get_all_rules().await.len(), 3);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
+
+    // Subscribe client2 to multiple rules
+    let rule_ids = vec![
+        RuleId("rule_1".to_string()),
+        RuleId("rule_2".to_string()),
+        RuleId("rule_3".to_string()),
+    ];
+
+    rule_manager
+        .subscribe_rules(client2.clone(), rule_ids)
+        .await?;
+
+    // Verify client2 is now subscribed
+    let clients = rule_manager.get_all_clients().await;
+    assert_eq!(clients.len(), 2);
+    assert!(clients.contains(&client1));
+    assert!(clients.contains(&client2));
+
+    // Verify rules still exist
+    assert_eq!(rule_manager.get_all_rules().await.len(), 3);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_subscribe_rules_nonexistent_rule() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    let rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    rule_manager.add_rule(client.clone(), rule).await?;
+
+    // Try to subscribe to a mix of existing and non-existing rules
+    let rule_ids = vec![
+        RuleId("rule_1".to_string()),
+        RuleId("nonexistent_rule".to_string()),
+    ];
+
+    let client2 = ClientId("client2".to_string());
+    let result = rule_manager.subscribe_rules(client2, rule_ids).await;
+
+    // Should fail because one rule doesn't exist
+    assert!(result.is_err());
+
+    // Verify client2 was not added (transaction-like behavior)
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_subscribe_rules_empty_list() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Subscribe to empty list of rules (should succeed, doing nothing)
+    let rule_ids = vec![];
+    let result = rule_manager.subscribe_rules(client.clone(), rule_ids).await;
+
+    assert!(result.is_ok());
+    assert_eq!(rule_manager.get_all_clients().await.len(), 0);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_subscribe_rules_concurrent() -> Result<(), RuleManagerError> {
+    let num_rules = 10;
+    let num_clients = 5;
+    let rule_manager = std::sync::Arc::new(RuleManager::new());
+
+    // Create rules using one client
+    let initial_client = ClientId("initial_client".to_string());
+    for i in 0..num_rules {
+        let rule = Rule::new(
+            RuleId(format!("rule_{}", i)),
+            Topic(format!("topic/{}", i)),
+            core::time::Duration::from_secs(60),
+            "a > 5".to_owned(),
+        );
+        rule_manager.add_rule(initial_client.clone(), rule).await?;
+    }
+
+    // Prepare all rule IDs
+    let all_rule_ids: Vec<RuleId> = (0..num_rules)
+        .map(|i| RuleId(format!("rule_{}", i)))
+        .collect();
+
+    // Concurrently subscribe multiple clients to all rules
+    let results: Vec<_> = (0..num_clients)
+        .fold(JoinSet::new(), |mut set, i| {
+            let rm = rule_manager.clone();
+            let rule_ids = all_rule_ids.clone();
+            set.spawn(async move {
+                let client = ClientId(format!("client_{}", i));
+                rm.subscribe_rules(client, rule_ids).await
+            });
+            set
+        })
+        .join_all()
+        .await;
+
+    // Verify all operations succeeded
+    assert!(results.iter().all(|r| r.is_ok()));
+
+    // Verify all clients were added (including initial client)
+    let clients = rule_manager.get_all_clients().await;
+    assert_eq!(clients.len(), num_clients + 1); // +1 for initial_client
+
+    // Verify rules still exist
+    assert_eq!(rule_manager.get_all_rules().await.len(), num_rules);
 
     Ok(())
 }
