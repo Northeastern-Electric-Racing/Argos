@@ -5,12 +5,22 @@ use axum_extra::{
     headers::{authorization::Basic, Authorization},
     TypedHeader,
 };
+use serde::Deserialize;
+use serde_with::serde_as;
+use serde_with::DurationSeconds;
+use std::time::Duration;
 use tracing::debug;
 
 use crate::{
     error::ScyllaError,
     rule_structs::{ClientId, Rule, RuleId, RuleManager, RulesResponse},
 };
+
+#[derive(Deserialize)]
+pub struct SubscribeRulesRequest {
+    rule_ids: Vec<String>,
+    client_id: String,
+}
 
 #[debug_handler]
 pub async fn add_rule(
@@ -80,4 +90,48 @@ pub async fn check_rule(
 ) -> Json<bool> {
     debug!("Checking if rule exists: {} - {}", rule.topic, rule.expr);
     Json(rules_manager.check_rule(&rule.topic, &rule.expr).await)
+}
+#[serde_as]
+#[derive(Deserialize)]
+pub struct EditRulePayload {
+    pub expr: String,
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub debounce_time: Duration,
+}
+
+#[debug_handler]
+pub async fn edit_rule(
+    Path(rule_id): Path<String>,
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(EditRulePayload {
+        expr,
+        debounce_time,
+    }): Json<EditRulePayload>,
+) -> Result<(), ScyllaError> {
+    rules_manager
+        .edit_rule(RuleId(rule_id), expr, debounce_time)
+        .await
+        .map_err(|e| ScyllaError::RuleError(e))
+}
+
+#[debug_handler]
+pub async fn subscribe_rules(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(request): Json<SubscribeRulesRequest>,
+) -> Result<Json<String>, ScyllaError> {
+    debug!(
+        "Subscribing client {} to {} rules",
+        request.client_id,
+        request.rule_ids.len()
+    );
+
+    let rule_ids: Vec<RuleId> = request.rule_ids.into_iter().map(RuleId).collect();
+
+    match rules_manager
+        .subscribe_rules(ClientId(request.client_id), rule_ids)
+        .await
+    {
+        Ok(_) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
+        Err(err) => Err(ScyllaError::RuleError(err)),
+    }
 }
