@@ -78,6 +78,6 @@ pub async fn check_rule(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule): Json<Rule>,
 ) -> Json<bool> {
-    debug!("Checking if rule exists: {} - {}", rule.topic, rule.expr());
+    debug!("Checking if rule exists: {} - {}", rule.topic, rule.expr);
     Json(rules_manager.check_rule(&rule.topic, &rule.expr).await)
 }
