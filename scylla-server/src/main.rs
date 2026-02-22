@@ -27,6 +27,7 @@ use scylla_server::{
         data_type_controller, file_insertion_controller,
         rule_controller::{
             add_rule, delete_rule, get_all_rules, get_all_rules_with_client_info, unsubscribe_rules,
+            subscribe_rules,
         },
         run_controller, scylla_config_controller,
         video_streamer_controller::{self},
@@ -411,6 +412,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .route("/rules", get(get_all_rules))
                 .route("/rules/{client_id}", get(get_all_rules_with_client_info))
                 .route("/rules/unsubscribe", post(unsubscribe_rules))
+                .route("/rules/edit/{rule_id}", put(edit_rule))
+                .route("/rules/subscribe", post(subscribe_rules))
                 //.route("/rules/delete/{rule_id}", post()).route("/rules/poll")
                 .layer(Extension(rules_manager)),
         )

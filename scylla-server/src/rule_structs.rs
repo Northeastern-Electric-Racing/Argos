@@ -188,7 +188,7 @@ pub const RULE_SOCKET_KEY: &str = "rule_notify";
 pub struct ClientId(pub String);
 
 /// a Rule ID, add to derives to get more string features
-#[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Display, Debug, Clone, Serialize, Deserialize)]
 pub struct RuleId(pub String);
 
 /// a MQTT topic to trigger on, add to derives to get more string features
@@ -219,11 +219,11 @@ pub struct RuleNotification {
 #[derive(Deserialize, Serialize, Clone)]
 /// A single modular rule, can be serial/deserialized
 pub struct Rule {
-    id: RuleId,
+    pub id: RuleId,
     pub topic: Topic,
     #[serde_as(as = "DurationSeconds<u64>")]
     debounce_time: Duration,
-    expr: String,
+    pub expr: String,
     #[serde(skip)]
     last_seen: Option<tokio::time::Instant>,
     #[serde(skip)]
@@ -485,6 +485,24 @@ impl RuleManager {
         }
     }
 
+    pub async fn edit_rule(
+        &self,
+        rule_id: RuleId,
+        expr: String,
+        debounce_time: Duration,
+    ) -> Result<(), RuleManagerError> {
+        let mut rules_guard = self.rules.write().await;
+        let Some(old_rule) = rules_guard.remove(&rule_id) else {
+            warn!("Could not find rule with rule_id: {rule_id} to edit!");
+            return Err(RuleManagerError::NoMatchingRule);
+        };
+        rules_guard.insert(
+            rule_id,
+            Rule::new(old_rule.id, old_rule.topic, debounce_time, expr),
+        );
+        Ok(())
+    }
+
     pub async fn get_all_rules(&self) -> Vec<Rule> {
         self.rules
             .read()
@@ -530,6 +548,17 @@ impl RuleManager {
         self.subscriptions.read().await.lefts()
     }
 
+    /// Helper function to verify all rules exist
+    async fn verify_rules_exist(&self, rule_ids: &[RuleId]) -> Result<(), RuleManagerError> {
+        let rules_guard = self.rules.read().await;
+        for rule_id in rule_ids {
+            if !rules_guard.contains_key(rule_id) {
+                return Err(RuleManagerError::NoMatchingRule);
+            }
+        }
+        Ok(())
+    }
+
     /// Unsubscribe a client from multiple rules
     pub async fn unsubscribe_rules(
         &self,
@@ -541,6 +570,24 @@ impl RuleManager {
         // Remove subscriptions (rules remain even if no subscribers)
         for rule_id in rule_ids {
             subscriptions.remove_right_from_left(&client_id, &rule_id);
+        }
+
+        Ok(())
+    }
+
+    /// Subscribe a client to multiple existing rules
+    pub async fn subscribe_rules(
+        &self,
+        client_id: ClientId,
+        rule_ids: Vec<RuleId>,
+    ) -> Result<(), RuleManagerError> {
+        // First, verify all rules exist
+        self.verify_rules_exist(&rule_ids).await?;
+
+        // Now subscribe to all rules
+        let mut subscriptions = self.subscriptions.write().await;
+        for rule_id in rule_ids {
+            subscriptions.insert(&client_id, &rule_id);
         }
 
         Ok(())

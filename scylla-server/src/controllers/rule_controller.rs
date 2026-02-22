@@ -6,6 +6,9 @@ use axum_extra::{
     TypedHeader,
 };
 use serde::Deserialize;
+use serde_with::serde_as;
+use serde_with::DurationSeconds;
+use std::time::Duration;
 use tracing::debug;
 
 use crate::{
@@ -14,7 +17,7 @@ use crate::{
 };
 
 #[derive(Deserialize)]
-pub struct UnsubscribeRulesRequest {
+pub struct RuleSubscriptionRequest {
     rule_ids: Vec<String>,
     client_id: String,
 }
@@ -80,10 +83,33 @@ pub async fn get_all_rules_with_client_info(
     ))
 }
 
+#[serde_as]
+#[derive(Deserialize)]
+pub struct EditRulePayload {
+    pub expr: String,
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub debounce_time: Duration,
+}
+
+#[debug_handler]
+pub async fn edit_rule(
+    Path(rule_id): Path<String>,
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(EditRulePayload {
+        expr,
+        debounce_time,
+    }): Json<EditRulePayload>,
+) -> Result<(), ScyllaError> {
+    rules_manager
+        .edit_rule(RuleId(rule_id), expr, debounce_time)
+        .await
+        .map_err(|e| ScyllaError::RuleError(e))
+}
+
 #[debug_handler]
 pub async fn unsubscribe_rules(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
-    Json(request): Json<UnsubscribeRulesRequest>,
+    Json(request): Json<RuleSubscriptionRequest>,
 ) -> Result<Json<String>, ScyllaError> {
     debug!(
         "Unsubscribing client {} from {} rules",
@@ -100,6 +126,28 @@ pub async fn unsubscribe_rules(
         Ok(_) => Ok(Json::from(
             "Successfully unsubscribed from rules".to_owned(),
         )),
+        Err(err) => Err(ScyllaError::RuleError(err)),
+    }
+}
+
+#[debug_handler]
+pub async fn subscribe_rules(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(request): Json<RuleSubscriptionRequest>,
+) -> Result<Json<String>, ScyllaError> {
+    debug!(
+        "Subscribing client {} to {} rules",
+        request.client_id,
+        request.rule_ids.len()
+    );
+
+    let rule_ids: Vec<RuleId> = request.rule_ids.into_iter().map(RuleId).collect();
+
+    match rules_manager
+        .subscribe_rules(ClientId(request.client_id), rule_ids)
+        .await
+    {
+        Ok(_) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
 }
