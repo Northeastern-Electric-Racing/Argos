@@ -9,7 +9,6 @@ import { HexTileComponent } from '../hex-tile/hex-tile.component';
 
 export interface DisplayCell {
   reading: CellReading;
-  readingB?: CellReading;
   value: number | undefined;
   boolValue: boolean | undefined;
   cellNum: string;
@@ -56,45 +55,33 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Pair adjacent cells (0+1, 2+3, …) into 13 display tiles */
-  private pairCells(cells: Readonly<CellReading[]>): DisplayCell[] {
-    const paired: DisplayCell[] = [];
-    for (let i = 0; i < cells.length; i += 2) {
-      const cellA = cells[i];
-      const cellB = i + 1 < cells.length ? cells[i + 1] : undefined;
-      paired.push({
-        reading: cellA,
-        readingB: cellB,
-        value: this.getPairedValue(cellA, cellB),
-        boolValue: this.getPairedBoolValue(cellA, cellB),
-        cellNum: (i / 2).toString()
-      });
-    }
-    return paired;
+  /** Map each CellReading 1:1 to a DisplayCell */
+  private toDisplayCells(cells: Readonly<CellReading[]>): DisplayCell[] {
+    return cells.map((cell) => ({
+      reading: cell,
+      value: this.getCellValue(cell),
+      boolValue: this.getCellBoolValue(cell),
+      cellNum: cell.cellNumber.toString()
+    }));
   }
 
   get topRowCells(): DisplayCell[] {
-    return this.pairCells(this.betaCells).reverse();
+    return this.toDisplayCells(this.betaCells).reverse();
   }
 
   get bottomRowCells(): DisplayCell[] {
-    return this.pairCells(this.alphaCells);
+    return this.toDisplayCells(this.alphaCells);
   }
 
-  private getPairedValue(a: CellReading, b: CellReading | undefined): number | undefined {
-    if (this.view === HeatMapView.Temperature) return a.temp;
-    if (this.view === HeatMapView.Voltage) {
-      if (a.voltage === undefined) return b?.voltage;
-      if (b === undefined || b.voltage === undefined) return a.voltage;
-      return (a.voltage + b.voltage) / 2;
-    }
+  private getCellValue(cell: CellReading): number | undefined {
+    if (this.view === HeatMapView.Temperature) return cell.temp;
+    if (this.view === HeatMapView.Voltage) return cell.voltage;
     return undefined;
   }
 
-  private getPairedBoolValue(a: CellReading, b: CellReading | undefined): boolean | undefined {
+  private getCellBoolValue(cell: CellReading): boolean | undefined {
     if (this.view !== HeatMapView.Balancing) return undefined;
-    if (a.balancing === undefined && (b === undefined || b.balancing === undefined)) return undefined;
-    return !!(a.balancing || b?.balancing);
+    return cell.balancing;
   }
 
   getColor(cell: DisplayCell): string {
@@ -127,8 +114,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
       data: {
         forSegment: this.segment(),
         displayCellIndex: displayCell.cellNum,
-        readingA: displayCell.reading,
-        readingB: displayCell.readingB
+        readingA: displayCell.reading
       },
       width: '40%',
       draggable: true,
