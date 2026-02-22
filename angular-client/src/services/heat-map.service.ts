@@ -22,6 +22,9 @@ export interface SelectedCellInfo {
 export class HeatMapService {
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
+  /** Global default view — drives the "Set ALL Maps" selector and initial per-segment defaults */
+  readonly globalView$ = new BehaviorSubject<HeatMapView>(HeatMapView.Voltage);
+
   /** Multi-cell selection state */
   selectedCells: SelectedCellInfo[] = [];
   dialogRef: DynamicDialogRef | null = null;
@@ -52,12 +55,13 @@ export class HeatMapService {
 
   getCurrentView = (segment: Segment) => {
     if (!this.currentViewMap.get(segment)) {
-      this.currentViewMap.set(segment, new BehaviorSubject<HeatMapView>(HeatMapView.Voltage));
+      this.currentViewMap.set(segment, new BehaviorSubject<HeatMapView>(this.globalView$.value));
     }
     return this.currentViewMap.get(segment);
   };
 
   setAllSegViews = (view: HeatMapView) => {
+    this.globalView$.next(view);
     this.currentViewMap.forEach((subject) => {
       subject.next(view);
     });

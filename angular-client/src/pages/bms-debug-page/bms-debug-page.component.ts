@@ -1,4 +1,5 @@
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, inject, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { allSegments } from 'src/utils/bms.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from './components/bms-header/bms-header.component';
@@ -27,8 +28,9 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
     SelectDropdownComponent
   ]
 })
-export class BmsDebugPageComponent {
+export class BmsDebugPageComponent implements OnInit, OnDestroy {
   private heatMapService = inject(HeatMapService);
+  private subscription?: Subscription;
 
   time = new Date();
   newRunIsLoading = false;
@@ -54,10 +56,23 @@ export class BmsDebugPageComponent {
   ];
   allSegSelectorConfig: SelectorConfig = {
     options: this.allViewOptions,
-    placeholder: 'Set ALL Maps: Temp...'
+    placeholder: 'Set ALL Maps'
   };
 
   constructor() {}
+
+  ngOnInit(): void {
+    this.subscription = this.heatMapService.globalView$.subscribe((view) => {
+      this.allSegSelectorConfig = {
+        ...this.allSegSelectorConfig,
+        defaultValue: formatAllSelectorName(view)
+      };
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
 
   @HostListener('window:resize', ['$event'])
   onResize() {
