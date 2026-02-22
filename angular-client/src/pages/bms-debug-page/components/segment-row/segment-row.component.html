@@ -1,64 +1,29 @@
-<!-- Unified segment row: controls | hex grid | overview stats -->
+<!-- Unified segment row: dark wrapper with light heatmap and overview panels -->
 <div class="segment-row">
-  <!-- LEFT: Controls -->
+  <!-- LEFT: Controls (inside dark wrapper) -->
   <div class="controls-zone">
     <div class="segment-title">
       <span class="battery-icon">🔋</span>
       <span class="title-text">Segment {{ segment() + 1 }}</span>
     </div>
-    <select-dropdown
-      [options]="viewSelectorConfig.options"
-      [placeholder]="viewSelectorConfig.placeholder"
-      [defaultValue]="viewSelectorConfig.defaultValue"
-    />
-    <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
-  </div>
-
-  <!-- CENTER: Honeycomb hex grid -->
-  <div class="hex-grid-zone">
-    <!-- Top row (beta cells reversed) -->
-    <div class="hex-row top-row">
-      @for (cell of topRowCells; track $index) {
-        <hex-tile
-          [value]="cell.value"
-          [booleanValue]="cell.boolValue"
-          [color]="getColor(cell)"
-          [currentView]="view"
-          [boxShadowColor]="isSelected(cell.reading)"
-          [cellNumber]="cell.cellNum"
-          (click)="cellClicked(cell.reading)"
-        />
-      }
-    </div>
-    <!-- Bottom row (alpha cells) — offset for honeycomb -->
-    <div class="hex-row bottom-row">
-      @for (cell of bottomRowCells; track $index) {
-        <hex-tile
-          [value]="cell.value"
-          [booleanValue]="cell.boolValue"
-          [color]="getColor(cell)"
-          [currentView]="view"
-          [boxShadowColor]="isSelected(cell.reading)"
-          [cellNumber]="cell.cellNum"
-          (click)="cellClicked(cell.reading)"
-        />
-      }
+    <div class="controls-actions">
+      <select-dropdown
+        [options]="viewSelectorConfig.options"
+        [placeholder]="viewSelectorConfig.placeholder"
+        [defaultValue]="viewSelectorConfig.defaultValue"
+      />
+      <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
     </div>
   </div>
 
-  <!-- RIGHT: Segment overview stats -->
-  <div class="overview-zone">
-    <div class="stat">
-      <span class="stat-value">{{ formatTemp() }}<sup class="stat-unit">°C</sup></span>
-      <span class="stat-label">Temperature</span>
+  <!-- RIGHT: Separate light panels -->
+  <div class="content-zone">
+    <div class="heatmap-panel">
+      <segment-heatmap [segment]="segment()" />
     </div>
-    <div class="stat">
-      <span class="stat-value">{{ formatVoltage() }}<sup class="stat-unit">V</sup></span>
-      <span class="stat-label">Voltage</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value">{{ formatChipTemp() }}<sup class="stat-unit">°C</sup></span>
-      <span class="stat-label">Chip Temp</span>
+
+    <div class="overview-panel">
+      <segment-overview [segment]="segment()" />
     </div>
   </div>
 </div>

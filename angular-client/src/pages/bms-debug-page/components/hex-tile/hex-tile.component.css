@@ -56,3 +56,87 @@
   color: #2c2c2c;
   vertical-align: super;
 }
+
+/* ── View Variants ── */
+
+/* Voltage: number top-left, value center-bottom */
+.hex-tile.view-voltage .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-voltage {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
+/* Balancing: number top-left, value centered */
+.hex-tile.view-balancing .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-balancing {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
+/* Temperature: number top-left, value centered */
+.hex-tile.view-temperature .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-temperature {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
+/* ── heatmap-cell variant: wider hex, number top-left above value ── */
+
+:host(.heatmap-cell) .hex-tile {
+  width: var(--hex-w, 48px);
+  height: var(--hex-h, 48px);
+  align-items: flex-start;
+  justify-content: center;
+  padding: 18% 0 0 20%;
+  flex-direction: column;
+  gap: 0;
+}
+
+:host(.heatmap-cell) .cell-number {
+  position: static;
+  font-size: calc(var(--hex-w, 48px) * 0.22);
+  font-weight: 800;
+  color: #1a1a1a;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+:host(.heatmap-cell) .cell-value-container {
+  gap: 1px;
+}
+
+:host(.heatmap-cell) .cell-value {
+  font-size: calc(var(--hex-w, 48px) * 0.24);
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.1;
+}
+
+:host(.heatmap-cell) .cell-unit {
+  font-size: calc(var(--hex-w, 48px) * 0.16);
+  color: #1a1a1a;
+}

@@ -1,0 +1,37 @@
+:host {
+  display: block;
+  --hex-w: clamp(42px, 3.6vw, 54px);
+  --hex-h: calc(var(--hex-w) * 1.155);
+  --hex-gap: 2px;
+  --row-offset: calc(var(--hex-w) / 2 + 2px);
+  --row-gap: calc(var(--hex-h) * -0.2);
+  flex: 0 1 auto;
+  width: fit-content;
+  min-width: fit-content;
+}
+
+.hex-grid-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.hex-row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.hex-row hex-tile {
+  margin-right: var(--hex-gap);
+}
+
+.hex-row hex-tile:last-child {
+  margin-right: 0;
+}
+
+.hex-row.bottom-row {
+  margin-top: var(--row-gap);
+  margin-left: var(--row-offset);
+}

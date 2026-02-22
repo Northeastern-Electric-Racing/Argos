@@ -5,15 +5,28 @@ import { HeatMapView } from 'src/services/heat-map.service';
   selector: 'hex-tile',
   templateUrl: './hex-tile.component.html',
   styleUrl: './hex-tile.component.css',
-  standalone: true
+  standalone: true,
+  host: {
+    '[class]': 'variant()'
+  }
 })
 export class HexTileComponent {
+  variant = input<string>('');
   value = input<number | undefined>();
   booleanValue = input<boolean | undefined>();
   color = input.required<string>();
   currentView = input<HeatMapView>();
   boxShadowColor = input<boolean>(false);
   cellNumber = input<string | undefined>();
+
+  viewClass = computed(() => {
+    const view = this.currentView();
+    let cls = 'hex-tile';
+    if (view === HeatMapView.Voltage) cls += ' view-voltage';
+    else if (view === HeatMapView.Balancing) cls += ' view-balancing';
+    else if (view === HeatMapView.Temperature) cls += ' view-temperature';
+    return cls;
+  });
 
   displayValue = computed(() => {
     if (this.booleanValue() !== undefined) {

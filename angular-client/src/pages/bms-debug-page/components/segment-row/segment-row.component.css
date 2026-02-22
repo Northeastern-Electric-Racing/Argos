@@ -1,36 +1,64 @@
-/* ── Host: hex sizing custom properties ── */
 :host {
   display: block;
-  /* Pointy-top hex: taller than wide (h ≈ w × 1.155) */
-  --hex-w: clamp(28px, 3vw, 48px);
-  --hex-h: calc(var(--hex-w) * 1.155);
-  /* Small gap between hexes in a row (can be negative for tighter packing) */
-  --hex-gap: 2px;
-  /* Bottom row shifts right by half a hex width for honeycomb offset */
-  --row-offset: calc(var(--hex-w) / 2 + 1px);
-  /* Rows nestle: overlap by 25% of hex height (pointy-top geometry) */
-  --row-gap: calc(var(--hex-h) * -0.25);
 }
 
 /* ── Segment Row ── */
 .segment-row {
   display: flex;
-  align-items: center;
-  background-color: #2c2c2c;
+  align-items: stretch;
   border-radius: 8px;
-  padding: 12px 16px;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
+  background-color: #1a1a1a;
+  padding: 10px;
 }
 
-/* ── Left: Controls ── */
+/* ── Left: Controls (inside dark wrapper) ── */
 .controls-zone {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
   gap: 8px;
-  min-width: 110px;
+  min-width: 128px;
   flex-shrink: 0;
+  padding: 8px 8px;
+}
+
+/* ── Right: Separate light panels ── */
+.content-zone {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  justify-content: flex-start;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  min-width: 0;
+}
+
+.heatmap-panel {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px 10px 100px;
+  background-color: #2c2c2c;
+  border-radius: 8px;
+  clip-path: polygon(88px 0, 100% 0, 100% 100%, 0 100%, 0 88px);
+  width: fit-content;
+  min-width: fit-content;
+  min-height: 112px;
+}
+
+.overview-panel {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: #2c2c2c;
+  border-radius: 8px;
+  min-width: 264px;
+  min-height: 112px;
 }
 
 .segment-title {
@@ -51,86 +79,62 @@
   white-space: nowrap;
 }
 
+/* ── Actions group: dropdown + button same width ── */
+.controls-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 120px;
+}
+
 .see-more-btn {
   background-color: #2aaeee;
   color: #000;
   border: none;
   border-radius: 16px;
-  padding: 6px 14px;
+  padding: 6px 18px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  width: 100%;
+  text-align: center;
+  height: 30px;
+  box-sizing: border-box;
 }
 
 .see-more-btn:hover {
   background-color: #1e9ad8;
 }
 
-/* ── Center: Hex Grid ── */
-.hex-grid-zone {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  overflow: hidden;
-  min-width: 0;
+/* ── Dropdown overrides inside controls-zone ── */
+.controls-zone ::ng-deep .small-grey-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 30px !important;
+  border-radius: 16px !important;
+  background-color: #555 !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
 }
 
-.hex-row {
-  display: flex;
-  flex-wrap: nowrap;
+.controls-zone ::ng-deep .p-select-label,
+.controls-zone ::ng-deep .p-select-label.p-placeholder {
+  width: auto !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #c0c0c0 !important;
+  --p-select-placeholder-color: #c0c0c0 !important;
+  line-height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
-/* Gap between hex tiles in a row */
-.hex-row hex-tile {
-  margin-right: var(--hex-gap);
-}
-
-.hex-row hex-tile:last-child {
-  margin-right: 0;
-}
-
-/* Bottom row: honeycomb offset right + nestle up */
-.hex-row.bottom-row {
-  margin-top: var(--row-gap);
-  margin-left: var(--row-offset);
-}
-
-/* ── Right: Overview Stats ── */
-.overview-zone {
-  display: flex;
-  gap: 20px;
-  flex-shrink: 0;
-  align-items: center;
-  padding-left: 16px;
-  border-left: 1px solid #444;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 55px;
-}
-
-.stat-value {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  font-size: 1.6rem;
-  color: #efefef;
-  line-height: 1.1;
-}
-
-.stat-unit {
-  font-size: 0.55em;
-  font-weight: 400;
-  color: #aaa;
-}
-
-.stat-label {
-  font-family: 'Roboto', sans-serif;
-  font-size: 0.7rem;
-  color: #cacaca;
-  margin-top: 2px;
+.controls-zone ::ng-deep .p-select-trigger {
+  padding-right: 8px !important;
+  display: flex !important;
+  align-items: center !important;
 }
