@@ -6,9 +6,10 @@
 .overview-zone {
   display: flex;
   gap: 0;
-  flex-shrink: 0;
+  flex-shrink: 1;
   align-items: center;
   height: 100%;
+  overflow: hidden;
 }
 
 .stat {
@@ -16,8 +17,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 72px;
-  padding: 0 clamp(12px, 1.4vw, 22px);
+  min-width: 0;
+  flex: 1 1 0;
+  padding: 0 clamp(8px, 1vw, 18px);
+  overflow: hidden;
 }
 
 .stat + .stat {
@@ -27,7 +30,8 @@
 .stat-value {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  font-size: clamp(1.7rem, 2.6vw, 2.8rem);
+  font-size: clamp(1.4rem, 2.2vw, 2.4rem);
+  white-space: nowrap;
   color: #efefef;
   line-height: 1.1;
 }
@@ -40,7 +44,8 @@
 
 .stat-label {
   font-family: 'Roboto', sans-serif;
-  font-size: clamp(0.65rem, 0.8vw, 0.85rem);
+  font-size: clamp(0.6rem, 0.75vw, 0.8rem);
+  white-space: nowrap;
   color: #cacaca;
   margin-top: 4px;
 }

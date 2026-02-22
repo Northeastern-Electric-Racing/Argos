@@ -6,11 +6,11 @@
 .segment-row {
   display: flex;
   align-items: stretch;
-  border-radius: 8px;
-  gap: 12px;
+  border-radius: clamp(6px, 0.63vw, 12px);
+  gap: clamp(8px, 0.94vw, 16px);
   width: 100%;
   background-color: #1a1a1a;
-  padding: 10px;
+  padding: clamp(6px, 0.78vw, 14px);
 }
 
 /* ── Left: Controls (inside dark wrapper) ── */
@@ -19,10 +19,10 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 8px;
-  min-width: 128px;
+  gap: clamp(6px, 0.63vw, 10px);
+  min-width: clamp(100px, 10vw, 160px);
   flex-shrink: 0;
-  padding: 8px 8px;
+  padding: clamp(6px, 0.63vw, 10px);
 }
 
 /* ── Right: Separate light panels ── */
@@ -42,23 +42,23 @@
   flex: 0 1 auto;
   display: flex;
   align-items: center;
-  padding: 10px 12px 10px 100px;
+  padding: clamp(6px, 0.78vw, 14px) clamp(8px, 0.94vw, 16px) clamp(6px, 0.78vw, 14px) clamp(70px, 7.8vw, 120px);
   background-color: #2c2c2c;
-  border-radius: 8px;
-  clip-path: polygon(88px 0, 100% 0, 100% 100%, 0 100%, 0 88px);
+  border-radius: clamp(6px, 0.63vw, 12px);
+  clip-path: polygon(clamp(60px, 6.9vw, 108px) 0, 100% 0, 100% 100%, 0 100%, 0 clamp(60px, 6.9vw, 108px));
   width: fit-content;
   min-width: fit-content;
-  min-height: 112px;
+  min-height: clamp(90px, 8.75vw, 140px);
 }
 
 .overview-panel {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: clamp(6px, 0.78vw, 14px) clamp(10px, 1.25vw, 20px);
   background-color: #2c2c2c;
-  border-radius: 8px;
-  min-width: 264px;
-  min-height: 112px;
+  border-radius: clamp(6px, 0.63vw, 12px);
+  min-width: clamp(180px, 18vw, 300px);
+  min-height: clamp(90px, 8.75vw, 140px);
 }
 
 .segment-title {
@@ -68,14 +68,14 @@
 }
 
 .battery-icon {
-  width: 13px;
-  height: 17px;
+  width: clamp(10px, 1vw, 16px);
+  height: clamp(13px, 1.33vw, 21px);
 }
 
 .title-text {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  font-size: 20px;
+  font-size: clamp(16px, 1.56vw, 24px);
   color: #efefef;
   white-space: nowrap;
 }
@@ -84,23 +84,23 @@
 .controls-actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 120px;
+  gap: clamp(4px, 0.47vw, 8px);
+  width: clamp(96px, 9.4vw, 150px);
 }
 
 .see-more-btn {
   background-color: #2aaeee;
   color: #000;
   border: none;
-  border-radius: 16px;
-  padding: 6px 18px;
-  font-size: 12px;
+  border-radius: clamp(12px, 1.25vw, 20px);
+  padding: clamp(4px, 0.47vw, 8px) clamp(12px, 1.4vw, 22px);
+  font-size: clamp(10px, 0.94vw, 14px);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   width: 100%;
   text-align: center;
-  height: 30px;
+  height: clamp(26px, 2.3vw, 36px);
   box-sizing: border-box;
 }
 
@@ -112,10 +112,10 @@
 .controls-zone ::ng-deep .small-grey-select {
   width: 100% !important;
   min-width: 0 !important;
-  height: 30px !important;
-  border-radius: 16px !important;
+  height: clamp(26px, 2.3vw, 36px) !important;
+  border-radius: clamp(12px, 1.25vw, 20px) !important;
   background-color: #555 !important;
-  font-size: 12px !important;
+  font-size: clamp(10px, 0.94vw, 14px) !important;
   display: flex !important;
   align-items: center !important;
   box-sizing: border-box !important;
@@ -124,18 +124,18 @@
 .controls-zone ::ng-deep .p-select-label,
 .controls-zone ::ng-deep .p-select-label.p-placeholder {
   width: auto !important;
-  padding: 0 12px !important;
-  font-size: 12px !important;
+  padding: 0 clamp(8px, 0.94vw, 16px) !important;
+  font-size: clamp(10px, 0.94vw, 14px) !important;
   font-weight: 600 !important;
   color: #c0c0c0 !important;
   --p-select-placeholder-color: #c0c0c0 !important;
-  line-height: 30px !important;
+  line-height: clamp(26px, 2.3vw, 36px) !important;
   display: flex !important;
   align-items: center !important;
 }
 
 .controls-zone ::ng-deep .p-select-trigger {
-  padding-right: 8px !important;
+  padding-right: clamp(6px, 0.63vw, 10px) !important;
   display: flex !important;
   align-items: center !important;
 }
