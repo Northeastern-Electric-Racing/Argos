@@ -111,7 +111,7 @@
   height: var(--hex-h, 48px);
   align-items: flex-start;
   justify-content: center;
-  padding: 18% 0 0 20%;
+  padding: 6% 0 0 8%;
   flex-direction: column;
   gap: 0;
 }
@@ -123,6 +123,7 @@
   color: #1a1a1a;
   opacity: 0.6;
   line-height: 1;
+  margin-bottom: 1px;
 }
 
 :host(.heatmap-cell) .cell-value-container {
@@ -130,13 +131,13 @@
 }
 
 :host(.heatmap-cell) .cell-value {
-  font-size: calc(var(--hex-w, 48px) * 0.24);
+  font-size: calc(var(--hex-w, 48px) * 0.36);
   font-weight: 700;
   color: #1a1a1a;
-  line-height: 1.1;
+  line-height: 1;
 }
 
 :host(.heatmap-cell) .cell-unit {
-  font-size: calc(var(--hex-w, 48px) * 0.16);
+  font-size: calc(var(--hex-w, 48px) * 0.2);
   color: #1a1a1a;
 }

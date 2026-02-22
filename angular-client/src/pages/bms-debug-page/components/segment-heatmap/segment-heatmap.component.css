@@ -1,6 +1,6 @@
 :host {
   display: block;
-  --hex-w: clamp(42px, 3.6vw, 54px);
+  --hex-w: clamp(44px, 4.1vw, 60px);
   --hex-h: calc(var(--hex-w) * 1.155);
   --hex-gap: 2px;
   --row-offset: calc(var(--hex-w) / 2 + 2px);

@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: center;
   min-width: 72px;
-  padding: 0 14px;
+  padding: 0 clamp(12px, 1.4vw, 22px);
 }
 
 .stat + .stat {
@@ -27,20 +27,20 @@
 .stat-value {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  font-size: 1.6rem;
+  font-size: clamp(1.7rem, 2.6vw, 2.8rem);
   color: #efefef;
   line-height: 1.1;
 }
 
 .stat-unit {
-  font-size: 0.55em;
+  font-size: 0.45em;
   font-weight: 400;
   color: #aaa;
 }
 
 .stat-label {
   font-family: 'Roboto', sans-serif;
-  font-size: 0.7rem;
+  font-size: clamp(0.65rem, 0.8vw, 0.85rem);
   color: #cacaca;
-  margin-top: 2px;
+  margin-top: 4px;
 }
