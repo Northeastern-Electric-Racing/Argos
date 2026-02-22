@@ -34,6 +34,10 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
       function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Voltage)
     },
     {
+      name: HeatMapView.Temperature.toString(),
+      function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Temperature)
+    },
+    {
       name: HeatMapView.Balancing.toString(),
       function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Balancing)
     }
