@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, OnInit } from '@angular/core';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
-import { AlphaCells, BetaCells, CellReading, CellService } from 'src/services/cell.service';
+import { CellReading, CellService } from 'src/services/cell.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewComponent } from '../cell-view/cell-view.component';
@@ -25,8 +25,8 @@ export class CellByCellHeatMapComponent implements OnInit {
   private heatMapService = inject(HeatMapService);
   private dialogService = inject(DialogService);
   currentSegment = input.required<Segment>();
-  alphaCells!: Readonly<AlphaCells>;
-  betaCells!: Readonly<BetaCells>;
+  alphaCells!: Readonly<CellReading[]>;
+  betaCells!: Readonly<CellReading[]>;
   view = HeatMapView.Voltage;
   selectedCell: CellReading | undefined = undefined;
   cellViewSelectOptions: DropdownOption[] = [

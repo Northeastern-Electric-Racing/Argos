@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
+import { BMS_CONFIG, Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
 import Storage from './storage.service';
 import {
   allAlphaBurnValues,
@@ -22,14 +22,11 @@ export type CellReading = {
   cellNumbers: [number, number] | undefined;
 };
 
-/* 7 alpha cell reading (for 14 cells) (if we only record data for every other CellReading, or anything like that, adjacents will contain the same data for field) */
-export type AlphaCells = [CellReading, CellReading, CellReading, CellReading, CellReading, CellReading, CellReading];
-export type PerSegmentAlphaCells = [AlphaCells, AlphaCells, AlphaCells, AlphaCells, AlphaCells];
-const createSegmentAlphaCells = (segment: number): AlphaCells => {
+const createSegmentCells = (segment: number, chip: Chip, count: number): CellReading[] => {
   return Array.from(
-    { length: 7 },
+    { length: count },
     (): CellReading => ({
-      chip: Chip.Alpha,
+      chip,
       segment,
       temp: undefined,
       volt1: undefined,
@@ -38,55 +35,23 @@ const createSegmentAlphaCells = (segment: number): AlphaCells => {
       balancing2: undefined,
       cellNumbers: undefined
     })
-  ) as AlphaCells; // Type assertion here is safe due to length enforcement
-};
-const startingPerSegmentAlphaCells: PerSegmentAlphaCells = [
-  createSegmentAlphaCells(0),
-  createSegmentAlphaCells(1),
-  createSegmentAlphaCells(2),
-  createSegmentAlphaCells(3),
-  createSegmentAlphaCells(4)
-];
-
-/* 11 beta cells (if we only record data for every other CellReading, or anything like that, adjacents will contain the same data for field) */
-// Explicit tuple types
-export type BetaCells = [CellReading, CellReading, CellReading, CellReading, CellReading, CellReading];
-
-export type PerSegmentBetaCells = [BetaCells, BetaCells, BetaCells, BetaCells, BetaCells];
-
-// Utility function to create a BetaCells array for a specific segment
-const createSegmentBetaCells = (segment: number): BetaCells => {
-  return Array.from(
-    { length: 6 },
-    (): CellReading => ({
-      chip: Chip.Beta,
-      segment,
-      temp: undefined,
-      volt1: undefined,
-      volt2: undefined,
-      balancing1: undefined,
-      balancing2: undefined,
-      cellNumbers: undefined
-    })
-  ) as BetaCells;
+  );
 };
 
-// Create the main structure
-const startingPerSegmentBetaCells: PerSegmentBetaCells = [
-  createSegmentBetaCells(0),
-  createSegmentBetaCells(1),
-  createSegmentBetaCells(2),
-  createSegmentBetaCells(3),
-  createSegmentBetaCells(4)
-];
+const createPerSegmentCells = (chip: Chip, cellsPerSegment: number): CellReading[][] => {
+  return Array.from({ length: BMS_CONFIG.NUM_SEGMENTS }, (_, seg) => createSegmentCells(seg, chip, cellsPerSegment));
+};
+
+const startingPerSegmentAlphaCells: CellReading[][] = createPerSegmentCells(Chip.Alpha, BMS_CONFIG.ALPHA_THERM_COUNT);
+const startingPerSegmentBetaCells: CellReading[][] = createPerSegmentCells(Chip.Beta, BMS_CONFIG.BETA_THERM_COUNT);
 
 @Injectable({
   providedIn: 'root'
 })
 export class CellService {
   private storageService: Storage;
-  private perSegmentAlphaCells: PerSegmentAlphaCells;
-  private perSegmentBetaCells: PerSegmentBetaCells;
+  private perSegmentAlphaCells: CellReading[][];
+  private perSegmentBetaCells: CellReading[][];
 
   constructor(storageService: Storage) {
     this.storageService = storageService;
@@ -148,7 +113,7 @@ export class CellService {
         const constIndex = index;
         this.storageService.get(topics.betaTemp(segmentNumber, therm)).subscribe((data) => {
           const tempBtwnTwoCells = parseFloat(data.values[0]);
-          segmentBetaCells[constIndex].cellNumbers = [constIndex * 2, Math.min(constIndex * 2 + 1, 10)];
+          segmentBetaCells[constIndex].cellNumbers = [constIndex * 2, Math.min(constIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)];
 
           segmentBetaCells[constIndex].temp = tempBtwnTwoCells;
         });
@@ -159,7 +124,7 @@ export class CellService {
         const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(topics.betaVolt(segmentNumber, volt)).subscribe((data) => {
           const voltage = parseFloat(data.values[0]);
-          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
+          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)];
           if (constIndex % 2 === 0) {
             segmentBetaCells[cellIndex].volt1 = voltage;
           } else {
@@ -173,7 +138,7 @@ export class CellService {
         const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
           const balancing = parseInt(data.values[0]) === 1;
-          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, 10)];
+          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)];
           if (constIndex % 2 === 0) {
             segmentBetaCells[cellIndex].balancing1 = balancing;
           } else {
@@ -184,21 +149,19 @@ export class CellService {
     });
   };
 
-  getAllAlphaCells = (): Readonly<PerSegmentAlphaCells> => {
+  getAllAlphaCells = (): Readonly<CellReading[][]> => {
     return this.perSegmentAlphaCells;
   };
 
-  // 0 2 4 6 8 10 12
-  getAlphaCellsBySegment = (segment: number): Readonly<AlphaCells> => {
+  getAlphaCellsBySegment = (segment: number): Readonly<CellReading[]> => {
     return this.perSegmentAlphaCells[segment];
   };
 
-  getAllBetaCells = (): Readonly<PerSegmentBetaCells> => {
+  getAllBetaCells = (): Readonly<CellReading[][]> => {
     return this.perSegmentBetaCells;
   };
 
-  // 0 2 4 6 8 10
-  getBetaCellsBySegment = (segment: number): Readonly<BetaCells> => {
+  getBetaCellsBySegment = (segment: number): Readonly<CellReading[]> => {
     return this.perSegmentBetaCells[segment];
   };
 }
