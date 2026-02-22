@@ -31,7 +31,10 @@
   margin-right: 0;
 }
 
+.hex-row.top-row {
+  margin-left: var(--row-offset);
+}
+
 .hex-row.bottom-row {
   margin-top: var(--row-gap);
-  margin-left: var(--row-offset);
 }
