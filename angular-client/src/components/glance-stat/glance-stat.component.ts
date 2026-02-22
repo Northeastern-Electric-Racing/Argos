@@ -1,5 +1,4 @@
 import { Component, input, OnChanges } from '@angular/core';
-import { NgClass } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 
 /**
@@ -12,7 +11,7 @@ import { MatIcon } from '@angular/material/icon';
   templateUrl: './glance-stat.component.html',
   styleUrl: './glance-stat.component.css',
   standalone: true,
-  imports: [NgClass, MatIcon],
+  imports: [MatIcon],
   host: {
     '[class.unit-below-mode]': 'unitBelow()'
   }

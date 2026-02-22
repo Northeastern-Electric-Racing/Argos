@@ -1,8 +1,9 @@
 import { Component, Input, OnChanges } from '@angular/core';
+import Theme from 'src/services/theme.service';
 
 /**
  * Compact battery widget sized for the At A Glance bar.
- * Fixed 20×36px footprint. Self-contained — no external wrapper needed.
+ * Fixed 18×44px footprint. Self-contained — no external wrapper needed.
  */
 @Component({
   selector: 'glance-battery',
@@ -14,10 +15,10 @@ export class GlanceBatteryComponent implements OnChanges {
   @Input() percentage: number = 0;
 
   fillHeight = '0%';
-  fillColor = '#1ae824';
+  fillColor = Theme.battteryHigh;
 
   ngOnChanges(): void {
     this.fillHeight = Math.max(0, Math.min(100, this.percentage)) + '%';
-    this.fillColor = this.percentage <= 20 ? '#f50905' : '#1ae824';
+    this.fillColor = this.percentage <= 20 ? Theme.battteryLow : Theme.battteryHigh;
   }
 }

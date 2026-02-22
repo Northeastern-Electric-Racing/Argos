@@ -16,6 +16,6 @@
   width: 2px;
   align-self: center;
   height: 70px;
-  background-color: #414141;
+  background-color: var(--color-divider);
   flex-shrink: 0;
 }

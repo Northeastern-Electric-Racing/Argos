@@ -1,5 +1,5 @@
 .panel {
-  border-radius: 8px;
+  border-radius: var(--border-radius-panel);
   box-sizing: border-box;
 }
 
@@ -27,9 +27,9 @@
 }
 
 .title-text {
-  font-family: 'Roboto', sans-serif;
-  font-size: 14px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
   font-weight: 500;
-  color: #efefef;
+  color: var(--color-text-primary);
   white-space: nowrap;
 }

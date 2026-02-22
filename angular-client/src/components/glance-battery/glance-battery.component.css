@@ -16,7 +16,7 @@
 .nub {
   width: 10px;
   height: 4px;
-  background: #efefed;
+  background: var(--color-battery-shell);
   border-radius: 2px 2px 0 0;
 }
 
@@ -24,7 +24,7 @@
 .shell {
   width: 18px;
   height: 40px;
-  background: #efefed;
+  background: var(--color-battery-shell);
   border-radius: 3px;
   display: flex;
   flex-direction: column;

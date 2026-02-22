@@ -2,14 +2,42 @@
 @import 'styles/roboto.scss';
 @import 'styles/material-icons.scss';
 
+/* ---- Design Tokens ---- */
+:root {
+  /* Colors */
+  --color-text-primary: #efefef;
+  --color-text-secondary: #797a7a;
+  --color-text-subtitle: #cacaca;
+  --color-background-info: #2c2c2c;
+  --color-background-page: #101010;
+  --color-divider: #414141;
+  --color-battery-shell: #efefed;
+  --color-battery-low: #f50905;
+  --color-battery-med: #ffea00;
+  --color-battery-high: #1ae824;
+  --color-widget-glass: #ffffff;
+
+  /* Typography */
+  --font-family: 'Roboto', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 34px;
+  --font-size-xxl: 48px;
+
+  /* Spacing */
+  --border-radius-panel: 8px;
+}
+
 html,
 body {
   height: 100%;
-  font-family: 'Roboto';
+  font-family: var(--font-family);
 }
 body {
   margin: 0;
-  background-color: #101010;
+  background-color: var(--color-background-page);
 }
 
 /* WebKit (Chrome, Safari) scrollbar styles */
