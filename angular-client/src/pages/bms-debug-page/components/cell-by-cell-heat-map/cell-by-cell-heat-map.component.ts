@@ -132,16 +132,8 @@ export class CellByCellHeatMapComponent implements OnInit {
     return this.selectedCell === cell;
   };
 
-  averageVoltCellPair = (reading: CellReading): number | undefined => {
-    const { volt1, volt2 } = reading;
-
-    if (volt1 === undefined) {
-      return volt2;
-    } else if (volt2 === undefined) {
-      return volt1;
-    }
-
-    return (volt1 + volt2) / 2;
+  getCellVoltage = (reading: CellReading): number | undefined => {
+    return reading.voltage;
   };
 
   // open cell-view dialog

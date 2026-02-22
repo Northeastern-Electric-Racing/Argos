@@ -15,7 +15,7 @@
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
           [sevenBoxLayout]="true"
-          [upperTitle]="cell.cellNumbers?.toString()"
+          [upperTitle]="cell.cellNumber.toString()"
         ></cell-tile>
       }
     </hstack>
@@ -29,97 +29,59 @@
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
           [sevenBoxLayout]="true"
-          [upperTitle]="cell.cellNumbers?.toString()"
+          [upperTitle]="cell.cellNumber.toString()"
         ></cell-tile>
       }
     </hstack>
   } @else if (this.view.toString() === 'Voltage') {
     <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
-      @for (cell of betaCells.slice().reverse(); track cell; let i = $index) {
-        @if (i !== 0) {
-          <cell-tile
-            [value]="cell.volt2"
-            [color]="this.getVoltColor(cell.volt2)"
-            (click)="this.cellClicked(cell)"
-            [currentView]="this.view"
-            [boxShadowColor]="this.isSelectedCell(cell)"
-            [upperTitle]="cell.cellNumbers?.[1]?.toString()"
-          ></cell-tile>
-        }
-
+      @for (cell of betaCells.slice().reverse(); track cell) {
         <cell-tile
-          [value]="cell.volt1"
-          [color]="this.getVoltColor(cell.volt1)"
+          [value]="cell.voltage"
+          [color]="this.getVoltColor(cell.voltage)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[0]?.toString()"
+          [upperTitle]="cell.cellNumber.toString()"
         ></cell-tile>
       }
     </hstack>
     <div style="padding-top: 20px"></div>
     <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
-      @for (cell of alphaCells; track cell; let i = $index) {
+      @for (cell of alphaCells; track cell) {
         <cell-tile
-          [value]="cell.volt1"
-          [color]="this.getVoltColor(cell.volt1)"
+          [value]="cell.voltage"
+          [color]="this.getVoltColor(cell.voltage)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[0]?.toString()"
-        ></cell-tile>
-        <cell-tile
-          [value]="cell.volt2"
-          [color]="this.getVoltColor(cell.volt2)"
-          (click)="this.cellClicked(cell)"
-          [currentView]="this.view"
-          [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[1]?.toString()"
+          [upperTitle]="cell.cellNumber.toString()"
         ></cell-tile>
       }
     </hstack>
   } @else if (this.view === 'Balancing') {
     <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
-      @for (cell of betaCells.slice().reverse(); track cell; let i = $index) {
-        @if (i !== 0) {
-          <cell-tile
-            [boleanValue]="cell.balancing2"
-            [color]="this.getBalancingColor(cell.balancing2)"
-            (click)="this.cellClicked(cell)"
-            [currentView]="this.view"
-            [boxShadowColor]="this.isSelectedCell(cell)"
-            [upperTitle]="cell.cellNumbers?.[1]?.toString()"
-          ></cell-tile>
-        }
-
+      @for (cell of betaCells.slice().reverse(); track cell) {
         <cell-tile
-          [boleanValue]="cell.balancing1"
-          [color]="this.getBalancingColor(cell.balancing1)"
+          [boleanValue]="cell.balancing"
+          [color]="this.getBalancingColor(cell.balancing)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[0]?.toString()"
+          [upperTitle]="cell.cellNumber.toString()"
         ></cell-tile>
       }
     </hstack>
     <div style="padding-top: 20px"></div>
     <hstack alignItems="end" justifyContent="end" spacing="0.5vw">
-      @for (cell of alphaCells; track cell; let i = $index) {
+      @for (cell of alphaCells; track cell) {
         <cell-tile
-          [boleanValue]="cell.balancing1"
-          [color]="this.getBalancingColor(cell.balancing1)"
+          [boleanValue]="cell.balancing"
+          [color]="this.getBalancingColor(cell.balancing)"
           (click)="this.cellClicked(cell)"
           [currentView]="this.view"
           [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[0]?.toString()"
-        ></cell-tile>
-        <cell-tile
-          [boleanValue]="cell.balancing2"
-          [color]="this.getBalancingColor(cell.balancing2)"
-          (click)="this.cellClicked(cell)"
-          [currentView]="this.view"
-          [boxShadowColor]="this.isSelectedCell(cell)"
-          [upperTitle]="cell.cellNumbers?.[1]?.toString()"
+          [upperTitle]="cell.cellNumber.toString()"
         ></cell-tile>
       }
     </hstack>

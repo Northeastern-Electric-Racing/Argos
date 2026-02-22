@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener, inject, input, OnDestroy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { CellReading } from 'src/services/cell.service';
-import { HeatMapService } from 'src/services/heat-map.service';
 import { chipToString, Segment } from 'src/utils/bms.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
@@ -16,10 +15,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
 })
 export class CellViewComponent implements OnDestroy {
-  private heatMapService = inject(HeatMapService);
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
   cellViewData: CellReading | undefined = undefined;
+  readingB: CellReading | undefined = undefined;
   screenWidth = window.innerWidth;
   forSegment = input.required<Segment>();
   segment: Segment;
@@ -27,7 +26,7 @@ export class CellViewComponent implements OnDestroy {
   public config = inject(DynamicDialogConfig);
 
   // Update view width
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.screenWidth = window.innerWidth;
   }
@@ -36,9 +35,8 @@ export class CellViewComponent implements OnDestroy {
     this.segment = this.config.data.forSegment;
     this.displayCellIndex =
       this.config.data.displayCellIndex !== undefined ? parseInt(this.config.data.displayCellIndex, 10) : undefined;
-    this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
-      this.cellViewData = data;
-    });
+    this.cellViewData = this.config.data.readingA;
+    this.readingB = this.config.data.readingB;
     // CellReading properties are mutated in-place by CellService as MQTT data arrives,
     // so we poll for changes to keep the dialog values up to date.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 500);
@@ -89,8 +87,8 @@ export class CellViewComponent implements OnDestroy {
   };
 
   getAverageVoltage(): number | undefined {
-    const v1 = this.cellViewData?.volt1;
-    const v2 = this.cellViewData?.volt2;
+    const v1 = this.cellViewData?.voltage;
+    const v2 = this.readingB?.voltage;
     if (v1 === undefined && v2 === undefined) return undefined;
     if (v1 === undefined) return v2;
     if (v2 === undefined) return v1;
@@ -98,8 +96,8 @@ export class CellViewComponent implements OnDestroy {
   }
 
   getBalancing(): boolean | undefined {
-    const b1 = this.cellViewData?.balancing1;
-    const b2 = this.cellViewData?.balancing2;
+    const b1 = this.cellViewData?.balancing;
+    const b2 = this.readingB?.balancing;
     if (b1 === undefined && b2 === undefined) return undefined;
     return !!(b1 || b2);
   }

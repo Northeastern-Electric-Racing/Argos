@@ -9,6 +9,7 @@ import { HexTileComponent } from '../hex-tile/hex-tile.component';
 
 export interface DisplayCell {
   reading: CellReading;
+  readingB?: CellReading;
   value: number | undefined;
   boolValue: boolean | undefined;
   cellNum: string;
@@ -55,53 +56,46 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
     }
   }
 
-  get topRowCells(): DisplayCell[] {
-    const cells: DisplayCell[] = [];
-    const reversed = this.betaCells.slice().reverse();
-
-    for (let i = 0; i < reversed.length; i++) {
-      const cell = reversed[i];
-      cells.push({
-        reading: cell,
-        value: this.getCellValue(cell),
-        boolValue: this.getCellBoolValue(cell),
-        cellNum: (reversed.length - 1 - i).toString()
+  /** Pair adjacent cells (0+1, 2+3, …) into 13 display tiles */
+  private pairCells(cells: Readonly<CellReading[]>): DisplayCell[] {
+    const paired: DisplayCell[] = [];
+    for (let i = 0; i < cells.length; i += 2) {
+      const cellA = cells[i];
+      const cellB = i + 1 < cells.length ? cells[i + 1] : undefined;
+      paired.push({
+        reading: cellA,
+        readingB: cellB,
+        value: this.getPairedValue(cellA, cellB),
+        boolValue: this.getPairedBoolValue(cellA, cellB),
+        cellNum: (i / 2).toString()
       });
     }
-    return cells;
+    return paired;
+  }
+
+  get topRowCells(): DisplayCell[] {
+    const reversed = this.betaCells.slice().reverse();
+    return this.pairCells(reversed);
   }
 
   get bottomRowCells(): DisplayCell[] {
-    const cells: DisplayCell[] = [];
-
-    for (let i = 0; i < this.alphaCells.length; i++) {
-      const cell = this.alphaCells[i];
-      cells.push({
-        reading: cell,
-        value: this.getCellValue(cell),
-        boolValue: this.getCellBoolValue(cell),
-        cellNum: i.toString()
-      });
-    }
-    return cells;
+    return this.pairCells(this.alphaCells);
   }
 
-  private getCellValue(cell: CellReading): number | undefined {
-    if (this.view === HeatMapView.Temperature) return cell.temp;
-    if (this.view === HeatMapView.Voltage) return this.averageVolt(cell);
+  private getPairedValue(a: CellReading, b: CellReading | undefined): number | undefined {
+    if (this.view === HeatMapView.Temperature) return a.temp;
+    if (this.view === HeatMapView.Voltage) {
+      if (a.voltage === undefined) return b?.voltage;
+      if (b === undefined || b.voltage === undefined) return a.voltage;
+      return (a.voltage + b.voltage) / 2;
+    }
     return undefined;
   }
 
-  private getCellBoolValue(cell: CellReading): boolean | undefined {
+  private getPairedBoolValue(a: CellReading, b: CellReading | undefined): boolean | undefined {
     if (this.view !== HeatMapView.Balancing) return undefined;
-    if (cell.balancing1 === undefined && cell.balancing2 === undefined) return undefined;
-    return !!(cell.balancing1 || cell.balancing2);
-  }
-
-  private averageVolt(cell: CellReading): number | undefined {
-    if (cell.volt1 === undefined) return cell.volt2;
-    if (cell.volt2 === undefined) return cell.volt1;
-    return (cell.volt1 + cell.volt2) / 2;
+    if (a.balancing === undefined && (b === undefined || b.balancing === undefined)) return undefined;
+    return !!(a.balancing || b?.balancing);
   }
 
   getColor(cell: DisplayCell): string {
@@ -127,11 +121,16 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
     return value ? '#4169e1' : 'yellow';
   }
 
-  cellClicked(cell: CellReading, displayIndex: string): void {
-    this.selectedCell = cell;
-    this.heatMapService.setSelectedCell(cell);
+  cellClicked(displayCell: DisplayCell): void {
+    this.selectedCell = displayCell.reading;
+    this.heatMapService.setSelectedCell(displayCell.reading);
     const ref = this.dialogService.open(CellViewComponent, {
-      data: { forSegment: this.segment(), displayCellIndex: displayIndex },
+      data: {
+        forSegment: this.segment(),
+        displayCellIndex: displayCell.cellNum,
+        readingA: displayCell.reading,
+        readingB: displayCell.readingB
+      },
       width: '40%',
       draggable: true,
       closable: true,
