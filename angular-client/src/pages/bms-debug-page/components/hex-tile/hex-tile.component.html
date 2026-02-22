@@ -1,0 +1,9 @@
+<div class="hex-tile" [style.background-color]="color()" [class.selected]="boxShadowColor()">
+  <span class="cell-number">{{ cellNumber() }}</span>
+  <span class="cell-value-container">
+    <span class="cell-value">{{ displayValue() }}</span>
+    @if (unitLabel()) {
+      <sup class="cell-unit">{{ unitLabel() }}</sup>
+    }
+  </span>
+</div>

@@ -11,3 +11,28 @@
 mat-grid-tile {
   overflow: visible !important; /* Allow dropdown to overflow */
 }
+
+/* ── Section header row ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 0 8px;
+  gap: 12px;
+}
+
+.section-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #efefef;
+}
+
+.section-title-right {
+  margin-left: auto;
+}
+
+.segment-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
