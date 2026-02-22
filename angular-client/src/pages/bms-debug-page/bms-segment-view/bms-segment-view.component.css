@@ -2,3 +2,11 @@
 mat-grid-tile {
   overflow: visible !important; /* Allow dropdown to overflow */
 }
+
+.segment-page-heatmap {
+  --hex-w: clamp(60px, 5.5vw, 85px);
+  --hex-h: calc(var(--hex-w) * 1.155);
+  --hex-gap: 3px;
+  --row-offset: calc(var(--hex-w) / 2 + 3px);
+  margin: 0 auto;
+}
