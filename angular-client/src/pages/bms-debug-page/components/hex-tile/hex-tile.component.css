@@ -111,7 +111,7 @@
   height: var(--hex-h, 48px);
   align-items: flex-start;
   justify-content: center;
-  padding: 6% 0 0 8%;
+  padding: 0% 0 0 8%;
   flex-direction: column;
   gap: 0;
 }

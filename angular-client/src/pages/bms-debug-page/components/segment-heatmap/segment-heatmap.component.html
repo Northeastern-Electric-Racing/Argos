@@ -9,7 +9,7 @@
         [currentView]="view"
         [boxShadowColor]="isSelected(cell.reading)"
         [cellNumber]="cell.cellNum"
-        (click)="cellClicked(cell.reading)"
+        (click)="cellClicked(cell.reading, cell.cellNum)"
       />
     }
   </div>
@@ -23,7 +23,7 @@
         [currentView]="view"
         [boxShadowColor]="isSelected(cell.reading)"
         [cellNumber]="cell.cellNum"
-        (click)="cellClicked(cell.reading)"
+        (click)="cellClicked(cell.reading, cell.cellNum)"
       />
     }
   </div>

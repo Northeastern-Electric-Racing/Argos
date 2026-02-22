@@ -127,11 +127,11 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
     return value ? '#4169e1' : 'yellow';
   }
 
-  cellClicked(cell: CellReading): void {
+  cellClicked(cell: CellReading, displayIndex: string): void {
     this.selectedCell = cell;
     this.heatMapService.setSelectedCell(cell);
     const ref = this.dialogService.open(CellViewComponent, {
-      data: { forSegment: this.segment() },
+      data: { forSegment: this.segment(), displayCellIndex: displayIndex },
       width: '40%',
       draggable: true,
       closable: true,

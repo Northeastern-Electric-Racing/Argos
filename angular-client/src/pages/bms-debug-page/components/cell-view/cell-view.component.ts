@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, input } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, inject, input, OnDestroy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { CellReading } from 'src/services/cell.service';
 import { HeatMapService } from 'src/services/heat-map.service';
@@ -6,23 +6,24 @@ import { chipToString, Segment } from 'src/utils/bms.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
-import { DividerComponent } from '../../../../components/divider/divider';
 import HStackComponent from 'src/components/hstack/hstack.component';
-import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   standalone: true,
-  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, HStackComponent, VStackComponent]
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
 })
-export class CellViewComponent {
+export class CellViewComponent implements OnDestroy {
   private heatMapService = inject(HeatMapService);
+  private cdr = inject(ChangeDetectorRef);
+  private refreshInterval: ReturnType<typeof setInterval> | undefined;
   cellViewData: CellReading | undefined = undefined;
   screenWidth = window.innerWidth;
   forSegment = input.required<Segment>();
   segment: Segment;
+  displayCellIndex: number | undefined;
   public config = inject(DynamicDialogConfig);
 
   // Update view width
@@ -33,9 +34,20 @@ export class CellViewComponent {
 
   constructor() {
     this.segment = this.config.data.forSegment;
+    this.displayCellIndex =
+      this.config.data.displayCellIndex !== undefined ? parseInt(this.config.data.displayCellIndex, 10) : undefined;
     this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
       this.cellViewData = data;
     });
+    // CellReading properties are mutated in-place by CellService as MQTT data arrives,
+    // so we poll for changes to keep the dialog values up to date.
+    this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 500);
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   getTitle = (): string => {
@@ -75,4 +87,20 @@ export class CellViewComponent {
     const balancingLabel = this.screenWidth <= 1100 ? `Bal.?` : `Balancing?`;
     return balancingLabel;
   };
+
+  getAverageVoltage(): number | undefined {
+    const v1 = this.cellViewData?.volt1;
+    const v2 = this.cellViewData?.volt2;
+    if (v1 === undefined && v2 === undefined) return undefined;
+    if (v1 === undefined) return v2;
+    if (v2 === undefined) return v1;
+    return (v1 + v2) / 2;
+  }
+
+  getBalancing(): boolean | undefined {
+    const b1 = this.cellViewData?.balancing1;
+    const b2 = this.cellViewData?.balancing2;
+    if (b1 === undefined && b2 === undefined) return undefined;
+    return !!(b1 || b2);
+  }
 }
