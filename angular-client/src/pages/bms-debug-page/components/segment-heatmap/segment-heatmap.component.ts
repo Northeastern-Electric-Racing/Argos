@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Segment } from 'src/utils/bms.utils';
-import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
+import { HeatMapService, HeatMapView, SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -34,7 +34,6 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   alphaCells!: Readonly<CellReading[]>;
   betaCells!: Readonly<CellReading[]>;
   view = HeatMapView.Voltage;
-  selectedCell: CellReading | undefined = undefined;
 
   constructor() {
     effect(() => {
@@ -132,24 +131,36 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   cellClicked(displayCell: DisplayCell): void {
-    this.selectedCell = displayCell.reading;
-    this.heatMapService.setSelectedCell(displayCell.reading);
-    const ref = this.dialogService.open(CellViewComponent, {
-      data: {
-        forSegment: this.segment(),
-        displayCellIndex: displayCell.cellNum,
-        readingA: displayCell.reading
-      },
-      width: '40%',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
-    ref.onClose.subscribe(() => (this.selectedCell = undefined));
+    const info: SelectedCellInfo = {
+      reading: displayCell.reading,
+      cellNum: displayCell.cellNum,
+      segment: this.segment()
+    };
+
+    this.heatMapService.toggleCell(info);
+
+    // Open dialog on first selection
+    if (this.heatMapService.selectedCells.length > 0 && !this.heatMapService.dialogRef) {
+      this.heatMapService.dialogRef = this.dialogService.open(CellViewComponent, {
+        data: { cells: this.heatMapService.selectedCells },
+        header: 'Cell Comparison',
+        draggable: true,
+        closable: true,
+        closeAriaLabel: 'Close',
+        styleClass: 'cell-compare-dialog'
+      });
+      this.heatMapService.dialogRef.onClose.subscribe(() => {
+        this.heatMapService.clearSelection();
+        this.heatMapService.dialogRef = null;
+      });
+    } else if (this.heatMapService.selectedCells.length === 0 && this.heatMapService.dialogRef) {
+      // Close dialog when all cells deselected
+      this.heatMapService.dialogRef.close();
+    }
   }
 
   isSelected(cell: CellReading): boolean {
-    return this.selectedCell === cell;
+    return this.heatMapService.isCellSelected(cell);
   }
 
   ngOnDestroy(): void {

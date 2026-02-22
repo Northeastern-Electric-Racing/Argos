@@ -1,42 +1,27 @@
-import { ChangeDetectorRef, Component, HostListener, inject, input, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { CellReading } from 'src/services/cell.service';
-import { chipToString, Segment } from 'src/utils/bms.utils';
-import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-
-import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
+import { SelectedCellInfo } from 'src/services/heat-map.service';
+import { Chip, chipToString } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   standalone: true,
-  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
+  imports: []
 })
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
-  cellViewData: CellReading | undefined = undefined;
-  screenWidth = window.innerWidth;
-  forSegment = input.required<Segment>();
-  segment: Segment;
-  displayCellIndex: number | undefined;
   public config = inject(DynamicDialogConfig);
 
-  // Update view width
-  @HostListener('window:resize')
-  onResize() {
-    this.screenWidth = window.innerWidth;
-  }
+  /** Shared array reference — additions/removals by SegmentHeatmapComponent
+   *  are visible here because it's the same array object. */
+  cells: SelectedCellInfo[];
 
   constructor() {
-    this.segment = this.config.data.forSegment;
-    this.displayCellIndex =
-      this.config.data.displayCellIndex !== undefined ? parseInt(this.config.data.displayCellIndex, 10) : undefined;
-    this.cellViewData = this.config.data.readingA;
-    // CellReading properties are mutated in-place by CellService as MQTT data arrives,
-    // so we poll for changes to keep the dialog values up to date.
+    this.cells = this.config.data.cells;
+    // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 500);
   }
 
@@ -46,49 +31,20 @@ export class CellViewComponent implements OnDestroy {
     }
   }
 
-  getTitle = (): string => {
-    const title = `Seg ${this.segment + 1}: Cell View`;
-    return title;
-  };
-
-  getUpperRightTitle = (): string => {
-    const smallChipLabel = this.screenWidth < 1200;
-
-    const chipValue =
-      this.cellViewData?.chip !== undefined ? chipToString(this.cellViewData?.chip, smallChipLabel) : 'No Value';
-
-    const tempValue =
-      this.cellViewData?.temp !== undefined && this.cellViewData?.temp !== null
-        ? `${this.cellViewData?.temp?.toFixed(2)} °C`
-        : 'No Value';
-
-    const chipLabel = this.screenWidth <= 1100 ? `C:` : `Cell:`;
-    const tempLabel = this.screenWidth <= 1100 ? `T:` : `Temp:`;
-    const title = `${chipLabel} ${chipValue} | ${tempLabel} ${tempValue}`;
-
-    return title;
-  };
-
-  getCellNumTitle = (): string => {
-    const cellNumLabel = this.screenWidth <= 1100 ? `Cell` : `Cell Number`;
-    return cellNumLabel;
-  };
-
-  getCellVoltageTitle = (): string => {
-    const cellVoltageLabel = this.screenWidth <= 1100 ? `Volts` : `Voltage`;
-    return cellVoltageLabel;
-  };
-
-  getBalancingTitle = (): string => {
-    const balancingLabel = this.screenWidth <= 1100 ? `Bal.?` : `Balancing?`;
-    return balancingLabel;
-  };
-
-  getAverageVoltage(): number | undefined {
-    return this.cellViewData?.voltage;
+  chipLabel(chip: Chip): string {
+    return chipToString(chip, true);
   }
 
-  getBalancing(): boolean | undefined {
-    return this.cellViewData?.balancing;
+  formatVoltage(v: number | undefined): string {
+    return v !== undefined ? `${v.toFixed(3)} V` : '-';
+  }
+
+  formatTemp(t: number | undefined): string {
+    return t !== undefined && t !== null ? `${t.toFixed(1)} °C` : '-';
+  }
+
+  formatBool(b: boolean | undefined): string {
+    if (b === undefined) return '-';
+    return b ? 'Yes' : 'No';
   }
 }

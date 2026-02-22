@@ -1,25 +1,20 @@
-<info-background [title]="this.getTitle()" svgIcon="battery_charging_2" [topRightInfo]="this.getUpperRightTitle()">
-  <hstack justifyContent="center" alignItems="center" spacing="5vw" style="height: 100%">
-    <info-value-display
-      [value]="this.displayCellIndex"
-      valueStyle="fontSize: 30px;"
-      [subtitle]="this.getCellNumTitle()"
-      [precision]="0"
-      style="padding-top: 25px"
-    ></info-value-display>
-    <info-value-display
-      [value]="this.getAverageVoltage()"
-      [precision]="3"
-      valueStyle="fontSize: 30px;"
-      unit="V"
-      [subtitle]="this.getCellVoltageTitle()"
-      style="margin-top: 0.8vh"
-    ></info-value-display>
-    <info-value-display
-      [boolValue]="this.getBalancing()"
-      [subtitle]="this.getBalancingTitle()"
-      valueStyle="fontSize: 30px;"
-      style="padding-top: 25px"
-    ></info-value-display>
-  </hstack>
-</info-background>
+<div class="compare-grid">
+  <!-- Header row -->
+  <div class="label-col">
+    <div class="corner-cell"></div>
+    <span class="row-label">Voltage</span>
+    <span class="row-label">Temp</span>
+    <span class="row-label">Balancing</span>
+  </div>
+  @for (cell of cells; track cell.reading) {
+    <div class="data-col">
+      <div class="col-header">
+        <span class="col-title">{{ cell.cellNum }}</span>
+        <span class="col-subtitle">{{ chipLabel(cell.reading.chip) }} · S{{ cell.segment + 1 }}</span>
+      </div>
+      <span class="data-value">{{ formatVoltage(cell.reading.voltage) }}</span>
+      <span class="data-value">{{ formatTemp(cell.reading.temp) }}</span>
+      <span class="data-value" [class.bal-yes]="cell.reading.balancing === true" [class.bal-no]="cell.reading.balancing === false">{{ formatBool(cell.reading.balancing) }}</span>
+    </div>
+  }
+</div>

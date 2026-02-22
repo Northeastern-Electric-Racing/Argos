@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CellReading } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
+import { DynamicDialogRef } from 'primeng/dynamicdialog';
 
 export enum HeatMapView {
   Voltage = 'Voltage',
@@ -9,26 +10,38 @@ export enum HeatMapView {
   Balancing = 'Balancing'
 }
 
+export interface SelectedCellInfo {
+  reading: CellReading;
+  cellNum: string;
+  segment: Segment;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class HeatMapService {
-  private selectedCellMap: Map<Segment, BehaviorSubject<CellReading | undefined>> = new Map();
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
-  setSelectedCell = (cell: CellReading) => {
-    if (!this.selectedCellMap.get(cell.segment)) {
-      this.selectedCellMap.set(cell.segment, new BehaviorSubject<CellReading | undefined>(cell));
-    }
-    this.selectedCellMap.get(cell.segment)?.next(cell);
-  };
+  /** Multi-cell selection state */
+  selectedCells: SelectedCellInfo[] = [];
+  dialogRef: DynamicDialogRef | null = null;
 
-  getSelectedCell = (segment: Segment) => {
-    if (!this.selectedCellMap.get(segment)) {
-      this.selectedCellMap.set(segment, new BehaviorSubject<CellReading | undefined>(undefined));
+  toggleCell(info: SelectedCellInfo): void {
+    const idx = this.selectedCells.findIndex((s) => s.reading === info.reading);
+    if (idx >= 0) {
+      this.selectedCells.splice(idx, 1);
+    } else {
+      this.selectedCells.push(info);
     }
-    return this.selectedCellMap.get(segment)!;
-  };
+  }
+
+  clearSelection(): void {
+    this.selectedCells.length = 0;
+  }
+
+  isCellSelected(reading: CellReading): boolean {
+    return this.selectedCells.some((s) => s.reading === reading);
+  }
 
   setCurrentView = (segment: Segment, view: HeatMapView) => {
     if (!this.currentViewMap.get(segment)) {

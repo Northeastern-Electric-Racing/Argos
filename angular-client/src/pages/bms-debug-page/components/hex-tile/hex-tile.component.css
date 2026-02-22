@@ -155,18 +155,7 @@
   /* Outline of two pointy-top hexagons sharing their inner vertical edge.
      V-notches at top-center (50% 25%) and bottom-center (50% 75%)
      reveal the two-hex silhouette. */
-  clip-path: polygon(
-    0% 25%,
-    25% 0%,
-    50% 25%,
-    75% 0%,
-    100% 25%,
-    100% 75%,
-    75% 100%,
-    50% 75%,
-    25% 100%,
-    0% 75%
-  );
+  clip-path: polygon(0% 25%, 25% 0%, 50% 25%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 50% 75%, 25% 100%, 0% 75%);
   align-items: flex-start;
   justify-content: center;
   padding: 0% 0 0 5%;
