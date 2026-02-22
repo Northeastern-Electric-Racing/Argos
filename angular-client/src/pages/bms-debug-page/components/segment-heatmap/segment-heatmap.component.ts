@@ -1,6 +1,6 @@
 import { Component, effect, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { Segment } from 'src/utils/bms.utils';
+import { Chip, Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView, SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
@@ -131,13 +131,40 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   cellClicked(displayCell: DisplayCell): void {
-    const info: SelectedCellInfo = {
-      reading: displayCell.reading,
-      cellNum: displayCell.cellNum,
-      segment: this.segment()
-    };
+    const segment = this.segment();
 
-    this.heatMapService.toggleCell(info);
+    // In temperature view, find therm group and add all member cells
+    if (this.view === HeatMapView.Temperature) {
+      const { cellNumber: cellNum, chip } = displayCell.reading;
+      const thermMap = chip === Chip.Alpha ? ALPHA_THERM_CELL_MAP : BETA_THERM_CELL_MAP;
+      const cells = chip === Chip.Alpha ? this.alphaCells : this.betaCells;
+
+      // Find which therm group this cell belongs to
+      const group = thermMap.find((indices) => indices.includes(cellNum)) ?? [cellNum];
+
+      // Check if any cell in the group is already selected — if so, toggle all off
+      const anySelected = group.some((idx) => cells[idx] && this.heatMapService.isCellSelected(cells[idx]));
+
+      for (const idx of group) {
+        const reading = cells[idx];
+        if (!reading) continue;
+        const info: SelectedCellInfo = { reading, cellNum: idx.toString(), segment };
+        if (anySelected) {
+          // Remove if present
+          const i = this.heatMapService.selectedCells.findIndex((s) => s.reading === reading);
+          if (i >= 0) this.heatMapService.selectedCells.splice(i, 1);
+        } else if (!this.heatMapService.isCellSelected(reading)) {
+          this.heatMapService.selectedCells.push(info);
+        }
+      }
+    } else {
+      const info: SelectedCellInfo = {
+        reading: displayCell.reading,
+        cellNum: displayCell.cellNum,
+        segment
+      };
+      this.heatMapService.toggleCell(info);
+    }
 
     // Open dialog on first selection
     if (this.heatMapService.selectedCells.length > 0 && !this.heatMapService.dialogRef) {
