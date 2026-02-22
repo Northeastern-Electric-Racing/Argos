@@ -3,9 +3,6 @@ import { allSegments } from 'src/utils/bms.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from './components/bms-header/bms-header.component';
 import { BmsAtAGlanceComponent } from './components/bms-at-a-glance/bms-at-a-glance.component';
-import { AccHighVoltageComponent } from './components/acc-high-voltage/acc-high-voltage.component';
-import { AccLowVoltageComponent } from './components/acc-low-voltage/acc-low-voltage.component';
-import { AccHighTempComponent } from './components/acc-high-temp/acc-high-temp.component';
 import { SegmentSummaryComponent } from './components/segment-summary/segment-summary.component';
 import { CellByCellHeatMapComponent } from './components/cell-by-cell-heat-map/cell-by-cell-heat-map.component';
 
@@ -19,9 +16,6 @@ import { CellByCellHeatMapComponent } from './components/cell-by-cell-heat-map/c
     MatGridTile,
     BmsHeaderComponent,
     BmsAtAGlanceComponent,
-    AccHighVoltageComponent,
-    AccLowVoltageComponent,
-    AccHighTempComponent,
     SegmentSummaryComponent,
     CellByCellHeatMapComponent
   ]
@@ -36,7 +30,7 @@ export class BmsDebugPageComponent {
 
   constructor() {}
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.windowSize = window.innerWidth;

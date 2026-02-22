@@ -10,13 +10,6 @@
       <mat-grid-tile [colspan]="6" rowspan="5">
         <bms-at-a-glance style="height: 100%; width: 100%" />
       </mat-grid-tile>
-      <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" [rowspan]="16">
-        <div style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 3%">
-          <acc-high-voltage style="width: 100%; min-height: 31%" />
-          <acc-low-voltage style="width: 100%; min-height: 31%" />
-          <acc-high-temp style="width: 100%; min-height: 32%" />
-        </div>
-      </mat-grid-tile>
       @for (segment of segments; track segment) {
         <mat-grid-tile [colspan]="windowSize > 1300 ? 1 : 2" rowspan="16">
           <segment-summary [segmentNumber]="segment" style="height: 100%; width: 100%" />

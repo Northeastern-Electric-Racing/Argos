@@ -1,0 +1,20 @@
+<div
+  class="panel"
+  [class.full]="widthMode() === 'full'"
+  [class.fit]="widthMode() === 'fit'"
+  [style.padding]="padding()"
+  [style.background-color]="backgroundColor()"
+>
+  @if (title()) {
+    <div class="title-bar">
+      @if (icon()) {
+        <mat-icon aria-hidden="false" [fontIcon]="icon()" class="title-icon" />
+      }
+      @if (svgIcon()) {
+        <mat-icon aria-hidden="false" [svgIcon]="svgIcon()" class="title-icon" />
+      }
+      <span class="title-text">{{ title() }}</span>
+    </div>
+  }
+  <ng-content />
+</div>

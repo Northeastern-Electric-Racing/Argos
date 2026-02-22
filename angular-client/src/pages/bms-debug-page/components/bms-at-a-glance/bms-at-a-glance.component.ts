@@ -1,25 +1,27 @@
 import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import {
-  BatteryConfig,
-  ConnectionDotConfig,
-  ThermometerConfig
-} from 'src/components/info-value-dispaly/info-value-display.component';
 import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
-import { getConnectionDotStatusColor } from 'src/utils/bms.utils';
+import { Chip, chipToString, getConnectionDotStatusColor } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
-import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-
-import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
+import { InfoPanelComponent } from '../../../../components/info-panel/info-panel.component';
+import { GlanceStatComponent } from '../../../../components/glance-stat/glance-stat.component';
+import { ConnectionDotWithMessageComponent } from '../../../../components/connection-dot-with-message/connection-dot-with-message.component';
+import { GlanceBatteryComponent } from '../../../../components/glance-battery/glance-battery.component';
+import { GlanceThermometerComponent } from '../../../../components/glance-thermometer/glance-thermometer.component';
 
 @Component({
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
   styleUrl: './bms-at-a-glance.component.css',
   standalone: true,
-  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent]
+  imports: [
+    InfoPanelComponent,
+    GlanceStatComponent,
+    ConnectionDotWithMessageComponent,
+    GlanceBatteryComponent,
+    GlanceThermometerComponent
+  ]
 })
 export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
@@ -29,17 +31,20 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   chargeState: number = 0;
   ccl: number = 0;
   dcl: number = 0;
-  thermometerConfig: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: -15, max: 30 };
-  batteryConfig: BatteryConfig = { type: 'battery-config', percentage: 0, height: 50, width: 25 };
+  highVoltage: number | undefined = undefined;
+  highVoltageChip: Chip | undefined = undefined;
+  highVoltageCell: number | undefined = undefined;
+  lowVoltage: number | undefined = undefined;
+  lowVoltageChip: Chip | undefined = undefined;
+  lowVoltageCell: number | undefined = undefined;
+  highTemp: number | undefined = undefined;
+  highTempChip: Chip | undefined = undefined;
+  highTempCell: number | undefined = undefined;
   getStatusColor = (): string => {
     return getConnectionDotStatusColor(this.voltage);
   };
-  connectionDotConfig: ConnectionDotConfig = {
-    type: 'connection-dot-config',
-    getStatusColor: this.getStatusColor
-  };
   enableWidgets = window.innerWidth >= 1000;
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.enableWidgets = window.innerWidth >= 1000;
   }
@@ -51,17 +56,42 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
       }),
       this.storage.get(DataTypeEnum.PACK_TEMP).subscribe((value) => {
         this.temperature = parseInt(value.values[0]);
-        this.thermometerConfig.currentValue = this.temperature;
       }),
       this.storage.get(DataTypeEnum.STATE_OF_CHARGE).subscribe((value) => {
         this.chargeState = parseInt(value.values[0]);
-        this.batteryConfig.percentage = this.chargeState;
       }),
       this.storage.get(topics.accCCL()).subscribe((value) => {
         this.ccl = parseInt(value.values[0]);
       }),
       this.storage.get(topics.accDCL()).subscribe((value) => {
         this.dcl = parseInt(value.values[0]);
+      }),
+      this.storage.get(topics.highVoltsValue()).subscribe((value) => {
+        this.highVoltage = parseFloat(value.values[0]);
+      }),
+      this.storage.get(topics.highVoltsChip()).subscribe((value) => {
+        this.highVoltageChip = this.getChipFromTopicValue(parseInt(value.values[0]));
+      }),
+      this.storage.get(topics.highVoltsCell()).subscribe((value) => {
+        this.highVoltageCell = parseInt(value.values[0]);
+      }),
+      this.storage.get(topics.lowVoltsValue()).subscribe((value) => {
+        this.lowVoltage = parseFloat(value.values[0]);
+      }),
+      this.storage.get(topics.lowVoltsChip()).subscribe((value) => {
+        this.lowVoltageChip = this.getChipFromTopicValue(parseInt(value.values[0]));
+      }),
+      this.storage.get(topics.lowVoltsCell()).subscribe((value) => {
+        this.lowVoltageCell = parseInt(value.values[0]);
+      }),
+      this.storage.get(topics.highTempValue()).subscribe((value) => {
+        this.highTemp = parseFloat(value.values[0]);
+      }),
+      this.storage.get(topics.highTempChip()).subscribe((value) => {
+        this.highTempChip = this.getChipFromTopicValue(parseInt(value.values[0]));
+      }),
+      this.storage.get(topics.highTempCell()).subscribe((value) => {
+        this.highTempCell = parseInt(value.values[0]);
       })
     );
   }
@@ -69,4 +99,14 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
+
+  getCellChipLabel = (cell: number | undefined, chip: Chip | undefined): string => {
+    const cellLabel = cell !== undefined ? `Cell: ${cell}` : 'No Cell';
+    const chipLabel = chip !== undefined ? `Chip: ${chipToString(chip, true)}` : 'No Chip';
+    return `${cellLabel} | ${chipLabel}`;
+  };
+
+  private getChipFromTopicValue = (chipValue: number): Chip => {
+    return chipValue % 2 === 0 ? Chip.Alpha : Chip.Beta;
+  };
 }

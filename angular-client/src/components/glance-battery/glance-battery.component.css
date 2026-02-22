@@ -1,0 +1,41 @@
+:host {
+  display: inline-flex;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.battery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 18px;
+  height: 44px;
+}
+
+/* Small nub on top */
+.nub {
+  width: 10px;
+  height: 4px;
+  background: #efefed;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Outer shell */
+.shell {
+  width: 18px;
+  height: 40px;
+  background: #efefed;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px;
+}
+
+/* Fill bar — grows from bottom */
+.fill {
+  width: 14px;
+  border-radius: 2px;
+  transition: height 0.3s ease;
+}
