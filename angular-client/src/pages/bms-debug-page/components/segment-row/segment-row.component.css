@@ -10,7 +10,7 @@
   gap: clamp(4px, 0.94vw, 20px);
   width: 100%;
   background-color: #1a1a1a;
-  padding: clamp(4px, 0.78vw, 16px);
+  padding: clamp(3px, 0.55vw, 10px);
 }
 
 /* ── Left: Controls (inside dark wrapper) ── */
@@ -43,21 +43,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(4px, 0.78vw, 18px) clamp(4px, 0.94vw, 20px) clamp(4px, 0.78vw, 18px) clamp(40px, 7.8vw, 150px);
+  padding: clamp(2px, 0.5vw, 12px) clamp(4px, 0.94vw, 20px) clamp(2px, 0.5vw, 12px) clamp(40px, 7.8vw, 150px);
   background-color: #2c2c2c;
   border-radius: clamp(4px, 0.63vw, 14px);
   clip-path: polygon(clamp(34px, 6.9vw, 136px) 0, 100% 0, 100% 100%, 0 100%, 0 clamp(34px, 6.9vw, 136px));
-  min-height: clamp(60px, 8.75vw, 180px);
+  min-height: clamp(50px, 7vw, 150px);
 }
 
 .overview-panel {
   display: flex;
   align-items: center;
-  padding: clamp(4px, 0.78vw, 18px) clamp(6px, 1.25vw, 26px);
+  padding: clamp(2px, 0.5vw, 12px) clamp(6px, 1.25vw, 26px);
   background-color: #2c2c2c;
   border-radius: clamp(4px, 0.63vw, 14px);
   min-width: clamp(120px, 18vw, 380px);
-  min-height: clamp(60px, 8.75vw, 180px);
+  min-height: clamp(50px, 7vw, 150px);
   flex: 1 1 auto;
 }
 
