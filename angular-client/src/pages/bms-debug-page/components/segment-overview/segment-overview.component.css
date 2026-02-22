@@ -8,6 +8,8 @@
   gap: 0;
   flex-shrink: 1;
   align-items: center;
+  justify-content: center;
+  width: 100%;
   height: 100%;
   overflow: hidden;
 }
@@ -19,7 +21,7 @@
   justify-content: center;
   min-width: 0;
   flex: 1 1 0;
-  padding: 0 clamp(8px, 1vw, 18px);
+  padding: 0 clamp(4px, 1vw, 24px);
   overflow: hidden;
 }
 
@@ -30,7 +32,7 @@
 .stat-value {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  font-size: clamp(1.4rem, 2.2vw, 2.4rem);
+  font-size: clamp(0.8rem, 2.2vw, 3rem);
   white-space: nowrap;
   color: #efefef;
   line-height: 1.1;
@@ -44,7 +46,7 @@
 
 .stat-label {
   font-family: 'Roboto', sans-serif;
-  font-size: clamp(0.6rem, 0.75vw, 0.8rem);
+  font-size: clamp(0.4rem, 0.75vw, 1rem);
   white-space: nowrap;
   color: #cacaca;
   margin-top: 4px;
