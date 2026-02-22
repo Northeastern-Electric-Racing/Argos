@@ -7,7 +7,8 @@ import { HeatMapView } from 'src/services/heat-map.service';
   styleUrl: './hex-tile.component.css',
   standalone: true,
   host: {
-    '[class]': 'variant()'
+    '[class]': 'variant()',
+    '[class.selected-cell]': 'boxShadowColor()'
   }
 })
 export class HexTileComponent {

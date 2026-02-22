@@ -21,8 +21,13 @@
   filter: brightness(1.15);
 }
 
+/* Selected: drop-shadow on host follows the clip-path shape */
 .hex-tile.selected {
-  filter: brightness(1.4) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  filter: brightness(1.3);
+}
+
+:host(.selected-cell) {
+  filter: drop-shadow(0 0 3px white) drop-shadow(0 0 1px white);
   z-index: 1;
 }
 
