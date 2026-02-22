@@ -10,7 +10,7 @@
   gap: clamp(4px, 0.94vw, 20px);
   width: 100%;
   background-color: #1a1a1a;
-  padding: clamp(3px, 0.55vw, 10px);
+  padding: clamp(2px, 0.4vw, 7px);
 }
 
 /* ── Left: Controls (inside dark wrapper) ── */

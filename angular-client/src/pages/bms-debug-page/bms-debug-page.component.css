@@ -34,5 +34,5 @@ mat-grid-tile {
 .segment-rows {
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 0.94vw, 18px);
+  gap: clamp(2px, 0.35vw, 8px);
 }
