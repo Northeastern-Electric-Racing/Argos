@@ -1,18 +1,6 @@
 import { topics } from './topic.utils';
-
-/**
- * Central BMS configuration — change counts here to match the current accumulator.
- * All segment/cell arrays and topic subscriptions derive from these values.
- */
-export const BMS_CONFIG = {
-  NUM_SEGMENTS: 5,
-  ALPHA_VOLT_COUNT: 14,
-  BETA_VOLT_COUNT: 11,
-  ALPHA_THERM_COUNT: 7,
-  BETA_THERM_COUNT: 6,
-  ALPHA_BURN_COUNT: 14,
-  BETA_BURN_COUNT: 11
-} as const;
+export { BMS_CONFIG } from './bms.config';
+import { BMS_CONFIG } from './bms.config';
 
 export enum Chip {
   Alpha = 0,

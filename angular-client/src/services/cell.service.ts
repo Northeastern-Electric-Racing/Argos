@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BMS_CONFIG, Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
+import { BMS_CONFIG } from 'src/utils/bms.config';
+import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
 import Storage from './storage.service';
 import {
   allAlphaBurnValues,
@@ -113,7 +114,10 @@ export class CellService {
         const constIndex = index;
         this.storageService.get(topics.betaTemp(segmentNumber, therm)).subscribe((data) => {
           const tempBtwnTwoCells = parseFloat(data.values[0]);
-          segmentBetaCells[constIndex].cellNumbers = [constIndex * 2, Math.min(constIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)];
+          segmentBetaCells[constIndex].cellNumbers = [
+            constIndex * 2,
+            Math.min(constIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)
+          ];
 
           segmentBetaCells[constIndex].temp = tempBtwnTwoCells;
         });
@@ -124,7 +128,10 @@ export class CellService {
         const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(topics.betaVolt(segmentNumber, volt)).subscribe((data) => {
           const voltage = parseFloat(data.values[0]);
-          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)];
+          segmentBetaCells[cellIndex].cellNumbers = [
+            cellIndex * 2,
+            Math.min(cellIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)
+          ];
           if (constIndex % 2 === 0) {
             segmentBetaCells[cellIndex].volt1 = voltage;
           } else {
@@ -138,7 +145,10 @@ export class CellService {
         const cellIndex = Math.floor(constIndex / 2);
         this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
           const balancing = parseInt(data.values[0]) === 1;
-          segmentBetaCells[cellIndex].cellNumbers = [cellIndex * 2, Math.min(cellIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)];
+          segmentBetaCells[cellIndex].cellNumbers = [
+            cellIndex * 2,
+            Math.min(cellIndex * 2 + 1, BMS_CONFIG.BETA_VOLT_COUNT - 1)
+          ];
           if (constIndex % 2 === 0) {
             segmentBetaCells[cellIndex].balancing1 = balancing;
           } else {
