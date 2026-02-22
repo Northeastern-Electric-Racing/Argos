@@ -26,7 +26,7 @@ use scylla_server::{
         car_command_controller::{self},
         data_type_controller, file_insertion_controller,
         rule_controller::{
-            add_rule, delete_rule, get_all_rules, get_all_rules_with_client_info, subscribe_rules,
+            add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info, subscribe_rules,
             unsubscribe_rules,
         },
         run_controller, scylla_config_controller,
