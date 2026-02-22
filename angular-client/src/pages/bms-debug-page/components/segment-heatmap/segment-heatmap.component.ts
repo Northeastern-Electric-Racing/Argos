@@ -74,8 +74,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   get topRowCells(): DisplayCell[] {
-    const reversed = this.betaCells.slice().reverse();
-    return this.pairCells(reversed);
+    return this.pairCells(this.betaCells).reverse();
   }
 
   get bottomRowCells(): DisplayCell[] {
