@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
+import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
 import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewComponent } from '../cell-view/cell-view.component';
 import { HexTileComponent } from '../hex-tile/hex-tile.component';
@@ -12,6 +13,7 @@ export interface DisplayCell {
   value: number | undefined;
   boolValue: boolean | undefined;
   cellNum: string;
+  cellCount: number;
 }
 
 @Component({
@@ -61,15 +63,37 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
       reading: cell,
       value: this.getCellValue(cell),
       boolValue: this.getCellBoolValue(cell),
-      cellNum: cell.cellNumber.toString()
+      cellNum: cell.cellNumber.toString(),
+      cellCount: 1
     }));
   }
 
+  /** Group cells by therm mapping into combined DisplayCells */
+  private toThermDisplayCells(cells: Readonly<CellReading[]>, thermMap: number[][]): DisplayCell[] {
+    return thermMap.map((cellIndices) => {
+      const primary = cells[cellIndices[0]];
+      const label = cellIndices.join(',');
+      return {
+        reading: primary,
+        value: primary?.temp,
+        boolValue: undefined,
+        cellNum: label,
+        cellCount: cellIndices.length
+      };
+    });
+  }
+
   get topRowCells(): DisplayCell[] {
+    if (this.view === HeatMapView.Temperature) {
+      return this.toThermDisplayCells(this.betaCells, BETA_THERM_CELL_MAP).reverse();
+    }
     return this.toDisplayCells(this.betaCells).reverse();
   }
 
   get bottomRowCells(): DisplayCell[] {
+    if (this.view === HeatMapView.Temperature) {
+      return this.toThermDisplayCells(this.alphaCells, ALPHA_THERM_CELL_MAP);
+    }
     return this.toDisplayCells(this.alphaCells);
   }
 

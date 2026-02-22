@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BMS_CONFIG } from 'src/utils/bms.config';
+import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP, BMS_CONFIG } from 'src/utils/bms.config';
 import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
 import Storage from './storage.service';
 import {
@@ -65,15 +65,15 @@ export class CellService {
     this.perSegmentAlphaCells.map((segmentAlphaCells, index) => {
       const segmentNumber = numToSegmentType(index);
 
-      // Therms: each therm covers two adjacent cells
+      // Therms: apply temperature to cells defined in ALPHA_THERM_CELL_MAP
       allAlphaThermValues.forEach((therm, thermIndex) => {
         this.storageService.get(topics.alphaTemp(segmentNumber, therm)).subscribe((data) => {
           const temp = parseFloat(data.values[0]);
-          const cellA = thermIndex * 2;
-          const cellB = thermIndex * 2 + 1;
-          segmentAlphaCells[cellA].temp = temp;
-          if (cellB < segmentAlphaCells.length) {
-            segmentAlphaCells[cellB].temp = temp;
+          const cellIndices = ALPHA_THERM_CELL_MAP[thermIndex] ?? [];
+          for (const cellIdx of cellIndices) {
+            if (cellIdx < segmentAlphaCells.length) {
+              segmentAlphaCells[cellIdx].temp = temp;
+            }
           }
         });
       });
@@ -98,15 +98,15 @@ export class CellService {
     this.perSegmentBetaCells.map((segmentBetaCells, index) => {
       const segmentNumber = numToSegmentType(index);
 
-      // Therms: each therm covers two adjacent cells
+      // Therms: apply temperature to cells defined in BETA_THERM_CELL_MAP
       allBetaThermValues.map((therm, thermIndex) => {
         this.storageService.get(topics.betaTemp(segmentNumber, therm)).subscribe((data) => {
           const temp = parseFloat(data.values[0]);
-          const cellA = thermIndex * 2;
-          const cellB = thermIndex * 2 + 1;
-          segmentBetaCells[cellA].temp = temp;
-          if (cellB < segmentBetaCells.length) {
-            segmentBetaCells[cellB].temp = temp;
+          const cellIndices = BETA_THERM_CELL_MAP[thermIndex] ?? [];
+          for (const cellIdx of cellIndices) {
+            if (cellIdx < segmentBetaCells.length) {
+              segmentBetaCells[cellIdx].temp = temp;
+            }
           }
         });
       });

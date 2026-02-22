@@ -146,3 +146,57 @@
   font-size: calc(var(--hex-w, 48px) * 0.2);
   color: #1a1a1a;
 }
+
+/* ── Double-hex variant: two merged pointy-top hex silhouettes ── */
+
+:host(.heatmap-cell-double) .hex-tile {
+  width: calc(var(--hex-w, 48px) * 2 + var(--hex-gap, 2px));
+  height: var(--hex-h, 48px);
+  /* Outline of two pointy-top hexagons sharing their inner vertical edge.
+     V-notches at top-center (50% 25%) and bottom-center (50% 75%)
+     reveal the two-hex silhouette. */
+  clip-path: polygon(
+    0% 25%,
+    25% 0%,
+    50% 25%,
+    75% 0%,
+    100% 25%,
+    100% 75%,
+    75% 100%,
+    50% 75%,
+    25% 100%,
+    0% 75%
+  );
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0% 0 0 5%;
+  flex-direction: column;
+  gap: 0;
+}
+
+:host(.heatmap-cell-double) .cell-number {
+  position: static;
+  font-size: calc(var(--hex-w, 48px) * 0.22);
+  font-weight: 800;
+  color: #1a1a1a;
+  opacity: 0.6;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+:host(.heatmap-cell-double) .cell-value-container {
+  gap: 1px;
+  align-self: center;
+}
+
+:host(.heatmap-cell-double) .cell-value {
+  font-size: calc(var(--hex-w, 48px) * 0.36);
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+:host(.heatmap-cell-double) .cell-unit {
+  font-size: calc(var(--hex-w, 48px) * 0.2);
+  color: #1a1a1a;
+}

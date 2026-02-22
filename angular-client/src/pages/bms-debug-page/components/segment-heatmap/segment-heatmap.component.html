@@ -2,7 +2,7 @@
   <div class="hex-row top-row">
     @for (cell of topRowCells; track $index) {
       <hex-tile
-        variant="heatmap-cell"
+        [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
         [value]="cell.value"
         [booleanValue]="cell.boolValue"
         [color]="getColor(cell)"
@@ -16,7 +16,7 @@
   <div class="hex-row bottom-row">
     @for (cell of bottomRowCells; track $index) {
       <hex-tile
-        variant="heatmap-cell"
+        [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
         [value]="cell.value"
         [booleanValue]="cell.boolValue"
         [color]="getColor(cell)"
