@@ -14,7 +14,12 @@
       </div>
       <span class="data-value">{{ formatVoltage(cell.reading.voltage) }}</span>
       <span class="data-value">{{ formatTemp(cell.reading.temp) }}</span>
-      <span class="data-value" [class.bal-yes]="cell.reading.balancing === true" [class.bal-no]="cell.reading.balancing === false">{{ formatBool(cell.reading.balancing) }}</span>
+      <span
+        class="data-value"
+        [class.bal-yes]="cell.reading.balancing === true"
+        [class.bal-no]="cell.reading.balancing === false"
+        >{{ formatBool(cell.reading.balancing) }}</span
+      >
     </div>
   }
 </div>
