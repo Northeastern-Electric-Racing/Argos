@@ -548,21 +548,41 @@ impl RuleManager {
         self.subscriptions.read().await.lefts()
     }
 
+    /// Helper function to verify all rules exist
+    async fn verify_rules_exist(&self, rule_ids: &[RuleId]) -> Result<(), RuleManagerError> {
+        let rules_guard = self.rules.read().await;
+        for rule_id in rule_ids {
+            if !rules_guard.contains_key(rule_id) {
+                return Err(RuleManagerError::NoMatchingRule);
+            }
+        }
+        Ok(())
+    }
+
+    /// Unsubscribe a client from multiple rules
+    pub async fn unsubscribe_rules(
+        &self,
+        client_id: ClientId,
+        rule_ids: Vec<RuleId>,
+    ) -> Result<(), RuleManagerError> {
+        let mut subscriptions = self.subscriptions.write().await;
+
+        // Remove subscriptions (rules remain even if no subscribers)
+        for rule_id in rule_ids {
+            subscriptions.remove_right_from_left(&client_id, &rule_id);
+        }
+
+        Ok(())
+    }
+
     /// Subscribe a client to multiple existing rules
     pub async fn subscribe_rules(
         &self,
         client_id: ClientId,
         rule_ids: Vec<RuleId>,
     ) -> Result<(), RuleManagerError> {
-        let rules_guard = self.rules.read().await;
-
         // First, verify all rules exist
-        for rule_id in &rule_ids {
-            if !rules_guard.contains_key(rule_id) {
-                return Err(RuleManagerError::NoMatchingRule);
-            }
-        }
-        drop(rules_guard);
+        self.verify_rules_exist(&rule_ids).await?;
 
         // Now subscribe to all rules
         let mut subscriptions = self.subscriptions.write().await;
