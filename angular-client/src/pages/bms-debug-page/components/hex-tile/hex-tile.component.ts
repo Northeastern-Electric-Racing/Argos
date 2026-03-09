@@ -1,6 +1,20 @@
 import { Component, input, computed } from '@angular/core';
 import { HeatMapView } from 'src/services/heat-map.service';
 
+/** Maps each HeatMapView to its CSS modifier class suffix */
+const VIEW_CLASS_MAP: Record<HeatMapView, string> = {
+  [HeatMapView.Voltage]: 'view-voltage',
+  [HeatMapView.Balancing]: 'view-balancing',
+  [HeatMapView.Temperature]: 'view-temperature'
+};
+
+/** Maps each HeatMapView to the unit label shown inside the hex */
+const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
+  [HeatMapView.Voltage]: 'V',
+  [HeatMapView.Temperature]: '°C',
+  [HeatMapView.Balancing]: ''
+};
+
 @Component({
   selector: 'hex-tile',
   templateUrl: './hex-tile.component.html',
@@ -22,11 +36,8 @@ export class HexTileComponent {
 
   viewClass = computed(() => {
     const view = this.currentView();
-    let cls = 'hex-tile';
-    if (view === HeatMapView.Voltage) cls += ' view-voltage';
-    else if (view === HeatMapView.Balancing) cls += ' view-balancing';
-    else if (view === HeatMapView.Temperature) cls += ' view-temperature';
-    return cls;
+    const className = view ? VIEW_CLASS_MAP[view] : '';
+    return className ? `hex-tile ${className}` : 'hex-tile';
   });
 
   displayValue = computed(() => {
@@ -40,8 +51,6 @@ export class HexTileComponent {
   unitLabel = computed(() => {
     if (this.booleanValue() !== undefined) return '';
     const view = this.currentView();
-    if (view === HeatMapView.Temperature) return '°C';
-    if (view === HeatMapView.Voltage) return 'V';
-    return '';
+    return view ? VIEW_UNIT_MAP[view] : '';
   });
 }

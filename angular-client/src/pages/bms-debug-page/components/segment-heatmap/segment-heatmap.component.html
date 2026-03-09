@@ -1,6 +1,6 @@
 <div class="hex-grid-zone">
   <div class="hex-row top-row">
-    @for (cell of topRowCells; track $index) {
+    @for (cell of betaDisplayCells; track $index) {
       <hex-tile
         [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
         [value]="cell.value"
@@ -8,13 +8,13 @@
         [color]="getColor(cell)"
         [currentView]="view"
         [boxShadowColor]="isSelected(cell.reading)"
-        [cellNumber]="cell.cellNum"
+        [cellNumber]="cell.cellLabel"
         (click)="cellClicked(cell)"
       />
     }
   </div>
   <div class="hex-row bottom-row">
-    @for (cell of bottomRowCells; track $index) {
+    @for (cell of alphaDisplayCells; track $index) {
       <hex-tile
         [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
         [value]="cell.value"
@@ -22,7 +22,7 @@
         [color]="getColor(cell)"
         [currentView]="view"
         [boxShadowColor]="isSelected(cell.reading)"
-        [cellNumber]="cell.cellNum"
+        [cellNumber]="cell.cellLabel"
         (click)="cellClicked(cell)"
       />
     }

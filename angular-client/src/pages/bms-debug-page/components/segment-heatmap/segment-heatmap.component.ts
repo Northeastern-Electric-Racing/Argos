@@ -12,7 +12,11 @@ export interface DisplayCell {
   reading: CellReading;
   value: number | undefined;
   boolValue: boolean | undefined;
-  cellNum: string;
+  /** Display label — usually the cell number, or comma-separated numbers when
+   *  multiple readings are combined (e.g. thermistor groups like "0,1"). */
+  cellLabel: string;
+  /** Number of physical hex tiles this DisplayCell occupies.
+   *  1 = single hex, 2 = merged double-hex for thermistor readings. */
   cellCount: number;
 }
 
@@ -33,19 +37,22 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
 
   alphaCells!: Readonly<CellReading[]>;
   betaCells!: Readonly<CellReading[]>;
-  view = HeatMapView.Voltage;
+  view!: HeatMapView;
 
   constructor() {
     effect(() => {
       this.alphaCells = this.cellService.getAlphaCellsBySegment(this.segment());
       this.betaCells = this.cellService.getBetaCellsBySegment(this.segment());
+
+      // Initialize view from the service (ties it to the per-segment BehaviorSubject)
+      const viewSub = this.heatMapService.getCurrentView(this.segment());
+      if (viewSub) {
+        this.view = viewSub.value;
+      }
     });
   }
 
   ngOnInit(): void {
-    this.alphaCells = this.cellService.getAlphaCellsBySegment(this.segment());
-    this.betaCells = this.cellService.getBetaCellsBySegment(this.segment());
-
     const viewSub = this.heatMapService.getCurrentView(this.segment());
     if (viewSub) {
       this.subscriptions.push(
@@ -62,7 +69,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
       reading: cell,
       value: this.getCellValue(cell),
       boolValue: this.getCellBoolValue(cell),
-      cellNum: cell.cellNumber.toString(),
+      cellLabel: cell.cellNumber.toString(),
       cellCount: 1
     }));
   }
@@ -76,20 +83,22 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
         reading: primary,
         value: primary?.temp,
         boolValue: undefined,
-        cellNum: label,
+        cellLabel: label,
         cellCount: cellIndices.length
       };
     });
   }
 
-  get topRowCells(): DisplayCell[] {
+  /** Beta chip cells (top row in the hex grid, reversed to match physical layout) */
+  get betaDisplayCells(): DisplayCell[] {
     if (this.view === HeatMapView.Temperature) {
       return this.toThermDisplayCells(this.betaCells, BETA_THERM_CELL_MAP).reverse();
     }
     return this.toDisplayCells(this.betaCells).reverse();
   }
 
-  get bottomRowCells(): DisplayCell[] {
+  /** Alpha chip cells (bottom row in the hex grid) */
+  get alphaDisplayCells(): DisplayCell[] {
     if (this.view === HeatMapView.Temperature) {
       return this.toThermDisplayCells(this.alphaCells, ALPHA_THERM_CELL_MAP);
     }
@@ -133,7 +142,9 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   cellClicked(displayCell: DisplayCell): void {
     const segment = this.segment();
 
-    // In temperature view, find therm group and add all member cells
+    // In temperature view, find therm group and add all member cells.
+    // The therm map is chosen based on the reading's chip (Alpha or Beta)
+    // so the correct mapping is used regardless of which row was clicked.
     if (this.view === HeatMapView.Temperature) {
       const { cellNumber: cellNum, chip } = displayCell.reading;
       const thermMap = chip === Chip.Alpha ? ALPHA_THERM_CELL_MAP : BETA_THERM_CELL_MAP;
@@ -160,7 +171,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
     } else {
       const info: SelectedCellInfo = {
         reading: displayCell.reading,
-        cellNum: displayCell.cellNum,
+        cellNum: displayCell.cellLabel,
         segment
       };
       this.heatMapService.toggleCell(info);
