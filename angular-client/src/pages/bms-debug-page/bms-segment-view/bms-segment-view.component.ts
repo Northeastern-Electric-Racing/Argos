@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { allSegments, Chip, Segment } from 'src/utils/bms.utils';
@@ -21,6 +21,9 @@ const formatAllSelectorName = (name: string) => {
   templateUrl: './bms-segment-view.component.html',
   styleUrl: './bms-segment-view.component.css',
   standalone: true,
+  host: {
+    '(window:resize)': 'onResize()'
+  },
   imports: [
     MatGridList,
     MatGridTile,
@@ -110,7 +113,6 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
   }
 
   // Update view width
-  @HostListener('window:resize', ['$event'])
   onResize() {
     this.changeTitleSize = window.innerWidth < 1060;
   }
