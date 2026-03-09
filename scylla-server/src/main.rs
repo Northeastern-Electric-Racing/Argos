@@ -27,7 +27,10 @@ use scylla_server::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller,
-        rule_controller::{add_rule, delete_rule},
+        rule_controller::{
+            add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info,
+            subscribe_rules, unsubscribe_rules,
+        },
         run_controller, scylla_config_controller,
         video_streamer_controller::{self},
     },
@@ -42,6 +45,7 @@ use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::{
     signal,
     sync::{RwLock, broadcast, mpsc},
+    sync::{broadcast, mpsc},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tower::ServiceBuilder;
@@ -247,7 +251,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (db_send, db_receive) = mpsc::channel::<Vec<ClientData>>(1000);
 
     // the rules manager
-    let rules_manager = Arc::new(RwLock::new(RuleManager::new()));
+    let rules_manager = Arc::new(RuleManager::new());
 
     // the below two threads need to cancel cleanly to ensure all queued messages are sent.  therefore they are part of the a task tracker group.
     // create a task tracker and cancellation token
@@ -404,6 +408,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Router::new()
                 .route("/rules/add", put(add_rule))
                 .route("/rules/delete/{rule_id}", post(delete_rule))
+                .route("/rules", get(get_all_rules))
+                .route("/rules/{client_id}", get(get_all_rules_with_client_info))
+                .route("/rules/unsubscribe", post(unsubscribe_rules))
+                .route("/rules/edit/{rule_id}", put(edit_rule))
+                .route("/rules/subscribe", post(subscribe_rules))
                 //.route("/rules/delete/{rule_id}", post()).route("/rules/poll")
                 .layer(Extension(rules_manager)),
         )

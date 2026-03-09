@@ -47,7 +47,7 @@ struct AuthData {
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
-    rules_manager: Arc<RwLock<RuleManager>>,
+    rules_manager: Arc<RuleManager>,
     io: SocketIo,
 ) {
     let mut upload_counter = 0u8;
@@ -196,18 +196,18 @@ pub async fn socket_handler_with_metadata(
 /// Handles triggering rules based on a recieved datapoint
 async fn handle_rule_processing(
     data: &ClientData,
-    rule_manager: &Arc<RwLock<RuleManager>>,
+    rule_manager: &Arc<RuleManager>,
     client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
     io: &SocketIo,
 ) {
-    let Ok(Some(notifs)) = rule_manager.write().await.handle_msg(data) else {
+    let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
     for notification in notifs {
         let read_clients = client_socket_map.read().await;
         let Some(sid) = read_clients.get(&notification.0.0) else {
             warn!("Could not find client to deliver notification, deleting client");
-            let _ = rule_manager.write().await.delete_client(notification.0);
+            let _ = rule_manager.delete_client(notification.0).await;
             return;
         };
         debug!(
@@ -216,7 +216,7 @@ async fn handle_rule_processing(
         );
         let Some(socket) = io.get_socket(*sid) else {
             warn!("Could not find client socket, deleting client");
-            let _ = rule_manager.write().await.delete_client(notification.0);
+            let _ = rule_manager.delete_client(notification.0).await;
             return;
         };
         if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {

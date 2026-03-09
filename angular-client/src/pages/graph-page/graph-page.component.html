@@ -32,17 +32,21 @@
           <!-- Graph Configuration Inputs -->
           <div style="display: flex; align-items: center; gap: 5px; margin-left: 15px">
             @if (this.realTime === true) {
-              <label style="color: #fff; font-size: 12px">X (points):</label>
+              <argos-button
+                [onClick]="this.toggleRangeMode"
+                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
+                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 90px; font-size: 11px;"
+              />
+
+              <label style="color: #fff; font-size: 12px">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
               <p-inputNumber
-                [(ngModel)]="this.dataPoints"
+                [(ngModel)]="rangeValue"
                 mode="decimal"
-                [minFractionDigits]="1"
-                [maxFractionDigits]="3"
-                [step]="0.1"
+                [min]="1"
+                [step]="1"
                 styleClass="time-range-input"
                 inputStyleClass="text-xs p-4"
-                inputId="minmaxfraction"
-                placeholder="Auto"
+                [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
                 (onInput)="onGraphConfigChange()"
               ></p-inputNumber>
             }
