@@ -32,6 +32,11 @@ const formatAllSelectorName = (name: string) => {
     ChipFaultsComponent
   ]
 })
+/**
+ * Detail page for a single battery segment.
+ * Displays a full-size heatmap, chip diagnostics, and chip faults.
+ * Implements OnDestroy for proper RxJS subscription cleanup.
+ */
 export class BmsSegmentViewComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private router = inject(Router);

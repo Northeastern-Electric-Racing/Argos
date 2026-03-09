@@ -1,3 +1,6 @@
+/* AI-generated — reviewed & adjusted by bracyw */
+
+/* Grid container for the page title row */
 .title-style {
   display: grid;
   width: 100%;
@@ -7,12 +10,12 @@
   padding-left: 20px;
 }
 
-/* Add these styles to your component */
+/* Allow PrimeNG dropdowns inside mat-grid-tiles to overflow the tile boundary */
 mat-grid-tile {
-  overflow: visible !important; /* Allow dropdown to overflow */
+  overflow: visible !important;
 }
 
-/* ── Section header row ── */
+/* ── Section header: flex row with title (left), dropdown (center), and right-aligned label ── */
 .section-header {
   display: flex;
   align-items: center;
@@ -31,6 +34,7 @@ mat-grid-tile {
   margin-left: auto;
 }
 
+/* Vertical stack of segment-row components with responsive gaps */
 .segment-rows {
   display: flex;
   flex-direction: column;

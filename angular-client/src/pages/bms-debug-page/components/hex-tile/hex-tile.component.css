@@ -1,9 +1,11 @@
+/* AI-generated — reviewed & adjusted by bracyw */
+
 :host {
   display: block;
   flex-shrink: 0;
 }
 
-/* Pointy-top hexagon via clip-path */
+/* Base pointy-top hexagon shape using clip-path polygon */
 .hex-tile {
   width: var(--hex-w, 42px);
   height: var(--hex-h, 48px);
@@ -21,11 +23,12 @@
   filter: brightness(1.15);
 }
 
-/* Selected: drop-shadow on host follows the clip-path shape */
+/* Inner selected state: brighten the hex fill */
 .hex-tile.selected {
   filter: brightness(1.3);
 }
 
+/* Outer selected state: white glow via drop-shadow on the :host (respects the clip-path shape) */
 :host(.selected-cell) {
   filter: drop-shadow(0 0 3px white) drop-shadow(0 0 1px white);
   z-index: 1;
@@ -62,9 +65,9 @@
   vertical-align: super;
 }
 
-/* ── View Variants ── */
+/* ── View Variants: per-HeatMapView layout tweaks ── */
 
-/* Voltage: number top-left, value center-bottom */
+/* Voltage: cell number anchored top-left (semi-transparent), value pushed to bottom center */
 .hex-tile.view-voltage .cell-number {
   top: 22%;
   left: 20%;
@@ -79,7 +82,7 @@
   padding-bottom: 16%;
 }
 
-/* Balancing: number top-left, value centered */
+/* Balancing: same top-left number, value pushed to bottom */
 .hex-tile.view-balancing .cell-number {
   top: 22%;
   left: 20%;
@@ -94,7 +97,7 @@
   padding-bottom: 16%;
 }
 
-/* Temperature: number top-left, value centered */
+/* Temperature: same top-left number, value pushed to bottom */
 .hex-tile.view-temperature .cell-number {
   top: 22%;
   left: 20%;
@@ -109,7 +112,7 @@
   padding-bottom: 16%;
 }
 
-/* ── heatmap-cell variant: wider hex, number top-left above value ── */
+/* ── heatmap-cell variant: used inside segment rows; number stacked above value, left-aligned ── */
 
 :host(.heatmap-cell) .hex-tile {
   width: var(--hex-w, 48px);
@@ -147,7 +150,7 @@
   color: #1a1a1a;
 }
 
-/* ── Double-hex variant: two merged pointy-top hex silhouettes ── */
+/* ── Double-hex variant: two merged pointy-top hexes for thermistor groups that span two cells ── */
 
 :host(.heatmap-cell-double) .hex-tile {
   width: calc(var(--hex-w, 48px) * 2 + var(--hex-gap, 2px));

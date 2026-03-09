@@ -1,8 +1,10 @@
+/* AI-generated — reviewed & adjusted by bracyw */
+
 :host {
   display: block;
 }
 
-/* ── Segment Row ── */
+/* ── Segment Row: flex container pairing a controls column (left) with content panels (right) ── */
 .segment-row {
   display: flex;
   align-items: stretch;
@@ -13,7 +15,7 @@
   padding: clamp(2px, 0.4vw, 7px);
 }
 
-/* ── Left: Controls (inside dark wrapper) ── */
+/* ── Left column: segment title + view dropdown + "See more" button ── */
 .controls-zone {
   display: flex;
   flex-direction: column;
@@ -25,7 +27,7 @@
   padding: clamp(3px, 0.63vw, 12px);
 }
 
-/* ── Right: Separate light panels ── */
+/* ── Right side: two light panels (heatmap + overview) inside the dark row wrapper ── */
 .content-zone {
   flex: 1;
   display: flex;
@@ -38,6 +40,8 @@
   min-width: 0;
 }
 
+/* Heatmap panel: flex-3 so it takes the majority of the row width.
+   clip-path slices the top-left corner to match the angled design language. */
 .heatmap-panel {
   flex: 3 1 auto;
   display: flex;
@@ -80,7 +84,7 @@
   white-space: nowrap;
 }
 
-/* ── Actions group: dropdown + button same width ── */
+/* ── Actions group: view selector dropdown + "See more" button, stacked to equal width ── */
 .controls-actions {
   display: flex;
   flex-direction: column;
@@ -108,7 +112,7 @@
   background-color: #1e9ad8;
 }
 
-/* ── Dropdown overrides inside controls-zone ── */
+/* ── PrimeNG Select overrides: force the dropdown to match the controls-zone styling ── */
 .controls-zone ::ng-deep .small-grey-select {
   width: 100% !important;
   min-width: 0 !important;
