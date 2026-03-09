@@ -3,13 +3,13 @@ use chrono::Utc;
 use derive_more::AsRef;
 use derive_more::Display;
 use evalexpr::{
-    eval_boolean_with_context, ContextWithMutableVariables, DefaultNumericTypes, HashMapContext,
+    ContextWithMutableVariables, DefaultNumericTypes, HashMapContext, eval_boolean_with_context,
 };
 use rustc_hash::FxHashMap;
 use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use serde_with::serde_as;
 use std::time::Duration;
 use tracing::trace;
 use tracing::warn;
@@ -129,10 +129,10 @@ impl Rule {
         // if we have triggered and we arent during cooldown
         if res && !self.during_cooldown {
             self.last_seen = Some(tokio::time::Instant::now());
+            self.first_seen
+                .get_or_insert_with(tokio::time::Instant::now);
             // if this is the first time we see it
-            if self.first_seen.is_none() {
-                self.first_seen = Some(tokio::time::Instant::now());
-            } else if self.last_seen.expect("impossible last seen")
+            if self.last_seen.expect("impossible last seen")
                 - self.first_seen.expect("impossible first seen")
                 > self.debounce_time
             {

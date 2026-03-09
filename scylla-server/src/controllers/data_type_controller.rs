@@ -1,8 +1,8 @@
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 
 use crate::{
-    error::ScyllaError, services::data_type_service,
-    transformers::data_type_transformer::PublicDataType, PoolHandle,
+    PoolHandle, error::ScyllaError, services::data_type_service,
+    transformers::data_type_transformer::PublicDataType,
 };
 
 /// Get a list of data types
