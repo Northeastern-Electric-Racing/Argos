@@ -6,8 +6,8 @@ use axum_extra::{
     headers::{Authorization, authorization::Basic},
 };
 use serde::Deserialize;
-use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use serde_with::serde_as;
 use std::time::Duration;
 use tracing::debug;
 
@@ -103,7 +103,7 @@ pub async fn edit_rule(
     rules_manager
         .edit_rule(RuleId(rule_id), expr, debounce_time)
         .await
-        .map_err(|e| ScyllaError::RuleError(e))
+        .map_err(ScyllaError::RuleError)
 }
 
 #[debug_handler]

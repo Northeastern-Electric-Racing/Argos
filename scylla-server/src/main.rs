@@ -44,7 +44,6 @@ use scylla_server::{
 use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::{
     signal,
-    sync::{RwLock, broadcast, mpsc},
     sync::{broadcast, mpsc},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};

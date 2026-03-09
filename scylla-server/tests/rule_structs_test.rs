@@ -1,6 +1,6 @@
 use chrono::Utc;
-use scylla_server::rule_structs::*;
 use scylla_server::ClientData;
+use scylla_server::rule_structs::*;
 use tokio::task::JoinSet;
 
 #[tokio::test]
@@ -115,7 +115,7 @@ async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
 
     let notifications = result.unwrap();
     assert!(!notifications.is_empty());
-    assert_eq!(notifications[0].0 .0, client.0);
+    assert_eq!(notifications[0].0.0, client.0);
     assert_eq!(notifications[0].1.topic.0, "test/topic");
 
     Ok(())
