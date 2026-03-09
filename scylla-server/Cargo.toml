@@ -1,7 +1,8 @@
 [package]
 name = "scylla-server"
 version = "0.0.1"
-edition = "2021"
+edition = "2024"
+rust-version = "1.88"
 default-run = "scylla-server"
 
 [dependencies]
@@ -15,7 +16,7 @@ axum = { version = "0.8.8", features = ["multipart", "macros"] }
 tower = { version = "0.5.2", features = ["timeout"] }
 tower-http = { version = "0.6.8", features = ["cors", "trace"] }
 socketioxide = { version = "0.18.2", features = ["tracing"] }
-rumqttc = { git = "https://github.com/bytebeamio/rumqtt", branch = "main"}
+rumqttc = { version = "0.25.1" }
 tokio-util = { version=  "0.7.16", features = ["full"] }
 tracing = "0.1.43"
 tracing-subscriber = { version = "0.3.22", features = ["ansi", "env-filter"] }
@@ -58,4 +59,3 @@ strip = false
 [[bin]]
 name = "scylla-server"
 path = "src/main.rs"
-

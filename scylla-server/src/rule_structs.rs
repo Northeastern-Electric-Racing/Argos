@@ -3,21 +3,21 @@ use chrono::Utc;
 use derive_more::AsRef;
 use derive_more::Display;
 use evalexpr::{
-    eval_boolean_with_context, ContextWithMutableVariables, DefaultNumericTypes, HashMapContext,
+    ContextWithMutableVariables, DefaultNumericTypes, HashMapContext, eval_boolean_with_context,
 };
 use rustc_hash::FxHashMap;
 use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use serde_with::serde_as;
 use std::borrow::Borrow;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::warn;
 
-use crate::rule_structs::BiMapRemoveResult::*;
 use crate::ClientData;
+use crate::rule_structs::BiMapRemoveResult::*;
 
 static ASCII_LOWER: [char; 26] = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
@@ -37,6 +37,12 @@ pub enum BiMapRemoveResult<T> {
 pub struct BiMultiMap<L, R> {
     left_to_right: FxHashMap<L, FxHashSet<R>>,
     right_to_left: FxHashMap<R, FxHashSet<L>>,
+}
+
+impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> Default for BiMultiMap<L, R> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
@@ -66,11 +72,11 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
     pub fn insert(&mut self, left: &L, right: &R) {
         self.left_to_right
             .entry(left.clone())
-            .or_insert_with(FxHashSet::default)
+            .or_default()
             .insert(right.clone());
         self.right_to_left
             .entry(right.clone())
-            .or_insert_with(FxHashSet::default)
+            .or_default()
             .insert(left.clone());
     }
 
@@ -295,10 +301,10 @@ impl Rule {
         // if we have triggered and we arent during cooldown
         if res && !self.during_cooldown {
             self.last_seen = Some(tokio::time::Instant::now());
+            self.first_seen
+                .get_or_insert_with(tokio::time::Instant::now);
             // if this is the first time we see it
-            if self.first_seen.is_none() {
-                self.first_seen = Some(tokio::time::Instant::now());
-            } else if self.last_seen.expect("impossible last seen")
+            if self.last_seen.expect("impossible last seen")
                 - self.first_seen.expect("impossible first seen")
                 > self.debounce_time
             {
@@ -504,13 +510,7 @@ impl RuleManager {
     }
 
     pub async fn get_all_rules(&self) -> Vec<Rule> {
-        self.rules
-            .read()
-            .await
-            .values()
-            .into_iter()
-            .map(|rule| rule.clone())
-            .collect()
+        self.rules.read().await.values().cloned().collect()
     }
 
     pub async fn get_all_rules_with_subscription_status(
@@ -539,7 +539,7 @@ impl RuleManager {
             .collect();
 
         RulesResponse {
-            requesting_client_id: requesting_client_id,
+            requesting_client_id,
             client_rules: rules,
         }
     }

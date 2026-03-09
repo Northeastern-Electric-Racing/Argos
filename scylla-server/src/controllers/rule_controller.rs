@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use axum::{debug_handler, extract::Path, Extension, Json};
+use axum::{Extension, Json, debug_handler, extract::Path};
 use axum_extra::{
-    headers::{authorization::Basic, Authorization},
     TypedHeader,
+    headers::{Authorization, authorization::Basic},
 };
 use serde::Deserialize;
-use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use serde_with::serde_as;
 use std::time::Duration;
 use tracing::debug;
 
@@ -103,7 +103,7 @@ pub async fn edit_rule(
     rules_manager
         .edit_rule(RuleId(rule_id), expr, debounce_time)
         .await
-        .map_err(|e| ScyllaError::RuleError(e))
+        .map_err(ScyllaError::RuleError)
 }
 
 #[debug_handler]
