@@ -4,11 +4,11 @@
    Shared with hex-tile.component.css via CSS custom props on the host. */
 :host {
   display: block;
-  --hex-w: clamp(28px, 4.1vw, 76px);          /* responsive hex width */
-  --hex-h: calc(var(--hex-w) * 1.155);         /* pointy-top height ≈ width × 1.155 */
-  --hex-gap: 2px;                               /* gap between adjacent hexes */
-  --row-offset: calc(var(--hex-w) / 2 + 2px);  /* stagger for bottom row (half hex + gap) */
-  --row-gap: calc(var(--hex-h) * -0.2);        /* negative margin to interlock rows vertically */
+  --hex-w: clamp(28px, 4.1vw, 76px); /* responsive hex width */
+  --hex-h: calc(var(--hex-w) * 1.155); /* pointy-top height ≈ width × 1.155 */
+  --hex-gap: 2px; /* gap between adjacent hexes */
+  --row-offset: calc(var(--hex-w) / 2 + 2px); /* stagger for bottom row (half hex + gap) */
+  --row-gap: calc(var(--hex-h) * -0.2); /* negative margin to interlock rows vertically */
   flex: 0 1 auto;
   width: fit-content;
   min-width: fit-content;

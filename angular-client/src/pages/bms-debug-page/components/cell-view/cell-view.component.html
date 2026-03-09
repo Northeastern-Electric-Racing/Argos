@@ -13,9 +13,9 @@
         <span class="col-subtitle">{{ chipLabel(cell.reading.chip) }} · S{{ cell.segment + 1 }}</span>
       </div>
       @for (row of rows; track row.label) {
-        <span class="data-value" [class]="row.getClass ? row.getClass(cell.reading) : ''"
-          >{{ row.getValue(cell.reading) }}</span
-        >
+        <span class="data-value" [class]="row.getClass ? row.getClass(cell.reading) : ''">{{
+          row.getValue(cell.reading)
+        }}</span>
       }
     </div>
   }

@@ -4,7 +4,7 @@
   [style]="{ 'background-color': this.backgroundColor() }"
   [class.sliced-left-corner]="this.slicedLeftCorner()"
   [style.--slice-x]="this.slicePercentage() + 'px'"
-  [style.--slice-y]="(this.slicePercentage() + 20) + 'px'"
+  [style.--slice-y]="this.slicePercentage() + 20 + 'px'"
 >
   @if (this.title(); as title) {
     <div class="title-container">

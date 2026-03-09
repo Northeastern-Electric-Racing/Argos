@@ -1,11 +1,7 @@
 <div class="section-header">
   <span class="section-title">{{ leftTitle() }}</span>
   @for (config of selectorConfigs(); track config.placeholder) {
-    <select-dropdown
-      [options]="config.options"
-      [placeholder]="config.placeholder"
-      [defaultValue]="config.defaultValue"
-    />
+    <select-dropdown [options]="config.options" [placeholder]="config.placeholder" [defaultValue]="config.defaultValue" />
   }
   @if (rightTitle(); as right) {
     <span class="section-title section-title-right">{{ right }}</span>
