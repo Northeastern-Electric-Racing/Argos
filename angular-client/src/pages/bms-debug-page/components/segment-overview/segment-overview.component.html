@@ -1,14 +1,8 @@
 <div class="overview-zone">
-  <div class="stat">
-    <span class="stat-value">{{ formatTemp() }}<sup class="stat-unit">°C</sup></span>
-    <span class="stat-label">Temperature</span>
-  </div>
-  <div class="stat">
-    <span class="stat-value">{{ formatVoltage() }}<sup class="stat-unit">V</sup></span>
-    <span class="stat-label">Voltage</span>
-  </div>
-  <div class="stat">
-    <span class="stat-value">{{ formatChipTemp() }}<sup class="stat-unit">°C</sup></span>
-    <span class="stat-label">Chip Temp</span>
-  </div>
+  @for (stat of stats(); track stat.topicKey) {
+    <div class="stat">
+      <span class="stat-value">{{ formatStat(stat) }}<sup class="stat-unit">{{ stat.unit }}</sup></span>
+      <span class="stat-label">{{ stat.label }}</span>
+    </div>
+  }
 </div>

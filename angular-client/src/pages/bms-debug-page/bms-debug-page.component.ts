@@ -6,11 +6,8 @@ import { BmsHeaderComponent } from './components/bms-header/bms-header.component
 import { BmsAtAGlanceComponent } from './components/bms-at-a-glance/bms-at-a-glance.component';
 import { SegmentRowComponent } from './components/segment-row/segment-row.component';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
-import {
-  DropdownOption,
-  SelectorConfig,
-  SelectDropdownComponent
-} from 'src/components/select-dropdown/select-dropdown.component';
+import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
+import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
 
@@ -19,14 +16,7 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
   templateUrl: './bms-debug-page.component.html',
   styleUrl: './bms-debug-page.component.css',
   standalone: true,
-  imports: [
-    MatGridList,
-    MatGridTile,
-    BmsHeaderComponent,
-    BmsAtAGlanceComponent,
-    SegmentRowComponent,
-    SelectDropdownComponent
-  ]
+  imports: [MatGridList, MatGridTile, BmsHeaderComponent, BmsAtAGlanceComponent, SegmentRowComponent, SectionHeaderComponent]
 })
 export class BmsDebugPageComponent implements OnInit, OnDestroy {
   private heatMapService = inject(HeatMapService);
@@ -74,7 +64,7 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
     this.subscription?.unsubscribe();
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.windowSize = window.innerWidth;

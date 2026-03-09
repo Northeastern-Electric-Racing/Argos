@@ -3,6 +3,19 @@ import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Segment, segmentInfoMap, SegmentInfo } from 'src/utils/bms.utils';
 
+export interface StatConfig {
+  label: string;
+  unit: string;
+  topicKey: keyof SegmentInfo;
+  formatFn: (v: number) => string;
+}
+
+const DEFAULT_STATS: StatConfig[] = [
+  { label: 'Temperature', unit: '°C', topicKey: 'segmentTempKey', formatFn: (v) => v.toFixed(0) },
+  { label: 'Voltage', unit: 'V', topicKey: 'voltageKey', formatFn: (v) => v.toFixed(1) },
+  { label: 'Chip Temp', unit: '°C', topicKey: 'alphaChipTempKey', formatFn: (v) => v.toFixed(0) }
+];
+
 @Component({
   selector: 'segment-overview',
   templateUrl: './segment-overview.component.html',
@@ -14,29 +27,25 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
-  temperature!: number;
-  voltage!: number;
-  chipTemp!: number;
+  stats = input<StatConfig[]>(DEFAULT_STATS);
+
+  /** Current stat values keyed by topicKey */
+  values: Record<string, number | undefined> = {};
 
   ngOnInit(): void {
     const info: SegmentInfo = segmentInfoMap[this.segment()];
-    this.subscriptions.push(
-      this.storage.get(info.segmentTempKey).subscribe((v) => (this.temperature = parseFloat(v.values[0]))),
-      this.storage.get(info.voltageKey).subscribe((v) => (this.voltage = parseFloat(v.values[0]))),
-      this.storage.get(info.alphaChipTempKey).subscribe((v) => (this.chipTemp = parseFloat(v.values[0])))
-    );
+    for (const stat of this.stats()) {
+      this.subscriptions.push(
+        this.storage.get(info[stat.topicKey]).subscribe((v) => {
+          this.values[stat.topicKey] = parseFloat(v.values[0]);
+        })
+      );
+    }
   }
 
-  formatTemp(): string {
-    return this.temperature !== undefined ? this.temperature.toFixed(0) : '-';
-  }
-
-  formatVoltage(): string {
-    return this.voltage !== undefined ? this.voltage.toFixed(1) : '-';
-  }
-
-  formatChipTemp(): string {
-    return this.chipTemp !== undefined ? this.chipTemp.toFixed(0) : '-';
+  formatStat(stat: StatConfig): string {
+    const val = this.values[stat.topicKey];
+    return val !== undefined ? stat.formatFn(val) : '-';
   }
 
   ngOnDestroy(): void {

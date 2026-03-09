@@ -12,15 +12,11 @@
     </mat-grid-list>
 
     <!-- Section header with "Set ALL Maps" dropdown -->
-    <div class="section-header">
-      <span class="section-title">Cell-by-Cell Heat Map</span>
-      <select-dropdown
-        [options]="allSegSelectorConfig.options"
-        [placeholder]="allSegSelectorConfig.placeholder"
-        [defaultValue]="allSegSelectorConfig.defaultValue"
-      />
-      <span class="section-title section-title-right">Segment Overview</span>
-    </div>
+    <section-header
+      leftTitle="Cell-by-Cell Heat Map"
+      rightTitle="Segment Overview"
+      [selectorConfigs]="[allSegSelectorConfig]"
+    />
 
     <!-- Unified segment rows -->
     <div class="segment-rows">

@@ -2,9 +2,9 @@
   <!-- Header row -->
   <div class="label-col">
     <div class="corner-cell"></div>
-    <span class="row-label">Voltage</span>
-    <span class="row-label">Temp</span>
-    <span class="row-label">Balancing</span>
+    @for (row of rows; track row.label) {
+      <span class="row-label">{{ row.label }}</span>
+    }
   </div>
   @for (cell of cells; track cell.reading) {
     <div class="data-col">
@@ -12,14 +12,11 @@
         <span class="col-title">{{ cell.cellNum }}</span>
         <span class="col-subtitle">{{ chipLabel(cell.reading.chip) }} · S{{ cell.segment + 1 }}</span>
       </div>
-      <span class="data-value">{{ formatVoltage(cell.reading.voltage) }}</span>
-      <span class="data-value">{{ formatTemp(cell.reading.temp) }}</span>
-      <span
-        class="data-value"
-        [class.bal-yes]="cell.reading.balancing === true"
-        [class.bal-no]="cell.reading.balancing === false"
-        >{{ formatBool(cell.reading.balancing) }}</span
-      >
+      @for (row of rows; track row.label) {
+        <span class="data-value" [class]="row.getClass ? row.getClass(cell.reading) : ''"
+          >{{ row.getValue(cell.reading) }}</span
+        >
+      }
     </div>
   }
 </div>
