@@ -1,21 +1,16 @@
-import { Component, computed, inject, input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Segment, segmentInfoMap, SegmentInfo } from 'src/utils/bms.utils';
-import { StatDisplay, StatSummaryComponent } from 'src/components/stat-summary/stat-summary.component';
+import { StatConfig, StatSummaryComponent } from 'src/components/stat-summary/stat-summary.component';
 
-export interface StatConfig {
-  label: string;
-  unit: string;
-  topicKey: keyof SegmentInfo;
-  formatFn: (v: number) => string;
-}
-
-const DEFAULT_STATS: StatConfig[] = [
-  { label: 'Avg Temp', unit: '°C', topicKey: 'segmentTempKey', formatFn: (v) => v.toFixed(0) },
-  { label: 'Avg Voltage', unit: 'V', topicKey: 'voltageKey', formatFn: (v) => v.toFixed(1) },
-  { label: 'Total Voltage', unit: 'V', topicKey: 'totalVoltageKey', formatFn: (v) => v.toFixed(1) }
+const DEFAULT_SEGMENT_STATS: StatConfig[] = [
+  { label: 'Avg Temp', unit: '°C', value: undefined, formatFn: (v) => v.toFixed(0) },
+  { label: 'Avg Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(1) },
+  { label: 'Total Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(1) }
 ];
+
+const SEGMENT_TOPIC_KEYS: (keyof SegmentInfo)[] = ['segmentTempKey', 'voltageKey', 'totalVoltageKey'];
 
 @Component({
   selector: 'segment-overview',
@@ -29,33 +24,22 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
-  stats = input<StatConfig[]>(DEFAULT_STATS);
+  segmentStats = input<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
-  /** Current stat values keyed by topicKey */
-  values: Record<string, number | undefined> = {};
-
-  displayStats = computed<StatDisplay[]>(() =>
-    this.stats().map((stat) => ({
-      label: stat.label,
-      unit: stat.unit,
-      value: this.formatStat(stat)
-    }))
-  );
+  statConfigs = signal<StatConfig[]>([]);
 
   ngOnInit(): void {
-    const info: SegmentInfo = segmentInfoMap[this.segment()];
-    for (const stat of this.stats()) {
+    const info = segmentInfoMap[this.segment()];
+    const configs = [...this.segmentStats()];
+
+    SEGMENT_TOPIC_KEYS.forEach((key, i) => {
       this.subscriptions.push(
-        this.storage.get(info[stat.topicKey]).subscribe((v) => {
-          this.values[stat.topicKey] = parseFloat(v.values[0]);
+        this.storage.get(info[key]).subscribe((v) => {
+          configs[i] = { ...configs[i], value: parseFloat(v.values[0]) };
+          this.statConfigs.set([...configs]);
         })
       );
-    }
-  }
-
-  formatStat(stat: StatConfig): string {
-    const val = this.values[stat.topicKey];
-    return val !== undefined ? stat.formatFn(val) : '-';
+    });
   }
 
   ngOnDestroy(): void {

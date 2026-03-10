@@ -1,9 +1,10 @@
 import { Component, input } from '@angular/core';
 
-export interface StatDisplay {
+export interface StatConfig {
   label: string;
-  value: string;
   unit: string;
+  value: number | undefined;
+  formatFn: (v: number) => string;
 }
 
 @Component({
@@ -13,5 +14,9 @@ export interface StatDisplay {
   standalone: true
 })
 export class StatSummaryComponent {
-  stats = input.required<StatDisplay[]>();
+  configs = input.required<StatConfig[]>();
+
+  formatStat(config: StatConfig): string {
+    return config.value !== undefined ? config.formatFn(config.value) : '-';
+  }
 }
