@@ -57,12 +57,13 @@
 .overview-panel {
   display: flex;
   align-items: center;
-  padding: clamp(1px, 0.3vw, 6px) clamp(6px, 1.25vw, 26px);
+  padding: clamp(1px, 0.3vw, 6px) clamp(2px, 0.5vw, 10px);
   background-color: #2c2c2c;
   border-radius: clamp(4px, 0.63vw, 14px);
-  min-width: clamp(120px, 18vw, 380px);
+  min-width: clamp(160px, 22vw, 420px);
+  max-width: clamp(160px, 22vw, 420px);
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 .segment-title {
