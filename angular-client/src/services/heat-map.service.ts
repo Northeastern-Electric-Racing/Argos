@@ -53,13 +53,20 @@ export class HeatMapService {
       this.selectedCells.set(reading, { reading, cellNum: reading.cellNumber, segment });
     }
 
+    if (useDialog) {
+      this.openDialogForSelectedCells();
+    }
+  }
+
+  openDialogForSelectedCells(): void {
     // Open dialog if not already open, and the caller requested it.
-    if (useDialog && this.selectedCells.size > 0 && !this.dialogRef) {
+    if (this.selectedCells.size > 0 && !this.dialogRef) {
       this.dialogRef = this.dialogService.open(CellViewComponent, {
         data: { cells: this.selectedCells },
         header: 'Cell Comparison',
         draggable: true,
         closable: true,
+        modal: false,
         closeAriaLabel: 'Close',
         styleClass: 'cell-compare-dialog'
       });
@@ -78,9 +85,16 @@ export class HeatMapService {
       this.selectedCells.delete(reading);
     }
 
+    if (useDialog) {
+      this.closeDialogIfNoSelection();
+    }
+  }
+
+  closeDialogIfNoSelection(): void {
     // close dialog if no cells remain selected and the caller requested it.
-    if (useDialog && this.selectedCells.size === 0 && this.dialogRef) {
+    if (this.selectedCells.size === 0 && this.dialogRef) {
       this.dialogRef.close();
+      this.dialogRef = null;
     }
   }
 

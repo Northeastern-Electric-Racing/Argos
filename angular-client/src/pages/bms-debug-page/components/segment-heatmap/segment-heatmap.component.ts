@@ -74,11 +74,16 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   /** Group cells by therm mapping into combined DisplayCells */
-  private toThermDisplayCells(cells: Readonly<CellReading[]>, thermMap: number[][]): DisplayCell[] {
+  private toThermDisplayCells(
+    cells: Readonly<CellReading[]>,
+    thermMap: number[][],
+    reverseLabels: boolean = false
+  ): DisplayCell[] {
     return thermMap.map((cellIndices) => {
       const groupReadings = cellIndices.filter((i) => !!cells[i]).map((i) => cells[i]);
       const [primary] = groupReadings;
-      const label = cellIndices.join(',');
+      const ordered = reverseLabels ? [...cellIndices].reverse() : cellIndices;
+      const label = ordered.join(',');
       return {
         readings: groupReadings,
         value: primary?.temp,
@@ -92,7 +97,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   /** Beta chip cells (top row in the hex grid, reversed to match physical layout) */
   get betaDisplayCells(): DisplayCell[] {
     if (this.view === HeatMapView.Temperature) {
-      return this.toThermDisplayCells(this.betaCells, BETA_THERM_CELL_MAP).reverse();
+      return this.toThermDisplayCells(this.betaCells, BETA_THERM_CELL_MAP, true).reverse();
     }
     return this.toDisplayCells(this.betaCells).reverse();
   }
