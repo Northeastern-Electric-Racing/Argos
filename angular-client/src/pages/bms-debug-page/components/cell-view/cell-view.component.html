@@ -1,22 +1,5 @@
-<div class="compare-grid">
-  <!-- Header row -->
-  <div class="label-col">
-    <div class="corner-cell"></div>
-    @for (row of rows; track row.label) {
-      <span class="row-label">{{ row.label }}</span>
-    }
-  </div>
-  @for (cell of cells; track cell.reading) {
-    <div class="data-col">
-      <div class="col-header">
-        <span class="col-title">{{ cell.cellNum }}</span>
-        <span class="col-subtitle">{{ chipLabel(cell.reading.chip) }} · S{{ cell.segment + 1 }}</span>
-      </div>
-      @for (row of rows; track row.label) {
-        <span class="data-value" [class]="row.getClass ? row.getClass(cell.reading) : ''">{{
-          row.getValue(cell.reading)
-        }}</span>
-      }
-    </div>
-  }
-</div>
+<config-table
+  [rows]="rows"
+  [columns]="cells"
+  [columnConfig]="columnConfig"
+/>

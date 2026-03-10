@@ -2,36 +2,36 @@ import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
-import { Chip, chipToString } from 'src/utils/bms.utils';
+import { chipToString } from 'src/utils/bms.utils';
+import { ConfigTableComponent, TableRowConfig, TableColumnConfig } from 'src/components/config-table/config-table.component';
 
-export interface CellViewRow {
-  label: string;
-  getValue: (reading: CellReading) => string;
-  getClass?: (reading: CellReading) => string;
-}
-
-const DEFAULT_ROW_CONFIG: CellViewRow[] = [
+const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
   {
     label: 'Voltage',
-    getValue: (r) => (r.voltage !== undefined ? `${r.voltage.toFixed(3)} V` : '-')
+    getValue: (c) => (c.reading.voltage !== undefined ? `${c.reading.voltage.toFixed(3)} V` : '-')
   },
   {
     label: 'Temp',
-    getValue: (r) => (r.temp !== undefined && r.temp !== null ? `${r.temp.toFixed(1)} \u00b0C` : '-')
+    getValue: (c) => (c.reading.temp !== undefined && c.reading.temp !== null ? `${c.reading.temp.toFixed(1)} \u00b0C` : '-')
   },
   {
     label: 'Balancing',
-    getValue: (r) => (r.balancing === undefined ? '-' : r.balancing ? 'Yes' : 'No'),
-    getClass: (r) => (r.balancing === true ? 'bal-yes' : r.balancing === false ? 'bal-no' : '')
+    getValue: (c) => (c.reading.balancing === undefined ? '-' : c.reading.balancing ? 'Yes' : 'No'),
+    getClass: (c) => (c.reading.balancing === true ? 'bal-yes' : c.reading.balancing === false ? 'bal-no' : '')
   }
 ];
+
+const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
+  title: (c) => c.cellNum.toString(),
+  subtitle: (c) => `${chipToString(c.reading.chip, true)} \u00b7 S${c.segment + 1}`
+};
 
 @Component({
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   standalone: true,
-  imports: []
+  imports: [ConfigTableComponent]
 })
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
@@ -41,7 +41,8 @@ export class CellViewComponent implements OnDestroy {
   /** Shared Map reference — mutations by SegmentHeatmapComponent
    *  are visible here because it's the same Map object. */
   private cellsMap: Map<CellReading, SelectedCellInfo>;
-  rows: CellViewRow[] = DEFAULT_ROW_CONFIG;
+  rows = DEFAULT_ROW_CONFIG;
+  columnConfig = COLUMN_CONFIG;
 
   get cells(): SelectedCellInfo[] {
     return Array.from(this.cellsMap.values());
@@ -57,9 +58,5 @@ export class CellViewComponent implements OnDestroy {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
-  }
-
-  chipLabel(chip: Chip): string {
-    return chipToString(chip, true);
   }
 }
