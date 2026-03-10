@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { Chip, Segment } from 'src/utils/bms.utils';
-import { HeatMapService, HeatMapView, SelectedCellInfo } from 'src/services/heat-map.service';
+import { Segment } from 'src/utils/bms.utils';
+import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -9,7 +9,9 @@ import { CellViewComponent } from '../cell-view/cell-view.component';
 import { HexTileComponent } from '../hex-tile/hex-tile.component';
 
 export interface DisplayCell {
-  reading: CellReading;
+  /** All CellReadings this tile represents
+   * (single cell or a group of cells sharing a single reading (e.g. temp)). */
+  readings: CellReading[];
   value: number | undefined;
   boolValue: boolean | undefined;
   /** Display label — usually the cell number, or comma-separated numbers when
@@ -66,7 +68,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   /** Map each CellReading 1:1 to a DisplayCell */
   private toDisplayCells(cells: Readonly<CellReading[]>): DisplayCell[] {
     return cells.map((cell) => ({
-      reading: cell,
+      readings: [cell],
       value: this.getCellValue(cell),
       boolValue: this.getCellBoolValue(cell),
       cellLabel: cell.cellNumber.toString(),
@@ -77,10 +79,11 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   /** Group cells by therm mapping into combined DisplayCells */
   private toThermDisplayCells(cells: Readonly<CellReading[]>, thermMap: number[][]): DisplayCell[] {
     return thermMap.map((cellIndices) => {
-      const primary = cells[cellIndices[0]];
+      const groupReadings = cellIndices.filter((i) => !!cells[i]).map((i) => cells[i]);
+      const [primary] = groupReadings;
       const label = cellIndices.join(',');
       return {
-        reading: primary,
+        readings: groupReadings,
         value: primary?.temp,
         boolValue: undefined,
         cellLabel: label,
@@ -140,45 +143,10 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   cellClicked(displayCell: DisplayCell): void {
-    const segment = this.segment();
-
-    // In temperature view, find therm group and add all member cells.
-    // The therm map is chosen based on the reading's chip (Alpha or Beta)
-    // so the correct mapping is used regardless of which row was clicked.
-    if (this.view === HeatMapView.Temperature) {
-      const { cellNumber: cellNum, chip } = displayCell.reading;
-      const thermMap = chip === Chip.Alpha ? ALPHA_THERM_CELL_MAP : BETA_THERM_CELL_MAP;
-      const cells = chip === Chip.Alpha ? this.alphaCells : this.betaCells;
-
-      // Find which therm group this cell belongs to
-      const group = thermMap.find((indices) => indices.includes(cellNum)) ?? [cellNum];
-
-      // Check if any cell in the group is already selected — if so, toggle all off
-      const anySelected = group.some((idx) => cells[idx] && this.heatMapService.isCellSelected(cells[idx]));
-
-      for (const idx of group) {
-        const reading = cells[idx];
-        if (!reading) continue;
-        const info: SelectedCellInfo = { reading, cellNum: idx.toString(), segment };
-        if (anySelected) {
-          // Remove if present
-          const i = this.heatMapService.selectedCells.findIndex((s) => s.reading === reading);
-          if (i >= 0) this.heatMapService.selectedCells.splice(i, 1);
-        } else if (!this.heatMapService.isCellSelected(reading)) {
-          this.heatMapService.selectedCells.push(info);
-        }
-      }
-    } else {
-      const info: SelectedCellInfo = {
-        reading: displayCell.reading,
-        cellNum: displayCell.cellLabel,
-        segment
-      };
-      this.heatMapService.toggleCell(info);
-    }
+    this.heatMapService.toggleCells(displayCell.readings, displayCell.cellLabel, this.segment());
 
     // Open dialog on first selection
-    if (this.heatMapService.selectedCells.length > 0 && !this.heatMapService.dialogRef) {
+    if (this.heatMapService.selectedCells.size > 0 && !this.heatMapService.dialogRef) {
       this.heatMapService.dialogRef = this.dialogService.open(CellViewComponent, {
         data: { cells: this.heatMapService.selectedCells },
         header: 'Cell Comparison',
@@ -191,14 +159,14 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
         this.heatMapService.clearSelection();
         this.heatMapService.dialogRef = null;
       });
-    } else if (this.heatMapService.selectedCells.length === 0 && this.heatMapService.dialogRef) {
+    } else if (this.heatMapService.selectedCells.size === 0 && this.heatMapService.dialogRef) {
       // Close dialog when all cells deselected
       this.heatMapService.dialogRef.close();
     }
   }
 
-  isSelected(cell: CellReading): boolean {
-    return this.heatMapService.isCellSelected(cell);
+  isSelected(cell: DisplayCell): boolean {
+    return cell.readings.some((r) => this.heatMapService.isCellSelected(r));
   }
 
   ngOnDestroy(): void {

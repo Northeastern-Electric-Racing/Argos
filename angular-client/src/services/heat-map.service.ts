@@ -12,7 +12,7 @@ export enum HeatMapView {
 
 export interface SelectedCellInfo {
   reading: CellReading;
-  cellNum: string;
+  cellNum: number;
   segment: Segment;
 }
 
@@ -25,25 +25,43 @@ export class HeatMapService {
   /** Global default view — drives the "Set ALL Maps" selector and initial per-segment defaults */
   readonly globalView$ = new BehaviorSubject<HeatMapView>(HeatMapView.Voltage);
 
-  /** Multi-cell selection state */
-  selectedCells: SelectedCellInfo[] = [];
+  /** Multi-cell selection state, keyed by CellReading identity */
+  selectedCells = new Map<CellReading, SelectedCellInfo>();
   dialogRef: DynamicDialogRef | null = null;
 
-  toggleCell(info: SelectedCellInfo): void {
-    const idx = this.selectedCells.findIndex((s) => s.reading === info.reading);
-    if (idx >= 0) {
-      this.selectedCells.splice(idx, 1);
+  /**
+   * Toggle a group of readings as a unit. Uses the first reading's
+   * selection state as the lead — if it is already selected every
+   * reading in the list is deselected, otherwise all are selected.
+   */
+  toggleCells(readings: CellReading[], cellLabel: string, segment: Segment): void {
+    if (this.isCellSelected(readings[0])) {
+      this.deselectCells(readings);
     } else {
-      this.selectedCells.push(info);
+      this.selectCells(readings, segment);
+    }
+  }
+
+  /** Select readings (no-op for already-selected readings). */
+  selectCells(readings: CellReading[], segment: Segment): void {
+    for (const reading of readings) {
+      this.selectedCells.set(reading, { reading, cellNum: reading.cellNumber, segment });
+    }
+  }
+
+  /** Deselect readings (no-op for already-deselected readings). */
+  deselectCells(readings: CellReading[]): void {
+    for (const reading of readings) {
+      this.selectedCells.delete(reading);
     }
   }
 
   clearSelection(): void {
-    this.selectedCells.length = 0;
+    this.selectedCells.clear();
   }
 
   isCellSelected(reading: CellReading): boolean {
-    return this.selectedCells.some((s) => s.reading === reading);
+    return this.selectedCells.has(reading);
   }
 
   setCurrentView = (segment: Segment, view: HeatMapView) => {

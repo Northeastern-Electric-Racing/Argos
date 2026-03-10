@@ -10,7 +10,7 @@ export interface CellViewRow {
   getClass?: (reading: CellReading) => string;
 }
 
-const DEFAULT_ROWS: CellViewRow[] = [
+const DEFAULT_ROW_CONFIG: CellViewRow[] = [
   {
     label: 'Voltage',
     getValue: (r) => (r.voltage !== undefined ? `${r.voltage.toFixed(3)} V` : '-')
@@ -38,13 +38,17 @@ export class CellViewComponent implements OnDestroy {
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
   public config = inject(DynamicDialogConfig);
 
-  /** Shared array reference — additions/removals by SegmentHeatmapComponent
-   *  are visible here because it's the same array object. */
-  cells: SelectedCellInfo[];
-  rows: CellViewRow[] = DEFAULT_ROWS;
+  /** Shared Map reference — mutations by SegmentHeatmapComponent
+   *  are visible here because it's the same Map object. */
+  private cellsMap: Map<CellReading, SelectedCellInfo>;
+  rows: CellViewRow[] = DEFAULT_ROW_CONFIG;
+
+  get cells(): SelectedCellInfo[] {
+    return Array.from(this.cellsMap.values());
+  }
 
   constructor() {
-    this.cells = this.config.data.cells;
+    this.cellsMap = this.config.data.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 500);
   }
