@@ -166,7 +166,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   isSelected(cell: DisplayCell): boolean {
-    return cell.readings.some((r) => this.heatMapService.isCellSelected(r));
+    return this.heatMapService.anySelected(cell.readings);
   }
 
   ngOnDestroy(): void {

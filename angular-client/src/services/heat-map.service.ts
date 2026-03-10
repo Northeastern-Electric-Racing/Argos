@@ -64,6 +64,10 @@ export class HeatMapService {
     return this.selectedCells.has(reading);
   }
 
+  anySelected(readings: CellReading[]): boolean {
+    return readings.some((r) => this.isCellSelected(r));
+  }
+
   setCurrentView = (segment: Segment, view: HeatMapView) => {
     if (!this.currentViewMap.get(segment)) {
       this.currentViewMap.set(segment, new BehaviorSubject(view));
