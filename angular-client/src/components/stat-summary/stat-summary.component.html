@@ -1,0 +1,10 @@
+<div class="summary-zone">
+  @for (stat of stats(); track stat.label) {
+    <div class="stat">
+      <span class="stat-value"
+        >{{ stat.value }}<sup class="stat-unit">{{ stat.unit }}</sup></span
+      >
+      <span class="stat-label">{{ stat.label }}</span>
+    </div>
+  }
+</div>

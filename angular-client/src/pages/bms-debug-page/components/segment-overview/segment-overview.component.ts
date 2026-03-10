@@ -1,7 +1,8 @@
-import { Component, inject, input, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Segment, segmentInfoMap, SegmentInfo } from 'src/utils/bms.utils';
+import { StatDisplay, StatSummaryComponent } from 'src/components/stat-summary/stat-summary.component';
 
 export interface StatConfig {
   label: string;
@@ -20,7 +21,8 @@ const DEFAULT_STATS: StatConfig[] = [
   selector: 'segment-overview',
   templateUrl: './segment-overview.component.html',
   styleUrl: './segment-overview.component.css',
-  standalone: true
+  standalone: true,
+  imports: [StatSummaryComponent]
 })
 export class SegmentOverviewComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
@@ -31,6 +33,14 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
 
   /** Current stat values keyed by topicKey */
   values: Record<string, number | undefined> = {};
+
+  displayStats = computed<StatDisplay[]>(() =>
+    this.stats().map((stat) => ({
+      label: stat.label,
+      unit: stat.unit,
+      value: this.formatStat(stat)
+    }))
+  );
 
   ngOnInit(): void {
     const info: SegmentInfo = segmentInfoMap[this.segment()];
