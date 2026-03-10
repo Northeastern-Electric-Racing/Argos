@@ -11,8 +11,9 @@ import {
   ApexLegend,
   ApexYAxis
 } from 'ng-apexcharts';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { GraphInfo } from 'src/utils/types.utils';
+import { Subscription } from 'rxjs';
+import { binarySearchInsertIndex } from 'src/utils/array.utils';
+import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 
 type ChartOptions = {
   chart: ApexChart;
@@ -36,20 +37,25 @@ type ChartOptions = {
 })
 export default class CustomGraphComponent implements OnInit, OnDestroy {
   showMultipleYAxes = input<boolean>(false);
-  valuesSubject = input.required<BehaviorSubject<GraphInfo>[]>();
+  valuesSubject = input.required<ObservableGraphInfo[]>();
   limitRange = input(true);
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
-  clearGraph = input<boolean>(false);
+  clearGraph = input<number>(0);
   options!: ChartOptions;
   chart!: ApexCharts;
-  previousDataLength: number = 0;
   // label -> x,y (topic, data point)
   data!: Map<string, Array<{ x: number; y: number }>>;
   isSliding: boolean = false;
   timeRangeMs: number | undefined = undefined;
   private timeOuts: NodeJS.Timeout[] = [];
-  graphConfig = input.required<{ maxPoints: number; yMin: number | null; yMax: number | null }>();
+  graphConfig = input.required<{
+    maxPoints: number;
+    yMin: number | null;
+    yMax: number | null;
+    rangeMode: 'time' | 'points';
+    timeRangeMs: number;
+  }>();
   range = input<number | undefined>(undefined);
   subscriptions: Subscription[] = [];
 
@@ -87,8 +93,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       if (this.chart) {
         this.chart.updateSeries([]);
       }
-      this.previousDataLength = 0;
       this.data = new Map();
+      this.timeRangeMs = undefined;
     });
 
     effect(() => {
@@ -137,11 +143,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.timeOuts.forEach((timeout) => clearTimeout(timeout));
       this.timeOuts = [];
 
-      this.valuesSubject().forEach((graphInfo) => {
-        if (this.isPaused()) {
-          return;
-        }
-        this.subscriptions.push(graphInfo.subscribe(this.graphInfoCallback));
+      this.valuesSubject().forEach(({ label, updates }) => {
+        this.subscriptions.push(updates.subscribe((data) => this.graphInfoCallback({ label, data })));
       });
 
       this.updateChart();
@@ -170,54 +173,77 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const series = Array.from(this.data).map(([key, map], index) => ({
+    const series = Array.from(this.data).map(([key, points], index) => ({
       name: key,
-      data: Array.from(map),
-      yaxis: index // Assign each series to a y-axis index
+      data: points,
+      yaxis: index
     }));
 
-    this.chart.updateSeries(series);
+    // Use time-based range if in time mode, otherwise use calculated timeRangeMs from point-based logic
+    const effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
 
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: this.timeRangeMs
-      }
-    });
+    // Single updateOptions call with series included — avoids two separate re-renders
+    // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
+    this.chart.updateOptions(
+      {
+        ...this.options,
+        series,
+        xaxis: {
+          ...this.options.xaxis,
+          range: effectiveRange
+        }
+      },
+      false, // redraw (default is false)
+      false // animate (default is true)
+    );
   };
 
-  graphInfoCallback = (info: GraphInfo | undefined) => {
+  graphInfoCallback = (info: GraphInfo) => {
     // Skip processing if paused
     if (this.isPaused()) {
       return;
     }
-
-    const values = info?.data ?? [];
-    // if (values.length === 0) this.data = new Map();
-    values.forEach((value, i) => {
-      let line: Array<{ x: number; y: number }>;
-      const label = (info?.label ?? '') + ' ' + i;
-      if (!this.data.has(label)) {
-        line = this.data.set(label, []).get(label)!;
-      } else {
-        line = this.data.get(label)!;
+    info.data.forEach((value, i) => {
+      const seriesLabel = info.label + ' ' + i;
+      if (!this.data.has(seriesLabel)) {
+        this.data.set(seriesLabel, []);
       }
+      const line = this.data.get(seriesLabel)!;
 
       value.forEach((val) => {
-        if (!line.some((v) => v.x === val.x)) {
-          line.push({ x: val.x, y: +val.y.toFixed(3) });
-        }
+        const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
 
-        if (this.realTime() && line.length > this.graphConfig().maxPoints) {
-          const shiftedPoint = line.shift()?.x; // Remove the oldest point
-          // THE BELOW IS A SOMEWHAT TEMP FIX, ULTIMATELY THIS SHOULD BE MORE DYNAMIC AND BE OFFERED AS A CONFIG OPTION
-          // Calculate the actual time range: difference between newest and oldest remaining points
-          const timeDiff = line.length > 0 && shiftedPoint !== undefined ? val.x - shiftedPoint : 0;
-          // Update time range if this is larger than current range
-          this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
+        // if the point is in order according to it's timestamp, just push it to the end of the line
+        if (line.length === 0 || val.x >= line.at(-1)!.x) {
+          line.push(point);
+        } else {
+          // Out of order: binary search for correct sorted position
+          // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
+          const idx = binarySearchInsertIndex(line, val.x);
+          line.splice(idx, 0, point);
         }
       });
+
+      // Trim after processing all points in this series batch
+      if (this.realTime() && line.length > 0) {
+        const config = this.graphConfig();
+        const latestX = line[line.length - 1].x;
+
+        if (config.rangeMode === 'time') {
+          // remove point if outside the time range + 10% buffer (for better UX)
+          const buffer = config.timeRangeMs * 0.1;
+          const cutoff = latestX - config.timeRangeMs - buffer;
+          if (line[0].x < cutoff) {
+            line.shift();
+          }
+        } else if (line.length > config.maxPoints * 1.1) {
+          const shiftedPoint = line.shift();
+          // point based trim requires is to calculate the max time range we can show that
+          // doesn't show points being deleted. So we default to smallest range.
+          const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
+          this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
+        }
+      }
     });
 
     this.updateChart();

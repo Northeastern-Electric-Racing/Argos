@@ -5,12 +5,22 @@ use axum_extra::{
     headers::{authorization::Basic, Authorization},
     TypedHeader,
 };
+use serde::Deserialize;
+use serde_with::serde_as;
+use serde_with::DurationSeconds;
+use std::time::Duration;
 use tracing::debug;
 
 use crate::{
     error::ScyllaError,
     rule_structs::{ClientId, Rule, RuleId, RuleManager, RulesResponse},
 };
+
+#[derive(Deserialize)]
+pub struct SubscribeRulesRequest {
+    rule_ids: Vec<String>,
+    client_id: String,
+}
 
 #[debug_handler]
 pub async fn add_rule(
