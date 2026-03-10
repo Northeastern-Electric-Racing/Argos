@@ -16,9 +16,7 @@
         }
       </div>
       @for (row of rows(); track row.label) {
-        <span class="data-value" [class]="row.getClass ? row.getClass(item) : ''">{{
-          row.getValue(item)
-        }}</span>
+        <span class="data-value" [class]="row.getClass ? row.getClass(item) : ''">{{ row.getValue(item) }}</span>
       }
     </div>
   }

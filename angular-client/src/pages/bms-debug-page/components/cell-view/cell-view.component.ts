@@ -51,7 +51,7 @@ export class CellViewComponent implements OnDestroy {
   constructor() {
     this.cellsMap = this.config.data.cells;
     // Poll for MQTT value changes and selection array changes.
-    this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 500);
+    this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
   }
 
   ngOnDestroy(): void {

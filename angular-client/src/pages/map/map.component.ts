@@ -34,7 +34,7 @@ export default class MapComponent implements OnInit {
     }, 1);
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= 768;
   }
