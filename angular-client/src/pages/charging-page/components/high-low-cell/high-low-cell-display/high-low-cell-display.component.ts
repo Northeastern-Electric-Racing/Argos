@@ -44,7 +44,7 @@ export default class HighLowCellDisplayComponent implements OnInit {
     icon: 'restart_alt'
   };
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }

@@ -41,7 +41,7 @@ export class SegmentAtAGlanceComponent implements OnDestroy {
   valueSubscriptions: Subscription[] = [];
 
   enableWidgets = window.innerWidth >= 1000;
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.enableWidgets = window.innerWidth >= 1000;
   }

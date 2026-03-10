@@ -23,7 +23,7 @@ export class BmsHeaderComponent {
 
   constructor() {}
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.windowSize = window.innerWidth;

@@ -86,7 +86,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   }
 
   // on resize, set the screen width
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;

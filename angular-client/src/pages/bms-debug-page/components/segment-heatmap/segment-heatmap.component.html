@@ -1,0 +1,30 @@
+<div class="hex-grid-zone">
+  <div class="hex-row beta-row">
+    @for (cell of betaDisplayCells; track $index) {
+      <hex-tile
+        [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
+        [value]="cell.value"
+        [booleanValue]="cell.boolValue"
+        [color]="getColor(cell)"
+        [currentView]="view"
+        [boxShadowColor]="isSelected(cell)"
+        [cellNumber]="cell.cellLabel"
+        (click)="cellClicked(cell)"
+      />
+    }
+  </div>
+  <div class="hex-row alpha-row">
+    @for (cell of alphaDisplayCells; track $index) {
+      <hex-tile
+        [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
+        [value]="cell.value"
+        [booleanValue]="cell.boolValue"
+        [color]="getColor(cell)"
+        [currentView]="view"
+        [boxShadowColor]="isSelected(cell)"
+        [cellNumber]="cell.cellLabel"
+        (click)="cellClicked(cell)"
+      />
+    }
+  </div>
+</div>

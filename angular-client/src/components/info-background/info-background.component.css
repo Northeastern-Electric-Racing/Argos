@@ -13,7 +13,7 @@ mat-icon {
 
 .container.sliced-left-corner {
   padding: 15px 12px 12px 15px;
-  clip-path: polygon(125px 0, 100% 0, 100% 100%, 0 100%, 0 145px);
+  clip-path: polygon(var(--slice-x, 125px) 0, 100% 0, 100% 100%, 0 100%, 0 var(--slice-y, 145px));
 }
 
 .title-container {
@@ -24,7 +24,7 @@ mat-icon {
 }
 
 .title.sliced-left-corner {
-  padding-left: 120px;
+  padding-left: var(--slice-x, 120px);
 }
 
 .title {

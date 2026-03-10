@@ -39,7 +39,7 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
     getStatusColor: this.getStatusColor
   };
   enableWidgets = window.innerWidth >= 1000;
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.enableWidgets = window.innerWidth >= 1000;
   }

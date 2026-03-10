@@ -1,0 +1,49 @@
+/* AI-generated  */
+
+/* Custom properties that drive the hex grid layout.
+   Shared with hex-tile.component.css via CSS custom props on the host. */
+:host {
+  display: block;
+  --hex-w: clamp(28px, 4.1vw, 76px); /* responsive hex width */
+  --hex-h: calc(var(--hex-w) * 1.155); /* pointy-top height ≈ width × 1.155 */
+  --hex-gap: 2px; /* gap between adjacent hexes */
+  --row-offset: calc(var(--hex-w) / 2 + 2px); /* stagger for bottom row (half hex + gap) */
+  --row-gap: calc(var(--hex-h) * -0.2); /* negative margin to interlock rows vertically */
+  flex: 0 1 auto;
+  width: fit-content;
+  min-width: fit-content;
+}
+
+/* Container for both hex rows */
+.hex-grid-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: visible;
+  padding: 4px 0;
+  min-width: 0;
+}
+
+/* Each row is a horizontal flex strip of hex-tiles */
+.hex-row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.hex-row hex-tile {
+  margin-right: var(--hex-gap);
+}
+
+.hex-row hex-tile:last-child {
+  margin-right: 0;
+}
+
+/* Beta row is offset right by half a hex to create the honeycomb stagger */
+.hex-row.beta-row {
+  margin-left: var(--row-offset);
+}
+
+/* Alpha row overlaps upward to interlock with the beta row */
+.hex-row.alpha-row {
+  margin-top: var(--row-gap);
+}

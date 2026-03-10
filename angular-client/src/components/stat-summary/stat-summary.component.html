@@ -1,0 +1,10 @@
+<div class="summary-zone">
+  @for (config of configs(); track config.label) {
+    <div class="stat">
+      <span class="stat-value"
+        >{{ formatStat(config) }}<sup class="stat-unit">{{ config.unit }}</sup></span
+      >
+      <span class="stat-label">{{ config.label }}</span>
+    </div>
+  }
+</div>
