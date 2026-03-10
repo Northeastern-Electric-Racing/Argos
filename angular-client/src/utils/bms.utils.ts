@@ -34,6 +34,7 @@ export type SegmentInfo = {
   alphaChipTempKey: string;
   betaChipTempKey: string;
   voltageKey: string;
+  totalVoltageKey: string;
 };
 
 /** Dynamically generated map of segment index → SegmentInfo topic keys. */
@@ -44,7 +45,8 @@ export const segmentInfoMap: Record<Segment, SegmentInfo> = Object.fromEntries(
       segmentTempKey: topics.segmentTemp(seg),
       alphaChipTempKey: topics.dieTemp(seg, Chip.Alpha),
       betaChipTempKey: topics.dieTemp(seg, Chip.Beta),
-      voltageKey: topics.segmentVoltage(seg)
+      voltageKey: topics.segmentVoltage(seg),
+      totalVoltageKey: topics.segmentTotalVoltage(seg)
     }
   ])
 );

@@ -9,6 +9,7 @@ export const alphaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Alp
 export const betaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
 export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
 export const segmentVoltage = (segment: Segment) => `BMS/Segment_Volt/${segment}`;
+export const segmentTotalVoltage = (segment: Segment) => `BMS/Segment_Total_Volt/${segment}`;
 export const vref = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vref2`;
 export const vres = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vres`;
 export const vAnalog = (segment: Segment, chip: Chip) => `BMS/PerCell/${chipToString(chip)}/${segment}/Vanalog`;
@@ -45,6 +46,7 @@ export const topics = {
   betaBurning,
   segmentTemp,
   segmentVoltage,
+  segmentTotalVoltage,
   vref,
   vres,
   vAnalog,

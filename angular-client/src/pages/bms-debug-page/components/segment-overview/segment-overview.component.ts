@@ -10,10 +10,10 @@ export interface StatConfig {
   formatFn: (v: number) => string;
 }
 
-const DEFAULT_STATS: StatConfig[] = [
-  { label: 'Temperature', unit: '°C', topicKey: 'segmentTempKey', formatFn: (v) => v.toFixed(0) },
-  { label: 'Voltage', unit: 'V', topicKey: 'voltageKey', formatFn: (v) => v.toFixed(1) },
-  { label: 'Chip Temp', unit: '°C', topicKey: 'alphaChipTempKey', formatFn: (v) => v.toFixed(0) }
+const DEFAULT_STATS	: StatConfig[] = [
+  { label: 'Avg Temp', unit: '°C', topicKey: 'segmentTempKey', formatFn: (v) => v.toFixed(0) },
+  { label: 'Avg Voltage', unit: 'V', topicKey: 'voltageKey', formatFn: (v) => v.toFixed(1) },
+  { label: 'Total Voltage', unit: 'V', topicKey: 'totalVoltageKey', formatFn: (v) => v.toFixed(1) }
 ];
 
 @Component({
