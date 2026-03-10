@@ -6,10 +6,7 @@ import { BmsHeaderComponent } from './components/bms-header/bms-header.component
 import { BmsAtAGlanceComponent } from './components/bms-at-a-glance/bms-at-a-glance.component';
 import { SegmentRowComponent } from './components/segment-row/segment-row.component';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
-import {
-  DropdownOption,
-  SelectorConfig
-} from 'src/components/select-dropdown/select-dropdown.component';
+import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
@@ -22,14 +19,7 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
   host: {
     '(window:resize)': 'onResize()'
   },
-  imports: [
-    MatGridList,
-    MatGridTile,
-    BmsHeaderComponent,
-    BmsAtAGlanceComponent,
-    SegmentRowComponent,
-    SectionHeaderComponent
-  ]
+  imports: [MatGridList, MatGridTile, BmsHeaderComponent, BmsAtAGlanceComponent, SegmentRowComponent, SectionHeaderComponent]
 })
 export class BmsDebugPageComponent implements OnInit, OnDestroy {
   private heatMapService = inject(HeatMapService);

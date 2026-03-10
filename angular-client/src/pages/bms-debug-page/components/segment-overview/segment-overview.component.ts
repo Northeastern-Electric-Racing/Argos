@@ -10,7 +10,7 @@ export interface StatConfig {
   formatFn: (v: number) => string;
 }
 
-const DEFAULT_STATS	: StatConfig[] = [
+const DEFAULT_STATS: StatConfig[] = [
   { label: 'Avg Temp', unit: '°C', topicKey: 'segmentTempKey', formatFn: (v) => v.toFixed(0) },
   { label: 'Avg Voltage', unit: 'V', topicKey: 'voltageKey', formatFn: (v) => v.toFixed(1) },
   { label: 'Total Voltage', unit: 'V', topicKey: 'totalVoltageKey', formatFn: (v) => v.toFixed(1) }
