@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CellReading } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 
 export enum HeatMapView {
   Voltage = 'Voltage',
@@ -20,13 +21,15 @@ export interface SelectedCellInfo {
   providedIn: 'root'
 })
 export class HeatMapService {
+  private dialogService = inject(DialogService);
+
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
   /** Global default view — drives the "Set ALL Maps" selector and initial per-segment defaults */
   readonly globalView$ = new BehaviorSubject<HeatMapView>(HeatMapView.Voltage);
 
   /** Multi-cell selection state, keyed by CellReading identity */
-  selectedCells = new Map<CellReading, SelectedCellInfo>();
+  private selectedCells = new Map<CellReading, SelectedCellInfo>();
   dialogRef: DynamicDialogRef | null = null;
 
   /**
@@ -34,25 +37,50 @@ export class HeatMapService {
    * selection state as the lead — if it is already selected every
    * reading in the list is deselected, otherwise all are selected.
    */
-  toggleCells(readings: CellReading[], cellLabel: string, segment: Segment): void {
+  toggleCells(readings: CellReading[], segment: Segment, useDialog: boolean = false): void {
     if (this.isCellSelected(readings[0])) {
-      this.deselectCells(readings);
+      this.deselectCells(readings, useDialog);
     } else {
-      this.selectCells(readings, segment);
+      this.selectCells(readings, segment, useDialog);
     }
   }
 
-  /** Select readings (no-op for already-selected readings). */
-  selectCells(readings: CellReading[], segment: Segment): void {
+  /**
+   * Select readings (no-op for already-selected readings). If useDialog is true, also opens a dialog showing the selected cells if not already open.
+   */
+  selectCells(readings: CellReading[], segment: Segment, useDialog: boolean): void {
     for (const reading of readings) {
       this.selectedCells.set(reading, { reading, cellNum: reading.cellNumber, segment });
     }
+
+    // Open dialog if not already open, and the caller requested it.
+    if (useDialog && this.selectedCells.size > 0 && !this.dialogRef) {
+      this.dialogRef = this.dialogService.open(CellViewComponent, {
+        data: { cells: this.selectedCells },
+        header: 'Cell Comparison',
+        draggable: true,
+        closable: true,
+        closeAriaLabel: 'Close',
+        styleClass: 'cell-compare-dialog'
+      });
+      this.dialogRef.onClose.subscribe(() => {
+        this.clearSelection();
+        this.dialogRef = null;
+      });
+    }
   }
 
-  /** Deselect readings (no-op for already-deselected readings). */
-  deselectCells(readings: CellReading[]): void {
+  /**
+   * Deselect readings (no-op for already-deselected readings). If useDialog is true, also closes the dialog if no cells remain selected.
+   */
+  deselectCells(readings: CellReading[], useDialog: boolean): void {
     for (const reading of readings) {
       this.selectedCells.delete(reading);
+    }
+
+    // close dialog if no cells remain selected and the caller requested it.
+    if (useDialog && this.selectedCells.size === 0 && this.dialogRef) {
+      this.dialogRef.close();
     }
   }
 

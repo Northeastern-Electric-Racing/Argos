@@ -4,8 +4,6 @@ import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
-import { DialogService } from 'primeng/dynamicdialog';
-import { CellViewComponent } from '../cell-view/cell-view.component';
 import { HexTileComponent } from '../hex-tile/hex-tile.component';
 
 export interface DisplayCell {
@@ -32,7 +30,6 @@ export interface DisplayCell {
 export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   private cellService = inject(CellService);
   private heatMapService = inject(HeatMapService);
-  private dialogService = inject(DialogService);
   private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
@@ -143,26 +140,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   cellClicked(displayCell: DisplayCell): void {
-    this.heatMapService.toggleCells(displayCell.readings, displayCell.cellLabel, this.segment());
-
-    // Open dialog on first selection
-    if (this.heatMapService.selectedCells.size > 0 && !this.heatMapService.dialogRef) {
-      this.heatMapService.dialogRef = this.dialogService.open(CellViewComponent, {
-        data: { cells: this.heatMapService.selectedCells },
-        header: 'Cell Comparison',
-        draggable: true,
-        closable: true,
-        closeAriaLabel: 'Close',
-        styleClass: 'cell-compare-dialog'
-      });
-      this.heatMapService.dialogRef.onClose.subscribe(() => {
-        this.heatMapService.clearSelection();
-        this.heatMapService.dialogRef = null;
-      });
-    } else if (this.heatMapService.selectedCells.size === 0 && this.heatMapService.dialogRef) {
-      // Close dialog when all cells deselected
-      this.heatMapService.dialogRef.close();
-    }
+    this.heatMapService.toggleCells(displayCell.readings, this.segment(), true);
   }
 
   isSelected(cell: DisplayCell): boolean {
