@@ -77,7 +77,10 @@ pub async fn get_all_rules_with_client_info(
 pub async fn check_rule(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule): Json<Rule>,
-) -> Json<bool> {
-    debug!("Checking if rule exists: {} - {}", rule.topic, rule.expr);
-    Json(rules_manager.check_rule(&rule.topic, &rule.expr).await)
+) -> Result<Json<bool>, ScyllaError> {
+    Ok(Json(
+        rules_manager
+        .check_duplicate(&rule)
+        .await,
+    ))
 }

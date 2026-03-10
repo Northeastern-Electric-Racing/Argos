@@ -535,6 +535,7 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
             }
         }
     }
+    // Tests that check_rule returns true when a rule with the same topic and expression exists.
     #[tokio::test]
     async fn test_check_rule_exists() -> Result<(), RuleManagerError> {
         let rule_manager = RuleManager::new();
@@ -549,10 +550,15 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
 
         rule_manager.add_rule(client, rule).await?;
 
-        assert!(rule_manager.check_rule(&Topic("test/topic".to_string()), "a > 10").await);
+        assert!(
+            rule_manager
+                .check_rule(&Topic("test/topic".to_string()), "a > 10")
+                .await
+        );
         Ok(())
     }
 
+    // Tests that check_rule returns false when the topic matches but the expression does not.
     #[tokio::test]
     async fn test_check_rule_wrong_expr() -> Result<(), RuleManagerError> {
         let rule_manager = RuleManager::new();
@@ -567,10 +573,15 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
 
         rule_manager.add_rule(client, rule).await?;
 
-        assert!(!rule_manager.check_rule(&Topic("test/topic".to_string()), "a > 20").await);
+        assert!(
+            !rule_manager
+                .check_rule(&Topic("test/topic".to_string()), "a > 20")
+                .await
+        );
         Ok(())
     }
 
+    // Tests that check_rule returns false when the expression matches but the topic does not.
     #[tokio::test]
     async fn test_check_rule_wrong_topic() -> Result<(), RuleManagerError> {
         let rule_manager = RuleManager::new();
@@ -585,15 +596,24 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
 
         rule_manager.add_rule(client, rule).await?;
 
-        assert!(!rule_manager.check_rule(&Topic("wrong/topic".to_string()), "a > 10").await);
+        assert!(
+            !rule_manager
+                .check_rule(&Topic("wrong/topic".to_string()), "a > 10")
+                .await
+        );
         Ok(())
     }
 
+    // Tests that check_rule returns false when the rule manager contains no rules.
     #[tokio::test]
     async fn test_check_rule_empty_manager() {
         let rule_manager = RuleManager::new();
 
-        assert!(!rule_manager.check_rule(&Topic("test/topic".to_string()), "a > 10").await);
+        assert!(
+            !rule_manager
+                .check_rule(&Topic("test/topic".to_string()), "a > 10")
+                .await
+        );
     }
 
     // Verify system state is unchanged

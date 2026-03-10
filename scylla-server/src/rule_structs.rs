@@ -492,6 +492,9 @@ impl RuleManager {
             .values()
             .any(|rule| rule.topic == *topic && rule.expr == expr)
     }
+    pub async fn check_duplicate(&self, rule: &Rule) -> bool {
+        self.check_rule(&rule.topic, &rule.expr).await
+    }
     pub async fn get_all_rules(&self) -> Vec<Rule> {
         self.rules
             .read()
