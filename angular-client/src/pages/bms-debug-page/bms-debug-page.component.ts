@@ -16,10 +16,17 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
   templateUrl: './bms-debug-page.component.html',
   styleUrl: './bms-debug-page.component.css',
   standalone: true,
+  imports: [
+    MatGridList,
+    MatGridTile,
+    BmsHeaderComponent,
+    BmsAtAGlanceComponent,
+    SegmentRowComponent,
+    SectionHeaderComponent
+  ],
   host: {
     '(window:resize)': 'onResize()'
-  },
-  imports: [MatGridList, MatGridTile, BmsHeaderComponent, BmsAtAGlanceComponent, SegmentRowComponent, SectionHeaderComponent]
+  }
 })
 export class BmsDebugPageComponent implements OnInit, OnDestroy {
   private heatMapService = inject(HeatMapService);

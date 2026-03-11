@@ -1,0 +1,35 @@
+.panel {
+  border-radius: var(--border-radius-panel);
+  box-sizing: border-box;
+}
+
+.panel.full {
+  width: 100%;
+}
+
+.panel.fit {
+  width: fit-content;
+}
+
+/* ---- Title bar ---- */
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.title-icon {
+  color: white;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.title-text {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}

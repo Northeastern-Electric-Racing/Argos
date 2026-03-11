@@ -85,6 +85,7 @@ export default class AppContextComponent implements OnInit {
         this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery_charging_2.svg')
       )
       .addSvgIcon('error', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/alert-triangle.svg'))
+      .addSvgIcon('battery', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery.svg'))
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'))
       .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'))
       .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'));
