@@ -1,0 +1,29 @@
+<!-- Unified segment row: dark wrapper with light heatmap and overview panels -->
+<div class="segment-row">
+  <!-- LEFT: Controls (inside dark wrapper) -->
+  <div class="controls-zone">
+    <div class="segment-title">
+      <img class="battery-icon" src="assets/icons/battery.svg" alt="battery" />
+      <span class="title-text">Segment {{ segment() + 1 }}</span>
+    </div>
+    <div class="controls-actions">
+      <select-dropdown
+        [options]="viewSelectorConfig.options"
+        [placeholder]="viewSelectorConfig.placeholder"
+        [defaultValue]="viewSelectorConfig.defaultValue"
+      />
+      <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Separate light panels -->
+  <div class="content-zone">
+    <div class="heatmap-panel">
+      <segment-heatmap [segment]="segment()" />
+    </div>
+
+    <div class="overview-panel">
+      <segment-overview [segment]="segment()" />
+    </div>
+  </div>
+</div>

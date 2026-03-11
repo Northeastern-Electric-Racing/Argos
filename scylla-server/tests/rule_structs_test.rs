@@ -1,6 +1,6 @@
 use chrono::Utc;
-use scylla_server::rule_structs::*;
 use scylla_server::ClientData;
+use scylla_server::rule_structs::*;
 use tokio::task::JoinSet;
 
 #[tokio::test]
@@ -115,7 +115,7 @@ async fn test_handle_msg_rule_triggered() -> Result<(), RuleManagerError> {
 
     let notifications = result.unwrap();
     assert!(!notifications.is_empty());
-    assert_eq!(notifications[0].0 .0, client.0);
+    assert_eq!(notifications[0].0.0, client.0);
     assert_eq!(notifications[0].1.topic.0, "test/topic");
 
     Ok(())
@@ -626,6 +626,7 @@ async fn test_edit_rule_preserves_subscriptions_concurrent() -> Result<(), RuleM
     Ok(())
 }
 
+#[tokio::test]
 async fn test_subscribe_rules_success() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
     let client1 = ClientId("client1".to_string());
@@ -680,6 +681,174 @@ async fn test_subscribe_rules_success() -> Result<(), RuleManagerError> {
 
     // Verify rules still exist
     assert_eq!(rule_manager.get_all_rules().await.len(), 3);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_success() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client1 = ClientId("client1".to_string());
+    let client2 = ClientId("client2".to_string());
+
+    // Create rules via client1
+    let rule1 = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    let rule2 = Rule::new(
+        RuleId("rule_2".to_string()),
+        Topic("topic/2".to_string()),
+        core::time::Duration::from_secs(30),
+        "b < 5".to_owned(),
+    );
+
+    rule_manager.add_rule(client1.clone(), rule1).await?;
+    rule_manager.add_rule(client1.clone(), rule2).await?;
+    rule_manager
+        .add_rule(
+            client2.clone(),
+            Rule::new(
+                RuleId("rule_1".to_string()),
+                Topic("topic/1".to_string()),
+                core::time::Duration::from_secs(60),
+                "a > 10".to_owned(),
+            ),
+        )
+        .await?;
+
+    // Verify initial state: 2 rules, 2 clients
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 2);
+
+    // Client1 unsubscribes from rule_1
+    rule_manager
+        .unsubscribe_rules(client1.clone(), vec![RuleId("rule_1".to_string())])
+        .await?;
+
+    // Rule 1 should still exist (client2 subscribed), 2 clients remain
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 2);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_keeps_orphaned() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Create rules
+    let rule1 = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    let rule2 = Rule::new(
+        RuleId("rule_2".to_string()),
+        Topic("topic/2".to_string()),
+        core::time::Duration::from_secs(30),
+        "b < 5".to_owned(),
+    );
+
+    rule_manager.add_rule(client.clone(), rule1).await?;
+    rule_manager.add_rule(client.clone(), rule2).await?;
+
+    // Verify initial state
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
+
+    // Unsubscribe from both rules
+    rule_manager
+        .unsubscribe_rules(
+            client.clone(),
+            vec![RuleId("rule_1".to_string()), RuleId("rule_2".to_string())],
+        )
+        .await?;
+
+    // Rules should still exist (not deleted), client removed
+    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 0);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_nonexistent() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Try to unsubscribe from rules that don't exist - should succeed (no-op)
+    rule_manager
+        .unsubscribe_rules(
+            client,
+            vec![
+                RuleId("nonexistent_1".to_string()),
+                RuleId("nonexistent_2".to_string()),
+            ],
+        )
+        .await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_unsubscribe_rules_empty_list() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    // Unsubscribe from empty list - should succeed
+    rule_manager.unsubscribe_rules(client, vec![]).await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_orphaned_rule_resubscription() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client1 = ClientId("client1".to_string());
+    let client2 = ClientId("client2".to_string());
+
+    // Client1 creates a rule
+    let rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    rule_manager.add_rule(client1.clone(), rule).await?;
+
+    // Verify initial state
+    assert_eq!(rule_manager.get_all_rules().await.len(), 1);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
+
+    // Client1 unsubscribes - rule becomes orphaned but still exists
+    rule_manager
+        .unsubscribe_rules(client1.clone(), vec![RuleId("rule_1".to_string())])
+        .await?;
+
+    assert_eq!(rule_manager.get_all_rules().await.len(), 1); // Rule still exists
+    assert_eq!(rule_manager.get_all_clients().await.len(), 0); // No clients
+
+    // Client2 subscribes to the orphaned rule (re-adding it)
+    let rule_reuse = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    rule_manager.add_rule(client2.clone(), rule_reuse).await?;
+
+    // Verify rule is now subscribed to by client2
+    assert_eq!(rule_manager.get_all_rules().await.len(), 1);
+    assert_eq!(rule_manager.get_all_clients().await.len(), 1);
 
     Ok(())
 }

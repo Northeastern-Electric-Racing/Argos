@@ -1,12 +1,12 @@
 use std::sync::atomic::Ordering;
 
 use axum::{
-    extract::{Path, State},
     Json,
+    extract::{Path, State},
 };
 
 use crate::{
-    error::ScyllaError, services::run_service, transformers::run_transformer::PublicRun, PoolHandle,
+    PoolHandle, error::ScyllaError, services::run_service, transformers::run_transformer::PublicRun,
 };
 
 /// get a list of runs

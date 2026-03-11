@@ -6,10 +6,10 @@ use tokio::sync::{broadcast, mpsc};
 use tokio::time::Duration;
 
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, instrument, trace, warn, Level};
+use tracing::{Level, debug, info, instrument, trace, warn};
 
 use crate::services::{data_service, data_type_service};
-use crate::{ClientData, PoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE};
+use crate::{BATCH_UPSERT_TIME, ClientData, DATA_UPLOAD_DISABLE, PoolHandle};
 
 /// A few threads to manage the processing and inserting of special types,
 /// upserting of metadata for data, and batch uploading the database
@@ -26,7 +26,7 @@ pub struct DbHandler {
 
 /// Chunks a vec into roughly equal vectors all under size `max_chunk_size`
 /// This precomputes vec capacity but does however call to_vec(), reallocating the slices
-fn chunk_vec<T: Clone>(input: Vec<T>, max_chunk_size: usize) -> Vec<Vec<T>> {
+fn chunk_vec<T: Clone>(input: &[T], max_chunk_size: usize) -> Vec<Vec<T>> {
     if max_chunk_size == 0 {
         panic!("Maximum chunk size must be greater than zero");
     }
@@ -101,7 +101,7 @@ impl DbHandler {
                                 continue;
                             }
                             let chunk_size = final_msgs.len() / ((final_msgs.len() / 8190) + 1);
-                            let chunks = chunk_vec(final_msgs, chunk_size);
+                            let chunks = chunk_vec(&final_msgs, chunk_size);
                             debug!("Batch uploading {} chunks in sequence", chunks.len());
                             for chunk in chunks {
                                 info!(
@@ -123,7 +123,7 @@ impl DbHandler {
                         }
                         let msg_len = msgs.len();
                         let chunk_size = msg_len / ((msg_len / 8190) + 1);
-                        let chunks = chunk_vec(msgs, chunk_size);
+                        let chunks = chunk_vec(&msgs, chunk_size);
                         info!("Batch uploading {} chunks in parrallel, {} messages.", chunks.len(), msg_len);
                         for chunk in chunks {
                            tokio::spawn(DbHandler::batch_upload(chunk, pool.clone()));

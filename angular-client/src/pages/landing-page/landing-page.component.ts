@@ -76,7 +76,7 @@ export default class LandingPageComponent implements OnInit {
 
   onStartNewRun!: () => void;
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

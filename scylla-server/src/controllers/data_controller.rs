@@ -1,12 +1,12 @@
 use axum::{
-    extract::{Path, Query, State},
     Json,
+    extract::{Path, Query, State},
 };
 use serde::Deserialize;
 
 use crate::{
-    error::ScyllaError, services::data_service, transformers::data_transformer::PublicData,
-    PoolHandle,
+    PoolHandle, error::ScyllaError, services::data_service,
+    transformers::data_transformer::PublicData,
 };
 
 #[derive(Deserialize)]

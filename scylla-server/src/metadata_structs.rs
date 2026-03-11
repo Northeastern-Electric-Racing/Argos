@@ -1,5 +1,5 @@
 use ::serde::Serialize;
-use chrono::{serde::ts_milliseconds, DateTime, TimeDelta, Utc};
+use chrono::{DateTime, TimeDelta, Utc, serde::ts_milliseconds};
 use rustc_hash::FxHashMap;
 
 pub const DATA_SOCKET_KEY: &str = "data";

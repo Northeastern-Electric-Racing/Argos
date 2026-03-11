@@ -1,4 +1,4 @@
-import { Component, input, OnInit, ViewChild } from '@angular/core';
+import { Component, effect, input, ViewChild } from '@angular/core';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -19,8 +19,7 @@ export interface DropdownOption {
   standalone: true,
   imports: [Select, ReactiveFormsModule, FormsModule]
 })
-export class SelectDropdownComponent implements OnInit {
-  constructor() {}
+export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
     {
       name: 'default',
@@ -37,13 +36,16 @@ export class SelectDropdownComponent implements OnInit {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @ViewChild('dropdownRef') dropdownRef: any;
 
-  ngOnInit() {
-    if (this.defaultValue()) {
-      const defaultOption = this.options().find((option) => option.name === this.defaultValue());
-      if (defaultOption) {
-        this.selectedOption = defaultOption;
+  constructor() {
+    effect(() => {
+      const val = this.defaultValue();
+      if (val) {
+        const match = this.options().find((option) => option.name === val);
+        if (match) {
+          this.selectedOption = match;
+        }
       }
-    }
+    });
   }
 
   handleChangedOption(changeEvent: SelectChangeEvent) {

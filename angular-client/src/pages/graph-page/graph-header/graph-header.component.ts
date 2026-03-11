@@ -25,7 +25,7 @@ export default class GraphHeaderComponent implements OnInit {
     }, 1000);
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= 768;
   }

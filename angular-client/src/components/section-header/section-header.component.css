@@ -1,0 +1,17 @@
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: clamp(8px, 1.25vw, 24px) 0 clamp(4px, 0.63vw, 12px);
+  gap: clamp(6px, 0.94vw, 18px);
+}
+
+.section-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: clamp(18px, 2.66vw, 44px);
+  color: #efefef;
+}
+
+.section-title-right {
+  margin-left: auto;
+}

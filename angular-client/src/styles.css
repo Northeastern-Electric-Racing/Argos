@@ -153,3 +153,29 @@ body {
 .p-dialog-mask:has(.nav-options-dialog) {
   background: transparent !important;
 }
+
+/* Cell comparison dialog — compact, no backdrop */
+.cell-compare-dialog.p-dialog {
+  width: auto !important;
+  min-width: 0 !important;
+  border-radius: 12px !important;
+}
+
+.cell-compare-dialog .p-dialog-header {
+  padding: 8px 14px !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.cell-compare-dialog .p-dialog-content {
+  padding: 0 14px 10px !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.p-dialog-mask:has(.cell-compare-dialog) {
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+.cell-compare-dialog {
+  pointer-events: auto !important;
+}

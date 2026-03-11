@@ -1,49 +1,47 @@
 use std::{
     fs,
     path::Path,
-    sync::{atomic::Ordering, Arc},
+    sync::{Arc, atomic::Ordering},
     time::Duration,
 };
 
 use axum::{
+    Extension, Router,
     extract::DefaultBodyLimit,
     http::Method,
     routing::{get, post, put},
-    Extension, Router,
 };
 use clap::Parser;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{
-    pooled_connection::{bb8::Pool, AsyncDieselConnectionManager},
     AsyncConnection, AsyncPgConnection,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
+    BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode, SOCKET_DISCARD_PERCENT,
+    STATIC_RATE_LIMIT_VALUE,
     controllers::{
-        self,
+        self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller,
         rule_controller::{
             add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info,
-            subscribe_rules,
+            subscribe_rules, unsubscribe_rules,
         },
         run_controller, scylla_config_controller,
         video_streamer_controller::{self},
-        OutputDirectory, VideoSuffix,
     },
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    RateLimitMode, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
-    STATIC_RATE_LIMIT_VALUE,
 };
 use scylla_server::{
-    db_handler,
+    ClientData, db_handler,
     mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-    ClientData,
 };
-use socketioxide::{extract::SocketRef, SocketIo};
+use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::{
     signal,
     sync::{broadcast, mpsc},
@@ -55,7 +53,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::{debug, info, level_filters::LevelFilter, warn};
-use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt::format::FmtSpan};
 
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
@@ -411,6 +409,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .route("/rules/delete/{rule_id}", post(delete_rule))
                 .route("/rules", get(get_all_rules))
                 .route("/rules/{client_id}", get(get_all_rules_with_client_info))
+                .route("/rules/unsubscribe", post(unsubscribe_rules))
                 .route("/rules/edit/{rule_id}", put(edit_rule))
                 .route("/rules/subscribe", post(subscribe_rules))
                 //.route("/rules/delete/{rule_id}", post()).route("/rules/poll")
