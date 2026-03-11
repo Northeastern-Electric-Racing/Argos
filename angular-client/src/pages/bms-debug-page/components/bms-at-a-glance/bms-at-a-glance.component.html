@@ -1,53 +1,53 @@
 <info-panel title="At A Glance" svgIcon="battery_charging_2" padding="6px 20px 14px">
   <div class="glance-bar">
-    <glance-stat [value]="voltage" unit="V" subtitle="Average Voltage">
+    <stat-display [value]="voltage" unit="V" subtitle="Average Voltage">
       @if (this.enableWidgets) {
         <connection-dot-with-message [getStatusColor]="this.getStatusColor" style="margin-left: 5px" />
       }
-    </glance-stat>
+    </stat-display>
     <div class="divider"></div>
 
-    <glance-stat [value]="temperature" unit="C" subtitle="Average Temp." [unitBelow]="true">
+    <stat-display [value]="temperature" unit="C" subtitle="Average Temp." [unitBelow]="true">
       @if (this.enableWidgets) {
         <glance-thermometer [temperature]="temperature" [min]="-15" [max]="30" />
       }
-    </glance-stat>
+    </stat-display>
     <div class="divider"></div>
 
-    <glance-stat [value]="chargeState" unit="%" subtitle="Charge State" [unitBelow]="true">
+    <stat-display [value]="chargeState" unit="%" subtitle="Charge State" [unitBelow]="true">
       @if (this.enableWidgets) {
-        <glance-battery [percentage]="chargeState" />
+        <battery-level-indicator [percentage]="chargeState"></battery-level-indicator>
       }
-    </glance-stat>
+    </stat-display>
     <div class="divider"></div>
 
-    <glance-stat [value]="this.ccl" unit="A" subtitle="CCL" />
+    <stat-display [value]="this.ccl" unit="A" subtitle="CCL"></stat-display>
     <div class="divider"></div>
 
-    <glance-stat [value]="this.dcl" unit="A" subtitle="DCL" />
+    <stat-display [value]="this.dcl" unit="A" subtitle="DCL"></stat-display>
     <div class="divider"></div>
 
-    <glance-stat
+    <stat-display
       [value]="this.highVoltage"
       unit="V"
       [precision]="3"
       subtitle="High Voltage"
       [headerLabel]="this.getCellChipLabel(this.highVoltageCell, this.highVoltageChip)"
       headerIcon="battery"
-    />
+    ></stat-display>
     <div class="divider"></div>
 
-    <glance-stat
+    <stat-display
       [value]="this.lowVoltage"
       unit="V"
       [precision]="3"
       subtitle="Low Voltage"
       [headerLabel]="this.getCellChipLabel(this.lowVoltageCell, this.lowVoltageChip)"
       headerIcon="battery"
-    />
+    ></stat-display>
     <div class="divider"></div>
 
-    <glance-stat
+    <stat-display
       [value]="this.highTemp"
       unit="C"
       [precision]="2"
@@ -55,6 +55,7 @@
       [unitBelow]="true"
       [headerLabel]="this.getCellChipLabel(this.highTempCell, this.highTempChip)"
       headerIcon="battery"
-    />
+    ></stat-display>
+    
   </div>
 </info-panel>

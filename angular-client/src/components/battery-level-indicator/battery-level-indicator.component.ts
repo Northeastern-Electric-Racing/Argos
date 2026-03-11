@@ -2,16 +2,16 @@ import { Component, Input, OnChanges } from '@angular/core';
 import Theme from 'src/services/theme.service';
 
 /**
- * Compact battery widget sized for the At A Glance bar.
+ * Compact battery level indicator sized for the At A Glance bar.
  * Fixed 18×44px footprint. Self-contained — no external wrapper needed.
  */
 @Component({
-  selector: 'glance-battery',
-  templateUrl: './glance-battery.component.html',
-  styleUrl: './glance-battery.component.css',
+  selector: 'battery-level-indicator',
+  templateUrl: './battery-level-indicator.component.html',
+  styleUrl: './battery-level-indicator.component.css',
   standalone: true
 })
-export class GlanceBatteryComponent implements OnChanges {
+export class BatteryLevelIndicatorComponent implements OnChanges {
   @Input() percentage: number = 0;
 
   fillHeight = '0%';

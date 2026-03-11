@@ -5,9 +5,9 @@ import Storage from 'src/services/storage.service';
 import { Chip, chipToString, getConnectionDotStatusColor } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { InfoPanelComponent } from '../../../../components/info-panel/info-panel.component';
-import { GlanceStatComponent } from '../../../../components/glance-stat/glance-stat.component';
+import { StatDisplayComponent } from '../../../../components/stat-display/stat-display.component';
 import { ConnectionDotWithMessageComponent } from '../../../../components/connection-dot-with-message/connection-dot-with-message.component';
-import { GlanceBatteryComponent } from '../../../../components/glance-battery/glance-battery.component';
+import { BatteryLevelIndicatorComponent } from '../../../../components/battery-level-indicator/battery-level-indicator.component';
 import { GlanceThermometerComponent } from '../../../../components/glance-thermometer/glance-thermometer.component';
 
 @Component({
@@ -17,9 +17,9 @@ import { GlanceThermometerComponent } from '../../../../components/glance-thermo
   standalone: true,
   imports: [
     InfoPanelComponent,
-    GlanceStatComponent,
+    StatDisplayComponent,
     ConnectionDotWithMessageComponent,
-    GlanceBatteryComponent,
+    BatteryLevelIndicatorComponent,
     GlanceThermometerComponent
   ]
 })

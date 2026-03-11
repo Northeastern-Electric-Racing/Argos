@@ -7,16 +7,16 @@ import { MatIcon } from '@angular/material/icon';
  * Uses pure CSS — no nested hstack/vstack/typography wrappers.
  */
 @Component({
-  selector: 'glance-stat',
-  templateUrl: './glance-stat.component.html',
-  styleUrl: './glance-stat.component.css',
+  selector: 'stat-display',
+  templateUrl: './stat-display.component.html',
+  styleUrl: './stat-display.component.css',
   standalone: true,
   imports: [MatIcon],
   host: {
     '[class.unit-below-mode]': 'unitBelow()'
   }
 })
-export class GlanceStatComponent implements OnChanges {
+export class StatDisplayComponent implements OnChanges {
   value = input<number>();
   unit = input<string>('');
   subtitle = input<string>('');
