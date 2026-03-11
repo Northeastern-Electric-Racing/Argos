@@ -5,23 +5,17 @@ import Storage from 'src/services/storage.service';
 import { Chip, chipToString, getConnectionDotStatusColor } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { InfoPanelComponent } from '../../../../components/info-panel/info-panel.component';
-import { StatDisplayComponent } from '../../../../components/stat-display/stat-display.component';
-import { ConnectionDotWithMessageComponent } from '../../../../components/connection-dot-with-message/connection-dot-with-message.component';
-import { BatteryLevelIndicatorComponent } from '../../../../components/battery-level-indicator/battery-level-indicator.component';
-import { GlanceThermometerComponent } from '../../../../components/glance-thermometer/glance-thermometer.component';
+import {
+  StatDisplayListComponent,
+  StatDisplayListConfig
+} from '../../../../components/stat-display-list/stat-display-list.component';
 
 @Component({
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
   styleUrl: './bms-at-a-glance.component.css',
   standalone: true,
-  imports: [
-    InfoPanelComponent,
-    StatDisplayComponent,
-    ConnectionDotWithMessageComponent,
-    BatteryLevelIndicatorComponent,
-    GlanceThermometerComponent
-  ]
+  imports: [InfoPanelComponent, StatDisplayListComponent]
 })
 export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
@@ -43,6 +37,75 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   getStatusColor = (): string => {
     return getConnectionDotStatusColor(this.voltage);
   };
+
+  get statDisplayConfigs(): StatDisplayListConfig[] {
+    return [
+      {
+        key: 'pack-voltage',
+        value: this.voltage,
+        unit: 'V',
+        subtitle: 'Average Voltage',
+        widget: { type: 'connection-dot', getStatusColor: this.getStatusColor }
+      },
+      {
+        key: 'pack-temp',
+        value: this.temperature,
+        unit: 'C',
+        subtitle: 'Average Temp.',
+        unitBelow: true,
+        widget: { type: 'thermometer', value: this.temperature, min: -15, max: 30 }
+      },
+      {
+        key: 'charge-state',
+        value: this.chargeState,
+        unit: '%',
+        subtitle: 'Charge State',
+        unitBelow: true,
+        widget: { type: 'battery-level-indicator', value: this.chargeState }
+      },
+      {
+        key: 'ccl',
+        value: this.ccl,
+        unit: 'A',
+        subtitle: 'CCL'
+      },
+      {
+        key: 'dcl',
+        value: this.dcl,
+        unit: 'A',
+        subtitle: 'DCL'
+      },
+      {
+        key: 'high-voltage',
+        value: this.highVoltage,
+        unit: 'V',
+        precision: 3,
+        subtitle: 'High Voltage',
+        headerLabel: this.getCellChipLabel(this.highVoltageCell, this.highVoltageChip),
+        headerIcon: 'battery'
+      },
+      {
+        key: 'low-voltage',
+        value: this.lowVoltage,
+        unit: 'V',
+        precision: 3,
+        subtitle: 'Low Voltage',
+        headerLabel: this.getCellChipLabel(this.lowVoltageCell, this.lowVoltageChip),
+        headerIcon: 'battery'
+      },
+      {
+        key: 'high-temp',
+        value: this.highTemp,
+        unit: 'C',
+        precision: 2,
+        subtitle: 'High Temp.',
+        unitBelow: true,
+        headerLabel: this.getCellChipLabel(this.highTempCell, this.highTempChip),
+        headerIcon: 'battery'
+      }
+    ];
+  }
+
   enableWidgets = window.innerWidth >= 1000;
   @HostListener('window:resize')
   onResize() {
