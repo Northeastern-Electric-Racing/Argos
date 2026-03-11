@@ -103,5 +103,77 @@ export enum DataTypeEnum {
 
   // Overflow and CRC
   PER_CELL_OVERFLOWID = 'BMS/PerCell/OverflowID',
-  PER_CELL_CRC = 'BMS/PerCell/PECErrorChip'
+  PER_CELL_CRC = 'BMS/PerCell/PECErrorChip',
+
+  // VCU eFUSES
+  // Dashboard eFuse:
+  VCU_EFUSE_DASHBOARD_ADC = 'VCU/eFuses/Dashboard/ADC',
+  VCU_EFUSE_DASHBOARD_VOLTAGE = 'VCU/eFuses/Dashboard/Voltage',
+  VCU_EFUSE_DASHBOARD_CURRENT = 'VCU/eFuses/Dashboard/Current',
+  VCU_EFUSE_DASHBOARD_FAULTED = 'VCU/eFuses/Dashboard/Faulted?',
+  VCU_EFUSE_DASHBOARD_ENABLED = 'VCU/eFuses/Dashboard/Enabled?',
+  
+  // Brake eFuse:
+  VCU_EFUSE_BRAKE_ADC = 'VCU/eFuses/Brake/ADC',
+  VCU_EFUSE_BRAKE_VOLTAGE = 'VCU/eFuses/Brake/Voltage',
+  VCU_EFUSE_BRAKE_CURRENT = 'VCU/eFuses/Brake/Current',
+  VCU_EFUSE_BRAKE_FAULTED = 'VCU/eFuses/Brake/Faulted?',
+  VCU_EFUSE_BRAKE_ENABLED = 'VCU/eFuses/Brake/Enabled?',
+  
+  // Shutdown eFuse:
+  VCU_EFUSE_SHUTDOWN_ADC = 'VCU/eFuses/Shutdown/ADC',
+  VCU_EFUSE_SHUTDOWN_VOLTAGE = 'VCU/eFuses/Shutdown/Voltage',
+  VCU_EFUSE_SHUTDOWN_CURRENT = 'VCU/eFuses/Shutdown/Current',
+  VCU_EFUSE_SHUTDOWN_FAULTED = 'VCU/eFuses/Shutdown/Faulted?',
+  VCU_EFUSE_SHUTDOWN_ENABLED = 'VCU/eFuses/Shutdown/Enabled?',
+  
+  // LV eFuse:
+  VCU_EFUSE_LV_ADC = 'VCU/eFuses/LV/ADC',
+  VCU_EFUSE_LV_VOLTAGE = 'VCU/eFuses/LV/Voltage',
+  VCU_EFUSE_LV_CURRENT = 'VCU/eFuses/LV/Current',
+  VCU_EFUSE_LV_FAULTED = 'VCU/eFuses/LV/Faulted?',
+  VCU_EFUSE_LV_ENABLED = 'VCU/eFuses/LV/Enabled?',
+  
+  // Radfan eFuse:
+  VCU_EFUSE_RADFAN_ADC = 'VCU/eFuses/Radfan/ADC',
+  VCU_EFUSE_RADFAN_VOLTAGE = 'VCU/eFuses/Radfan/Voltage',
+  VCU_EFUSE_RADFAN_CURRENT = 'VCU/eFuses/Radfan/Current',
+  VCU_EFUSE_RADFAN_FAULTED = 'VCU/eFuses/Radfan/Faulted?',
+  VCU_EFUSE_RADFAN_ENABLED = 'VCU/eFuses/Radfan/Enabled?',
+  
+  // Fanbatt eFuse:
+  VCU_EFUSE_FANBATT_ADC = 'VCU/eFuses/Fanbatt/ADC',
+  VCU_EFUSE_FANBATT_VOLTAGE = 'VCU/eFuses/Fanbatt/Voltage',
+  VCU_EFUSE_FANBATT_CURRENT = 'VCU/eFuses/Fanbatt/Current',
+  VCU_EFUSE_FANBATT_FAULTED = 'VCU/eFuses/Fanbatt/Faulted?',
+  VCU_EFUSE_FANBATT_ENABLED = 'VCU/eFuses/Fanbatt/Enabled?',
+  
+  // PumpOne eFuse:
+  VCU_EFUSE_PUMPONE_ADC = 'VCU/eFuses/PumpOne/ADC',
+  VCU_EFUSE_PUMPONE_VOLTAGE = 'VCU/eFuses/PumpOne/Voltage',
+  VCU_EFUSE_PUMPONE_CURRENT = 'VCU/eFuses/PumpOne/Current',
+  VCU_EFUSE_PUMPONE_FAULTED = 'VCU/eFuses/PumpOne/Faulted?',
+  VCU_EFUSE_PUMPONE_ENABLED = 'VCU/eFuses/PumpOne/Enabled?',
+  
+  // PumpTwo eFuse:
+  VCU_EFUSE_PUMPTWO_ADC = 'VCU/eFuses/PumpTwo/ADC',
+  VCU_EFUSE_PUMPTWO_VOLTAGE = 'VCU/eFuses/PumpTwo/Voltage',
+  VCU_EFUSE_PUMPTWO_CURRENT = 'VCU/eFuses/PumpTwo/Current',
+  VCU_EFUSE_PUMPTWO_FAULTED = 'VCU/eFuses/PumpTwo/Faulted?',
+  VCU_EFUSE_PUMPTWO_ENABLED = 'VCU/eFuses/PumpTwo/Enabled?',
+  
+  // Battbox eFuse:
+  VCU_EFUSE_BATTBOX_ADC = 'VCU/eFuses/Battbox/ADC',
+  VCU_EFUSE_BATTBOX_VOLTAGE = 'VCU/eFuses/Battbox/Voltage',
+  VCU_EFUSE_BATTBOX_CURRENT = 'VCU/eFuses/Battbox/Current',
+  VCU_EFUSE_BATTBOX_FAULTED = 'VCU/eFuses/Battbox/Faulted?',
+  VCU_EFUSE_BATTBOX_ENABLED = 'VCU/eFuses/Battbox/Enabled?',
+  
+  // MC eFuse:
+  VCU_EFUSE_MC_ADC = 'VCU/eFuses/MC/ADC',
+  VCU_EFUSE_MC_VOLTAGE = 'VCU/eFuses/MC/Voltage',
+  VCU_EFUSE_MC_CURRENT = 'VCU/eFuses/MC/Current',
+  VCU_EFUSE_MC_FAULTED = 'VCU/eFuses/MC/Faulted?',
+  VCU_EFUSE_MC_ENABLED = 'VCU/eFuses/MC/Enabled?',
+
 }

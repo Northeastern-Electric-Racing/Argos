@@ -1,0 +1,147 @@
+<div style="padding: 20px">
+  <typography variant="large-header" content="eFuses Control & Monitoring" />
+
+  <div style="margin-top: 20px">
+    <mat-grid-list cols="3" gutterSize="15px" rowHeight="500px">
+      <!-- Dashboard eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Dashboard"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_ENABLED"
+          [maxCurrent]="'3'"
+        />
+      </mat-grid-tile>
+
+      <!-- Brake eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Brake"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ENABLED"
+          [maxCurrent]="'0.6'"
+        />
+      </mat-grid-tile>
+
+      <!-- Shutdown eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Shutdown"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_ENABLED"
+          [maxCurrent]="'1'"
+        />
+      </mat-grid-tile>
+
+      <!-- LV eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="LV"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_LV_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_LV_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_LV_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_LV_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_LV_ENABLED"
+          [maxCurrent]="'3'"
+        />
+      </mat-grid-tile>
+
+      <!-- Radfan eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Radfan"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ENABLED"
+          [maxCurrent]="'2'"
+        />
+      </mat-grid-tile>
+
+      <!-- Fanbatt eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Fanbatt"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ENABLED"
+          [maxCurrent]="'4'"
+        />
+      </mat-grid-tile>
+
+      <!-- PumpOne eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Pump One"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ENABLED"
+          [maxCurrent]="'2.5'"
+        />
+      </mat-grid-tile>
+
+      <!-- PumpTwo eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Pump Two"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ENABLED"
+          [maxCurrent]="'2.5'"
+        />
+      </mat-grid-tile>
+
+      <!-- Battbox eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Battbox"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_ENABLED"
+          [maxCurrent]="'2'"
+        />
+      </mat-grid-tile>
+
+      <!-- MC eFuse -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Motor Controller"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_MC_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_MC_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_MC_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_MC_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_MC_ENABLED"
+          [maxCurrent]="'2'"
+        />
+      </mat-grid-tile>
+    </mat-grid-list>
+  </div>
+</div>

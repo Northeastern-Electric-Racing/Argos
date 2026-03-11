@@ -1,0 +1,50 @@
+<info-background [svgIcon]="'electrical_services'" [title]="efuseName()">
+  <vstack style="padding: 20px 20px 30px 20px; gap: 20px; height: 100%; justify-content: space-between">
+    <!-- Main Current Value (Large) -->
+    <vstack style="align-items: center; margin-top: 10px">
+      <div class="current-label">Current</div>
+      <div class="current-value">{{ current.toFixed(2) }} A</div>
+      <seven-segment-display [value]="current.toFixed(2)" [size]="'large'" />
+      <!-- uncomment this eventually <div class="max-current-text">{{ maxCurrent() }} A</div> -->
+    </vstack>
+
+    <!-- ADC Values (Smaller) -->
+    <hstack [spacing]="'14px'" class="adc-value-stack" style="align-items: center;">
+      <div class="adc-pill">
+        <hstack [spacing]="'4px'" style="align-items: center;">
+          <div class="adc-raw-label">ADC Raw:</div>
+          <div class="adc-raw-value">{{ adcRaw.toFixed(0) }}</div>
+        </hstack>
+      </div>
+      
+      <div class="adc-pill">
+        <hstack [spacing]="'4px'" style="align-items: center;">
+          <div class="adc-voltage-label">ADC Voltage:</div>
+          <div class="adc-voltage-value">{{ voltage.toFixed(2) }} V</div>
+        </hstack>
+      </div>
+    </hstack>
+
+    <!-- Status Indicators -->
+    <vstack style="gap: 10px; margin-top: 10px">
+      <hstack style="align-items: center; gap: 10px; justify-content: space-between">
+        <typography variant="sidebar-label" content="Faulted:" />
+        <div 
+          [style.background-color]="isFaulted ? '#ef4444' : '#6b7280'" 
+          style="width: 50px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold">
+          {{ isFaulted ? 'YES' : 'NO' }}
+        </div>
+      </hstack>
+
+      <hstack style="align-items: center; gap: 10px; justify-content: space-between">
+        <typography variant="sidebar-label" content="Enabled:" />
+        <div 
+          [style.background-color]="isEnabled ? '#22c55e' : '#6b7280'" 
+          style="width: 50px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold">
+          {{ isEnabled ? 'YES' : 'NO' }}
+        </div>
+      </hstack>
+    </vstack>
+  </vstack>
+</info-background>
+

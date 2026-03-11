@@ -1,0 +1,230 @@
+/* Seven-segment display container */
+.seven-segment-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  background-color: #1a1a1a;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* Wrapper for each digit */
+.digit-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+/* Individual digit container */
+.digit {
+  position: relative;
+  display: inline-block;
+}
+
+/* Base segment styling */
+.segment {
+  position: absolute;
+  transition: border-color 0.1s ease;
+}
+
+/* Horizontal segments - trapezoid shape using borders */
+.segment-a,
+.segment-d,
+.segment-g {
+  height: 0;
+  width: 24px;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+}
+
+/* Segment A (top) - uses border-top */
+.segment-a {
+  top: 0;
+  left: 3px;
+  border-top: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-a.active {
+  border-top-color: #ff3333;
+}
+
+/* Segment D (bottom) - uses border-bottom */
+.segment-d {
+  bottom: 0;
+  left: 3px;
+  border-bottom: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-d.active {
+  border-bottom-color: #ff3333;
+}
+
+/* Segment G (middle) - uses border-bottom */
+.segment-g {
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  border-bottom: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-g.active {
+  border-bottom-color: #ff3333;
+}
+
+/* Vertical segments - trapezoid shape using borders */
+.segment-b,
+.segment-c,
+.segment-e,
+.segment-f {
+  width: 0;
+  height: 21px;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+/* Segment B (top right) - uses border-right */
+.segment-b {
+  top: 3px;
+  right: 0;
+  border-right: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-b.active {
+  border-right-color: #ff3333;
+}
+
+/* Segment C (bottom right) - uses border-right */
+.segment-c {
+  bottom: 3px;
+  right: 0;
+  border-right: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-c.active {
+  border-right-color: #ff3333;
+}
+
+/* Segment E (bottom left) - uses border-left */
+.segment-e {
+  bottom: 3px;
+  left: 0;
+  border-left: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-e.active {
+  border-left-color: #ff3333;
+}
+
+/* Segment F (top left) - uses border-left */
+.segment-f {
+  top: 3px;
+  left: 0;
+  border-left: 5px solid #2a0a0a; /* inactive dark red */
+}
+
+.segment-f.active {
+  border-left-color: #ff3333;
+}
+
+/* Decimal point */
+.decimal-point {
+  position: absolute;
+  bottom: -2px;
+  right: -6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #2a0a0a; /* Very dark red */
+  transition: background-color 0.1s ease;
+}
+
+.decimal-point.active {
+  background-color: #ff3333;
+}
+
+/* Size variations */
+.size-small .digit {
+  width: 20px;
+  height: 32px;
+}
+
+.size-small .segment-a,
+.size-small .segment-d,
+.size-small .segment-g {
+  width: 14px;
+  border-left-width: 2px;
+  border-right-width: 2px;
+}
+
+.size-small .segment-b,
+.size-small .segment-c,
+.size-small .segment-e,
+.size-small .segment-f {
+  height: 14px;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+}
+
+.size-small .decimal-point {
+  width: 3px;
+  height: 3px;
+}
+
+.size-medium .digit {
+  width: 30px;
+  height: 48px;
+}
+
+.size-medium .segment-a,
+.size-medium .segment-d,
+.size-medium .segment-g {
+  width: 24px;
+  border-left-width: 3px;
+  border-right-width: 3px;
+}
+
+.size-medium .segment-b,
+.size-medium .segment-c,
+.size-medium .segment-e,
+.size-medium .segment-f {
+  height: 21px;
+  border-top-width: 3px;
+  border-bottom-width: 3px;
+}
+
+.size-medium .decimal-point {
+  width: 4px;
+  height: 4px;
+}
+
+.size-large .digit {
+  width: 60px;
+  height: 96px;
+}
+
+.size-large .segment-a,
+.size-large .segment-d,
+.size-large .segment-g {
+  width: 54px;
+  border-left-width: 5px;
+  border-right-width: 5px;
+}
+
+.size-large .segment-b,
+.size-large .segment-c,
+.size-large .segment-e,
+.size-large .segment-f {
+  height: 43px;
+  border-top-width: 5px;
+  border-bottom-width: 5px;
+}
+
+.size-large .decimal-point {
+  width: 6px;
+  height: 6px;
+}
+
+.size-large .decimal-point {
+  width: 6px;
+  height: 6px;
+}
