@@ -11,6 +11,15 @@
   src: url(assets/fonts/WooveboxSegment7Standard.otf) format('opentype');
 }
 
+/* Highway Gothic — US DOT public domain font for annunciator plates */
+@font-face {
+  font-family: 'Highway Gothic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/HWYGOTH.TTF) format('truetype');
+}
+
 /* ---- Design Tokens ---- */
 :root {
   /* Colors */

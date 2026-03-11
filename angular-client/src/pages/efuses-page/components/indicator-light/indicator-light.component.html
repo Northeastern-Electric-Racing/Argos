@@ -1,0 +1,10 @@
+<div
+  class="indicator-plate"
+  [class.active]="active()"
+  [style.font-size.px]="fontSize()"
+  [style.--plate-bg]="glowColor().bg"
+  [style.--plate-glow]="glowColor().glow"
+  [style.--plate-text]="glowColor().text"
+>
+  <span class="plate-label">{{ label() }}</span>
+</div>

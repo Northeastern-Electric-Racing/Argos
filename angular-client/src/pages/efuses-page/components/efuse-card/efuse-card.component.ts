@@ -8,6 +8,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 import SevenSegmentDisplayComponent from '../seven-segment-display/seven-segment-display.component';
+import IndicatorLightComponent from '../indicator-light/indicator-light.component';
 import { inject } from '@angular/core';
 
 /**
@@ -23,7 +24,8 @@ import { inject } from '@angular/core';
     TypographyComponent,
     HStackComponent,
     VStackComponent,
-    SevenSegmentDisplayComponent
+    SevenSegmentDisplayComponent,
+    IndicatorLightComponent
   ]
 })
 export default class EfuseCardComponent implements OnInit, OnDestroy {

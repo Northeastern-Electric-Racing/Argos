@@ -25,26 +25,11 @@
       </vstack>
     </hstack>
 
-    <!-- Status Indicators -->
-    <!-- <vstack style="gap: 10px; margin-top: 10px">
-      <hstack style="align-items: center; gap: 10px; justify-content: space-between">
-        <typography variant="sidebar-label" content="Faulted:" />
-        <div 
-          [style.background-color]="isFaulted ? '#ef4444' : '#6b7280'" 
-          style="width: 50px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold">
-          {{ isFaulted ? 'YES' : 'NO' }}
-        </div>
-      </hstack>
-
-      <hstack style="align-items: center; gap: 10px; justify-content: space-between">
-        <typography variant="sidebar-label" content="Enabled:" />
-        <div 
-          [style.background-color]="isEnabled ? '#22c55e' : '#6b7280'" 
-          style="width: 50px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold">
-          {{ isEnabled ? 'YES' : 'NO' }}
-        </div>
-      </hstack>
-    </vstack> -->
+    <!-- Status Indicators (left) + future switch (right) -->
+    <hstack [justifyContent]="'center'" [spacing]="'15px'" [alignItems]="'end'" style="width: 100%">
+      <indicator-light [label]="'FAULTED'" [active]="isFaulted" [color]="'red'" [fontSize]="14" />
+      <indicator-light [label]="'ENABLED'" [active]="isEnabled" [color]="'green'" [fontSize]="14" />
+    </hstack>
     </vstack>
   </div>
 </info-background>
