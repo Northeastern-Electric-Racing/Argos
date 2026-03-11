@@ -2,6 +2,15 @@
 @import 'styles/roboto.scss';
 @import 'styles/material-icons.scss';
 
+/* Seven-segment display font */
+@font-face {
+  font-family: 'Segment7';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/WooveboxSegment7Standard.otf) format('opentype');
+}
+
 /* ---- Design Tokens ---- */
 :root {
   /* Colors */

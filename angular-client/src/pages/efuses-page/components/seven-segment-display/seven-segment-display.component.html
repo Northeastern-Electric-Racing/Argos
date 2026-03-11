@@ -1,29 +1,19 @@
-<div class="seven-segment-container" [ngClass]="getSizeClass()">
-  <div class="digit-wrapper" *ngFor="let item of getDisplayCharacters()">
-    <div class="digit">
-      <!-- Segment A (top) -->
-      <div class="segment segment-a" [ngClass]="{ 'active': getSegments(item.char)[0] }"></div>
-      
-      <!-- Segment B (top right) -->
-      <div class="segment segment-b" [ngClass]="{ 'active': getSegments(item.char)[1] }"></div>
-      
-      <!-- Segment C (bottom right) -->
-      <div class="segment segment-c" [ngClass]="{ 'active': getSegments(item.char)[2] }"></div>
-      
-      <!-- Segment D (bottom) -->
-      <div class="segment segment-d" [ngClass]="{ 'active': getSegments(item.char)[3] }"></div>
-      
-      <!-- Segment E (bottom left) -->
-      <div class="segment segment-e" [ngClass]="{ 'active': getSegments(item.char)[4] }"></div>
-      
-      <!-- Segment F (top left) -->
-      <div class="segment segment-f" [ngClass]="{ 'active': getSegments(item.char)[5] }"></div>
-      
-      <!-- Segment G (middle) -->
-      <div class="segment segment-g" [ngClass]="{ 'active': getSegments(item.char)[6] }"></div>
-      
-      <!-- Decimal point -->
-      <div class="decimal-point" [ngClass]="{ 'active': item.hasDecimal }"></div>
+<div class="seven-segment-wrapper">
+  <div class="seven-segment-container"
+    [style.font-size.px]="fontSize()"
+    [style.padding-left.px]="paddingLeft()"
+    [style.padding-right.px]="paddingRight()"
+    [style.padding-top.px]="paddingTop()"
+    [style.padding-bottom.px]="paddingBottom()"
+  >
+    <div class="segment-stack">
+      <!-- Background: all segments dimly lit -->
+      <span class="segment-text background">{{ backgroundText() }}</span>
+      <!-- Foreground: actual value in bright red -->
+      <span class="segment-text foreground">{{ foregroundText() }}</span>
     </div>
   </div>
+  @if (unit()) {
+    <span class="unit-label" [style.font-size.px]="unitFontSize()">{{ unit() }}</span>
+  }
 </div>

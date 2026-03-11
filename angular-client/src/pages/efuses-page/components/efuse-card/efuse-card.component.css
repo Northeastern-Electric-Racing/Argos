@@ -12,6 +12,7 @@
   font-weight: bold;
   color: white;
   line-height: 1.2;
+  text-align: left;
 }
 
 /* Main current value */
@@ -74,6 +75,16 @@
 /* ADC Voltage Value */
 .adc-voltage-value {
   font-size: 15px;
+  font-weight: 500;
+  color: white;
+  line-height: 1.2;
+}
+
+/* Amps */
+.amps {
+  font-size: 30px;
+  font-style: oblique;
+  letter-spacing: 0.5px;
   font-weight: 500;
   color: white;
   line-height: 1.2;

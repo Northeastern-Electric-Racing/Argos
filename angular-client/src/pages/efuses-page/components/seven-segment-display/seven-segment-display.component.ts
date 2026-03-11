@@ -1,73 +1,74 @@
-import { Component, input } from '@angular/core';
-import { NgFor, NgClass } from '@angular/common';
+import { Component, input, computed } from '@angular/core';
+
+/** Use one-dot-leader (U+2024) instead of period — it falls back to
+ *  monospace with a consistent advance width in the Segment7 font. */
+const DOT = '\u2024';
 
 /**
- * Seven-segment display component that mimics classic LED displays
- * Shows numbers with red segments on a near-black background
+ * Seven-segment display component using a font-based approach.
+ * Two layers: a background layer always showing "8" for every digit (faded red),
+ * and a foreground layer showing the actual value (bright red).
+ *
+ * Uses the one-dot-leader character (U+2024) for the decimal point so that
+ * both layers always have identical character widths and align perfectly.
  */
 @Component({
   selector: 'seven-segment-display',
   templateUrl: './seven-segment-display.component.html',
   styleUrls: ['./seven-segment-display.component.css'],
   standalone: true,
-  imports: [NgFor, NgClass]
 })
 export default class SevenSegmentDisplayComponent {
-  // Input properties
-  value = input.required<string>(); // The value to display (e.g., "123.45")
-  size = input<string>('medium'); // Size: 'small', 'medium', 'large'
+  /** The value to display (e.g., "1.70") */
+  value = input.required<string>();
 
-  // Segment mappings for each digit (0-9) and decimal point
-  private segmentMap: { [key: string]: boolean[] } = {
-    '0': [true, true, true, true, true, true, false],     // a,b,c,d,e,f,g
-    '1': [false, true, true, false, false, false, false],
-    '2': [true, true, false, true, true, false, true],
-    '3': [true, true, true, true, false, false, true],
-    '4': [false, true, true, false, false, true, true],
-    '5': [true, false, true, true, false, true, true],
-    '6': [true, false, true, true, true, true, true],
-    '7': [true, true, true, false, false, false, false],
-    '8': [true, true, true, true, true, true, true],
-    '9': [true, true, true, true, false, true, true],
-    ' ': [false, false, false, false, false, false, false], // blank
-    '-': [false, false, false, false, false, false, true],  // minus sign
-    '.': [false, false, false, false, false, false, false]  // decimal (handled separately)
-  };
+  /** Number of digits (not counting decimal point) to show in the background */
+  digits = input<number>(3);
+
+  /** Number of decimal places */
+  decimals = input<number>(2);
+
+  /** Font size in px */
+  fontSize = input<number>(64);
+
+  /** Optional unit label displayed at the bottom-right of the box (e.g., "A", "V") */
+  unit = input<string>('');
+
+  /** Font size in px for the unit label */
+  unitFontSize = input<number>(30);
+
+  /** Optional padding overrides for the display box (in px) */
+  paddingLeft = input<number>(15);
+  paddingRight = input<number>(10);
+  paddingTop = input<number>(20);
+  paddingBottom = input<number>(10);
 
   /**
-   * Get the characters to display including proper spacing for decimals
+   * Background text with all 8s and the dot leader, e.g. "8․88"
    */
-  getDisplayCharacters(): Array<{ char: string; hasDecimal: boolean }> {
-    const valueStr = this.value().toString();
-    const result: Array<{ char: string; hasDecimal: boolean }> = [];
-
-    for (let i = 0; i < valueStr.length; i++) {
-      const char = valueStr[i];
-      
-      if (char === '.') {
-        // Attach decimal to previous character
-        if (result.length > 0) {
-          result[result.length - 1].hasDecimal = true;
-        }
-      } else {
-        result.push({ char, hasDecimal: false });
-      }
+  backgroundText = computed(() => {
+    const intDigits = this.digits() - this.decimals();
+    const decPlaces = this.decimals();
+    if (decPlaces > 0) {
+      return '8'.repeat(intDigits) + DOT + '8'.repeat(decPlaces);
     }
-
-    return result;
-  }
-
-  /**
-   * Get segment states for a given character
-   */
-  getSegments(char: string): boolean[] {
-    return this.segmentMap[char] || this.segmentMap[' '];
-  }
+    return '8'.repeat(this.digits());
+  });
 
   /**
-   * Get CSS class for size
+   * Foreground text with the actual value, using the dot leader, e.g. "0․90"
    */
-  getSizeClass(): string {
-    return `size-${this.size()}`;
-  }
+  foregroundText = computed(() => {
+    const val = this.value();
+    const dotIndex = val.indexOf('.');
+    const decPlaces = this.decimals();
+    const intDigits = this.digits() - decPlaces;
+
+    const intPart = (dotIndex >= 0 ? val.substring(0, dotIndex) : val).padStart(intDigits, ' ');
+    if (decPlaces === 0) return intPart;
+
+    const decRaw = dotIndex >= 0 ? val.substring(dotIndex + 1) : '';
+    const decPart = decRaw.padEnd(decPlaces, '0').substring(0, decPlaces);
+    return intPart + DOT + decPart;
+  });
 }
