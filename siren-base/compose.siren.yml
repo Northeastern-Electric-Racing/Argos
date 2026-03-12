@@ -1,0 +1,17 @@
+services:
+  siren:
+    container_name: siren
+    restart: unless-stopped
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+      - 9002:9001 # win conflict on 9001
+    expose:
+      - 1883
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/certs/ca.crt:/mosquitto/config/certs/ca.crt:ro
+      - ./mosquitto/certs/base-station-broker.crt:/mosquitto/config/certs/base-station-broker.crt:ro
+      - ./mosquitto/certs/base-station-broker.key:/mosquitto/config/certs/base-station-broker.key:ro
+    cpu_shares: 2048
+    oom_kill_disable: true
