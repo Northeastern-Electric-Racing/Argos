@@ -41,6 +41,7 @@ const addRule = () => `${baseURL}/rules/add`;
 const deleteRule = (ruleId: string) => `${baseURL}/rules/delete/${ruleId}`;
 const editRule = (ruleId: string) => `${baseURL}/rules/edit/${ruleId}`;
 const subscribeToRule = () => `${baseURL}/rules/subscribe`;
+const unsubscribeFromRule = () => `${baseURL}/rules/unsubscribe`;
 
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
@@ -80,6 +81,7 @@ export const urls = {
   deleteRule,
   editRule,
   subscribeToRule,
+  unsubscribeFromRule,
 
   authenticate,
 

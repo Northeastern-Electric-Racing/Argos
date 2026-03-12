@@ -53,10 +53,23 @@ export const editRule = (ruleId: string, rule: object): Promise<Response> => {
   });
 };
 
-export const subscribeToRule = (subscription: object): Promise<Response> => {
+export interface RuleSubscriptionRequest {
+  rule_ids: string[];
+  client_id: string;
+}
+
+export const subscribeToRules = (request: RuleSubscriptionRequest): Promise<Response> => {
   return fetch(urls.subscribeToRule(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(subscription)
+    body: JSON.stringify(request)
+  });
+};
+
+export const unsubscribeFromRules = (request: RuleSubscriptionRequest): Promise<Response> => {
+  return fetch(urls.unsubscribeFromRule(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
   });
 };

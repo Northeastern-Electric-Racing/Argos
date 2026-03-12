@@ -1,0 +1,38 @@
+.loading-state,
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #888;
+  font-size: 1rem;
+}
+
+.action-icons {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background-color: #e74c3c;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+  background-color: #444;
+  color: #ddd;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #555;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #333;
+  padding: 8px 12px;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  padding: 10px 12px;
+}

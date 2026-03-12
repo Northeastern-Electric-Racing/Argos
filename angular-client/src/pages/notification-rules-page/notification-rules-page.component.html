@@ -20,8 +20,16 @@
     <typography variant="header" content="Rules" />
     <div class="rules-bar-actions">
       <argos-button label="Add" [onClick]="onAddRule" />
-      <argos-button label="Remove" [onClick]="onRemoveSelected" additionalStyles="background-color: #555; opacity: 0.6; cursor: not-allowed;" />
-      <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" additionalStyles="background-color: #555; opacity: 0.6; cursor: not-allowed;" />
+      <argos-button
+        label="Remove"
+        [onClick]="onRemoveSelected"
+        [additionalStyles]="hasSelection() ? '' : 'background-color: #555; opacity: 0.6; cursor: not-allowed;'"
+      />
+      <argos-button
+        label="Toggle Subscription"
+        [onClick]="onToggleSubscription"
+        [additionalStyles]="hasSelection() ? '' : 'background-color: #555; opacity: 0.6; cursor: not-allowed;'"
+      />
     </div>
     <div class="search-container">
       <input
@@ -36,6 +44,10 @@
     </div>
   </div>
 
-  <!-- Table placeholder — implemented in #535 -->
-  <div class="table-placeholder"></div>
+  <rules-table
+    #rulesTable
+    [clientId]="clientId"
+    [searchTerm]="searchTerm()"
+    (selectionChanged)="onSelectionChanged($event)"
+  />
 </div>

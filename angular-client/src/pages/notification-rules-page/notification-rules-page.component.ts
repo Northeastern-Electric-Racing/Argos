@@ -1,13 +1,21 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { take } from 'rxjs';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
-import { addRule, getRulesByClientId, RulePayload, RulesResponse } from 'src/api/rules.api';
+import {
+  addRule,
+  deleteRule,
+  getRulesByClientId,
+  RulePayload,
+  RulesResponse,
+  subscribeToRules
+} from 'src/api/rules.api';
 import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-confirm-dialog.component';
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
+import { RulesTableComponent } from './rules-table/rules-table.component';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -20,7 +28,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText]
+  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(MessageService);
@@ -33,6 +41,9 @@ export default class NotificationRulesPageComponent implements OnInit {
   searchTerm = signal('');
   /** Selected rule IDs — populated by the rules table (#535) */
   selectedRuleIds = signal<string[]>([]);
+
+  rulesTable = viewChild<RulesTableComponent>('rulesTable');
+  hasSelection = computed(() => this.selectedRuleIds().length > 0);
 
   private confirmRef: DynamicDialogRef | undefined;
   private addRuleRef: DynamicDialogRef | undefined;
@@ -64,6 +75,7 @@ export default class NotificationRulesPageComponent implements OnInit {
         const response = await addRule(this.clientId, rule);
         if (response.ok) {
           this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
+          this.rulesTable()?.loadRules();
         } else {
           const text = await response.text();
           this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
@@ -74,11 +86,52 @@ export default class NotificationRulesPageComponent implements OnInit {
     });
   };
 
-  // Stub — enabled once table selection is wired in #535
-  onRemoveSelected = () => {};
+  onRemoveSelected = async () => {
+    const ids = this.selectedRuleIds();
+    if (ids.length === 0) return;
+    if (!confirm(`Delete ${ids.length} selected rule(s)?`)) return;
 
-  // Stub — enabled once table selection is wired in #535
-  onToggleSubscription = () => {};
+    const errors: string[] = [];
+    for (const id of ids) {
+      try {
+        const response = await deleteRule(this.clientId, id);
+        if (!response.ok) errors.push(id);
+      } catch {
+        errors.push(id);
+      }
+    }
+
+    if (errors.length > 0) {
+      this.messageService.add({ severity: 'error', summary: 'Delete Error', detail: `Failed to delete: ${errors.join(', ')}` });
+    } else {
+      this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${ids.length} rule(s) removed` });
+    }
+
+    this.selectedRuleIds.set([]);
+    this.rulesTable()?.loadRules();
+  };
+
+  onToggleSubscription = async () => {
+    const ids = this.selectedRuleIds();
+    if (ids.length === 0) return;
+
+    const request = { rule_ids: ids, client_id: this.clientId };
+    try {
+      const response = await subscribeToRules(request);
+      if (response.ok) {
+        this.messageService.add({ severity: 'success', summary: 'Subscribed', detail: `Subscribed to ${ids.length} rule(s)` });
+        this.rulesTable()?.loadRules();
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update subscriptions' });
+      }
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
+    }
+  };
+
+  onSelectionChanged(ruleIds: string[]): void {
+    this.selectedRuleIds.set(ruleIds);
+  }
 
   onSearchInput(event: Event): void {
     const { value } = event.target as HTMLInputElement;
@@ -261,6 +314,7 @@ export default class NotificationRulesPageComponent implements OnInit {
         summary: 'Upload Complete',
         detail: `${successCount} of ${rules.length} rule(s) added successfully`
       });
+      this.rulesTable()?.loadRules();
     }
 
     if (errors.length > 0) {
