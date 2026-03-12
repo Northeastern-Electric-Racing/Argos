@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { take } from 'rxjs';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { addRule, getRulesByClientId, RulePayload, RulesResponse } from 'src/api/rules.api';
@@ -78,7 +79,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       data: { rules: result }
     });
 
-    this.confirmRef.onClose.subscribe((confirmed: boolean | undefined) => {
+    this.confirmRef.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
       if (confirmed) {
         this.batchAddRules(result);
       }
@@ -252,11 +253,11 @@ export default class NotificationRulesPageComponent implements OnInit {
 
       // TODO: add description and uploaded_by columns once backend supports them
       const header = CSV_HEADERS.join(',');
-      const rows = rules.map((r) => {
-        const expr = r.expr.includes(',') ? `"${r.expr.replace(/"/g, '""')}"` : r.expr;
-        const topic = r.topic.includes(',') ? `"${r.topic.replace(/"/g, '""')}"` : r.topic;
-        return `${r.id},${topic},${expr},${r.debounce_time}`;
-      });
+      const rows = rules.map((r) =>
+        [this.escapeCsvCell(r.id), this.escapeCsvCell(r.topic), this.escapeCsvCell(r.expr), String(r.debounce_time)].join(
+          ','
+        )
+      );
 
       const csvContent = [header, ...rows].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -274,6 +275,19 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     this.downloading.set(false);
+  }
+
+  /** Escape a CSV cell value, preventing formula injection and handling special characters */
+  private escapeCsvCell(value: string): string {
+    // Prevent CSV formula injection by prefixing with single-quote
+    if (/^[=+\-@\t\r]/.test(value)) {
+      return `"'${value.replace(/"/g, '""')}"`;
+    }
+    // Quote fields containing commas, quotes, or newlines
+    if (/[,"\n]/.test(value)) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
   }
 
   private getOrCreateClientId(): string {
