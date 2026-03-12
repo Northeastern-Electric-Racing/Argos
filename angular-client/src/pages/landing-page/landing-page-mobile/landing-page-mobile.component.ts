@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 
 import { DriverComponent } from '../../../components/driver-component/driver-component';
 import { AccelerationGraphsComponent } from '../../../components/acceleration-graphs/acceleration-graphs.component';
@@ -11,12 +11,15 @@ import SpeedOverTimeDisplayComponent from 'src/components/speed-over-time-displa
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import MqttMobileViewComponent from './mqtt-mobile-view/mqtt-mobile-view.component';
+
+export type MobileTab = 'dashboard' | 'mqtt';
 
 @Component({
   selector: 'landing-page-mobile',
   templateUrl: './landing-page-mobile.component.html',
   styleUrls: ['./landing-page-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TypographyComponent,
     VStackComponent,
@@ -28,9 +31,16 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
     DatePipe,
     RasberryPiComponent,
     MotorInfoComponent,
-    AccelerationOverTimeDisplayComponent
+    AccelerationOverTimeDisplayComponent,
+    MqttMobileViewComponent
   ]
 })
 export default class LandingPageMobileComponent {
-  @Input() time!: Date;
+  time = input.required<Date>();
+
+  activeTab = signal<MobileTab>('dashboard');
+
+  setTab(tab: MobileTab): void {
+    this.activeTab.set(tab);
+  }
 }

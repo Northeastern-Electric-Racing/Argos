@@ -1,0 +1,38 @@
+.tab-bar {
+  display: flex;
+  gap: 0;
+  margin: 8px 0 12px 0;
+  background-color: var(--color-background-info, #2c2c2c);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary, #797a7a);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-button.active {
+  background-color: #ef4343;
+  color: #fff;
+}
+
+.tab-button:focus-visible {
+  outline: 2px solid #ef4343;
+  outline-offset: 2px;
+}
+
+.mqtt-panel {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+}
