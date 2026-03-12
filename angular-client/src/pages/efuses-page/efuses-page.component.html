@@ -2,7 +2,7 @@
   <typography variant="large-header" content="eFuses Control & Monitoring" />
 
   <div style="margin-top: 20px">
-    <mat-grid-list cols="3" gutterSize="15px" rowHeight="500px">
+    <mat-grid-list cols="3" gutterSize="15px" rowHeight="450px">
       <!-- Dashboard eFuse -->
       <mat-grid-tile>
         <efuse-card
@@ -59,7 +59,7 @@
         />
       </mat-grid-tile>
 
-      <!-- Radfan eFuse -->
+      <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
       <mat-grid-tile>
         <efuse-card
           style="width: 100%; height: 100%"
@@ -70,10 +70,14 @@
           [faultedDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_FAULTED"
           [enabledDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ENABLED"
           [maxCurrent]="'2'"
+          [autoDataType]="DataTypeEnum.MOTOR_TEMP"
+          [autoLabel]="'Motor Temp'"
+          [autoUnit]="'°C'"
         />
       </mat-grid-tile>
 
-      <!-- Fanbatt eFuse -->
+      <!-- Fanbatt eFuse (Type 2: AUTO based on BMS battbox temp) -->
+      <!-- TODO: Replace PACK_TEMP with the correct BMS battbox temp DataTypeEnum once available -->
       <mat-grid-tile>
         <efuse-card
           style="width: 100%; height: 100%"
@@ -84,10 +88,13 @@
           [faultedDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_FAULTED"
           [enabledDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ENABLED"
           [maxCurrent]="'4'"
+          [autoDataType]="DataTypeEnum.PACK_TEMP"
+          [autoLabel]="'Battbox Temp'"
+          [autoUnit]="'°C'"
         />
       </mat-grid-tile>
 
-      <!-- PumpOne eFuse -->
+      <!-- PumpOne eFuse (Type 2: AUTO based on DTI motor temp) -->
       <mat-grid-tile>
         <efuse-card
           style="width: 100%; height: 100%"
@@ -98,10 +105,14 @@
           [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_FAULTED"
           [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ENABLED"
           [maxCurrent]="'2.5'"
+          [autoDataType]="DataTypeEnum.MOTOR_TEMP"
+          [autoLabel]="'Motor Temp'"
+          [autoUnit]="'°C'"
         />
       </mat-grid-tile>
 
-      <!-- PumpTwo eFuse -->
+      <!-- PumpTwo eFuse (Type 2: AUTO based on DTI controller temp) -->
+      <!-- TODO: Replace MOTOR_TEMP with the correct DTI controller temp DataTypeEnum once available -->
       <mat-grid-tile>
         <efuse-card
           style="width: 100%; height: 100%"
@@ -112,6 +123,9 @@
           [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_FAULTED"
           [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ENABLED"
           [maxCurrent]="'2.5'"
+          [autoDataType]="DataTypeEnum.MOTOR_TEMP"
+          [autoLabel]="'Controller Temp'"
+          [autoUnit]="'°C'"
         />
       </mat-grid-tile>
 

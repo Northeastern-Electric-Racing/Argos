@@ -36,18 +36,6 @@
   margin-top: 100px;
 }
 
-/* ADC Pill Container */
-.adc-pill {
-  min-width: 180px;
-  text-align: center;
-  background-color: #5b6068;
-  border-radius: 15px;
-  padding: 6px 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* ADC Raw Label */
 .adc-raw-label {
   font-size: 15px;

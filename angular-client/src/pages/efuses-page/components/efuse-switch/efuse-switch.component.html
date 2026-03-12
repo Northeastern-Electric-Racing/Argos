@@ -1,0 +1,12 @@
+<div class="switch-group">
+  @for (option of options(); track option) {
+    <button
+      class="switch-button"
+      [class.active]="selected() === option"
+      [style.font-size.px]="fontSize()"
+      (click)="select(option)"
+    >
+      <span class="switch-label">{{ option }}</span>
+    </button>
+  }
+</div>
