@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, inject, input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, OnChanges, OnInit, inject, input, output } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -39,7 +39,7 @@ export class FormTemplateComponent implements OnInit, OnChanges {
   public ref = inject(DynamicDialogRef);
 
   formData = input<Map<string, anyType>>(new Map());
-  @Output() submitForm: EventEmitter<FormGroup> = new EventEmitter();
+  submitForm = output<FormGroup>();
 
   form: FormGroup = this.fb.group({});
 

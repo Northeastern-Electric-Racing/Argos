@@ -6,7 +6,7 @@
       [totalTime]="totalSeconds"
     />
     <div style="padding-top: 40px">
-      @if (displayLight) {
+      @if (displayLight()) {
         <div
           class="connection-dot"
           [style.background-color]="getStatusColor(isActive)"

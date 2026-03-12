@@ -1,4 +1,4 @@
-import { Component, effect, input, ViewChild } from '@angular/core';
+import { Component, effect, input, viewChild } from '@angular/core';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -34,7 +34,7 @@ export class SelectDropdownComponent {
   selectedOption: DropdownOption | undefined;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  @ViewChild('dropdownRef') dropdownRef: any;
+  dropdownRef = viewChild<any>('dropdownRef');
 
   constructor() {
     effect(() => {

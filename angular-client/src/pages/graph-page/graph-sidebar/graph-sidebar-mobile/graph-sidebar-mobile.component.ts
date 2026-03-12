@@ -1,5 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
@@ -43,7 +43,7 @@ import { TopicSelectionService } from 'src/services/topic-selection.service';
   imports: [AsyncPipe, NodeDisplayComponent, TypographyComponent]
 })
 export default class GraphSidebarMobileComponent implements OnInit {
-  @Input() dataTypes!: DataType[];
+  dataTypes = input.required<DataType[]>();
   nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
   showSelection = false;
   nodes!: Node[];
@@ -53,7 +53,7 @@ export default class GraphSidebarMobileComponent implements OnInit {
    * Initializes the nodes with the visibility toggle.
    */
   ngOnInit(): void {
-    this.nodes = dataTypesToNodes(this.dataTypes);
+    this.nodes = dataTypesToNodes(this.dataTypes());
     this.nodesWithVisibilityToggle = of(
       this.nodes.map((node: Node) => {
         return {

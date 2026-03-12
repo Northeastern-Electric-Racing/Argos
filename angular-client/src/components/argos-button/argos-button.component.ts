@@ -20,7 +20,7 @@ export class ButtonComponent implements OnInit {
   ngOnInit(): void {
     this.style = 'width: 140px; height: 45px; ';
 
-    if (this.additionalStyles) {
+    if (this.additionalStyles()) {
       this.style += this.additionalStyles();
     }
   }

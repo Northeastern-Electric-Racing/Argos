@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, input } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
@@ -15,7 +15,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class BalancingStatusComponent implements OnInit, OnDestroy {
-  @Input() displayLight: boolean = true;
+  displayLight = input<boolean>(true);
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
   isBalancing: boolean = false;

@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, input } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -26,11 +26,11 @@ type ChartOptions = {
 })
 export class GraphComponent implements OnInit, OnDestroy {
   public dialogService = inject(DialogService);
-  @Input() data!: GraphData[];
-  @Input() color!: string; // Must be hex
-  @Input() title?: string;
-  @Input() graphContainerId!: string;
-  @Input({ required: false }) timeRangeSec!: number;
+  data = input.required<GraphData[]>();
+  color = input.required<string>(); // Must be hex
+  title = input<string | undefined>(undefined);
+  graphContainerId = input.required<string>();
+  timeRangeSec = input<number>(undefined as unknown as number);
   options!: ChartOptions;
   chart!: ApexCharts;
   timeDiffMs: number = 0;
@@ -39,11 +39,11 @@ export class GraphComponent implements OnInit, OnDestroy {
   timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
-      header: this.title,
+      header: this.title(),
       data: {
-        data: this.data,
-        color: this.color,
-        title: this.title
+        data: this.data(),
+        color: this.color(),
+        title: this.title()
       }
     });
   };
@@ -51,13 +51,13 @@ export class GraphComponent implements OnInit, OnDestroy {
   updateChart = () => {
     this.chart.updateSeries([
       {
-        name: this.title,
-        data: Array.from(this.data)
+        name: this.title(),
+        data: Array.from(this.data())
       }
     ]);
 
-    if (!this.isSliding && this.data.length > 2) {
-      this.timeDiffMs = this.data[this.data.length - 1].x - this.data[0].x;
+    if (!this.isSliding && this.data().length > 2) {
+      this.timeDiffMs = this.data()[this.data().length - 1].x - this.data()[0].x;
     }
 
     if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
@@ -79,7 +79,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    this.timeRangeMs = (this.timeRangeSec ?? 120) * 1000;
+    this.timeRangeMs = (this.timeRangeSec() ?? 120) * 1000;
 
     this.options = {
       chart: {
@@ -105,7 +105,7 @@ export class GraphComponent implements OnInit, OnDestroy {
       },
       stroke: {
         curve: 'straight',
-        colors: [this.color]
+        colors: [this.color()]
       },
       markers: {
         size: 0
@@ -168,7 +168,7 @@ export class GraphComponent implements OnInit, OnDestroy {
     //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
     this.timeOuts.push(
       setTimeout(() => {
-        const chartContainer = document.getElementById(this.graphContainerId);
+        const chartContainer = document.getElementById(this.graphContainerId());
         if (!chartContainer) {
           return;
         }

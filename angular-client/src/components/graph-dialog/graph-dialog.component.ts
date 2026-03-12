@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
@@ -14,10 +14,10 @@ export class GraphDialogComponent {
   public dialogService = inject(DialogService);
   public config = inject(DynamicDialogConfig);
   public ref = inject(DynamicDialogRef); // Inject the dialog reference for closing
-  @Input() data!: GraphData[];
-  @Input() color!: string;
-  @Input() title!: string;
-  @Input() graphContainerId!: string;
+  data = input.required<GraphData[]>();
+  color = input.required<string>();
+  title = input.required<string>();
+  graphContainerId = input.required<string>();
 
   constructor() {
     this.data = this.config.data.data;

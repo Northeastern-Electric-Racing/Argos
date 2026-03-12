@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { DataTypeEnum } from 'src/data-type.enum';
@@ -14,7 +14,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class FaultedStatusComponent implements OnInit {
-  @Input() displayLight: boolean = true;
+  displayLight = input<boolean>(true);
   private storage = inject(Storage);
   isFaulted: boolean = false;
   currentSeconds: number = 0;

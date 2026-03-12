@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 import { DriverComponent } from '../../../components/driver-component/driver-component';
 import { AccelerationGraphsComponent } from '../../../components/acceleration-graphs/acceleration-graphs.component';
@@ -32,5 +32,5 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   ]
 })
 export default class LandingPageMobileComponent {
-  @Input() time!: Date;
+  time = input.required<Date>();
 }

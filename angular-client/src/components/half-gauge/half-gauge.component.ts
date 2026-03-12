@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit, input } from '@angular/core';
 
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
 import { NgStyle } from '@angular/common';
@@ -21,12 +21,12 @@ export type ChartOptions = {
 export default class HalfGaugeComponent implements OnInit {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public chartOptions!: Partial<ChartOptions> | any;
-  @Input() current: number = 50;
-  @Input() min: number = 0;
-  @Input() max: number = 100;
-  @Input() unit: string = 'm/s';
-  @Input() color: string = '#ff0000';
-  @Input() size: number = 200;
+  current = input<number>(50);
+  min = input<number>(0);
+  max = input<number>(100);
+  unit = input<string>('m/s');
+  color = input<string>('#ff0000');
+  size = input<number>(200);
 
   widthpx: string = '200px';
   heightpx: string = '200px';
@@ -36,12 +36,12 @@ export default class HalfGaugeComponent implements OnInit {
   fontsize: string = '50px';
 
   ngOnInit() {
-    this.widthpx = this.size + 'px';
-    this.heightpx = this.size * 0.5 + 'px';
+    this.widthpx = this.size() + 'px';
+    this.heightpx = this.size() * 0.5 + 'px';
     this.paddingTop = '';
-    this.label = this.current + this.unit;
-    this.percentage = ((this.current - this.min) / (this.max - this.min)) * 100;
-    this.fontsize = this.size / 10 + 'px';
+    this.label = this.current() + this.unit();
+    this.percentage = ((this.current() - this.min()) / (this.max() - this.min())) * 100;
+    this.fontsize = this.size() / 10 + 'px';
 
     // apex radial charts are hard coded to work with percentages, so converting to percentage to
     // accurately represent min and max in chart and then using actual value and unit as label
@@ -91,7 +91,7 @@ export default class HalfGaugeComponent implements OnInit {
       },
       fill: {
         type: 'solid',
-        colors: [this.color]
+        colors: [this.color()]
       },
       labels: [this.label]
     };

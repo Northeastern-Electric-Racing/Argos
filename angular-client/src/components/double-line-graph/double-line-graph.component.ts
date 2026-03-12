@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, input } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexAxisChartSeries,
@@ -41,15 +41,15 @@ type ChartOptions = {
 })
 export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   public dialogService = inject(DialogService);
-  @Input() data1!: GraphData[];
-  @Input() color1!: string; // Must be hex
-  @Input() title1?: string;
-  @Input() data2!: GraphData[];
-  @Input() color2!: string; // Must be hex
-  @Input() title2?: string;
-  @Input() header?: string;
-  @Input() graphContainerId!: string;
-  @Input({ required: false }) timeRangeSec!: number;
+  data1 = input.required<GraphData[]>();
+  color1 = input.required<string>(); // Must be hex
+  title1 = input<string | undefined>(undefined);
+  data2 = input.required<GraphData[]>();
+  color2 = input.required<string>(); // Must be hex
+  title2 = input<string | undefined>(undefined);
+  header = input<string | undefined>(undefined);
+  graphContainerId = input.required<string>();
+  timeRangeSec = input<number>(undefined as unknown as number);
   options!: ChartOptions;
   chart!: ApexCharts;
   series: ApexAxisChartSeries = [];
@@ -59,11 +59,11 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
-      header: this.header,
+      header: this.header(),
       data: {
-        data: this.data1,
-        color: this.color1,
-        title: this.title1
+        data: this.data1(),
+        color: this.color1(),
+        title: this.title1()
       }
     });
   };
@@ -76,18 +76,18 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   updateChart = () => {
     this.series = [
       {
-        name: this.title1,
-        data: Array.from(this.data1)
+        name: this.title1(),
+        data: Array.from(this.data1())
       },
       {
-        name: this.title2,
-        data: Array.from(this.data2)
+        name: this.title2(),
+        data: Array.from(this.data2())
       }
     ];
     // temp fix, for now just basing change on data1 length...
     // even though probably should check data1 also
-    if (!this.isSliding && this.data1.length > 2) {
-      this.timeDiffMs = this.data1[this.data1.length - 1].x - this.data1[0].x;
+    if (!this.isSliding && this.data1().length > 2) {
+      this.timeDiffMs = this.data1()[this.data1().length - 1].x - this.data1()[0].x;
     }
 
     if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
@@ -110,16 +110,16 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    this.timeRangeMs = (this.timeRangeSec ?? 120) * 1000;
+    this.timeRangeMs = (this.timeRangeSec() ?? 120) * 1000;
 
     this.series = [
       {
-        name: this.title1,
-        data: this.data1
+        name: this.title1(),
+        data: this.data1()
       },
       {
-        name: this.title2,
-        data: this.data2
+        name: this.title2(),
+        data: this.data2()
       }
     ];
 
@@ -143,7 +143,7 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
         }
         // background: '#5A5A5A'
       },
-      colors: [this.color1, this.color2], // Set series colors here
+      colors: [this.color1(), this.color2()], // Set series colors here
       dataLabels: {
         enabled: false
       },
@@ -209,7 +209,7 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
 
     // Delay rendering to ensure the container is available
     setTimeout(() => {
-      const chartContainer = document.getElementById(this.graphContainerId);
+      const chartContainer = document.getElementById(this.graphContainerId());
       if (!chartContainer) {
         return;
       }

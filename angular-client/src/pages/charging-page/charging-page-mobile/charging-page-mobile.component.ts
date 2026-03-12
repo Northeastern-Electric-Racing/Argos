@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
@@ -46,14 +46,14 @@ export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
   private timeInterval!: NodeJS.Timeout;
-  @Input() time = new Date();
+  time = signal(new Date());
   location: string = 'No Location Set';
   mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
     this.timeInterval = setInterval(() => {
-      this.time = new Date();
+      this.time.set(new Date());
     }, 1000);
 
     this.subscriptions.push(
