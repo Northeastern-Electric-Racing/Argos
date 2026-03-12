@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { InputText } from 'primeng/inputtext';
 import { take } from 'rxjs';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { addRule, getRulesByClientId, RulePayload, RulesResponse } from 'src/api/rules.api';
 import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-confirm-dialog.component';
+import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -18,7 +20,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent]
+  imports: [TypographyComponent, ButtonComponent, InputText]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(MessageService);
@@ -28,8 +30,12 @@ export default class NotificationRulesPageComponent implements OnInit {
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   uploading = signal(false);
   downloading = signal(false);
+  searchTerm = signal('');
+  /** Selected rule IDs — populated by the rules table (#535) */
+  selectedRuleIds = signal<string[]>([]);
 
   private confirmRef: DynamicDialogRef | undefined;
+  private addRuleRef: DynamicDialogRef | undefined;
 
   ngOnInit(): void {
     this.clientId = this.getOrCreateClientId();
@@ -42,6 +48,42 @@ export default class NotificationRulesPageComponent implements OnInit {
   onDownload = () => {
     this.downloadRulesAsCsv();
   };
+
+  onAddRule = () => {
+    this.addRuleRef = this.dialogService.open(AddRuleDialogComponent, {
+      header: 'Add New Rule',
+      width: '500px',
+      closable: true,
+      closeAriaLabel: 'Close'
+    });
+
+    this.addRuleRef.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
+      if (!rule) return;
+
+      try {
+        const response = await addRule(this.clientId, rule);
+        if (response.ok) {
+          this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
+        } else {
+          const text = await response.text();
+          this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
+        }
+      } catch {
+        this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: 'Network error' });
+      }
+    });
+  };
+
+  // Stub — enabled once table selection is wired in #535
+  onRemoveSelected = () => {};
+
+  // Stub — enabled once table selection is wired in #535
+  onToggleSubscription = () => {};
+
+  onSearchInput(event: Event): void {
+    const { value } = event.target as HTMLInputElement;
+    this.searchTerm.set(value);
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;

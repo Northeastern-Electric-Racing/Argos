@@ -15,10 +15,42 @@
   align-items: center;
 }
 
-.placeholder-content {
-  margin-top: 20px;
-}
-
 .hidden-file-input {
   display: none;
+}
+
+.rules-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.rules-bar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-container {
+  margin-left: auto;
+}
+
+.search-input {
+  width: 200px;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.search-input::placeholder {
+  color: #888;
+}
+
+.table-placeholder {
+  min-height: 200px;
 }

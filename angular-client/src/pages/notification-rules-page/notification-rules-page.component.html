@@ -16,7 +16,26 @@
     aria-label="Upload CSV file"
   />
 
-  <div class="placeholder-content">
+  <div class="rules-bar">
     <typography variant="header" content="Rules" />
+    <div class="rules-bar-actions">
+      <argos-button label="Add" [onClick]="onAddRule" />
+      <argos-button label="Remove" [onClick]="onRemoveSelected" additionalStyles="background-color: #555; opacity: 0.6; cursor: not-allowed;" />
+      <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" additionalStyles="background-color: #555; opacity: 0.6; cursor: not-allowed;" />
+    </div>
+    <div class="search-container">
+      <input
+        pInputText
+        type="text"
+        placeholder="Search..."
+        [value]="searchTerm()"
+        (input)="onSearchInput($event)"
+        aria-label="Search rules"
+        class="search-input"
+      />
+    </div>
   </div>
+
+  <!-- Table placeholder — implemented in #535 -->
+  <div class="table-placeholder"></div>
 </div>
