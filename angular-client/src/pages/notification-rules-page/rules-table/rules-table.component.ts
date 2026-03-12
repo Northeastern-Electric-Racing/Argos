@@ -28,7 +28,7 @@ export class RulesTableComponent implements OnInit {
   clientId = input.required<string>();
   searchTerm = input('');
 
-  selectionChanged = output<string[]>();
+  selectionChanged = output<ClientRule[]>();
 
   private messageService = inject(MessageService);
   private dialogService = inject(DialogService);
@@ -73,7 +73,7 @@ export class RulesTableComponent implements OnInit {
 
   onSelectionChange(selected: ClientRule[]): void {
     this.selectedRules.set(selected);
-    this.selectionChanged.emit(selected.map((r) => r.id));
+    this.selectionChanged.emit(selected);
   }
 
   async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
@@ -130,7 +130,7 @@ export class RulesTableComponent implements OnInit {
       if (response.ok) {
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
         this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
-        this.selectionChanged.emit(this.selectedRules().map((r) => r.id));
+        this.selectionChanged.emit(this.selectedRules());
         this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `Rule "${rule.id}" removed` });
       } else {
         const text = await response.text();

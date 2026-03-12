@@ -17,6 +17,7 @@
   color: #fff;
   font-weight: 600;
   border: none;
+  padding: 10px 12px;
 }
 
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr {
@@ -31,8 +32,4 @@
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
   border-bottom: 1px solid #333;
   padding: 8px 12px;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
-  padding: 10px 12px;
 }

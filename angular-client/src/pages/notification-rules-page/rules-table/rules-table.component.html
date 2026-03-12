@@ -11,7 +11,7 @@
 } @else {
   <p-table
     [value]="filteredRules()"
-    [(selection)]="selectedRules"
+    [selection]="selectedRules()"
     (selectionChange)="onSelectionChange($any($event))"
     dataKey="id"
     [scrollable]="true"
@@ -29,7 +29,7 @@
         <!-- TODO: Description column once backend supports it -->
         <th>Description</th>
         <th>Subscribed</th>
-        <th style="width: 5rem"></th>
+        <th style="width: 5rem" aria-label="Actions"></th>
       </tr>
     </ng-template>
     <ng-template #body let-rule>

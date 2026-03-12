@@ -7,11 +7,13 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
   addRule,
+  ClientRule,
   deleteRule,
   getRulesByClientId,
   RulePayload,
   RulesResponse,
-  subscribeToRules
+  subscribeToRules,
+  unsubscribeFromRules
 } from 'src/api/rules.api';
 import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-confirm-dialog.component';
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
@@ -39,11 +41,11 @@ export default class NotificationRulesPageComponent implements OnInit {
   uploading = signal(false);
   downloading = signal(false);
   searchTerm = signal('');
-  /** Selected rule IDs — populated by the rules table (#535) */
-  selectedRuleIds = signal<string[]>([]);
+  /** Selected rules — populated by the rules table */
+  selectedRules = signal<ClientRule[]>([]);
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
-  hasSelection = computed(() => this.selectedRuleIds().length > 0);
+  hasSelection = computed(() => this.selectedRules().length > 0);
 
   private confirmRef: DynamicDialogRef | undefined;
   private addRuleRef: DynamicDialogRef | undefined;
@@ -87,10 +89,11 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onRemoveSelected = async () => {
-    const ids = this.selectedRuleIds();
-    if (ids.length === 0) return;
-    if (!confirm(`Delete ${ids.length} selected rule(s)?`)) return;
+    const selected = this.selectedRules();
+    if (selected.length === 0) return;
+    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
 
+    const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
       try {
@@ -104,33 +107,49 @@ export default class NotificationRulesPageComponent implements OnInit {
     if (errors.length > 0) {
       this.messageService.add({ severity: 'error', summary: 'Delete Error', detail: `Failed to delete: ${errors.join(', ')}` });
     } else {
-      this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${ids.length} rule(s) removed` });
+      this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${selected.length} rule(s) removed` });
     }
 
-    this.selectedRuleIds.set([]);
+    this.selectedRules.set([]);
     this.rulesTable()?.loadRules();
   };
 
   onToggleSubscription = async () => {
-    const ids = this.selectedRuleIds();
-    if (ids.length === 0) return;
+    const selected = this.selectedRules();
+    if (selected.length === 0) return;
 
-    const request = { rule_ids: ids, client_id: this.clientId };
+    const toSubscribe = selected.filter((r) => !r.is_subscribed).map((r) => r.id);
+    const toUnsubscribe = selected.filter((r) => r.is_subscribed).map((r) => r.id);
+
     try {
-      const response = await subscribeToRules(request);
-      if (response.ok) {
-        this.messageService.add({ severity: 'success', summary: 'Subscribed', detail: `Subscribed to ${ids.length} rule(s)` });
+      const promises: Promise<Response>[] = [];
+      if (toSubscribe.length > 0) {
+        promises.push(subscribeToRules({ rule_ids: toSubscribe, client_id: this.clientId }));
+      }
+      if (toUnsubscribe.length > 0) {
+        promises.push(unsubscribeFromRules({ rule_ids: toUnsubscribe, client_id: this.clientId }));
+      }
+
+      const results = await Promise.all(promises);
+      const allOk = results.every((r) => r.ok);
+
+      if (allOk) {
+        const parts: string[] = [];
+        if (toSubscribe.length > 0) parts.push(`subscribed to ${toSubscribe.length}`);
+        if (toUnsubscribe.length > 0) parts.push(`unsubscribed from ${toUnsubscribe.length}`);
+        this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Toggled: ${parts.join(', ')}` });
         this.rulesTable()?.loadRules();
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update subscriptions' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update some subscriptions' });
+        this.rulesTable()?.loadRules();
       }
     } catch {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
     }
   };
 
-  onSelectionChanged(ruleIds: string[]): void {
-    this.selectedRuleIds.set(ruleIds);
+  onSelectionChanged(rules: ClientRule[]): void {
+    this.selectedRules.set(rules);
   }
 
   onSearchInput(event: Event): void {
