@@ -32,9 +32,10 @@
 
   /* 3D raised effect — thick bottom shadow acts as the "edge" */
   border-bottom: 3px solid #0a0a0a;
-  transition: border-bottom-width 0.08s ease,
-              transform 0.08s ease,
-              background-color 0.08s ease;
+  transition:
+    border-bottom-width 0.08s ease,
+    transform 0.08s ease,
+    background-color 0.08s ease;
 }
 
 .switch-button:last-child {
@@ -49,7 +50,9 @@
   text-transform: uppercase;
   color: #3a3a3a;
   user-select: none;
-  transition: color 0.08s ease, text-shadow 0.08s ease;
+  transition:
+    color 0.08s ease,
+    text-shadow 0.08s ease;
 }
 
 /* ---- Hover: sink slightly toward base ---- */
@@ -67,10 +70,35 @@
 .switch-button.active {
   border-bottom-width: 0px;
   transform: translateY(3px);
-  background-color: #3d3d3d;
   box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
 }
 
-.switch-button.active .switch-label {
-  color: #d0d0d0;
+/* ON — muted green (matches indicator-light green preset) */
+.switch-button.active.state-on {
+  background-color: #1a3318;
+}
+
+.switch-button.active.state-on .switch-label {
+  color: #4a9e3e;
+  text-shadow: 0 0 3px rgba(74, 158, 62, 0.35);
+}
+
+/* AUTO — muted amber / yellow (matches indicator-light amber preset) */
+.switch-button.active.state-auto {
+  background-color: #3d3010;
+}
+
+.switch-button.active.state-auto .switch-label {
+  color: #c8911e;
+  text-shadow: 0 0 3px rgba(200, 145, 30, 0.35);
+}
+
+/* OFF — muted red (matches indicator-light red preset) */
+.switch-button.active.state-off {
+  background-color: #4a1515;
+}
+
+.switch-button.active.state-off .switch-label {
+  color: #cc3030;
+  text-shadow: 0 0 3px rgba(204, 48, 48, 0.35);
 }
