@@ -1,17 +1,22 @@
-name: Prettier Check
+name: Client CI
+
 on:
   push:
     branches:
       - main
       - develop
+    paths:
+      - "angular-client/**"
   pull_request:
     branches:
       - main
       - develop
       - "feature/**"
+    paths:
+      - "angular-client/**"
 
 jobs:
-  run-prettier-check:
+  lint-and-format:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -20,12 +25,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 18.17.1
+          node-version: 20.17.0
           cache: "npm"
           cache-dependency-path: ./angular-client/package-lock.json
       - name: Install modules
         working-directory: ./angular-client
-        run: npm install
+        run: npm ci
+      - name: Run linting check
+        working-directory: ./angular-client
+        run: npm run lint --max-warnings=0
       - name: Run prettier check
         working-directory: ./angular-client
         run: npm run prettier-check

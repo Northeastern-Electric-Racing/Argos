@@ -5,11 +5,15 @@ on:
       branches:
          - main
          - develop
+      paths:
+         - "scylla-server/**"
    pull_request:
       branches:
          - main
          - develop
          - 'feature/**'
+      paths:
+         - "scylla-server/**"
 
 
 defaults:

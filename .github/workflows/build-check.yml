@@ -1,14 +1,22 @@
 name: Build
-on: 
+on:
   push:
     branches:
       - main
       - develop
+    paths:
+      - "angular-client/**"
+      - "scylla-server/**"
+      - "compose/**"
   pull_request:
     branches:
       - main
       - develop
       - 'feature/**'
+    paths:
+      - "angular-client/**"
+      - "scylla-server/**"
+      - "compose/**"
 jobs:
   run-build:
     runs-on: ubuntu-latest
