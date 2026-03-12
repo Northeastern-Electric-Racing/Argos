@@ -7,6 +7,15 @@
     </div>
   </div>
 
+  <input
+    #fileInput
+    type="file"
+    accept=".csv"
+    class="hidden-file-input"
+    (change)="onFileSelected($event)"
+    aria-label="Upload CSV file"
+  />
+
   <div class="placeholder-content">
     <typography variant="header" content="Rules" />
   </div>
