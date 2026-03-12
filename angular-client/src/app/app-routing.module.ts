@@ -1,14 +1,4 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { BmsDebugPageComponent } from 'src/pages/bms-debug-page/bms-debug-page.component';
-import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component';
-import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
-import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
-import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
-import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
-import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
-import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
-import MapComponent from 'src/pages/map/map.component';
+import { Routes } from '@angular/router';
 import { Segment } from 'src/utils/bms.utils';
 
 const landingRoute = () => `/landing`;
@@ -35,24 +25,53 @@ export const appRoutes = {
   commandsRoute
 };
 
-// Routes should be defined carefully in accordance with the appRoutes
-const routes: Routes = [
-  { path: 'landing', component: LandingPageComponent },
-  { path: 'graph', component: GraphPageComponent },
+// Routes use loadComponent for lazy loading / route-level code splitting.
+// Each page is loaded on demand rather than bundled into the initial chunk.
+export const routes: Routes = [
+  {
+    path: 'landing',
+    loadComponent: () => import('src/pages/landing-page/landing-page.component')
+  },
+  {
+    path: 'graph',
+    loadComponent: () => import('src/pages/graph-page/graph-page.component')
+  },
   { path: '', redirectTo: appRoutes.landingRoute(), pathMatch: 'full' },
-  { path: 'map', component: MapComponent },
-  { path: 'charging', component: ChargingPageComponent },
-  { path: 'bms', component: BmsDebugPageComponent },
-  // NOTE: paramaterized routes should be even more carefully defined in accordance with the appRoutes
-  { path: 'bms/segment/:id', component: BmsSegmentViewComponent },
-  { path: 'faults', component: FaultPageComponent },
-  { path: 'faults/fault-graph', component: GraphPageComponent },
-  { path: 'camera', component: CameraPageComponent },
-  { path: 'commands', component: CarCommandComponent }
+  {
+    path: 'map',
+    loadComponent: () => import('src/pages/map/map.component')
+  },
+  {
+    path: 'charging',
+    loadComponent: () => import('src/pages/charging-page/charging-page.component')
+  },
+  {
+    path: 'bms',
+    loadComponent: () =>
+      import('src/pages/bms-debug-page/bms-debug-page.component').then((m) => m.BmsDebugPageComponent)
+  },
+  {
+    path: 'bms/segment/:id',
+    loadComponent: () =>
+      import('src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component').then(
+        (m) => m.BmsSegmentViewComponent
+      )
+  },
+  {
+    path: 'faults',
+    loadComponent: () => import('src/pages/fault-page/fault-page.component')
+  },
+  {
+    path: 'faults/fault-graph',
+    loadComponent: () => import('src/pages/graph-page/graph-page.component')
+  },
+  {
+    path: 'camera',
+    loadComponent: () =>
+      import('src/pages/camera-page/camera-page.component').then((m) => m.CameraPageComponent)
+  },
+  {
+    path: 'commands',
+    loadComponent: () => import('src/pages/car-command-page/car-command.component')
+  }
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule {}
