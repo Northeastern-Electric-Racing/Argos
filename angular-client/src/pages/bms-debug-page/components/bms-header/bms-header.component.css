@@ -1,0 +1,19 @@
+.title-style {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  margin-left: 30px;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Add these styles to your component */
+mat-grid-tile {
+  overflow: visible !important; /* Allow dropdown to overflow */
+}
+
+mat-grid-list {
+  overflow: visible !important; /* Allow dropdown to overflow */
+}

@@ -1,4 +1,4 @@
-import { Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 /**
  * The response from a query
@@ -8,8 +8,8 @@ import { Subject } from 'rxjs';
  * @param error The error that has occurred
  */
 export type QueryResponse<T> = {
-  isLoading: Subject<boolean>;
-  data: Subject<T>;
-  isError: Subject<boolean>;
-  error: Subject<Error>;
+  isLoading: BehaviorSubject<boolean>;
+  data: BehaviorSubject<T | null>;
+  isError: BehaviorSubject<boolean>;
+  error: BehaviorSubject<Error | null>;
 };

@@ -1,3 +1,9 @@
+.caption-container {
+  display: flex;
+  height: 150px;
+  margin-top: 10px;
+}
+
 .info-container {
   font: small-caption;
   width: 100%;
@@ -8,14 +14,11 @@
   flex-direction: row;
   justify-content: space-between;
   color: #ffffff;
-  padding-right: 8px;
-  padding-left: 8px;
+  padding-right: 16px;
+  padding-left: 16px;
+  flex: 1;
 }
 
 .left-info {
   text-align: left;
-}
-
-.right-info {
-  text-align: right;
 }

@@ -13,6 +13,14 @@
   padding-right: 16px;
 }
 
+.thermometer-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  width: 75px;
+}
+
 @media screen and (max-width: 800px) {
   .container-div {
     background-attachment: fixed;

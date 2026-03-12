@@ -4,22 +4,13 @@
     variant="subheader"
     content="Select Data Type"
   />
-  <div *ngIf="showSelection" class="container" @toggleSidebar>
-    <div *ngFor="let node of nodesWithVisibilityToggle" class="subcontainer">
-      <sidebar-card
-        [title]="node.name"
-        onclick="event.stopPropagation()"
-        (click)="toggleDataTypeVisibility(node)"
-        [dropDown]="true"
-      />
-      <div *ngIf="node.dataTypesAreVisible" class="subcontainer" @toggleCardExpand>
-        <sidebar-card
-          *ngFor="let dataType of node.dataTypes"
-          [title]="dataType.name"
-          [subtitle]="dataType.unit"
-          (click)="selectDataType(dataType)"
-        />
-      </div>
+  @if (showSelection) {
+    <div class="container" @toggleSidebar>
+      @for (node of nodesWithVisibilityToggle | async; track node) {
+        <div class="subcontainer" (click)="$event.stopPropagation()">
+          <node-display [node]="node" searchFilter="" [isDesktop]="false" />
+        </div>
+      }
     </div>
-  </div>
+  }
 </div>

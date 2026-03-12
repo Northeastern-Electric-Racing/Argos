@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "cloud-prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CLOUD_DATABASE_URL")
+}
+
+model run {
+  id           String   @id @default(uuid())
+  runId        Int      @default(autoincrement())
+  driverName   String?
+  locationName String?
+  notes        String?
+  time         DateTime @unique @db.Timestamptz()
+
+  data data[]
+
+  @@unique([runId, time], name: "unique_run_time")
+}
+
+model data {
+  values Float[]
+  time   DateTime @db.Timestamptz()
+
+  dataTypeName String
+  dataType     data_type @relation(fields: [dataTypeName], references: [name])
+  runId        String
+  run          run       @relation(fields: [runId], references: [id])
+
+  @@id([time, dataTypeName])
+}
+
+model data_type {
+  name String @id
+  unit String
+
+  data data[]
+}

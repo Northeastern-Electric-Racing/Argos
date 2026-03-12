@@ -1,6 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import Theme from 'src/services/theme.service';
-import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
+import { StyleVariant } from 'src/utils/style-variant';
 
 /**
  * Custom typography component that allows for the use of different styles of text.
@@ -13,32 +13,69 @@ import { StyleVariant } from 'src/utils/enumerations/StyleVariant';
  */
 @Component({
   selector: 'typography',
-  templateUrl: './typography.component.html'
+  templateUrl: './typography.component.html',
+  styleUrls: ['./typography.component.css'],
+  standalone: true
 })
-export default class Typography implements OnInit {
-  @Input() variant!: StyleVariant;
-  @Input() content?: string | null;
-  @Input() additionalStyles?: string;
-  style!: string;
+export default class TypographyComponent {
+  variant = input.required<StyleVariant>();
+  content = input<string | string[] | null>();
+  additionalStyles = input<string>('');
 
-  ngOnInit(): void {
-    switch (this.variant) {
+  style = computed(() => {
+    let baseStyle: string = '';
+
+    switch (this.variant()) {
       case 'header':
-        this.style = Theme.HEADER;
+        baseStyle = Theme.header;
+        break;
+      case 'secondary-header':
+        baseStyle = Theme.secondaryHeader;
         break;
       case 'xx-large-title':
-        this.style = Theme.XXLARGEHEADER;
+        baseStyle = Theme.xxLargeHeader;
         break;
       case 'large-header':
-        this.style = Theme.LARGEHEADER;
+        baseStyle = Theme.largeHeader;
+        break;
+      case 'large-secondary-header':
+        baseStyle = Theme.largeSecondaryHeader;
         break;
       case 'subheader':
-        this.style = Theme.SUBHEADER;
+        baseStyle = Theme.subheader;
+        break;
+      case 'info-title':
+        baseStyle = Theme.infoTitle;
+        break;
+      case 'info-subtitle':
+        baseStyle = Theme.infoSubtitle;
+        break;
+      case 'value':
+        baseStyle = Theme.value;
+        break;
+      case 'info-value-mobile':
+        baseStyle = Theme.infoValueMobile;
+        break;
+      case 'info-value':
+        baseStyle = Theme.infoValue;
+        break;
+      case 'info-unit':
+        baseStyle = Theme.infoUnit;
+        break;
+      case 'sidebar-label':
+        baseStyle = Theme.sidebarLabel;
+        break;
+      case 'x-large-title':
+        baseStyle = Theme.xLargeHeader;
+        break;
+      default:
+        baseStyle = '';
         break;
     }
 
-    if (this.additionalStyles) {
-      this.style += this.additionalStyles;
+    if (this.additionalStyles()) {
+      baseStyle += this.additionalStyles();
     }
-  }
+    return baseStyle;
+  });
 }

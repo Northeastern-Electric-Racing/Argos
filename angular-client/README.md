@@ -1,27 +1,65 @@
 # AngularClient
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.4.
+The Angular Frontend for Argos.
 
-## Development server
+---
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Quickstart
 
-## Code scaffolding
+Make sure to install [node and npm](https://www.geeksforgeeks.org/how-to-download-and-install-node-js-and-npm/) before beginning. Contact let us know in slack if you have issues.
+
+---
+
+### Extensions to install
+
+Please install by searching that id(s) in vs code extensions.
+
+prettier: `esbenp.prettier-vscode` <br>
+eslint: `dbaeumer.vscode-eslint` <br>
+angular intellisense: `angular.ng-template`
+
+### Running the app
+
+Make sure you're in the `angular-client` directory.
+
+To install dependencies run:
+
+`npm install`
+
+To run the client in development mode run:
+
+`npm run start`
+
+Navigate to `http://localhost:4200/` to ensure the website is running, and you're done! The application will automatically reload if you change any of the source files.
+
+---
+
+## Development Guide
+
+This section should be your first refrence when developing or running into development issues.
+
+---
+
+### Creating new files (compoents, etc)
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Build
+### Building
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
-## Running unit tests
+### NPM package changes
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+When npm packages are changed, delete your node modules by running `rm -rF node_modules/` on mac/linux or on windows `rmdir /s /q node_modules` to delete your nodemodules (houses all external tools for development).
 
-## Running end-to-end tests
+Then run `npm install` to install all the most recent modules.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### Developing with Data
 
-## Further help
+Refer to top level `Argos/REAMDE.md` for how to setup mock data locally.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+### Env Variables
+
+To update dev env variables, just change the values in assets/env.js
+
+To set prod env variables, change the associated docker composes environment variables. The only relevant one is backend_url

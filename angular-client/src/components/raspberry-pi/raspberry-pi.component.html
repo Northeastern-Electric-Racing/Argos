@@ -1,0 +1,20 @@
+<info-background svgIcon="memory" title="Rasberry Pi">
+  @if (isMobile) {
+    <raspberry-pi-mobile
+      style="width: 100%"
+      [cpuTemp]="cpuTemp"
+      [cpuUsage]="cpuUsage"
+      [ramUsage]="ramUsage"
+      [wifiRSSI]="wifiRSSI"
+      [mcs]="mcs"
+    />
+  } @else {
+    <raspberry-pi-desktop
+      style="width: 100%"
+      [cpuUsage]="cpuUsage"
+      [ramUsage]="ramUsage"
+      [wifiRSSI]="wifiRSSI"
+      [mcs]="mcs"
+    />
+  }
+</info-background>

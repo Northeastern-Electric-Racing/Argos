@@ -1,33 +1,33 @@
 <div class="modal-container">
-  <button mat-dialog-close class="close-button">
-    <mat-icon>close</mat-icon>
-  </button>
-  <p-carousel [value]="runs" [numVisible]="1" [numScroll]="1" [circular]="true" [showIndicators]="false">
-    <ng-template pTemplate="header">
-      <typography additionalStyles="margin-left: 8px;" variant="header" content="Run History" />
-    </ng-template>
-    <ng-template let-run pTemplate="item">
+  <!-- Carousel Content -->
+  <p-carousel
+    [value]="runs"
+    [numVisible]="1"
+    [numScroll]="1"
+    [circular]="true"
+    [autoplayInterval]="3000"
+    (onPage)="handlePageChange($event)"
+  >
+    <ng-template let-run let-i="index" pTemplate="item">
       <div class="run-card">
         <mat-grid-list cols="2" rowHeight="40px">
           <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id" />
+            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
           </mat-grid-tile>
           <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName" />
+            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
           </mat-grid-tile>
           <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)" />
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.systemName" />
+            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
           </mat-grid-tile>
           <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName" />
+            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
           </mat-grid-tile>
         </mat-grid-list>
       </div>
+
       <div class="select-button-container">
-        <button mat-button class="run-select-button" (click)="selectRun(run)">Select this Run</button>
+        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
       </div>
     </ng-template>
   </p-carousel>

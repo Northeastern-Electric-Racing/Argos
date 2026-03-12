@@ -1,0 +1,34 @@
+<div class="stat-display-list">
+  @for (statConfig of this.configs(); track statConfig.key; let last = $last) {
+    <stat-display
+      [value]="statConfig.value"
+      [unit]="statConfig.unit"
+      [subtitle]="statConfig.subtitle"
+      [precision]="statConfig.precision ?? 1"
+      [unitBelow]="statConfig.unitBelow ?? false"
+      [headerLabel]="statConfig.headerLabel ?? ''"
+      [headerIcon]="statConfig.headerIcon ?? ''"
+    >
+      @if (this.enableWidgets() && statConfig.widget?.type === 'connection-dot') {
+        <connection-dot-with-message
+          [getStatusColor]="statConfig.widget?.getStatusColor ?? this.defaultStatusColor"
+          style="margin-left: 5px"
+        />
+      }
+      @if (this.enableWidgets() && statConfig.widget?.type === 'thermometer') {
+        <glance-thermometer
+          [temperature]="statConfig.widget?.value ?? statConfig.value ?? 0"
+          [min]="statConfig.widget?.min ?? -15"
+          [max]="statConfig.widget?.max ?? 30"
+        />
+      }
+      @if (this.enableWidgets() && statConfig.widget?.type === 'battery-level-indicator') {
+        <battery-level-indicator [percentage]="statConfig.widget?.value ?? statConfig.value ?? 0"></battery-level-indicator>
+      }
+    </stat-display>
+
+    @if (!last) {
+      <div class="divider"></div>
+    }
+  }
+</div>

@@ -1,0 +1,146 @@
+/* AI-generated  */
+
+:host {
+  display: block;
+}
+
+/* ── Segment Row: flex container pairing a controls column (left) with content panels (right) ── */
+.segment-row {
+  display: flex;
+  align-items: stretch;
+  border-radius: clamp(4px, 0.63vw, 14px);
+  gap: clamp(4px, 0.94vw, 20px);
+  width: 100%;
+  background-color: #1a1a1a;
+  padding: clamp(2px, 0.4vw, 7px);
+}
+
+/* ── Left column: segment title + view dropdown + "See more" button ── */
+.controls-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(3px, 0.63vw, 12px);
+  min-width: clamp(70px, 10vw, 200px);
+  flex-shrink: 0;
+  padding: clamp(3px, 0.63vw, 12px);
+}
+
+/* ── Right side: two light panels (heatmap + overview) inside the dark row wrapper ── */
+.content-zone {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  justify-content: flex-start;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  min-width: 0;
+}
+
+/* Heatmap panel: flex-3 so it takes the majority of the row width.
+   clip-path slices the top-left corner to match the angled design language. */
+.heatmap-panel {
+  flex: 3 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1px, 0.3vw, 6px) clamp(4px, 0.94vw, 20px) clamp(1px, 0.3vw, 6px) clamp(20px, 4vw, 80px);
+  background-color: #2c2c2c;
+  border-radius: clamp(4px, 0.63vw, 14px);
+  clip-path: polygon(clamp(34px, 6.9vw, 136px) 0, 100% 0, 100% 100%, 0 100%, 0 clamp(34px, 6.9vw, 136px));
+  min-height: 0;
+}
+
+.overview-panel {
+  display: flex;
+  align-items: center;
+  padding: clamp(1px, 0.3vw, 6px) clamp(2px, 0.5vw, 10px);
+  background-color: #2c2c2c;
+  border-radius: clamp(4px, 0.63vw, 14px);
+  min-width: clamp(160px, 22vw, 420px);
+  max-width: clamp(160px, 22vw, 420px);
+  min-height: 0;
+  flex: 0 0 auto;
+}
+
+.segment-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.battery-icon {
+  width: clamp(8px, 1vw, 20px);
+  height: clamp(10px, 1.33vw, 26px);
+}
+
+.title-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: clamp(10px, 1.56vw, 30px);
+  color: #efefef;
+  white-space: nowrap;
+}
+
+/* ── Actions group: view selector dropdown + "See more" button, stacked to equal width ── */
+.controls-actions {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.47vw, 10px);
+  width: clamp(64px, 9.4vw, 190px);
+}
+
+.see-more-btn {
+  background-color: #2aaeee;
+  color: #000;
+  border: none;
+  border-radius: clamp(8px, 1.25vw, 24px);
+  padding: clamp(2px, 0.47vw, 10px) clamp(6px, 1.4vw, 28px);
+  font-size: clamp(7px, 0.94vw, 18px);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+  height: clamp(18px, 2.3vw, 44px);
+  box-sizing: border-box;
+}
+
+.see-more-btn:hover {
+  background-color: #1e9ad8;
+}
+
+/* ── PrimeNG Select overrides: force the dropdown to match the controls-zone styling ── */
+.controls-zone ::ng-deep .small-grey-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: clamp(18px, 2.3vw, 44px) !important;
+  border-radius: clamp(8px, 1.25vw, 24px) !important;
+  background-color: #555 !important;
+  font-size: clamp(7px, 0.94vw, 18px) !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.controls-zone ::ng-deep .p-select-label,
+.controls-zone ::ng-deep .p-select-label.p-placeholder {
+  width: auto !important;
+  padding: 0 clamp(4px, 0.94vw, 20px) !important;
+  font-size: clamp(7px, 0.94vw, 18px) !important;
+  font-weight: 600 !important;
+  color: #c0c0c0 !important;
+  --p-select-placeholder-color: #c0c0c0 !important;
+  line-height: clamp(18px, 2.3vw, 44px) !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.controls-zone ::ng-deep .p-select-trigger {
+  padding-right: clamp(3px, 0.63vw, 14px) !important;
+  display: flex !important;
+  align-items: center !important;
+}

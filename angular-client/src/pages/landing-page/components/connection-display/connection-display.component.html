@@ -1,0 +1,12 @@
+<info-background>
+  <div class="connection-display">
+    <div class="connection-display-title">
+      <typography variant="header" content="Connection" additionalStyles="margin: 0px;" />
+    </div>
+    <div style="margin-top: 20px"></div>
+    <connection-dot-with-message
+      [getStatusColor]="this.getConnectedColor"
+      [getStatusMessage]="this.getConnectedStatus"
+    ></connection-dot-with-message>
+  </div>
+</info-background>

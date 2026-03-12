@@ -1,0 +1,7 @@
+.thermometer-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 74px;
+  width: 28px;
+}

@@ -1,0 +1,16 @@
+services:
+    scylla-server:
+        environment:
+            - SCYLLA_SIREN_HOST_URL=siren:1883
+
+    siren:
+        extends:
+            file: ../siren-base/compose.siren.yml
+            service: siren
+
+    calypso:
+        extends:
+            file: ./compose.calypso.yml
+            service: calypso
+        depends_on:
+            - siren

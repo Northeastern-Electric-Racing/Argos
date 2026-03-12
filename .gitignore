@@ -3,8 +3,12 @@
 
 # environment config
 **/.env
-scylla-server/src/prisma/mydatabase.db
-scylla-server/src/prisma/mydatabase.db-journal
+scylla-server-typescript/src/prisma/mydatabase.db
+scylla-server-typescript/src/prisma/mydatabase.db-journal
+scylla-server/files
+scylla-server/target
+backups
+/target
 
 # Xcode
 #
@@ -96,3 +100,8 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
+
+# user compose override
+compose.override.yml
+**/.DS_Store
+**/.vs

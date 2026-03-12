@@ -1,0 +1,48 @@
+@if (isDesktop) {
+  <info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton">
+    <hstack spacing="30px">
+      <vstack style="width: 10%; margin-bottom: 40px">
+        @if (isDesktop) {
+          <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
+        } @else {
+          <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+        }
+        <typography variant="info-subtitle" content="Delta" additionalStyles="fontSize:15px" />
+      </vstack>
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px; margin-bottom: 40px" />
+      <vstack style="width: 10%; margin-bottom: 40px">
+        @if (isDesktop) {
+          <typography variant="info-value" [content]="lowCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
+        } @else {
+          <typography variant="info-value" [content]="lowCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+        }
+        <typography variant="info-subtitle" content="Low Cell" additionalStyles="fontSize:15px" />
+      </vstack>
+      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
+      <divider style="height: 100px; margin-bottom: 40px" />
+      <vstack style="width: 10%; margin-bottom: 40px">
+        @if (isDesktop) {
+          <typography variant="info-value" [content]="highCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
+        } @else {
+          <typography variant="info-value" [content]="highCellVoltage.toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+        }
+        <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
+      </vstack>
+      <high-low-cell-graph
+        style="width: 75%; padding-bottom: 35px"
+        [highVoltsData]="highVoltsData"
+        [lowVoltsData]="lowVoltsData"
+      />
+    </hstack>
+  </info-background>
+} @else {
+  <high-low-cell-mobile
+    [delta]="delta"
+    [lowCellVoltage]="lowCellVoltage"
+    [highCellVoltage]="highCellVoltage"
+    [highVoltsData]="highVoltsData"
+    [lowVoltsData]="lowVoltsData"
+    [resetGraphButton]="resetGraphButton"
+  />
+}

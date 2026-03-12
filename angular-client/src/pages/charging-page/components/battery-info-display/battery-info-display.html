@@ -1,0 +1,21 @@
+<info-background title="Battery" svgIcon="battery_charging_full">
+  @if (isMobile) {
+  <battery-info-mobile
+    style="width: 100%"
+    [voltage]="voltage"
+    [chargeCurrentLimit]="chargeCurrentLimit"
+    [dischargeCurrentLimit]="dischargeCurrentLimit"
+    [packTemp]="packTemp"
+    [stateOfCharge]="stateOfCharge"
+  />
+  } @else {
+  <battery-info-desktop
+    style="width: 100%"
+    [voltage]="voltage"
+    [chargeCurrentLimit]="chargeCurrentLimit"
+    [dischargeCurrentLimit]="dischargeCurrentLimit"
+    [packTemp]="packTemp"
+    [stateOfCharge]="stateOfCharge"
+  />
+  }
+</info-background>

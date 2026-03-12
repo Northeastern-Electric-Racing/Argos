@@ -1,24 +1,12 @@
-FROM node:18.18.0 AS Production
+FROM rust:latest AS builder
 
-ENV NODE_ENV=production
+WORKDIR /usr/src/myapp
 
-WORKDIR /usr/src/api
+COPY . . 
+RUN cargo install --path . --locked --profile release
 
-COPY package.json . 
-COPY package-lock.json .
+FROM debian:stable-slim
+COPY --from=builder /usr/local/cargo/bin/scylla-server /usr/local/bin/scylla-server
+RUN apt-get update && apt install -y openssl && apt clean && rm -rf /var/lib/apt/lists/*
 
-RUN npm install
-
-COPY . .
-
-# Initialize for git submodules
-RUN git init
-RUN git submodule add -f https://github.com/Northeastern-Electric-Racing/Odyssey-Base.git ./src/odyssey-base && \
-    git submodule update --init --recursive
-
-RUN npm run prisma:generate && \
-    npm run prisma:migrate:prod
-
-RUN npm run build
-
-CMD ["sh", "-c", "npm run start:production"]
+ENTRYPOINT ["/usr/local/bin/scylla-server"]

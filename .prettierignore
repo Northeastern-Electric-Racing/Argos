@@ -1,8 +1,0 @@
-.github
-.vscode
-
-docker-compose.yml
-.eslintrc.js
-tsconfig.json
-
-tsconfig.*.json

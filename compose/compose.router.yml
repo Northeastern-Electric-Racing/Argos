@@ -1,0 +1,34 @@
+services:
+  scylla-server:
+    depends_on:
+      - siren
+    environment:
+      - SCYLLA_SIREN_HOST_URL=siren:1883
+      - SCYLLA_BATCH_UPSERT_TIME=20
+    init: false
+
+  client:
+    extends:
+      file: ../angular-client/compose.client.yml
+      service: client
+
+  grafana:
+    extends:
+      file: ../siren-base/compose.grafana.yml
+      service: grafana
+    depends_on:
+      - siren
+
+  siren:
+    extends:
+      file: ../siren-base/compose.siren.yml
+      service: siren
+
+  siren-av:
+    network_mode: host
+    image: bluenviron/mediamtx:latest-ffmpeg
+    volumes:
+      - type: bind
+        source: ../siren-base/mediamtx.yml
+        target: /mediamtx.yml
+        read_only: true

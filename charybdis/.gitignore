@@ -1,0 +1,9 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+src/prisma/cloud-prisma/cloud-prisma-client/*
+src/prisma/local-prisma/local-prisma-client/*
+
+# ignore the downloads folder
+downloads/*

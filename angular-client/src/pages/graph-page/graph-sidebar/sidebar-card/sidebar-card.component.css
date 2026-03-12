@@ -1,0 +1,36 @@
+.card {
+  background-color: #101010;
+  border-radius: 5px;
+  margin: 8px;
+  height: 20px;
+  position: relative;
+  text-align: center;
+  transition: background-color 0.3s;
+  padding-right: 10px;
+
+  &:hover {
+    background-color: #3f3f3f;
+    cursor: pointer;
+  }
+
+  &.selected {
+    background-color: #4f4f4f;
+  }
+}
+
+.text-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icon {
+  color: white;
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  transition: transform 0.3s;
+}

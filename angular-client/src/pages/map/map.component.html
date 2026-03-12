@@ -1,0 +1,21 @@
+@if (isMobile) {
+  <sidebar-toggle style="width: 100%" />
+}
+@if (isError) {
+  <div>
+    <error-page [errorMessage]="error!.message" />
+  </div>
+} @else {
+  @if (isLoading) {
+    <div>
+      <loading-page />
+    </div>
+  } @else {
+    <div id="map" class="map-container">
+      <run-selector
+        style="position: absolute; margin-bottom: 16px; margin-right: 16px; bottom: 0; right: 0"
+        [selectRun]="onRunSelected"
+      />
+    </div>
+  }
+}

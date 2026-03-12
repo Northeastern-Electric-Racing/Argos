@@ -3,25 +3,29 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
-      - 'feature/**'
+      - develop
+      - "feature/**"
+
 jobs:
   run-linting-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          submodules: true
+        uses: actions/checkout@v6
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: 16.17.1
-          cache: 'npm'
+          node-version: 20.17.0
+          cache: "npm"
+          cache-dependency-path: ./angular-client/package-lock.json
       - name: Install modules
-        run: npm install && npm run prisma:generate
+        working-directory: ./angular-client
+        run: npm install
       - name: Run linting check
+        working-directory: ./angular-client
         run: npm run lint --max-warnings=0

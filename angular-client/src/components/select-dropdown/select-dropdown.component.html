@@ -1,0 +1,10 @@
+<p-select
+  #dropdownRef
+  class="small-grey-select"
+  [options]="options()"
+  [(ngModel)]="selectedOption"
+  optionLabel="name"
+  [placeholder]="placeholder()"
+  (onChange)="handleChangedOption($event)"
+  appendTo="body"
+></p-select>

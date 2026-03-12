@@ -1,0 +1,95 @@
+<div [style]="{ paddingLeft: '20px' }">
+  <typography variant="large-header" content="Car Commands" />
+  <ng-container *ngIf="dataTypesIsError; else checkSettingsError">
+    <error-page [errorMessage]="dataTypesError!.message" />
+  </ng-container>
+
+  <ng-template #checkSettingsError>
+    <ng-container *ngIf="settingsIsError; else checkLoading">
+      <error-page [errorMessage]="settingsError!.message" />
+    </ng-container>
+  </ng-template>
+
+  <ng-template #checkLoading>
+    <ng-container *ngIf="!carCommands || dataTypesIsLoading || settingsIsLoading; else checkAuth">
+      <loading-page />
+    </ng-container>
+  </ng-template>
+
+  <ng-template #checkAuth>
+    <ng-container *ngIf="!isAuthenticated; else renderSettings">
+      <div [style]="{ display: 'flex', width: '100%', justifyContent: 'center', gap: '20px' }">
+        <div [style]="{ textAlign: 'center' }">
+          <div [style]="{ marginBottom: '20px' }">
+            <label [style]="{ marginRight: '20px' }" for="password">Enter Password</label>
+            <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+          </div>
+          <argos-button label="Authenticate" [onClick]="authenticatePw" />
+        </div>
+      </div>
+    </ng-container>
+  </ng-template>
+
+  <ng-template #renderSettings>
+    <argos-button
+      label="Update Videos"
+      [onClick]="onUpdateVideosPressed"
+      style="position: absolute; top: 90px; right: 20px"
+    />
+    <mat-grid-list cols="2" rowHeight="250px">
+      @for (command of carCommands; track command) {
+        <mat-grid-tile colspan="1">
+          <div
+            [style]="{
+              textAlign: 'center',
+              display: 'flex',
+              verticalAlign: 'middle',
+              alignItems: 'center',
+              gap: '5px',
+              marginBottom: '20px'
+            }"
+          >
+            <div [style]="{ textAlign: 'left' }">
+              <h3>{{ command.name }}</h3>
+              <div [style]="{ display: 'flex', alignItems: 'center', gap: '20px' }">
+                <div>
+                  @for (value of command.values; track i; let i = $index) {
+                    <div [style]="{ marginBottom: '5px' }">
+                      <label [style]="{ marginRight: '5px' }" [for]="getOptionId(command.name, i)">{{ i }}</label>
+                      <p-inputnumber [(ngModel)]="command.values[i]" [inputId]="getOptionId(command.name, i)" />
+                    </div>
+                  }
+                </div>
+
+                <argos-button label="Send Command" [onClick]="sendCarCommand.bind(this, command.name, command.values)" />
+              </div>
+            </div>
+          </div>
+        </mat-grid-tile>
+      }
+    </mat-grid-list>
+
+    <typography variant="large-header" content="Scylla Settings" />
+
+    <mat-grid-list cols="2" gutterSize="15px" rowHeight="100px">
+      <mat-grid-tile colspan="1">
+        <setting-input [label]="'Batch time'" [(value)]="batchTime" />
+      </mat-grid-tile>
+      <mat-grid-tile colspan="1">
+        <setting-input [label]="'Rate Limit Mode'" [(value)]="rateLimitMode" />
+      </mat-grid-tile>
+      <mat-grid-tile colspan="1">
+        <setting-input [label]="'Rate Limit Time'" [(value)]="rateLimitTime" />
+      </mat-grid-tile>
+      <mat-grid-tile colspan="1">
+        <setting-input [label]="'Discard Percentage'" [(value)]="discardPercentage" />
+      </mat-grid-tile>
+      <mat-grid-tile colspan="2">
+        <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
+      </mat-grid-tile>
+      <mat-grid-tile colspan="2">
+        <argos-button [label]="'Save Settings'" [onClick]="onUpdateSettingsPressed" />
+      </mat-grid-tile>
+    </mat-grid-list>
+  </ng-template>
+</div>

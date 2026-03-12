@@ -3,23 +3,29 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
-      - 'feature/**'
+      - develop
+      - "feature/**"
+
 jobs:
   run-prettier-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: 18.17.1
-          cache: 'npm'
+          cache: "npm"
+          cache-dependency-path: ./angular-client/package-lock.json
       - name: Install modules
+        working-directory: ./angular-client
         run: npm install
       - name: Run prettier check
+        working-directory: ./angular-client
         run: npm run prettier-check

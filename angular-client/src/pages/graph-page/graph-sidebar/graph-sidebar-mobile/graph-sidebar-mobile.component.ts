@@ -1,36 +1,19 @@
 import { animate, style, transition, trigger } from '@angular/animations';
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+
+import { AsyncPipe } from '@angular/common';
+import NodeDisplayComponent from '../node-display/node-display.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   animations: [
-    trigger('toggleCardExpand', [
-      transition(':enter', [
-        style({
-          width: 0,
-          opacity: 0
-        }),
-        animate(
-          '400ms',
-          style({
-            width: '*',
-            opacity: 1
-          })
-        )
-      ]),
-      transition(':leave', [
-        animate(
-          '400ms',
-          style({
-            width: 0,
-            opacity: 0
-          })
-        )
-      ])
-    ]),
     trigger('toggleSidebar', [
       transition(':enter', [
         style({
@@ -55,33 +38,31 @@ import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils'
         )
       ])
     ])
-  ]
+  ],
+  standalone: true,
+  imports: [AsyncPipe, NodeDisplayComponent, TypographyComponent]
 })
-export default class GraphSidebarMobile {
-  @Input() nodes!: Node[];
-  @Input() selectDataType!: (dataType: DataType) => void;
-  nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
+export default class GraphSidebarMobileComponent implements OnInit {
+  @Input() dataTypes!: DataType[];
+  nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
   showSelection = false;
+  nodes!: Node[];
+  private topicSelection = inject(TopicSelectionService);
 
   /**
    * Initializes the nodes with the visibility toggle.
    */
   ngOnInit(): void {
-    this.nodesWithVisibilityToggle = this.nodes.map((node: Node) => {
-      return {
-        ...node,
-        dataTypesAreVisible: false
-      };
-    });
+    this.nodes = dataTypesToNodes(this.dataTypes);
+    this.nodesWithVisibilityToggle = of(
+      this.nodes.map((node: Node) => {
+        return {
+          ...node,
+          subnodesVisible: false
+        };
+      })
+    );
   }
-
-  /**
-   * Toggles Visibility whenever a node is selected
-   * @param node The node to toggle the visibility of the data types for.
-   */
-  toggleDataTypeVisibility = (node: NodeWithVisibilityToggle) => {
-    node.dataTypesAreVisible = !node.dataTypesAreVisible;
-  };
 
   /**
    * Toggles the sidebar.
@@ -89,4 +70,8 @@ export default class GraphSidebarMobile {
   toggleSidebar = () => {
     this.showSelection = !this.showSelection;
   };
+
+  transformDataTypeName(dataTypeName: string) {
+    return dataTypeNamePipe(dataTypeName);
+  }
 }

@@ -1,0 +1,90 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "projects/**/*",
+    "**/.github/**",
+    "build",
+    "coverage",
+    "docs",
+    "lambda",
+    "node_modules",
+    "public",
+    "lib",
+    "dist",
+    "generated"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts"
+      ],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
+      "rules": {
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "style": "kebab-case"
+          }
+        ],
+        "guard-for-in": "error",
+        "prefer-arrow-callback": "error",
+        "no-unsafe-negation": [
+          "error",
+          {
+            "enforceForOrderingRelations": true
+          }
+        ],
+        "no-unsafe-optional-chaining": [
+          "error",
+          {
+            "disallowArithmeticOperators": true
+          }
+        ],
+        "eqeqeq": "error",
+        "no-else-return": "error",
+        "no-lonely-if": "error",
+        "no-throw-literal": "error",
+        "prefer-promise-reject-errors": "error",
+        "no-unneeded-ternary": "error",
+        "no-var": "error",
+        "object-shorthand": "error",
+        "prefer-const": "error",
+        "prefer-destructuring": [
+          "error",
+          {
+            "VariableDeclarator": {
+              "array": true,
+              "object": true
+            },
+            "AssignmentExpression": {
+              "array": true,
+              "object": true
+            }
+          },
+          {
+            "enforceForRenamedProperties": false
+          }
+        ],
+        "prefer-exponentiation-operator": "error",
+        "prefer-object-spread": "error",
+        "prefer-rest-params": "error",
+        "prefer-spread": "error"
+      }
+    },
+    {
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended"
+      ],
+      "rules": {}
+    }
+  ]
+}

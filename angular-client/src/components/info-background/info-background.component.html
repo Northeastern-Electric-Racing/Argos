@@ -1,0 +1,54 @@
+<div
+  class="container"
+  (click)="onClick()?.()"
+  [style]="{ 'background-color': this.backgroundColor() }"
+  [class.sliced-left-corner]="this.slicedLeftCorner()"
+  [style.--slice-x]="this.slicePercentage() + 'px'"
+  [style.--slice-y]="this.slicePercentage() + 20 + 'px'"
+>
+  @if (this.title(); as title) {
+    <div class="title-container">
+      <div class="title" [class.sliced-left-corner]="this.slicedLeftCorner()">
+        @if (this.icon(); as icon) {
+          <mat-icon aria-hidden="false" [fontIcon]="icon" />
+        }
+        @if (this.svgIcon(); as svgIcon) {
+          <mat-icon aria-hidden="false" [svgIcon]="svgIcon" />
+        }
+        <typography variant="info-title" content="{{ title }}" />
+      </div>
+      @if (button) {
+        <div>
+          @if (button) {
+            <mat-icon
+              aria-hidden="false"
+              (click)="button.onClick()"
+              [fontIcon]="button.icon"
+              style="position: relative; z-index: 10"
+            />
+          }
+        </div>
+      }
+      @if (this.selectorConfigs().length !== 0) {
+        <hstack>
+          @for (selectorConfig of this.selectorConfigs(); track selectorConfig.defaultValue) {
+            <select-dropdown
+              [options]="selectorConfig.options"
+              [placeholder]="selectorConfig.placeholder"
+              [defaultValue]="selectorConfig.defaultValue"
+            />
+          }
+        </hstack>
+      }
+      @if (this.topRightInfo(); as topRightInfo) {
+        <div class="top-right-info">
+          <typography variant="info-subtitle" [content]="topRightInfo" additionalStyles="fontSize: 19px;" />
+        </div>
+      }
+    </div>
+  }
+  @if (this.onClick(); as onClick) {
+    <typography additionalStyles="text-align: left;" variant="info-subtitle" content="Click for more details" />
+  }
+  <ng-content />
+</div>

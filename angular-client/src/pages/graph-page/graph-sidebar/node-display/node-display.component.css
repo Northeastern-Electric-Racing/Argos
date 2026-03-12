@@ -1,0 +1,12 @@
+.mobile-subcontainer {
+  display: flex;
+  flex-flow: row;
+  width: fit-content;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.desktop-subcontainer {
+  display: flex;
+  justify-content: center;
+}

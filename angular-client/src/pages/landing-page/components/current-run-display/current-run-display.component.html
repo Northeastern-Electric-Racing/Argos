@@ -1,0 +1,21 @@
+@if (this.navBarStyle()) {
+  <hstack spacing="5px">
+    <typography
+      [variant]="small() ? 'sidebar-label' : 'large-header'"
+      content="Run"
+      additionalStyles="margin: 0px; color: #ef4345; fontSize: 36px"
+    />
+    <typography
+      [variant]="small() ? 'sidebar-label' : 'large-header'"
+      content="#{{ currentRun }}"
+      additionalStyles="margin: 0px; color: #ef4345; fontSize: 36px;"
+    />
+  </hstack>
+} @else {
+  <info-background>
+    <div class="current-run-display">
+      <typography variant="header" content="Run" additionalStyles="margin: 0px" />
+      <typography variant="info-subtitle" content="#{{ currentRun }}" additionalStyles="margin: 0px" />
+    </div>
+  </info-background>
+}

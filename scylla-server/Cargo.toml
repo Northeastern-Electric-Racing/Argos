@@ -1,0 +1,61 @@
+[package]
+name = "scylla-server"
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.88"
+default-run = "scylla-server"
+
+[dependencies]
+diesel = { version = "2.2.12", features = ["postgres", "chrono"] }
+dotenvy = "0.15"
+serde = "1.0.228"
+protobuf-codegen = "3.7.1"
+protobuf = { version = "3.7.1", features = ["with-bytes"] }
+tokio = { version = "1.49.0", features = ["full", "tracing"] }
+axum = { version = "0.8.8", features = ["multipart", "macros"] }
+tower = { version = "0.5.2", features = ["timeout"] }
+tower-http = { version = "0.6.8", features = ["cors", "trace"] }
+socketioxide = { version = "0.18.2", features = ["tracing"] }
+rumqttc = { version = "0.25.1" }
+tokio-util = { version=  "0.7.16", features = ["full"] }
+tracing = "0.1.43"
+tracing-subscriber = { version = "0.3.22", features = ["ansi", "env-filter"] }
+console-subscriber = { version = "0.5.0", optional = true }
+ringbuffer = "0.16.0"
+axum-extra = { version = "0.12.5", features = ["query", "typed-header"] }
+clap = { version = "4.5.60", features = ["derive", "env"] }
+chrono = { version = "0.4.43", features = ["serde"] }
+serde_json = "1.0.149"
+diesel_migrations = { version = "2.2.0", features = ["postgres"] }
+regex = "1.11.1"
+rangemap = "1.7.1"
+axum-macros = "0.5.0"
+diesel-async = { version = "0.6.1", features = ["postgres", "bb8", "async-connection-wrapper", "sync-connection-wrapper", "tokio"] }
+rustc-hash = "2.1.1"
+evalexpr = "13.1.0"
+serde_with = "3.16.1"
+derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = "0.6"
+
+
+[features]
+top = ["dep:console-subscriber"]
+
+[build-dependencies]
+protobuf-codegen = "3.7.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true  # Automatically strip symbols from the binary.
+
+[profile.profiling]
+inherits = "release"
+debug = true
+strip = false
+
+[[bin]]
+name = "scylla-server"
+path = "src/main.rs"

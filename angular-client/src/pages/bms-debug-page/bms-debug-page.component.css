@@ -1,0 +1,23 @@
+/* AI-generated  */
+
+/* Grid container for the page title row */
+.title-style {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  grid-template-columns: [start] 1fr [end];
+  padding-left: 20px;
+}
+
+/* Allow PrimeNG dropdowns inside mat-grid-tiles to overflow the tile boundary */
+mat-grid-tile {
+  overflow: visible !important;
+}
+
+/* Vertical stack of segment-row components with responsive gaps */
+.segment-rows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.35vw, 8px);
+}

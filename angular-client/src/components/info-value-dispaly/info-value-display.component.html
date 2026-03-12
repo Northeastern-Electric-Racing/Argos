@@ -1,0 +1,40 @@
+<vstack spacing="0px" [style]="containerStyle()">
+  <hstack spacing="5px" [style]="valueUnitContainerStyle()">
+    @if (this.boolValue() !== undefined) {
+      <typography variant="info-value" [content]="this.boolValue() ? 'YES' : 'NO'" [additionalStyles]="this.valueStyle()" />
+      <typography variant="info-unit" [content]="this.unit()" [additionalStyles]="this.unitStyle()" />
+    } @else {
+      <typography
+        variant="info-value"
+        [content]="this.formattedValue"
+        style="margin-bottom: -10px"
+        [additionalStyles]="this.valueStyle()"
+      />
+      <typography variant="info-unit" [content]="this.unit()" [additionalStyles]="this.unitStyle()" />
+    }
+
+    @if (this.enableWidget() && this.widget(); as widget) {
+      @switch (widget.type) {
+        @case ('thermometer-config') {
+          <div class="thermometer-container">
+            <thermometer [temperature]="widget.currentValue" [min]="widget.min" [max]="widget.max" />
+          </div>
+        }
+        @case ('battery-config') {
+          <battery-percentage [percentage]="widget.percentage" [height]="widget.height" [width]="widget.width" />
+        }
+        @case ('connection-dot-config') {
+          <connection-dot-with-message
+            [getStatusColor]="widget.getStatusColor"
+            [getStatusMessage]="this.getStatusMessage(widget)"
+            style="margin-left: 5px"
+          />
+        }
+      }
+    }
+  </hstack>
+
+  @if (this.subtitle() !== '') {
+    <typography variant="info-subtitle" [content]="subtitle()" [additionalStyles]="this.getSubtitleStyle()" />
+  }
+</vstack>

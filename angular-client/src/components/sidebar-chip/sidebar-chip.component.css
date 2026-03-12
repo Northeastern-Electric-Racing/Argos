@@ -1,0 +1,20 @@
+.chip {
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px;
+  color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  transition: color 0.2s;
+}
+
+.chip:hover {
+  color: #ef4345;
+  cursor: pointer;
+}
+
+/* New: When a chip is active, it keeps the hover style */
+.chip.active {
+  color: #ef4345;
+}

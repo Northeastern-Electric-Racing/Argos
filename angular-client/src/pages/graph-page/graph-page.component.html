@@ -1,33 +1,125 @@
-<div *ngIf="paramsError; else checkNodesError">
-  <error-page [errorMessage]="paramsError.message" />
-</div>
-<ng-template #checkNodesError>
-  <div *ngIf="nodesIsError; else checkLoading">
-    <error-page [errorMessage]="nodesError!.message" />
+@if (dataTypesIsError) {
+  <div>
+    <error-page [errorMessage]="dataTypesError!.message" />
   </div>
-</ng-template>
-<ng-template #checkLoading>
-  <div *ngIf="!nodes || nodesIsLoading || !run || runIsLoading; else displayData">
-    <loading-page />
-  </div>
-</ng-template>
-<ng-template #displayData>
-  <div class="container">
-    <graph-header class="graph-header" [realTime]="realTime" [runId]="runId" />
-    <div class="content-div">
-      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="desktop-sidebar" />
-      <div class="right-container">
-        <graph [valuesSubject]="selectedDataTypeValuesSubject" class="graph" />
-        <graph-caption
-          [dataType]="selectedDataType"
-          [currentValue]="currentValue"
-          [currentDriver]="run?.driverName"
-          [currentSystem]="run?.systemName"
-          [currentLocation]="run?.locationName"
-          class="graph-caption"
-        />
-      </div>
-      <graph-sidebar [nodes]="nodes!" [selectDataType]="setSelectedDataType" class="mobile-sidebar" />
+} @else {
+  @if (!dataTypes || dataTypesIsLoading) {
+    <div>
+      <loading-page />
     </div>
-  </div>
-</ng-template>
+  } @else {
+    <div class="container">
+      <hstack alignItems="start" justifyContent="space-between" style="align-self: flex-start; width: 100%" spacing="0px">
+        <hstack spacing="0px">
+          <argos-button
+            [onClick]="this.toggleSideBar"
+            label="Tog Sidebar"
+            additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 80px;"
+          />
+          <argos-button
+            [onClick]="this.toggleMultiYaxis"
+            label="Tog Mult Yaxis"
+            additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 80px;"
+          />
+          @if (realTime === true) {
+            <argos-button
+              [onClick]="this.togglePause"
+              [label]="isPaused ? 'Play' : 'Pause'"
+              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 50px;"
+            />
+          }
+
+          <!-- Graph Configuration Inputs -->
+          <div style="display: flex; align-items: center; gap: 5px; margin-left: 15px">
+            @if (this.realTime === true) {
+              <argos-button
+                [onClick]="this.toggleRangeMode"
+                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
+                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd; width: 90px; font-size: 11px;"
+              />
+
+              <label style="color: #fff; font-size: 12px">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
+              <p-inputNumber
+                [(ngModel)]="rangeValue"
+                mode="decimal"
+                [min]="1"
+                [step]="1"
+                styleClass="time-range-input"
+                inputStyleClass="text-xs p-4"
+                [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
+                (onInput)="onGraphConfigChange()"
+              ></p-inputNumber>
+            }
+
+            <label style="color: #fff; font-size: 12px">Y Min:</label>
+            <p-inputNumber
+              [(ngModel)]="yAxisMin"
+              styleClass="y-axis-input"
+              inputStyleClass="text-xs p-1"
+              placeholder="Auto"
+              (onInput)="onGraphConfigChange()"
+            ></p-inputNumber>
+
+            <label style="color: #fff; font-size: 12px">Y Max:</label>
+            <p-inputNumber
+              [(ngModel)]="yAxisMax"
+              styleClass="y-axis-input"
+              inputStyleClass="text-xs p-1"
+              placeholder="Auto"
+              (onInput)="onGraphConfigChange()"
+            ></p-inputNumber>
+          </div>
+
+          @if (onFaultPage) {
+            <fault-buttons [onClearData]="clearDataType" />
+          } @else {
+            <general-buttons
+              [onRunSelected]="onRunSelected"
+              [onClearDataType]="clearDataType"
+              [onSetRealTime]="onSetRealtime"
+              [historicalOn]="this.run !== undefined || this.minutesToQuery !== undefined"
+              [selectorConfig]="this.queryMinutesConfig"
+            />
+          }
+        </hstack>
+
+        <typography
+          variant="large-header"
+          additionalStyles="margin-top: 5px; margin-bottom: 0px; padding-right: 15px;"
+          [content]="this.rightHeader"
+        />
+      </hstack>
+
+      <div class="content-div">
+        @if (this.showSideBar) {
+          <!-- <graph-sidebar
+            [dataTypes]="dataTypes"
+            [selectDataTypes]="this.setSelectedDataTypes"
+            [currentSelectedDataTypes]="this.selectedDataTypes"
+            class="desktop-sidebar"
+          /> -->
+          <graph-sidebar [dataTypes]="dataTypes" class="desktop-sidebar" />
+        }
+        <div class="right-container">
+          <graph
+            [limitRange]="realTime === true"
+            [realTime]="this.realTime === true"
+            [valuesSubject]="selectedDataTypeValuesSubject"
+            class="graph"
+            [showMultipleYAxes]="this.showMultiYaxis"
+            [isPaused]="this.isPaused"
+            [clearGraph]="this.clearGraph"
+            [graphConfig]="this.graphConfig"
+          />
+        </div>
+        <!-- <graph-sidebar
+          [dataTypes]="dataTypes!"
+          [selectDataTypes]="this.setSelectedDataTypes"
+          [currentSelectedDataTypes]="this.selectedDataTypes"
+          class="mobile-sidebar"
+        /> -->
+        <graph-sidebar [dataTypes]="dataTypes!" class="mobile-sidebar" />
+      </div>
+    </div>
+  }
+}

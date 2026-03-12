@@ -1,30 +1,34 @@
-import { Component, Input } from '@angular/core';
+import { Component, ContentChild, input, OnInit, TemplateRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType } from 'src/utils/types.utils';
 
+import { NgTemplateOutlet } from '@angular/common';
+import TypographyComponent from 'src/components/typography/typography.component';
+
 @Component({
   selector: 'graph-caption',
   styleUrls: ['./graph-caption.component.css'],
-  templateUrl: './graph-caption.component.html'
+  templateUrl: './graph-caption.component.html',
+  standalone: true,
+  imports: [NgTemplateOutlet, TypographyComponent]
 })
-export default class GraphInfo {
-  @Input() dataType!: Subject<DataType>;
-  @Input() currentValue!: Subject<DataValue | undefined>;
-  @Input() currentDriver?: string;
-  @Input() currentSystem?: string;
-  @Input() currentLocation?: string;
+export default class GraphInfoComponent implements OnInit {
+  dataType = input.required<Subject<DataType[] | undefined>>();
+  currentValue = input<DataValue[]>();
+  @ContentChild('rightInfo', { static: true }) rightInfo!: TemplateRef<void>;
+  @ContentChild('buttons', { static: true }) buttons!: TemplateRef<void>;
+
   dataTypeName?: string;
   dataTypeUnit?: string;
   value?: string | number;
 
   ngOnInit(): void {
-    this.dataType.subscribe((dataType: DataType) => {
-      this.dataTypeName = dataType.name;
-      this.dataTypeUnit = dataType.unit;
+    this.dataType().subscribe((dataType: DataType[] | undefined) => {
+      this.dataTypeName = dataType?.at(0)?.name;
+      this.dataTypeUnit = dataType?.at(0)?.unit;
     });
-    this.currentValue.subscribe((value?: DataValue) => {
-      this.value = value?.value ?? 'No Values';
-    });
+    const currentValues = this.currentValue();
+    this.value = currentValues?.[0]?.values?.[0];
   }
 }

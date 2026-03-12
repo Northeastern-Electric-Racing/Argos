@@ -1,45 +1,58 @@
-## Argos
+# Argos
 
-### Initializing Submodule
+Our real-time data processing and visualization tool.
 
-To initialize the odyssey submodule run `git submodule init` and `git submodule update`
+## Quickstart
 
-### Running the Project in Dev Mode
+Go through the quickstart sections of client and scylla-server:
 
-To run the project locally for development, you'll want to run the client and the server separately.
+[Angular Client](./angular-client/README.md) <br>
+[Scylla Server](./scylla-server/README.md)
 
-Client:
+Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the development guide to run locally, or pull from published docker images for one or the other (client, or scylla).
 
-cd into the client directory, and run the following commands:
+## Development
 
-`npm install`
+Your guide for everything development for Argos, in the [Odyssey](https://nerdocs.atlassian.net/wiki/spaces/NER/pages/615874585/Odyssey+24A) ecosystem.
 
-`npm run start`
+### Mock Data & Docker Setup
 
-Server:
+For mock data and running remote branches for scylla and angular-client, you can refer to [Compose Profiles](./compose/README.md).
 
-cd into the scylla-server, and run the following commands:
+Commonly used commands in development:
 
-`npm install`
+- `./argos.sh client-dev up`: runs scylla from a remote branch and combined with mock data from related Odyssey containers.
 
-If it's your first time setting up the repo locally, run:
+### Schema Related Work
 
-`npm run prisma:generate`
+For all changes and adjustments of schema look to [Charybdis](./charybdis/README.md).
 
-`npm run prisma:migrate`
+## Production
 
-Then to actually run the server run:
+Only used when deploying to the router for testing or comp.
 
-`npm run start`
+Please see [Compose Profiles](./compose/README.md) to for more info on docker deployment abstractions.
 
-### Running the Project in Prod Mode
+### Starting out
 
-I've setup a docker-compose file, so that you can easily run both these containers with a few commands:
+connect to the router and ssh in. (link to confluence?)
 
-This will build the docker images that will be run:
+Run: `./argos.sh router -d up` to start all stuff up for data collection
 
-`docker compose build`
+### Codegen Protobuf Types (client only)
 
-This will run the two docker images and output all the outputs from both of them to the terminal:
+Server protobuf generation is automatic. See below for client protobuf generation.
 
-`docker compose up`
+##### Mac
+
+`brew install protobuf@3`
+`brew link --overwrite protobuf@3`
+
+#### Codegen
+
+`npm run build:proto`
+
+### Siren
+
+The configuration for the Mosquitto MQTT server on the router is in the siren-base folder.
+Note that the configuration is used in the docker compose file, but the configuration on the TPU is stored in [Odysseus.](https://github.com/Northeastern-Electric-Racing/Odysseus/tree/cb12fb3240d5fd58adfeae26262e158ad6dd889b/odysseus_tree/overlays/rootfs_overlay_tpu/etc/mosquitto)

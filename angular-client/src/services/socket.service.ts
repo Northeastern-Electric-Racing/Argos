@@ -1,13 +1,16 @@
 import { Socket } from 'socket.io-client';
-import { DataValue, ServerData } from 'src/utils/socket.utils';
+import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
-import { BehaviorSubject } from 'rxjs';
+import { DataTypeEnum } from 'src/data-type.enum';
+import { FaultData } from 'src/utils/types.utils';
+import { FaultService } from './fault.service';
 
 /**
  * Service for interacting with the socket
  */
 export default class SocketService {
   private socket: Socket;
+  private lastLatencyTimestamp: number = 0;
 
   /**
    * Constructor
@@ -20,35 +23,84 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData(storage: Storage) {
-    this.socket.on('message', (message: string) => {
+  receiveData = (storage: Storage, faultService: FaultService) => {
+    this.socket.on('data', (message: string) => {
       try {
+        /* Parse the message and store it in the storage service */
+
         const data = JSON.parse(message) as ServerData;
-        const key = JSON.stringify({
-          name: data.name,
-          unit: data.unit
-        });
-        const valuesSubject = storage.get(key);
-        const newValue = { value: data.value, time: data.timestamp };
-        if (valuesSubject) {
-          const value = valuesSubject.getValue();
-          value.push(newValue);
-          valuesSubject.next(value);
-        } else {
-          const newValuesSubject = new BehaviorSubject<DataValue[]>([newValue]);
-          storage.set(key, newValuesSubject);
+        storage.setCurrentRunId(data.runId);
+
+        /* Create key based on name and unit for hashmap */
+        const key = data.name;
+        const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
+        storage.addValue(key, newValue);
+        if (Date.now() - this.lastLatencyTimestamp > 1000) {
+          const latency = Date.now() - data.timestamp;
+          storage.addValue(DataTypeEnum.LATENCY, {
+            values: [latency.toString()],
+            time: data.timestamp.toString(),
+            unit: 'ms'
+          });
+          this.lastLatencyTimestamp = Date.now();
         }
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
     });
-  }
+
+    this.socket.on('faults', (message: string) => {
+      try {
+        const data = this.transformFaultData(JSON.parse(message));
+        faultService.addFault(data);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
+    this.socket.on('metadata', (message: string) => {
+      try {
+        const data = JSON.parse(message) as ServerData;
+        storage.setCurrentRunId(data.runId);
+
+        const key = data.name;
+        const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
+        storage.addValue(key, newValue);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
+    this.socket.on('timers', (message: string) => {
+      try {
+        const data = JSON.parse(message) as TimerData;
+        const key = data.topic;
+        storage.addTimerValue(key, data);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
+    this.socket.on('disconnect', () => {
+      storage.setCurrentRunId(undefined);
+    });
+  };
 
   /**
    * Sends an error message to the server
    * @param message The error message to send to the server
    */
-  sendError(message: string) {
+  sendError = (message: string) => {
     this.socket.emit('error', message);
-  }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transformFaultData = (data: any): FaultData[] => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.map((fault: any) => ({
+      ...fault,
+      occurredAt: new Date(fault.occured_at),
+      lastSeen: new Date(fault.last_seen)
+    }));
+  };
 }

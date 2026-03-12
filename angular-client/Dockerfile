@@ -1,16 +1,36 @@
-FROM node:18 AS Production
+# ---------- Build Phase ----------
+FROM node:alpine AS Build
+WORKDIR /usr/src/app
 
-ENV NODE_ENV=production
-
-WORKDIR /usr/src/client
-
-COPY package.json . 
-COPY package-lock.json .
-
+COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
 
-RUN npm run build
+# Build the app once (no real env values here)
+RUN npm run build:production
 
-CMD ["sh", "-c", "npm run start:production"]
+# ---------- Runtime Phase ----------
+FROM nginx:alpine AS Production
+
+# Install envsubst to do runtime variable substitution
+RUN apk add --no-cache gettext
+
+# Set working directory
+WORKDIR /usr/share/nginx/html
+
+# Copy built Angular app
+COPY --from=Build /usr/src/app/dist/angular-client/browser .
+
+# Copy NGINX config
+COPY --from=Build /usr/src/app/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy env prod and entrypoint script
+COPY env.prod.js ./assets/env.prod.js
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,6 +1,15 @@
-import { animate, style, transition, trigger } from '@angular/animations';
-import { Component, Input, OnInit } from '@angular/core';
-import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
+import { Component, OnInit, OnDestroy, input, inject } from '@angular/core';
+import { DataType, Node } from 'src/utils/types.utils';
+import { FormControl, FormGroup } from '@angular/forms';
+import { BehaviorSubject, debounceTime, Subscription } from 'rxjs';
+import { TreeNode, PrimeTemplate } from 'primeng/api';
+import Storage from 'src/services/storage.service';
+import { decimalPipe } from 'src/utils/pipes.utils';
+import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
+import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
+import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import TypographyComponent from 'src/components/typography/typography.component';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 /**
  * Sidebar component that displays the nodes and their data types.
@@ -12,58 +21,134 @@ import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils'
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
-  animations: [
-    trigger('toggleExpand', [
-      transition(':enter', [
-        style({
-          height: 0,
-          opacity: 0,
-          transform: 'translateY(-25%)'
-        }),
-        animate(
-          '400ms',
-          style({
-            height: '*',
-            opacity: 1,
-            transform: 'translateY(0)'
-          })
-        )
-      ]),
-      transition(':leave', [
-        animate(
-          '400ms',
-          style({
-            height: 0,
-            opacity: 0,
-            transform: 'translateY(-25%)'
-          })
-        )
-      ])
-    ])
-  ]
+  standalone: true,
+  imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
 })
-export default class GraphSidebarDesktop implements OnInit {
-  @Input() nodes!: Node[];
-  nodesWithVisibilityToggle!: NodeWithVisibilityToggle[];
-  @Input() selectDataType!: (dataType: DataType) => void;
+export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
+  private topicSelectionService = inject(TopicSelectionService);
+  private storage = inject(Storage);
+  dataTypes = input<DataType[]>([]);
+  nodes: Node[] = [];
+
+  filterForm: FormGroup = new FormGroup({
+    searchFilter: new FormControl<string>('')
+  });
+  filterFormSubsription!: Subscription;
+  searchFilter: string = '';
+
+  treeNodes: TreeNode<Node>[] = [];
+  selectedNodes?: TreeNode<Node>[]; // still needed for p-tree binding
+  treeInitialized = false;
+
+  // Local list of selected DataTypes
+  private selectedDataTypesList: DataType[] = [];
 
   /**
    * Initializes the nodes with the visibility toggle.
    */
   ngOnInit(): void {
-    this.nodesWithVisibilityToggle = this.nodes.map((node: Node) => {
-      return {
-        ...node,
-        dataTypesAreVisible: false
-      };
+    this.nodes = dataTypesToNodes(this.dataTypes());
+
+    // Callback to update search regex (debounced at 300 ms)
+    this.filterFormSubsription = this.filterForm.valueChanges.pipe(debounceTime(300)).subscribe((changes) => {
+      this.searchFilter = changes.searchFilter;
     });
+
+    const mapToTreeNode = (node: Node): TreeNode => {
+      const displayValue = new BehaviorSubject<string>('N/A');
+      this.storage.get(node.topicName.slice(0, -1)).subscribe((value) => {
+        displayValue.next(decimalPipe(value.values[0], 3).toFixed(3) + value.unit);
+      });
+      return {
+        label: node.name,
+        data: { ...node, displayValue },
+        key: node.topicName,
+        children: node.nodes.value.map(mapToTreeNode),
+        selectable: node.nodes.value.length === 0
+      };
+    };
+
+    this.treeNodes = this.nodes.map(mapToTreeNode);
+    // Helper function to find selected nodes in the tree and expand their parent nodes
+    const findSelectedNodes = (nodes: TreeNode<Node>[]): TreeNode<Node>[] => {
+      const selected: TreeNode<Node>[] = [];
+
+      // Map to track if a node contains selected children
+      const containsSelectedNode = new Map<TreeNode<Node>, boolean>();
+
+      // First pass: find all selected nodes
+      const findSelected = (nodes: TreeNode<Node>[], parents: TreeNode<Node>[] = []): void => {
+        for (const node of nodes) {
+          // Check if this is a leaf node and matches a selected data type
+          if (node.selectable && node.data?.dataType && this.topicSelectionService.isSelected(node.data.dataType)) {
+            selected.push(node);
+
+            // Mark all parents as containing selected nodes
+            parents.forEach((parent) => containsSelectedNode.set(parent, true));
+          }
+
+          // Continue searching children
+          if (node.children && node.children.length > 0) {
+            findSelected(node.children as TreeNode<Node>[], [...parents, node]);
+          }
+        }
+      };
+
+      // Find selected nodes and track their parents
+      findSelected(nodes);
+
+      // Expand all parent nodes that contain selected children
+      containsSelectedNode.forEach((hasSelectedChild, node) => {
+        if (hasSelectedChild) {
+          node.expanded = true;
+        }
+      });
+
+      return selected;
+    };
+
+    this.selectedNodes = findSelectedNodes(this.treeNodes);
   }
 
-  /**
-   * Toggles Visibility whenever a node is selected
-   * @param node The node to toggle the visibility of the data types for.
-   */
-  toggleDataTypeVisibility(node: NodeWithVisibilityToggle) {
-    node.dataTypesAreVisible = !node.dataTypesAreVisible;
+  ngOnDestroy(): void {
+    this.filterFormSubsription.unsubscribe();
+  }
+
+  clearSelections = () => {
+    this.treeNodes.forEach((n) => (n.expanded = false));
+    this.selectedDataTypesList = [];
+    this.topicSelectionService.clearSelection();
+    this.selectedNodes = undefined;
+  };
+
+  transformDataTypeName(dataTypeName: string) {
+    return dataTypeNamePipe(dataTypeName);
+  }
+
+  nodeSelect(event: TreeNodeSelectEvent) {
+    const dt = event.node.data?.dataType;
+    if (dt && !this.selectedDataTypesList.includes(dt)) {
+      this.selectedDataTypesList.push(dt);
+      this.topicSelectionService.addDataType(dt);
+    }
+  }
+
+  // this is so awesome and made by chat
+  onRowClick(evt: MouseEvent, node: TreeNode) {
+    if (node.children?.length !== 0) {
+      // parent row
+      evt.preventDefault();
+      evt.stopPropagation(); // keep selection engine out
+      node.expanded = !node.expanded; // toggle expanded state
+    }
+    /* leaf rows fall through → normal multi‑selection behaviour */
+  }
+
+  onNodeUnselect(event: TreeNodeUnSelectEvent) {
+    const dt = event.node.data?.dataType;
+    if (dt) {
+      this.selectedDataTypesList = this.selectedDataTypesList.filter((x) => x !== dt);
+      this.topicSelectionService.removeDataType(dt);
+    }
   }
 }

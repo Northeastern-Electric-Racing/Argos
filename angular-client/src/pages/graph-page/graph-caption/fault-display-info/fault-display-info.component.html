@@ -1,0 +1,8 @@
+<div [style]="{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
+  <typography variant="header" content="Last Seen: " additionalStyles="margin-right: 10px"></typography>
+  <typography variant="subheader" [content]="selectedFault?.lastSeen | date: 'HH:mm:ss'" />
+</div>
+<div [style]="{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
+  <typography variant="header" content="Originally Occurred: " additionalStyles="margin-right: 10px"></typography>
+  <typography variant="subheader" [content]="selectedFault?.occurredAt | date: 'HH:mm:ss'" />
+</div>

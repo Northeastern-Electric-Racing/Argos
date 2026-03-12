@@ -1,6 +1,26 @@
 .background {
-  width: 200px;
-  margin-left: 16px;
-  height: 80%;
-  overflow: scroll;
+  width: 28vw;
+  margin-left: 0px;
+  max-height: 80vh;
+  margin-top: 10px;
+}
+
+::ng-deep .p-tree-node-label {
+  width: 100%;
+}
+
+::ng-deep .p-tree-node-leaf {
+  height: 30px;
+}
+
+::ng-deep .p-tree-node-selectable {
+  height: 30px;
+}
+
+:host {
+  /* p-tree styles */
+  --p-tree-background: transparent !important;
+  --p-tree-node-hover-color: #ef4343;
+  --p-tree-node-selected-background: #ef434355;
+  --p-tree-node-focus-ring-color: #ef4343;
 }

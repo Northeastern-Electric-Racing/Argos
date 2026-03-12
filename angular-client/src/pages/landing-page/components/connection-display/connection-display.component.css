@@ -1,0 +1,12 @@
+.connection-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.connection-display-data {
+  display: flex;
+  justify-content: center;
+}
