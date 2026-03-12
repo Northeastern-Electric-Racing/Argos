@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -15,7 +15,7 @@ import { RulePayload } from 'src/api/rules.api';
         <label for="rule-id">Rule ID</label>
         <input id="rule-id" pInputText formControlName="id" placeholder="e.g. high-voltage-alert" />
         @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
-          <small class="error">Rule ID is required</small>
+          <small class="error" role="alert">Rule ID is required</small>
         }
       </div>
 
@@ -23,7 +23,7 @@ import { RulePayload } from 'src/api/rules.api';
         <label for="rule-topic">Topic</label>
         <input id="rule-topic" pInputText formControlName="topic" placeholder="e.g. BMS/Pack/Voltage" />
         @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
-          <small class="error">Topic is required</small>
+          <small class="error" role="alert">Topic is required</small>
         }
       </div>
 
@@ -31,7 +31,7 @@ import { RulePayload } from 'src/api/rules.api';
         <label for="rule-expr">Expression</label>
         <input id="rule-expr" pInputText formControlName="expr" placeholder='e.g. a > 5.0 || a < 1.0' />
         @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-          <small class="error">Expression is required</small>
+          <small class="error" role="alert">Expression is required</small>
         }
       </div>
 
@@ -39,10 +39,10 @@ import { RulePayload } from 'src/api/rules.api';
         <label for="rule-debounce">Debounce Time (seconds)</label>
         <input id="rule-debounce" pInputText formControlName="debounce_time" type="number" placeholder="e.g. 60" />
         @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-          <small class="error">Debounce time is required</small>
+          <small class="error" role="alert">Debounce time is required</small>
         }
         @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-          <small class="error">Must be 0 or greater</small>
+          <small class="error" role="alert">Must be 0 or greater</small>
         }
       </div>
 
@@ -50,7 +50,7 @@ import { RulePayload } from 'src/api/rules.api';
 
       <div class="button-row">
         <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-        <button pButton type="submit" label="Add Rule" [disabled]="submitting()"></button>
+        <button pButton type="submit" label="Add Rule"></button>
       </div>
     </form>
   `,
@@ -90,8 +90,6 @@ import { RulePayload } from 'src/api/rules.api';
 export class AddRuleDialogComponent {
   private ref = inject(DynamicDialogRef);
   private fb = inject(FormBuilder);
-
-  submitting = signal(false);
 
   form = this.fb.group({
     id: ['', Validators.required],

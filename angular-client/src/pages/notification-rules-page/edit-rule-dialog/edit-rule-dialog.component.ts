@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -19,7 +19,7 @@ export interface EditRuleResult {
         <label for="edit-expr">Expression</label>
         <input id="edit-expr" pInputText formControlName="expr" />
         @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-          <small class="error">Expression is required</small>
+          <small class="error" role="alert">Expression is required</small>
         }
       </div>
 
@@ -27,16 +27,16 @@ export interface EditRuleResult {
         <label for="edit-debounce">Debounce Time (seconds)</label>
         <input id="edit-debounce" pInputText formControlName="debounce_time" type="number" />
         @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-          <small class="error">Debounce time is required</small>
+          <small class="error" role="alert">Debounce time is required</small>
         }
         @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-          <small class="error">Must be 0 or greater</small>
+          <small class="error" role="alert">Must be 0 or greater</small>
         }
       </div>
 
       <div class="button-row">
         <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-        <button pButton type="submit" label="Save" [disabled]="submitting()"></button>
+        <button pButton type="submit" label="Save"></button>
       </div>
     </form>
   `,
@@ -77,8 +77,6 @@ export class EditRuleDialogComponent {
   private ref = inject(DynamicDialogRef);
   private config = inject(DynamicDialogConfig);
   private fb = inject(FormBuilder);
-
-  submitting = signal(false);
 
   form = this.fb.group({
     expr: [this.config.data.expr as string, Validators.required],

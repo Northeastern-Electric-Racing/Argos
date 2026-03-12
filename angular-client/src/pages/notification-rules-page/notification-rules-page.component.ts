@@ -196,7 +196,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       return null;
     }
 
-    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const headers = this.splitCsvLine(lines[0]).map((h) => h.trim().toLowerCase());
 
     for (const required of CSV_HEADERS) {
       if (!headers.includes(required)) {
