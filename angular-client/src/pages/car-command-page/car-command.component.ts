@@ -1,5 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   authenticatePw,
   getSettings,
@@ -16,7 +16,7 @@ import APIService from 'src/services/api.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 
 import { Password } from 'primeng/password';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { InputNumber } from 'primeng/inputnumber';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
@@ -24,8 +24,8 @@ import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
-import { CommonModule } from '@angular/common';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 
 interface CarCommand {
   dataType: DataType;
@@ -37,10 +37,10 @@ interface CarCommand {
   selector: 'car-command',
   templateUrl: './car-command.component.html',
   styleUrls: ['./car-command.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [ConfirmationService],
   imports: [
     Password,
-    ReactiveFormsModule,
     FormsModule,
     ButtonComponent,
     InputNumber,
@@ -49,32 +49,34 @@ interface CarCommand {
     TypographyComponent,
     SettingToggleComponent,
     SettingInputComponent,
-    CommonModule,
     MatGridList,
-    MatGridTile
+    MatGridTile,
+    ConfirmDialog
   ]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
   private toastService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
 
-  carCommands: CarCommand[] = [];
-  dataTypesIsLoading = true;
-  dataTypesIsError = false;
-  dataTypesError?: Error;
+  carCommands = signal<CarCommand[]>([]);
+  dataTypesIsLoading = signal(true);
+  dataTypesIsError = signal(false);
+  dataTypesError = signal<Error | undefined>(undefined);
 
-  isAuthenticated = false;
+  isAuthenticated = signal(false);
   enteredPw = '';
+  authError = signal<string | undefined>(undefined);
 
-  uploadEnabled?: boolean = undefined;
-  batchTime?: number = undefined;
-  rateLimitMode?: number = undefined;
-  rateLimitTime?: number = undefined;
-  discardPercentage?: number = undefined;
+  uploadEnabled = signal<boolean | undefined>(undefined);
+  batchTime = signal<number | undefined>(undefined);
+  rateLimitMode = signal<number | undefined>(undefined);
+  rateLimitTime = signal<number | undefined>(undefined);
+  discardPercentage = signal<number | undefined>(undefined);
 
-  settingsIsLoading = true;
-  settingsIsError = false;
-  settingsError?: Error;
+  settingsIsLoading = signal(true);
+  settingsIsError = signal(false);
+  settingsError = signal<Error | undefined>(undefined);
 
   ngOnInit(): void {
     this.queryScyllaSettings();
@@ -85,45 +87,42 @@ export default class CarCommandComponent implements OnInit {
     const settingsResponse = this.serverService.query<ScyllaSettings>(getSettings, { queryKey: ['settings'] });
     settingsResponse.data.subscribe((data) => {
       if (data) {
-        this.uploadEnabled = !data.data_upload_disabled;
-        this.batchTime = data.batch_upsert_time;
-        this.rateLimitMode = data.ratelimit_mode;
-        this.rateLimitTime = data.static_ratelimit_time;
-        this.discardPercentage = data.socket_discard_percent;
+        this.uploadEnabled.set(!data.data_upload_disabled);
+        this.batchTime.set(data.batch_upsert_time);
+        this.rateLimitMode.set(data.ratelimit_mode);
+        this.rateLimitTime.set(data.static_ratelimit_time);
+        this.discardPercentage.set(data.socket_discard_percent);
       }
     });
 
     settingsResponse.error.subscribe((error) => {
       if (error) {
-        this.settingsError = error;
-        this.settingsIsError = true;
+        this.settingsError.set(error);
+        this.settingsIsError.set(true);
       }
     });
 
     settingsResponse.isLoading.subscribe((isLoading) => {
-      this.settingsIsLoading = isLoading;
+      this.settingsIsLoading.set(isLoading);
     });
   }
 
-  /**
-   * Queries the datatypes from the server.
-   */
   private queryDataTypes() {
     const dataTypesQueryResponse = this.serverService.query<DataType[]>(getAllDatatypes);
     dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.dataTypesIsLoading = isLoading;
+      this.dataTypesIsLoading.set(isLoading);
     });
     dataTypesQueryResponse.error.subscribe((error) => {
       if (error) {
-        this.dataTypesIsError = true;
-        this.dataTypesError = error;
+        this.dataTypesIsError.set(true);
+        this.dataTypesError.set(error);
       }
     });
     dataTypesQueryResponse.data.subscribe((data) => {
       if (data) {
         const commandMap = new Map<string, CarCommand>();
         data
-          .filter((data) => data.name.includes('Calypso/Bidir'))
+          .filter((item) => item.name.includes('Calypso/Bidir'))
           .forEach((dataType) => {
             const commandName = dataType.name.split('/')[dataType.name.split('/').length - 2];
             const existingCommand = commandMap.get(commandName);
@@ -133,20 +132,29 @@ export default class CarCommandComponent implements OnInit {
               commandMap.set(commandName, { ...existingCommand, values: [...existingCommand.values, 0] });
             }
           });
-        this.carCommands = Array.from(commandMap.values());
+        this.carCommands.set(Array.from(commandMap.values()));
       }
     });
   }
 
-  sendCarCommand(key: string, values: number[]) {
+  confirmSendCommand(key: string, values: number[]) {
+    this.confirmationService.confirm({
+      message: `Send command "${key}" with values [${values.join(', ')}] to the car?`,
+      header: 'Confirm Command',
+      acceptLabel: 'Send',
+      rejectLabel: 'Cancel',
+      accept: () => this.sendCarCommand(key, values)
+    });
+  }
+
+  private sendCarCommand(key: string, values: number[]) {
     const commandQueryResponse = this.serverService.query<string>(() => sendConfig(key, values));
     commandQueryResponse.isLoading.subscribe((isLoading) => {
-      this.dataTypesIsLoading = isLoading;
+      this.dataTypesIsLoading.set(isLoading);
     });
     commandQueryResponse.error.subscribe((error) => {
       if (error) {
-        this.dataTypesIsError = true;
-        this.dataTypesError = error;
+        this.toastService.add({ severity: 'error', summary: 'Command Failed', detail: error.message });
       }
     });
     commandQueryResponse.data.subscribe((message) => {
@@ -157,19 +165,21 @@ export default class CarCommandComponent implements OnInit {
   }
 
   authenticatePw = () => {
+    this.authError.set(undefined);
     const authenticationQueryResponse = this.serverService.query<string>(() => authenticatePw(this.enteredPw));
     authenticationQueryResponse.isLoading.subscribe((isLoading) => {
-      this.dataTypesIsLoading = isLoading;
+      this.dataTypesIsLoading.set(isLoading);
     });
     authenticationQueryResponse.error.subscribe((error) => {
       if (error) {
-        this.dataTypesIsError = true;
-        this.dataTypesError = error;
-        this.isAuthenticated = false;
+        this.authError.set('Incorrect password. Please try again.');
+        this.isAuthenticated.set(false);
       }
     });
-    authenticationQueryResponse.data.subscribe(() => {
-      this.isAuthenticated = true;
+    authenticationQueryResponse.data.subscribe((data) => {
+      if (data) {
+        this.isAuthenticated.set(true);
+      }
     });
   };
 
@@ -189,9 +199,20 @@ export default class CarCommandComponent implements OnInit {
     });
   };
 
-  onUpdateSettingsPressed = () => {
-    if (this.uploadEnabled !== undefined) {
-      const response = this.serverService.query(() => toggleUpload(this.uploadEnabled!), { invalidates: ['settings'] });
+  confirmSaveSettings = () => {
+    this.confirmationService.confirm({
+      message: 'Save all settings changes? This will update the live server configuration.',
+      header: 'Confirm Settings Update',
+      acceptLabel: 'Save',
+      rejectLabel: 'Cancel',
+      accept: () => this.onUpdateSettingsPressed()
+    });
+  };
+
+  private onUpdateSettingsPressed() {
+    const uploadEnabled = this.uploadEnabled();
+    if (uploadEnabled !== undefined) {
+      const response = this.serverService.query(() => toggleUpload(uploadEnabled), { invalidates: ['settings'] });
       response.data.subscribe(() => {
         this.toastService.add({ severity: 'success', summary: 'Successfully Updated Upload Enabled' });
       });
@@ -199,8 +220,10 @@ export default class CarCommandComponent implements OnInit {
         (error) => error && this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message })
       );
     }
-    if (this.batchTime !== undefined) {
-      const response = this.serverService.query(() => setBatchTime(this.batchTime!), { invalidates: ['settings'] });
+
+    const batchTime = this.batchTime();
+    if (batchTime !== undefined) {
+      const response = this.serverService.query(() => setBatchTime(batchTime), { invalidates: ['settings'] });
       response.data.subscribe(() => {
         this.toastService.add({ severity: 'success', summary: 'Successfully Updated Batch Time' });
       });
@@ -208,8 +231,10 @@ export default class CarCommandComponent implements OnInit {
         (error) => error && this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message })
       );
     }
-    if (this.rateLimitMode !== undefined) {
-      const response = this.serverService.query(() => setRateLimitMode(this.rateLimitMode!), { invalidates: ['settings'] });
+
+    const rateLimitMode = this.rateLimitMode();
+    if (rateLimitMode !== undefined) {
+      const response = this.serverService.query(() => setRateLimitMode(rateLimitMode), { invalidates: ['settings'] });
       response.data.subscribe(() => {
         this.toastService.add({ severity: 'success', summary: 'Successfully Updated Rate Limit Mode' });
       });
@@ -217,8 +242,10 @@ export default class CarCommandComponent implements OnInit {
         (error) => error && this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message })
       );
     }
-    if (this.rateLimitTime !== undefined) {
-      const response = this.serverService.query(() => setRateLimitTime(this.rateLimitTime!), { invalidates: ['settings'] });
+
+    const rateLimitTime = this.rateLimitTime();
+    if (rateLimitTime !== undefined) {
+      const response = this.serverService.query(() => setRateLimitTime(rateLimitTime), { invalidates: ['settings'] });
       response.data.subscribe(() => {
         this.toastService.add({ severity: 'success', summary: 'Successfully Updated Rate Limit Time' });
       });
@@ -226,8 +253,10 @@ export default class CarCommandComponent implements OnInit {
         (error) => error && this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message })
       );
     }
-    if (this.discardPercentage !== undefined) {
-      const response = this.serverService.query(() => setDiscardPercentage(this.discardPercentage!), {
+
+    const discardPercentage = this.discardPercentage();
+    if (discardPercentage !== undefined) {
+      const response = this.serverService.query(() => setDiscardPercentage(discardPercentage), {
         invalidates: ['settings']
       });
       response.data.subscribe(() => {
@@ -237,5 +266,5 @@ export default class CarCommandComponent implements OnInit {
         (error) => error && this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message })
       );
     }
-  };
+  }
 }

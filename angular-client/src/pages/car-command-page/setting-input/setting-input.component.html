@@ -1,4 +1,13 @@
 <p-floatlabel>
-  <input pInputText type="number" [id]="label() + '-input'" [(ngModel)]="value" autocomplete="off" />
+  <input
+    pInputText
+    type="number"
+    [id]="label() + '-input'"
+    [(ngModel)]="value"
+    [attr.min]="min()"
+    [attr.max]="max()"
+    (change)="onValueChange($any($event.target).value)"
+    autocomplete="off"
+  />
   <label [for]="label() + '-input'">{{ label() }}</label>
 </p-floatlabel>
