@@ -26,6 +26,11 @@ export enum DataTypeEnum {
   // DTI
   MOTOR_TEMP = 'DTI/Temps/Motor_Temperature',
 
+  // VCU Echo (AUTO-mode source-of-truth)
+  VCU_ECHO_MOTOR_TEMP = 'VCU/Echo/Motor_Temp',
+  VCU_ECHO_CONTROLLER_TEMP = 'VCU/Echo/Controller_Temp',
+  VCU_ECHO_BATTBOX_TEMP = 'VCU/Echo/Battbox_Temp',
+
   // TPU
   CPUUsage = 'TPU/OnBoard/CpuUsage',
   CPUTemp = 'TPU/OnBoard/CpuTemp',
@@ -175,6 +180,18 @@ export enum DataTypeEnum {
   VCU_EFUSE_MC_CURRENT = 'VCU/eFuses/MC/Current',
   VCU_EFUSE_MC_FAULTED = 'VCU/eFuses/MC/Faulted?',
   VCU_EFUSE_MC_ENABLED = 'VCU/eFuses/MC/Enabled?',
+
+  // VCU eFuse Control State (0=ON, 1=AUTO, 2=OFF)
+  VCU_EFUSE_DASHBOARD_CONTROL_STATE = 'VCU/eFuses/Dashboard/Control_State',
+  VCU_EFUSE_BRAKE_CONTROL_STATE = 'VCU/eFuses/Brake/Control_State',
+  VCU_EFUSE_SHUTDOWN_CONTROL_STATE = 'VCU/eFuses/Shutdown/Control_State',
+  VCU_EFUSE_LV_CONTROL_STATE = 'VCU/eFuses/LV/Control_State',
+  VCU_EFUSE_RADFAN_CONTROL_STATE = 'VCU/eFuses/Radfan/Control_State',
+  VCU_EFUSE_FANBATT_CONTROL_STATE = 'VCU/eFuses/Fanbatt/Control_State',
+  VCU_EFUSE_PUMPONE_CONTROL_STATE = 'VCU/eFuses/PumpOne/Control_State',
+  VCU_EFUSE_PUMPTWO_CONTROL_STATE = 'VCU/eFuses/PumpTwo/Control_State',
+  VCU_EFUSE_BATTBOX_CONTROL_STATE = 'VCU/eFuses/Battbox/Control_State',
+  VCU_EFUSE_MC_CONTROL_STATE = 'VCU/eFuses/MC/Control_State',
 
   // Calypso eFuse command states (0=ON, 1=AUTO, 2=OFF)
   CALYPSO_EFUSE_STATE_DASHBOARD = 'Calypso/Bidir/State/eFuses/Dashboard',

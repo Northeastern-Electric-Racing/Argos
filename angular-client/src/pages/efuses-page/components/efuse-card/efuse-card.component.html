@@ -63,12 +63,27 @@
 
         <!-- Switch + optional AUTO telemetry display -->
         <hstack [justifyContent]="hasAutoMode() ? 'space-between' : 'center'" [alignItems]="'center'" style="width: 100%">
-          <efuse-switch
-            [fontSize]="14"
-            [options]="switchOptions()"
-            [selectedState]="switchState()"
-            (stateChange)="onSwitchStateChange($event)"
-          />
+          <vstack [align]="'center'" [spacing]="'6px'">
+            <efuse-switch
+              [fontSize]="14"
+              [options]="switchOptions()"
+              [selectedState]="switchState()"
+              (stateChange)="onSwitchStateChange($event)"
+            />
+            <seven-segment-display
+              [value]="controlStateDisplay()"
+              [digits]="4"
+              [decimals]="0"
+              [fontSize]="14"
+              [textAlign]="'left'"
+              [stackAlign]="'start'"
+              [unitFontSize]="0"
+              [paddingBottom]="2"
+              [paddingLeft]="10"
+              [paddingRight]="10"
+              [paddingTop]="6"
+            />
+          </vstack>
           @if (hasAutoMode()) {
             <vstack [align]="'flex-start'" [spacing]="'2px'">
               <seven-segment-display

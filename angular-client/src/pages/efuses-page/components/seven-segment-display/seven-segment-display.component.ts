@@ -16,7 +16,7 @@ const DOT = '\u2024';
   selector: 'seven-segment-display',
   templateUrl: './seven-segment-display.component.html',
   styleUrls: ['./seven-segment-display.component.css'],
-  standalone: true,
+  standalone: true
 })
 export default class SevenSegmentDisplayComponent {
   /** The value to display (e.g., "1.70") */
@@ -42,6 +42,12 @@ export default class SevenSegmentDisplayComponent {
   paddingRight = input<number>(10);
   paddingTop = input<number>(20);
   paddingBottom = input<number>(10);
+
+  /** Text alignment for the segment text */
+  textAlign = input<'left' | 'center' | 'right'>('center');
+
+  /** Alignment for the stacked text layers */
+  stackAlign = input<'start' | 'center' | 'end'>('center');
 
   /**
    * Background text with all 8s and the dot leader, e.g. "8․88"

@@ -40,9 +40,12 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
 
+  private static readonly FIGURE_SPACE = '\u2007';
+
   // ── Common inputs (required for every eFuse card) ──
   efuseName = input.required<string>();
   stateDataType = input.required<DataTypeEnum>();
+  controlStateDataType = input.required<DataTypeEnum>();
   commandKey = input<string | null>(null);
   adcDataType = input.required<DataTypeEnum>();
   voltageDataType = input.required<DataTypeEnum>();
@@ -81,6 +84,7 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   isEnabled: boolean = false;
   autoValue: number = 0;
   switchState = signal<EfuseSwitchState>('OFF');
+  controlStateDisplay = signal<string>('    ');
 
   ngOnInit() {
     // Subscribe to ADC raw data
@@ -115,6 +119,15 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.storage.get(this.enabledDataType()).subscribe((value) => {
         this.isEnabled = Number(value.values[0]) === 1;
+      })
+    );
+
+    // Subscribe to VCU control state (0=ON, 1=AUTO, 2=OFF)
+    this.subscriptions.push(
+      this.storage.get(this.controlStateDataType()).subscribe((value) => {
+        const raw = Number(value.values[0]);
+        if (Number.isNaN(raw)) return;
+        this.controlStateDisplay.set(this.formatControlState(raw));
       })
     );
 
@@ -162,5 +175,13 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
     sendConfig(this.resolvedCommandKey(), [payload]).catch((error) => {
       console.error(`Failed to send ${this.efuseName()} command`, error);
     });
+  }
+
+  private formatControlState(raw: number): string {
+    const pad = EfuseCardComponent.FIGURE_SPACE;
+    if (raw === 0) return `${pad}On${pad}`;
+    if (raw === 1) return 'Auto';
+    if (raw === 2) return `${pad}OFF`;
+    return pad.repeat(4);
   }
 }

@@ -31,6 +31,8 @@
   white-space: pre;
   letter-spacing: 0.05em;
   text-align: center;
+  width: 100%;
+  display: block;
 }
 
 /* Background layer: all segments faintly visible */
