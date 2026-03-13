@@ -145,7 +145,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     },
     { id: appRoutes.faultsRoute(), label: 'Fault', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' },
     { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
-    { id: appRoutes.efusesRoute(), label: 'eFuses', onClick: () => this.navigateTo(appRoutes.efusesRoute()), icon: 'electrical_services' }
+    {
+      id: appRoutes.efusesRoute(),
+      label: 'eFuses',
+      onClick: () => this.navigateTo(appRoutes.efusesRoute()),
+      icon: 'electrical_services'
+    }
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
