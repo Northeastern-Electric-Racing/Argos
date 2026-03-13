@@ -84,7 +84,7 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   isEnabled: boolean = false;
   autoValue: number = 0;
   switchState = signal<EfuseSwitchState>('OFF');
-  controlStateDisplay = signal<string>('    ');
+  controlStateDisplay = signal<string>('Null');
 
   ngOnInit() {
     // Subscribe to ADC raw data
@@ -182,6 +182,6 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
     if (raw === 0) return `${pad}On${pad}`;
     if (raw === 1) return 'Auto';
     if (raw === 2) return `${pad}OFF`;
-    return pad.repeat(4);
+    return 'Null';
   }
 }
