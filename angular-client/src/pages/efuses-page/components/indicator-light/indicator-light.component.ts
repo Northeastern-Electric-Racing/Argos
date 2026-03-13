@@ -12,7 +12,7 @@ import { Component, input, computed } from '@angular/core';
   selector: 'indicator-light',
   templateUrl: './indicator-light.component.html',
   styleUrls: ['./indicator-light.component.css'],
-  standalone: true,
+  standalone: true
 })
 export default class IndicatorLightComponent {
   /** The text displayed on the plate (e.g., "FAULTED", "ENABLED") */
@@ -32,7 +32,7 @@ export default class IndicatorLightComponent {
     const presets: Record<string, { bg: string; glow: string; text: string }> = {
       red: { bg: '#4a1515', glow: '#cc3030', text: '#cc3030' },
       green: { bg: '#1a3318', glow: '#4a9e3e', text: '#4a9e3e' },
-      amber: { bg: '#3d3010', glow: '#c8911e', text: '#c8911e' },
+      amber: { bg: '#3d3010', glow: '#c8911e', text: '#c8911e' }
     };
     return presets[this.color()] ?? { bg: this.color(), glow: this.color(), text: '#ffffff' };
   });
