@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal, OnInit } from '@angular/core';
+import { Component, computed, effect, input, output, signal, OnInit } from '@angular/core';
 
 export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
 
@@ -30,6 +30,9 @@ export default class EfuseSwitchComponent implements OnInit {
   /** The set of states available to this switch */
   options = input<EfuseSwitchState[]>(['ON', 'OFF']);
 
+  /** Selected state from Calypso (source of truth) */
+  selectedState = input<EfuseSwitchState | null>(null);
+
   /**
    * Ordered options — ensures AUTO is always in the middle when present.
    * Canonical order: ON, AUTO, OFF.
@@ -41,6 +44,13 @@ export default class EfuseSwitchComponent implements OnInit {
 
   /** The currently selected state */
   selected = signal<EfuseSwitchState>('OFF');
+
+  private syncSelectedState = effect(() => {
+    const incoming = this.selectedState();
+    if (incoming) {
+      this.selected.set(incoming);
+    }
+  });
 
   /** Emitted when the user selects a new state */
   stateChange = output<EfuseSwitchState>();

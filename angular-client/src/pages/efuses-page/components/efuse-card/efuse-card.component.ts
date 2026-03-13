@@ -1,10 +1,10 @@
-import { Component, OnDestroy, OnInit, input, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, input, computed, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { decimalPipe } from 'src/utils/pipes.utils';
+import { sendConfig } from 'src/api/car-command.api';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 import SevenSegmentDisplayComponent from '../seven-segment-display/seven-segment-display.component';
@@ -29,7 +29,6 @@ import { inject } from '@angular/core';
   standalone: true,
   imports: [
     InfoBackgroundComponent,
-    TypographyComponent,
     HStackComponent,
     VStackComponent,
     SevenSegmentDisplayComponent,
@@ -43,6 +42,8 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   // ── Common inputs (required for every eFuse card) ──
   efuseName = input.required<string>();
+  stateDataType = input.required<DataTypeEnum>();
+  commandKey = input<string | null>(null);
   adcDataType = input.required<DataTypeEnum>();
   voltageDataType = input.required<DataTypeEnum>();
   currentDataType = input.required<DataTypeEnum>();
@@ -63,10 +64,14 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   /** Whether this card supports AUTO mode (Type 2) */
   hasAutoMode = computed(() => this.autoDataType() !== undefined);
 
+  /** The command key to send to Calypso (falls back to efuseName) */
+  resolvedCommandKey = computed(() => this.commandKey() ?? this.efuseName());
+
   /** The switch options passed to <efuse-switch> */
-  switchOptions = computed<EfuseSwitchState[]>(() =>
-    this.hasAutoMode() ? ['ON', 'OFF', 'AUTO'] : ['ON', 'OFF']
-  );
+  switchOptions = computed<EfuseSwitchState[]>(() => {
+    const includeAuto = this.hasAutoMode() || this.switchState() === 'AUTO';
+    return includeAuto ? ['ON', 'OFF', 'AUTO'] : ['ON', 'OFF'];
+  });
 
   // ── Data properties ──
   adcRaw: number = 0;
@@ -75,6 +80,7 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   isFaulted: boolean = false;
   isEnabled: boolean = false;
   autoValue: number = 0;
+  switchState = signal<EfuseSwitchState>('OFF');
 
   ngOnInit() {
     // Subscribe to ADC raw data
@@ -112,6 +118,17 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Subscribe to Calypso eFuse state (0=ON, 1=AUTO, 2=OFF)
+    this.subscriptions.push(
+      this.storage.get(this.stateDataType()).subscribe((value) => {
+        const raw = Number(value.values[0]);
+        if (Number.isNaN(raw)) return;
+        if (raw === 0) this.switchState.set('ON');
+        if (raw === 1) this.switchState.set('AUTO');
+        if (raw === 2) this.switchState.set('OFF');
+      })
+    );
+
     // Subscribe to the AUTO-mode telemetry value (Type 2 cards only)
     const autoDT = this.autoDataType();
     if (autoDT !== undefined) {
@@ -141,7 +158,9 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   /** Handle switch state change — sends the appropriate CAN message */
   onSwitchStateChange(state: EfuseSwitchState): void {
-    // TODO: send CAN message based on efuse name and selected state
-    console.log(`[${this.efuseName()}] switch → ${state}`);
+    const payload = state === 'ON' ? 0 : state === 'AUTO' ? 1 : 2;
+    sendConfig(this.resolvedCommandKey(), [payload]).catch((error) => {
+      console.error(`Failed to send ${this.efuseName()} command`, error);
+    });
   }
 }

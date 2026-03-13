@@ -1,59 +1,93 @@
 <info-background [svgIcon]="'electrical_services'" [title]="efuseName()">
-  <div style="padding: 20px 30px 10px 40px; height: 100%; box-sizing: border-box;">
-    <vstack [align]="'flex-center'" [spacing]="'30px'" style="height: 100%; justify-content: space-between;">
-    <!-- Current display + ADC displays side by side -->
-    <hstack [spacing]="'100px'" style="align-items: flex-start; margin-top: 10px">
-      <!-- Main Current Value (Large) -->
-      <vstack [align]="'flex-start'">
-        <seven-segment-display [value]="current.toFixed(2)" [digits]="3" [decimals]="2" [fontSize]="80" [unit]="'A'" [unitFontSize]="30" />
-        <div class="current-label">Current</div>
-      </vstack>
-
-      <!-- ADC Voltage + ADC Raw stacked vertically -->
-      <vstack [spacing]="'10px'" [align]="'flex-start'">
-        <!-- ADC Voltage -->
+  <div style="padding: 20px 30px 10px 40px; height: 100%; box-sizing: border-box">
+    <vstack [align]="'flex-center'" [spacing]="'30px'" style="height: 100%; justify-content: space-between">
+      <!-- Current display + ADC displays side by side -->
+      <hstack [spacing]="'100px'" style="align-items: flex-start; margin-top: 10px">
+        <!-- Main Current Value (Large) -->
         <vstack [align]="'flex-start'">
-          <seven-segment-display [value]="voltage.toFixed(2)" [digits]="3" [decimals]="2" [fontSize]="40" [unit]="'V'" [unitFontSize]="20" [paddingBottom]="4" [paddingLeft]="12" [paddingRight]="12" [paddingTop]="10" />
-          <div class="adc-voltage-label">ADC Voltage</div>
+          <seven-segment-display
+            [value]="current.toFixed(2)"
+            [digits]="3"
+            [decimals]="2"
+            [fontSize]="80"
+            [unit]="'A'"
+            [unitFontSize]="30"
+          />
+          <div class="current-label">Current</div>
         </vstack>
 
-        <!-- ADC Raw -->
-        <vstack [align]="'flex-start'">
-          <seven-segment-display [value]="adcRaw.toFixed(0).padStart(4, '0')" [digits]="4" [decimals]="0" [fontSize]="40" [unit]="'RAW'" [unitFontSize]="20" [paddingBottom]="4" [paddingLeft]="12" [paddingRight]="12" [paddingTop]="10" />
-          <div class="adc-voltage-label">ADC</div>
-        </vstack>
-      </vstack>
-    </hstack>
-
-    <!-- Status Indicators + Switch (centered, stacked) -->
-    <vstack [align]="'center'" [spacing]="'30px'">
-      <hstack [justifyContent]="'center'" [spacing]="'15px'" [alignItems]="'center'">
-        <indicator-light [label]="'FAULTED'" [active]="isFaulted" [color]="'red'" [fontSize]="14" />
-        <indicator-light [label]="'ENABLED'" [active]="isEnabled" [color]="'green'" [fontSize]="14" />
-      </hstack>
-
-      <!-- Switch + optional AUTO telemetry display -->
-      <hstack [justifyContent]="hasAutoMode() ? 'space-between' : 'center'" [alignItems]="'center'" style="width: 100%">
-        <efuse-switch [fontSize]="14" [options]="switchOptions()" (stateChange)="onSwitchStateChange($event)" />
-        @if (hasAutoMode()) {
-          <vstack [align]="'flex-start'" [spacing]="'2px'">
+        <!-- ADC Voltage + ADC Raw stacked vertically -->
+        <vstack [spacing]="'10px'" [align]="'flex-start'">
+          <!-- ADC Voltage -->
+          <vstack [align]="'flex-start'">
             <seven-segment-display
-              [value]="autoValue.toFixed(autoDecimals())"
-              [digits]="autoDigits()"
-              [decimals]="autoDecimals()"
+              [value]="voltage.toFixed(2)"
+              [digits]="3"
+              [decimals]="2"
               [fontSize]="40"
-              [unit]="autoUnit()"
+              [unit]="'V'"
               [unitFontSize]="20"
               [paddingBottom]="4"
               [paddingLeft]="12"
               [paddingRight]="12"
               [paddingTop]="10"
             />
-            <div class="adc-voltage-label">{{ autoLabel() }}</div>
+            <div class="adc-voltage-label">ADC Voltage</div>
           </vstack>
-        }
+
+          <!-- ADC Raw -->
+          <vstack [align]="'flex-start'">
+            <seven-segment-display
+              [value]="adcRaw.toFixed(0).padStart(4, '0')"
+              [digits]="4"
+              [decimals]="0"
+              [fontSize]="40"
+              [unit]="'RAW'"
+              [unitFontSize]="20"
+              [paddingBottom]="4"
+              [paddingLeft]="12"
+              [paddingRight]="12"
+              [paddingTop]="10"
+            />
+            <div class="adc-voltage-label">ADC</div>
+          </vstack>
+        </vstack>
       </hstack>
-    </vstack>
+
+      <!-- Status Indicators + Switch (centered, stacked) -->
+      <vstack [align]="'center'" [spacing]="'30px'">
+        <hstack [justifyContent]="'center'" [spacing]="'15px'" [alignItems]="'center'">
+          <indicator-light [label]="'FAULTED'" [active]="isFaulted" [color]="'red'" [fontSize]="14" />
+          <indicator-light [label]="'ENABLED'" [active]="isEnabled" [color]="'green'" [fontSize]="14" />
+        </hstack>
+
+        <!-- Switch + optional AUTO telemetry display -->
+        <hstack [justifyContent]="hasAutoMode() ? 'space-between' : 'center'" [alignItems]="'center'" style="width: 100%">
+          <efuse-switch
+            [fontSize]="14"
+            [options]="switchOptions()"
+            [selectedState]="switchState()"
+            (stateChange)="onSwitchStateChange($event)"
+          />
+          @if (hasAutoMode()) {
+            <vstack [align]="'flex-start'" [spacing]="'2px'">
+              <seven-segment-display
+                [value]="autoValue.toFixed(autoDecimals())"
+                [digits]="autoDigits()"
+                [decimals]="autoDecimals()"
+                [fontSize]="40"
+                [unit]="autoUnit()"
+                [unitFontSize]="20"
+                [paddingBottom]="4"
+                [paddingLeft]="12"
+                [paddingRight]="12"
+                [paddingTop]="10"
+              />
+              <div class="adc-voltage-label">{{ autoLabel() }}</div>
+            </vstack>
+          }
+        </hstack>
+      </vstack>
     </vstack>
   </div>
 </info-background>
