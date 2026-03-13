@@ -12,4 +12,11 @@
   gap: 15px;
 }
 
+.title-style {
+  display: grid;
+  align-items: center;
+  margin-top: -20px;
+  line-height: 1;
+}
+
 /* Add your custom styles here */
