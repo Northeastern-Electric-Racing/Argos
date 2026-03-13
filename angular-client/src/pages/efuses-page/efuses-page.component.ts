@@ -15,12 +15,7 @@ import EfuseCardComponent from './components/efuse-card/efuse-card.component';
   styleUrls: ['./efuses-page.component.css'],
   templateUrl: './efuses-page.component.html',
   standalone: true,
-  imports: [
-    MatGridList,
-    MatGridTile,
-    TypographyComponent,
-    EfuseCardComponent
-  ]
+  imports: [MatGridList, MatGridTile, TypographyComponent, EfuseCardComponent]
 })
 export default class EfusesPageComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
