@@ -87,7 +87,7 @@
           @if (hasAutoMode()) {
             <vstack [align]="'flex-start'" [spacing]="'2px'">
               <seven-segment-display
-                [value]="autoValue.toFixed(autoDecimals())"
+                [value]="autoValue.toFixed(autoDecimals()).padStart(4, '0')"
                 [digits]="autoDigits()"
                 [decimals]="autoDecimals()"
                 [fontSize]="40"
