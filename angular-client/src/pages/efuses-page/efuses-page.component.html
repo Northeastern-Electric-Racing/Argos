@@ -7,7 +7,7 @@
   />
 
   <div style="margin-top: 20px">
-    <mat-grid-list cols="3" gutterSize="15px" rowHeight="450px">
+    <mat-grid-list [cols]="gridCols" gutterSize="15px" [rowHeight]="gridRowHeight">
       <!-- Dashboard eFuse -->
       <mat-grid-tile>
         <efuse-card
