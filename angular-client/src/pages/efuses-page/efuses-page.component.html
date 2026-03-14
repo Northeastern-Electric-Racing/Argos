@@ -39,6 +39,11 @@
           [faultedDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_FAULTED"
           [enabledDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ENABLED"
           [maxCurrent]="'0.6'"
+          [autoDataType]="DataTypeEnum.VCU_ECHO_BRAKE_STATE"
+          [autoLabel]="'Brake State'"
+          [autoUnit]="''"
+          [autoDecimals]="0"
+          [autoDigits]="1"
         />
       </mat-grid-tile>
 
@@ -152,6 +157,26 @@
           [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_FAULTED"
           [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ENABLED"
           [maxCurrent]="'2.5'"
+          [autoDataType]="DataTypeEnum.VCU_ECHO_CONTROLLER_TEMP"
+          [autoLabel]="'Controller Temp'"
+          [autoUnit]="'°C'"
+        />
+      </mat-grid-tile>
+
+      <!-- Spare eFuse (Type 2: AUTO based on DTI controller temp) -->
+      <mat-grid-tile>
+        <efuse-card
+          style="width: 100%; height: 100%"
+          efuseName="Spare"
+          commandKey="Spare"
+          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_SPARE"
+          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_SPARE_CONTROL_STATE"
+          [adcDataType]="DataTypeEnum.VCU_EFUSE_SPARE_ADC"
+          [voltageDataType]="DataTypeEnum.VCU_EFUSE_SPARE_VOLTAGE"
+          [currentDataType]="DataTypeEnum.VCU_EFUSE_SPARE_CURRENT"
+          [faultedDataType]="DataTypeEnum.VCU_EFUSE_SPARE_FAULTED"
+          [enabledDataType]="DataTypeEnum.VCU_EFUSE_SPARE_ENABLED"
+          [maxCurrent]="'2'"
           [autoDataType]="DataTypeEnum.VCU_ECHO_CONTROLLER_TEMP"
           [autoLabel]="'Controller Temp'"
           [autoUnit]="'°C'"
