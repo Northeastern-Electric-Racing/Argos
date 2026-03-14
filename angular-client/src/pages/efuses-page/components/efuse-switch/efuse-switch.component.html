@@ -1,4 +1,4 @@
-<div class="switch-group">
+<div class="switch-group" [class.disabled]="disabled()">
   @for (option of orderedOptions(); track option) {
     <button
       class="switch-button"
@@ -7,6 +7,7 @@
       [class.state-auto]="option === 'AUTO'"
       [class.state-off]="option === 'OFF'"
       [style.font-size.px]="fontSize()"
+      [disabled]="disabled()"
       (click)="select(option)"
     >
       <span class="switch-label">{{ option }}</span>

@@ -27,6 +27,9 @@ export default class EfuseSwitchComponent implements OnInit {
   /** Font size in px for the button labels */
   fontSize = input<number>(14);
 
+  /** Disable interactions while keeping state display live */
+  disabled = input<boolean>(false);
+
   /** The set of states available to this switch */
   options = input<EfuseSwitchState[]>(['ON', 'OFF']);
 
@@ -62,6 +65,7 @@ export default class EfuseSwitchComponent implements OnInit {
   }
 
   select(state: EfuseSwitchState): void {
+    if (this.disabled()) return;
     if (state === this.selected()) return;
     this.selected.set(state);
     this.stateChange.emit(state);

@@ -1,0 +1,80 @@
+/* Container — keeps the three buttons in a tight row */
+.switch-group {
+  display: inline-flex;
+  gap: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #333333;
+}
+
+/* ---- Base button ---- */
+.switch-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 11px;
+  min-width: 5px;
+  box-sizing: border-box;
+  background-color: #1a1a1a;
+  border: none;
+  cursor: pointer;
+  position: relative;
+
+  /* 3D raised effect — shadow acts as the "edge" */
+  box-shadow: 0 3px 0 #0a0a0a;
+  transition:
+    box-shadow 0.08s ease,
+    transform 0.08s ease,
+    background-color 0.08s ease;
+}
+
+/* ---- Label text ---- */
+.switch-label {
+  color: #3a3a3a;
+  user-select: none;
+  transition:
+    color 0.08s ease,
+    text-shadow 0.08s ease;
+}
+
+.switch-label.material-icons {
+  font-family: 'Material Icons';
+  letter-spacing: normal;
+  text-transform: none;
+  transform: translateY(-2px);
+}
+
+/* ---- Hover: sink slightly toward base ---- */
+.switch-button:not(.active):hover {
+  box-shadow: 0 2px 0 #0a0a0a;
+  transform: translateY(1px);
+  background-color: #222222;
+}
+
+.switch-button:not(.active):hover .switch-label {
+  color: #555555;
+}
+
+/* ---- Active / pressed: flush with base ---- */
+.switch-button.active {
+  transform: translateY(3px);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Locked */
+.switch-button.active.state-locked {
+  background-color: #4a1515;
+}
+
+.switch-button.active.state-locked .switch-label {
+  color: #cc3030;
+  text-shadow: 0 0 3px rgba(204, 48, 48, 0.35);
+}
+
+.switch-button.active.state-locked:hover {
+  background-color: #551818;
+}
+
+.switch-button.active.state-locked:hover .switch-label {
+  color: #d14646;
+}

@@ -10,6 +10,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import SevenSegmentDisplayComponent from '../seven-segment-display/seven-segment-display.component';
 import IndicatorLightComponent from '../indicator-light/indicator-light.component';
 import EfuseSwitchComponent, { EfuseSwitchState } from '../efuse-switch/efuse-switch.component';
+import { LockButtonComponent } from '../lock-button/lock-button.component';
 import { inject } from '@angular/core';
 
 /**
@@ -33,7 +34,8 @@ import { inject } from '@angular/core';
     VStackComponent,
     SevenSegmentDisplayComponent,
     IndicatorLightComponent,
-    EfuseSwitchComponent
+    EfuseSwitchComponent,
+    LockButtonComponent
   ]
 })
 export default class EfuseCardComponent implements OnInit, OnDestroy {
@@ -63,6 +65,9 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   autoUnit = input<string>('°C');
   autoDigits = input<number>(3);
   autoDecimals = input<number>(1);
+
+  // ── Locking state ──
+  isLocked = signal<boolean>(true);
 
   /** Whether this card supports AUTO mode (Type 2) */
   hasAutoMode = computed(() => this.autoDataType() !== undefined);
@@ -171,10 +176,25 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   /** Handle switch state change — sends the appropriate CAN message */
   onSwitchStateChange(state: EfuseSwitchState): void {
+    if (this.isLocked()) return;
     const payload = state === 'ON' ? 0 : state === 'AUTO' ? 1 : 2;
     sendConfig(this.resolvedCommandKey(), [payload]).catch((error) => {
       console.error(`Failed to send ${this.efuseName()} command`, error);
     });
+    this.lockEfuse();
+  }
+
+  onLockButtonClick(): void {
+    if (this.isLocked()) {
+      this.isLocked.set(false);
+      return;
+    }
+
+    this.lockEfuse();
+  }
+
+  lockEfuse(): void {
+    this.isLocked.set(true);
   }
 
   private formatControlState(raw: number): string {

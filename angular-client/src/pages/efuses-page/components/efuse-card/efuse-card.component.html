@@ -64,12 +64,16 @@
         <!-- Switch + optional AUTO telemetry display -->
         <hstack [justifyContent]="hasAutoMode() ? 'space-between' : 'center'" [alignItems]="'center'" style="width: 100%">
           <vstack [align]="'center'" [spacing]="'6px'">
-            <efuse-switch
-              [fontSize]="14"
-              [options]="switchOptions()"
-              [selectedState]="switchState()"
-              (stateChange)="onSwitchStateChange($event)"
-            />
+            <hstack [justifyContent]="'center'" [alignItems]="'center'" [spacing]="'10px'">
+              <efuse-switch
+                [fontSize]="14"
+                [options]="switchOptions()"
+                [selectedState]="switchState()"
+                [disabled]="isLocked()"
+                (stateChange)="onSwitchStateChange($event)"
+              />
+              <lock-button [locked]="isLocked()" (pressed)="onLockButtonClick()"></lock-button>
+            </hstack>
             <seven-segment-display
               [value]="controlStateDisplay()"
               [digits]="4"
