@@ -3,20 +3,21 @@ use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
+use socketioxide::SocketIo;
 use socketioxide::extract::{SocketRef, TryData};
 use socketioxide::socket::Sid;
-use socketioxide::SocketIo;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
 use crate::metadata_structs::{
-    map_dti_flt, FaultData, Node, TimerData, TotalTimerData, DATA_SOCKET_KEY, FAULT_BINS,
-    FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, METADATA_SOCKET_KEY, TIMERS_TOPICS, TIMER_SOCKET_KEY,
+    DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData,
+    METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
+    map_dti_flt,
 };
-use crate::rule_structs::{RuleManager, RULE_SOCKET_KEY};
+use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -204,7 +205,7 @@ async fn handle_rule_processing(
     };
     for notification in notifs {
         let read_clients = client_socket_map.read().await;
-        let Some(sid) = read_clients.get(&notification.0 .0) else {
+        let Some(sid) = read_clients.get(&notification.0.0) else {
             warn!("Could not find client to deliver notification, deleting client");
             let _ = rule_manager.delete_client(notification.0).await;
             return;
@@ -273,19 +274,25 @@ fn handle_socket_msg(
 
     // check to see if this is a fault, and return the fault name and node
     // each bring is the logic to get a node, note the difference in DTI
-    let (flt_txt, node) = if let Some(mtch) = fault_regex_bms.captures_iter(&data.name).next() {
-        (mtch.get(1).map_or("", |m| m.as_str()), Node::Bms)
-    } else if let Some(mtch) = fault_regex_charger.captures_iter(&data.name).next() {
-        (mtch.get(1).map_or("", |m| m.as_str()), Node::Charger)
-    } else if let Some(mtch) = fault_regex_mpu.captures_iter(&data.name).next() {
-        (mtch.get(1).map_or("", |m| m.as_str()), Node::Mpu)
-    } else if FAULT_BINS[0] == data.name {
-        let Some(flt) = map_dti_flt(*data.values.first().unwrap_or(&0f32) as usize) else {
-            return;
-        };
-        (flt, Node::Dti)
-    } else {
-        return;
+    let (flt_txt, node) = match fault_regex_bms.captures_iter(&data.name).next() {
+        Some(mtch) => (mtch.get(1).map_or("", |m| m.as_str()), Node::Bms),
+        _ => match fault_regex_charger.captures_iter(&data.name).next() {
+            Some(mtch) => (mtch.get(1).map_or("", |m| m.as_str()), Node::Charger),
+            _ => match fault_regex_mpu.captures_iter(&data.name).next() {
+                Some(mtch) => (mtch.get(1).map_or("", |m| m.as_str()), Node::Mpu),
+                _ => {
+                    if FAULT_BINS[0] == data.name {
+                        let Some(flt) = map_dti_flt(*data.values.first().unwrap_or(&0f32) as usize)
+                        else {
+                            return;
+                        };
+                        (flt, Node::Dti)
+                    } else {
+                        return;
+                    }
+                }
+            },
+        },
     };
 
     // flt_text is the fault text name

@@ -1,78 +1,62 @@
-import { Component, HostListener, inject, input } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
-import { HeatMapService } from 'src/services/heat-map.service';
-import { chipToString, Segment } from 'src/utils/bms.utils';
-import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import { chipToString } from 'src/utils/bms.utils';
+import { ConfigTableComponent, TableRowConfig, TableColumnConfig } from 'src/components/config-table/config-table.component';
 
-import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
-import { DividerComponent } from '../../../../components/divider/divider';
-import HStackComponent from 'src/components/hstack/hstack.component';
-import VStackComponent from 'src/components/vstack/vstack.component';
+const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
+  {
+    label: 'Voltage',
+    getValue: (c) => (c.reading.voltage !== undefined ? `${c.reading.voltage.toFixed(3)} V` : '-')
+  },
+  {
+    label: 'Temp',
+    getValue: (c) => (c.reading.temp !== undefined && c.reading.temp !== null ? `${c.reading.temp.toFixed(1)} \u00b0C` : '-')
+  },
+  {
+    label: 'Balancing',
+    getValue: (c) => (c.reading.balancing === undefined ? '-' : c.reading.balancing ? 'Yes' : 'No'),
+    getClass: (c) => (c.reading.balancing === true ? 'bal-yes' : c.reading.balancing === false ? 'bal-no' : '')
+  }
+];
+
+const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
+  title: (c) => c.cellNum.toString(),
+  subtitle: (c) => `${chipToString(c.reading.chip, true)} \u00b7 S${c.segment + 1}`
+};
 
 @Component({
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   standalone: true,
-  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, HStackComponent, VStackComponent]
+  imports: [ConfigTableComponent]
 })
-export class CellViewComponent {
-  private heatMapService = inject(HeatMapService);
-  cellViewData: CellReading | undefined = undefined;
-  screenWidth = window.innerWidth;
-  forSegment = input.required<Segment>();
-  segment: Segment;
+export class CellViewComponent implements OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
+  private refreshInterval: ReturnType<typeof setInterval> | undefined;
   public config = inject(DynamicDialogConfig);
 
-  // Update view width
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.screenWidth = window.innerWidth;
+  /** Shared Map reference — mutations by SegmentHeatmapComponent
+   *  are visible here because it's the same Map object. */
+  private cellsMap: Map<CellReading, SelectedCellInfo>;
+  rows = DEFAULT_ROW_CONFIG;
+  columnConfig = COLUMN_CONFIG;
+
+  get cells(): SelectedCellInfo[] {
+    return Array.from(this.cellsMap.values());
   }
 
   constructor() {
-    this.segment = this.config.data.forSegment;
-    this.heatMapService.getSelectedCell(this.segment)?.subscribe((data) => {
-      this.cellViewData = data;
-    });
+    this.cellsMap = this.config.data.cells;
+    // Poll for MQTT value changes and selection array changes.
+    this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
   }
 
-  getTitle = (): string => {
-    const title = `Seg ${this.segment + 1}: Cell View`;
-    return title;
-  };
-
-  getUpperRightTitle = (): string => {
-    const smallChipLabel = this.screenWidth < 1200;
-
-    const chipValue =
-      this.cellViewData?.chip !== undefined ? chipToString(this.cellViewData?.chip, smallChipLabel) : 'No Value';
-
-    const tempValue =
-      this.cellViewData?.temp !== undefined && this.cellViewData?.temp !== null
-        ? `${this.cellViewData?.temp?.toFixed(2)} °C`
-        : 'No Value';
-
-    const chipLabel = this.screenWidth <= 1100 ? `C:` : `Cell:`;
-    const tempLabel = this.screenWidth <= 1100 ? `T:` : `Temp:`;
-    const title = `${chipLabel} ${chipValue} | ${tempLabel} ${tempValue}`;
-
-    return title;
-  };
-
-  getCellNumTitle = (): string => {
-    const cellNumLabel = this.screenWidth <= 1100 ? `Cell` : `Cell Number`;
-    return cellNumLabel;
-  };
-
-  getCellVoltageTitle = (): string => {
-    const cellVoltageLabel = this.screenWidth <= 1100 ? `Volts` : `Voltage`;
-    return cellVoltageLabel;
-  };
-
-  getBalancingTitle = (): string => {
-    const balancingLabel = this.screenWidth <= 1100 ? `Bal.?` : `Balancing?`;
-    return balancingLabel;
-  };
+  ngOnDestroy(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  }
 }

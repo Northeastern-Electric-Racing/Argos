@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Multipart, State},
     Extension, Json,
+    extract::{Multipart, State},
 };
 use axum_macros::debug_handler;
 use chrono::DateTime;
@@ -13,10 +13,10 @@ use tokio::{fs, sync::mpsc};
 use tracing::{debug, info, trace, warn};
 
 use crate::{
+    ClientData, PoolHandle,
     error::ScyllaError,
     proto::{playback_data, serverdata},
     services::run_service,
-    ClientData, PoolHandle,
 };
 
 use super::OutputDirectory;

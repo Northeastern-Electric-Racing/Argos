@@ -42,7 +42,7 @@ export default class RasberryPiComponent implements OnInit {
     });
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

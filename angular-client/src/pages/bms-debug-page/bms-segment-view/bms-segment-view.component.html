@@ -12,7 +12,16 @@
       <segment-at-a-glance style="width: 100%; height: 100%" [segmentNumber]="this.segmentId" />
     </mat-grid-tile>
     <mat-grid-tile colspan="6" rowspan="8">
-      <cell-by-cell-heat-map style="width: 100%; height: 100%" [currentSegment]="this.segmentId"></cell-by-cell-heat-map>
+      <info-background
+        style="width: 100%; height: 100%"
+        [title]="this.getHeatmapTitle()"
+        svgIcon="battery_charging_2"
+        [slicedLeftCorner]="true"
+        [selectorConfigs]="[this.currentSegmentSelectorConfig, this.allSegSelectorConfig]"
+      >
+        <div style="padding-top: 20px"></div>
+        <segment-heatmap class="segment-page-heatmap" [segment]="this.segmentId" />
+      </info-background>
     </mat-grid-tile>
     <mat-grid-tile colspan="3" rowspan="8">
       <!-- Alpha -->

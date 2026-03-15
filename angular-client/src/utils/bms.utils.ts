@@ -1,4 +1,6 @@
 import { topics } from './topic.utils';
+export { BMS_CONFIG } from './bms.config';
+import { BMS_CONFIG } from './bms.config';
 
 export enum Chip {
   Alpha = 0,
@@ -14,18 +16,15 @@ export const chipToString = (chip: Chip, singleLetter = false): string => {
       throw new Error('Invalid chip type ' + chip);
   }
 };
-export enum Segment {
-  Segment0 = 0,
-  Segment1 = 1,
-  Segment2 = 2,
-  Segment3 = 3,
-  Segment4 = 4
-}
-export const allSegments = [Segment.Segment0, Segment.Segment1, Segment.Segment2, Segment.Segment3, Segment.Segment4];
+
+/** Segment is a plain numeric index (0-based). */
+export type Segment = number;
+
+export const allSegments: Segment[] = Array.from({ length: BMS_CONFIG.NUM_SEGMENTS }, (_, i) => i);
+
 export const numToSegmentType = (segment: number): Segment => {
-  const segmentType: Segment | undefined = segment as Segment;
-  if (segmentType !== undefined) {
-    return segmentType;
+  if (segment >= 0 && segment < BMS_CONFIG.NUM_SEGMENTS) {
+    return segment;
   }
   throw new Error('Invalid segment number ' + segment);
 };
@@ -35,50 +34,22 @@ export type SegmentInfo = {
   alphaChipTempKey: string;
   betaChipTempKey: string;
   voltageKey: string;
+  totalVoltageKey: string;
 };
 
-export const segment0: SegmentInfo = {
-  segmentTempKey: topics.segmentTemp(Segment.Segment0),
-  alphaChipTempKey: topics.dieTemp(Segment.Segment0, Chip.Alpha),
-  betaChipTempKey: topics.dieTemp(Segment.Segment0, Chip.Beta),
-  voltageKey: topics.segmentVoltage(Segment.Segment0)
-};
-
-export const segment1: SegmentInfo = {
-  segmentTempKey: topics.segmentTemp(Segment.Segment1),
-  alphaChipTempKey: topics.dieTemp(Segment.Segment1, Chip.Alpha),
-  betaChipTempKey: topics.dieTemp(Segment.Segment1, Chip.Beta),
-  voltageKey: topics.segmentVoltage(Segment.Segment1)
-};
-
-export const segment2: SegmentInfo = {
-  segmentTempKey: topics.segmentTemp(Segment.Segment2),
-  alphaChipTempKey: topics.dieTemp(Segment.Segment2, Chip.Alpha),
-  betaChipTempKey: topics.dieTemp(Segment.Segment2, Chip.Beta),
-  voltageKey: topics.segmentVoltage(Segment.Segment2)
-};
-
-export const segment3: SegmentInfo = {
-  segmentTempKey: topics.segmentTemp(Segment.Segment3),
-  alphaChipTempKey: topics.dieTemp(Segment.Segment3, Chip.Alpha),
-  betaChipTempKey: topics.dieTemp(Segment.Segment3, Chip.Beta),
-  voltageKey: topics.segmentVoltage(Segment.Segment3)
-};
-
-export const segment4: SegmentInfo = {
-  segmentTempKey: topics.segmentTemp(Segment.Segment4),
-  alphaChipTempKey: topics.dieTemp(Segment.Segment4, Chip.Alpha),
-  betaChipTempKey: topics.dieTemp(Segment.Segment4, Chip.Beta),
-  voltageKey: topics.segmentVoltage(Segment.Segment4)
-};
-
-export const segmentInfoMap = {
-  [Segment.Segment0]: segment0,
-  [Segment.Segment1]: segment1,
-  [Segment.Segment2]: segment2,
-  [Segment.Segment3]: segment3,
-  [Segment.Segment4]: segment4
-};
+/** Dynamically generated map of segment index → SegmentInfo topic keys. */
+export const segmentInfoMap: Record<Segment, SegmentInfo> = Object.fromEntries(
+  allSegments.map((seg) => [
+    seg,
+    {
+      segmentTempKey: topics.segmentTemp(seg),
+      alphaChipTempKey: topics.dieTemp(seg, Chip.Alpha),
+      betaChipTempKey: topics.dieTemp(seg, Chip.Beta),
+      voltageKey: topics.segmentVoltage(seg),
+      totalVoltageKey: topics.segmentTotalVoltage(seg)
+    }
+  ])
+);
 
 export const getConnectionDotStatusColor = (voltage: number): string => {
   if (voltage <= 375) {

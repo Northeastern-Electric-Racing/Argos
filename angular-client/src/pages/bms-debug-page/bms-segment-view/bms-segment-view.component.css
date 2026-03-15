@@ -1,4 +1,15 @@
-/* Add these styles to your component */
+/* AI-generated  */
+
+/* Allow PrimeNG dropdowns inside mat-grid-tiles to overflow the tile boundary */
 mat-grid-tile {
-  overflow: visible !important; /* Allow dropdown to overflow */
+  overflow: visible !important;
+}
+
+/* Hex sizing overrides for the full-page segment heatmap (larger than the row variant) */
+.segment-page-heatmap {
+  --hex-w: clamp(60px, 5.5vw, 85px); /* responsive hex width */
+  --hex-h: calc(var(--hex-w) * 1.155); /* pointy-top height ≈ width × 1.155 */
+  --hex-gap: 3px; /* horizontal gap between adjacent hexes */
+  --row-offset: calc(var(--hex-w) / 2 + 3px); /* stagger offset for the bottom row */
+  margin: 0 auto;
 }

@@ -2,7 +2,7 @@
   <hstack spacing="5px" [style]="valueUnitContainerStyle()">
     @if (this.boolValue() !== undefined) {
       <typography variant="info-value" [content]="this.boolValue() ? 'YES' : 'NO'" [additionalStyles]="this.valueStyle()" />
-      <typography variant="info-unit" [content]="this.unit()" />
+      <typography variant="info-unit" [content]="this.unit()" [additionalStyles]="this.unitStyle()" />
     } @else {
       <typography
         variant="info-value"
@@ -10,7 +10,7 @@
         style="margin-bottom: -10px"
         [additionalStyles]="this.valueStyle()"
       />
-      <typography variant="info-unit" [content]="this.unit()" />
+      <typography variant="info-unit" [content]="this.unit()" [additionalStyles]="this.unitStyle()" />
     }
 
     @if (this.enableWidget() && this.widget(); as widget) {

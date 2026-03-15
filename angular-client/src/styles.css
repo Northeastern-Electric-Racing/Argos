@@ -2,14 +2,42 @@
 @import 'styles/roboto.scss';
 @import 'styles/material-icons.scss';
 
+/* ---- Design Tokens ---- */
+:root {
+  /* Colors */
+  --color-text-primary: #efefef;
+  --color-text-secondary: #797a7a;
+  --color-text-subtitle: #cacaca;
+  --color-background-info: #2c2c2c;
+  --color-background-page: #101010;
+  --color-divider: #414141;
+  --color-battery-shell: #efefed;
+  --color-battery-low: #f50905;
+  --color-battery-med: #ffea00;
+  --color-battery-high: #1ae824;
+  --color-widget-glass: #ffffff;
+
+  /* Typography */
+  --font-family: 'Roboto', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 34px;
+  --font-size-xxl: 48px;
+
+  /* Spacing */
+  --border-radius-panel: 8px;
+}
+
 html,
 body {
   height: 100%;
-  font-family: 'Roboto';
+  font-family: var(--font-family);
 }
 body {
   margin: 0;
-  background-color: #101010;
+  background-color: var(--color-background-page);
 }
 
 /* WebKit (Chrome, Safari) scrollbar styles */
@@ -124,4 +152,30 @@ body {
 
 .p-dialog-mask:has(.nav-options-dialog) {
   background: transparent !important;
+}
+
+/* Cell comparison dialog — compact, no backdrop */
+.cell-compare-dialog.p-dialog {
+  width: auto !important;
+  min-width: 0 !important;
+  border-radius: 12px !important;
+}
+
+.cell-compare-dialog .p-dialog-header {
+  padding: 8px 14px !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.cell-compare-dialog .p-dialog-content {
+  padding: 0 14px 10px !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.p-dialog-mask:has(.cell-compare-dialog) {
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+.cell-compare-dialog {
+  pointer-events: auto !important;
 }
