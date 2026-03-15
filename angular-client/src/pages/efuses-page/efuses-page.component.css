@@ -7,10 +7,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.efuse-grid {
-  display: grid;
-  gap: 15px;
-}
 
 .title-style {
   display: grid;

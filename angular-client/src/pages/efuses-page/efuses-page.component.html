@@ -6,218 +6,183 @@
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: center; margin-top: 0;"
   />
 
-  <div style="margin-top: 20px">
-    <mat-grid-list [cols]="gridCols" gutterSize="15px" [rowHeight]="gridRowHeight">
-      <!-- Dashboard eFuse -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Dashboard"
-          commandKey="Dashboard"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_DASHBOARD"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_ENABLED"
-          [maxCurrent]="'3'"
-        />
-      </mat-grid-tile>
+  <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
+    <!-- Dashboard eFuse -->
+    <efuse-card
+      efuseName="Dashboard"
+      commandKey="Dashboard"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_DASHBOARD"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_DASHBOARD_ENABLED"
+      [maxCurrent]="'3'"
+    />
 
-      <!-- Brake eFuse -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Brake"
-          commandKey="Brake"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_BRAKE"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ENABLED"
-          [maxCurrent]="'0.6'"
-          [autoDataType]="DataTypeEnum.VCU_ECHO_BRAKE_STATE"
-          [autoLabel]="'Brake State'"
-          [autoUnit]="''"
-          [autoDecimals]="0"
-          [autoDigits]="1"
-        />
-      </mat-grid-tile>
+    <!-- Brake eFuse -->
+    <efuse-card
+      efuseName="Brake"
+      commandKey="Brake"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_BRAKE"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_BRAKE_ENABLED"
+      [maxCurrent]="'0.6'"
+      [autoDataType]="DataTypeEnum.VCU_ECHO_BRAKE_STATE"
+      [autoLabel]="'Brake State'"
+      [autoUnit]="''"
+      [autoDecimals]="0"
+      [autoDigits]="1"
+    />
 
-      <!-- Shutdown eFuse -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Shutdown"
-          commandKey="Shutdown"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_SHUTDOWN"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_ENABLED"
-          [maxCurrent]="'1'"
-        />
-      </mat-grid-tile>
+    <!-- Shutdown eFuse -->
+    <efuse-card
+      efuseName="Shutdown"
+      commandKey="Shutdown"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_SHUTDOWN"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_SHUTDOWN_ENABLED"
+      [maxCurrent]="'1'"
+    />
 
-      <!-- LV eFuse -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="LV"
-          commandKey="LV"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_LV"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_LV_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_LV_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_LV_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_LV_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_LV_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_LV_ENABLED"
-          [maxCurrent]="'3'"
-        />
-      </mat-grid-tile>
+    <!-- LV eFuse -->
+    <efuse-card
+      efuseName="LV"
+      commandKey="LV"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_LV"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_LV_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_LV_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_LV_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_LV_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_LV_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_LV_ENABLED"
+      [maxCurrent]="'3'"
+    />
 
-      <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Radfan"
-          commandKey="Radfan"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_RADFAN"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ENABLED"
-          [maxCurrent]="'2'"
-          [autoDataType]="DataTypeEnum.VCU_ECHO_MOTOR_TEMP"
-          [autoLabel]="'Motor Temp'"
-          [autoUnit]="'°C'"
-        />
-      </mat-grid-tile>
+    <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
+    <efuse-card
+      efuseName="Radfan"
+      commandKey="Radfan"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_RADFAN"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_RADFAN_ENABLED"
+      [maxCurrent]="'2'"
+      [autoDataType]="DataTypeEnum.VCU_ECHO_MOTOR_TEMP"
+      [autoLabel]="'Motor Temp'"
+      [autoUnit]="'°C'"
+    />
 
-      <!-- Fanbatt eFuse (Type 2: AUTO based on BMS battbox temp) -->
-      <!-- TODO: Replace PACK_TEMP with the correct BMS battbox temp DataTypeEnum once available -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Fanbatt"
-          commandKey="Fanbatt"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_FANBATT"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ENABLED"
-          [maxCurrent]="'4'"
-          [autoDataType]="DataTypeEnum.VCU_ECHO_BATTBOX_TEMP"
-          [autoLabel]="'Battbox Temp'"
-          [autoUnit]="'°C'"
-        />
-      </mat-grid-tile>
+    <!-- Fanbatt eFuse (Type 2: AUTO based on BMS battbox temp) -->
+    <!-- TODO: Replace PACK_TEMP with the correct BMS battbox temp DataTypeEnum once available -->
+    <efuse-card
+      efuseName="Fanbatt"
+      commandKey="Fanbatt"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_FANBATT"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_FANBATT_ENABLED"
+      [maxCurrent]="'4'"
+      [autoDataType]="DataTypeEnum.VCU_ECHO_BATTBOX_TEMP"
+      [autoLabel]="'Battbox Temp'"
+      [autoUnit]="'°C'"
+    />
 
-      <!-- PumpOne eFuse (Type 2: AUTO based on DTI motor temp) -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Pump One"
-          commandKey="PumpOne"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_PUMPONE"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ENABLED"
-          [maxCurrent]="'2.5'"
-          [autoDataType]="DataTypeEnum.VCU_ECHO_MOTOR_TEMP"
-          [autoLabel]="'Motor Temp'"
-          [autoUnit]="'°C'"
-        />
-      </mat-grid-tile>
+    <!-- PumpOne eFuse (Type 2: AUTO based on DTI motor temp) -->
+    <efuse-card
+      efuseName="Pump One"
+      commandKey="PumpOne"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_PUMPONE"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPONE_ENABLED"
+      [maxCurrent]="'2.5'"
+      [autoDataType]="DataTypeEnum.VCU_ECHO_MOTOR_TEMP"
+      [autoLabel]="'Motor Temp'"
+      [autoUnit]="'°C'"
+    />
 
-      <!-- PumpTwo eFuse (Type 2: AUTO based on DTI controller temp) -->
-      <!-- TODO: Replace MOTOR_TEMP with the correct DTI controller temp DataTypeEnum once available -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Pump Two"
-          commandKey="PumpTwo"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_PUMPTWO"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ENABLED"
-          [maxCurrent]="'2.5'"
-          [autoDataType]="DataTypeEnum.VCU_ECHO_CONTROLLER_TEMP"
-          [autoLabel]="'Controller Temp'"
-          [autoUnit]="'°C'"
-        />
-      </mat-grid-tile>
+    <!-- PumpTwo eFuse (Type 2: AUTO based on DTI controller temp) -->
+    <!-- TODO: Replace MOTOR_TEMP with the correct DTI controller temp DataTypeEnum once available -->
+    <efuse-card
+      efuseName="Pump Two"
+      commandKey="PumpTwo"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_PUMPTWO"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_PUMPTWO_ENABLED"
+      [maxCurrent]="'2.5'"
+      [autoDataType]="DataTypeEnum.VCU_ECHO_CONTROLLER_TEMP"
+      [autoLabel]="'Controller Temp'"
+      [autoUnit]="'°C'"
+    />
 
-      <!-- Spare eFuse (Type 2: AUTO based on DTI controller temp) -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Spare"
-          commandKey="Spare"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_SPARE"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_SPARE_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_SPARE_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_SPARE_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_SPARE_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_SPARE_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_SPARE_ENABLED"
-          [maxCurrent]="'2'"
-          [autoDataType]="DataTypeEnum.VCU_ECHO_CONTROLLER_TEMP"
-          [autoLabel]="'Controller Temp'"
-          [autoUnit]="'°C'"
-        />
-      </mat-grid-tile>
+    <!-- Spare eFuse (Type 2: AUTO based on DTI controller temp) -->
+    <efuse-card
+      efuseName="Spare"
+      commandKey="Spare"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_SPARE"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_SPARE_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_SPARE_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_SPARE_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_SPARE_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_SPARE_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_SPARE_ENABLED"
+      [maxCurrent]="'2'"
+      [autoDataType]="DataTypeEnum.VCU_ECHO_CONTROLLER_TEMP"
+      [autoLabel]="'Controller Temp'"
+      [autoUnit]="'°C'"
+    />
 
-      <!-- Battbox eFuse -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Battbox"
-          commandKey="Battbox"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_BATTBOX"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_ENABLED"
-          [maxCurrent]="'2'"
-        />
-      </mat-grid-tile>
+    <!-- Battbox eFuse -->
+    <efuse-card
+      efuseName="Battbox"
+      commandKey="Battbox"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_BATTBOX"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_BATTBOX_ENABLED"
+      [maxCurrent]="'2'"
+    />
 
-      <!-- MC eFuse -->
-      <mat-grid-tile>
-        <efuse-card
-          style="width: 100%; height: 100%"
-          efuseName="Motor Controller"
-          commandKey="MC"
-          [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_MC"
-          [controlStateDataType]="DataTypeEnum.VCU_EFUSE_MC_CONTROL_STATE"
-          [adcDataType]="DataTypeEnum.VCU_EFUSE_MC_ADC"
-          [voltageDataType]="DataTypeEnum.VCU_EFUSE_MC_VOLTAGE"
-          [currentDataType]="DataTypeEnum.VCU_EFUSE_MC_CURRENT"
-          [faultedDataType]="DataTypeEnum.VCU_EFUSE_MC_FAULTED"
-          [enabledDataType]="DataTypeEnum.VCU_EFUSE_MC_ENABLED"
-          [maxCurrent]="'2'"
-        />
-      </mat-grid-tile>
-    </mat-grid-list>
-  </div>
+    <!-- MC eFuse -->
+    <efuse-card
+      efuseName="Motor Controller"
+      commandKey="MC"
+      [stateDataType]="DataTypeEnum.CALYPSO_EFUSE_STATE_MC"
+      [controlStateDataType]="DataTypeEnum.VCU_EFUSE_MC_CONTROL_STATE"
+      [adcDataType]="DataTypeEnum.VCU_EFUSE_MC_ADC"
+      [voltageDataType]="DataTypeEnum.VCU_EFUSE_MC_VOLTAGE"
+      [currentDataType]="DataTypeEnum.VCU_EFUSE_MC_CURRENT"
+      [faultedDataType]="DataTypeEnum.VCU_EFUSE_MC_FAULTED"
+      [enabledDataType]="DataTypeEnum.VCU_EFUSE_MC_ENABLED"
+      [maxCurrent]="'2'"
+    />
+  </grid-layout>
 
   <div class="rtds-section">
     <rtds-debug-card />
