@@ -7,6 +7,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import TypographyComponent from 'src/components/typography/typography.component';
 import EfuseCardComponent from './components/efuse-card/efuse-card.component';
+import RtdsDebugCardComponent from './components/rtds-debug-card/rtds-debug-card.component';
 
 /**
  * Container for the eFuses page, displays eFuse status and controls.
@@ -16,7 +17,7 @@ import EfuseCardComponent from './components/efuse-card/efuse-card.component';
   styleUrls: ['./efuses-page.component.css'],
   templateUrl: './efuses-page.component.html',
   standalone: true,
-  imports: [MatGridList, MatGridTile, TypographyComponent, EfuseCardComponent]
+  imports: [MatGridList, MatGridTile, TypographyComponent, EfuseCardComponent, RtdsDebugCardComponent]
 })
 export default class EfusesPageComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);

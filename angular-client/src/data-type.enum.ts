@@ -189,6 +189,12 @@ export enum DataTypeEnum {
   VCU_EFUSE_MC_FAULTED = 'VCU/eFuses/MC/Faulted?',
   VCU_EFUSE_MC_ENABLED = 'VCU/eFuses/MC/Enabled?',
 
+  // VCU RTDS states
+  VCU_RTDS_PIN_STATE = 'VCU/RTDS/Pin_State',
+  VCU_RTDS_SOUNDING_STATE = 'VCU/RTDS/Sounding_State',
+  VCU_RTDS_REVERSE_STATE = 'VCU/RTDS/Reverse_State',
+  VCU_RTDS_ERROR_STATE = 'VCU/RTDS/Error_State',
+
   // VCU eFuse Control State (0=ON, 1=AUTO, 2=OFF)
   VCU_EFUSE_DASHBOARD_CONTROL_STATE = 'VCU/eFuses/Dashboard/Control_State',
   VCU_EFUSE_BRAKE_CONTROL_STATE = 'VCU/eFuses/Brake/Control_State',
