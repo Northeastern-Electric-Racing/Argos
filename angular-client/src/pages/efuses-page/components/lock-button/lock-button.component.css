@@ -25,7 +25,7 @@
   transition:
     box-shadow 0.08s ease,
     transform 0.08s ease,
-    background-color 0.08s ease;
+    background-color 0s ease;
 }
 
 /* ---- Label text ---- */
@@ -33,21 +33,20 @@
   color: #3a3a3a;
   user-select: none;
   transition:
-    color 0.08s ease,
-    text-shadow 0.08s ease;
+    color 0s ease,
+    text-shadow 0.08s ease,
+    transform 0.08s ease;
 }
 
 .switch-label.material-icons {
   font-family: 'Material Icons';
   letter-spacing: normal;
   text-transform: none;
-  transform: translateY(-2px);
 }
 
 /* ---- Hover: sink slightly toward base ---- */
 .switch-button:not(.active):hover {
   box-shadow: 0 2px 0 #0a0a0a;
-  transform: translateY(1px);
   background-color: #222222;
 }
 
@@ -69,6 +68,7 @@
 .switch-button.active.state-locked .switch-label {
   color: #cc3030;
   text-shadow: 0 0 3px rgba(204, 48, 48, 0.35);
+  transform: translateY(-3px);
 }
 
 .switch-button.active.state-locked:hover {
