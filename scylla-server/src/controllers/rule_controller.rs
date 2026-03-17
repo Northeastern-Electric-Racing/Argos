@@ -83,6 +83,14 @@ pub async fn get_all_rules_with_client_info(
     ))
 }
 
+#[debug_handler]
+pub async fn check_rule(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(rule): Json<Rule>,
+) -> Result<Json<bool>, ScyllaError> {
+    Ok(Json(rules_manager.check_duplicate(&rule).await))
+}
+
 #[serde_as]
 #[derive(Deserialize)]
 pub struct EditRulePayload {

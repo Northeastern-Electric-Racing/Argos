@@ -490,7 +490,13 @@ impl RuleManager {
             }
         }
     }
-
+    pub async fn check_duplicate(&self, rule: &Rule) -> bool {
+        self.rules
+            .read()
+            .await
+            .values()
+            .any(|r| r.topic == rule.topic && r.expr == rule.expr)
+    }
     pub async fn edit_rule(
         &self,
         rule_id: RuleId,
