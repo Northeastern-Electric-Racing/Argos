@@ -10,6 +10,7 @@ use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
 use serde_with::DurationSeconds;
 use serde_with::serde_as;
+use tracing::debug;
 use std::borrow::Borrow;
 use std::hash::Hash;
 use std::time::Duration;
@@ -286,7 +287,7 @@ impl Rule {
                 warn!("Don't know when cooldown began!");
                 return None;
             };
-            if tokio::time::Instant::now() - last_seen < COOLDOWN_TIME {
+            if tokio::time::Instant::now().saturating_duration_since(last_seen) < COOLDOWN_TIME {
                 return Some(false);
             } else {
                 // end cooldown, restart counting
@@ -300,18 +301,19 @@ impl Rule {
 
         // if we have triggered and we arent during cooldown
         if res && !self.during_cooldown {
-            self.last_seen = Some(tokio::time::Instant::now());
-            self.first_seen
-                .get_or_insert_with(tokio::time::Instant::now);
+            let now = tokio::time::Instant::now();
+            self.last_seen = Some(now);
+            let first = *self.first_seen.get_or_insert(now);
             // if this is the first time we see it
-            if self.last_seen.expect("impossible last seen")
-                - self.first_seen.expect("impossible first seen")
-                > self.debounce_time
+            if now.saturating_duration_since(first) >= self.debounce_time
             {
                 // we have a winner, lets cleanup and enter cooldown state
                 self.during_cooldown = true;
                 return Some(true);
             }
+        } else if !self.during_cooldown {
+            self.first_seen = None;
+            self.last_seen = None;
         }
         Some(false)
     }
@@ -380,6 +382,9 @@ impl RuleManager {
         };
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
+
+        
+        debug!("Handling rule processing for {} with values: {:?}", data.name, data.values);
         for rule_id in rule_ids {
             let clients_op = self.subscriptions.read().await.get_left(&rule_id).cloned();
 
@@ -395,7 +400,7 @@ impl RuleManager {
                 .get_mut(&rule_id)
                 .map(|rule| rule.tick(&data.values))
             {
-                Some(Some(val)) => val,
+                Some(Some(val)) => { debug!("Rule {} triggered: {}", rule_id, val); val} ,
                 // Rule tick failed
                 Some(None) => return Err(RuleManagerError::RuleFailure),
                 None => {
