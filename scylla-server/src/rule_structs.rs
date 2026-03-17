@@ -183,7 +183,7 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
 }
 
 /// cooldown time
-const COOLDOWN_TIME: std::time::Duration = std::time::Duration::from_secs(60);
+const COOLDOWN_TIME: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// socket key for sending rule notification events
 pub const RULE_SOCKET_KEY: &str = "rule_notify";
