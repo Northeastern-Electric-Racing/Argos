@@ -136,7 +136,6 @@ pub async fn socket_handler_with_metadata(
                     DATA_SOCKET_KEY,
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-
                 handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
@@ -203,10 +202,11 @@ async fn handle_rule_processing(
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
+    
     for notification in notifs {
         let read_clients = client_socket_map.read().await;
         let Some(sid) = read_clients.get(&notification.0.0) else {
-            warn!("Could not find client to deliver notification, deleting client");
+            warn!("Could not find client to deliver notification, deleting client {}", notification.0.0);
             let _ = rule_manager.delete_client(notification.0).await;
             return;
         };
@@ -215,7 +215,7 @@ async fn handle_rule_processing(
             notification.1.topic, notification.0
         );
         let Some(socket) = io.get_socket(*sid) else {
-            warn!("Could not find client socket, deleting client");
+            warn!("Could not find client socket, deleting client {}", notification.0.0);
             let _ = rule_manager.delete_client(notification.0).await;
             return;
         };
@@ -224,6 +224,8 @@ async fn handle_rule_processing(
                 "Could not send rule notification to {}, err {}",
                 notification.0, err
             );
+        } else {
+            debug!("Successfully sent notification to {}", notification.0);
         };
     }
 }
