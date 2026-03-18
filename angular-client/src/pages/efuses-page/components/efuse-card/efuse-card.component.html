@@ -9,9 +9,9 @@
             [value]="current.toFixed(2)"
             [digits]="3"
             [decimals]="2"
-            [fontSize]="80"
+            [fontSize]="largeDisplayFontSize"
             [unit]="'A'"
-            [unitFontSize]="30"
+            [unitFontSize]="largeDisplayUnitFontSize"
           />
           <div class="current-label">Current</div>
         </vstack>
@@ -24,13 +24,13 @@
               [value]="voltage.toFixed(2)"
               [digits]="3"
               [decimals]="2"
-              [fontSize]="40"
+              [fontSize]="smallDisplayFontSize"
               [unit]="'V'"
-              [unitFontSize]="20"
-              [paddingBottom]="4"
-              [paddingLeft]="12"
-              [paddingRight]="12"
-              [paddingTop]="10"
+              [unitFontSize]="smallDisplayUnitFontSize"
+              [paddingBottom]="smallDisplayPaddingBottom"
+              [paddingLeft]="smallDisplayPaddingLeft"
+              [paddingRight]="smallDisplayPaddingRight"
+              [paddingTop]="smallDisplayPaddingTop"
             />
             <div class="adc-voltage-label">ADC Voltage</div>
           </vstack>
@@ -41,13 +41,13 @@
               [value]="adcRaw.toFixed(0).padStart(4, '0')"
               [digits]="4"
               [decimals]="0"
-              [fontSize]="40"
+              [fontSize]="smallDisplayFontSize"
               [unit]="'RAW'"
-              [unitFontSize]="20"
-              [paddingBottom]="4"
-              [paddingLeft]="12"
-              [paddingRight]="12"
-              [paddingTop]="10"
+              [unitFontSize]="smallDisplayUnitFontSize"
+              [paddingBottom]="smallDisplayPaddingBottom"
+              [paddingLeft]="smallDisplayPaddingLeft"
+              [paddingRight]="smallDisplayPaddingRight"
+              [paddingTop]="smallDisplayPaddingTop"
             />
             <div class="adc-voltage-label">ADC</div>
           </vstack>
@@ -78,14 +78,14 @@
               [value]="controlStateDisplay()"
               [digits]="4"
               [decimals]="0"
-              [fontSize]="14"
+              [fontSize]="controlDisplayFontSize"
               [textAlign]="'left'"
               [stackAlign]="'start'"
               [unitFontSize]="0"
-              [paddingBottom]="4"
-              [paddingLeft]="10"
-              [paddingRight]="10"
-              [paddingTop]="6"
+              [paddingBottom]="controlDisplayPaddingBottom"
+              [paddingLeft]="controlDisplayPaddingLeft"
+              [paddingRight]="controlDisplayPaddingRight"
+              [paddingTop]="controlDisplayPaddingTop"
             />
           </vstack>
           @if (hasAutoMode()) {
@@ -94,13 +94,13 @@
                 [value]="autoValue.toFixed(autoDecimals()).padStart(autoDigits() + (autoDecimals() > 0 ? 1 : 0), '0')"
                 [digits]="autoDigits()"
                 [decimals]="autoDecimals()"
-                [fontSize]="40"
+                [fontSize]="smallDisplayFontSize"
                 [unit]="autoUnit()"
-                [unitFontSize]="20"
-                [paddingBottom]="4"
-                [paddingLeft]="12"
-                [paddingRight]="12"
-                [paddingTop]="10"
+                [unitFontSize]="smallDisplayUnitFontSize"
+                [paddingBottom]="smallDisplayPaddingBottom"
+                [paddingLeft]="smallDisplayPaddingLeft"
+                [paddingRight]="smallDisplayPaddingRight"
+                [paddingTop]="smallDisplayPaddingTop"
               />
               <div class="adc-voltage-label">{{ autoLabel() }}</div>
             </vstack>

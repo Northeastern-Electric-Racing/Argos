@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit, input, computed, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { sendConfig } from 'src/api/car-command.api';
+import { EFUSE_TOPICS } from '../../efuses-page.topics';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -44,33 +44,75 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   private static readonly FIGURE_SPACE = '\u2007';
 
+  private static readonly EFUSE_KEY_FALLBACK: keyof typeof EFUSE_TOPICS.VCU.eFuses = 'Dashboard';
+
   // ── Common inputs (required for every eFuse card) ──
   efuseName = input.required<string>();
-  stateDataType = input.required<DataTypeEnum>();
-  controlStateDataType = input.required<DataTypeEnum>();
+  efuseTopicKey = input.required<keyof typeof EFUSE_TOPICS.VCU.eFuses>();
+  stateDataType = input<string | undefined>(undefined);
+  controlStateDataType = input<string | undefined>(undefined);
   commandKey = input<string | null>(null);
-  adcDataType = input.required<DataTypeEnum>();
-  voltageDataType = input.required<DataTypeEnum>();
-  currentDataType = input.required<DataTypeEnum>();
-  faultedDataType = input.required<DataTypeEnum>();
-  enabledDataType = input.required<DataTypeEnum>();
+  adcDataType = input<string | undefined>(undefined);
+  voltageDataType = input<string | undefined>(undefined);
+  currentDataType = input<string | undefined>(undefined);
+  faultedDataType = input<string | undefined>(undefined);
+  enabledDataType = input<string | undefined>(undefined);
   maxCurrent = input.required<string>();
 
   // ── Optional AUTO-mode inputs (Type 2 cards only) ──
   // When `autoDataType` is provided the card becomes Type 2:
   //   • The switch gains an AUTO button.
   //   • A small seven-segment display shows the controlling telemetry value.
-  autoDataType = input<DataTypeEnum | undefined>(undefined);
+  autoDataType = input<string | undefined>(undefined);
   autoLabel = input<string>('Auto Value');
   autoUnit = input<string>('°C');
   autoDigits = input<number>(3);
   autoDecimals = input<number>(1);
+
+  // ── Shared seven-segment display inputs ──
+  readonly largeDisplayFontSize: number = 80;
+  readonly largeDisplayUnitFontSize: number = 30;
+
+  readonly smallDisplayFontSize: number = 40;
+  readonly smallDisplayUnitFontSize: number = 20;
+  readonly smallDisplayPaddingTop: number = 10;
+  readonly smallDisplayPaddingRight: number = 12;
+  readonly smallDisplayPaddingBottom: number = 4;
+  readonly smallDisplayPaddingLeft: number = 12;
+
+  readonly controlDisplayFontSize: number = 14;
+  readonly controlDisplayPaddingTop: number = 6;
+  readonly controlDisplayPaddingRight: number = 10;
+  readonly controlDisplayPaddingBottom: number = 4;
+  readonly controlDisplayPaddingLeft: number = 10;
 
   // ── Locking state ──
   isLocked = signal<boolean>(true);
 
   /** Whether this card supports AUTO mode (Type 2) */
   hasAutoMode = computed(() => this.autoDataType() !== undefined);
+
+  /** Derived topic bundle for this eFuse key */
+  private efuseTopicBundle = computed(() => {
+    const key = this.efuseTopicKey() ?? EfuseCardComponent.EFUSE_KEY_FALLBACK;
+    return EFUSE_TOPICS.VCU.eFuses[key];
+  });
+
+  /** Derived Calypso command topic for this eFuse key */
+  private efuseCommandTopic = computed(() => {
+    const key = this.efuseTopicKey() ?? EfuseCardComponent.EFUSE_KEY_FALLBACK;
+    return EFUSE_TOPICS.Calypso.eFuse_Commands[key];
+  });
+
+  private resolvedStateDataType = computed(() => this.stateDataType() ?? this.efuseCommandTopic());
+  private resolvedControlStateDataType = computed(
+    () => this.controlStateDataType() ?? this.efuseTopicBundle().Control_State
+  );
+  private resolvedAdcDataType = computed(() => this.adcDataType() ?? this.efuseTopicBundle().ADC);
+  private resolvedVoltageDataType = computed(() => this.voltageDataType() ?? this.efuseTopicBundle().Voltage);
+  private resolvedCurrentDataType = computed(() => this.currentDataType() ?? this.efuseTopicBundle().Current);
+  private resolvedFaultedDataType = computed(() => this.faultedDataType() ?? this.efuseTopicBundle().Faulted);
+  private resolvedEnabledDataType = computed(() => this.enabledDataType() ?? this.efuseTopicBundle().Enabled);
 
   /** The command key to send to Calypso (falls back to efuseName) */
   resolvedCommandKey = computed(() => this.commandKey() ?? this.efuseName());
@@ -94,42 +136,42 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Subscribe to ADC raw data
     this.subscriptions.push(
-      this.storage.get(this.adcDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedAdcDataType()).subscribe((value) => {
         this.adcRaw = parseInt(value.values[0]);
       })
     );
 
     // Subscribe to voltage data
     this.subscriptions.push(
-      this.storage.get(this.voltageDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedVoltageDataType()).subscribe((value) => {
         this.voltage = decimalPipe(value.values[0], 2);
       })
     );
 
     // Subscribe to current data
     this.subscriptions.push(
-      this.storage.get(this.currentDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedCurrentDataType()).subscribe((value) => {
         this.current = decimalPipe(value.values[0], 2);
       })
     );
 
     // Subscribe to faulted status
     this.subscriptions.push(
-      this.storage.get(this.faultedDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedFaultedDataType()).subscribe((value) => {
         this.isFaulted = Number(value.values[0]) === 1;
       })
     );
 
     // Subscribe to enabled status
     this.subscriptions.push(
-      this.storage.get(this.enabledDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedEnabledDataType()).subscribe((value) => {
         this.isEnabled = Number(value.values[0]) === 1;
       })
     );
 
     // Subscribe to VCU control state (0=ON, 1=AUTO, 2=OFF)
     this.subscriptions.push(
-      this.storage.get(this.controlStateDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedControlStateDataType()).subscribe((value) => {
         const raw = Number(value.values[0]);
         if (Number.isNaN(raw)) return;
         this.controlStateDisplay.set(this.formatControlState(raw));
@@ -138,7 +180,7 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
     // Subscribe to Calypso eFuse state (0=ON, 1=AUTO, 2=OFF)
     this.subscriptions.push(
-      this.storage.get(this.stateDataType()).subscribe((value) => {
+      this.storage.get(this.resolvedStateDataType()).subscribe((value) => {
         const raw = Number(value.values[0]);
         if (Number.isNaN(raw)) return;
         if (raw === 0) this.switchState.set('ON');

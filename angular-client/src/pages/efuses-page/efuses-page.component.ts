@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { EFUSE_TOPICS } from './efuses-page.topics';
 
 import TypographyComponent from 'src/components/typography/typography.component';
 import EfuseCardComponent from './components/efuse-card/efuse-card.component';
@@ -20,8 +20,8 @@ import GridLayoutComponent from 'src/components/grid-layout/grid-layout.componen
 export default class EfusesPageComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
-  // Expose DataTypeEnum for template
-  DataTypeEnum = DataTypeEnum;
+  // Expose eFuse topics for template
+  readonly topics = EFUSE_TOPICS;
 
   ngOnInit() {
     // Page initialization

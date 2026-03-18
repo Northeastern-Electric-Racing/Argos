@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { EFUSE_TOPICS } from '../../efuses-page.topics';
 import { sendConfig } from 'src/api/car-command.api';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -19,7 +19,7 @@ export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
 
-  DataTypeEnum = DataTypeEnum;
+  readonly rtdsTopics = EFUSE_TOPICS.VCU.RTDS;
 
   isLocked = signal<boolean>(true);
 
@@ -29,10 +29,10 @@ export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
   errorState = 0;
 
   ngOnInit(): void {
-    this.subscribeState(DataTypeEnum.VCU_RTDS_PIN_STATE, (value) => (this.pinState = value));
-    this.subscribeState(DataTypeEnum.VCU_RTDS_SOUNDING_STATE, (value) => (this.soundingState = value));
-    this.subscribeState(DataTypeEnum.VCU_RTDS_REVERSE_STATE, (value) => (this.reverseState = value));
-    this.subscribeState(DataTypeEnum.VCU_RTDS_ERROR_STATE, (value) => (this.errorState = value));
+    this.subscribeState(this.rtdsTopics.Pin_State, (value) => (this.pinState = value));
+    this.subscribeState(this.rtdsTopics.Sounding_State, (value) => (this.soundingState = value));
+    this.subscribeState(this.rtdsTopics.Reverse_State, (value) => (this.reverseState = value));
+    this.subscribeState(this.rtdsTopics.Error_State, (value) => (this.errorState = value));
   }
 
   ngOnDestroy(): void {
@@ -65,7 +65,7 @@ export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
     this.isLocked.set(true);
   }
 
-  private subscribeState(dataType: DataTypeEnum, setter: (value: number) => void): void {
+  private subscribeState(dataType: string, setter: (value: number) => void): void {
     this.subscriptions.push(
       this.storage.get(dataType).subscribe((value) => {
         const raw = Number(value.values[0]);
