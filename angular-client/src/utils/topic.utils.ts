@@ -1,6 +1,7 @@
 import { BMS_CONFIG } from './bms.config';
 import { Chip, chipToString, Segment } from './bms.utils';
 
+// BMS
 export const alphaTemp = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
 export const betaTemp = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
 export const alphaVolt = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Volts/${cell}`;
