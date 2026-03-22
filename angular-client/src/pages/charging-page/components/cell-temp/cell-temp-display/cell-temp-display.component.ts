@@ -41,7 +41,7 @@ export default class CellTempDisplayComponent implements OnInit {
   mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }

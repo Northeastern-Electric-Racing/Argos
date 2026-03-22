@@ -55,6 +55,7 @@ export class InfoValueDisplayComponent implements OnChanges {
   subtitle = input<string>('');
   subtitleStyle = input<string>('');
   unit = input<string>('');
+  unitStyle = input<string>('');
   formattedValue = '-';
 
   // Consolidated widget input

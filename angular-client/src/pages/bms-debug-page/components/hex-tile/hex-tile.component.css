@@ -1,0 +1,194 @@
+/* AI-generated  */
+
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Base pointy-top hexagon shape using clip-path polygon */
+.hex-tile {
+  width: var(--hex-w, 42px);
+  height: var(--hex-h, 48px);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.hex-tile:hover {
+  filter: brightness(1.15);
+}
+
+/* Inner selected state: brighten the hex fill */
+.hex-tile.selected {
+  filter: brightness(1.3);
+}
+
+/* Outer selected state: white glow via drop-shadow on the :host (respects the clip-path shape) */
+:host(.selected-cell) {
+  filter: drop-shadow(0 0 3px white) drop-shadow(0 0 1px white);
+  z-index: 1;
+}
+
+.cell-number {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: calc(var(--hex-w, 42px) * 0.18);
+  font-weight: 600;
+  color: #2c2c2c;
+  line-height: 1;
+}
+
+.cell-value-container {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+
+.cell-value {
+  font-size: calc(var(--hex-w, 42px) * 0.24);
+  font-weight: 700;
+  color: #2c2c2c;
+  line-height: 1;
+}
+
+.cell-unit {
+  font-size: calc(var(--hex-w, 42px) * 0.15);
+  font-weight: 600;
+  color: #2c2c2c;
+  vertical-align: super;
+}
+
+/* ── View Variants: per-HeatMapView layout tweaks ── */
+
+/* Voltage: cell number anchored top-left (semi-transparent), value pushed to bottom center */
+.hex-tile.view-voltage .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-voltage {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
+/* Balancing: same top-left number, value pushed to bottom */
+.hex-tile.view-balancing .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-balancing {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
+/* Temperature: same top-left number, value pushed to bottom */
+.hex-tile.view-temperature .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-temperature {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
+/* ── heatmap-cell variant: used inside segment rows; number stacked above value, left-aligned ── */
+
+:host(.heatmap-cell) .hex-tile {
+  width: var(--hex-w, 48px);
+  height: var(--hex-h, 48px);
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0% 0 0 8%;
+  flex-direction: column;
+  gap: 0;
+}
+
+:host(.heatmap-cell) .cell-number {
+  position: static;
+  font-size: calc(var(--hex-w, 48px) * 0.22);
+  font-weight: 800;
+  color: #1a1a1a;
+  opacity: 0.6;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+:host(.heatmap-cell) .cell-value-container {
+  gap: 1px;
+}
+
+:host(.heatmap-cell) .cell-value {
+  font-size: calc(var(--hex-w, 48px) * 0.36);
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+:host(.heatmap-cell) .cell-unit {
+  font-size: calc(var(--hex-w, 48px) * 0.2);
+  color: #1a1a1a;
+}
+
+/* ── Double-hex variant: two merged pointy-top hexes for thermistor groups that span two cells ── */
+
+:host(.heatmap-cell-double) .hex-tile {
+  width: calc(var(--hex-w, 48px) * 2 + var(--hex-gap, 2px));
+  height: var(--hex-h, 48px);
+  /* Outline of two pointy-top hexagons sharing their inner vertical edge.
+     V-notches at top-center (50% 25%) and bottom-center (50% 75%)
+     reveal the two-hex silhouette. */
+  clip-path: polygon(0% 25%, 25% 0%, 50% 25%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 50% 75%, 25% 100%, 0% 75%);
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0% 0 0 5%;
+  flex-direction: column;
+  gap: 0;
+}
+
+:host(.heatmap-cell-double) .cell-number {
+  position: static;
+  font-size: calc(var(--hex-w, 48px) * 0.22);
+  font-weight: 800;
+  color: #1a1a1a;
+  opacity: 0.6;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+:host(.heatmap-cell-double) .cell-value-container {
+  gap: 1px;
+  align-self: center;
+}
+
+:host(.heatmap-cell-double) .cell-value {
+  font-size: calc(var(--hex-w, 48px) * 0.36);
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+:host(.heatmap-cell-double) .cell-unit {
+  font-size: calc(var(--hex-w, 48px) * 0.2);
+  color: #1a1a1a;
+}

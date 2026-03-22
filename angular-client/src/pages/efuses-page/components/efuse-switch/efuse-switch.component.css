@@ -1,0 +1,112 @@
+/*
+ * eFuse three-position switch — 3D push-button style that matches
+ * the annunciator plate indicator lights on the eFuse page.
+ *
+ * Idle:    raised button with a visible bottom "edge" (border-bottom).
+ * Hover:   button sinks slightly toward its base.
+ * Active:  button is fully pressed — sits flush with the base.
+ */
+
+/* Container — keeps the three buttons in a tight row */
+.switch-group {
+  display: inline-flex;
+  gap: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #333333;
+}
+
+.switch-group.disabled {
+  opacity: 0.65;
+}
+
+/* ---- Base button ---- */
+.switch-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 26px;
+  min-width: 88px;
+  box-sizing: border-box;
+  background-color: #1a1a1a;
+  border: none;
+  border-right: 1px solid #2a2a2a;
+  cursor: pointer;
+  position: relative;
+
+  /* 3D raised effect — shadow acts as the "edge" */
+  box-shadow: 0 3px 0 #0a0a0a;
+  transition:
+    box-shadow 0.08s ease,
+    transform 0.08s ease,
+    background-color 0.08s ease;
+}
+
+.switch-group.disabled .switch-button {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.switch-button:last-child {
+  border-right: none;
+}
+
+/* ---- Label text ---- */
+.switch-label {
+  font-family: 'Highway Gothic', 'Roboto', sans-serif;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #3a3a3a;
+  user-select: none;
+  transition:
+    color 0.08s ease,
+    text-shadow 0.08s ease;
+}
+
+/* ---- Hover: sink slightly toward base ---- */
+.switch-button:not(.active):hover {
+  box-shadow: 0 2px 0 #0a0a0a;
+  transform: translateY(1px);
+  background-color: #222222;
+}
+
+.switch-button:not(.active):hover .switch-label {
+  color: #555555;
+}
+
+/* ---- Active / pressed: flush with base ---- */
+.switch-button.active {
+  transform: translateY(3px);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ON — muted green (matches indicator-light green preset) */
+.switch-button.active.state-on {
+  background-color: #1a3318;
+}
+
+.switch-button.active.state-on .switch-label {
+  color: #4a9e3e;
+  text-shadow: 0 0 3px rgba(74, 158, 62, 0.35);
+}
+
+/* AUTO — muted amber / yellow (matches indicator-light amber preset) */
+.switch-button.active.state-auto {
+  background-color: #3d3010;
+}
+
+.switch-button.active.state-auto .switch-label {
+  color: #c8911e;
+  text-shadow: 0 0 3px rgba(200, 145, 30, 0.35);
+}
+
+/* OFF — muted red (matches indicator-light red preset) */
+.switch-button.active.state-off {
+  background-color: #4a1515;
+}
+
+.switch-button.active.state-off .switch-label {
+  color: #cc3030;
+  text-shadow: 0 0 3px rgba(204, 48, 48, 0.35);
+}

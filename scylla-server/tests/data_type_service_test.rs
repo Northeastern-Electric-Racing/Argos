@@ -2,8 +2,8 @@
 mod test_utils;
 
 use diesel::{
-    query_dsl::methods::{FilterDsl, SelectDsl},
     ExpressionMethods, SelectableHelper,
+    query_dsl::methods::{FilterDsl, SelectDsl},
 };
 use diesel_async::RunQueryDsl;
 use scylla_server::{
@@ -18,9 +18,11 @@ async fn test_get_all_datatypes() -> Result<(), diesel::result::Error> {
     let mut db = pool.get().await.unwrap();
 
     // ensure datatypes is empty
-    assert!(data_type_service::get_all_data_types(&mut db)
-        .await?
-        .is_empty());
+    assert!(
+        data_type_service::get_all_data_types(&mut db)
+            .await?
+            .is_empty()
+    );
 
     Ok(())
 }

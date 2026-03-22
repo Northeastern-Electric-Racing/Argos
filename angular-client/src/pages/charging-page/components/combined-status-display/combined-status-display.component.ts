@@ -28,7 +28,7 @@ export default class CombinedStatusDisplayComponent {
   isMobile = window.innerWidth < this.mobileThreshold;
   lightsOn = window.innerWidth >= 1120;
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.lightsOn = window.innerWidth >= 1120;

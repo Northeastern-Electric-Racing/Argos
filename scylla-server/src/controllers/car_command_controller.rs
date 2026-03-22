@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use axum::{
+    Extension,
     extract::{Json, Path},
     http::StatusCode,
-    Extension,
 };
 use axum_extra::extract::Query;
 use protobuf::Message;

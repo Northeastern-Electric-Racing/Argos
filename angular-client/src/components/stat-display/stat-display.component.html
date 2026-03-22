@@ -1,0 +1,18 @@
+@if (headerLabel()) {
+  <div class="header">
+    @if (headerIcon()) {
+      <mat-icon aria-hidden="false" [svgIcon]="headerIcon()" class="header-icon" />
+    }
+    <span class="header-label">{{ headerLabel() }}</span>
+  </div>
+}
+
+<div class="value-row">
+  <span class="value">{{ formattedValue }}</span>
+  <span class="unit" [class.unit-below]="unitBelow()">{{ unit() }}</span>
+  <ng-content />
+</div>
+
+@if (subtitle()) {
+  <span class="subtitle">{{ subtitle() }}</span>
+}

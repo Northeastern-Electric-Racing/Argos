@@ -1,11 +1,11 @@
 use std::sync::atomic::Ordering;
 
-use axum::{extract::Path, Json};
+use axum::{Json, extract::Path};
 use serde::Serialize;
 
 use crate::{
-    error::ScyllaError, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE,
-    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE,
+    BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, SOCKET_DISCARD_PERCENT,
+    STATIC_RATE_LIMIT_VALUE, error::ScyllaError,
 };
 
 /// holding all of scylla's settings

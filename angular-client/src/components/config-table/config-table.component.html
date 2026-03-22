@@ -1,0 +1,23 @@
+<div class="config-table-grid">
+  <!-- Left label column -->
+  <div class="label-col">
+    <div class="corner-cell"></div>
+    @for (row of rows(); track row.label) {
+      <span class="row-label">{{ row.label }}</span>
+    }
+  </div>
+  <!-- One data column per item -->
+  @for (item of columns(); track $index) {
+    <div class="data-col">
+      <div class="col-header">
+        <span class="col-title">{{ columnConfig().title(item) }}</span>
+        @if (columnConfig().subtitle) {
+          <span class="col-subtitle">{{ columnConfig().subtitle!(item) }}</span>
+        }
+      </div>
+      @for (row of rows(); track row.label) {
+        <span class="data-value" [class]="row.getClass ? row.getClass(item) : ''">{{ row.getValue(item) }}</span>
+      }
+    </div>
+  }
+</div>

@@ -33,4 +33,5 @@ export class InfoBackgroundComponent {
   topRightInfo = input<string | undefined>(undefined);
 
   slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
+  slicePercentage = input<number>(125); // pixel size of the corner slice (used for both clip-path x and y)
 }

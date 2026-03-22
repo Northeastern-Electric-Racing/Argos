@@ -1,4 +1,4 @@
-use crate::{models::DataType, schema::data_type::dsl::*, Database};
+use crate::{Database, models::DataType, schema::data_type::dsl::*};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
