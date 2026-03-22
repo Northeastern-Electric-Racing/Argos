@@ -519,6 +519,26 @@ impl RuleManager {
         self.rules.read().await.values().cloned().collect()
     }
 
+    pub async fn get_client_rules(&self, client_id: ClientId) -> Vec<Rule> {
+        let subscribed_rule_ids = self
+            .subscriptions
+            .read()
+            .await
+            .get_right(&client_id)
+            .cloned()
+            .unwrap_or_default();
+
+        if subscribed_rule_ids.is_empty() {
+            return Vec::new();
+        }
+
+        let rules = self.rules.read().await;
+        subscribed_rule_ids
+            .into_iter()
+            .filter_map(|rule_id| rules.get(&rule_id).cloned())
+            .collect()
+    }
+
     pub async fn get_all_rules_with_subscription_status(
         &self,
         requesting_client_id: ClientId,
