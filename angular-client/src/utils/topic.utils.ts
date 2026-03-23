@@ -197,14 +197,14 @@ export const topics = {
   internalThermalError,
   internalSoftwareFault,
   packOverheat,
-  perCellOverflowId, 
+  perCellOverflowId,
   motorUsage,
   coolingUsage,
   steeringAngle,
   torque,
   brakePressure,
   acceleration,
-  xyzAcceleration,
+  xyzAcceleration
 };
 
 /* Dynamically generated cell-index arrays derived from BMS_CONFIG */
