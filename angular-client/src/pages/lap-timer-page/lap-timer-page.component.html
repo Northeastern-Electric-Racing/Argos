@@ -1,0 +1,61 @@
+<div class="page-container">
+  <info-background svgIcon="timer" title="Lap Timer">
+    <div class="timer-content">
+      <!-- Main timer display -->
+      <div class="timer-display">
+        <typography variant="info-subtitle" content="TOTAL" additionalStyles="fontSize: 14px; letter-spacing: 2px;" />
+        <div class="time-value">{{ timer.formattedTotal() }}</div>
+        <div class="current-lap-row">
+          <typography variant="info-subtitle" content="LAP {{ timer.lapCount() + 1 }}" additionalStyles="fontSize: 12px; letter-spacing: 1px;" />
+          <div class="current-lap-time">{{ timer.formattedCurrentLap() }}</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        @if (timer.isIdle()) {
+          <button class="control-btn start-btn" (click)="onStartResume()">Start</button>
+        } @else if (timer.isRunning()) {
+          <hstack spacing="12px">
+            <button class="control-btn lap-btn" (click)="onLap()">Lap</button>
+            <button class="control-btn pause-btn" (click)="onPause()">Pause</button>
+          </hstack>
+        } @else if (timer.isPaused()) {
+          <hstack spacing="12px">
+            <button class="control-btn stop-btn" (click)="onStop()">Stop</button>
+            <button class="control-btn start-btn" (click)="onStartResume()">Resume</button>
+          </hstack>
+        }
+      </div>
+
+      <!-- Lap list -->
+      @if (timer.laps().length > 0 || timer.isRunning() || timer.isPaused()) {
+        <div class="lap-list-container">
+          <div class="lap-list-header">
+            <hstack justifyContent="space-between" spacing="0px">
+              <typography variant="info-subtitle" content="Lap" additionalStyles="fontSize: 13px; text-align: left;" />
+              <typography variant="info-subtitle" content="Time" additionalStyles="fontSize: 13px; text-align: right;" />
+            </hstack>
+          </div>
+          <div class="lap-list">
+            @for (lap of timer.laps().slice().reverse(); track lap.number) {
+              <div class="lap-row">
+                <hstack justifyContent="space-between" spacing="0px">
+                  <typography variant="info-subtitle" [content]="'Lap ' + lap.number" additionalStyles="fontSize: 14px; color: #EFEFEF;" />
+                  <typography variant="info-subtitle" [content]="timer.formatTime(lap.duration)" additionalStyles="fontSize: 14px; color: #EFEFEF; font-variant-numeric: tabular-nums;" />
+                </hstack>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Reset (only when stopped with laps) -->
+      @if (timer.isIdle() && timer.laps().length > 0) {
+        <div class="reset-container">
+          <button class="control-btn reset-btn" (click)="onReset()">Reset</button>
+        </div>
+      }
+    </div>
+  </info-background>
+</div>

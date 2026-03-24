@@ -9,6 +9,7 @@ import EfusesPageComponent from 'src/pages/efuses-page/efuses-page.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
+import LapTimerPageComponent from 'src/pages/lap-timer-page/lap-timer-page.component';
 import MapComponent from 'src/pages/map/map.component';
 import { Segment } from 'src/utils/bms.utils';
 
@@ -23,6 +24,7 @@ const faultsRoute = () => `/faults`;
 const faultsGraphRoute = () => `/faults/fault-graph`;
 const commandsRoute = () => `/commands`;
 const efusesRoute = () => `/efuses`;
+const lapTimerRoute = () => `/lap-timer`;
 
 export const appRoutes = {
   landingRoute,
@@ -35,7 +37,8 @@ export const appRoutes = {
   faultsRoute,
   faultsGraphRoute,
   commandsRoute,
-  efusesRoute
+  efusesRoute,
+  lapTimerRoute
 };
 
 // Routes should be defined carefully in accordance with the appRoutes
@@ -52,7 +55,8 @@ const routes: Routes = [
   { path: 'faults/fault-graph', component: GraphPageComponent },
   { path: 'camera', component: CameraPageComponent },
   { path: 'commands', component: CarCommandComponent },
-  { path: 'efuses', component: EfusesPageComponent }
+  { path: 'efuses', component: EfusesPageComponent },
+  { path: 'lap-timer', component: LapTimerPageComponent }
 ];
 
 @NgModule({

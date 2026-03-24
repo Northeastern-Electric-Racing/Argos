@@ -1,0 +1,131 @@
+.page-container {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+  height: 100%;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.timer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 24px;
+}
+
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-value {
+  font-family: 'Roboto', monospace;
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: #fbf7f5;
+  text-shadow: 0 0 8px rgba(217, 217, 214, 0.3);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+.current-lap-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.current-lap-time {
+  font-family: 'Roboto', monospace;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #cacaca;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.control-btn {
+  border: none;
+  border-radius: 50px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  min-width: 100px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.control-btn:hover {
+  opacity: 0.85;
+}
+
+.control-btn:active {
+  opacity: 0.7;
+}
+
+.start-btn {
+  background-color: #1db954;
+  color: #fff;
+}
+
+.pause-btn {
+  background-color: #f0a030;
+  color: #fff;
+}
+
+.stop-btn {
+  background-color: #f04346;
+  color: #fff;
+}
+
+.lap-btn {
+  background-color: #3a3a3a;
+  color: #efefef;
+  border: 1px solid #555;
+}
+
+.reset-btn {
+  background-color: #3a3a3a;
+  color: #efefef;
+  border: 1px solid #555;
+}
+
+.lap-list-container {
+  width: 100%;
+  max-width: 360px;
+}
+
+.lap-list-header {
+  padding: 8px 4px;
+  border-bottom: 1px solid #444;
+}
+
+.lap-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.lap-row {
+  padding: 8px 4px;
+  border-bottom: 1px solid #333;
+}
+
+.reset-container {
+  padding-top: 4px;
+}

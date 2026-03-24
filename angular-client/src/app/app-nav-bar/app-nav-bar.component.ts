@@ -189,6 +189,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       label: 'Commands',
       onClick: () => this.navigateTo(appRoutes.commandsRoute()),
       icon: 'electrical_services'
+    },
+    {
+      id: appRoutes.lapTimerRoute(),
+      label: 'Lap Timer',
+      onClick: () => this.navigateTo(appRoutes.lapTimerRoute()),
+      icon: 'timer'
     }
   ];
 
