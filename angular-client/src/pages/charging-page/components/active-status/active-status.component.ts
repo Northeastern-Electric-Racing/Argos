@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
@@ -22,7 +22,7 @@ export default class ActiveStatusComponent implements OnInit {
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.storage.getTimerData(DataTypeEnum.BMS_MODE).subscribe((value) => {
+    this.storage.getTimerData(topics.bmsMode()).subscribe((value) => {
       const statusStateValue = value.last_value;
       if (this.isActive) {
         if (!(statusStateValue === 2)) {

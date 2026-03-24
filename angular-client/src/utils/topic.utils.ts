@@ -38,6 +38,81 @@ export const lowTempChip = () => `BMS/Cells/Temp_Low_Chip`;
 export const lowTempCell = () => `BMS/Cells/Temp_Low_Cell`;
 export const tempAvgValue = () => `BMS/Cells/Temp_Avg_Value`;
 
+// General
+export const driver = () => `Driver`;
+export const location = () => `Location`;
+export const viewers = () => `Viewers`;
+export const latency = () => `Old_Latency`;
+export const newLatency = () => `Latency`;
+
+// MPU
+export const speed = () => `MPU/State/Speed`;
+export const motorController = () => `MPU/Current/Motor_Controller`;
+export const battboxFans = () => `MPU/Current/Battbox_Fans`;
+export const pumps = () => `MPU/Current/Pumps`;
+export const lvBoards = () => `MPU/Current/LV_Boards`;
+
+// DTI
+export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
+
+// TPU
+export const cpuUsage = () => `TPU/OnBoard/CpuUsage`;
+export const cpuTemp = () => `TPU/OnBoard/CpuTemp`;
+export const ramUsage = () => `TPU/OnBoard/MemAvailable`;
+export const wifiRSSI = () => `TPU/HaLow/RSSI`;
+export const mcs = () => `TPU/HaLow/ApMCS`;
+export const gpsLocation = () => `TPU/GPS/Location`;
+
+// BMS Status / Pack
+export const packTemp = () => `BMS/Status/Temp_Average`;
+export const stateOfCharge = () => `BMS/Pack/SOC`;
+export const current = () => `BMS/Charging/Current`;
+export const chargeCurrentLimit = () => `BMS/Pack/CCL`;
+export const dischargeCurrentLimit = () => `BMS/Pack/DCL`;
+export const statusBalancing = () => `BMS/Status/Balancing`;
+export const bmsMode = () => `BMS/Status/State`;
+export const charging = () => `BMS/Charging/Control`;
+export const packVoltage = () => `BMS/Pack/Voltage`;
+export const cellUndervoltage = () => `BMS/Status/F/Cell_Undervoltage`;
+export const cellOvervoltage = () => `BMS/Status/F/Cell_Overvoltage`;
+export const cellsNotBalancing = () => `BMS/Status/F/Cells_Not_Balancing`;
+
+// Charger Faults
+export const commTimeoutFault = () => `Charger/Box/F_CommTimeout`;
+export const hardwareFailureFault = () => `Charger/Box/F_HardwareFailure`;
+export const overTempFault = () => `Charger/Box/F_OverTemp`;
+export const overVoltageFault = () => `Charger/Box/F_OverVoltage`;
+export const wrongBatConnectFault = () => `Charger/Box/F_WrongBatConnect`;
+
+// BMS Faults
+export const openWire = () => `BMS/Status/F/Open_Wire`;
+export const chargerLimitEnforcementFault = () => `BMS/Status/F/CCL_Enforce`;
+export const chargerCanFault = () => `BMS/Status/F/Charger_Can`;
+export const batteryThermistor = () => `BMS/Status/F/Battery_Therm`;
+export const chargerSafetyRelay = () => `BMS/Status/F/Charger_Safety`;
+export const dischargeLimitEnforcementFault = () => `BMS/Status/F/DCL_Enforce`;
+export const externalCanFault = () => `BMS/Status/F/External_Can`;
+export const weakPackFault = () => `BMS/Status/F/Weak_Pack`;
+export const lowCellVoltage = () => `BMS/Status/F/Low_Cell_Volts`;
+export const chargeReadingMismatch = () => `BMS/Status/F/Charge_Reading`;
+export const currentSensorFault = () => `BMS/Status/F/Current_Sense`;
+export const internalCellCommFault = () => `BMS/Status/F/IC_Comm`;
+export const internalThermalError = () => `BMS/Status/F/Thermal_Err`;
+export const internalSoftwareFault = () => `BMS/Status/F/Software`;
+export const packOverheat = () => `BMS/Status/F/Pack_Overheat`;
+
+// Fake / Mock Data
+export const motorUsage = () => `Motor Usage`;
+export const coolingUsage = () => `Cooling Usage`;
+export const steeringAngle = () => `Steering Angle`;
+export const torque = () => `Torque`;
+export const brakePressure = () => `Brake Pressure`;
+export const acceleration = () => `Acceleration`;
+export const xyzAcceleration = () => `XYZAcceleration`;
+
+// BMS Debug / Per Cell
+export const perCellOverflowId = () => `BMS/PerCell/OverflowID`;
+
 export const topics = {
   alphaTemp,
   betaTemp,
@@ -72,7 +147,64 @@ export const topics = {
   tempAvgValue,
   accCCL,
   accDCL,
-  msgsPerSecond
+  msgsPerSecond,
+  driver,
+  location,
+  viewers,
+  latency,
+  newLatency,
+  speed,
+  motorController,
+  battboxFans,
+  pumps,
+  lvBoards,
+  motorTemp,
+  cpuUsage,
+  cpuTemp,
+  ramUsage,
+  wifiRSSI,
+  mcs,
+  gpsLocation,
+  packTemp,
+  stateOfCharge,
+  current,
+  chargeCurrentLimit,
+  dischargeCurrentLimit,
+  statusBalancing,
+  bmsMode,
+  charging,
+  packVoltage,
+  cellUndervoltage,
+  cellOvervoltage,
+  cellsNotBalancing,
+  commTimeoutFault,
+  hardwareFailureFault,
+  overTempFault,
+  overVoltageFault,
+  wrongBatConnectFault,
+  openWire,
+  chargerLimitEnforcementFault,
+  chargerCanFault,
+  batteryThermistor,
+  chargerSafetyRelay,
+  dischargeLimitEnforcementFault,
+  externalCanFault,
+  weakPackFault,
+  lowCellVoltage,
+  chargeReadingMismatch,
+  currentSensorFault,
+  internalCellCommFault,
+  internalThermalError,
+  internalSoftwareFault,
+  packOverheat,
+  perCellOverflowId,
+  motorUsage,
+  coolingUsage,
+  steeringAngle,
+  torque,
+  brakePressure,
+  acceleration,
+  xyzAcceleration
 };
 
 /* Dynamically generated cell-index arrays derived from BMS_CONFIG */
