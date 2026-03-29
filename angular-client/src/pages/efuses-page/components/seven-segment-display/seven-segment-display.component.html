@@ -1,0 +1,20 @@
+<div class="seven-segment-wrapper">
+  <div
+    class="seven-segment-container"
+    [style.font-size.px]="fontSize()"
+    [style.padding-left.px]="paddingLeft()"
+    [style.padding-right.px]="paddingRight()"
+    [style.padding-top.px]="paddingTop()"
+    [style.padding-bottom.px]="paddingBottom()"
+  >
+    <div class="segment-stack" [style.justify-items]="stackAlign()">
+      <!-- Background: all segments dimly lit -->
+      <span class="segment-text background" [style.text-align]="textAlign()">{{ backgroundText() }}</span>
+      <!-- Foreground: actual value in bright red -->
+      <span class="segment-text foreground" [style.text-align]="textAlign()">{{ foregroundText() }}</span>
+    </div>
+  </div>
+  @if (unit()) {
+    <span class="unit-label" [style.font-size.px]="unitFontSize()">{{ unit() }}</span>
+  }
+</div>

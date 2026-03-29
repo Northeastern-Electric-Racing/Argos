@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 
@@ -42,31 +42,31 @@ export default class MotorInfoComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.MOTOR_TEMP).subscribe((value) => {
+      this.storage.get(topics.motorTemp()).subscribe((value) => {
         this.motorTemp = floatPipe(value.values[0]);
         this.updatePieChart();
       }),
-      this.storage.get(DataTypeEnum.MOTOR_USAGE).subscribe((value) => {
+      this.storage.get(topics.motorUsage()).subscribe((value) => {
         this.motorUsage = floatPipe(value.values[0]);
         this.updatePieChart();
       }),
-      this.storage.get(DataTypeEnum.COOL_USAGE).subscribe((value) => {
+      this.storage.get(topics.coolingUsage()).subscribe((value) => {
         this.coolUsage = floatPipe(value.values[0]);
         this.updatePieChart();
       }),
-      this.storage.get(DataTypeEnum.BATTBOX_FANS).subscribe((value) => {
+      this.storage.get(topics.battboxFans()).subscribe((value) => {
         this.battboxFans = floatPipe(value.values[0]);
         this.updatePieChart();
       }),
-      this.storage.get(DataTypeEnum.PUMPS).subscribe((value) => {
+      this.storage.get(topics.pumps()).subscribe((value) => {
         this.pumps = floatPipe(value.values[0]);
         this.updatePieChart();
       }),
-      this.storage.get(DataTypeEnum.MOTOR_CONTROLLER).subscribe((value) => {
+      this.storage.get(topics.motorController()).subscribe((value) => {
         this.motorController = floatPipe(value.values[0]);
         this.updatePieChart();
       }),
-      this.storage.get(DataTypeEnum.LV_BOARDS).subscribe((value) => {
+      this.storage.get(topics.lvBoards()).subscribe((value) => {
         this.lvBoards = floatPipe(value.values[0]);
         this.updatePieChart();
       })
@@ -76,9 +76,7 @@ export default class MotorInfoComponent implements OnInit, OnDestroy {
   }
 
   updatePieChart() {
-    // Calculate total usage of the four components
     const totalUsed = this.motorController + this.battboxFans + this.pumps + this.lvBoards;
-    // Calculate the remaining unused portion out of 20
     const remainingUnused = Math.max(0, 20 - totalUsed);
 
     this.piechartData = [

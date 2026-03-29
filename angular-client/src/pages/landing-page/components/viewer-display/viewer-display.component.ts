@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -16,7 +16,7 @@ export class ViewerDisplayComponent implements OnInit {
   numViewers: number = 0;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.VIEWERS).subscribe((value) => {
+    this.storage.get(topics.viewers()).subscribe((value) => {
       this.numViewers = parseInt(value.values[0]);
     });
   }

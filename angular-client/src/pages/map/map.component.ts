@@ -3,7 +3,7 @@ import { MapService } from '../../services/map.service';
 import { DataValue } from 'src/utils/socket.utils';
 import APIService from 'src/services/api.service';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import Storage from 'src/services/storage.service';
 import { Run } from 'src/utils/types.utils';
 
@@ -42,21 +42,19 @@ export default class MapComponent implements OnInit {
   onRunSelected = (run: Run) => {
     if (run.id === this.storage.getCurrentRunId().value) {
       this.isLoading = false;
-      //Allow page to render before building map
       setTimeout(() => {
         this.map.buildMap('map');
         this.map.addPolyline([]);
-        this.storage.get(DataTypeEnum.POINTS).subscribe((value) => {
+        this.storage.get(topics.gpsLocation()).subscribe((value) => {
           this.map.addCoordinateToPolyline(this.map.transformDataToCoordinate(value));
         });
       }, 100);
     } else {
       const queryResponse = this.apiService.query<DataValue[]>(() =>
-        getDataByDataTypeNameAndRunId(DataTypeEnum.POINTS, run.id)
+        getDataByDataTypeNameAndRunId(topics.gpsLocation(), run.id)
       );
       queryResponse.data.subscribe((points) => {
         if (points) {
-          //Allow page to render before building map
           setTimeout(() => {
             this.map.buildMap('map');
             this.map.addPolyline(points.map(this.map.transformDataToCoordinate));

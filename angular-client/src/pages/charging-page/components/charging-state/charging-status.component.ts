@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
@@ -22,7 +22,7 @@ export default class ChargingStatusComponent implements OnInit {
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.storage.getTimerData(DataTypeEnum.CHARGING).subscribe((value) => {
+    this.storage.getTimerData(topics.charging()).subscribe((value) => {
       const chargingControlValue = value.last_value;
       if (this.isCharging) {
         if (chargingControlValue === 1) {

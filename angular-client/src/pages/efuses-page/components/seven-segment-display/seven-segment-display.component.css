@@ -1,0 +1,56 @@
+/* Outer wrapper: aligns the box and unit label together */
+.seven-segment-wrapper {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Seven-segment display using font overlay technique */
+.seven-segment-container {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Segment7', monospace;
+  background-color: #1a1a1a;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+/* Grid stack: both children occupy the same cell, perfectly overlapping */
+.segment-stack {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+}
+
+.segment-stack > * {
+  grid-area: 1 / 1;
+}
+
+.segment-text {
+  white-space: pre;
+  letter-spacing: 0.05em;
+  text-align: center;
+  width: 100%;
+  display: block;
+}
+
+/* Background layer: all segments faintly visible */
+.segment-text.background {
+  color: #2a0a0a;
+}
+
+/* Foreground layer: actual value in bright red */
+.segment-text.foreground {
+  color: #ff3333;
+}
+
+/* Unit label (e.g., "A", "V") — bottom-aligned with the display box */
+.unit-label {
+  font-family: 'Roboto', sans-serif;
+  font-style: oblique;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  color: white;
+  line-height: 1;
+}

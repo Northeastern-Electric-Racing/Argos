@@ -1,7 +1,7 @@
 import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 
 import { DividerComponent } from '../../../components/divider/divider';
 import { DatePipe } from '@angular/common';
@@ -57,7 +57,7 @@ export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
     }, 1000);
 
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.LOCATION).subscribe((value) => {
+      this.storage.get(topics.location()).subscribe((value) => {
         [this.location] = value.values || ['No Location Set'];
       })
     );
