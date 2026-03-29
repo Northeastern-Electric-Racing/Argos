@@ -2,10 +2,13 @@ use chrono::Utc;
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use socketioxide::SocketIo;
-use socketioxide::extract::{SocketRef, TryData};
-use socketioxide::socket::Sid;
+use socketioxide::adapter::Adapter;
+use socketioxide::extract::SocketRef;
+use socketioxide::handler::{FromConnectParts, Value};
+use socketioxide::socket::{Sid, Socket};
+use std::convert::Infallible;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
 use tokio::sync::{RwLock, broadcast};
@@ -39,9 +42,36 @@ pub async fn socket_handler(
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct AuthData {
-    token: String,
+struct SocketClientId(String);
+
+/**
+ * Extracts a client ID from the query string of the socket connection, and uses that as the client ID for rule notifications.
+ * This allows clients to persist their identity across reconnects by including the same clientId in the
+ *
+ * Based on the documentation page and example from socketioxide: https://docs.rs/socketioxide/latest/socketioxide/extract/index.html
+ */
+impl<A: Adapter> FromConnectParts<A> for SocketClientId {
+    type Error = Infallible;
+
+    fn from_connect_parts(s: &Arc<Socket<A>>, _: &Option<Value>) -> Result<Self, Self::Error> {
+        // Use query-string identity to persist client identity across reconnects.
+        let client_id = s
+            .req_parts()
+            .uri
+            .query()
+            .and_then(|query| {
+                query.split('&').find_map(|pair| {
+                    let mut parts = pair.splitn(2, '=');
+                    match (parts.next(), parts.next()) {
+                        (Some("clientId"), Some(value)) if !value.is_empty() => Some(value),
+                        _ => None,
+                    }
+                })
+            })
+            .unwrap_or_default();
+
+        Ok(SocketClientId(client_id.to_string()))
+    }
 }
 
 pub async fn socket_handler_with_metadata(
@@ -93,27 +123,23 @@ pub async fn socket_handler_with_metadata(
     let writable_socket_map = client_socket_map.clone();
     io.ns(
         "/",
-        |socket: SocketRef, TryData(auth): TryData<AuthData>| async move {
+        |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
             // unfortunate locking and ref counting due to the async closures
             let mut owned = writable_socket_map.write().await;
-            let client_id = match auth {
-                Ok(auth) => auth,
-
-                Err(e) => {
-                    warn!("Could not extract auth, client unauthenticated: {}", e);
-                    return;
-                }
-            };
+            if client_id.is_empty() {
+                warn!("Could not extract clientId query parameter, client unauthenticated");
+                return;
+            }
 
             debug!(
-                "Establishing auth connection with {} -- socket {}",
-                client_id.token, socket.id
+                "Establishing client connection with {} on socket_id {}",
+                client_id, socket.id
             );
-            owned.insert(client_id.token.clone(), socket.id);
+            owned.insert(client_id.clone(), socket.id);
             drop(owned);
 
             socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id.token);
+                writable_socket_map.write().await.remove(&client_id);
             });
         },
     );
@@ -136,7 +162,6 @@ pub async fn socket_handler_with_metadata(
                     DATA_SOCKET_KEY,
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-
                 handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
             }
             _ = recent_faults_interval.tick() => {
@@ -203,27 +228,40 @@ async fn handle_rule_processing(
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
+
     for notification in notifs {
-        let read_clients = client_socket_map.read().await;
-        let Some(sid) = read_clients.get(&notification.0.0) else {
-            warn!("Could not find client to deliver notification, deleting client");
+        // Copy the sid and drop the read lock before any async work
+        let sid_opt = {
+            let read_clients = client_socket_map.read().await;
+            read_clients.get(&notification.0.0).copied()
+        };
+        let Some(sid) = sid_opt else {
+            warn!(
+                "Could not find client to deliver notification, deleting client {}",
+                notification.0.0
+            );
             let _ = rule_manager.delete_client(notification.0).await;
-            return;
+            continue;
         };
         debug!(
             "Sending notification of {} to {}",
             notification.1.topic, notification.0
         );
-        let Some(socket) = io.get_socket(*sid) else {
-            warn!("Could not find client socket, deleting client");
+        let Some(socket) = io.get_socket(sid) else {
+            warn!(
+                "Could not find client socket, deleting client {}",
+                notification.0.0
+            );
             let _ = rule_manager.delete_client(notification.0).await;
-            return;
+            continue;
         };
         if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
             warn!(
                 "Could not send rule notification to {}, err {}",
                 notification.0, err
             );
+        } else {
+            debug!("Successfully sent notification to {}", notification.0);
         };
     }
 }

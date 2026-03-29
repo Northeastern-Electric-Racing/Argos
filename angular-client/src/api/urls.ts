@@ -35,6 +35,14 @@ const updateVideos = () => `${getAllVideos()}/update`;
 const carCommandConfig = (key: string, values: number[]) =>
   `${baseURL}/config/set/${key}?${values.map((value) => `data=${value}`).join('&')}`;
 
+/* Rules */
+const getRulesByClientId = (clientId: string) => `${baseURL}/rules/${clientId}`;
+const addRule = () => `${baseURL}/rules/add`;
+const deleteRule = (ruleId: string) => `${baseURL}/rules/delete/${ruleId}`;
+const editRule = (ruleId: string) => `${baseURL}/rules/edit/${ruleId}`;
+const subscribeToRule = () => `${baseURL}/rules/subscribe`;
+const unsubscribeFromRule = () => `${baseURL}/rules/unsubscribe`;
+
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
 
@@ -67,6 +75,14 @@ export const urls = {
   updateVideos,
 
   carCommandConfig,
+
+  getRulesByClientId,
+  addRule,
+  deleteRule,
+  editRule,
+  subscribeToRule,
+  unsubscribeFromRule,
+
   authenticate,
 
   scyllaSettings,

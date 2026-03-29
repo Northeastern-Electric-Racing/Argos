@@ -1,0 +1,45 @@
+<div class="page-container">
+  <div class="header-row">
+    <typography variant="x-large-title" content="Notification Rules" />
+    <div class="header-buttons">
+      <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
+      <argos-button label="Download" [onClick]="onDownload" />
+    </div>
+  </div>
+
+  <input
+    #fileInput
+    type="file"
+    accept=".csv"
+    class="hidden-file-input"
+    (change)="onFileSelected($event)"
+    aria-label="Upload CSV file"
+  />
+
+  <div class="rules-bar">
+    <typography variant="header" content="Rules" />
+    <div class="rules-bar-actions">
+      <argos-button label="Add" [onClick]="onAddRule" />
+      <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
+      <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+    </div>
+    <div class="search-container">
+      <input
+        pInputText
+        type="text"
+        placeholder="Search..."
+        [value]="searchTerm()"
+        (input)="onSearchInput($event)"
+        aria-label="Search rules"
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <rules-table
+    #rulesTable
+    [clientId]="clientId"
+    [searchTerm]="searchTerm()"
+    (selectionChanged)="onSelectionChanged($event)"
+  />
+</div>

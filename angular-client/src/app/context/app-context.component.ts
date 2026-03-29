@@ -11,6 +11,18 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { EnvService } from 'src/services/env.service';
 import { NotificationLogService } from 'src/services/notification-log.service';
+import { MessageService } from 'primeng/api';
+
+/** Generate or retrieve a stable client ID for notifications */
+function getOrCreateClientId(): string {
+  const key = 'notification_rules_client_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -26,8 +38,13 @@ export default class AppContextComponent implements OnInit {
   private cellService = new CellService(this.storage);
   private faultService = inject(FaultService);
   private notificationLogService = inject(NotificationLogService);
+  private messageService = inject(MessageService);
   private envService = inject(EnvService);
-  socket = io(this.envService.backendUrl, { auth: { token: 'some random token' } });
+  socket = io(this.envService.backendUrl, {
+    query: {
+      clientId: getOrCreateClientId()
+    }
+  });
   socketService = new SocketService(this.socket);
 
   constructor(
@@ -90,12 +107,13 @@ export default class AppContextComponent implements OnInit {
       .addSvgIcon('battery', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery.svg'))
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'))
       .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'))
-      .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'));
+      .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'))
+      .addSvgIcon('notifications', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/notifications.svg'));
   }
 
   ngOnInit(): void {
     document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
-    this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
+    this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService, this.messageService);
   }
 }

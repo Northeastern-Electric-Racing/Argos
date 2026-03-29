@@ -18,8 +18,13 @@
   user-select: none;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   transition: ease;
   transition-duration: 0.2s;
   background-color: #f04346b2;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

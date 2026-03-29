@@ -199,8 +199,14 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       icon: 'electrical_services'
     },
     {
+      id: appRoutes.rulesRoute(),
+      label: 'Rules',
+      onClick: () => this.navigateTo(appRoutes.rulesRoute()),
+      icon: 'notifications'
+    },
+    {
       id: appRoutes.notificationLogRoute(),
-      label: 'Notifications',
+      label: 'Notification Log',
       onClick: () => this.navigateTo(appRoutes.notificationLogRoute()),
       icon: 'notifications'
     }
