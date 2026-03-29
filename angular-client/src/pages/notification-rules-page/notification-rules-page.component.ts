@@ -51,7 +51,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   private addRuleRef: DynamicDialogRef | undefined;
 
   ngOnInit(): void {
-    this.clientId = this.getOrCreateClientId();
+    // clientId is guaranteed to exist — eagerly created in AppContextComponent
+    this.clientId = localStorage.getItem(CLIENT_ID_KEY)!;
   }
 
   onUpload = () => {
@@ -106,11 +107,14 @@ export default class NotificationRulesPageComponent implements OnInit {
 
     if (errors.length > 0) {
       this.messageService.add({ severity: 'error', summary: 'Delete Error', detail: `Failed to delete: ${errors.join(', ')}` });
+      // Keep failed rules selected so the user can retry
+      const failedSet = new Set(errors);
+      this.selectedRules.set(selected.filter((r) => failedSet.has(r.id)));
     } else {
       this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${selected.length} rule(s) removed` });
+      this.selectedRules.set([]);
     }
 
-    this.selectedRules.set([]);
     this.rulesTable()?.loadRules();
   };
 
@@ -405,12 +409,4 @@ export default class NotificationRulesPageComponent implements OnInit {
     return value;
   }
 
-  private getOrCreateClientId(): string {
-    let id = localStorage.getItem(CLIENT_ID_KEY);
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem(CLIENT_ID_KEY, id);
-    }
-    return id;
-  }
 }

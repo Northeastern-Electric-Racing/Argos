@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
@@ -37,17 +37,13 @@ export class RulesTableComponent implements OnInit {
   loading = signal(true);
   selectedRules = signal<ClientRule[]>([]);
 
-  filteredRules = computed(() => {
-    const term = this.searchTerm().toLowerCase();
-    const all = this.rules();
-    if (!term) return all;
-    return all.filter(
-      (r) =>
-        r.expr.toLowerCase().includes(term) ||
-        r.topic.toLowerCase().includes(term) ||
-        r.id.toLowerCase().includes(term)
-    );
-  });
+  dt = viewChild<Table>('dt');
+
+  constructor() {
+    effect(() => {
+      this.dt()?.filterGlobal(this.searchTerm(), 'contains');
+    });
+  }
 
   private editRef: DynamicDialogRef | undefined;
 

@@ -522,21 +522,29 @@ impl RuleManager {
         &self,
         requesting_client_id: ClientId,
     ) -> RulesResponse {
-        let rules_guard = self.rules.read().await;
+        // Clone rules data and drop the lock before acquiring the subscriptions lock
+        let rules_snapshot: Vec<(RuleId, Rule)> = {
+            let rules_guard = self.rules.read().await;
+            rules_guard
+                .iter()
+                .map(|(id, rule)| (id.clone(), rule.clone()))
+                .collect()
+        };
+
         let subscriptions_guard = self.subscriptions.read().await;
 
-        let rules = rules_guard
-            .iter()
+        let rules = rules_snapshot
+            .into_iter()
             .map(|(rule_id, rule)| {
                 let subscribers = subscriptions_guard
-                    .get_left(rule_id)
+                    .get_left(&rule_id)
                     .cloned()
                     .unwrap_or_default();
 
                 let is_subscribed = subscribers.contains(&requesting_client_id);
 
                 ClientRule {
-                    rule: rule.clone(),
+                    rule,
                     subscribers: subscribers.into_iter().collect(),
                     is_subscribed,
                 }

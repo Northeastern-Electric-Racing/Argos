@@ -236,7 +236,7 @@ async fn handle_rule_processing(
         let Some(sid) = read_clients.get(&notification.0.0) else {
             warn!("Could not find client to deliver notification, deleting client {}", notification.0.0);
             let _ = rule_manager.delete_client(notification.0).await;
-            return;
+            continue;
         };
         debug!(
             "Sending notification of {} to {}",
@@ -245,7 +245,7 @@ async fn handle_rule_processing(
         let Some(socket) = io.get_socket(*sid) else {
             warn!("Could not find client socket, deleting client {}", notification.0.0);
             let _ = rule_manager.delete_client(notification.0).await;
-            return;
+            continue;
         };
         if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
             warn!(

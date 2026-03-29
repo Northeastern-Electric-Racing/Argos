@@ -11,6 +11,17 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { EnvService } from 'src/services/env.service';
 
+/** Generate or retrieve a stable client ID for notifications */
+function getOrCreateClientId(): string {
+  const key = 'notification_rules_client_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
  */
@@ -27,7 +38,7 @@ export default class AppContextComponent implements OnInit {
   private envService = inject(EnvService);
   socket = io(this.envService.backendUrl, {
     query: {
-      clientId: localStorage.getItem('notification_rules_client_id') || 'fallback'
+      clientId: getOrCreateClientId()
     }
   });
   socketService = new SocketService(this.socket);

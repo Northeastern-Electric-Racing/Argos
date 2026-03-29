@@ -15,6 +15,7 @@ export class ButtonComponent implements OnInit {
   label = input.required<string>();
   onClick = input.required<() => void>();
   additionalStyles = input<string>();
+  disabled = input<boolean>(false);
   style!: string;
 
   ngOnInit(): void {
