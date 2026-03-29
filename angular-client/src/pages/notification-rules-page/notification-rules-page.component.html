@@ -20,16 +20,8 @@
     <typography variant="header" content="Rules" />
     <div class="rules-bar-actions">
       <argos-button label="Add" [onClick]="onAddRule" />
-      <argos-button
-        label="Remove"
-        [onClick]="onRemoveSelected"
-        [disabled]="!hasSelection()"
-      />
-      <argos-button
-        label="Toggle Subscription"
-        [onClick]="onToggleSubscription"
-        [disabled]="!hasSelection()"
-      />
+      <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
+      <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
     </div>
     <div class="search-container">
       <input
