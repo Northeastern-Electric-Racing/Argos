@@ -1,4 +1,4 @@
-import { Component, input, OnChanges } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 
 /**
@@ -16,7 +16,7 @@ import { MatIcon } from '@angular/material/icon';
     '[class.unit-below-mode]': 'unitBelow()'
   }
 })
-export class StatDisplayComponent implements OnChanges {
+export class StatDisplayComponent {
   value = input<number>();
   unit = input<string>('');
   subtitle = input<string>('');
@@ -28,10 +28,8 @@ export class StatDisplayComponent implements OnChanges {
   /** When true, render the unit below the value instead of inline */
   unitBelow = input<boolean>(false);
 
-  formattedValue = '-';
-
-  ngOnChanges(): void {
+  formattedValue = computed(() => {
     const val = this.value();
-    this.formattedValue = (val?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
-  }
+    return (val?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
+  });
 }

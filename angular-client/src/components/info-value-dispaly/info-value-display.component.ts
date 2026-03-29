@@ -1,4 +1,4 @@
-import { Component, input, OnChanges } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { BatteryPercentageComponent } from '../battery-percentage/battery-percentage.component';
 import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
 import TypographyComponent from '../typography/typography.component';
@@ -42,10 +42,7 @@ export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConf
     VStackComponent
   ]
 })
-export class InfoValueDisplayComponent implements OnChanges {
-  ngOnChanges(): void {
-    this.formattedValue = (this.value()?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
-  }
+export class InfoValueDisplayComponent {
   containerStyle = input<string>('');
   valueUnitContainerStyle = input<string>('');
   value = input<number>();
@@ -56,7 +53,10 @@ export class InfoValueDisplayComponent implements OnChanges {
   subtitleStyle = input<string>('');
   unit = input<string>('');
   unitStyle = input<string>('');
-  formattedValue = '-';
+
+  formattedValue = computed(() => {
+    return (this.value()?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
+  });
 
   // Consolidated widget input
   widget = input<WidgetConfig>();

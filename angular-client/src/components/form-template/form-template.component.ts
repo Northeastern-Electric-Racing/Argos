@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, OnChanges, OnInit, inject, input, output } from '@angular/core';
+import { Component, OnInit, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -31,7 +31,7 @@ export interface DynamicFormField {
   standalone: true,
   imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
 })
-export class FormTemplateComponent implements OnInit, OnChanges {
+export class FormTemplateComponent implements OnInit {
   public config = inject(DynamicDialogConfig);
 
   fields = input.required<DynamicFormField[]>();
@@ -44,14 +44,15 @@ export class FormTemplateComponent implements OnInit, OnChanges {
   form: FormGroup = this.fb.group({});
 
   constructor(private fb: FormBuilder) {
-    // this.fields = this.config.data.fields;
+    effect(() => {
+      // Re-read signals to track changes
+      this.fields();
+      this.formData();
+      this.buildForm();
+    });
   }
 
   ngOnInit(): void {
-    this.buildForm();
-  }
-
-  ngOnChanges(): void {
     this.buildForm();
   }
 

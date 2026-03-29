@@ -8,7 +8,7 @@
 }
 
 <div class="value-row">
-  <span class="value">{{ formattedValue }}</span>
+  <span class="value">{{ formattedValue() }}</span>
   <span class="unit" [class.unit-below]="unitBelow()">{{ unit() }}</span>
   <ng-content />
 </div>

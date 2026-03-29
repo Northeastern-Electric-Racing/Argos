@@ -30,7 +30,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   color = input.required<string>(); // Must be hex
   title = input<string | undefined>(undefined);
   graphContainerId = input.required<string>();
-  timeRangeSec = input<number>(undefined as unknown as number);
+  timeRangeSec = input<number | undefined>(undefined);
   options!: ChartOptions;
   chart!: ApexCharts;
   timeDiffMs: number = 0;
