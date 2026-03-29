@@ -30,9 +30,17 @@
       <vstack style="width: 10%">
         <hstack>
           @if (isDesktop) {
-            <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
+            <typography
+              variant="info-value"
+              [content]="highCellVoltage().toFixed(3) + 'V'"
+              additionalStyles="fontSize:30px"
+            />
           } @else {
-            <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+            <typography
+              variant="info-value"
+              [content]="highCellVoltage().toFixed(3) + 'V'"
+              additionalStyles="fontSize:20px"
+            />
           }
         </hstack>
         <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />

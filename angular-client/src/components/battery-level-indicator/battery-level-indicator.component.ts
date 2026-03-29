@@ -15,5 +15,5 @@ export class BatteryLevelIndicatorComponent {
   percentage = input<number>(0);
 
   fillHeight = computed(() => Math.max(0, Math.min(100, this.percentage())) + '%');
-  fillColor = computed(() => this.percentage() <= 20 ? Theme.battteryLow : Theme.battteryHigh);
+  fillColor = computed(() => (this.percentage() <= 20 ? Theme.battteryLow : Theme.battteryHigh));
 }

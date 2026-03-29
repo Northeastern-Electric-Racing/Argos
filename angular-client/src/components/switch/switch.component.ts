@@ -13,7 +13,7 @@ export class SwitchComponent implements OnInit {
   offString = input<string>('PAUSED');
   onString = input<string>('ALLOWED');
   currentState = signal(false);
-  chargingString = computed(() => this.currentState() ? this.onString() : this.offString());
+  chargingString = computed(() => (this.currentState() ? this.onString() : this.offString()));
   toggleEmitter = output<boolean>();
 
   ngOnInit(): void {
