@@ -29,7 +29,7 @@ import { RulePayload } from 'src/api/rules.api';
 
       <div class="field">
         <label for="rule-expr">Expression</label>
-        <input id="rule-expr" pInputText formControlName="expr" placeholder='e.g. a > 5.0 || a < 1.0' />
+        <input id="rule-expr" pInputText formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
         @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
           <small class="error" role="alert">Expression is required</small>
         }

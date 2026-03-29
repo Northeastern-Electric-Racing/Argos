@@ -49,9 +49,7 @@ describe('NotificationRulesPageComponent', () => {
       } as unknown as Event;
 
       component.onFileSelected(event);
-      expect(addSpy).toHaveBeenCalledWith(
-        jasmine.objectContaining({ severity: 'error', summary: 'Invalid File' })
-      );
+      expect(addSpy).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'error', summary: 'Invalid File' }));
     });
   });
 });

@@ -106,7 +106,11 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     if (errors.length > 0) {
-      this.messageService.add({ severity: 'error', summary: 'Delete Error', detail: `Failed to delete: ${errors.join(', ')}` });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Delete Error',
+        detail: `Failed to delete: ${errors.join(', ')}`
+      });
       // Keep failed rules selected so the user can retry
       const failedSet = new Set(errors);
       this.selectedRules.set(selected.filter((r) => failedSet.has(r.id)));
@@ -408,5 +412,4 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
     return value;
   }
-
 }
