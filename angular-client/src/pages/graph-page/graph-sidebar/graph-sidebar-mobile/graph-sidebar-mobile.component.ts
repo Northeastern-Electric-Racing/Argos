@@ -117,5 +117,4 @@ export default class GraphSidebarMobileComponent implements OnInit, OnDestroy {
       this.topicSelectionService.removeDataType(dt);
     }
   }
-
 }
