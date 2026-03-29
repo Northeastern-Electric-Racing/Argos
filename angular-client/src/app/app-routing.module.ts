@@ -48,15 +48,12 @@ export const routes: Routes = [
   },
   {
     path: 'bms',
-    loadComponent: () =>
-      import('src/pages/bms-debug-page/bms-debug-page.component').then((m) => m.BmsDebugPageComponent)
+    loadComponent: () => import('src/pages/bms-debug-page/bms-debug-page.component').then((m) => m.BmsDebugPageComponent)
   },
   {
     path: 'bms/segment/:id',
     loadComponent: () =>
-      import('src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component').then(
-        (m) => m.BmsSegmentViewComponent
-      )
+      import('src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component').then((m) => m.BmsSegmentViewComponent)
   },
   {
     path: 'faults',
@@ -68,8 +65,7 @@ export const routes: Routes = [
   },
   {
     path: 'camera',
-    loadComponent: () =>
-      import('src/pages/camera-page/camera-page.component').then((m) => m.CameraPageComponent)
+    loadComponent: () => import('src/pages/camera-page/camera-page.component').then((m) => m.CameraPageComponent)
   },
   {
     path: 'commands',

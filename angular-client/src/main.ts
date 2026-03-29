@@ -14,10 +14,7 @@ import AppContextComponent from './app/context/app-context.component';
 bootstrapApplication(AppContextComponent, {
   providers: [
     provideRouter(routes),
-    importProvidersFrom(
-      BrowserModule,
-      DynamicDialogModule
-    ),
+    importProvidersFrom(BrowserModule, DynamicDialogModule),
     DialogService,
     MessageService,
     ChipFaultPipe,
