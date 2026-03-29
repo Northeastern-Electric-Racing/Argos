@@ -1,0 +1,70 @@
+<p-table
+  #dt
+  [value]="rules()"
+  [globalFilterFields]="['expr', 'topic', 'id']"
+  [selection]="selectedRules()"
+  (selectionChange)="onSelectionChange($any($event))"
+  dataKey="id"
+  [scrollable]="true"
+  scrollHeight="600px"
+  [loading]="loading()"
+>
+  <ng-template #header>
+    <tr>
+      <th style="width: 3rem">
+        <p-tableHeaderCheckbox />
+      </th>
+      <th>Rule</th>
+      <th>Applied To</th>
+      <!-- TODO: Uploaded By column once backend supports it -->
+      <th>Uploaded By</th>
+      <!-- TODO: Description column once backend supports it -->
+      <th>Description</th>
+      <th>Subscribed</th>
+      <th style="width: 5rem" aria-label="Actions"></th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-rule>
+    <tr>
+      <td>
+        <p-tableCheckbox [value]="rule" />
+      </td>
+      <td>{{ rule.expr }}</td>
+      <td>{{ rule.topic }}</td>
+      <td>-</td>
+      <td>-</td>
+      <td>
+        <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
+      </td>
+      <td class="action-icons">
+        <button
+          pButton
+          class="p-button-text p-button-sm"
+          icon="pi pi-pencil"
+          (click)="onEdit(rule)"
+          aria-label="Edit rule"
+        ></button>
+        <button
+          pButton
+          class="p-button-text p-button-sm p-button-danger"
+          icon="pi pi-trash"
+          (click)="onDelete(rule)"
+          aria-label="Delete rule"
+        ></button>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7">
+        <div class="empty-state">
+          @if (rules().length === 0) {
+            No rules yet. Add a rule or upload a CSV to get started.
+          } @else {
+            No rules match your search.
+          }
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

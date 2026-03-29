@@ -1,0 +1,35 @@
+.confirm-content p {
+  margin-bottom: 12px;
+  color: #ccc;
+}
+
+.rules-preview {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+  color: #ddd;
+}
+
+th {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

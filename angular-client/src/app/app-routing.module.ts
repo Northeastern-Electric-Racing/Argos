@@ -10,6 +10,7 @@ import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import MapComponent from 'src/pages/map/map.component';
+import NotificationRulesPageComponent from 'src/pages/notification-rules-page/notification-rules-page.component';
 import { Segment } from 'src/utils/bms.utils';
 
 const landingRoute = () => `/landing`;
@@ -22,6 +23,7 @@ const cameraRoute = () => `/camera`;
 const faultsRoute = () => `/faults`;
 const faultsGraphRoute = () => `/faults/fault-graph`;
 const commandsRoute = () => `/commands`;
+const rulesRoute = () => `/rules`;
 const efusesRoute = () => `/efuses`;
 
 export const appRoutes = {
@@ -35,6 +37,7 @@ export const appRoutes = {
   faultsRoute,
   faultsGraphRoute,
   commandsRoute,
+  rulesRoute,
   efusesRoute
 };
 
@@ -52,6 +55,7 @@ const routes: Routes = [
   { path: 'faults/fault-graph', component: GraphPageComponent },
   { path: 'camera', component: CameraPageComponent },
   { path: 'commands', component: CarCommandComponent },
+  { path: 'rules', component: NotificationRulesPageComponent },
   { path: 'efuses', component: EfusesPageComponent }
 ];
 

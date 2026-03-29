@@ -1,4 +1,4 @@
-import { Component, input, OnInit } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Simple custom button component that does something on click
@@ -11,17 +11,14 @@ import { Component, input, OnInit } from '@angular/core';
   styleUrls: ['./argos-button.component.css'],
   standalone: true
 })
-export class ButtonComponent implements OnInit {
+export class ButtonComponent {
   label = input.required<string>();
   onClick = input.required<() => void>();
   additionalStyles = input<string>();
-  style!: string;
-
-  ngOnInit(): void {
-    this.style = 'width: 140px; height: 45px; ';
-
-    if (this.additionalStyles) {
-      this.style += this.additionalStyles();
-    }
-  }
+  disabled = input<boolean>(false);
+  style = computed(() => {
+    const base = 'width: 140px; height: 45px; ';
+    const extra = this.additionalStyles();
+    return extra ? base + extra : base;
+  });
 }
