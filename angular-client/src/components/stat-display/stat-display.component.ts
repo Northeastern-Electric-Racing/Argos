@@ -1,5 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
+import { formatDisplayValue } from 'src/utils/pipes.utils';
 
 /**
  * Lightweight stat display component designed for the At A Glance bar.
@@ -28,8 +29,5 @@ export class StatDisplayComponent {
   /** When true, render the unit below the value instead of inline */
   unitBelow = input<boolean>(false);
 
-  formattedValue = computed(() => {
-    const val = this.value();
-    return (val?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
-  });
+  formattedValue = computed(() => formatDisplayValue(this.value(), this.precision(), this.unit()));
 }

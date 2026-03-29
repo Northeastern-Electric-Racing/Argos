@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, OnInit, effect, inject, input, output } from '@angular/core';
+import { Component, effect, inject, input, output, untracked } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -31,7 +31,7 @@ export interface DynamicFormField {
   standalone: true,
   imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
 })
-export class FormTemplateComponent implements OnInit {
+export class FormTemplateComponent {
   public config = inject(DynamicDialogConfig);
 
   fields = input.required<DynamicFormField[]>();
@@ -45,23 +45,18 @@ export class FormTemplateComponent implements OnInit {
 
   constructor(private fb: FormBuilder) {
     effect(() => {
-      // Re-read signals to track changes
-      this.fields();
-      this.formData();
-      this.buildForm();
+      const fields = this.fields();
+      const formData = this.formData();
+      untracked(() => this.buildForm(fields, formData));
     });
   }
 
-  ngOnInit(): void {
-    this.buildForm();
-  }
-
-  buildForm() {
+  buildForm(fields = this.fields(), formData = this.formData()) {
     const group: any = {};
 
-    this.fields().forEach((field) => {
+    fields.forEach((field) => {
       const control = this.fb.control({
-        value: this.formData() ? this.formData().get(field.name) : '',
+        value: formData ? formData.get(field.name) : '',
         disabled: field.disabled
       });
 

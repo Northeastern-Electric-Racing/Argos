@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { formatDisplayValue } from 'src/utils/pipes.utils';
 import { BatteryPercentageComponent } from '../battery-percentage/battery-percentage.component';
 import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
 import TypographyComponent from '../typography/typography.component';
@@ -54,9 +55,7 @@ export class InfoValueDisplayComponent {
   unit = input<string>('');
   unitStyle = input<string>('');
 
-  formattedValue = computed(() => {
-    return (this.value()?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
-  });
+  formattedValue = computed(() => formatDisplayValue(this.value(), this.precision(), this.unit()));
 
   // Consolidated widget input
   widget = input<WidgetConfig>();

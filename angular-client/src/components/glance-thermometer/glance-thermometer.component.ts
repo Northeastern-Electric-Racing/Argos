@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Compact thermometer widget sized for the At A Glance bar.
@@ -15,17 +15,17 @@ export class GlanceThermometerComponent {
   min = input<number>(0);
   max = input<number>(100);
 
-  get mercuryHeight(): string {
+  // Mercury fills 0–70% of the tube area (leaving room for glass top)
+  mercuryHeight = computed(() => {
     const clamped = Math.max(this.min(), Math.min(this.temperature(), this.max()));
     const pct = ((clamped - this.min()) / (this.max() - this.min())) * 100;
-    // Mercury fills 0–70% of the tube area (leaving room for glass top)
     return Math.max(5, pct * 0.7) + '%';
-  }
+  });
 
-  get mercuryColor(): string {
+  mercuryColor = computed(() => {
     const range = this.max() - this.min();
     if (this.temperature() < this.min() + range / 2) return '#3b82f6';
     if (this.temperature() < this.min() + range / 1.5) return '#eab308';
     return '#ef4444';
-  }
+  });
 }
