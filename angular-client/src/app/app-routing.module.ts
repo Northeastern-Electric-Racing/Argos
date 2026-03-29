@@ -27,8 +27,7 @@ export const appRoutes = {
   efusesRoute
 };
 
-// Routes use loadComponent for lazy loading / route-level code splitting.
-// Each page is loaded on demand rather than bundled into the initial chunk.
+// Lazy-loaded routes: each page is split into its own chunk to reduce initial bundle size (#199).
 export const routes: Routes = [
   {
     path: 'landing',
