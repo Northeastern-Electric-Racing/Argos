@@ -5,14 +5,13 @@ import { Run } from 'src/utils/types.utils';
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'general-buttons',
   templateUrl: './general-buttons.component.html',
   styleUrl: './general-buttons.component.css',
   standalone: true,
-  imports: [RunSelectorComponent, ButtonComponent, SelectDropdownComponent, HStackComponent]
+  imports: [RunSelectorComponent, ButtonComponent, SelectDropdownComponent]
 })
 export class GeneralButtonsComponent {
   historicalOn = input<boolean>(false);

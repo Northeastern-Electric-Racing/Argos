@@ -7,6 +7,45 @@
   flex-flow: column;
 }
 
+/* Toolbar: replaces the old inline-styled hstack */
+.toolbar {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  align-self: flex-start;
+  width: 100%;
+}
+
+.toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.config-group {
+  margin-left: 15px;
+}
+
+.input-label {
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.toolbar-header {
+  margin-top: 5px;
+  margin-bottom: 0;
+  padding-right: 15px;
+  flex-shrink: 0;
+}
+
 .graph-header {
   flex: 0 1 auto;
 }
@@ -32,6 +71,10 @@
 }
 
 .mobile-sidebar {
+  display: none;
+}
+
+.mobile-value-strip {
   display: none;
 }
 
@@ -63,7 +106,36 @@
   width: 100% !important;
 }
 
+/* ======================== Mobile ======================== */
 @media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .config-group {
+    margin-left: 0;
+  }
+
+  .toolbar-header {
+    padding-right: 0;
+    text-align: center;
+    margin-top: 2px;
+  }
+
   .content-div {
     flex-flow: column;
   }
@@ -76,11 +148,32 @@
     display: block;
   }
 
+  .mobile-value-strip {
+    display: block;
+  }
+
   .right-container {
-    flex: 1 1 auto;
+    height: 50vh;
+    min-height: 250px;
+    padding-right: 8px;
+    padding-left: 8px;
   }
 
   .graph-caption {
     flex: 0 0 auto;
+  }
+
+  ::ng-deep .time-range-input {
+    width: 70px !important;
+  }
+
+  ::ng-deep .y-axis-input {
+    width: 55px !important;
+  }
+
+  ::ng-deep .p-select-label,
+  ::ng-deep .p-select-label.p-placeholder {
+    width: auto !important;
+    min-width: 100px;
   }
 }

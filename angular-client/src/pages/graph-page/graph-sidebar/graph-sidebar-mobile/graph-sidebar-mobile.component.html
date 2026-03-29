@@ -1,16 +1,39 @@
-<div class="popup-tab" (click)="toggleSidebar()">
-  <typography
-    additionalStyles="margin: 0; margin-bottom: 5px; cursor: pointer;"
-    variant="subheader"
-    content="Select Data Type"
-  />
-  @if (showSelection) {
-    <div class="container" @toggleSidebar>
-      @for (node of nodesWithVisibilityToggle | async; track node) {
-        <div class="subcontainer" (click)="$event.stopPropagation()">
-          <node-display [node]="node" searchFilter="" [isDesktop]="false" />
-        </div>
-      }
+<button class="toggle-btn" (click)="toggleSidebar()">
+  Select Topics
+</button>
+
+<p-sidebar [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
+  <ng-template pTemplate="header">
+    <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
+  </ng-template>
+  <ng-template pTemplate="content">
+    <div class="sidebar-content">
+      <argos-button
+        [onClick]="clearSelections"
+        label="Clear Topics"
+        additionalStyles="background-color: #323232; border: 1.4px solid #027bd7; width: 100%;"
+      />
+      <p-tree
+        [value]="treeNodes"
+        (onNodeSelect)="nodeSelect($event)"
+        (onNodeUnselect)="onNodeUnselect($event)"
+        [(selection)]="selectedNodes"
+        [filter]="true"
+        filterPlaceholder="Search topics..."
+        styleClass="w-full"
+        [style]="{ height: 'calc(100vh - 160px)', overflow: 'auto' }"
+        [metaKeySelection]="false"
+        selectionMode="multiple"
+      >
+        <ng-template let-node pTemplate="default">
+          <div class="tree-node-container" (click)="onRowClick($event, node)">
+            <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
+            @if (node.children?.length === 0) {
+              <typography [content]="node.data.displayValue | async" variant="subheader" />
+            }
+          </div>
+        </ng-template>
+      </p-tree>
     </div>
-  }
-</div>
+  </ng-template>
+</p-sidebar>
