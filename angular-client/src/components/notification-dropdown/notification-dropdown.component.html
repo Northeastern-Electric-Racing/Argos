@@ -1,7 +1,7 @@
 <div class="dropdown-container">
   <div class="dropdown-header">
     <typography variant="header" content="Notifications" />
-    @if (notificationLogService.notifications().length > 0) {
+    @if (notificationLogService.recentNotifications().length > 0) {
       <p-button
         label="Clear All"
         severity="danger"
@@ -42,7 +42,7 @@
     }
   </div>
 
-  @if (notificationLogService.notifications().length > 0) {
+  @if (notificationLogService.recentNotifications().length > 0) {
     <div class="dropdown-footer">
       <p-button label="View All" [text]="true" (onClick)="viewAll()" ariaLabel="View all notifications" />
     </div>
