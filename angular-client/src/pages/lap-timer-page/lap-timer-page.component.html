@@ -1,61 +1,183 @@
-<div class="page-container">
-  <info-background svgIcon="timer" title="Lap Timer">
-    <div class="timer-content">
-      <!-- Main timer display -->
-      <div class="timer-display">
-        <typography variant="info-subtitle" content="TOTAL" additionalStyles="fontSize: 14px; letter-spacing: 2px;" />
-        <div class="time-value">{{ timer.formattedTotal() }}</div>
-        <div class="current-lap-row">
-          <typography variant="info-subtitle" content="LAP {{ timer.lapCount() + 1 }}" additionalStyles="fontSize: 12px; letter-spacing: 1px;" />
-          <div class="current-lap-time">{{ timer.formattedCurrentLap() }}</div>
-        </div>
-      </div>
-
-      <!-- Controls -->
-      <div class="controls">
-        @if (timer.isIdle()) {
-          <button class="control-btn start-btn" (click)="onStartResume()">Start</button>
-        } @else if (timer.isRunning()) {
-          <hstack spacing="12px">
-            <button class="control-btn lap-btn" (click)="onLap()">Lap</button>
-            <button class="control-btn pause-btn" (click)="onPause()">Pause</button>
-          </hstack>
-        } @else if (timer.isPaused()) {
-          <hstack spacing="12px">
-            <button class="control-btn stop-btn" (click)="onStop()">Stop</button>
-            <button class="control-btn start-btn" (click)="onStartResume()">Resume</button>
-          </hstack>
-        }
-      </div>
-
-      <!-- Lap list -->
-      @if (timer.laps().length > 0 || timer.isRunning() || timer.isPaused()) {
-        <div class="lap-list-container">
-          <div class="lap-list-header">
-            <hstack justifyContent="space-between" spacing="0px">
-              <typography variant="info-subtitle" content="Lap" additionalStyles="fontSize: 13px; text-align: left;" />
-              <typography variant="info-subtitle" content="Time" additionalStyles="fontSize: 13px; text-align: right;" />
-            </hstack>
+<div class="page-grid">
+  <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem">
+    <!-- Timer hero -->
+    <mat-grid-tile [colspan]="3" [rowspan]="10">
+      <info-background svgIcon="timer" title="Lap Timer" style="width: 100%; height: 100%">
+        <div class="timer-content">
+          <div class="timer-display">
+            <typography variant="info-subtitle" content="TOTAL" additionalStyles="fontSize: 13px; letter-spacing: 2px;" />
+            <div class="time-value">{{ timer.formattedTotal() }}</div>
+            <div class="current-lap-row">
+              <typography
+                variant="info-subtitle"
+                content="LAP {{ timer.lapCount() + 1 }}"
+                additionalStyles="fontSize: 11px; letter-spacing: 1px;"
+              />
+              <div class="current-lap-time">{{ timer.formattedCurrentLap() }}</div>
+            </div>
           </div>
-          <div class="lap-list">
-            @for (lap of timer.laps().slice().reverse(); track lap.number) {
-              <div class="lap-row">
-                <hstack justifyContent="space-between" spacing="0px">
-                  <typography variant="info-subtitle" [content]="'Lap ' + lap.number" additionalStyles="fontSize: 14px; color: #EFEFEF;" />
-                  <typography variant="info-subtitle" [content]="timer.formatTime(lap.duration)" additionalStyles="fontSize: 14px; color: #EFEFEF; font-variant-numeric: tabular-nums;" />
-                </hstack>
-              </div>
+          <div class="controls">
+            @if (timer.isIdle()) {
+              <button class="control-btn start-btn" (click)="onStartResume()">Start</button>
+            } @else if (timer.isRunning()) {
+              <hstack spacing="12px">
+                <button class="control-btn lap-btn" (click)="onLap()">Lap</button>
+                <button class="control-btn pause-btn" (click)="onPause()">Pause</button>
+              </hstack>
+            } @else if (timer.isPaused()) {
+              <hstack spacing="12px">
+                <button class="control-btn stop-btn" (click)="onStop()">Stop</button>
+                <button class="control-btn start-btn" (click)="onStartResume()">Resume</button>
+              </hstack>
             }
           </div>
+          @if (timer.isIdle() && timer.laps().length > 0) {
+            <button class="control-btn reset-btn" (click)="onReset()">Reset</button>
+          }
         </div>
-      }
+      </info-background>
+    </mat-grid-tile>
 
-      <!-- Reset (only when stopped with laps) -->
-      @if (timer.isIdle() && timer.laps().length > 0) {
-        <div class="reset-container">
-          <button class="control-btn reset-btn" (click)="onReset()">Reset</button>
+    <!-- Session summary -->
+    <mat-grid-tile [colspan]="1" [rowspan]="10">
+      <info-background title="Session" style="width: 100%; height: 100%">
+        <div class="session-stats">
+          <div
+            style="
+              font-family: 'Roboto', monospace;
+              font-size: 2.4rem;
+              font-weight: bold;
+              color: #fbf7f5;
+              text-align: center;
+            "
+          >
+            {{ timer.lapCount() }}
+          </div>
+          <div style="font-size: 11px; color: #777; text-align: center; margin-bottom: 4px">Laps</div>
+          <div class="stat-row">
+            <span class="stat-label">Best</span
+            ><span class="stat-value best-text">{{
+              timer.bestLap() ? timer.formatTime(timer.bestLap()!.duration) : '—'
+            }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Avg</span
+            ><span class="stat-value">{{ timer.lapCount() > 0 ? timer.formatTime(timer.averageLapTime()) : '—' }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Energy</span
+            ><span class="stat-value">{{ timer.totalEnergyUsed() | number: '1.1-1' }}%</span>
+          </div>
         </div>
-      }
-    </div>
-  </info-background>
+      </info-background>
+    </mat-grid-tile>
+
+    <!-- Live speed -->
+    <mat-grid-tile [colspan]="2" [rowspan]="5">
+      <info-background svgIcon="speed" title="Speed" style="width: 100%; height: 100%">
+        <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" color="#1db954" [size]="160" />
+      </info-background>
+    </mat-grid-tile>
+
+    <!-- Live SOC + Motor Temp stacked in right column -->
+    <mat-grid-tile [colspan]="1" [rowspan]="5">
+      <info-background title="Battery" style="width: 100%; height: 100%">
+        <div style="display: flex; align-items: baseline; justify-content: center; padding: 8px 0">
+          <span class="live-big">{{ liveSoc() | number: '1.0-0' }}</span>
+          <span class="live-unit">%</span>
+        </div>
+      </info-background>
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="1" [rowspan]="5">
+      <info-background title="Motor" style="width: 100%; height: 100%">
+        <div style="display: flex; align-items: baseline; justify-content: center; padding: 8px 0">
+          <span class="live-big">{{ liveMotorTemp() | number: '1.0-0' }}°</span>
+          <span class="live-unit">C</span>
+        </div>
+      </info-background>
+    </mat-grid-tile>
+
+    <!-- Lap list — full width bottom -->
+    <mat-grid-tile [colspan]="6" [rowspan]="20">
+      <info-background title="Laps" style="width: 100%; height: 100%">
+        <div class="lap-list-full">
+          @if (timer.laps().length > 0 || timer.isRunning() || timer.isPaused()) {
+            <div class="lap-list-header">
+              <hstack justifyContent="space-between" spacing="0px">
+                <typography variant="info-subtitle" content="Lap" additionalStyles="fontSize: 13px;" />
+                <hstack spacing="40px">
+                  <typography variant="info-subtitle" content="Time" additionalStyles="fontSize: 13px;" />
+                  <typography variant="info-subtitle" content="Speed" additionalStyles="fontSize: 13px;" />
+                  <typography variant="info-subtitle" content="Energy" additionalStyles="fontSize: 13px;" />
+                  <typography variant="info-subtitle" content="Temp" additionalStyles="fontSize: 13px;" />
+                </hstack>
+              </hstack>
+            </div>
+            <div class="lap-list">
+              @for (lap of timer.laps().slice().reverse(); track lap.number) {
+                <div
+                  class="lap-entry"
+                  [class.best-lap]="timer.bestLap()?.number === lap.number && timer.laps().length > 1"
+                  [class.worst-lap]="timer.worstLap()?.number === lap.number"
+                >
+                  <div class="lap-row">
+                    <hstack justifyContent="space-between" spacing="0px">
+                      <typography
+                        variant="info-subtitle"
+                        [content]="'Lap ' + lap.number"
+                        additionalStyles="fontSize: 14px; color: #EFEFEF;"
+                      />
+                      <hstack spacing="24px">
+                        <div class="lap-time-col">
+                          <typography
+                            variant="info-subtitle"
+                            [content]="timer.formatTime(lap.duration)"
+                            additionalStyles="fontSize: 14px; color: #EFEFEF; font-variant-numeric: tabular-nums;"
+                          />
+                          @if (timer.deltaFromBest(lap.duration); as delta) {
+                            @if (delta !== 0) {
+                              <span
+                                class="lap-delta"
+                                [class.delta-positive]="delta > 0"
+                                [class.delta-negative]="delta < 0"
+                                >{{ timer.formatDelta(delta) }}</span
+                              >
+                            }
+                          }
+                        </div>
+                        <span class="stat-value">{{
+                          lap.stats.avgSpeed !== null ? (lap.stats.avgSpeed | number: '1.0-0') + ' mph' : '—'
+                        }}</span>
+                        <span class="stat-value">{{
+                          lap.stats.energyUsed !== null ? (lap.stats.energyUsed | number: '1.2-2') + '%' : '—'
+                        }}</span>
+                        <span class="stat-value">{{
+                          lap.stats.maxMotorTemp !== null ? (lap.stats.maxMotorTemp | number: '1.0-0') + '°C' : '—'
+                        }}</span>
+                      </hstack>
+                    </hstack>
+                  </div>
+                </div>
+              }
+            </div>
+            @if (timer.laps().length > 1) {
+              <div class="avg-lap">
+                <typography variant="info-subtitle" content="AVG" additionalStyles="fontSize: 12px; letter-spacing: 1px;" />
+                <span class="avg-lap-time">{{ timer.formatTime(timer.averageLapTime()) }}</span>
+              </div>
+            }
+          } @else {
+            <div style="padding: 16px; text-align: center">
+              <typography
+                variant="info-subtitle"
+                content="Hit Start then Lap to begin recording"
+                additionalStyles="fontSize: 13px; color: #555;"
+              />
+            </div>
+          }
+        </div>
+      </info-background>
+    </mat-grid-tile>
+  </mat-grid-list>
 </div>

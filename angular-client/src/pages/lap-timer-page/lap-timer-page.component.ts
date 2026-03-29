@@ -16,9 +16,13 @@ import { topics } from 'src/utils/topic.utils';
   styleUrl: './lap-timer-page.component.css',
   standalone: true,
   imports: [
-    MatGridList, MatGridTile,
-    InfoBackgroundComponent, TypographyComponent,
-    HStackComponent, HalfGaugeComponent, DecimalPipe
+    MatGridList,
+    MatGridTile,
+    InfoBackgroundComponent,
+    TypographyComponent,
+    HStackComponent,
+    HalfGaugeComponent,
+    DecimalPipe
   ]
 })
 export default class LapTimerPageComponent implements OnInit, OnDestroy {
@@ -57,8 +61,16 @@ export default class LapTimerPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPause(): void { this.timer.pause(); }
-  onLap(): void { this.timer.lap(); }
-  onStop(): void { this.timer.stop(); }
-  onReset(): void { this.timer.reset(); }
+  onPause(): void {
+    this.timer.pause();
+  }
+  onLap(): void {
+    this.timer.lap();
+  }
+  onStop(): void {
+    this.timer.stop();
+  }
+  onReset(): void {
+    this.timer.reset();
+  }
 }

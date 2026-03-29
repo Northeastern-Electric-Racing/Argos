@@ -192,15 +192,10 @@ export default class LapTimerService {
   }
 
   private snapshotStats(): LapStats {
-    const avgSpeed = this.speedSamples.length > 0
-      ? this.speedSamples.reduce((a, b) => a + b, 0) / this.speedSamples.length
-      : null;
-    const maxSpeed = this.speedSamples.length > 0
-      ? Math.max(...this.speedSamples)
-      : null;
-    const energyUsed = this.lapSocStart !== null && this.lastSoc !== null
-      ? this.lapSocStart - this.lastSoc
-      : null;
+    const avgSpeed =
+      this.speedSamples.length > 0 ? this.speedSamples.reduce((a, b) => a + b, 0) / this.speedSamples.length : null;
+    const maxSpeed = this.speedSamples.length > 0 ? Math.max(...this.speedSamples) : null;
+    const energyUsed = this.lapSocStart !== null && this.lastSoc !== null ? this.lapSocStart - this.lastSoc : null;
 
     return {
       avgSpeed,
@@ -208,7 +203,7 @@ export default class LapTimerService {
       socStart: this.lapSocStart,
       socEnd: this.lastSoc,
       energyUsed,
-      maxMotorTemp: this.lapMaxMotorTemp,
+      maxMotorTemp: this.lapMaxMotorTemp
     };
   }
 
