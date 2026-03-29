@@ -1,0 +1,4 @@
+services:
+  calypso:
+    image: calypso:debug-efuses-v3
+    command: ["simulate"]

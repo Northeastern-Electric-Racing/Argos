@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
@@ -17,7 +17,7 @@ export default class TorqueDisplayComponent implements OnInit {
   torque: number = 0;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.TORQUE).subscribe((value) => {
+    this.storage.get(topics.torque()).subscribe((value) => {
       this.torque = parseInt(value.values[0]);
     });
   }

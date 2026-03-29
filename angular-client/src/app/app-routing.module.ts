@@ -5,6 +5,7 @@ import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-vi
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
+import EfusesPageComponent from 'src/pages/efuses-page/efuses-page.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
@@ -23,6 +24,7 @@ const faultsRoute = () => `/faults`;
 const faultsGraphRoute = () => `/faults/fault-graph`;
 const commandsRoute = () => `/commands`;
 const rulesRoute = () => `/rules`;
+const efusesRoute = () => `/efuses`;
 
 export const appRoutes = {
   landingRoute,
@@ -35,7 +37,8 @@ export const appRoutes = {
   faultsRoute,
   faultsGraphRoute,
   commandsRoute,
-  rulesRoute
+  rulesRoute,
+  efusesRoute
 };
 
 // Routes should be defined carefully in accordance with the appRoutes
@@ -52,7 +55,8 @@ const routes: Routes = [
   { path: 'faults/fault-graph', component: GraphPageComponent },
   { path: 'camera', component: CameraPageComponent },
   { path: 'commands', component: CarCommandComponent },
-  { path: 'rules', component: NotificationRulesPageComponent }
+  { path: 'rules', component: NotificationRulesPageComponent },
+  { path: 'efuses', component: EfusesPageComponent }
 ];
 
 @NgModule({

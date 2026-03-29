@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import HalfGaugeComponent from '../half-gauge/half-gauge.component';
 
@@ -16,7 +16,7 @@ export default class SpeedDisplayComponent implements OnInit {
   speed: number = 0;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.SPEED).subscribe((value) => {
+    this.storage.get(topics.speed()).subscribe((value) => {
       this.speed = parseInt(value.values[0]);
     });
   }

@@ -1,7 +1,7 @@
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import PackVoltageDisplayComponent from './components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
@@ -51,7 +51,7 @@ export default class ChargingPageComponent implements OnInit, OnDestroy {
     }, 1000);
 
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.LOCATION).subscribe((value) => {
+      this.storage.get(topics.location()).subscribe((value) => {
         [this.location] = value.values || ['No Location Set'];
       })
     );

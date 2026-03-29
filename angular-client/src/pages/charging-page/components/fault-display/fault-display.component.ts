@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -34,26 +34,25 @@ export default class FaultDisplayComponent implements OnInit, OnDestroy {
     const chargerFaultAndDisplayNames = [
       {
         displayName: 'Comm Timeout',
-        faultIdentifier: DataTypeEnum.COMM_TIMEOUT_FAULT
+        faultIdentifier: topics.commTimeoutFault()
       },
       {
         displayName: 'Hardware Failure',
-        faultIdentifier: DataTypeEnum.HARDWARE_FAILURE_FAULT
+        faultIdentifier: topics.hardwareFailureFault()
       },
       {
         displayName: 'Over Temp',
-        faultIdentifier: DataTypeEnum.OVER_TEMP_FAULT
+        faultIdentifier: topics.overTempFault()
       },
       {
         displayName: 'Over Voltage Fault',
-        faultIdentifier: DataTypeEnum.OVER_VOLTAGE_FAULT
+        faultIdentifier: topics.overVoltageFault()
       },
       {
         displayName: 'Wrong Battery Connect',
-        faultIdentifier: DataTypeEnum.WRONG_BAT_CONNECT_FAULT
+        faultIdentifier: topics.wrongBatConnectFault()
       }
     ];
-    // Subscribe to each charger fault, with a display name (to display when the fault is triggered)
     chargerFaultAndDisplayNames.forEach((faultAndDisplayName) => {
       this.faultSubcribe(faultAndDisplayName.displayName, faultAndDisplayName.faultIdentifier, FaultType.Charger);
     });
@@ -61,75 +60,74 @@ export default class FaultDisplayComponent implements OnInit, OnDestroy {
     const bmsFaultAndDisplayNames = [
       {
         displayName: 'Open Wire',
-        faultIdentifier: DataTypeEnum.OPEN_WIRE
+        faultIdentifier: topics.openWire()
       },
       {
         displayName: 'Charger Limit Enforcement',
-        faultIdentifier: DataTypeEnum.CHARGER_LIMIT_ENFORCEMENT_FAULT
+        faultIdentifier: topics.chargerLimitEnforcementFault()
       },
       {
         displayName: 'Charger Can Fault',
-        faultIdentifier: DataTypeEnum.CHARGER_CAN_FAULT
+        faultIdentifier: topics.chargerCanFault()
       },
       {
         displayName: 'Battery Thermistor',
-        faultIdentifier: DataTypeEnum.BATTERY_THERMISTOR
+        faultIdentifier: topics.batteryThermistor()
       },
       {
         displayName: 'Charger Safety Relay',
-        faultIdentifier: DataTypeEnum.CHARGER_SAFETY_RELAY
+        faultIdentifier: topics.chargerSafetyRelay()
       },
       {
         displayName: 'Discharge Limit Enforcement',
-        faultIdentifier: DataTypeEnum.DISCHARGE_LIMIT_ENFORCEMENT_FAULT
+        faultIdentifier: topics.dischargeLimitEnforcementFault()
       },
       {
         displayName: 'External Can Fault',
-        faultIdentifier: DataTypeEnum.EXTERNAL_CAN_FAULT
+        faultIdentifier: topics.externalCanFault()
       },
       {
         displayName: 'Weak Pack Fault',
-        faultIdentifier: DataTypeEnum.WEAK_PACK_FAULT
+        faultIdentifier: topics.weakPackFault()
       },
       {
         displayName: 'Low Cell Voltage',
-        faultIdentifier: DataTypeEnum.LOW_CELL_VOLTAGE
+        faultIdentifier: topics.lowCellVoltage()
       },
       {
         displayName: 'Charge Reading Mismatch',
-        faultIdentifier: DataTypeEnum.CHARGE_READING_MISMATCH
+        faultIdentifier: topics.chargeReadingMismatch()
       },
       {
         displayName: 'Current Sensor Fault',
-        faultIdentifier: DataTypeEnum.CURRENT_SENSOR_FAULT
+        faultIdentifier: topics.currentSensorFault()
       },
       {
         displayName: 'Internal Cell Comm Fault',
-        faultIdentifier: DataTypeEnum.INTERNAL_CELL_COMM_FAULT
+        faultIdentifier: topics.internalCellCommFault()
       },
       {
         displayName: 'Internal Software Fault',
-        faultIdentifier: DataTypeEnum.INTERNAL_SOFTWARE_FAULT
+        faultIdentifier: topics.internalSoftwareFault()
       },
       {
         displayName: 'Pack Overheat',
-        faultIdentifier: DataTypeEnum.PACK_OVERHEAT
+        faultIdentifier: topics.packOverheat()
       },
       {
         displayName: 'Cell Undervoltage',
-        faultIdentifier: DataTypeEnum.CELL_UNDERVOLTAGE
+        faultIdentifier: topics.cellUndervoltage()
       },
       {
         displayName: 'Cell Overvoltage',
-        faultIdentifier: DataTypeEnum.CELL_OVERVOLTAGE
+        faultIdentifier: topics.cellOvervoltage()
       },
       {
         displayName: 'Cells Not Balancing',
-        faultIdentifier: DataTypeEnum.CELLS_NOT_BALANCING
+        faultIdentifier: topics.cellsNotBalancing()
       }
     ];
 
-    // Subscribe to each BMS fault, with a display name (to display when the fault is triggered)
     bmsFaultAndDisplayNames.forEach((faultAndDisplayName) => {
       this.faultSubcribe(faultAndDisplayName.displayName, faultAndDisplayName.faultIdentifier, FaultType.BMS);
     });
@@ -143,7 +141,7 @@ export default class FaultDisplayComponent implements OnInit, OnDestroy {
    * @param faultIdentifier the identifier for the fault.
    * @param faultType the type of the fault.
    */
-  private faultSubcribe(displayName: string, faultIdentifier: DataTypeEnum, faultType: FaultType) {
+  private faultSubcribe(displayName: string, faultIdentifier: string, faultType: FaultType) {
     let lastFaultValue = 0;
     this.subscriptions.push(
       this.storage.get(faultIdentifier).subscribe((value) => {
@@ -163,7 +161,6 @@ export default class FaultDisplayComponent implements OnInit, OnDestroy {
    * @param faultName the name of the fault, to be displayed.
    */
   private addFault(faultValue: number, faultName: string, faultType: FaultType, lastFaultValue: number) {
-    // only add fault if it is positve for a fault and the last value for this fault was not a fault
     if (faultValue !== 0 && lastFaultValue === 0) {
       if (this.faults.length >= 50) {
         this.faults.pop();

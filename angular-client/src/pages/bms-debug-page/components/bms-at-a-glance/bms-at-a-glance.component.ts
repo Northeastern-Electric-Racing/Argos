@@ -1,6 +1,5 @@
 import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString, getConnectionDotStatusColor } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
@@ -113,13 +112,13 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.PACK_VOLTAGE).subscribe((value) => {
+      this.storage.get(topics.packVoltage()).subscribe((value) => {
         this.voltage = parseInt(value.values[0]);
       }),
-      this.storage.get(DataTypeEnum.PACK_TEMP).subscribe((value) => {
+      this.storage.get(topics.packTemp()).subscribe((value) => {
         this.temperature = parseInt(value.values[0]);
       }),
-      this.storage.get(DataTypeEnum.STATE_OF_CHARGE).subscribe((value) => {
+      this.storage.get(topics.stateOfCharge()).subscribe((value) => {
         this.chargeState = parseInt(value.values[0]);
       }),
       this.storage.get(topics.accCCL()).subscribe((value) => {
