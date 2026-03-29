@@ -15,7 +15,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 @Component({
   selector: 'landing-page-mobile',
   templateUrl: './landing-page-mobile.component.html',
-  styleUrls: ['./landing-page-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TypographyComponent,
