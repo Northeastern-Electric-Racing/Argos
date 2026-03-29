@@ -3,6 +3,9 @@
 
 # environment config
 **/.env
+
+# Claude Code
+.claude/settings.json
 scylla-server-typescript/src/prisma/mydatabase.db
 scylla-server-typescript/src/prisma/mydatabase.db-journal
 scylla-server/files
