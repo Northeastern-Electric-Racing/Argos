@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
@@ -14,7 +14,7 @@ import { topics } from 'src/utils/topic.utils';
   selector: 'lap-timer-page',
   templateUrl: './lap-timer-page.component.html',
   styleUrl: './lap-timer-page.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatGridList,
     MatGridTile,
