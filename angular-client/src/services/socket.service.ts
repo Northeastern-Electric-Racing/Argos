@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { FaultData } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
 
@@ -26,18 +26,15 @@ export default class SocketService {
   receiveData = (storage: Storage, faultService: FaultService) => {
     this.socket.on('data', (message: string) => {
       try {
-        /* Parse the message and store it in the storage service */
-
         const data = JSON.parse(message) as ServerData;
         storage.setCurrentRunId(data.runId);
 
-        /* Create key based on name and unit for hashmap */
         const key = data.name;
         const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
         if (Date.now() - this.lastLatencyTimestamp > 1000) {
           const latency = Date.now() - data.timestamp;
-          storage.addValue(DataTypeEnum.LATENCY, {
+          storage.addValue(topics.latency(), {
             values: [latency.toString()],
             time: data.timestamp.toString(),
             unit: 'ms'

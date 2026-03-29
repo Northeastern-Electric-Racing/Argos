@@ -1,0 +1,91 @@
+<div class="rtds-card-shell">
+  <info-background title="RTDS Debug" icon="volume_up">
+    <div class="rtds-card-content">
+      <vstack [align]="'stretch'" [spacing]="'15px'">
+        <div class="rtds-button-row">
+          <div class="rtds-button-group" [class.locked]="isLocked()">
+            <button class="rtds-button rtds-button-sound" [disabled]="isLocked()" (click)="sendRtdsCommand(0)">
+              Sound RTDS
+            </button>
+            <button class="rtds-button rtds-button-cancel" [disabled]="isLocked()" (click)="sendRtdsCommand(1)">
+              Cancel RTDS
+            </button>
+            <button class="rtds-button rtds-button-start" [disabled]="isLocked()" (click)="sendRtdsCommand(2)">
+              Start Reverse
+            </button>
+            <button class="rtds-button rtds-button-stop" [disabled]="isLocked()" (click)="sendRtdsCommand(3)">
+              Stop Reverse
+            </button>
+          </div>
+          <lock-button [locked]="isLocked()" (pressed)="onLockButtonClick()"></lock-button>
+        </div>
+        <div class="rtds-button-subtext">
+          Note: These are oneshot trigger buttons (i.e., they don't force a continuous state on the car).<br />
+          The car still triggers RTDS/Reverse automatically as normal regardless of these buttons.
+        </div>
+
+        <div class="rtds-display-grid">
+          <div class="rtds-display">
+            <seven-segment-display
+              [value]="formatState(pinState)"
+              [digits]="1"
+              [decimals]="0"
+              [fontSize]="40"
+              [unitFontSize]="0"
+              [paddingBottom]="4"
+              [paddingLeft]="12"
+              [paddingRight]="12"
+              [paddingTop]="10"
+            />
+            <div class="rtds-display-label">Pin State</div>
+          </div>
+
+          <div class="rtds-display">
+            <seven-segment-display
+              [value]="formatState(soundingState)"
+              [digits]="1"
+              [decimals]="0"
+              [fontSize]="40"
+              [unitFontSize]="0"
+              [paddingBottom]="4"
+              [paddingLeft]="12"
+              [paddingRight]="12"
+              [paddingTop]="10"
+            />
+            <div class="rtds-display-label">Sounding State</div>
+          </div>
+
+          <div class="rtds-display">
+            <seven-segment-display
+              [value]="formatState(reverseState)"
+              [digits]="1"
+              [decimals]="0"
+              [fontSize]="40"
+              [unitFontSize]="0"
+              [paddingBottom]="4"
+              [paddingLeft]="12"
+              [paddingRight]="12"
+              [paddingTop]="10"
+            />
+            <div class="rtds-display-label">Reverse State</div>
+          </div>
+
+          <div class="rtds-display">
+            <seven-segment-display
+              [value]="formatState(errorState)"
+              [digits]="1"
+              [decimals]="0"
+              [fontSize]="40"
+              [unitFontSize]="0"
+              [paddingBottom]="4"
+              [paddingLeft]="12"
+              [paddingRight]="12"
+              [paddingTop]="10"
+            />
+            <div class="rtds-display-label">Error State</div>
+          </div>
+        </div>
+      </vstack>
+    </div>
+  </info-background>
+</div>

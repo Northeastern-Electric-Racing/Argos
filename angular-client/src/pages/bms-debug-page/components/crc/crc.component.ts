@@ -1,8 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-
 import { ConnectionDotWithMessageComponent } from '../../../../components/connection-dot-with-message/connection-dot-with-message.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -19,7 +18,7 @@ export class CRCComponent implements OnInit {
   pecErrorChip: number | undefined = undefined;
 
   ngOnInit(): void {
-    this.storage.get(DataTypeEnum.PER_CELL_CRC).subscribe((value) => {
+    this.storage.get(topics.pecErrorChip()).subscribe((value) => {
       if (parseFloat(value.time) > Date.now() - 4000) {
         this.pecErrorChip = parseInt(value.values[0]);
       } else {

@@ -71,6 +71,15 @@ pub async fn get_all_rules(
 }
 
 #[debug_handler]
+pub async fn get_client_subscribed_rules(
+    Path(client_id): Path<String>,
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+) -> Json<Vec<Rule>> {
+    debug!("Fetching subscribed rules for client {}", client_id);
+    Json(rules_manager.get_client_rules(ClientId(client_id)).await)
+}
+
+#[debug_handler]
 pub async fn get_all_rules_with_client_info(
     Path(client_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
@@ -81,6 +90,14 @@ pub async fn get_all_rules_with_client_info(
             .get_all_rules_with_subscription_status(ClientId(client_id))
             .await,
     ))
+}
+
+#[debug_handler]
+pub async fn check_rule(
+    Extension(rules_manager): Extension<Arc<RuleManager>>,
+    Json(rule): Json<Rule>,
+) -> Result<Json<bool>, ScyllaError> {
+    Ok(Json(rules_manager.check_duplicate(&rule).await))
 }
 
 #[serde_as]

@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 
 import { DividerComponent } from '../divider/divider';
@@ -24,10 +24,10 @@ export default class LatencyDisplayComponent implements OnInit {
   newLatency: number = 0;
 
   ngOnInit(): void {
-    this.storage.get(DataTypeEnum.LATENCY).subscribe((value) => {
+    this.storage.get(topics.latency()).subscribe((value) => {
       this.latency = parseInt(value.values[0]);
     });
-    this.storage.get(DataTypeEnum.NEW_LATENCY).subscribe((value) => {
+    this.storage.get(topics.newLatency()).subscribe((value) => {
       this.newLatency = parseInt(value.values[0]);
     });
   }
