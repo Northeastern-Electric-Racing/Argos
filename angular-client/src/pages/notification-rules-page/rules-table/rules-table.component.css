@@ -32,3 +32,51 @@
   border-bottom: 1px solid #333;
   padding: 8px 12px;
 }
+
+@media (max-width: 768px) {
+  /* Hide "Uploaded By" (4th column) and "Description" (5th column) on mobile */
+  :host ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(4),
+  :host ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(5),
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(4),
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(5) {
+    display: none;
+  }
+
+  :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+
+  /* Tighten the checkbox column */
+  :host ::ng-deep .p-datatable .p-datatable-thead > tr > th:first-child,
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td:first-child {
+    width: 2.5rem;
+    padding-left: 4px;
+    padding-right: 2px;
+  }
+
+  /* Tighten the actions column */
+  :host ::ng-deep .p-datatable .p-datatable-thead > tr > th:last-child,
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td:last-child {
+    width: 4rem;
+  }
+
+  .action-icons {
+    gap: 0;
+  }
+
+  .action-icons button {
+    min-width: unset;
+    padding: 4px;
+  }
+
+  .empty-state {
+    padding: 20px;
+    font-size: 0.9rem;
+  }
+}

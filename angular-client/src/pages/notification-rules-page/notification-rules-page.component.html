@@ -24,13 +24,11 @@
         label="Remove"
         [onClick]="onRemoveSelected"
         [disabled]="!hasSelection()"
-        [additionalStyles]="hasSelection() ? '' : 'background-color: #555;'"
       />
       <argos-button
         label="Toggle Subscription"
         [onClick]="onToggleSubscription"
         [disabled]="!hasSelection()"
-        [additionalStyles]="hasSelection() ? '' : 'background-color: #555;'"
       />
     </div>
     <div class="search-container">
