@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import CurrentTotalTimerComponent from 'src/components/current-total-timer/current-total-timer.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
@@ -25,7 +25,7 @@ export default class BalancingStatusComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.storage.getTimerData(DataTypeEnum.STATUS_BALANCING).subscribe((value) => {
+      this.storage.getTimerData(topics.statusBalancing()).subscribe((value) => {
         const statusBalancingValue = value.last_value;
         if (this.isBalancing) {
           if (!(statusBalancingValue === 1)) {

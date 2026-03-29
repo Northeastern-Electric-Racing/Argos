@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -16,7 +16,7 @@ export default class CurrentDisplayComponent implements OnInit {
   amps: number = 0;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.CURRENT).subscribe((value) => {
+    this.storage.get(topics.current()).subscribe((value) => {
       this.amps = parseFloat(value.values[0]);
     });
   }

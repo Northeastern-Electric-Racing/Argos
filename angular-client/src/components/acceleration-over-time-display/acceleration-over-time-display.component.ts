@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoGraphComponent } from '../info-graph/info-graph.component';
 
@@ -16,7 +16,7 @@ export default class AccelerationOverTimeDisplayComponent implements OnInit {
   data: GraphData[] = [];
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.ACCELERATION).subscribe((value) => {
+    this.storage.get(topics.acceleration()).subscribe((value) => {
       this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
     });
   }
