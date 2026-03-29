@@ -3,10 +3,10 @@ use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
 use serde::Serialize;
-use socketioxide::adapter::Adapter;
-use socketioxide::handler::{FromConnectParts, Value};
 use socketioxide::SocketIo;
+use socketioxide::adapter::Adapter;
 use socketioxide::extract::SocketRef;
+use socketioxide::handler::{FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -47,7 +47,7 @@ struct SocketClientId(String);
 /**
  * Extracts a client ID from the query string of the socket connection, and uses that as the client ID for rule notifications.
  * This allows clients to persist their identity across reconnects by including the same clientId in the
- * 
+ *
  * Based on the documentation page and example from socketioxide: https://docs.rs/socketioxide/latest/socketioxide/extract/index.html
  */
 impl<A: Adapter> FromConnectParts<A> for SocketClientId {
@@ -60,15 +60,13 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
             .uri
             .query()
             .and_then(|query| {
-                query
-                    .split('&')
-                    .find_map(|pair| {
-                        let mut parts = pair.splitn(2, '=');
-                        match (parts.next(), parts.next()) {
-                            (Some("clientId"), Some(value)) if !value.is_empty() => Some(value),
-                            _ => None,
-                        }
-                    })
+                query.split('&').find_map(|pair| {
+                    let mut parts = pair.splitn(2, '=');
+                    match (parts.next(), parts.next()) {
+                        (Some("clientId"), Some(value)) if !value.is_empty() => Some(value),
+                        _ => None,
+                    }
+                })
             })
             .unwrap_or_default();
 
@@ -238,7 +236,10 @@ async fn handle_rule_processing(
             read_clients.get(&notification.0.0).copied()
         };
         let Some(sid) = sid_opt else {
-            warn!("Could not find client to deliver notification, deleting client {}", notification.0.0);
+            warn!(
+                "Could not find client to deliver notification, deleting client {}",
+                notification.0.0
+            );
             let _ = rule_manager.delete_client(notification.0).await;
             continue;
         };
@@ -247,7 +248,10 @@ async fn handle_rule_processing(
             notification.1.topic, notification.0
         );
         let Some(socket) = io.get_socket(sid) else {
-            warn!("Could not find client socket, deleting client {}", notification.0.0);
+            warn!(
+                "Could not find client socket, deleting client {}",
+                notification.0.0
+            );
             let _ = rule_manager.delete_client(notification.0).await;
             continue;
         };
