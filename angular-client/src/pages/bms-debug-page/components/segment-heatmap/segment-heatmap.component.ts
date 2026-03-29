@@ -24,7 +24,6 @@ export interface DisplayCell {
   selector: 'segment-heatmap',
   templateUrl: './segment-heatmap.component.html',
   styleUrl: './segment-heatmap.component.css',
-  standalone: true,
   imports: [HexTileComponent]
 })
 export class SegmentHeatmapComponent implements OnInit, OnDestroy {

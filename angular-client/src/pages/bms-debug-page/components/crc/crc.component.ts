@@ -11,7 +11,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'crc',
   templateUrl: './crc.component.html',
   styleUrl: './crc.component.css',
-  standalone: true,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })
 export class CRCComponent implements OnInit {

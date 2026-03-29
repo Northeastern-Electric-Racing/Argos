@@ -14,7 +14,6 @@ import {
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
   styleUrl: './bms-at-a-glance.component.css',
-  standalone: true,
   imports: [InfoPanelComponent, StatDisplayListComponent]
 })
 export class BmsAtAGlanceComponent implements OnInit, OnDestroy {

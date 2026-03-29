@@ -16,7 +16,6 @@ const SEGMENT_TOPIC_KEYS: (keyof SegmentInfo)[] = ['segmentTempKey', 'voltageKey
   selector: 'segment-overview',
   templateUrl: './segment-overview.component.html',
   styleUrl: './segment-overview.component.css',
-  standalone: true,
   imports: [StatSummaryComponent]
 })
 export class SegmentOverviewComponent implements OnInit, OnDestroy {
