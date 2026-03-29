@@ -1,0 +1,50 @@
+<div class="dropdown-container">
+  <div class="dropdown-header">
+    <typography variant="header" content="Notifications" />
+    @if (notificationLogService.notifications().length > 0) {
+      <p-button
+        label="Clear All"
+        severity="danger"
+        [text]="true"
+        size="small"
+        (onClick)="notificationLogService.clearAll()"
+        ariaLabel="Clear all notifications"
+      />
+    }
+  </div>
+
+  <div class="dropdown-body">
+    @if (notificationLogService.recentNotifications().length === 0) {
+      <div class="empty-state">
+        <typography variant="subheader" content="No notifications yet." />
+      </div>
+    } @else {
+      @for (entry of notificationLogService.recentNotifications(); track entry.id) {
+        <div class="notification-item" [class.unread]="!entry.read">
+          <div class="notification-content">
+            <div class="notification-rule">{{ entry.notification.id }}</div>
+            <div class="notification-detail">
+              {{ entry.notification.topic }} &mdash; {{ entry.notification.values.join(', ') }}
+            </div>
+            <div class="notification-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</div>
+          </div>
+          <p-button
+            icon="pi pi-times"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="notificationLogService.dismissEntry(entry.id)"
+            ariaLabel="Dismiss notification"
+          />
+        </div>
+      }
+    }
+  </div>
+
+  @if (notificationLogService.notifications().length > 0) {
+    <div class="dropdown-footer">
+      <p-button label="View All" [text]="true" (onClick)="viewAll()" ariaLabel="View all notifications" />
+    </div>
+  }
+</div>

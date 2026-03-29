@@ -1,0 +1,55 @@
+<div class="container">
+  <div class="header">
+    <typography
+      class="title-style"
+      variant="x-large-title"
+      content="Notification Log"
+      additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
+    />
+    @if (notificationLogService.notifications().length > 0) {
+      <p-button
+        label="Clear All"
+        severity="danger"
+        [text]="true"
+        (onClick)="notificationLogService.clearAll()"
+        ariaLabel="Clear all notifications"
+      />
+    }
+  </div>
+
+  @if (notificationLogService.notifications().length === 0) {
+    <div class="empty-state">
+      <typography variant="subheader" content="No notifications have been triggered yet." />
+    </div>
+  } @else {
+    <p-table [value]="notificationLogService.notifications()" stripedRows>
+      <ng-template #header>
+        <tr>
+          <th>Rule ID</th>
+          <th>Topic</th>
+          <th>Values</th>
+          <th>Time</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-entry>
+        <tr [class.unread]="!entry.read">
+          <td>{{ entry.notification.id }}</td>
+          <td>{{ entry.notification.topic }}</td>
+          <td>{{ entry.notification.values.join(', ') }}</td>
+          <td>{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
+          <td>
+            <p-button
+              icon="pi pi-times"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              (onClick)="notificationLogService.dismissEntry(entry.id)"
+              ariaLabel="Dismiss notification"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

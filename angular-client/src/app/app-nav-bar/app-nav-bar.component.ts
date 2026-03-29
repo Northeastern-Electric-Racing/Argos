@@ -19,6 +19,10 @@ import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.compo
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
+import { NotificationLogService } from 'src/services/notification-log.service';
+import { NotificationDropdownComponent } from 'src/components/notification-dropdown/notification-dropdown.component';
+import { Popover } from 'primeng/popover';
+import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -43,7 +47,10 @@ export interface NavItem {
     TypographyComponent,
     HStackComponent,
     SidebarChipComponent,
-    MatIcon
+    MatIcon,
+    NotificationDropdownComponent,
+    Popover,
+    Badge
   ]
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
@@ -52,6 +59,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private dialogService = inject(DialogService);
+  protected notificationLogService = inject(NotificationLogService);
   private subscribtions: Subscription[] = [];
 
   ref: DynamicDialogRef | undefined;
@@ -189,6 +197,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       label: 'Commands',
       onClick: () => this.navigateTo(appRoutes.commandsRoute()),
       icon: 'electrical_services'
+    },
+    {
+      id: appRoutes.notificationLogRoute(),
+      label: 'Notifications',
+      onClick: () => this.navigateTo(appRoutes.notificationLogRoute()),
+      icon: 'notifications'
     }
   ];
 
@@ -213,6 +227,10 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   navigateTo(route: string): void {
     this.selectedRoute = route;
     this.router.navigate([route]);
+  }
+
+  onNotificationPanelShow(): void {
+    this.notificationLogService.markAllRead();
   }
 
   isSelected(navItem: NavItem) {

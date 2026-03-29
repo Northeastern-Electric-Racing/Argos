@@ -6,6 +6,7 @@ import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component
 import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
 import EfusesPageComponent from 'src/pages/efuses-page/efuses-page.component';
+import NotificationLogPageComponent from 'src/pages/notification-log-page/notification-log-page.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
@@ -23,6 +24,7 @@ const faultsRoute = () => `/faults`;
 const faultsGraphRoute = () => `/faults/fault-graph`;
 const commandsRoute = () => `/commands`;
 const efusesRoute = () => `/efuses`;
+const notificationLogRoute = () => `/notification-log`;
 
 export const appRoutes = {
   landingRoute,
@@ -35,7 +37,8 @@ export const appRoutes = {
   faultsRoute,
   faultsGraphRoute,
   commandsRoute,
-  efusesRoute
+  efusesRoute,
+  notificationLogRoute
 };
 
 // Routes should be defined carefully in accordance with the appRoutes
@@ -52,7 +55,8 @@ const routes: Routes = [
   { path: 'faults/fault-graph', component: GraphPageComponent },
   { path: 'camera', component: CameraPageComponent },
   { path: 'commands', component: CarCommandComponent },
-  { path: 'efuses', component: EfusesPageComponent }
+  { path: 'efuses', component: EfusesPageComponent },
+  { path: 'notification-log', component: NotificationLogPageComponent }
 ];
 
 @NgModule({

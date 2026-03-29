@@ -13,6 +13,13 @@
         >
         </sidebar-chip>
       }
+      <sidebar-chip
+        icon="notifications"
+        value="Notifications"
+        [active]="this.selectedRoute === '/notification-log'"
+        (click)="navigateTo('/notification-log')"
+      >
+      </sidebar-chip>
     </ng-template>
   </p-sidebar>
 } @else {
@@ -50,6 +57,24 @@
         additionalStyles="fontSize: 36px"
       />
       <messages-per-second />
+      <div
+        class="navbar-notification"
+        role="button"
+        tabindex="0"
+        aria-label="Notifications"
+        (click)="notificationPanel.toggle($event)"
+        (keydown.enter)="notificationPanel.toggle($event)"
+      >
+        <mat-icon>notifications</mat-icon>
+        @if (notificationLogService.unreadCount() > 0) {
+          <p-badge [value]="'' + notificationLogService.unreadCount()" severity="danger" class="notification-badge" />
+        }
+      </div>
+      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()">
+        <ng-template #content>
+          <notification-dropdown />
+        </ng-template>
+      </p-popover>
       <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
         <mat-icon [svgIcon]="'apps'" />
       </div>

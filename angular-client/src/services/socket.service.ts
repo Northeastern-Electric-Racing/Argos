@@ -2,8 +2,9 @@ import { Socket } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
 import { topics } from 'src/utils/topic.utils';
-import { FaultData } from 'src/utils/types.utils';
+import { FaultData, RuleNotification } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
+import { NotificationLogService } from './notification-log.service';
 
 /**
  * Service for interacting with the socket
@@ -23,7 +24,7 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData = (storage: Storage, faultService: FaultService) => {
+  receiveData = (storage: Storage, faultService: FaultService, notificationLogService: NotificationLogService) => {
     this.socket.on('data', (message: string) => {
       try {
         const data = JSON.parse(message) as ServerData;
@@ -73,6 +74,15 @@ export default class SocketService {
         const data = JSON.parse(message) as TimerData;
         const key = data.topic;
         storage.addTimerValue(key, data);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
+    this.socket.on('rule_notify', (message: string) => {
+      try {
+        const data = JSON.parse(message) as RuleNotification;
+        notificationLogService.addNotification(data);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }

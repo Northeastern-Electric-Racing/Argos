@@ -1,0 +1,31 @@
+.container {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  padding: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.title-style {
+  display: grid;
+  align-items: center;
+  margin-top: -20px;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  opacity: 0.6;
+}
+
+:host ::ng-deep tr.unread td {
+  font-weight: 600;
+}
