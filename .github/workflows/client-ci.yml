@@ -17,6 +17,10 @@ on:
       - "angular-client/**"
       - ".github/workflows/client-ci.yml"
 
+defaults:
+  run:
+    working-directory: angular-client
+
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
@@ -29,13 +33,10 @@ jobs:
         with:
           node-version: 20.17.0
           cache: "npm"
-          cache-dependency-path: ./angular-client/package-lock.json
+          cache-dependency-path: angular-client/package-lock.json
       - name: Install modules
-        working-directory: ./angular-client
         run: npm ci
       - name: Run linting check
-        working-directory: ./angular-client
-        run: npm run lint --max-warnings=0
+        run: npm run lint -- --max-warnings=0
       - name: Run prettier check
-        working-directory: ./angular-client
         run: npm run prettier-check
