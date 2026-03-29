@@ -15,6 +15,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'segment-summary',
   templateUrl: './segment-summary.component.html',
   styleUrl: './segment-summary.component.css',
+  standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
 })
 export class SegmentSummaryComponent implements OnInit, OnDestroy {

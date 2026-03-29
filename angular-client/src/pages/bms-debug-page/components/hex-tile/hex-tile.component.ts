@@ -19,6 +19,7 @@ const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
   selector: 'hex-tile',
   templateUrl: './hex-tile.component.html',
   styleUrl: './hex-tile.component.css',
+  standalone: true,
   host: {
     '[class]': 'variant()',
     '[class.selected-cell]': 'boxShadowColor()'

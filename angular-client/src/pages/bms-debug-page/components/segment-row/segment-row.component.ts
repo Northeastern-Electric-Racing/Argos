@@ -16,6 +16,7 @@ import { SegmentOverviewComponent } from '../segment-overview/segment-overview.c
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
+  standalone: true,
   imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
 })
 export class SegmentRowComponent implements OnInit, OnDestroy {

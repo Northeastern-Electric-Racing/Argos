@@ -10,6 +10,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'bms-header',
   templateUrl: './bms-header.component.html',
   styleUrl: './bms-header.component.css',
+  standalone: true,
   imports: [MatGridList, MatGridTile, SegmentSelectorComponent, CRCComponent, BmsOverflowComponent, TypographyComponent]
 })
 export class BmsHeaderComponent {

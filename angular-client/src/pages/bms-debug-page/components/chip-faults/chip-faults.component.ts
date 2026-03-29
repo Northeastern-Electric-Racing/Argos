@@ -17,6 +17,7 @@ import { DatePipe } from '@angular/common';
   selector: 'chip-faults',
   templateUrl: './chip-faults.component.html',
   styleUrl: './chip-faults.component.css',
+  standalone: true,
   imports: [InfoBackgroundComponent, TableModule, PrimeTemplate, DatePipe]
 })
 export class ChipFaultsComponent implements OnInit {

@@ -13,6 +13,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'segment-selector',
   templateUrl: './segment-selector.component.html',
   styleUrl: './segment-selector.component.css',
+  standalone: true,
   imports: [InfoBackgroundComponent, SelectDropdownComponent, TypographyComponent, VStackComponent]
 })
 export class SegmentSelectorComponent implements OnInit {

@@ -13,6 +13,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'chip-diagnostics',
   templateUrl: './chip-diagnostics.component.html',
   styleUrl: './chip-diagnostics.component.css',
+  standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
 })
 export class ChipDiagnosticsComponent implements OnInit, OnDestroy {

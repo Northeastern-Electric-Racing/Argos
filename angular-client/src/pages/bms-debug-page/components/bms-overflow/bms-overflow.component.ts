@@ -11,6 +11,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'bms-overflow',
   templateUrl: './bms-overflow.component.html',
   styleUrl: './bms-overflow.component.css',
+  standalone: true,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })
 export class BmsOverflowComponent implements OnInit, OnDestroy {
