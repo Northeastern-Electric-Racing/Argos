@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import TypographyComponent from '../typography/typography.component';
 
@@ -16,7 +16,7 @@ export default class BrakePressureDisplayComponent implements OnInit {
   brakePressure: number = 0;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.BRAKE_PRESSURE).subscribe((value) => {
+    this.storage.get(topics.brakePressure()).subscribe((value) => {
       this.brakePressure = parseInt(value.values[0]);
     });
   }

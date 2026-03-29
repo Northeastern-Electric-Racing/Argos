@@ -11,6 +11,7 @@ const cameraRoute = () => `/camera`;
 const faultsRoute = () => `/faults`;
 const faultsGraphRoute = () => `/faults/fault-graph`;
 const commandsRoute = () => `/commands`;
+const efusesRoute = () => `/efuses`;
 
 export const appRoutes = {
   landingRoute,
@@ -22,7 +23,8 @@ export const appRoutes = {
   cameraRoute,
   faultsRoute,
   faultsGraphRoute,
-  commandsRoute
+  commandsRoute,
+  efusesRoute
 };
 
 // Routes use loadComponent for lazy loading / route-level code splitting.
@@ -73,5 +75,9 @@ export const routes: Routes = [
   {
     path: 'commands',
     loadComponent: () => import('src/pages/car-command-page/car-command.component')
+  },
+  {
+    path: 'efuses',
+    loadComponent: () => import('src/pages/efuses-page/efuses-page.component')
   }
 ];

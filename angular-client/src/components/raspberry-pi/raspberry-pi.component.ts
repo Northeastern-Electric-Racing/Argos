@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import RaspberryPiDesktopComponent from './raspberry-pi-desktop-content/raspberry-pi-desktop.component';
@@ -25,19 +25,19 @@ export default class RasberryPiComponent implements OnInit {
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.CPUUsage).subscribe((value) => {
+    this.storage.get(topics.cpuUsage()).subscribe((value) => {
       this.cpuUsage = floatPipe(value.values[0]);
     });
-    this.storage.get(DataTypeEnum.CPUTemp).subscribe((value) => {
+    this.storage.get(topics.cpuTemp()).subscribe((value) => {
       this.cpuTemp = floatPipe(value.values[0]);
     });
-    this.storage.get(DataTypeEnum.RAMUsage).subscribe((value) => {
+    this.storage.get(topics.ramUsage()).subscribe((value) => {
       this.ramUsage = Math.round((1 - floatPipe(value.values[0]) / 8000) * 100);
     });
-    this.storage.get(DataTypeEnum.WIFIRSSI).subscribe((value) => {
+    this.storage.get(topics.wifiRSSI()).subscribe((value) => {
       this.wifiRSSI = floatPipe(value.values[0]);
     });
-    this.storage.get(DataTypeEnum.MCS).subscribe((value) => {
+    this.storage.get(topics.mcs()).subscribe((value) => {
       this.mcs = floatPipe(value.values[0]);
     });
   }
