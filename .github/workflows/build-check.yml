@@ -8,6 +8,7 @@ on:
       - "angular-client/**"
       - "scylla-server/**"
       - "compose/**"
+      - ".github/workflows/build-check.yml"
   pull_request:
     branches:
       - main
@@ -17,6 +18,7 @@ on:
       - "angular-client/**"
       - "scylla-server/**"
       - "compose/**"
+      - ".github/workflows/build-check.yml"
 jobs:
   run-build:
     runs-on: ubuntu-latest
@@ -25,14 +27,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Docker Compose
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install docker-compose
       - name: Build Docker Compose
         working-directory: compose
-        run: |
-          if ! docker-compose build; then
-            echo "Docker Compose build failed."
-            exit 1  # This will cause the workflow to fail
-          fi
+        run: docker compose build

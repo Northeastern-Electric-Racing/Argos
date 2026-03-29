@@ -7,6 +7,7 @@ on:
       - develop
     paths:
       - "angular-client/**"
+      - ".github/workflows/client-ci.yml"
   pull_request:
     branches:
       - main
@@ -14,6 +15,7 @@ on:
       - "feature/**"
     paths:
       - "angular-client/**"
+      - ".github/workflows/client-ci.yml"
 
 jobs:
   lint-and-format:
