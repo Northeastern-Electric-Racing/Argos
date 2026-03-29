@@ -4,6 +4,15 @@ import Storage from './storage.service';
 import { DataTypeEnum } from 'src/data-type.enum';
 import { FaultData } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
+import { MessageService } from 'primeng/api';
+
+/** Shape of a rule_notify event from the backend */
+interface RuleNotification {
+  id: string;
+  topic: string;
+  values: number[];
+  time: string;
+}
 
 /**
  * Service for interacting with the socket
@@ -23,7 +32,7 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData = (storage: Storage, faultService: FaultService) => {
+  receiveData = (storage: Storage, faultService: FaultService, messageService?: MessageService) => {
     this.socket.on('data', (message: string) => {
       try {
         /* Parse the message and store it in the storage service */
@@ -83,6 +92,22 @@ export default class SocketService {
 
     this.socket.on('disconnect', () => {
       storage.setCurrentRunId(undefined);
+    });
+
+    this.socket.on('rule_notify', (message: string) => {
+      try {
+        const notification = JSON.parse(message) as RuleNotification;
+        if (messageService) {
+          messageService.add({
+            severity: 'warn',
+            summary: `Rule Triggered: ${notification.id}`,
+            detail: `Topic: ${notification.topic}, Values: [${notification.values.join(', ')}]`,
+            life: 5000
+          });
+        }
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
     });
   };
 

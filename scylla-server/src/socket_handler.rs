@@ -42,7 +42,7 @@ pub async fn socket_handler(
     }
 }
 
-struct ClientId(String);
+struct SocketClientId(String);
 
 /**
  * Extracts a client ID from the query string of the socket connection, and uses that as the client ID for rule notifications.
@@ -50,7 +50,7 @@ struct ClientId(String);
  * 
  * Based on the documentation page and example from socketioxide: https://docs.rs/socketioxide/latest/socketioxide/extract/index.html
  */
-impl<A: Adapter> FromConnectParts<A> for ClientId {
+impl<A: Adapter> FromConnectParts<A> for SocketClientId {
     type Error = Infallible;
 
     fn from_connect_parts(s: &Arc<Socket<A>>, _: &Option<Value>) -> Result<Self, Self::Error> {
@@ -72,7 +72,7 @@ impl<A: Adapter> FromConnectParts<A> for ClientId {
             })
             .unwrap_or_default();
 
-        Ok(ClientId(client_id.to_string()))
+        Ok(SocketClientId(client_id.to_string()))
     }
 }
 
@@ -125,7 +125,7 @@ pub async fn socket_handler_with_metadata(
     let writable_socket_map = client_socket_map.clone();
     io.ns(
         "/",
-        |socket: SocketRef, ClientId(client_id): ClientId| async move {
+        |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
             // unfortunate locking and ref counting due to the async closures
             let mut owned = writable_socket_map.write().await;
             if client_id.is_empty() {
@@ -230,10 +230,14 @@ async fn handle_rule_processing(
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
-    
+
     for notification in notifs {
-        let read_clients = client_socket_map.read().await;
-        let Some(sid) = read_clients.get(&notification.0.0) else {
+        // Copy the sid and drop the read lock before any async work
+        let sid_opt = {
+            let read_clients = client_socket_map.read().await;
+            read_clients.get(&notification.0.0).copied()
+        };
+        let Some(sid) = sid_opt else {
             warn!("Could not find client to deliver notification, deleting client {}", notification.0.0);
             let _ = rule_manager.delete_client(notification.0).await;
             continue;
@@ -242,7 +246,7 @@ async fn handle_rule_processing(
             "Sending notification of {} to {}",
             notification.1.topic, notification.0
         );
-        let Some(socket) = io.get_socket(*sid) else {
+        let Some(socket) = io.get_socket(sid) else {
             warn!("Could not find client socket, deleting client {}", notification.0.0);
             let _ = rule_manager.delete_client(notification.0).await;
             continue;

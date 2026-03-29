@@ -10,6 +10,7 @@ import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { EnvService } from 'src/services/env.service';
+import { MessageService } from 'primeng/api';
 
 /** Generate or retrieve a stable client ID for notifications */
 function getOrCreateClientId(): string {
@@ -35,6 +36,7 @@ export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
   private cellService = new CellService(this.storage);
   private faultService = inject(FaultService);
+  private messageService = inject(MessageService);
   private envService = inject(EnvService);
   socket = io(this.envService.backendUrl, {
     query: {
@@ -110,6 +112,6 @@ export default class AppContextComponent implements OnInit {
   ngOnInit(): void {
     document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
-    this.socketService.receiveData(this.storage, this.faultService);
+    this.socketService.receiveData(this.storage, this.faultService, this.messageService);
   }
 }

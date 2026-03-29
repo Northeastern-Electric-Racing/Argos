@@ -377,7 +377,7 @@ impl RuleManager {
         let rule_ids = match self.topic_index.read().await.get(&data.name) {
             Some(rule_ids) => rule_ids.clone(), // Clone so we can drop resource
             None => {
-                return Err(RuleManagerError::NoMatchingRule);
+                return Ok(None);
             }
         };
 
@@ -457,6 +457,7 @@ impl RuleManager {
 
     /// Deletes a rule from client. \
     /// If no more rules exist for that client, the client is also removed.
+    /// If the rule has zero subscribers remaining, the rule is fully cleaned up.
     pub async fn delete_rule(
         &self,
         client_id: ClientId,
@@ -469,7 +470,26 @@ impl RuleManager {
             .await
             .remove_right_from_left(&client_id, &rule_id)
         {
-            RemovedWithCleanUp(_) | RemovedOnly => Ok(()),
+            RemovedWithCleanUp(orphaned_rule_id) => {
+                // No subscribers remain — clean up the rule and topic_index
+                let topic = self
+                    .rules
+                    .write()
+                    .await
+                    .remove(&orphaned_rule_id)
+                    .map(|r| r.topic.clone());
+                if let Some(topic) = topic {
+                    let mut topic_index = self.topic_index.write().await;
+                    if let Some(rule_ids) = topic_index.get_mut(&topic) {
+                        rule_ids.remove(&orphaned_rule_id);
+                        if rule_ids.is_empty() {
+                            topic_index.remove(&topic);
+                        }
+                    }
+                }
+                Ok(())
+            }
+            RemovedOnly => Ok(()),
             NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete rule: {}",
@@ -485,7 +505,23 @@ impl RuleManager {
     pub async fn delete_client(&self, client_id: ClientId) -> Result<(), RuleManagerError> {
         // Removing from left returns rules that no longer have clients
         match self.subscriptions.write().await.remove_left(&client_id) {
-            RemovedWithCleanUp(_) | RemovedOnly => Ok(()),
+            RemovedWithCleanUp(orphaned_rule_ids) => {
+                // Clean up rules and topic_index for rules with zero subscribers
+                let mut rules = self.rules.write().await;
+                let mut topic_index = self.topic_index.write().await;
+                for orphaned_rule_id in orphaned_rule_ids {
+                    if let Some(removed_rule) = rules.remove(&orphaned_rule_id) {
+                        if let Some(rule_ids) = topic_index.get_mut(&removed_rule.topic) {
+                            rule_ids.remove(&orphaned_rule_id);
+                            if rule_ids.is_empty() {
+                                topic_index.remove(&removed_rule.topic);
+                            }
+                        }
+                    }
+                }
+                Ok(())
+            }
+            RemovedOnly => Ok(()),
             NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete client: {}",
