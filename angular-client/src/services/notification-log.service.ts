@@ -16,7 +16,7 @@ export class NotificationLogService {
   private entries = signal<NotificationLogEntry[]>([]);
   private nextId = 0;
 
-  readonly notifications = computed(() => this.entries());
+  readonly notifications = this.entries.asReadonly();
   readonly unreadCount = computed(() => this.entries().filter((e) => !e.read).length);
   readonly recentNotifications = computed(() => this.entries().slice(0, 10));
 
