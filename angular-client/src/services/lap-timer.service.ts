@@ -21,15 +21,6 @@ export interface LapRecord {
   stats: LapStats;
 }
 
-const EMPTY_STATS: LapStats = {
-  avgSpeed: null,
-  maxSpeed: null,
-  socStart: null,
-  socEnd: null,
-  energyUsed: null,
-  maxMotorTemp: null,
-};
-
 @Injectable({ providedIn: 'root' })
 export default class LapTimerService {
   private storage = inject(Storage);
@@ -79,12 +70,6 @@ export default class LapTimerService {
   readonly totalEnergyUsed = computed(() => {
     const laps = this.laps();
     return laps.reduce((sum, lap) => sum + (lap.stats.energyUsed ?? 0), 0);
-  });
-
-  readonly bestLapSpeed = computed(() => {
-    const laps = this.laps();
-    const speeds = laps.map((l) => l.stats.avgSpeed).filter((s): s is number => s !== null);
-    return speeds.length > 0 ? Math.max(...speeds) : null;
   });
 
   deltaFromBest(lapDuration: number): number | null {

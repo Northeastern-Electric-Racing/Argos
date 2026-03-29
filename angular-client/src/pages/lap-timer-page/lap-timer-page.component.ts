@@ -25,7 +25,6 @@ export default class LapTimerPageComponent implements OnInit, OnDestroy {
   readonly timer = inject(LapTimerService);
   private storage = inject(Storage);
 
-  readonly expandedLap = signal<number | null>(null);
   readonly liveSpeed = signal(0);
   readonly liveMotorTemp = signal(0);
   readonly liveSoc = signal(0);
@@ -48,10 +47,6 @@ export default class LapTimerPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.forEach((s) => s.unsubscribe());
-  }
-
-  toggleLapDetail(lapNumber: number): void {
-    this.expandedLap.update((current) => (current === lapNumber ? null : lapNumber));
   }
 
   onStartResume(): void {
