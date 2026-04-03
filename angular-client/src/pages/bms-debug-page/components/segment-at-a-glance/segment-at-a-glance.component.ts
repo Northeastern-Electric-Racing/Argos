@@ -64,6 +64,9 @@ export class SegmentAtAGlanceComponent implements OnDestroy {
 
   subscribeToData = (segment: number) => {
     this.valueSubscriptions.push(
+      this.storage.get(topics.segmentVoltage(segment)).subscribe((value) => {
+        this.voltage = parseFloat(value.values[0]);
+      }),
       this.storage.get(topics.segmentTemp(segment)).subscribe((value) => {
         this.temperature = parseFloat(value.values[0]);
         this.thermometerConfigSegment.currentValue = this.temperature;
