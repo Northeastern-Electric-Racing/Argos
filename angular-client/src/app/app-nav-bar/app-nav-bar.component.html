@@ -70,9 +70,9 @@
           <p-badge [value]="'' + notificationLogService.unreadCount()" severity="danger" class="notification-badge" />
         }
       </div>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()">
+      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
         <ng-template #content>
-          <notification-dropdown />
+          <notification-list variant="popover" />
         </ng-template>
       </p-popover>
       <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">

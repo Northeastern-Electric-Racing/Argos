@@ -20,7 +20,7 @@ import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-opt
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
-import { NotificationDropdownComponent } from 'src/components/notification-dropdown/notification-dropdown.component';
+import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { Popover } from 'primeng/popover';
 import { Badge } from 'primeng/badge';
 
@@ -48,7 +48,7 @@ export interface NavItem {
     HStackComponent,
     SidebarChipComponent,
     MatIcon,
-    NotificationDropdownComponent,
+    NotificationListComponent,
     Popover,
     Badge
   ]

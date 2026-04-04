@@ -18,6 +18,7 @@ import {
 import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-confirm-dialog.component';
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 import { RulesTableComponent } from './rules-table/rules-table.component';
+import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -30,7 +31,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent]
+  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(MessageService);

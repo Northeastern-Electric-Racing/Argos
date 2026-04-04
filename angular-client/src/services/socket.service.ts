@@ -85,15 +85,14 @@ export default class SocketService {
       }
     });
 
-    this.socket.on('rule_notify', (message: string) => {
+    this.socket.on('rule_notify', (message: RuleNotification) => {
       try {
-        const data = JSON.parse(message) as RuleNotification;
-        notificationLogService.addNotification(data);
+        notificationLogService.addNotification(message);
         if (messageService) {
           messageService.add({
             severity: 'warn',
-            summary: `Rule Triggered: ${data.id}`,
-            detail: `Topic: ${data.topic}, Values: [${data.values.join(', ')}]`,
+            summary: `Rule Triggered: ${message.id}`,
+            detail: `Topic: ${message.topic}, Values: [${message.values.join(', ')}]`,
             life: 5000
           });
         }

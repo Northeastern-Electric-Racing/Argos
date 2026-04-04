@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
@@ -14,4 +14,6 @@ import { NotificationLogService } from 'src/services/notification-log.service';
 })
 export default class NotificationLogPageComponent {
   protected notificationLogService = inject(NotificationLogService);
+  protected entries = computed(() => this.notificationLogService.notifications());
+  protected hasEntries = computed(() => this.entries().length > 0);
 }
