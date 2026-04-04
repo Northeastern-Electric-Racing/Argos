@@ -143,14 +143,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       onClick: () => this.navigateTo(appRoutes.graphRoute()),
       icon: 'bar_chart'
     },
-    { id: appRoutes.faultsRoute(), label: 'Fault', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' },
-    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
-    {
-      id: appRoutes.efusesRoute(),
-      label: 'eFuses',
-      onClick: () => this.navigateTo(appRoutes.efusesRoute()),
-      icon: 'electrical_services'
-    }
+    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' }
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
@@ -166,6 +159,18 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems];
   navMenuItems: NavItem[] = [
+    {
+      id: appRoutes.faultsRoute(),
+      label: 'Fault',
+      onClick: () => this.navigateTo(appRoutes.faultsRoute()),
+      icon: 'error'
+    },
+    {
+      id: appRoutes.efusesRoute(),
+      label: 'eFuses',
+      onClick: () => this.navigateTo(appRoutes.efusesRoute()),
+      icon: 'electrical_services'
+    },
     {
       id: appRoutes.mapRoute(),
       label: 'Map',
