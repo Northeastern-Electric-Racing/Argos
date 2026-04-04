@@ -40,6 +40,10 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
     {
       name: HeatMapView.Balancing.toString(),
       function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Balancing)
+    },
+    {
+      name: HeatMapView.CvsFailure.toString(),
+      function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.CvsFailure)
     }
   ];
 

@@ -8,6 +8,8 @@ export const alphaVolt = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/
 export const betaVolt = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Volts/${cell}`;
 export const alphaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
 export const betaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
+export const alphaCvs = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/CvS/${cell}`;
+export const betaCvs = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/CvS/${cell}`;
 export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
 export const segmentVoltage = (segment: Segment) => `BMS/Segment_Volt/${segment}`;
 export const segmentTotalVoltage = (segment: Segment) => `BMS/Segment_Total_Volt/${segment}`;
@@ -120,6 +122,8 @@ export const topics = {
   betaVolt,
   alphaBurning,
   betaBurning,
+  alphaCvs,
+  betaCvs,
   segmentTemp,
   segmentVoltage,
   segmentTotalVoltage,
@@ -214,6 +218,8 @@ export const allAlphaVoltValues: number[] = Array.from({ length: BMS_CONFIG.ALPH
 export const allBetaVoltValues: number[] = Array.from({ length: BMS_CONFIG.BETA_VOLT_COUNT }, (_, i) => i);
 export const allAlphaBurnValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_BURN_COUNT }, (_, i) => i);
 export const allBetaBurnValues: number[] = Array.from({ length: BMS_CONFIG.BETA_BURN_COUNT }, (_, i) => i);
+export const allAlphaCvsValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_CVS_COUNT }, (_, i) => i);
+export const allBetaCvsValues: number[] = Array.from({ length: BMS_CONFIG.BETA_CVS_COUNT }, (_, i) => i);
 
 export enum ChipFault {
   VA_OV = 'VA_OV',

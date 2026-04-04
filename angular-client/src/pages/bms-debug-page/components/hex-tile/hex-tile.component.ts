@@ -5,14 +5,16 @@ import { HeatMapView } from 'src/services/heat-map.service';
 const VIEW_CLASS_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'view-voltage',
   [HeatMapView.Balancing]: 'view-balancing',
-  [HeatMapView.Temperature]: 'view-temperature'
+  [HeatMapView.Temperature]: 'view-temperature',
+  [HeatMapView.CvsFailure]: 'view-cvs-failure'
 };
 
 /** Maps each HeatMapView to the unit label shown inside the hex */
 const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'V',
   [HeatMapView.Temperature]: '°C',
-  [HeatMapView.Balancing]: ''
+  [HeatMapView.Balancing]: '',
+  [HeatMapView.CvsFailure]: ''
 };
 
 @Component({

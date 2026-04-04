@@ -4,9 +4,11 @@ import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
 import Storage from './storage.service';
 import {
   allAlphaBurnValues,
+  allAlphaCvsValues,
   allAlphaThermValues,
   allAlphaVoltValues,
   allBetaBurnValues,
+  allBetaCvsValues,
   allBetaThermValues,
   allBetaVoltValues,
   topics
@@ -18,6 +20,7 @@ export type CellReading = {
   temp: number | undefined;
   voltage: number | undefined;
   balancing: boolean | undefined;
+  cvs: boolean | undefined;
   cellNumber: number;
 };
 
@@ -30,6 +33,7 @@ const createSegmentCells = (segment: number, chip: Chip, count: number): CellRea
       temp: undefined,
       voltage: undefined,
       balancing: undefined,
+      cvs: undefined,
       cellNumber: i
     })
   );
@@ -91,6 +95,13 @@ export class CellService {
           segmentAlphaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
         });
       });
+
+      // CvS: one per cell
+      allAlphaCvsValues.forEach((cvs, cvsIndex) => {
+        this.storageService.get(topics.alphaCvs(segmentNumber, cvs)).subscribe((data) => {
+          segmentAlphaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
+        });
+      });
     });
   };
 
@@ -122,6 +133,13 @@ export class CellService {
       allBetaBurnValues.map((burn, burnIndex) => {
         this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
           segmentBetaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
+        });
+      });
+
+      // CvS: one per cell
+      allBetaCvsValues.forEach((cvs, cvsIndex) => {
+        this.storageService.get(topics.betaCvs(segmentNumber, cvs)).subscribe((data) => {
+          segmentBetaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
         });
       });
     });

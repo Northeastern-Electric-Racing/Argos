@@ -112,6 +112,21 @@
   padding-bottom: 16%;
 }
 
+/* CvS Failure: same top-left number, value pushed to bottom */
+.hex-tile.view-cvs-failure .cell-number {
+  top: 22%;
+  left: 20%;
+  transform: none;
+  font-size: calc(var(--hex-w, 42px) * 0.2);
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.hex-tile.view-cvs-failure {
+  justify-content: flex-end;
+  padding-bottom: 16%;
+}
+
 /* ── heatmap-cell variant: used inside segment rows; number stacked above value, left-aligned ── */
 
 :host(.heatmap-cell) .hex-tile {

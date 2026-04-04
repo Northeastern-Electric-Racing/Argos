@@ -52,6 +52,10 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
     {
       name: formatAllSelectorName(HeatMapView.Temperature.toString()),
       function: () => this.heatMapService.setAllSegViews(HeatMapView.Temperature)
+    },
+    {
+      name: formatAllSelectorName(HeatMapView.CvsFailure.toString()),
+      function: () => this.heatMapService.setAllSegViews(HeatMapView.CvsFailure)
     }
   ];
   allSegSelectorConfig: SelectorConfig = {

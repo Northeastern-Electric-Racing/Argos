@@ -18,6 +18,11 @@ const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
     label: 'Balancing',
     getValue: (c) => (c.reading.balancing === undefined ? '-' : c.reading.balancing ? 'Yes' : 'No'),
     getClass: (c) => (c.reading.balancing === true ? 'bal-yes' : c.reading.balancing === false ? 'bal-no' : '')
+  },
+  {
+    label: 'CvS Failure',
+    getValue: (c) => (c.reading.cvs === undefined ? '-' : c.reading.cvs ? 'Yes' : 'No'),
+    getClass: (c) => (c.reading.cvs === true ? 'cvs-yes' : c.reading.cvs === false ? 'cvs-no' : '')
   }
 ];
 
