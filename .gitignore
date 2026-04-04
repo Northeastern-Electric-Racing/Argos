@@ -105,3 +105,4 @@ iOSInjectionProject/
 compose.override.yml
 **/.DS_Store
 **/.vs
+.claude/

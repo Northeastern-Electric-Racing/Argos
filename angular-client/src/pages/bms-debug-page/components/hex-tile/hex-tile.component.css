@@ -127,6 +127,10 @@
   padding-bottom: 16%;
 }
 
+.hex-tile.view-cvs-failure .cell-value {
+  font-size: calc(var(--hex-w, 42px) * 0.19);
+}
+
 /* ── heatmap-cell variant: used inside segment rows; number stacked above value, left-aligned ── */
 
 :host(.heatmap-cell) .hex-tile {
@@ -163,6 +167,10 @@
 :host(.heatmap-cell) .cell-unit {
   font-size: calc(var(--hex-w, 48px) * 0.2);
   color: #1a1a1a;
+}
+
+:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-value {
+  font-size: calc(var(--hex-w, 48px) * 0.24);
 }
 
 /* ── Double-hex variant: two merged pointy-top hexes for thermistor groups that span two cells ── */
