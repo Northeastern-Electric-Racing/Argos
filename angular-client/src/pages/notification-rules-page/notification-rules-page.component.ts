@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { take } from 'rxjs';
+import { appRoutes } from 'src/app/app-routing.module';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
@@ -36,6 +38,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(MessageService);
   private dialogService = inject(DialogService);
+  private router = inject(Router);
 
   clientId!: string;
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -57,6 +60,10 @@ export default class NotificationRulesPageComponent implements OnInit {
     // clientId is guaranteed to exist — eagerly created in AppContextComponent
     this.clientId = localStorage.getItem(CLIENT_ID_KEY)!;
   }
+
+  onViewLog = () => {
+    this.router.navigateByUrl(appRoutes.notificationLogRoute());
+  };
 
   onUpload = () => {
     this.fileInput()?.nativeElement.click();
