@@ -114,7 +114,7 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscriptions.push(
       this.storage.get(topics.packVoltage()).subscribe((value) => {
-        this.voltage = parseInt(value.values[0]);
+        this.voltage = parseFloat(value.values[0]);
       }),
       this.storage.get(topics.packTemp()).subscribe((value) => {
         this.temperature = parseInt(value.values[0]);
