@@ -2,6 +2,81 @@
   padding: 20px;
 }
 
+.stream-toggle {
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: 28px;
+  height: 44px;
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: var(--color-text-subtitle);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.stream-toggle:hover,
+.stream-toggle:focus-visible {
+  background-color: #4a4a4a;
+  border-color: #666;
+  color: #fff;
+  outline: none;
+}
+
+.stream-toggle .pi {
+  font-size: 0.95rem;
+  transition: transform 0.25s ease;
+}
+
+.page-layout {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  /* Navbar is 60px tall; page-container has 20px padding top+bottom (40px total). */
+  min-height: calc(100vh - 60px - 40px);
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-rail {
+  width: clamp(200px, 16.66vw, 280px);
+  flex-shrink: 0;
+  display: flex;
+  overflow: hidden;
+  /* Hang flush to the right viewport edge (cancels page-container padding-right) */
+  margin-right: -20px;
+  transition:
+    width 0.25s ease,
+    margin-left 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.stream-rail notification-list {
+  flex: 1;
+  min-width: 0;
+}
+
+.stream-rail.collapsed {
+  width: 0;
+  opacity: 0;
+  /* Cancel the 20px page-layout gap so the arrow sits flush with the right edge */
+  margin-left: -20px;
+  pointer-events: none;
+}
+
 .header-row {
   display: flex;
   align-items: center;
@@ -13,6 +88,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  margin-left: auto;
 }
 
 .hidden-file-input {
@@ -56,13 +132,31 @@
   min-height: 200px;
 }
 
-.recent-notifications {
-  margin-top: 20px;
-}
-
 @media (max-width: 768px) {
   .page-container {
     padding: 12px;
+  }
+
+  .page-layout {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .stream-toggle {
+    display: none;
+  }
+
+  .stream-rail {
+    width: 100%;
+    max-height: 320px;
+  }
+
+  .stream-rail.collapsed {
+    /* Always show the stream on mobile — no toggle available */
+    width: 100%;
+    opacity: 1;
+    margin-left: 0;
+    pointer-events: auto;
   }
 
   .header-row {
@@ -73,6 +167,8 @@
 
   .header-buttons {
     width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
   }
 
   .header-buttons ::ng-deep argos-button .btn {

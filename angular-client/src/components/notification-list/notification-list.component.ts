@@ -5,7 +5,7 @@ import { Button } from 'primeng/button';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routing.module';
 
-export type NotificationListVariant = 'popover' | 'embedded';
+export type NotificationListVariant = 'popover' | 'embedded' | 'stream';
 
 @Component({
   selector: 'notification-list',
@@ -21,7 +21,11 @@ export class NotificationListComponent {
   variant = input<NotificationListVariant>('popover');
   title = input<string>('Notifications');
 
-  protected entries = computed(() => this.notificationLogService.recentNotifications());
+  protected entries = computed(() =>
+    this.variant() === 'stream'
+      ? this.notificationLogService.notifications()
+      : this.notificationLogService.recentNotifications()
+  );
   protected hasEntries = computed(() => this.entries().length > 0);
   protected totalCount = computed(() => this.notificationLogService.notifications().length);
 

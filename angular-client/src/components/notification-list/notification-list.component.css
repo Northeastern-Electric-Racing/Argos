@@ -26,6 +26,13 @@
   width: 100%;
 }
 
+/* Stream mode — fills full height/width of a side rail, scrolls when overflowing */
+.notification-list.variant-stream {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
 /* ---- Header ---- */
 
 .list-header {
@@ -112,6 +119,10 @@
 
 .variant-embedded .list-body {
   max-height: 280px;
+}
+
+.variant-stream .list-body {
+  max-height: none;
 }
 
 .entries {
