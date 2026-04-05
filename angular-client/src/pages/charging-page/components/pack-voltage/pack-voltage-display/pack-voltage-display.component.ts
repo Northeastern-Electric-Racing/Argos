@@ -42,9 +42,8 @@ export default class PackVoltageDisplayComponent implements OnInit {
 
   ngOnInit() {
     this.storage.get(topics.packVoltage()).subscribe((value) => {
-      const rawVoltage = floatPipe(value.values[0]);
-      this.voltage = Math.round(rawVoltage);
-      this.packVoltData.push({ x: +value.time, y: rawVoltage });
+      this.voltage = floatPipe(value.values[0]);
+      this.packVoltData.push({ x: +value.time, y: this.voltage });
     });
   }
 }

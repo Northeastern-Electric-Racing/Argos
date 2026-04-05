@@ -43,7 +43,6 @@ export class BmsAtAGlanceComponent implements OnInit, OnDestroy {
         key: 'pack-voltage',
         value: this.voltage,
         unit: 'V',
-        precision: 0,
         subtitle: 'Pack Voltage',
         widget: { type: 'connection-dot', getStatusColor: this.getStatusColor }
       },
