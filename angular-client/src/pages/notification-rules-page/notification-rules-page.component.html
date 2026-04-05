@@ -50,20 +50,20 @@
     <button
       type="button"
       class="stream-toggle"
-      (click)="toggleAlertPanel()"
-      [attr.aria-label]="alertPanelOpen() ? 'Hide notification stream' : 'Show notification stream'"
-      [attr.title]="alertPanelOpen() ? 'Hide stream' : 'Show stream'"
+      (click)="toggleStreamRail()"
+      [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
+      [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
-      <i class="pi" [class.pi-angle-right]="alertPanelOpen()" [class.pi-angle-left]="!alertPanelOpen()"></i>
+      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
     </button>
 
     <aside
       class="stream-rail"
-      [class.collapsed]="!alertPanelOpen()"
-      [attr.aria-hidden]="!alertPanelOpen()"
+      [class.collapsed]="!streamRailOpen()"
+      [attr.aria-hidden]="!streamRailOpen()"
       aria-label="Live notification stream"
     >
-      <notification-list variant="stream" title="Notifications" />
+      <notification-list variant="stream" />
     </aside>
   </div>
 </div>

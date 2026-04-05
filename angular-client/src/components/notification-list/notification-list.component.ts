@@ -5,7 +5,7 @@ import { Button } from 'primeng/button';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routing.module';
 
-export type NotificationListVariant = 'popover' | 'embedded' | 'stream';
+export type NotificationListVariant = 'popover' | 'stream';
 
 @Component({
   selector: 'notification-list',

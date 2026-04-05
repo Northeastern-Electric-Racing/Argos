@@ -69,6 +69,9 @@
   padding: 8px;
   border-radius: 4px;
   position: relative;
+  background: none;
+  border: none;
+  color: inherit;
 }
 
 .navbar-notification mat-icon {
@@ -93,7 +96,6 @@
   --p-dialog-border-color: transparent !important;
 }
 
-/* Let the notification-list component control its own chrome */
 :host ::ng-deep .notification-popover.p-popover {
   background: transparent !important;
   border: none !important;

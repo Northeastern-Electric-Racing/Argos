@@ -1,7 +1,6 @@
 <div
   class="notification-list"
   [class.variant-popover]="variant() === 'popover'"
-  [class.variant-embedded]="variant() === 'embedded'"
   [class.variant-stream]="variant() === 'stream'"
 >
   <header class="list-header">
@@ -12,12 +11,6 @@
       }
     </div>
     <div class="list-actions">
-      @if (variant() === 'embedded' && hasEntries()) {
-        <button type="button" class="view-all-link" (click)="viewAll()" aria-label="View full notification log">
-          View full log
-          <i class="pi pi-arrow-right"></i>
-        </button>
-      }
       @if (hasEntries()) {
         <p-button
           label="Clear"

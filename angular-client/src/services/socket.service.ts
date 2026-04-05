@@ -5,7 +5,6 @@ import { topics } from 'src/utils/topic.utils';
 import { FaultData, RuleNotification } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
 import { NotificationLogService } from './notification-log.service';
-import { MessageService } from 'primeng/api';
 
 /**
  * Service for interacting with the socket
@@ -28,8 +27,7 @@ export default class SocketService {
   receiveData = (
     storage: Storage,
     faultService: FaultService,
-    notificationLogService: NotificationLogService,
-    messageService?: MessageService
+    notificationLogService: NotificationLogService
   ) => {
     this.socket.on('data', (message: string) => {
       try {
@@ -88,14 +86,6 @@ export default class SocketService {
     this.socket.on('rule_notify', (message: RuleNotification) => {
       try {
         notificationLogService.addNotification(message);
-        if (messageService) {
-          messageService.add({
-            severity: 'warn',
-            summary: `Rule Triggered: ${message.id}`,
-            detail: `Topic: ${message.topic}, Values: [${message.values.join(', ')}]`,
-            life: 5000
-          });
-        }
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }

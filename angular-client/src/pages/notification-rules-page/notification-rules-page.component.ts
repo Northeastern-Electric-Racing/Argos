@@ -47,8 +47,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   searchTerm = signal('');
   /** Selected rules — populated by the rules table */
   selectedRules = signal<ClientRule[]>([]);
-  /** Whether the right-side notification stream rail is visible. Always defaults to open on page load. */
-  protected alertPanelOpen = signal(true);
+  /** Whether the right-side notification stream rail is visible. */
+  protected streamRailOpen = signal(true);
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
@@ -175,8 +175,8 @@ export default class NotificationRulesPageComponent implements OnInit {
     this.searchTerm.set(value);
   }
 
-  toggleAlertPanel = () => {
-    this.alertPanelOpen.update((open) => !open);
+  toggleStreamRail = () => {
+    this.streamRailOpen.update((open) => !open);
   };
 
   onFileSelected(event: Event): void {

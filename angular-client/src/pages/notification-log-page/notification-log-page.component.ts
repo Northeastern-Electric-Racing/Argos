@@ -14,6 +14,6 @@ import { NotificationLogService } from 'src/services/notification-log.service';
 })
 export default class NotificationLogPageComponent {
   protected notificationLogService = inject(NotificationLogService);
-  protected entries = computed(() => this.notificationLogService.notifications());
+  protected entries = this.notificationLogService.notifications;
   protected hasEntries = computed(() => this.entries().length > 0);
 }

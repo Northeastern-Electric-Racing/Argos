@@ -13,13 +13,6 @@
         >
         </sidebar-chip>
       }
-      <sidebar-chip
-        icon="notifications"
-        value="Notifications"
-        [active]="this.selectedRoute === '/notification-log'"
-        (click)="navigateTo('/notification-log')"
-      >
-      </sidebar-chip>
     </ng-template>
   </p-sidebar>
 } @else {
@@ -57,19 +50,17 @@
         additionalStyles="fontSize: 36px"
       />
       <messages-per-second />
-      <div
+      <button
+        type="button"
         class="navbar-notification"
-        role="button"
-        tabindex="0"
         aria-label="Notifications"
         (click)="notificationPanel.toggle($event)"
-        (keydown.enter)="notificationPanel.toggle($event)"
       >
-        <mat-icon>notifications</mat-icon>
+        <mat-icon [svgIcon]="'notifications'" />
         @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="'' + notificationLogService.unreadCount()" severity="danger" class="notification-badge" />
+          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
         }
-      </div>
+      </button>
       <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
         <ng-template #content>
           <notification-list variant="popover" />

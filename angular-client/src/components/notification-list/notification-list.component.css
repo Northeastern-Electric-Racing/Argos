@@ -1,9 +1,3 @@
-/* ----------------------------------------------------------------
-   Notification List
-   Shared layout for the nav popover and embedded page panels.
-   Colors pull from global tokens defined in styles.css.
----------------------------------------------------------------- */
-
 .notification-list {
   display: flex;
   flex-direction: column;
@@ -15,18 +9,11 @@
   font-family: var(--font-family);
 }
 
-/* Popover mode — fixed width, used in the nav bell dropdown */
 .notification-list.variant-popover {
   width: 380px;
   max-height: 480px;
 }
 
-/* Embedded mode — fills its container, used on the rules page */
-.notification-list.variant-embedded {
-  width: 100%;
-}
-
-/* Stream mode — fills full height/width of a side rail, scrolls when overflowing */
 .notification-list.variant-stream {
   width: 100%;
   height: 100%;
@@ -76,35 +63,6 @@
   flex-shrink: 0;
 }
 
-.view-all-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  color: var(--color-text-subtitle);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.view-all-link:hover,
-.view-all-link:focus-visible {
-  color: #ef4345;
-  background-color: rgba(239, 67, 69, 0.08);
-  outline: none;
-}
-
-.view-all-link .pi {
-  font-size: 0.7rem;
-}
-
 /* ---- Body ---- */
 
 .list-body {
@@ -115,10 +73,6 @@
 
 .variant-popover .list-body {
   max-height: 360px;
-}
-
-.variant-embedded .list-body {
-  max-height: 280px;
 }
 
 .variant-stream .list-body {
