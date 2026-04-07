@@ -198,7 +198,10 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -273,7 +276,9 @@
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .view-all-button:hover,
