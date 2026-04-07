@@ -6,7 +6,6 @@
   border: 1px solid var(--color-divider);
   border-radius: var(--border-radius-panel);
   overflow: hidden;
-  font-family: var(--font-family);
 }
 
 .notification-list.variant-popover {
@@ -17,10 +16,14 @@
 .notification-list.variant-stream {
   width: 100%;
   height: 100%;
-  max-height: none;
 }
 
-/* ---- Header ---- */
+/* ---- Header / Footer ---- */
+
+.list-header,
+.list-footer {
+  background-color: #252525;
+}
 
 .list-header {
   display: flex;
@@ -29,7 +32,6 @@
   gap: 12px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--color-divider);
-  background-color: #252525;
 }
 
 .list-title {
@@ -43,7 +45,6 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  letter-spacing: 0.01em;
 }
 
 .title-count {
@@ -53,7 +54,6 @@
   border-radius: 10px;
   background-color: #3a3a3a;
   color: var(--color-text-subtitle);
-  line-height: 1.2;
 }
 
 .list-actions {
@@ -75,10 +75,6 @@
   max-height: 360px;
 }
 
-.variant-stream .list-body {
-  max-height: none;
-}
-
 .entries {
   list-style: none;
   margin: 0;
@@ -88,13 +84,12 @@
 /* ---- Entry ---- */
 
 .entry {
-  position: relative;
   display: grid;
   grid-template-columns: 3px 1fr auto;
   align-items: start;
   gap: 10px;
   padding: 10px 14px 10px 11px;
-  border-bottom: 1px solid rgba(65, 65, 65, 0.5);
+  border-bottom: 1px solid #41414180;
   transition: background-color 0.15s ease;
 }
 
@@ -103,15 +98,13 @@
 }
 
 .entry:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: #ffffff06;
 }
 
 .entry-accent {
   width: 3px;
   align-self: stretch;
   background-color: #3a3a3a;
-  border-radius: 2px;
-  transition: background-color 0.15s ease;
 }
 
 .entry.unread .entry-accent {
@@ -132,18 +125,22 @@
   gap: 8px;
 }
 
+.entry-rule,
+.entry-topic,
+.entry-values-data {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .entry-rule {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: 0.01em;
 }
 
 .entry.unread .entry-rule {
-  color: #ffffff;
+  color: #fff;
 }
 
 .entry-time {
@@ -158,9 +155,6 @@
 .entry-topic {
   font-size: 0.76rem;
   color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
 }
 
@@ -186,9 +180,6 @@
   color: var(--color-text-subtitle);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
 }
 
@@ -207,10 +198,7 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   opacity: 0;
-  transition:
-    opacity 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
+  transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -223,7 +211,7 @@
 .entry-dismiss:hover,
 .entry-dismiss:focus-visible {
   color: #ef4345;
-  background-color: rgba(239, 67, 69, 0.1);
+  background-color: #ef43451a;
   outline: none;
 }
 
@@ -247,7 +235,6 @@
 .empty-icon {
   font-size: 1.75rem;
   color: #444;
-  margin-bottom: 4px;
 }
 
 .empty-text {
@@ -262,14 +249,13 @@
   opacity: 0.8;
 }
 
-/* ---- Footer (popover only) ---- */
+/* ---- Footer ---- */
 
 .list-footer {
   display: flex;
   justify-content: center;
   padding: 6px;
   border-top: 1px solid var(--color-divider);
-  background-color: #252525;
 }
 
 .view-all-button {
@@ -287,28 +273,21 @@
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .view-all-button:hover,
 .view-all-button:focus-visible {
   color: #ef4345;
-  background-color: rgba(239, 67, 69, 0.08);
+  background-color: #ef434514;
   outline: none;
 }
 
 .view-all-button .pi {
   font-size: 0.72rem;
-  transition: transform 0.15s ease;
 }
 
-.view-all-button:hover .pi {
-  transform: translateX(2px);
-}
-
-/* ---- Mobile responsive ---- */
+/* ---- Mobile ---- */
 
 @media (max-width: 768px) {
   .notification-list.variant-popover {
