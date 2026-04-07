@@ -24,11 +24,7 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData = (
-    storage: Storage,
-    faultService: FaultService,
-    notificationLogService: NotificationLogService
-  ) => {
+  receiveData = (storage: Storage, faultService: FaultService, notificationLogService: NotificationLogService) => {
     this.socket.on('data', (message: string) => {
       try {
         const data = JSON.parse(message) as ServerData;
