@@ -2,17 +2,9 @@ import { Socket } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
 import { topics } from 'src/utils/topic.utils';
-import { FaultData } from 'src/utils/types.utils';
+import { FaultData, RuleNotification } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
-import { MessageService } from 'primeng/api';
-
-/** Shape of a rule_notify event from the backend */
-interface RuleNotification {
-  id: string;
-  topic: string;
-  values: number[];
-  time: string;
-}
+import { NotificationLogService } from './notification-log.service';
 
 /**
  * Service for interacting with the socket
@@ -32,7 +24,7 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData = (storage: Storage, faultService: FaultService, messageService?: MessageService) => {
+  receiveData = (storage: Storage, faultService: FaultService, notificationLogService: NotificationLogService) => {
     this.socket.on('data', (message: string) => {
       try {
         const data = JSON.parse(message) as ServerData;
@@ -87,24 +79,16 @@ export default class SocketService {
       }
     });
 
-    this.socket.on('disconnect', () => {
-      storage.setCurrentRunId(undefined);
-    });
-
-    this.socket.on('rule_notify', (message: string) => {
+    this.socket.on('rule_notify', (message: RuleNotification) => {
       try {
-        const notification = JSON.parse(message) as RuleNotification;
-        if (messageService) {
-          messageService.add({
-            severity: 'warn',
-            summary: `Rule Triggered: ${notification.id}`,
-            detail: `Topic: ${notification.topic}, Values: [${notification.values.join(', ')}]`,
-            life: 5000
-          });
-        }
+        notificationLogService.addNotification(message);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
+    });
+
+    this.socket.on('disconnect', () => {
+      storage.setCurrentRunId(undefined);
     });
   };
 

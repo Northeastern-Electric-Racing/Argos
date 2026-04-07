@@ -1,0 +1,72 @@
+<div
+  class="notification-list"
+  [class.variant-popover]="variant() === 'popover'"
+  [class.variant-stream]="variant() === 'stream'"
+>
+  <header class="list-header">
+    <div class="list-title">
+      <span class="title-text">{{ title() }}</span>
+      @if (hasEntries()) {
+        <span class="title-count">{{ totalCount() }}</span>
+      }
+    </div>
+    <div class="list-actions">
+      @if (hasEntries()) {
+        <p-button
+          label="Clear"
+          severity="danger"
+          [text]="true"
+          size="small"
+          (onClick)="notificationLogService.clearAll()"
+          ariaLabel="Clear all notifications"
+        />
+      }
+    </div>
+  </header>
+
+  <div class="list-body">
+    @if (!hasEntries()) {
+      <div class="empty-state">
+        <i class="pi pi-bell-slash empty-icon"></i>
+        <span class="empty-text">No notifications yet</span>
+        <span class="empty-hint">Triggered rules will appear here</span>
+      </div>
+    } @else {
+      <ul class="entries" role="list">
+        @for (entry of entries(); track entry.id) {
+          <li class="entry" [class.unread]="!entry.read">
+            <span class="entry-accent" aria-hidden="true"></span>
+            <div class="entry-body">
+              <div class="entry-primary">
+                <span class="entry-rule" [title]="entry.notification.id">{{ entry.notification.id }}</span>
+                <time class="entry-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</time>
+              </div>
+              <div class="entry-topic" [title]="entry.notification.topic">{{ entry.notification.topic }}</div>
+              <div class="entry-values">
+                <span class="entry-values-label">triggered</span>
+                <span class="entry-values-data">{{ entry.notification.values.join(', ') }}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="entry-dismiss"
+              (click)="notificationLogService.dismissEntry(entry.id)"
+              [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (variant() === 'popover' && hasEntries()) {
+    <footer class="list-footer">
+      <button type="button" class="view-all-button" (click)="viewAll()" aria-label="View all notifications">
+        View all notifications
+        <i class="pi pi-arrow-right"></i>
+      </button>
+    </footer>
+  }
+</div>

@@ -61,7 +61,53 @@
   color: #ef4345;
 }
 
+.navbar-notification {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 4px;
+  position: relative;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+.navbar-notification mat-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 32px;
+  transition: color 0.2s ease;
+}
+
+.navbar-notification:hover {
+  color: #ef4345;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
 :host {
   --p-dialog-background: transparent !important;
   --p-dialog-border-color: transparent !important;
+}
+
+:host ::ng-deep .notification-popover.p-popover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  border-radius: var(--border-radius-panel) !important;
+}
+
+:host ::ng-deep .notification-popover .p-popover-content {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+:host ::ng-deep .notification-popover .p-popover-arrow {
+  display: none !important;
 }

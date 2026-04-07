@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { take } from 'rxjs';
+import { appRoutes } from 'src/app/app-routing.module';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
@@ -18,6 +20,7 @@ import {
 import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-confirm-dialog.component';
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 import { RulesTableComponent } from './rules-table/rules-table.component';
+import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -30,11 +33,12 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent]
+  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(MessageService);
   private dialogService = inject(DialogService);
+  private router = inject(Router);
 
   clientId!: string;
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -43,6 +47,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   searchTerm = signal('');
   /** Selected rules — populated by the rules table */
   selectedRules = signal<ClientRule[]>([]);
+  /** Whether the right-side notification stream rail is visible. */
+  protected streamRailOpen = signal(true);
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
@@ -54,6 +60,10 @@ export default class NotificationRulesPageComponent implements OnInit {
     // clientId is guaranteed to exist — eagerly created in AppContextComponent
     this.clientId = localStorage.getItem(CLIENT_ID_KEY)!;
   }
+
+  onViewLog = () => {
+    this.router.navigateByUrl(appRoutes.notificationLogRoute());
+  };
 
   onUpload = () => {
     this.fileInput()?.nativeElement.click();
@@ -164,6 +174,10 @@ export default class NotificationRulesPageComponent implements OnInit {
     const { value } = event.target as HTMLInputElement;
     this.searchTerm.set(value);
   }
+
+  toggleStreamRail = () => {
+    this.streamRailOpen.update((open) => !open);
+  };
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
