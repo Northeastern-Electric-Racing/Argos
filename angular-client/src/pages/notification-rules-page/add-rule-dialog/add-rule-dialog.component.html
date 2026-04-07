@@ -9,7 +9,15 @@
 
   <div class="field">
     <label for="rule-topic">Topic</label>
-    <input id="rule-topic" pInputText formControlName="topic" placeholder="e.g. BMS/Pack/Voltage" />
+    <p-autoComplete
+      id="rule-topic"
+      formControlName="topic"
+      [suggestions]="filteredTopics()"
+      (completeMethod)="filterTopics($event)"
+      [forceSelection]="true"
+      placeholder="e.g. BMS/Pack/Voltage"
+      [fluid]="true"
+    />
     @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
       <small class="error" role="alert">Topic is required</small>
     }
