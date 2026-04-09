@@ -1,5 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { Subscription } from 'rxjs';
 import {
   authenticatePw,
   getSettings,
@@ -13,6 +14,7 @@ import {
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { updateVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
+import Storage from 'src/services/storage.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 
 import { Password } from 'primeng/password';
@@ -28,9 +30,10 @@ import { CommonModule } from '@angular/common';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 
 interface CarCommand {
-  dataType: DataType;
+  dataTypes: DataType[];
   name: string;
   values: number[];
+  currentValues: string[];
 }
 
 @Component({
@@ -54,9 +57,11 @@ interface CarCommand {
     MatGridTile
   ]
 })
-export default class CarCommandComponent implements OnInit {
+export default class CarCommandComponent implements OnInit, OnDestroy {
   private serverService = inject(APIService);
   private toastService = inject(MessageService);
+  private storage = inject(Storage);
+  private subscriptions: Subscription[] = [];
 
   carCommands: CarCommand[] = [];
   dataTypesIsLoading = true;
@@ -128,13 +133,43 @@ export default class CarCommandComponent implements OnInit {
             const commandName = dataType.name.split('/')[dataType.name.split('/').length - 2];
             const existingCommand = commandMap.get(commandName);
             if (!existingCommand) {
-              commandMap.set(commandName, { dataType, values: [0], name: commandName });
+              commandMap.set(commandName, {
+                dataTypes: [dataType],
+                values: [0],
+                name: commandName,
+                currentValues: ['--']
+              });
             } else {
-              commandMap.set(commandName, { ...existingCommand, values: [...existingCommand.values, 0] });
+              commandMap.set(commandName, {
+                ...existingCommand,
+                dataTypes: [...existingCommand.dataTypes, dataType],
+                values: [...existingCommand.values, 0],
+                currentValues: [...existingCommand.currentValues, '--']
+              });
             }
           });
         this.carCommands = Array.from(commandMap.values());
+        this.subscribeToCurrentValues();
       }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  private subscribeToCurrentValues() {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions = [];
+    this.carCommands.forEach((command) => {
+      command.dataTypes.forEach((dataType, i) => {
+        this.subscriptions.push(
+          this.storage.get(dataType.name).subscribe((value) => {
+            const [currentValue] = value.values;
+            command.currentValues[i] = currentValue;
+          })
+        );
+      });
     });
   }
 
