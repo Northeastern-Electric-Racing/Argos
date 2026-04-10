@@ -208,10 +208,6 @@ export default class CarCommandComponent implements OnInit, OnDestroy {
     });
   };
 
-  getOptionId = (name: string, index: number) => {
-    return `${name}-value-${index}`;
-  };
-
   onUpdateVideosPressed = () => {
     const updateVideoQueryResponse = this.serverService.query(() => updateVideos(), { invalidates: ['videos'] });
     this.toastService.add({

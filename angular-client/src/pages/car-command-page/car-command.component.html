@@ -55,10 +55,8 @@
                 <div>
                   @for (value of command.values; track i; let i = $index) {
                     <div [style]="{ marginBottom: '5px' }">
-                      <label [style]="{ marginRight: '5px' }" [for]="getOptionId(command.name, i)"
-                        >Current: {{ command.currentValues[i] }}</label
-                      >
-                      <p-inputnumber [(ngModel)]="command.values[i]" [inputId]="getOptionId(command.name, i)" />
+                      <span [style]="{ marginRight: '5px' }">Current: {{ command.currentValues[i] }}</span>
+                      <p-inputnumber [(ngModel)]="command.values[i]" />
                     </div>
                   }
                 </div>
