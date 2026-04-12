@@ -11,13 +11,15 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { EnvService } from 'src/services/env.service';
 import { NotificationLogService } from 'src/services/notification-log.service';
+import { v4 as uuidv4 } from 'uuid';
 
-/** Generate or retrieve a stable client ID for notifications */
+// crypto.randomUUID is only defined in secure contexts (https or loopback);
+// uuidv4 falls back to crypto.getRandomValues so it works on insecure origins.
 function getOrCreateClientId(): string {
   const key = 'notification_rules_client_id';
   let id = localStorage.getItem(key);
   if (!id) {
-    id = crypto.randomUUID();
+    id = uuidv4();
     localStorage.setItem(key, id);
   }
   return id;
