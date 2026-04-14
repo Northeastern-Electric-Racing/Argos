@@ -1,8 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, input, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Signal, inject, input } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { combineLatest, map, of, startWith, switchMap } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { DataType } from 'src/utils/types.utils';
+
+interface LiveStripItem {
+  name: string;
+  shortName: string;
+  value: string;
+  unit: string;
+}
 
 @Component({
   selector: 'live-value-strip',
@@ -10,57 +18,33 @@ import { DataType } from 'src/utils/types.utils';
   styleUrls: ['./live-value-strip.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export default class LiveValueStripComponent implements OnDestroy {
+export default class LiveValueStripComponent {
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
 
   dataTypes = input<DataType[]>([]);
 
-  private liveValues = signal<Map<string, { value: string; unit: string }>>(new Map());
-
-  displayItems = computed(() => {
-    const map = this.liveValues();
-    return this.dataTypes().map((dt) => {
-      const parts = dt.name.split('/');
-      const shortName = parts.length > 1 ? parts.slice(1).join('/') : parts[0];
-      const entry = map.get(dt.name);
-      return {
-        name: dt.name,
-        shortName,
-        value: entry?.value ?? '-',
-        unit: entry?.unit ?? dt.unit
-      };
-    });
-  });
-
-  constructor() {
-    effect(() => {
-      const dataTypes = this.dataTypes();
-      this.teardownSubscriptions();
-
-      for (const dt of dataTypes) {
-        this.subscriptions.push(
-          this.storage.get(dt.name).subscribe((dv) => {
-            const formatted = decimalPipe(dv.values[0], 2).toFixed(2);
-            this.liveValues.update((prev) => {
-              const existing = prev.get(dt.name);
-              if (existing?.value === formatted && existing?.unit === dv.unit) return prev;
-              const next = new Map(prev);
-              next.set(dt.name, { value: formatted, unit: dv.unit });
-              return next;
-            });
+  displayItems: Signal<LiveStripItem[]> = toSignal(
+    toObservable(this.dataTypes).pipe(
+      switchMap((dataTypes) => {
+        if (dataTypes.length === 0) return of<LiveStripItem[]>([]);
+        return combineLatest(
+          dataTypes.map((dt) => {
+            const parts = dt.name.split('/');
+            const shortName = parts.length > 1 ? parts.slice(1).join('/') : parts[0];
+            const placeholder: LiveStripItem = { name: dt.name, shortName, value: '-', unit: dt.unit };
+            return this.storage.get(dt.name).pipe(
+              map((dv) => ({
+                name: dt.name,
+                shortName,
+                value: decimalPipe(dv.values[0], 2).toFixed(2),
+                unit: dv.unit
+              })),
+              startWith(placeholder)
+            );
           })
         );
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.teardownSubscriptions();
-  }
-
-  private teardownSubscriptions(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-    this.subscriptions = [];
-  }
+      })
+    ),
+    { initialValue: [] }
+  );
 }

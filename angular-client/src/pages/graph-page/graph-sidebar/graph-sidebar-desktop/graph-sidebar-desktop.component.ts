@@ -1,6 +1,4 @@
-import { AsyncPipe } from '@angular/common';
-import { Component, OnInit, OnDestroy, input, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, Injector, OnInit, inject, input } from '@angular/core';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import Storage from 'src/services/storage.service';
@@ -15,27 +13,21 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
-  standalone: true,
-  imports: [AsyncPipe, ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
+  imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent]
 })
-export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
+export default class GraphSidebarDesktopComponent implements OnInit {
   private topicSelectionService = inject(TopicSelectionService);
   private storage = inject(Storage);
+  private injector = inject(Injector);
 
   dataTypes = input<DataType[]>([]);
   treeNodes: TreeNode<TreeNodeData>[] = [];
   selectedNodes?: TreeNode<TreeNodeData>[];
 
-  private storageSubscriptions: Subscription[] = [];
-
   ngOnInit(): void {
     const nodes = dataTypesToNodes(this.dataTypes());
-    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.storageSubscriptions);
+    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.injector);
     this.selectedNodes = findSelectedTreeNodes(this.treeNodes, this.topicSelectionService);
-  }
-
-  ngOnDestroy(): void {
-    this.storageSubscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   clearSelections = () => {

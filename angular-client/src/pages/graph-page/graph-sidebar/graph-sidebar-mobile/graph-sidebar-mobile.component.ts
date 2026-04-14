@@ -1,6 +1,4 @@
-import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, input } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Injector, OnInit, inject, input } from '@angular/core';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { Sidebar } from 'primeng/sidebar';
@@ -17,28 +15,23 @@ import TypographyComponent from 'src/components/typography/typography.component'
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AsyncPipe, Sidebar, PrimeTemplate, Tree, ButtonComponent, TypographyComponent]
+  imports: [Sidebar, PrimeTemplate, Tree, ButtonComponent, TypographyComponent]
 })
-export default class GraphSidebarMobileComponent implements OnInit, OnDestroy {
+export default class GraphSidebarMobileComponent implements OnInit {
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
   private storage = inject(Storage);
+  private injector = inject(Injector);
 
   sidebarVisible = false;
   treeNodes: TreeNode<TreeNodeData>[] = [];
   selectedNodes?: TreeNode<TreeNodeData>[];
 
-  private storageSubscriptions: Subscription[] = [];
-
   ngOnInit(): void {
     const nodes = dataTypesToNodes(this.dataTypes());
-    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.storageSubscriptions);
+    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.injector);
     this.selectedNodes = findSelectedTreeNodes(this.treeNodes, this.topicSelectionService);
-  }
-
-  ngOnDestroy(): void {
-    this.storageSubscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   toggleSidebar = () => {

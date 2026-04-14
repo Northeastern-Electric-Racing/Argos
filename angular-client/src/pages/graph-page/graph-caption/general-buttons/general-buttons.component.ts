@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -10,7 +10,7 @@ import { SelectDropdownComponent } from '../../../../components/select-dropdown/
   selector: 'general-buttons',
   templateUrl: './general-buttons.component.html',
   styleUrl: './general-buttons.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RunSelectorComponent, ButtonComponent, SelectDropdownComponent]
 })
 export class GeneralButtonsComponent {

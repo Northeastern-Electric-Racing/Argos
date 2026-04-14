@@ -29,7 +29,6 @@ import { FormsModule } from '@angular/forms';
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
   styleUrls: ['./graph-page.component.css'],
-  standalone: true,
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,

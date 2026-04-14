@@ -1,37 +1,36 @@
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { Injector, Signal, runInInjectionContext, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TreeNode } from 'primeng/api';
+import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { Node } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 export interface TreeNodeData extends Node {
-  displayValue: BehaviorSubject<string>;
+  displayValue: Signal<string>;
 }
 
-/**
- * Recursively maps Node[] to PrimeNG TreeNode[], subscribing leaf nodes
- * to Storage for live value display.
- *
- * @returns The tree nodes. Caller must unsubscribe via the subscriptions array.
- */
+/** Builds TreeNodes from Nodes; leaf signals cleanup via the injector's DestroyRef. */
 export function mapNodesToTreeNodes(
   nodes: Node[],
   storage: Storage,
-  subscriptions: Subscription[],
+  injector: Injector,
   precision = 3
 ): TreeNode<TreeNodeData>[] {
   const mapToTreeNode = (node: Node): TreeNode<TreeNodeData> => {
-    const displayValue = new BehaviorSubject<string>('N/A');
     const isLeaf = node.nodes.value.length === 0;
-    if (isLeaf) {
-      // topicName has a trailing slash from dataTypesToNodes — strip it for storage lookup
-      subscriptions.push(
-        storage.get(node.topicName.slice(0, -1)).subscribe((value) => {
-          displayValue.next(decimalPipe(value.values[0], precision).toFixed(precision) + value.unit);
-        })
-      );
-    }
+    // topicName has a trailing slash from dataTypesToNodes — strip it for storage lookup
+    const displayValue: Signal<string> = isLeaf
+      ? runInInjectionContext(injector, () =>
+          toSignal(
+            storage
+              .get(node.topicName.slice(0, -1))
+              .pipe(map((value) => decimalPipe(value.values[0], precision).toFixed(precision) + value.unit)),
+            { initialValue: 'N/A' }
+          )
+        )
+      : signal('');
     return {
       label: node.name,
       data: { ...node, displayValue },
@@ -43,9 +42,7 @@ export function mapNodesToTreeNodes(
   return nodes.map(mapToTreeNode);
 }
 
-/**
- * Finds already-selected nodes in a tree and expands their parents.
- */
+/** Finds already-selected nodes and expands their parents. */
 export function findSelectedTreeNodes(
   treeNodes: TreeNode<TreeNodeData>[],
   selectionService: TopicSelectionService

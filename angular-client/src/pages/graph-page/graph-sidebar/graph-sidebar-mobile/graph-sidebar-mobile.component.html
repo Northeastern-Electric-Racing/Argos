@@ -27,7 +27,7 @@
           <div class="tree-node-container" (click)="onRowClick($event, node)">
             <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
             @if (node.children?.length === 0) {
-              <typography [content]="node.data.displayValue | async" variant="subheader" />
+              <typography [content]="node.data.displayValue()" variant="subheader" />
             }
           </div>
         </ng-template>
