@@ -22,7 +22,7 @@
   <vstack style="width: 33%">
     <hstack style="width: 100%" justifyContent="space-between">
       <typography variant="info-subtitle" content="Pack Voltage" />
-      <typography variant="info-value-mobile" [content]="voltage.toString() + 'V'" />
+      <typography variant="info-value-mobile" [content]="voltage.toFixed(1) + 'V'" />
     </hstack>
 
     <hstack style="width: 100%" justifyContent="space-between">

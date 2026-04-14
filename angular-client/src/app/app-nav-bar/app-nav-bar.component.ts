@@ -157,7 +157,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     }
   }
 
-  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems];
   navMenuItems: NavItem[] = [
     {
       id: appRoutes.faultsRoute(),
@@ -196,6 +195,8 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       icon: 'electrical_services'
     }
   ];
+
+  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
   openMenu() {
     this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
