@@ -1,37 +1,30 @@
-import { Component, input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
+import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
 
-/**
- * Lightweight stat display component designed for the At A Glance bar.
- * Renders value + unit + subtitle with optional header label and widget slot.
- * Uses pure CSS — no nested hstack/vstack/typography wrappers.
- */
 @Component({
   selector: 'stat-display',
   templateUrl: './stat-display.component.html',
   styleUrl: './stat-display.component.css',
-  standalone: true,
-  imports: [MatIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MatIcon, ConnectionDotWithMessageComponent],
   host: {
     '[class.unit-below-mode]': 'unitBelow()'
   }
 })
-export class StatDisplayComponent implements OnChanges {
+export class StatDisplayComponent {
   value = input<number>();
   unit = input<string>('');
   subtitle = input<string>('');
   precision = input<number>(1);
-  /** Optional header label (e.g. "Cell: 114 | Chip: A") */
   headerLabel = input<string>('');
-  /** SVG icon name to show in header (registered via matIconRegistry) */
   headerIcon = input<string>('');
-  /** When true, render the unit below the value instead of inline */
   unitBelow = input<boolean>(false);
+  connectionDotStatusColor = input<() => string>();
 
-  formattedValue = '-';
-
-  ngOnChanges(): void {
+  formattedValue = computed(() => {
     const val = this.value();
-    this.formattedValue = (val?.toFixed(this.precision()) ?? '-') + (this.unit() === 'C' ? '°' : '');
-  }
+    if (!Number.isFinite(val)) return '-';
+    return val!.toFixed(this.precision()) + (this.unit() === 'C' ? '°' : '');
+  });
 }

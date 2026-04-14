@@ -6,7 +6,7 @@ import { StatConfig, StatSummaryComponent } from 'src/components/stat-summary/st
 
 const DEFAULT_SEGMENT_STATS: StatConfig[] = [
   { label: 'Avg Temp', unit: '°C', value: undefined, formatFn: (v) => v.toFixed(0) },
-  { label: 'Avg Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(1) },
+  { label: 'Avg Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(2) },
   { label: 'Total Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(1) }
 ];
 
