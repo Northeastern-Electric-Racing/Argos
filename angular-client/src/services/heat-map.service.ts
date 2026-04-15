@@ -8,7 +8,8 @@ import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view
 export enum HeatMapView {
   Voltage = 'Voltage',
   Temperature = 'Temperature',
-  Balancing = 'Balancing'
+  Balancing = 'Balancing',
+  CvsFailure = 'CvS Failure'
 }
 
 export interface SelectedCellInfo {

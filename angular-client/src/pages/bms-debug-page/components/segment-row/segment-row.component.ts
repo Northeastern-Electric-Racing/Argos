@@ -16,7 +16,6 @@ import { SegmentOverviewComponent } from '../segment-overview/segment-overview.c
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
-  standalone: true,
   imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
 })
 export class SegmentRowComponent implements OnInit, OnDestroy {
@@ -26,7 +25,6 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
 
   segment = input.required<Segment>();
 
-  // View selector config (Voltage and Balancing only per ticket)
   viewSelectorConfig!: SelectorConfig;
   private viewOptions: DropdownOption[] = [
     {
@@ -40,6 +38,10 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
     {
       name: HeatMapView.Balancing.toString(),
       function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Balancing)
+    },
+    {
+      name: HeatMapView.CvsFailure.toString(),
+      function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.CvsFailure)
     }
   ];
 
