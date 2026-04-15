@@ -3,7 +3,7 @@
     <info-value-display style="margin-top: 10px" [value]="this.temperature" unit="C" subtitle="Temperature" />
 
     <divider style="width: 100px; margin-top: 15px" />
-    <info-value-display style="margin-top: -5px" [value]="this.voltage" unit="V" subtitle="Voltages" />
+    <info-value-display style="margin-top: -5px" [value]="this.voltage" unit="V" [precision]="2" subtitle="Avg Voltage" />
     <divider style="width: 100px; margin-top: 25px" />
     <info-value-display style="margin-top: -5px" [value]="this.alphaChipTemp" unit="C" subtitle="Chip Temp" />
     <toast-button

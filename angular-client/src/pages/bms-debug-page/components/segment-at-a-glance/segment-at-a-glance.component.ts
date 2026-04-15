@@ -2,7 +2,7 @@ import { Component, effect, HostListener, inject, input, OnDestroy } from '@angu
 import { Subscription } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
 import Storage from 'src/services/storage.service';
-import { Chip, getConnectionDotStatusColor, Segment } from 'src/utils/bms.utils';
+import { Chip, getCellVoltageStatusColor, Segment } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
@@ -16,7 +16,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   selector: 'segment-at-a-glance',
   templateUrl: './segment-at-a-glance.component.html',
   styleUrl: './segment-at-a-glance.component.css',
-  standalone: true,
   imports: [
     InfoBackgroundComponent,
     InfoValueDisplayComponent,
@@ -64,6 +63,9 @@ export class SegmentAtAGlanceComponent implements OnDestroy {
 
   subscribeToData = (segment: number) => {
     this.valueSubscriptions.push(
+      this.storage.get(topics.segmentVoltage(segment)).subscribe((value) => {
+        this.voltage = parseFloat(value.values[0]);
+      }),
       this.storage.get(topics.segmentTemp(segment)).subscribe((value) => {
         this.temperature = parseFloat(value.values[0]);
         this.thermometerConfigSegment.currentValue = this.temperature;
@@ -95,7 +97,7 @@ export class SegmentAtAGlanceComponent implements OnDestroy {
     return this.betaCrc === 0 ? 'green' : 'red';
   };
   getStatusColor = (): string => {
-    return getConnectionDotStatusColor(this.voltage);
+    return getCellVoltageStatusColor(this.voltage);
   };
   connectionDotConfig: ConnectionDotConfig = {
     type: 'connection-dot-config',

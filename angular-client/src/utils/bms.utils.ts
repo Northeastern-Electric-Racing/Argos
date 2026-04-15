@@ -63,3 +63,19 @@ export const getConnectionDotStatusColor = (voltage: number): string => {
   // anything above 3.5 * 125 cells for scaling, is good
   return '#19ff30';
 };
+
+export const getCellVoltageStatusColor = (avgCellVoltage: number): string => {
+  if (avgCellVoltage <= 3.0) return 'red';
+  if (avgCellVoltage <= 3.5) return 'yellow';
+  return '#19ff30';
+};
+
+export const getChipFromTopicValue = (chipValue: number): Chip => {
+  return chipValue % 2 === 0 ? Chip.Alpha : Chip.Beta;
+};
+
+export const getCellChipLabel = (cell: number | undefined, chip: Chip | undefined): string => {
+  const cellLabel = cell !== undefined ? `Cell: ${cell}` : 'No Cell';
+  const chipLabel = chip !== undefined ? `Chip: ${chipToString(chip, true)}` : 'No Chip';
+  return `${cellLabel} | ${chipLabel}`;
+};
