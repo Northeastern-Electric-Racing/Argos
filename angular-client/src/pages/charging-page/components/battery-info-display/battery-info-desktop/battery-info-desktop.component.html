@@ -21,9 +21,9 @@
   <divider />
   <vstack style="width: 20%">
     <hstack>
-      <typography variant="info-value" [content]="voltage.toString() + 'V'" />
+      <typography variant="info-value" [content]="voltage.toFixed(1) + 'V'" />
     </hstack>
-    <typography variant="info-subtitle" content="Voltage" />
+    <typography variant="info-subtitle" content="Pack Voltage" />
   </vstack>
 
   <divider />

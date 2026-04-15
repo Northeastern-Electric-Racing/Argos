@@ -1,0 +1,10 @@
+<div class="strip">
+  @for (item of displayItems(); track item.name) {
+    <div class="strip-item">
+      <span class="strip-item-label">{{ item.shortName }}</span>
+      <span class="strip-item-value">
+        {{ item.value }}<span class="strip-item-unit">{{ item.unit }}</span>
+      </span>
+    </div>
+  }
+</div>

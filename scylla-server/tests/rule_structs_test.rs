@@ -46,7 +46,7 @@ async fn test_delete_rule_success() -> Result<(), RuleManagerError> {
     assert_eq!(rule_manager.get_all_rules().await.len(), 1);
 
     rule_manager.delete_rule(client, rule_id).await?;
-    assert_eq!(rule_manager.get_all_rules().await.len(), 1); // Rule still exists but client is unsubscribed
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0); // Rule removed since no subscribers remain
 
     Ok(())
 }
@@ -77,7 +77,7 @@ async fn test_delete_client_success() -> Result<(), RuleManagerError> {
 
     rule_manager.delete_client(client).await?;
     assert!(rule_manager.get_all_clients().await.is_empty());
-    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0); // Rules removed since no subscribers remain
 
     Ok(())
 }
@@ -326,16 +326,16 @@ async fn test_rule_manager_concurrent_delete_rule() -> Result<(), RuleManagerErr
             .await
     };
 
-    // Deleting rules from calling client side code doesn't actually remove rules
+    // Deleting rules removes them when no subscribers remain
     let res = f().await;
     assert!(res.into_iter().all(|e| e.is_ok()));
-    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0);
     assert!(rule_manager.get_all_clients().await.is_empty());
 
     // Deleting again will result in NoSuchClient errors
     let res = f().await;
     assert!(res.into_iter().all(|e| e.is_err()));
-    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0);
     assert!(rule_manager.get_all_clients().await.is_empty());
 
     Ok(())
