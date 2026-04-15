@@ -69,6 +69,7 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   autoDigits = input<number>(3);
   autoDecimals = input<number>(1);
   notice = input<string>(''); // Component param allowing you to put a note/warning/etc, in the top-right corner of the card.
+  lockButtonEnabled = input<boolean>(true);
 
   // ── Shared seven-segment display inputs ──
   readonly largeDisplayFontSize: number = 80;
