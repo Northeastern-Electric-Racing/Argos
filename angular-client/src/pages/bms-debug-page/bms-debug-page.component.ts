@@ -15,7 +15,6 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
   selector: 'app-bms-debug-page',
   templateUrl: './bms-debug-page.component.html',
   styleUrl: './bms-debug-page.component.css',
-  standalone: true,
   imports: [
     MatGridList,
     MatGridTile,

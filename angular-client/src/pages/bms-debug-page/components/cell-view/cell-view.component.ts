@@ -35,7 +35,6 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
-  standalone: true,
   imports: [ConfigTableComponent]
 })
 export class CellViewComponent implements OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, input, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, computed } from '@angular/core';
 import { HeatMapView } from 'src/services/heat-map.service';
 
 /** Maps each HeatMapView to its CSS modifier class suffix */
@@ -21,7 +21,7 @@ const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
   selector: 'hex-tile',
   templateUrl: './hex-tile.component.html',
   styleUrl: './hex-tile.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class]': 'variant()',
     '[class.selected-cell]': 'boxShadowColor()'

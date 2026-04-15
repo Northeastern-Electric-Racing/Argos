@@ -20,7 +20,6 @@ const formatAllSelectorName = (name: string) => {
   selector: 'bms-segment-view',
   templateUrl: './bms-segment-view.component.html',
   styleUrl: './bms-segment-view.component.css',
-  standalone: true,
   host: {
     '(window:resize)': 'onResize()'
   },
