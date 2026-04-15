@@ -1,4 +1,4 @@
-<hstack>
+<div class="general-buttons-row">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
     <argos-button [onClick]="onSetRealTime()" label="Realtime" additionalStyles="border: 1.4px solid #000" />
@@ -13,4 +13,4 @@
     [placeholder]="selectorConfig().placeholder"
     [defaultValue]="selectorConfig().defaultValue"
   />
-</hstack>
+</div>

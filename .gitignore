@@ -108,3 +108,8 @@ iOSInjectionProject/
 compose.override.yml
 **/.DS_Store
 **/.vs
+
+# AI tooling
+.playwright-mcp/
+.wolf/
+.claude/

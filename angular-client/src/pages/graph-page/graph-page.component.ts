@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subscription } from 'rxjs';
@@ -17,8 +17,8 @@ import { ButtonComponent } from '../../components/argos-button/argos-button.comp
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
 import CustomGraphComponent from './graph/graph.component';
+import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
@@ -29,7 +29,6 @@ import { FormsModule } from '@angular/forms';
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
   styleUrls: ['./graph-page.component.css'],
-  standalone: true,
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
@@ -37,8 +36,8 @@ import { FormsModule } from '@angular/forms';
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
-    HStackComponent,
     CustomGraphComponent,
+    LiveValueStripComponent,
     TypographyComponent,
     InputNumberModule,
     FormsModule
@@ -52,6 +51,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
   private route = inject(ActivatedRoute);
+  // Required: forces CD when the isLoading BehaviorSubject transitions during the initial CD cycle
+  // (removing this re-introduces NG0100 on the loading→content branch flip). See PR #550 review thread.
+  private cdr = inject(ChangeDetectorRef);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime
   subscriptions: Subscription[] = [];
@@ -350,6 +352,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.persistentSubscriptions.push(
       dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
         this.dataTypesIsLoading = isLoading;
+        this.cdr.detectChanges();
       })
     );
     this.persistentSubscriptions.push(

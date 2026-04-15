@@ -7,3 +7,31 @@
   height: 100%;
   margin: 0px 5px 0px 15px;
 }
+
+.general-buttons-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  :host {
+    margin: 0;
+    width: 100%;
+  }
+
+  .general-buttons-row {
+    gap: 6px;
+    width: 100%;
+  }
+
+  :host ::ng-deep select-dropdown {
+    min-width: 130px;
+  }
+
+  :host ::ng-deep select-dropdown .p-select {
+    min-width: 130px;
+  }
+}

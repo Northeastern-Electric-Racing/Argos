@@ -1,77 +1,68 @@
-import { animate, style, transition, trigger } from '@angular/animations';
-import { Component, Input, OnInit, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { dataTypeNamePipe, dataTypesToNodes } from 'src/utils/dataTypes.utils';
-import { DataType, Node, NodeWithVisibilityToggle } from 'src/utils/types.utils';
-
-import { AsyncPipe } from '@angular/common';
-import NodeDisplayComponent from '../node-display/node-display.component';
-import TypographyComponent from 'src/components/typography/typography.component';
+import { ChangeDetectionStrategy, Component, Injector, OnInit, inject, input } from '@angular/core';
+import { TreeNode, PrimeTemplate } from 'primeng/api';
+import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
+import { Sidebar } from 'primeng/sidebar';
+import Storage from 'src/services/storage.service';
+import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
+import { mapNodesToTreeNodes, findSelectedTreeNodes, TreeNodeData } from 'src/utils/tree.utils';
+import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
+import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
-  animations: [
-    trigger('toggleSidebar', [
-      transition(':enter', [
-        style({
-          height: 0,
-          opacity: 0
-        }),
-        animate(
-          '400ms',
-          style({
-            height: '*',
-            opacity: 1
-          })
-        )
-      ]),
-      transition(':leave', [
-        animate(
-          '400ms',
-          style({
-            height: 0,
-            opacity: 0
-          })
-        )
-      ])
-    ])
-  ],
-  standalone: true,
-  imports: [AsyncPipe, NodeDisplayComponent, TypographyComponent]
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Sidebar, PrimeTemplate, Tree, ButtonComponent, TypographyComponent]
 })
 export default class GraphSidebarMobileComponent implements OnInit {
-  @Input() dataTypes!: DataType[];
-  nodesWithVisibilityToggle!: Observable<NodeWithVisibilityToggle[]>;
-  showSelection = false;
-  nodes!: Node[];
-  private topicSelection = inject(TopicSelectionService);
+  dataTypes = input.required<DataType[]>();
 
-  /**
-   * Initializes the nodes with the visibility toggle.
-   */
+  private topicSelectionService = inject(TopicSelectionService);
+  private storage = inject(Storage);
+  private injector = inject(Injector);
+
+  sidebarVisible = false;
+  treeNodes: TreeNode<TreeNodeData>[] = [];
+  selectedNodes?: TreeNode<TreeNodeData>[];
+
   ngOnInit(): void {
-    this.nodes = dataTypesToNodes(this.dataTypes);
-    this.nodesWithVisibilityToggle = of(
-      this.nodes.map((node: Node) => {
-        return {
-          ...node,
-          subnodesVisible: false
-        };
-      })
-    );
+    const nodes = dataTypesToNodes(this.dataTypes());
+    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.injector);
+    this.selectedNodes = findSelectedTreeNodes(this.treeNodes, this.topicSelectionService);
   }
 
-  /**
-   * Toggles the sidebar.
-   */
   toggleSidebar = () => {
-    this.showSelection = !this.showSelection;
+    this.sidebarVisible = !this.sidebarVisible;
   };
 
-  transformDataTypeName(dataTypeName: string) {
-    return dataTypeNamePipe(dataTypeName);
+  clearSelections = () => {
+    this.treeNodes.forEach((n) => (n.expanded = false));
+    this.topicSelectionService.clearSelection();
+    this.selectedNodes = undefined;
+  };
+
+  nodeSelect(event: TreeNodeSelectEvent) {
+    const dt = event.node.data?.dataType;
+    if (dt) {
+      this.topicSelectionService.addDataType(dt);
+    }
+  }
+
+  onRowClick(evt: MouseEvent, node: TreeNode) {
+    if (node.children?.length !== 0) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      node.expanded = !node.expanded;
+    }
+  }
+
+  onNodeUnselect(event: TreeNodeUnSelectEvent) {
+    const dt = event.node.data?.dataType;
+    if (dt) {
+      this.topicSelectionService.removeDataType(dt);
+    }
   }
 }
