@@ -24,7 +24,13 @@
     />
 
     <!-- Shutdown eFuse -->
-    <efuse-card efuseName="Shutdown" [efuseTopicKey]="'Shutdown'" commandKey="Shutdown" [maxCurrent]="'1'" />
+    <efuse-card
+      efuseName="Shutdown"
+      [efuseTopicKey]="'Shutdown'"
+      commandKey="Shutdown"
+      [maxCurrent]="'1'"
+      [notice]="'Note: Shutdown eFuse can\'t be turned off from here.'"
+    />
 
     <!-- LV eFuse -->
     <efuse-card efuseName="LV" [efuseTopicKey]="'LV'" commandKey="LV" [maxCurrent]="'3'" />
@@ -82,6 +88,7 @@
       [autoDataType]="topics.VCU.Echo.Controller_Temp"
       [autoLabel]="'Controller Temp'"
       [autoUnit]="'°C'"
+      [notice]="'Note: Spare eFuse doesn\'t support current reading.'"
     />
 
     <!-- Battbox eFuse -->
