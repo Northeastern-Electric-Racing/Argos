@@ -24,9 +24,12 @@ export function mapNodesToTreeNodes(
     const displayValue: Signal<string> = isLeaf
       ? runInInjectionContext(injector, () =>
           toSignal(
-            storage
-              .get(node.topicName.slice(0, -1))
-              .pipe(map((value) => decimalPipe(value.values[0], precision).toFixed(precision) + value.unit)),
+            storage.get(node.topicName.slice(0, -1)).pipe(
+              map((value) => {
+                const num = value?.values?.length ? decimalPipe(value.values[0], precision) : NaN;
+                return Number.isNaN(num) ? 'N/A' : num.toFixed(precision) + (value.unit ?? '');
+              })
+            ),
             { initialValue: 'N/A' }
           )
         )

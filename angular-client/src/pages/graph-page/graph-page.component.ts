@@ -51,6 +51,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
   private route = inject(ActivatedRoute);
+  // Required: forces CD when the isLoading BehaviorSubject transitions during the initial CD cycle
+  // (removing this re-introduces NG0100 on the loading→content branch flip). See PR #550 review thread.
   private cdr = inject(ChangeDetectorRef);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime

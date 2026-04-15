@@ -33,12 +33,15 @@ export default class LiveValueStripComponent {
             const shortName = parts.length > 1 ? parts.slice(1).join('/') : parts[0];
             const placeholder: LiveStripItem = { name: dt.name, shortName, value: '-', unit: dt.unit };
             return this.storage.get(dt.name).pipe(
-              map((dv) => ({
-                name: dt.name,
-                shortName,
-                value: decimalPipe(dv.values[0], 2).toFixed(2),
-                unit: dv.unit
-              })),
+              map((dv) => {
+                const num = dv?.values?.length ? decimalPipe(dv.values[0], 2) : NaN;
+                return {
+                  name: dt.name,
+                  shortName,
+                  value: Number.isNaN(num) ? '-' : num.toFixed(2),
+                  unit: dv?.unit ?? dt.unit
+                };
+              }),
               startWith(placeholder)
             );
           })
