@@ -26,7 +26,6 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
 
   segment = input.required<Segment>();
 
-  // View selector config (Voltage and Balancing only per ticket)
   viewSelectorConfig!: SelectorConfig;
   private viewOptions: DropdownOption[] = [
     {

@@ -43,11 +43,10 @@ export class HexTileComponent {
   });
 
   displayValue = computed(() => {
-    if (this.booleanValue() !== undefined) {
-      if (this.currentView() === HeatMapView.CvsFailure) {
-        return this.booleanValue() ? 'TRUE' : 'FALSE';
-      }
-      return this.booleanValue() ? 'YES' : 'NO';
+    const boolValue = this.booleanValue();
+    if (boolValue !== undefined) {
+      if (this.currentView() === HeatMapView.CvsFailure) return boolValue ? 'TRUE' : 'FALSE';
+      return boolValue ? 'YES' : 'NO';
     }
     const value = this.value();
     return value === undefined ? '-' : value.toFixed(2);
