@@ -8,7 +8,7 @@
 
   <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
     <!-- Dashboard eFuse -->
-    <efuse-card efuseName="Dashboard" [efuseTopicKey]="'Dashboard'" commandKey="Dashboard" [maxCurrent]="'3'" />
+    <efuse-card efuseName="Dashboard" [efuseTopicKey]="'Dashboard'" commandKey="Dashboard" [maxCurrent]="'3'"/>
 
     <!-- Brake eFuse (Type 2: AUTO based on braking state) -->
     <efuse-card
@@ -24,7 +24,7 @@
     />
 
     <!-- Shutdown eFuse -->
-    <efuse-card efuseName="Shutdown" [efuseTopicKey]="'Shutdown'" commandKey="Shutdown" [maxCurrent]="'1'" />
+    <efuse-card efuseName="Shutdown" [efuseTopicKey]="'Shutdown'" commandKey="Shutdown" [maxCurrent]="'1'" [notice]="'Note: Shutdown eFuse can\'t be turned off from here.'"/>
 
     <!-- LV eFuse -->
     <efuse-card efuseName="LV" [efuseTopicKey]="'LV'" commandKey="LV" [maxCurrent]="'3'" />
@@ -82,6 +82,7 @@
       [autoDataType]="topics.VCU.Echo.Controller_Temp"
       [autoLabel]="'Controller Temp'"
       [autoUnit]="'°C'"
+      [notice]="'Note: Spare eFuse doesn\'t support current reading.'"
     />
 
     <!-- Battbox eFuse -->
