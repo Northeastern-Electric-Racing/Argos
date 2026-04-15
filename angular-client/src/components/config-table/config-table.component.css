@@ -95,10 +95,10 @@
   color: #ffd700;
 }
 
-.cvs-yes {
+.cvs-true {
   color: #dc2626;
 }
 
-.cvs-no {
+.cvs-false {
   color: #16a34a;
 }

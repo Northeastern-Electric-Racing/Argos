@@ -22,7 +22,7 @@ const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
   {
     label: 'CvS Failure',
     getValue: (c) => (c.reading.cvs === undefined ? '-' : c.reading.cvs ? 'True' : 'False'),
-    getClass: (c) => (c.reading.cvs === true ? 'cvs-yes' : c.reading.cvs === false ? 'cvs-no' : '')
+    getClass: (c) => (c.reading.cvs === true ? 'cvs-true' : c.reading.cvs === false ? 'cvs-false' : '')
   }
 ];
 
