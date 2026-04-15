@@ -4,12 +4,16 @@ import { TreeNode } from 'primeng/api';
 import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
+import { DataValue } from 'src/utils/socket.utils';
 import { Node } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 export interface TreeNodeData extends Node {
   displayValue: Signal<string>;
 }
+
+// Shared sentinel for non-leaf nodes whose displayValue is never read.
+const EMPTY_DISPLAY: Signal<string> = signal('');
 
 /** Builds TreeNodes from Nodes; leaf signals cleanup via the injector's DestroyRef. */
 export function mapNodesToTreeNodes(
@@ -18,22 +22,16 @@ export function mapNodesToTreeNodes(
   injector: Injector,
   precision = 3
 ): TreeNode<TreeNodeData>[] {
+  const formatValue = (value: DataValue): string => {
+    const num = value?.values?.length ? decimalPipe(value.values[0], precision) : NaN;
+    return Number.isNaN(num) ? 'N/A' : num.toFixed(precision) + (value.unit ?? '');
+  };
+
   const mapToTreeNode = (node: Node): TreeNode<TreeNodeData> => {
     const isLeaf = node.nodes.value.length === 0;
-    // topicName has a trailing slash from dataTypesToNodes — strip it for storage lookup
-    const displayValue: Signal<string> = isLeaf
-      ? runInInjectionContext(injector, () =>
-          toSignal(
-            storage.get(node.topicName.slice(0, -1)).pipe(
-              map((value) => {
-                const num = value?.values?.length ? decimalPipe(value.values[0], precision) : NaN;
-                return Number.isNaN(num) ? 'N/A' : num.toFixed(precision) + (value.unit ?? '');
-              })
-            ),
-            { initialValue: 'N/A' }
-          )
-        )
-      : signal('');
+    const displayValue = isLeaf
+      ? toSignal(storage.get(node.dataType.name).pipe(map(formatValue)), { initialValue: 'N/A' })
+      : EMPTY_DISPLAY;
     return {
       label: node.name,
       data: { ...node, displayValue },
@@ -42,7 +40,8 @@ export function mapNodesToTreeNodes(
       selectable: isLeaf
     };
   };
-  return nodes.map(mapToTreeNode);
+
+  return runInInjectionContext(injector, () => nodes.map(mapToTreeNode));
 }
 
 /** Finds already-selected nodes and expands their parents. */
