@@ -48,11 +48,12 @@ export const latency = () => `Old_Latency`;
 export const newLatency = () => `Latency`;
 
 // MPU
-export const speed = () => `MPU/State/Speed`;
-export const motorController = () => `MPU/Current/Motor_Controller`;
-export const battboxFans = () => `MPU/Current/Battbox_Fans`;
-export const pumps = () => `MPU/Current/Pumps`;
-export const lvBoards = () => `MPU/Current/LV_Boards`;
+export const speed = () => `VCU/CarState/speed`;
+export const motorController = () => `MPU/Current/Motor_Controller`; // superseded by the MC efuse reading
+export const battboxFans = () => `MPU/Current/Battbox_Fans`; // superseded by the fanbatt eFuse reading
+export const pumps = () => `MPU/Current/Pumps`; // superseded by the pump1 and pump2 efuse readings
+export const lvBoards = () => `MPU/Current/LV_Boards`; // superseded by the LV efuse reading
+export const brakePressure = () => `VCU/Pedals/brake_psi`;
 
 // DTI
 export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
@@ -108,7 +109,6 @@ export const motorUsage = () => `Motor Usage`;
 export const coolingUsage = () => `Cooling Usage`;
 export const steeringAngle = () => `Steering Angle`;
 export const torque = () => `Torque`;
-export const brakePressure = () => `Brake Pressure`;
 export const acceleration = () => `Acceleration`;
 export const xyzAcceleration = () => `XYZAcceleration`;
 
