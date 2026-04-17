@@ -47,13 +47,14 @@ export const viewers = () => `Viewers`;
 export const latency = () => `Old_Latency`;
 export const newLatency = () => `Latency`;
 
-// MPU
+// VCU
 export const speed = () => `VCU/CarState/speed`;
 export const motorController = () => `MPU/Current/Motor_Controller`; // superseded by the MC efuse reading
 export const battboxFans = () => `MPU/Current/Battbox_Fans`; // superseded by the fanbatt eFuse reading
 export const pumps = () => `MPU/Current/Pumps`; // superseded by the pump1 and pump2 efuse readings
 export const lvBoards = () => `MPU/Current/LV_Boards`; // superseded by the LV efuse reading
-export const brakePressure = () => `VCU/Pedals/brake_psi`;
+export const brakePressureFront = () => `VCU/Pedals/PSI/Brake_Front`;
+export const brakePressureBack = () => `VCU/Pedals/PSI/Brake_Back`;
 
 // DTI
 export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
@@ -206,7 +207,8 @@ export const topics = {
   coolingUsage,
   steeringAngle,
   torque,
-  brakePressure,
+  brakePressureFront,
+  brakePressureBack,
   acceleration,
   xyzAcceleration
 };
