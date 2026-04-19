@@ -1,23 +1,27 @@
 <div class="page-container">
-  @if (dataTypesIsError()) {
+  @if (dataTypesError()) {
     <error-page [errorMessage]="dataTypesError()!.message" />
-  } @else if (settingsIsError()) {
+  } @else if (settingsError()) {
     <error-page [errorMessage]="settingsError()!.message" />
-  } @else if (!carCommands() || dataTypesIsLoading() || settingsIsLoading()) {
+  } @else if (dataTypesIsLoading() || settingsIsLoading()) {
     <loading-page />
   } @else if (!isAuthenticated()) {
-    <typography variant="large-header" content="Car Commands" />
-    <div class="auth-container">
-      <div class="auth-form">
-        <div class="auth-input-group">
-          <label for="password">Enter Password</label>
-          <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+    <div class="auth-section">
+      <info-background title="Car Commands" icon="lock">
+        <div class="auth-content">
+          <p class="auth-description">Enter the command password to access car controls.</p>
+          <div class="auth-form">
+            <div class="auth-input-group">
+              <label for="password">Password</label>
+              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+            </div>
+            <argos-button label="Authenticate" [onClick]="authenticatePw" />
+            @if (authError()) {
+              <p class="auth-error">{{ authError() }}</p>
+            }
+          </div>
         </div>
-        <argos-button label="Authenticate" [onClick]="authenticatePw" />
-        @if (authError()) {
-          <p class="auth-error">{{ authError() }}</p>
-        }
-      </div>
+      </info-background>
     </div>
   } @else {
     <div class="page-header">
@@ -25,49 +29,27 @@
       <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
     </div>
 
-    <mat-grid-list cols="2" rowHeight="250px">
-      @for (command of carCommands(); track command.name) {
-        <mat-grid-tile colspan="1">
-          <div class="command-card">
-            <h3>{{ command.name }}</h3>
-            <div class="command-values">
-              <div>
-                @for (value of command.values; track i; let i = $index) {
-                  <div class="command-value-row">
-                    <label [for]="getOptionId(command.name, i)">{{ i }}</label>
-                    <p-inputnumber
-                      [(ngModel)]="command.values[i]"
-                      [inputId]="getOptionId(command.name, i)"
-                      [min]="-1000000"
-                      [max]="1000000"
-                      mode="decimal"
-                    />
-                  </div>
-                }
-              </div>
-              <argos-button
-                label="Send Command"
-                [onClick]="confirmSendCommand.bind(this, command.name, command.values)"
-              />
-            </div>
-          </div>
-        </mat-grid-tile>
+    <div class="commands-grid">
+      @for (command of carCommandTopics(); track command.title) {
+        <command-card [command]="command" (sendCommand)="confirmSendCommand($event.title, $event.values)" />
       }
-    </mat-grid-list>
+    </div>
 
-    <typography variant="large-header" content="Scylla Settings" />
-
-    <div class="settings-grid">
-      <setting-input [label]="'Batch Time (s)'" [(value)]="batchTime" [min]="0" [max]="3600" />
-      <setting-input [label]="'Rate Limit Mode'" [(value)]="rateLimitMode" [min]="0" [max]="10" />
-      <setting-input [label]="'Rate Limit Time (ms)'" [(value)]="rateLimitTime" [min]="0" [max]="60000" />
-      <setting-input [label]="'Discard Percentage'" [(value)]="discardPercentage" [min]="0" [max]="100" />
-      <div class="settings-full-row">
-        <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
-      </div>
-      <div class="settings-full-row">
-        <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
-      </div>
+    <div class="section-spacer">
+      <info-background title="Scylla Settings" icon="settings">
+        <div class="settings-content">
+          <div class="settings-grid">
+            <setting-input [label]="'Batch Time (s)'" [(value)]="batchTime" [min]="0" [max]="3600" />
+            <setting-input [label]="'Rate Limit Mode'" [(value)]="rateLimitMode" [min]="0" [max]="10" />
+            <setting-input [label]="'Rate Limit Time (ms)'" [(value)]="rateLimitTime" [min]="0" [max]="60000" />
+            <setting-input [label]="'Discard Percentage'" [(value)]="discardPercentage" [min]="0" [max]="100" />
+          </div>
+          <div class="settings-footer">
+            <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
+            <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
+          </div>
+        </div>
+      </info-background>
     </div>
 
     <p-confirmDialog />

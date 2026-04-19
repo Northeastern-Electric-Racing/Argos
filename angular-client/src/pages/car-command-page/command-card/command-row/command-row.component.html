@@ -1,0 +1,5 @@
+<div class="value-row">
+  <span class="row-label">{{ row().label }}</span>
+  <span class="value-label">{{ currentValue() }}</span>
+  <p-inputnumber [(ngModel)]="value" [inputId]="inputId()" [min]="-1000000" [max]="1000000" mode="decimal" />
+</div>

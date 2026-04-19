@@ -1,4 +1,5 @@
-<p-floatlabel>
+<div class="setting-input-wrapper">
+  <label [for]="label() + '-input'" class="setting-label">{{ label() }}</label>
   <input
     pInputText
     type="number"
@@ -9,5 +10,4 @@
     (change)="onValueChange($any($event.target).value)"
     autocomplete="off"
   />
-  <label [for]="label() + '-input'">{{ label() }}</label>
-</p-floatlabel>
+</div>

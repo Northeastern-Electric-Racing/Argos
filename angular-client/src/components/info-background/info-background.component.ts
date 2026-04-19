@@ -34,4 +34,5 @@ export class InfoBackgroundComponent {
 
   slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
   slicePercentage = input<number>(125); // pixel size of the corner slice (used for both clip-path x and y)
+  fill = input<boolean>(false); // make .container a flex column so slotted content can use flex: 1 to fill remaining height
 }

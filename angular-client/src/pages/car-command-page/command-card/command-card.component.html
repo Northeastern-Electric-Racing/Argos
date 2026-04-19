@@ -1,0 +1,17 @@
+<info-background [title]="command().title" icon="terminal" [fill]="true">
+  <div class="card-content">
+    <div class="value-grid">
+      <div class="header-row">
+        <span>Name</span>
+        <span>Current</span>
+        <span>New Value</span>
+      </div>
+      @for (row of command().rows; track row.dataType.name) {
+        <command-row [row]="row" />
+      }
+    </div>
+    <div class="card-footer">
+      <argos-button label="Send Command" [onClick]="handleSend" />
+    </div>
+  </div>
+</info-background>
