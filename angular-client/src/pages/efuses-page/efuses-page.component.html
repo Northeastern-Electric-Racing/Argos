@@ -34,7 +34,14 @@
     />
 
     <!-- LV eFuse -->
-    <efuse-card efuseName="LV" [efuseTopicKey]="'LV'" commandKey="LV" [maxCurrent]="'3'" />
+    <efuse-card
+      efuseName="LV"
+      [efuseTopicKey]="'LV'"
+      commandKey="LV"
+      [maxCurrent]="'3'"
+      [notice]="'Note: LV eFuse can\'t be turned off from here.'"
+      [lockButtonEnabled]="false"
+    />
 
     <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
     <efuse-card
