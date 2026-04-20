@@ -72,9 +72,9 @@ async fn handling_loop_flushes_pending_batch_and_exits_on_sender_drop() {
 
     // The close-handling path must have pushed the accumulated data_queue
     // downstream as a single batch before breaking the loop.
-    let flushed = data_rx.try_recv().expect(
-        "handling_loop exited without flushing the 3 pending messages to data_channel",
-    );
+    let flushed = data_rx
+        .try_recv()
+        .expect("handling_loop exited without flushing the 3 pending messages to data_channel");
     assert_eq!(
         flushed.len(),
         3,
