@@ -258,27 +258,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive_socket, io));
+        let fut = socket_handler(token.clone(), mqtt_receive_socket, io);
+        task_tracker.spawn(async move {
+            let res = tokio::spawn(fut).await;
+            warn!(task = "socket_handler", "task ended: {:?}", res);
+        });
     } else {
-        task_tracker.spawn(socket_handler_with_metadata(
+        let fut = socket_handler_with_metadata(
             token.clone(),
             mqtt_receive_socket,
             rules_manager.clone(),
             io,
-        ));
+        );
+        task_tracker.spawn(async move {
+            let res = tokio::spawn(fut).await;
+            warn!(task = "socket_handler_with_metadata", "task ended: {:?}", res);
+        });
     }
 
     // spawn the database handler
-    task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
-            .handling_loop(db_send.clone(), token.clone()),
-    );
+    let handling_loop_fut = db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
+        .handling_loop(db_send.clone(), token.clone());
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(handling_loop_fut).await;
+        warn!(task = "handling_loop", "task ended: {:?}", res);
+    });
     // spawn the database inserter
-    task_tracker.spawn(db_handler::DbHandler::batching_loop(
+    let batching_loop_fut = db_handler::DbHandler::batching_loop(
         db_receive,
         pool.clone(),
         token.clone(),
-    ));
+    );
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(batching_loop_fut).await;
+        warn!(task = "batching_loop", "task ended: {:?}", res);
+    });
 
     // run prod if this isnt present
     // create and spawn the mqtt processor
@@ -293,7 +307,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
     let client_sharable: Arc<AsyncClient> = Arc::new(client);
-    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone()));
+    let process_mqtt_fut = recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone());
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(process_mqtt_fut).await;
+        warn!(task = "mqtt_processor", "task ended: {:?}", res);
+    });
 
     let app = Router::new()
         .merge(

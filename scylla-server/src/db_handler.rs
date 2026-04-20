@@ -74,7 +74,10 @@ impl DbHandler {
         pool: PoolHandle,
         cancel_token: CancellationToken,
     ) {
+        let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+        let mut iter_count: u64 = 0;
         loop {
+            iter_count = iter_count.wrapping_add(1);
             if DATA_UPLOAD_DISABLE.load(Ordering::Relaxed) {
                 tokio::select! {
                     _ = cancel_token.cancelled() => {
@@ -83,6 +86,15 @@ impl DbHandler {
                     },
                     Some(msgs) = batch_queue.recv() => {
                         warn!("NOT STORING {} MESSAGES", msgs.len());
+                    },
+                    _ = heartbeat.tick() => {
+                        info!(
+                            task = "batching_loop",
+                            iter = iter_count,
+                            batch_queue_len = batch_queue.len(),
+                            upload_disabled = true,
+                            "heartbeat"
+                        );
                     },
                 }
             } else {
@@ -134,6 +146,15 @@ impl DbHandler {
                             batch_queue.max_capacity()
                         );
                     }
+                    _ = heartbeat.tick() => {
+                        info!(
+                            task = "batching_loop",
+                            iter = iter_count,
+                            batch_queue_len = batch_queue.len(),
+                            upload_disabled = false,
+                            "heartbeat"
+                        );
+                    },
                 }
             }
         }
@@ -164,9 +185,12 @@ impl DbHandler {
         let mut batch_interval = tokio::time::interval(Duration::from_secs(
             BATCH_UPSERT_TIME.load(Ordering::Relaxed).into(),
         ));
+        let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+        let mut iter_count: u64 = 0;
         // the max batch size to reasonably expect
         let mut max_batch_size = 2usize;
         loop {
+            iter_count = iter_count.wrapping_add(1);
             // if the batch interval changed, act. this is run per message, which is a performance concern
             if BATCH_UPSERT_TIME.load(Ordering::Relaxed) as u64 != batch_interval.period().as_secs()
             {
@@ -195,6 +219,15 @@ impl DbHandler {
                         // give a vector a size that hopefully is big enough to fit the next batch
                         self.data_queue = Vec::with_capacity((max_batch_size as f32 * 1.05) as usize);
                     }
+                }
+                _ = heartbeat.tick() => {
+                    info!(
+                        task = "handling_loop",
+                        iter = iter_count,
+                        data_queue_len = self.data_queue.len(),
+                        mqtt_recv_len = self.receiver.len(),
+                        "heartbeat"
+                    );
                 }
             }
         }
