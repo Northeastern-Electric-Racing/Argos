@@ -26,7 +26,7 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
   segment = input.required<Segment>();
   segmentStats = input<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
-  statConfigs = signal<StatConfig[]>([]);
+  statConfigs = signal<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
   ngOnInit(): void {
     const info = segmentInfoMap[this.segment()];
