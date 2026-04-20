@@ -98,13 +98,13 @@ export default class CarCommandComponent implements OnInit {
     });
   }
 
-  confirmSendCommand(title: string, values: number[]) {
+  confirmSendCommand(title: string, value: number) {
     this.confirmationService.confirm({
-      message: `Send command "${title}" with values [${values.join(', ')}] to the car?`,
+      message: `Send command "${title}" with value ${value} to the car?`,
       header: 'Confirm Command',
       acceptLabel: 'Send',
       rejectLabel: 'Cancel',
-      accept: () => this.sendCarCommand(title, values)
+      accept: () => this.sendCarCommand(title, [value])
     });
   }
 

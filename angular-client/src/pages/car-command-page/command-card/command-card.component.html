@@ -7,7 +7,7 @@
         <span>New Value</span>
       </div>
       @for (row of command().rows; track row.dataType.name) {
-        <command-row [row]="row" />
+        <command-row [row]="row" (valueChange)="onValueChange($event)" />
       }
     </div>
     <div class="card-footer">

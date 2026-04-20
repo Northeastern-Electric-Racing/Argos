@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, viewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { CarCommand } from 'src/utils/types.utils';
@@ -13,14 +13,15 @@ import CommandRowComponent from './command-row/command-row.component';
 })
 export default class CommandCardComponent {
   command = input.required<CarCommand>();
-  sendCommand = output<{ title: string; values: number[] }>();
+  sendCommand = output<{ title: string; value: number }>();
 
-  private rowComponents = viewChildren(CommandRowComponent);
+  private value = signal<number>(0);
+
+  protected onValueChange(value: number) {
+    this.value.set(value);
+  }
 
   handleSend = () => {
-    this.sendCommand.emit({
-      title: this.command().title,
-      values: this.rowComponents().map((r) => r.value())
-    });
+    this.sendCommand.emit({ title: this.command().title, value: this.value() });
   };
 }

@@ -31,7 +31,7 @@
 
     <div class="commands-grid">
       @for (command of carCommandTopics(); track command.title) {
-        <command-card [command]="command" (sendCommand)="confirmSendCommand($event.title, $event.values)" />
+        <command-card [command]="command" (sendCommand)="confirmSendCommand($event.title, $event.value)" />
       }
     </div>
 
