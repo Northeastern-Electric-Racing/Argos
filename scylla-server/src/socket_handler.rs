@@ -35,8 +35,17 @@ pub async fn socket_handler(
                 debug!("Shutting down socket handler!");
                 break;
             },
-            Ok(data) = data_channel.recv() => {
-                send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
+            recv_result = data_channel.recv() => {
+                match recv_result {
+                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!("socket_handler broadcast lagged, skipped {} messages", n);
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        warn!("socket_handler broadcast closed; exiting");
+                        break;
+                    }
+                }
             }
         }
     }
@@ -153,16 +162,27 @@ pub async fn socket_handler_with_metadata(
                 debug!("Shutting down socket handler!");
                 break;
             },
-            Ok(data) = data_channel.recv() => {
-                msg_cnt += 1;
-                send_socket_msg(
-                    &data,
-                    &mut upload_counter,
-                    &io,
-                    DATA_SOCKET_KEY,
-                ).await;
-                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+            recv_result = data_channel.recv() => {
+                match recv_result {
+                    Ok(data) => {
+                        msg_cnt += 1;
+                        send_socket_msg(
+                            &data,
+                            &mut upload_counter,
+                            &io,
+                            DATA_SOCKET_KEY,
+                        ).await;
+                        handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                    }
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!("socket_handler_with_metadata broadcast lagged, skipped {} messages", n);
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        warn!("socket_handler_with_metadata broadcast closed; exiting");
+                        break;
+                    }
+                }
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
