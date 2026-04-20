@@ -19,6 +19,16 @@ export type DataType = {
   unit: string;
 };
 
+export interface CarCommandRow {
+  dataType: DataType;
+  label: string;
+}
+
+export interface CarCommand {
+  title: string;
+  rows: CarCommandRow[];
+}
+
 /**
  * Frontend type of Scylla Settings
  */

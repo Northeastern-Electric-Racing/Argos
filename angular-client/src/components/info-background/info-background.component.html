@@ -3,6 +3,7 @@
   (click)="onClick()?.()"
   [style]="{ 'background-color': this.backgroundColor() }"
   [class.sliced-left-corner]="this.slicedLeftCorner()"
+  [class.fill]="this.fill()"
   [style.--slice-x]="this.slicePercentage() + 'px'"
   [style.--slice-y]="this.slicePercentage() + 20 + 'px'"
 >

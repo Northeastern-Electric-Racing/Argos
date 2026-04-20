@@ -1,5 +1,40 @@
 import { BMS_CONFIG } from './bms.config';
 import { Chip, chipToString, Segment } from './bms.utils';
+import { CarCommand, CarCommandRow, DataType } from './types.utils';
+
+export type CarCommandSide = 'A' | 'B';
+
+export const pumpStatus = (side: CarCommandSide) => `Calypso/Bidir/State/PumpStatus/${side}`;
+export const rtdsOverride = (side: CarCommandSide) => `Calypso/Bidir/State/RTDSOverride/${side}`;
+export const fanBattBoxStatus = (side: CarCommandSide) => `Calypso/Bidir/State/FanBattBoxStatus/${side}`;
+export const radFanStatus = (side: CarCommandSide) => `Calypso/Bidir/State/RadFanStatus/${side}`;
+
+const CAR_COMMAND_ROW_LABELS: Record<string, string> = {
+  [pumpStatus('A')]: 'Pump A',
+  [pumpStatus('B')]: 'Pump B',
+  [rtdsOverride('A')]: 'RTDS A',
+  [fanBattBoxStatus('A')]: 'Fan Batt Box A',
+  [radFanStatus('A')]: 'Rad Fan A',
+  [radFanStatus('B')]: 'Rad Fan B'
+};
+
+export const carCommandRowLabel = (topic: string): string => CAR_COMMAND_ROW_LABELS[topic] ?? '';
+
+// Group MQTT datatypes under the Calypso/Bidir namespace into per-command
+// structures. All topic-name parsing is contained here so the component never
+// sees a split('/').
+export const groupCarCommands = (dataTypes: DataType[]): CarCommand[] => {
+  const byTitle = new Map<string, CarCommandRow[]>();
+  for (const dt of dataTypes) {
+    if (!dt.name.startsWith('Calypso/Bidir/')) continue;
+    const parts = dt.name.split('/');
+    const title = parts[parts.length - 2];
+    const rows = byTitle.get(title) ?? [];
+    rows.push({ dataType: dt, label: carCommandRowLabel(dt.name) });
+    byTitle.set(title, rows);
+  }
+  return [...byTitle.entries()].map(([title, rows]) => ({ title, rows }));
+};
 
 // BMS
 export const alphaTemp = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
@@ -153,6 +188,10 @@ export const topics = {
   accCCL,
   accDCL,
   msgsPerSecond,
+  pumpStatus,
+  rtdsOverride,
+  fanBattBoxStatus,
+  radFanStatus,
   driver,
   location,
   viewers,
