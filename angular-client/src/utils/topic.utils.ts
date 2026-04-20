@@ -2,15 +2,20 @@ import { BMS_CONFIG } from './bms.config';
 import { Chip, chipToString, Segment } from './bms.utils';
 import { CarCommand, CarCommandRow, DataType } from './types.utils';
 
-// Human-friendly row labels for each car-command topic variant.
-// Keyed by the full MQTT topic name so the mapping is explicit (no parsing).
+export type CarCommandSide = 'A' | 'B';
+
+export const pumpStatus = (side: CarCommandSide) => `Calypso/Bidir/State/PumpStatus/${side}`;
+export const rtdsOverride = (side: CarCommandSide) => `Calypso/Bidir/State/RTDSOverride/${side}`;
+export const fanBattBoxStatus = (side: CarCommandSide) => `Calypso/Bidir/State/FanBattBoxStatus/${side}`;
+export const radFanStatus = (side: CarCommandSide) => `Calypso/Bidir/State/RadFanStatus/${side}`;
+
 const CAR_COMMAND_ROW_LABELS: Record<string, string> = {
-  'Calypso/Bidir/State/PumpStatus/A': 'Pump A',
-  'Calypso/Bidir/State/PumpStatus/B': 'Pump B',
-  'Calypso/Bidir/State/RTDSOverride/A': 'RTDS A',
-  'Calypso/Bidir/State/FanBattBoxStatus/A': 'Fan Batt Box A',
-  'Calypso/Bidir/State/RadFanStatus/A': 'Rad Fan A',
-  'Calypso/Bidir/State/RadFanStatus/B': 'Rad Fan B'
+  [pumpStatus('A')]: 'Pump A',
+  [pumpStatus('B')]: 'Pump B',
+  [rtdsOverride('A')]: 'RTDS A',
+  [fanBattBoxStatus('A')]: 'Fan Batt Box A',
+  [radFanStatus('A')]: 'Rad Fan A',
+  [radFanStatus('B')]: 'Rad Fan B'
 };
 
 export const carCommandRowLabel = (topic: string): string => CAR_COMMAND_ROW_LABELS[topic] ?? '';
@@ -101,7 +106,11 @@ export const topics = {
   tempAvgValue,
   accCCL,
   accDCL,
-  msgsPerSecond
+  msgsPerSecond,
+  pumpStatus,
+  rtdsOverride,
+  fanBattBoxStatus,
+  radFanStatus
 };
 
 /* Dynamically generated cell-index arrays derived from BMS_CONFIG */
