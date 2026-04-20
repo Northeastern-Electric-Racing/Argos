@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
@@ -36,7 +36,7 @@ export class AccelerationGraphsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.XYZAccel).subscribe((value) => {
+      this.storage.get(topics.xyzAcceleration()).subscribe((value) => {
         const x1 = decimalPipe(value.values[0]);
         const y1 = decimalPipe(value.values[1]);
         const time = +value.time;

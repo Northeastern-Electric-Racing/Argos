@@ -1,9 +1,10 @@
 import { Socket } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
-import { FaultData } from 'src/utils/types.utils';
+import { topics } from 'src/utils/topic.utils';
+import { FaultData, RuleNotification } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
+import { NotificationLogService } from './notification-log.service';
 
 /**
  * Service for interacting with the socket
@@ -23,21 +24,18 @@ export default class SocketService {
   /**
    * Subscribe to the 'message' event from the server
    */
-  receiveData = (storage: Storage, faultService: FaultService) => {
+  receiveData = (storage: Storage, faultService: FaultService, notificationLogService: NotificationLogService) => {
     this.socket.on('data', (message: string) => {
       try {
-        /* Parse the message and store it in the storage service */
-
         const data = JSON.parse(message) as ServerData;
         storage.setCurrentRunId(data.runId);
 
-        /* Create key based on name and unit for hashmap */
         const key = data.name;
         const newValue: DataValue = { values: data.values, time: data.timestamp.toString(), unit: data.unit };
         storage.addValue(key, newValue);
         if (Date.now() - this.lastLatencyTimestamp > 1000) {
           const latency = Date.now() - data.timestamp;
-          storage.addValue(DataTypeEnum.LATENCY, {
+          storage.addValue(topics.latency(), {
             values: [latency.toString()],
             time: data.timestamp.toString(),
             unit: 'ms'
@@ -76,6 +74,14 @@ export default class SocketService {
         const data = JSON.parse(message) as TimerData;
         const key = data.topic;
         storage.addTimerValue(key, data);
+      } catch (error) {
+        if (error instanceof Error) this.sendError(error.message);
+      }
+    });
+
+    this.socket.on('rule_notify', (message: RuleNotification) => {
+      try {
+        notificationLogService.addNotification(message);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }

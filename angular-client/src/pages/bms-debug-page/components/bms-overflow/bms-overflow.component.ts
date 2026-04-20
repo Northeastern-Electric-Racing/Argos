@@ -1,9 +1,8 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { DataTypeEnum } from 'src/data-type.enum';
 import Storage from 'src/services/storage.service';
+import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-
 import { ConnectionDotWithMessageComponent } from '../../../../components/connection-dot-with-message/connection-dot-with-message.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -22,7 +21,7 @@ export class BmsOverflowComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.PER_CELL_OVERFLOWID).subscribe((value) => {
+      this.storage.get(topics.perCellOverflowId()).subscribe((value) => {
         if (parseFloat(value.time) > Date.now() - 4000) {
           this.overflowID = parseInt(value.values[0]);
         } else {

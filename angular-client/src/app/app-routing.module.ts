@@ -5,10 +5,13 @@ import { BmsSegmentViewComponent } from 'src/pages/bms-debug-page/bms-segment-vi
 import { CameraPageComponent } from 'src/pages/camera-page/camera-page.component';
 import CarCommandComponent from 'src/pages/car-command-page/car-command.component';
 import ChargingPageComponent from 'src/pages/charging-page/charging-page.component';
+import EfusesPageComponent from 'src/pages/efuses-page/efuses-page.component';
+import NotificationLogPageComponent from 'src/pages/notification-log-page/notification-log-page.component';
 import FaultPageComponent from 'src/pages/fault-page/fault-page.component';
 import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import MapComponent from 'src/pages/map/map.component';
+import NotificationRulesPageComponent from 'src/pages/notification-rules-page/notification-rules-page.component';
 import { Segment } from 'src/utils/bms.utils';
 
 const landingRoute = () => `/landing`;
@@ -21,6 +24,9 @@ const cameraRoute = () => `/camera`;
 const faultsRoute = () => `/faults`;
 const faultsGraphRoute = () => `/faults/fault-graph`;
 const commandsRoute = () => `/commands`;
+const rulesRoute = () => `/rules`;
+const efusesRoute = () => `/efuses`;
+const notificationLogRoute = () => `/notification-log`;
 
 export const appRoutes = {
   landingRoute,
@@ -32,7 +38,10 @@ export const appRoutes = {
   cameraRoute,
   faultsRoute,
   faultsGraphRoute,
-  commandsRoute
+  commandsRoute,
+  rulesRoute,
+  efusesRoute,
+  notificationLogRoute
 };
 
 // Routes should be defined carefully in accordance with the appRoutes
@@ -48,7 +57,10 @@ const routes: Routes = [
   { path: 'faults', component: FaultPageComponent },
   { path: 'faults/fault-graph', component: GraphPageComponent },
   { path: 'camera', component: CameraPageComponent },
-  { path: 'commands', component: CarCommandComponent }
+  { path: 'commands', component: CarCommandComponent },
+  { path: 'rules', component: NotificationRulesPageComponent },
+  { path: 'efuses', component: EfusesPageComponent },
+  { path: 'notification-log', component: NotificationLogPageComponent }
 ];
 
 @NgModule({

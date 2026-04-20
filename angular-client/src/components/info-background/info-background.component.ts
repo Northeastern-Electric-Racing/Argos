@@ -31,6 +31,7 @@ export class InfoBackgroundComponent {
   @Input() button?: ButtonInputs;
   selectorConfigs = input<SelectorConfig[]>([]);
   topRightInfo = input<string | undefined>(undefined);
+  topRightInfoSize = input<string>('19px');
 
   slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
   slicePercentage = input<number>(125); // pixel size of the corner slice (used for both clip-path x and y)

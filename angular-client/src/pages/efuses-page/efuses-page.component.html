@@ -1,0 +1,112 @@
+<div style="padding: 20px">
+  <typography
+    class="title-style"
+    variant="x-large-title"
+    content="eFuses!"
+    additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: center; margin-top: 0;"
+  />
+
+  <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
+    <!-- Dashboard eFuse -->
+    <efuse-card efuseName="Dashboard" [efuseTopicKey]="'Dashboard'" commandKey="Dashboard" [maxCurrent]="'3'" />
+
+    <!-- Brake eFuse (Type 2: AUTO based on braking state) -->
+    <efuse-card
+      efuseName="Brake"
+      [efuseTopicKey]="'Brake'"
+      commandKey="Brake"
+      [maxCurrent]="'0.6'"
+      [autoDataType]="topics.VCU.Echo.Brake_State"
+      [autoLabel]="'Brake State'"
+      [autoUnit]="''"
+      [autoDecimals]="0"
+      [autoDigits]="1"
+    />
+
+    <!-- Shutdown eFuse -->
+    <efuse-card
+      efuseName="Shutdown"
+      [efuseTopicKey]="'Shutdown'"
+      commandKey="Shutdown"
+      [maxCurrent]="'1'"
+      [notice]="'Note: Shutdown eFuse can\'t be turned off from here.'"
+      [lockButtonEnabled]="false"
+    />
+
+    <!-- LV eFuse -->
+    <efuse-card
+      efuseName="LV"
+      [efuseTopicKey]="'LV'"
+      commandKey="LV"
+      [maxCurrent]="'3'"
+      [notice]="'Note: LV eFuse can\'t be turned off from here.'"
+      [lockButtonEnabled]="false"
+    />
+
+    <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
+    <efuse-card
+      efuseName="Radfan"
+      [efuseTopicKey]="'Radfan'"
+      commandKey="Radfan"
+      [maxCurrent]="'2'"
+      [autoDataType]="topics.VCU.Echo.Motor_Temp"
+      [autoLabel]="'Motor Temp'"
+      [autoUnit]="'°C'"
+    />
+
+    <!-- Fanbatt eFuse (Type 2: AUTO based on BMS battbox temp) -->
+    <efuse-card
+      efuseName="Fanbatt"
+      [efuseTopicKey]="'Fanbatt'"
+      commandKey="Fanbatt"
+      [maxCurrent]="'4'"
+      [autoDataType]="topics.VCU.Echo.Battbox_Temp"
+      [autoLabel]="'Battbox Temp'"
+      [autoUnit]="'°C'"
+    />
+
+    <!-- PumpOne eFuse (Type 2: AUTO based on DTI motor temp) -->
+    <efuse-card
+      efuseName="Pump One"
+      [efuseTopicKey]="'PumpOne'"
+      commandKey="PumpOne"
+      [maxCurrent]="'2.5'"
+      [autoDataType]="topics.VCU.Echo.Motor_Temp"
+      [autoLabel]="'Motor Temp'"
+      [autoUnit]="'°C'"
+    />
+
+    <!-- PumpTwo eFuse (Type 2: AUTO based on DTI controller temp) -->
+    <efuse-card
+      efuseName="Pump Two"
+      [efuseTopicKey]="'PumpTwo'"
+      commandKey="PumpTwo"
+      [maxCurrent]="'2.5'"
+      [autoDataType]="topics.VCU.Echo.Controller_Temp"
+      [autoLabel]="'Controller Temp'"
+      [autoUnit]="'°C'"
+    />
+
+    <!-- Spare eFuse (Type 2: AUTO based on DTI controller temp) -->
+    <efuse-card
+      efuseName="Spare"
+      [efuseTopicKey]="'Spare'"
+      commandKey="Spare"
+      [maxCurrent]="'2'"
+      [autoDataType]="topics.VCU.Echo.Controller_Temp"
+      [autoLabel]="'Controller Temp'"
+      [autoUnit]="'°C'"
+      [notice]="'Note: Spare eFuse doesn\'t support current reading.'"
+    />
+
+    <!-- Battbox eFuse -->
+    <efuse-card efuseName="Battbox" [efuseTopicKey]="'Battbox'" commandKey="Battbox" [maxCurrent]="'2'" />
+
+    <!-- MC eFuse -->
+    <efuse-card efuseName="Motor Controller" [efuseTopicKey]="'MC'" commandKey="MC" [maxCurrent]="'2'" />
+  </grid-layout>
+
+  <div class="rtds-section">
+    <rtds-debug-card />
+  </div>
+</div>

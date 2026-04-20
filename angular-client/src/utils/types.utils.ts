@@ -101,3 +101,10 @@ export interface Timing {
   before: number;
   after: number;
 }
+
+export interface RuleNotification {
+  id: string;
+  topic: string;
+  values: number[];
+  time: string;
+}

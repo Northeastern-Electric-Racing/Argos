@@ -1,7 +1,6 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import Storage from 'src/services/storage.service';
-import { DataTypeEnum } from 'src/data-type.enum';
-import { floatPipe } from 'src/utils/pipes.utils';
+import { topics } from 'src/utils/topic.utils';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoBackgroundComponent } from '../../../../../components/info-background/info-background.component';
 import PackVoltageMobileDisplayComponent from './pack-voltage-mobile/pack-voltage-mobile.component';
@@ -41,8 +40,8 @@ export default class PackVoltageDisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storage.get(DataTypeEnum.PACK_VOLTAGE).subscribe((value) => {
-      this.voltage = floatPipe(value.values[0]);
+    this.storage.get(topics.packVoltage()).subscribe((value) => {
+      this.voltage = parseFloat(value.values[0]);
       this.packVoltData.push({ x: +value.time, y: this.voltage });
     });
   }

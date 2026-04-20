@@ -46,7 +46,7 @@ async fn test_delete_rule_success() -> Result<(), RuleManagerError> {
     assert_eq!(rule_manager.get_all_rules().await.len(), 1);
 
     rule_manager.delete_rule(client, rule_id).await?;
-    assert_eq!(rule_manager.get_all_rules().await.len(), 1); // Rule still exists but client is unsubscribed
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0); // Rule removed since no subscribers remain
 
     Ok(())
 }
@@ -77,7 +77,7 @@ async fn test_delete_client_success() -> Result<(), RuleManagerError> {
 
     rule_manager.delete_client(client).await?;
     assert!(rule_manager.get_all_clients().await.is_empty());
-    assert_eq!(rule_manager.get_all_rules().await.len(), 2);
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0); // Rules removed since no subscribers remain
 
     Ok(())
 }
@@ -172,6 +172,73 @@ async fn test_handle_msg_multiple_clients_same_rule() -> Result<(), RuleManagerE
     Ok(())
 }
 
+#[tokio::test]
+async fn test_get_client_rules_returns_only_subscribed_rules() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let owner = ClientId("owner".to_string());
+    let client = ClientId("client_2".to_string());
+
+    let rule_1 = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    let rule_2 = Rule::new(
+        RuleId("rule_2".to_string()),
+        Topic("topic/2".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 20".to_owned(),
+    );
+    let rule_3 = Rule::new(
+        RuleId("rule_3".to_string()),
+        Topic("topic/3".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 30".to_owned(),
+    );
+
+    rule_manager.add_rule(owner.clone(), rule_1).await?;
+    rule_manager.add_rule(owner, rule_2).await?;
+    rule_manager.add_rule(client.clone(), rule_3).await?;
+
+    rule_manager
+        .subscribe_rules(client.clone(), vec![RuleId("rule_1".to_string())])
+        .await?;
+
+    let client_rules = rule_manager.get_client_rules(client).await;
+    let rule_ids: std::collections::HashSet<String> =
+        client_rules.into_iter().map(|rule| rule.id.0).collect();
+
+    assert_eq!(rule_ids.len(), 2);
+    assert!(rule_ids.contains("rule_1"));
+    assert!(rule_ids.contains("rule_3"));
+    assert!(!rule_ids.contains("rule_2"));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_client_rules_empty_for_missing_client() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let owner = ClientId("owner".to_string());
+
+    let rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("topic/1".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    rule_manager.add_rule(owner, rule).await?;
+
+    let missing_client_rules = rule_manager
+        .get_client_rules(ClientId("missing_client".to_string()))
+        .await;
+    assert!(missing_client_rules.is_empty());
+
+    Ok(())
+}
+
 fn check_rules_present(rules: Vec<Rule>, prefix: &str, k: usize) {
     assert_eq!(rules.len(), k);
     let topics = rules.into_iter().map(|r| r.topic.0).collect::<Vec<_>>();
@@ -259,16 +326,16 @@ async fn test_rule_manager_concurrent_delete_rule() -> Result<(), RuleManagerErr
             .await
     };
 
-    // Deleting rules from calling client side code doesn't actually remove rules
+    // Deleting rules removes them when no subscribers remain
     let res = f().await;
     assert!(res.into_iter().all(|e| e.is_ok()));
-    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0);
     assert!(rule_manager.get_all_clients().await.is_empty());
 
     // Deleting again will result in NoSuchClient errors
     let res = f().await;
     assert!(res.into_iter().all(|e| e.is_err()));
-    check_rules_present(rule_manager.get_all_rules().await, "topic/", num_rules);
+    assert_eq!(rule_manager.get_all_rules().await.len(), 0);
     assert!(rule_manager.get_all_clients().await.is_empty());
 
     Ok(())
@@ -541,6 +608,100 @@ async fn test_concurrent_high_frequency_messages() -> Result<(), RuleManagerErro
     assert_eq!(rule_manager.get_all_clients().await.len(), num_rules);
 
     Ok(())
+}
+
+// Tests that check_rule returns true when a rule with the same topic and expression exists.
+#[tokio::test]
+async fn test_check_rule_exists() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    let rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+
+    rule_manager.add_rule(client, rule).await?;
+
+    assert!(
+        rule_manager
+            .check_duplicate(&Rule::new(
+                RuleId("rule_1".to_string()),
+                Topic("test/topic".to_string()),
+                core::time::Duration::from_secs(60),
+                "a > 10".to_owned(),
+            ))
+            .await
+    );
+    Ok(())
+}
+
+// Tests that check_duplicate returns false when the topic matches but the expression does not.
+#[tokio::test]
+async fn test_check_duplicate_wrong_expr() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+    let rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    rule_manager.add_rule(client, rule).await?;
+    assert!(
+        !rule_manager
+            .check_duplicate(&Rule::new(
+                RuleId("rule_1".to_string()),
+                Topic("test/topic".to_string()),
+                core::time::Duration::from_secs(60),
+                "a > 20".to_owned(),
+            ))
+            .await
+    );
+    Ok(())
+}
+
+// Tests that check_duplicate returns false when the expression matches but the topic does not.
+#[tokio::test]
+async fn test_check_duplicate_wrong_topic() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+    let rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    rule_manager.add_rule(client, rule).await?;
+    assert!(
+        !rule_manager
+            .check_duplicate(&Rule::new(
+                RuleId("rule_1".to_string()),
+                Topic("wrong/topic".to_string()),
+                core::time::Duration::from_secs(60),
+                "a > 10".to_owned(),
+            ))
+            .await
+    );
+    Ok(())
+}
+
+// Tests that check_duplicate returns false when the rule manager contains no rules.
+#[tokio::test]
+async fn test_check_duplicate_empty_manager() {
+    let rule_manager = RuleManager::new();
+    assert!(
+        !rule_manager
+            .check_duplicate(&Rule::new(
+                RuleId("rule_1".to_string()),
+                Topic("test/topic".to_string()),
+                core::time::Duration::from_secs(60),
+                "a > 10".to_owned(),
+            ))
+            .await
+    );
 }
 
 #[tokio::test]

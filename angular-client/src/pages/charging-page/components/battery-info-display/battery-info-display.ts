@@ -1,6 +1,6 @@
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { DataTypeEnum } from 'src/data-type.enum';
+import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
 import Storage from 'src/services/storage.service';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -27,19 +27,19 @@ export class BatteryInfoDisplayComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.storage.get(DataTypeEnum.PACK_TEMP).subscribe((value) => {
+      this.storage.get(topics.packTemp()).subscribe((value) => {
         this.packTemp = floatPipe(value.values[0]);
       }),
-      this.storage.get(DataTypeEnum.PACK_VOLTAGE).subscribe((value) => {
-        this.voltage = floatPipe(value.values[0]);
+      this.storage.get(topics.packVoltage()).subscribe((value) => {
+        this.voltage = parseFloat(value.values[0]);
       }),
-      this.storage.get(DataTypeEnum.STATE_OF_CHARGE).subscribe((value) => {
+      this.storage.get(topics.stateOfCharge()).subscribe((value) => {
         this.stateOfCharge = floatPipe(value.values[0]);
       }),
-      this.storage.get(DataTypeEnum.CHARGE_CURRENT_LIMIT).subscribe((value) => {
+      this.storage.get(topics.chargeCurrentLimit()).subscribe((value) => {
         this.chargeCurrentLimit = floatPipe(value.values[0]);
       }),
-      this.storage.get(DataTypeEnum.DISCHARGE_CURRENT_LIMIT).subscribe((value) => {
+      this.storage.get(topics.dischargeCurrentLimit()).subscribe((value) => {
         this.dischargeCurrentLimit = floatPipe(value.values[0]);
       })
     );

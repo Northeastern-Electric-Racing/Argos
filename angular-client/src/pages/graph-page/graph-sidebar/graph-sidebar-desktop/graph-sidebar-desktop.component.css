@@ -5,6 +5,13 @@
   margin-top: 10px;
 }
 
+.tree-node-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 ::ng-deep .p-tree-node-label {
   width: 100%;
 }

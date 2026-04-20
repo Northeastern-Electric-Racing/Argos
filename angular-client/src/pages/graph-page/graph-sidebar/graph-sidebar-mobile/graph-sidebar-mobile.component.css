@@ -1,32 +1,47 @@
-.popup-tab {
-  height: fit-content;
-  bottom: 0px;
-  background-color: #1b1b1b;
+.toggle-btn {
   position: fixed;
-  padding: 8px;
-  overflow: scroll;
-  max-width: 95%;
-  border-top-right-radius: 8px;
-  margin: 0px 0px 0px 8px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  z-index: 5;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #ef4343;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-height: 44px;
 }
 
-.container {
+.toggle-btn:active {
+  background-color: #d63535;
+}
+
+.sidebar-content {
   display: flex;
-  flex-flow: row;
-  justify-content: flex-start;
-  width: fit-content;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.tree-node-container {
+  display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
 }
 
-.subcontainer {
-  display: flex;
-  flex-flow: row;
-  width: fit-content;
-  justify-content: flex-start;
+:host {
+  --p-tree-background: transparent !important;
+  --p-tree-node-hover-color: #ef4343;
+  --p-tree-node-selected-background: #ef434355;
+  --p-tree-node-focus-ring-color: #ef4343;
 }
 
-:host ::ng-deep sidebar-card .card {
-  height: 50px;
-  width: 100px;
+::ng-deep .p-tree-node-label {
+  width: 100%;
 }

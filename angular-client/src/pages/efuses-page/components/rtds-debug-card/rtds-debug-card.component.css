@@ -1,0 +1,186 @@
+.rtds-card-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.rtds-card-content {
+  padding: 20px 30px 25px 40px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.rtds-button-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.rtds-button-group {
+  display: inline-flex;
+  gap: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #333333;
+}
+
+.rtds-button-group.locked {
+  opacity: 0.65;
+}
+
+.rtds-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
+  min-width: 150px;
+  box-sizing: border-box;
+  background-color: #1a1a1a;
+  border: none;
+  border-right: 1px solid #2a2a2a;
+  cursor: pointer;
+  position: relative;
+  font-family: 'Highway Gothic', 'Roboto', sans-serif;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #3a3a3a;
+  user-select: none;
+  box-shadow: 0 3px 0 #0a0a0a;
+  transition:
+    box-shadow 0.08s ease,
+    transform 0.08s ease,
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.rtds-button:last-child {
+  border-right: none;
+}
+
+.rtds-button:not(:disabled):hover {
+  box-shadow: 0 2px 0 #0a0a0a;
+  transform: translateY(1px);
+  transition:
+    box-shadow 0.08s ease,
+    transform 0.08s ease,
+    background-color 0.08s ease,
+    color 0.08s ease;
+}
+
+.rtds-button-subtext {
+  text-align: center;
+  margin-top: -6px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+  font-family: 'Highway Gothic', 'Roboto', sans-serif;
+  padding-bottom: 10px;
+}
+
+.rtds-button-subtext-2 {
+  text-align: center;
+  font-size: 15px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+  font-family: 'Highway Gothic', 'Roboto', sans-serif;
+  padding-bottom: 10px;
+}
+
+.shutdown-indicator {
+  text-align: center;
+  padding-top: 10px;
+}
+
+.rtds-button:not(:disabled):active {
+  transform: translateY(3px);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.rtds-button:disabled {
+  cursor: not-allowed;
+}
+
+.rtds-button-sound {
+  background-color: #1e2a3a;
+  color: #6aa1ff;
+}
+
+.rtds-button-sound:not(:disabled):hover {
+  background-color: #24334a;
+  color: #86b5ff;
+}
+
+.rtds-button-sound:not(:disabled):active {
+  background-color: #2f4470;
+  color: #b5d4ff;
+}
+
+.rtds-button-cancel {
+  background-color: #3a1d1d;
+  color: #ff7b7b;
+}
+
+.rtds-button-cancel:not(:disabled):hover {
+  background-color: #462121;
+  color: #ff9999;
+}
+
+.rtds-button-cancel:not(:disabled):active {
+  background-color: #6b2a2a;
+  color: #ffd0d0;
+}
+
+.rtds-button-start {
+  background-color: #1f3323;
+  color: #7ce58a;
+}
+
+.rtds-button-start:not(:disabled):hover {
+  background-color: #243b2a;
+  color: #9cf0a8;
+}
+
+.rtds-button-start:not(:disabled):active {
+  background-color: #326142;
+  color: #c3f7cd;
+}
+
+.rtds-button-stop {
+  background-color: #3b2b12;
+  color: #f1b26b;
+}
+
+.rtds-button-stop:not(:disabled):hover {
+  background-color: #463315;
+  color: #f7c48a;
+}
+
+.rtds-button-stop:not(:disabled):active {
+  background-color: #6b4a1b;
+  color: #ffe1b7;
+}
+
+.rtds-display-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 16px;
+  justify-items: center;
+}
+
+.rtds-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.rtds-display-label {
+  font-size: 15px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.2;
+  text-align: center;
+}
