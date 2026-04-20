@@ -24,13 +24,12 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
-  segmentStats = input<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
   statConfigs = signal<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
   ngOnInit(): void {
     const info = segmentInfoMap[this.segment()];
-    const configs = [...this.segmentStats()];
+    const configs = [...DEFAULT_SEGMENT_STATS];
 
     SEGMENT_TOPIC_KEYS.forEach((key, i) => {
       this.subscriptions.push(
