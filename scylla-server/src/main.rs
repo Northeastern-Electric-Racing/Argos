@@ -52,7 +52,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{debug, info, level_filters::LevelFilter, warn};
+use tracing::{debug, error, info, level_filters::LevelFilter, warn};
 use tracing_subscriber::{EnvFilter, fmt::format::FmtSpan};
 
 #[cfg(not(target_env = "msvc"))]
@@ -195,6 +195,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
     }
 
+    std::panic::set_hook(Box::new(|info| {
+        error!(thread = ?std::thread::current().id(), "panic: {}", info);
+    }));
+
     info!("Configuring global variables");
     DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
     BATCH_UPSERT_TIME.store(cli.batch_upsert_time, Ordering::Relaxed);
@@ -272,7 +276,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         task_tracker.spawn(async move {
             let res = tokio::spawn(fut).await;
-            warn!(task = "socket_handler_with_metadata", "task ended: {:?}", res);
+            warn!(
+                task = "socket_handler_with_metadata",
+                "task ended: {:?}", res
+            );
         });
     }
 
@@ -284,11 +291,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         warn!(task = "handling_loop", "task ended: {:?}", res);
     });
     // spawn the database inserter
-    let batching_loop_fut = db_handler::DbHandler::batching_loop(
-        db_receive,
-        pool.clone(),
-        token.clone(),
-    );
+    let batching_loop_fut =
+        db_handler::DbHandler::batching_loop(db_receive, pool.clone(), token.clone());
     task_tracker.spawn(async move {
         let res = tokio::spawn(batching_loop_fut).await;
         warn!(task = "batching_loop", "task ended: {:?}", res);
@@ -458,13 +462,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("Could not bind to 8000!");
     let axum_token = token.clone();
-    tokio::spawn(async {
+    let axum_fut = async move {
         axum::serve(listener, app)
             .with_graceful_shutdown(async move {
                 _ = axum_token.cancelled().await;
             })
             .await
             .expect("Failed shutdown init for axum");
+    };
+    tokio::spawn(async move {
+        let res = tokio::spawn(axum_fut).await;
+        warn!(task = "axum_serve", "task ended: {:?}", res);
     });
 
     task_tracker.close();
