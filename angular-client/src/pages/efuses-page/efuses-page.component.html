@@ -100,7 +100,14 @@
     />
 
     <!-- Battbox eFuse -->
-    <efuse-card efuseName="Battbox" [efuseTopicKey]="'Battbox'" commandKey="Battbox" [maxCurrent]="'2'" />
+    <efuse-card
+      efuseName="Battbox"
+      [efuseTopicKey]="'Battbox'"
+      commandKey="Battbox"
+      [maxCurrent]="'2'"
+      [notice]="'Note: Battbox eFuse can\'t be turned off from here.'"
+      [lockButtonEnabled]="false"
+    />
 
     <!-- MC eFuse -->
     <efuse-card efuseName="Motor Controller" [efuseTopicKey]="'MC'" commandKey="MC" [maxCurrent]="'2'" />

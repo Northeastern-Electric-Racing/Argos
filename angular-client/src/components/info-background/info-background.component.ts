@@ -35,4 +35,11 @@ export class InfoBackgroundComponent {
 
   slicedLeftCorner = input<boolean>(false); // slice out the upper left corner
   slicePercentage = input<number>(125); // pixel size of the corner slice (used for both clip-path x and y)
+  /**
+   * When true, the container becomes a vertical flex layout so slotted content
+   * using `flex: 1` expands to fill the background's full height. Use when the
+   * child (e.g. a table or list) should grow to match the outer container
+   * rather than size to its own intrinsic height.
+   */
+  fill = input<boolean>(false);
 }

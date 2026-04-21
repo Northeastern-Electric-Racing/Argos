@@ -1,5 +1,21 @@
 import { BMS_CONFIG } from './bms.config';
 import { Chip, chipToString, Segment } from './bms.utils';
+import { CarCommand, CarCommandRow, DataType } from './types.utils';
+
+// Group MQTT datatypes under the Calypso/Bidir namespace into per-command
+// structures. Row label is the last topic segment; title is the one before.
+export const groupCarCommands = (dataTypes: DataType[]): CarCommand[] => {
+  const byTitle = new Map<string, CarCommandRow[]>();
+  for (const dt of dataTypes) {
+    if (!dt.name.startsWith('Calypso/Bidir/')) continue;
+    const parts = dt.name.split('/');
+    const title = parts[parts.length - 2];
+    const rows = byTitle.get(title) ?? [];
+    rows.push({ dataType: dt, label: parts[parts.length - 1] ?? '' });
+    byTitle.set(title, rows);
+  }
+  return [...byTitle.entries()].map(([title, rows]) => ({ title, rows }));
+};
 
 // BMS
 export const alphaTemp = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Therms/${cell}`;
