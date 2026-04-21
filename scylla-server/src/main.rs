@@ -196,7 +196,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     std::panic::set_hook(Box::new(|info| {
-        error!(thread = ?std::thread::current().id(), "panic: {}", info);
+        let bt = std::backtrace::Backtrace::capture();
+        error!(
+            thread = ?std::thread::current().id(),
+            "panic: {}\nbacktrace:\n{}",
+            info,
+            bt
+        );
     }));
 
     info!("Configuring global variables");

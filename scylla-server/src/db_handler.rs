@@ -53,9 +53,9 @@ fn chunk_vec<T: Clone>(input: &[T], max_chunk_size: usize) -> Vec<Vec<T>> {
     result
 }
 
-/// Send a batch over the mpsc, emitting a warn every 5s if the send is still pending.
-/// The send itself always completes (or errors on channel close); the warn is purely
-/// to surface a wedged downstream consumer in logs.
+/// Awaits an mpsc send, emitting a warn every 5s while the send is pending so a
+/// wedged downstream consumer is visible in logs. Returns whatever the underlying
+/// send resolves to — including never, if the consumer is truly wedged forever.
 async fn send_batch_with_wedge_warn(
     sender: &mpsc::Sender<Vec<ClientData>>,
     payload: Vec<ClientData>,
@@ -66,6 +66,7 @@ async fn send_batch_with_wedge_warn(
     let mut wedge_at = Box::pin(tokio::time::sleep(Duration::from_secs(5)));
     loop {
         tokio::select! {
+            biased;
             res = &mut send_fut => return res,
             _ = &mut wedge_at => {
                 warn!(task, "mpsc send slow/wedged, downstream likely blocked");
@@ -117,7 +118,7 @@ impl DbHandler {
                             task = "batching_loop",
                             iter = iter_count,
                             batch_queue_len = batch_queue.len(),
-                            msgs_in_window = msgs_since_hb,
+                            batches_in_window = msgs_since_hb,
                             upload_disabled = true,
                             "heartbeat"
                         );
@@ -179,7 +180,7 @@ impl DbHandler {
                             task = "batching_loop",
                             iter = iter_count,
                             batch_queue_len = batch_queue.len(),
-                            msgs_in_window = msgs_since_hb,
+                            batches_in_window = msgs_since_hb,
                             upload_disabled = false,
                             "heartbeat"
                         );
@@ -252,7 +253,12 @@ impl DbHandler {
                         );
                     }
                     Err(broadcast::error::RecvError::Closed) => {
-                        warn!(task = "handling_loop", "broadcast sender closed, exiting loop");
+                        warn!(task = "handling_loop", "broadcast sender closed, flushing and exiting");
+                        if !self.data_queue.is_empty() {
+                            send_batch_with_wedge_warn(&data_channel, self.data_queue, "handling_loop")
+                                .await
+                                .expect("Could not comm data to db thread, broadcast-closed flush");
+                        }
                         break;
                     }
                 },
