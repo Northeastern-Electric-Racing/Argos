@@ -88,7 +88,12 @@
           </div>
         </div>
 
-        <typography variant="large-header" class="toolbar-header" [content]="this.rightHeader" />
+        <typography
+          variant="large-header"
+          class="toolbar-header"
+          [content]="this.rightHeader"
+          additionalStyles="margin: 0; font-size: 1.5rem;"
+        />
       </div>
 
       @if (selectedDataTypes.length > 0) {
