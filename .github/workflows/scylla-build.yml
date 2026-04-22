@@ -38,55 +38,29 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scylla
 
-      # Persist the BuildKit cache mount contents (cargo registry + target dir) across runs.
-      # type=gha caches image layers but NOT cache mount volumes; without this, the mounts are
-      # empty whenever COPY invalidates the RUN layer, and cargo recompiles from scratch.
-      # buildkit-cache-dance extracts the mount contents into these dirs after the build and
-      # re-injects them before the next build, and actions/cache persists the dirs across runs.
-      - name: Cache cargo registry
+      # buildkit-cache-dance persists RUN --mount=type=cache contents across runs —
+      # type=gha alone caches image layers, not cache mount volumes.
+      - name: Cache cargo state
         uses: actions/cache@v4
-        id: cache-registry
+        id: cache
         with:
-          path: cargo-registry
-          key: scylla-cargo-registry-${{ hashFiles('scylla-server/Cargo.lock') }}
-          restore-keys: |
-            scylla-cargo-registry-
-      - name: Cache cargo target (linux/amd64)
-        uses: actions/cache@v4
-        id: cache-target-amd64
-        with:
-          path: cargo-target-amd64
-          key: scylla-cargo-target-amd64-${{ hashFiles('scylla-server/Cargo.lock') }}
-          restore-keys: |
-            scylla-cargo-target-amd64-
-      - name: Cache cargo target (linux/arm64)
-        uses: actions/cache@v4
-        id: cache-target-arm64
-        with:
-          path: cargo-target-arm64
-          key: scylla-cargo-target-arm64-${{ hashFiles('scylla-server/Cargo.lock') }}
-          restore-keys: |
-            scylla-cargo-target-arm64-
-      - name: Inject cache into BuildKit cache mounts
+          path: |
+            cargo-registry
+            cargo-target-amd64
+            cargo-target-arm64
+          key: scylla-cargo-${{ hashFiles('scylla-server/Cargo.lock') }}
+          restore-keys: scylla-cargo-
+      - name: Persist BuildKit cache mounts
         uses: reproducible-containers/buildkit-cache-dance@v3
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           cache-map: |
             {
-              "cargo-registry": {
-                "target": "/usr/local/cargo/registry",
-                "id": "cargo-registry"
-              },
-              "cargo-target-amd64": {
-                "target": "/usr/src/myapp/target",
-                "id": "cargo-target-linux/amd64"
-              },
-              "cargo-target-arm64": {
-                "target": "/usr/src/myapp/target",
-                "id": "cargo-target-linux/arm64"
-              }
+              "cargo-registry": {"target": "/usr/local/cargo/registry", "id": "cargo-registry"},
+              "cargo-target-amd64": {"target": "/usr/src/myapp/target", "id": "cargo-target-linux/amd64"},
+              "cargo-target-arm64": {"target": "/usr/src/myapp/target", "id": "cargo-target-linux/arm64"}
             }
-          skip-extraction: ${{ steps.cache-registry.outputs.cache-hit == 'true' && steps.cache-target-amd64.outputs.cache-hit == 'true' && steps.cache-target-arm64.outputs.cache-hit == 'true' }}
+          skip-extraction: ${{ steps.cache.outputs.cache-hit == 'true' }}
 
       # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
