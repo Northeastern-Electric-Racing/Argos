@@ -15,5 +15,19 @@
 }
 
 .rtds-section {
-  margin-top: 20px;
+  margin-top: 0px;
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.zone-title {
+  padding-top: 20px;
+  font-weight: 900;
+  font-size: 50px;
+}
+
+.zone-subtext {
+  padding-bottom: 10px;
 }

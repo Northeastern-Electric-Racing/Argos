@@ -74,10 +74,10 @@
                 [fontSize]="14"
                 [options]="switchOptions()"
                 [selectedState]="switchState()"
-                [disabled]="isLocked()"
+                [disabled]="effectivelyLocked()"
                 (stateChange)="onSwitchStateChange($event)"
               />
-              @if (lockButtonEnabled()) {
+              @if (lockMode() === 'Unlockable') {
                 <lock-button [locked]="isLocked()" (pressed)="onLockButtonClick()"></lock-button>
               }
             </hstack>
