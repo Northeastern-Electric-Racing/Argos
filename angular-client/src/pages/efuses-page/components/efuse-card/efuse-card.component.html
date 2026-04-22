@@ -77,7 +77,7 @@
                 [disabled]="effectivelyLocked()"
                 (stateChange)="onSwitchStateChange($event)"
               />
-              @if (lockMode() === 'Unlockable') {
+              @if (showsLockButton()) {
                 <lock-button [locked]="isLocked()" (pressed)="onLockButtonClick()"></lock-button>
               }
             </hstack>

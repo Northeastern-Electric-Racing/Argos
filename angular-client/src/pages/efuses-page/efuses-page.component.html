@@ -12,7 +12,7 @@
       [efuseTopicKey]="'Dashboard'"
       commandKey="Dashboard"
       [maxCurrent]="'3'"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- Brake eFuse (Type 2: AUTO based on braking state) -->
@@ -26,7 +26,7 @@
       [autoUnit]="''"
       [autoDecimals]="0"
       [autoDigits]="1"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
@@ -38,7 +38,7 @@
       [autoDataType]="topics.VCU.Echo.Motor_Temp"
       [autoLabel]="'Motor Temp'"
       [autoUnit]="'°C'"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- Fanbatt eFuse (Type 2: AUTO based on BMS battbox temp) -->
@@ -50,7 +50,7 @@
       [autoDataType]="topics.VCU.Echo.Battbox_Temp"
       [autoLabel]="'Battbox Temp'"
       [autoUnit]="'°C'"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- PumpOne eFuse (Type 2: AUTO based on DTI motor temp) -->
@@ -62,7 +62,7 @@
       [autoDataType]="topics.VCU.Echo.Motor_Temp"
       [autoLabel]="'Motor Temp'"
       [autoUnit]="'°C'"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- PumpTwo eFuse (Type 2: AUTO based on DTI controller temp) -->
@@ -74,7 +74,7 @@
       [autoDataType]="topics.VCU.Echo.Controller_Temp"
       [autoLabel]="'Controller Temp'"
       [autoUnit]="'°C'"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- Spare eFuse (Type 2: AUTO based on DTI controller temp) -->
@@ -87,7 +87,7 @@
       [autoLabel]="'Controller Temp'"
       [autoUnit]="'°C'"
       [notice]="'Note: Spare eFuse doesn\'t support current reading.'"
-      [lockMode]="'Unlocked'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
   </grid-layout>
 
@@ -104,7 +104,7 @@
       commandKey="Shutdown"
       [maxCurrent]="'1'"
       [notice]="'Warning: Disabling this eFuse will literally turn the car off.'"
-      [lockMode]="'Unlockable'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
     />
 
     <!-- LV eFuse -->
@@ -114,7 +114,7 @@
       commandKey="LV"
       [maxCurrent]="'3'"
       [notice]="'Warning: Disabling this eFuse will literally turn off the car\'s entire low-voltage system.'"
-      [lockMode]="'Unlockable'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
     />
 
     <!-- Battbox eFuse -->
@@ -123,7 +123,7 @@
       [efuseTopicKey]="'Battbox'"
       commandKey="Battbox"
       [maxCurrent]="'2'"
-      [lockMode]="'Unlockable'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
     />
 
     <!-- MC eFuse -->
@@ -132,7 +132,7 @@
       [efuseTopicKey]="'MC'"
       commandKey="MC"
       [maxCurrent]="'2'"
-      [lockMode]="'Unlockable'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
     />
   </grid-layout>
 
