@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { EFUSE_TOPICS } from './efuses-page.topics';
 
 import TypographyComponent from 'src/components/typography/typography.component';
-import EfuseCardComponent from './components/efuse-card/efuse-card.component';
+import EfuseCardComponent, { EfuseLockMode } from './components/efuse-card/efuse-card.component';
 import RtdsDebugCardComponent from './components/rtds-debug-card/rtds-debug-card.component';
 import GridLayoutComponent from 'src/components/grid-layout/grid-layout.component';
 
@@ -20,7 +20,7 @@ import GridLayoutComponent from 'src/components/grid-layout/grid-layout.componen
 export default class EfusesPageComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
-  // Expose eFuse topics for template
+  readonly EfuseLockMode = EfuseLockMode;
   readonly topics = EFUSE_TOPICS;
 
   ngOnInit() {
