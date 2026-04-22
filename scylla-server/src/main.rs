@@ -1,4 +1,3 @@
-// warm-cache-validation marker — revert before merge
 use std::{
     fs,
     path::Path,
