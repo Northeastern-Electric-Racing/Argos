@@ -26,7 +26,7 @@ jobs:
       # https://github.com/actions/cache/blob/main/caching-strategies.md#using-restore-keys-to-download-the-closest-matching-cache
       # cargo reuses unchanged compiled artifacts
       # https://doc.rust-lang.org/cargo/guide/build-cache.html
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
