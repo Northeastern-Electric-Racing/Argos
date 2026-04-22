@@ -1,80 +1,110 @@
-#
 name: Create and publish scylla docker image
 
 on:
   workflow_dispatch:
 
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-scylla
 
-# There is a single job in this workflow. It's configured to run on the 22.04 version of Ubuntu (TODO: configure for new latests).
 jobs:
-  build-and-push-image:
-    runs-on: ubuntu-22.04
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04,     platform: linux/amd64, arch: amd64 }
+          - { runner: ubuntu-24.04-arm, platform: linux/arm64, arch: arm64 }
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
-      #
     steps:
-      - name: Set up Docker Buildx
-        id: setup-buildx
-        uses: docker/setup-buildx-action@v4.0.0
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
-      - name: Log in to the Container registry
-        uses: docker/login-action@v4.0.0
+      - uses: actions/checkout@v6
+
+      # restore-keys: closest-match cache on key miss
+      # https://github.com/actions/cache/blob/main/caching-strategies.md#using-restore-keys-to-download-the-closest-matching-cache
+      # cargo reuses unchanged compiled artifacts
+      # https://doc.rust-lang.org/cargo/guide/build-cache.html
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            scylla-server/target
+          key: scylla-${{ matrix.arch }}-${{ hashFiles('scylla-server/Cargo.lock') }}
+          restore-keys: scylla-${{ matrix.arch }}-
+
+      - name: Build
+        working-directory: scylla-server
+        run: |
+          sudo apt-get update && sudo apt-get install -y libpq-dev libssl-dev
+          cargo build --release --locked
+          mkdir -p bin
+          cp target/release/scylla-server bin/scylla-server
+
+      - uses: docker/setup-buildx-action@v4.0.0
+
+      - uses: docker/login-action@v4.0.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
-      - name: Extract metadata (tags, labels) for Docker
+
+      - uses: docker/metadata-action@v6.0.0
         id: meta
-        uses: docker/metadata-action@v6.0.0
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scylla
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      # buildkit-cache-dance persists RUN --mount=type=cache contents across runs —
-      # type=gha alone caches image layers, not cache mount volumes.
-      - name: Cache cargo state
-        uses: actions/cache@v4
-        id: cache
-        with:
-          path: |
-            cargo-registry
-            cargo-target-amd64
-            cargo-target-arm64
-          key: scylla-cargo-${{ hashFiles('scylla-server/Cargo.lock') }}
-          restore-keys: scylla-cargo-
-      - name: Persist BuildKit cache mounts
-        uses: reproducible-containers/buildkit-cache-dance@v3
-        with:
-          builder: ${{ steps.setup-buildx.outputs.name }}
-          cache-map: |
-            {
-              "cargo-registry": {"target": "/usr/local/cargo/registry", "id": "cargo-registry"},
-              "cargo-target-amd64": {"target": "/usr/src/myapp/target", "id": "cargo-target-linux/amd64"},
-              "cargo-target-arm64": {"target": "/usr/src/myapp/target", "id": "cargo-target-linux/arm64"}
-            }
-          skip-extraction: ${{ steps.cache.outputs.cache-hit == 'true' }}
-
-      # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
-      # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
-      # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
-      - name: Build and push Docker image for scylla server rust
+      - name: Build and push image by digest
         uses: docker/build-push-action@v7.0.0
+        id: build
         with:
           context: ./scylla-server
-          push: true
-          platforms: linux/arm64,linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
+          platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          # for caching
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          # https://github.com/docker/build-push-action/issues/820
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
           provenance: false
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${{ steps.build.outputs.digest }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+          if-no-files-found: error
+
+  merge:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v4.0.0
+
+      - uses: docker/login-action@v4.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v6.0.0
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@%s ' *)
