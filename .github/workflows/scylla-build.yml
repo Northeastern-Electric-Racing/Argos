@@ -55,6 +55,7 @@ jobs:
       - uses: docker/build-push-action@v7.0.0
         with:
           context: ./scylla-server
+          file: ./scylla-server/Dockerfile.prebuilt
           push: true
           platforms: ${{ matrix.platform }}
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ matrix.arch }}
