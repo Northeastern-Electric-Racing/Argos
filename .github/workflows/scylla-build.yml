@@ -5,7 +5,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-scylla
+  IMAGE_NAME: northeastern-electric-racing/argos-scylla
 
 jobs:
   build:
