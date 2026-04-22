@@ -1,4 +1,3 @@
-// cache-validation marker — temporary, revert before merge
 use std::{
     fs,
     path::Path,
