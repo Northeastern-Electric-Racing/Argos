@@ -86,8 +86,10 @@
           </div>
         </div>
         <div class="shutdown-indicator">
-          <indicator-light [label]="'SHUTDOWN'" [active]="shutdown" [color]="'red'" [fontSize]="14" />
-          <div class="rtds-button-subtext-2">(RTDS will not sound if shutdown is active.)</div>
+          <indicator-light [label]="'SHUTDOWN CLOSED'" [active]="shutdown" [color]="'red'" [fontSize]="14" />
+          <div class="rtds-button-subtext-2">
+            Shutdown has to be closed for RTDS to sound. This is enforced in the firmware.
+          </div>
         </div>
       </vstack>
     </div>
