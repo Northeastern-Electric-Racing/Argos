@@ -10,8 +10,7 @@ WORKDIR /usr/share/nginx/html
 COPY browser/ .
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY env.prod.js ./assets/env.prod.js
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 EXPOSE 80
 
