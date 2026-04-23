@@ -39,7 +39,12 @@ export const chipFault = (segment: Segment, chip: Chip, fault: ChipFault) =>
   `BMS/PerCell/${chipToString(chip)}/${segment}/Faults/${fault}`;
 export const accCCL = () => `BMS/Commands/Max_DC_Brake_Current_Target`;
 export const accDCL = () => `BMS/Commands/Max_DC_Current_Target`;
+// Argos/Message_Rate is a server-side synthetic topic — not stored in Scylla
+// (absent from /datatypes) but still pushed live, so the header msgs/sec
+// indicator keeps working. Left unchanged.
 export const msgsPerSecond = () => 'Argos/Message_Rate';
+// BMS/PerChip/* branch was removed from the CAN schema; no replacement topic
+// found for per-chip PEC error count. Left as-is pending a new source.
 export const pecErrorChip = () => `BMS/PerChip/PECErrorChip`;
 export const highVoltsChip = () => `BMS/Cells/Volts_High_Chip`;
 export const highVoltsCell = () => `BMS/Cells/Volts_High_Cell`;
@@ -57,6 +62,10 @@ export const lowTempCell = () => `BMS/Cells/Temp_Low_Cell`;
 export const tempAvgValue = () => `BMS/Cells/Temp_Avg_Value`;
 
 // General
+// NOTE: The five topics below are not found in /datatypes (not stored in Scylla)
+// but are still published as live MQTT/client-side values, so their string values
+// are left unchanged. `latency`/`newLatency` are produced client-side by
+// socket.service; `driver`/`location`/`viewers` come from the Argos server itself.
 export const driver = () => `Driver`;
 export const location = () => `Location`;
 export const viewers = () => `Viewers`;
@@ -65,17 +74,27 @@ export const newLatency = () => `Latency`;
 
 // VCU
 export const speed = () => `VCU/CarState/speed`;
-export const motorController = () => `MPU/Current/Motor_Controller`; // superseded by the MC efuse reading
-export const battboxFans = () => `MPU/Current/Battbox_Fans`; // superseded by the fanbatt eFuse reading
-export const pumps = () => `MPU/Current/Pumps`; // superseded by the pump1 and pump2 efuse readings
-export const lvBoards = () => `MPU/Current/LV_Boards`; // superseded by the LV efuse reading
-export const brakePressureFront = () => `VCU/Pedals/PSI/Brake_Front`;
-export const brakePressureBack = () => `VCU/Pedals/PSI/Brake_Back`;
+// The MPU/Current/* topics were removed when load-current sensing moved off the MPU
+// onto the VCU eFuse boards. The replacement topics below are picked from the
+// current VCU/eFuses/*/Current set that appears in the live /datatypes list.
+export const motorController = () => `VCU/eFuses/MC/Current`; // was MPU/Current/Motor_Controller; MC eFuse reading
+export const battboxFans = () => `VCU/eFuses/Fanbatt/Current`; // was MPU/Current/Battbox_Fans; fanbatt eFuse reading
+export const pumps = () => `VCU/eFuses/PumpOne/Current`; // was MPU/Current/Pumps; pumps are now two separate eFuses (PumpOne/PumpTwo), only PumpOne is wired here
+export const lvBoards = () => `VCU/eFuses/LV/Current`; // was MPU/Current/LV_Boards; LV eFuse reading
+// Pedals are now published as raw channel voltages instead of the old PSI-derived
+// Brake_Front/Brake_Back names (see VCU/Pedals/Voltages/* in /datatypes).
+export const brakePressureFront = () => `VCU/Pedals/Voltages/brake_1`; // was VCU/Pedals/PSI/Brake_Front
+export const brakePressureBack = () => `VCU/Pedals/Voltages/brake_2`; // was VCU/Pedals/PSI/Brake_Back
 
 // DTI
 export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
 
 // TPU
+// NOTE: The entire TPU/* namespace is absent from the current /datatypes list;
+// it appears the Raspberry-Pi telemetry feed (CPU/RAM/Wi-Fi/GPS) is no longer
+// wired through. Strings left in place because no replacement topics have been
+// identified — the raspberry-pi, map, and related components will stay blank
+// until a new topic source exists.
 export const cpuUsage = () => `TPU/OnBoard/CpuUsage`;
 export const cpuTemp = () => `TPU/OnBoard/CpuTemp`;
 export const ramUsage = () => `TPU/OnBoard/MemAvailable`;
@@ -87,41 +106,54 @@ export const gpsLocation = () => `TPU/GPS/Location`;
 export const packTemp = () => `BMS/Status/Temp_Average`;
 export const stateOfCharge = () => `BMS/Pack/SOC`;
 export const current = () => `BMS/Charging/Current`;
-export const chargeCurrentLimit = () => `BMS/Pack/CCL`;
-export const dischargeCurrentLimit = () => `BMS/Pack/DCL`;
+// BMS/Pack no longer publishes CCL/DCL in the current bms.json; the CCL/DCL
+// values are now conveyed via BMS/Commands/Max_DC_{Brake_,}Current_Target
+// (same topics aliased by accCCL/accDCL above).
+export const chargeCurrentLimit = () => `BMS/Commands/Max_DC_Brake_Current_Target`; // was BMS/Pack/CCL
+export const dischargeCurrentLimit = () => `BMS/Commands/Max_DC_Current_Target`; // was BMS/Pack/DCL
 export const statusBalancing = () => `BMS/Status/Balancing`;
 export const bmsMode = () => `BMS/Status/State`;
 export const charging = () => `BMS/Charging/Control`;
 export const packVoltage = () => `BMS/Pack/Voltage`;
-export const cellUndervoltage = () => `BMS/Status/F/Cell_Undervoltage`;
-export const cellOvervoltage = () => `BMS/Status/F/Cell_Overvoltage`;
-export const cellsNotBalancing = () => `BMS/Status/F/Cells_Not_Balancing`;
+// BMS faults were moved out of BMS/Status/F/* into BMS/Faults/Critical/* — the
+// old Status/F branch no longer exists in /datatypes. Leaf names are unchanged.
+export const cellUndervoltage = () => `BMS/Faults/Critical/Cell_Undervoltage`; // was BMS/Status/F/Cell_Undervoltage
+export const cellOvervoltage = () => `BMS/Faults/Critical/Cell_Overvoltage`; // was BMS/Status/F/Cell_Overvoltage
+export const cellsNotBalancing = () => `BMS/Faults/Critical/Cells_Not_Balancing`; // was BMS/Status/F/Cells_Not_Balancing
 
 // Charger Faults
 export const commTimeoutFault = () => `Charger/Box/F_CommTimeout`;
 export const hardwareFailureFault = () => `Charger/Box/F_HardwareFailure`;
 export const overTempFault = () => `Charger/Box/F_OverTemp`;
-export const overVoltageFault = () => `Charger/Box/F_OverVoltage`;
-export const wrongBatConnectFault = () => `Charger/Box/F_WrongBatConnect`;
+// charger.json renamed F_OverVoltage → F_VoltageWrong and F_WrongBatConnect → F_WrongBatConnection.
+export const overVoltageFault = () => `Charger/Box/F_VoltageWrong`; // was Charger/Box/F_OverVoltage
+export const wrongBatConnectFault = () => `Charger/Box/F_WrongBatConnection`; // was Charger/Box/F_WrongBatConnect
 
 // BMS Faults
-export const openWire = () => `BMS/Status/F/Open_Wire`;
-export const chargerLimitEnforcementFault = () => `BMS/Status/F/CCL_Enforce`;
-export const chargerCanFault = () => `BMS/Status/F/Charger_Can`;
-export const batteryThermistor = () => `BMS/Status/F/Battery_Therm`;
-export const chargerSafetyRelay = () => `BMS/Status/F/Charger_Safety`;
-export const dischargeLimitEnforcementFault = () => `BMS/Status/F/DCL_Enforce`;
-export const externalCanFault = () => `BMS/Status/F/External_Can`;
-export const weakPackFault = () => `BMS/Status/F/Weak_Pack`;
-export const lowCellVoltage = () => `BMS/Status/F/Low_Cell_Volts`;
-export const chargeReadingMismatch = () => `BMS/Status/F/Charge_Reading`;
-export const currentSensorFault = () => `BMS/Status/F/Current_Sense`;
-export const internalCellCommFault = () => `BMS/Status/F/IC_Comm`;
-export const internalThermalError = () => `BMS/Status/F/Thermal_Err`;
-export const internalSoftwareFault = () => `BMS/Status/F/Software`;
-export const packOverheat = () => `BMS/Status/F/Pack_Overheat`;
+// All BMS faults moved from BMS/Status/F/* to BMS/Faults/Critical/* — see the
+// Cell_Undervoltage/Overvoltage/NotBalancing block above for the same rename.
+// Leaf names unchanged.
+export const openWire = () => `BMS/Faults/Critical/Open_Wire`; // was BMS/Status/F/Open_Wire
+export const chargerLimitEnforcementFault = () => `BMS/Faults/Critical/CCL_Enforce`; // was BMS/Status/F/CCL_Enforce
+export const chargerCanFault = () => `BMS/Faults/Critical/Charger_Can`; // was BMS/Status/F/Charger_Can
+export const batteryThermistor = () => `BMS/Faults/Critical/Battery_Therm`; // was BMS/Status/F/Battery_Therm
+export const chargerSafetyRelay = () => `BMS/Faults/Critical/Charger_Safety`; // was BMS/Status/F/Charger_Safety
+export const dischargeLimitEnforcementFault = () => `BMS/Faults/Critical/DCL_Enforce`; // was BMS/Status/F/DCL_Enforce
+export const externalCanFault = () => `BMS/Faults/Critical/External_Can`; // was BMS/Status/F/External_Can
+export const weakPackFault = () => `BMS/Faults/Critical/Weak_Pack`; // was BMS/Status/F/Weak_Pack
+export const lowCellVoltage = () => `BMS/Faults/Critical/Low_Cell_Volts`; // was BMS/Status/F/Low_Cell_Volts
+export const chargeReadingMismatch = () => `BMS/Faults/Critical/Charge_Reading`; // was BMS/Status/F/Charge_Reading
+export const currentSensorFault = () => `BMS/Faults/Critical/Current_Sense`; // was BMS/Status/F/Current_Sense
+export const internalCellCommFault = () => `BMS/Faults/Critical/IC_Comm`; // was BMS/Status/F/IC_Comm
+export const internalThermalError = () => `BMS/Faults/Critical/Thermal_Err`; // was BMS/Status/F/Thermal_Err
+export const internalSoftwareFault = () => `BMS/Faults/Critical/Software`; // was BMS/Status/F/Software
+export const packOverheat = () => `BMS/Faults/Critical/Pack_Overheat`; // was BMS/Status/F/Pack_Overheat
 
 // Fake / Mock Data
+// These placeholder names were never real CAN/MQTT topics; the widgets that
+// consume them (motor-info, steering-angle-display, torque-display, accel
+// graphs) still reference them but will remain blank until real source topics
+// are identified. Leaving strings untouched.
 export const motorUsage = () => `Motor Usage`;
 export const coolingUsage = () => `Cooling Usage`;
 export const steeringAngle = () => `Steering Angle`;
@@ -130,6 +162,10 @@ export const acceleration = () => `Acceleration`;
 export const xyzAcceleration = () => `XYZAcceleration`;
 
 // BMS Debug / Per Cell
+// BMS/PerCell/OverflowID and BMS/PerChip/PECErrorChip no longer appear in
+// /datatypes — the PerChip branch was removed and PerCell/OverflowID wasn't
+// carried forward. No replacement identified; the bms-debug-page overflow and
+// crc widgets will stay blank until a new source is wired in.
 export const perCellOverflowId = () => `BMS/PerCell/OverflowID`;
 
 export const topics = {
