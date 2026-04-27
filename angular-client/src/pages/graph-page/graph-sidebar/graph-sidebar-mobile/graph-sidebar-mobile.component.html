@@ -11,16 +11,26 @@
         label="Clear Topics"
         additionalStyles="background-color: #323232; border: 1.4px solid #027bd7; width: 100%;"
       />
-      <label class="flatten-toggle">
-        <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-        <p-toggleSwitch
-          [ngModel]="flattenMode()"
-          (ngModelChange)="toggleFlattenMode($event)"
-          ariaLabel="Flatten topic tree"
-        />
-      </label>
+      <div class="toggle-group">
+        <label class="flatten-toggle">
+          <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
+          <p-toggleSwitch
+            [ngModel]="selectedOnly()"
+            (ngModelChange)="toggleSelectedOnly($event)"
+            ariaLabel="Show only selected topics"
+          />
+        </label>
+        <label class="flatten-toggle">
+          <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
+          <p-toggleSwitch
+            [ngModel]="flattenMode()"
+            (ngModelChange)="toggleFlattenMode($event)"
+            ariaLabel="Flatten topic tree"
+          />
+        </label>
+      </div>
       <p-tree
-        [value]="flattenMode() ? flatNodes : treeNodes"
+        [value]="activeNodes()"
         (onNodeSelect)="nodeSelect($event)"
         (onNodeUnselect)="onNodeUnselect($event)"
         [(selection)]="selectedNodes"
