@@ -14,7 +14,8 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tracing::debug;
+use tracing::info;
+use tracing::trace;
 use tracing::warn;
 
 use crate::ClientData;
@@ -382,7 +383,7 @@ impl RuleManager {
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
 
-        debug!(
+        trace!(
             "Handling rule processing for {} with values: {:?}",
             data.name, data.values
         );
@@ -402,7 +403,7 @@ impl RuleManager {
                 .map(|rule| rule.tick(&data.values))
             {
                 Some(Some(val)) => {
-                    debug!("Rule {} triggered: {}", rule_id, val);
+                    info!("Rule {} triggered: {}", rule_id, val);
                     val
                 }
                 // Rule tick failed
