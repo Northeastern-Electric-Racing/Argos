@@ -232,28 +232,23 @@ pub async fn socket_handler_with_metadata(
                     ).await;
             },
             _ = message_rate_interval.tick() => {
-                let elapsed_secs = (tokio::time::Instant::now() - last_instant).as_secs_f32();
-                // Skip the tick if elapsed somehow rounds to 0 — leaves msg_cnt/last_instant
-                // intact so the next tick produces a valid msg/sec value.
-                if elapsed_secs > 0.0 {
-                    let rate = msg_cnt as f32 / elapsed_secs;
-                    debug!("Updating message rate to be {} msg/sec", rate);
-                    let item = ClientData {
-                        name: "Argos/Message_Rate".to_string(),
-                        unit: "".to_string(),
-                        run_id: crate::RUN_ID.load(Ordering::Relaxed),
-                        timestamp: chrono::offset::Utc::now(),
-                        values: vec![rate]
-                    };
-                    send_socket_msg(
-                            &item,
-                            &mut upload_counter,
-                            &io,
-                            METADATA_SOCKET_KEY,
-                        ).await;
-                    msg_cnt = 0;
-                    last_instant = tokio::time::Instant::now();
-                }
+                let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
+                debug!("Updating message rate to be {} msg/sec", rate);
+                let item = ClientData {
+                    name: "Argos/Message_Rate".to_string(),
+                    unit: "".to_string(),
+                    run_id: crate::RUN_ID.load(Ordering::Relaxed),
+                    timestamp: chrono::offset::Utc::now(),
+                    values: vec![rate]
+                };
+                send_socket_msg(
+                        &item,
+                        &mut upload_counter,
+                        &io,
+                        METADATA_SOCKET_KEY,
+                    ).await;
+                msg_cnt = 0;
+                last_instant = tokio::time::Instant::now();
             }
         }
     }
