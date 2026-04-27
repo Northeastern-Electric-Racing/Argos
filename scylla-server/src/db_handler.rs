@@ -53,6 +53,29 @@ fn chunk_vec<T: Clone>(input: &[T], max_chunk_size: usize) -> Vec<Vec<T>> {
     result
 }
 
+/// Awaits an mpsc send, emitting a warn every 5s while the send is pending so a
+/// wedged downstream consumer is visible in logs. Returns whatever the underlying
+/// send resolves to — including never, if the consumer is truly wedged forever.
+async fn send_batch_with_wedge_warn(
+    sender: &mpsc::Sender<Vec<ClientData>>,
+    payload: Vec<ClientData>,
+    task: &'static str,
+) -> Result<(), mpsc::error::SendError<Vec<ClientData>>> {
+    let send_fut = sender.send(payload);
+    tokio::pin!(send_fut);
+    let mut wedge_at = Box::pin(tokio::time::sleep(Duration::from_secs(5)));
+    loop {
+        tokio::select! {
+            biased;
+            res = &mut send_fut => return res,
+            _ = &mut wedge_at => {
+                warn!(task, "mpsc send slow/wedged, downstream likely blocked");
+                wedge_at = Box::pin(tokio::time::sleep(Duration::from_secs(5)));
+            }
+        }
+    }
+}
+
 impl DbHandler {
     /// Make a new db handler
     /// * `recv` - the broadcast reciver of which clientdata will be sent
@@ -74,7 +97,12 @@ impl DbHandler {
         pool: PoolHandle,
         cancel_token: CancellationToken,
     ) {
+        info!(task = "batching_loop", "starting");
+        let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+        let mut iter_count: u64 = 0;
+        let mut msgs_since_hb: u64 = 0;
         loop {
+            iter_count = iter_count.wrapping_add(1);
             if DATA_UPLOAD_DISABLE.load(Ordering::Relaxed) {
                 tokio::select! {
                     _ = cancel_token.cancelled() => {
@@ -82,7 +110,19 @@ impl DbHandler {
                         break;
                     },
                     Some(msgs) = batch_queue.recv() => {
+                        msgs_since_hb = msgs_since_hb.wrapping_add(1);
                         warn!("NOT STORING {} MESSAGES", msgs.len());
+                    },
+                    _ = heartbeat.tick() => {
+                        info!(
+                            task = "batching_loop",
+                            iter = iter_count,
+                            batch_queue_len = batch_queue.len(),
+                            batches_in_window = msgs_since_hb,
+                            upload_disabled = true,
+                            "heartbeat"
+                        );
+                        msgs_since_hb = 0;
                     },
                 }
             } else {
@@ -114,6 +154,7 @@ impl DbHandler {
                         break;
                     },
                     Some(msgs) = batch_queue.recv() => {
+                        msgs_since_hb = msgs_since_hb.wrapping_add(1);
                         // libpq has max 65535 params, therefore batch
                         // max for batch is 65535/4 params per message, hence the below, rounded down with a margin for safety
                         // TODO avoid this code batch uploading the remainder messages as a new batch, combine it with another safely
@@ -134,6 +175,17 @@ impl DbHandler {
                             batch_queue.max_capacity()
                         );
                     }
+                    _ = heartbeat.tick() => {
+                        info!(
+                            task = "batching_loop",
+                            iter = iter_count,
+                            batch_queue_len = batch_queue.len(),
+                            batches_in_window = msgs_since_hb,
+                            upload_disabled = false,
+                            "heartbeat"
+                        );
+                        msgs_since_hb = 0;
+                    },
                 }
             }
         }
@@ -161,12 +213,17 @@ impl DbHandler {
         data_channel: mpsc::Sender<Vec<ClientData>>,
         cancel_token: CancellationToken,
     ) {
+        info!(task = "handling_loop", "starting");
         let mut batch_interval = tokio::time::interval(Duration::from_secs(
             BATCH_UPSERT_TIME.load(Ordering::Relaxed).into(),
         ));
+        let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+        let mut iter_count: u64 = 0;
+        let mut msgs_since_hb: u64 = 0;
         // the max batch size to reasonably expect
         let mut max_batch_size = 2usize;
         loop {
+            iter_count = iter_count.wrapping_add(1);
             // if the batch interval changed, act. this is run per message, which is a performance concern
             if BATCH_UPSERT_TIME.load(Ordering::Relaxed) as u64 != batch_interval.period().as_secs()
             {
@@ -178,23 +235,54 @@ impl DbHandler {
             tokio::select! {
                 _ = cancel_token.cancelled() => {
                     debug!("Pushing final messages to queue");
-                    data_channel.send(self.data_queue).await.expect("Could not comm data to db thread, shutdown");
+                    send_batch_with_wedge_warn(&data_channel, self.data_queue, "handling_loop")
+                        .await
+                        .expect("Could not comm data to db thread, shutdown");
                     break;
                 },
-                Ok(msg) = self.receiver.recv() => {
-                    self.handle_msg(msg, &data_channel).await;
-                }
+                msg = self.receiver.recv() => match msg {
+                    Ok(msg) => {
+                        msgs_since_hb = msgs_since_hb.wrapping_add(1);
+                        self.handle_msg(msg, &data_channel).await;
+                    }
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!(
+                            task = "handling_loop",
+                            lagged = n,
+                            "broadcast receiver lagged, dropped messages"
+                        );
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        warn!(task = "handling_loop", "broadcast sender closed, flushing and exiting");
+                        if !self.data_queue.is_empty() {
+                            send_batch_with_wedge_warn(&data_channel, self.data_queue, "handling_loop")
+                                .await
+                                .expect("Could not comm data to db thread, broadcast-closed flush");
+                        }
+                        break;
+                    }
+                },
                 _ = batch_interval.tick() => {
                     if !self.data_queue.is_empty() {
                         // set a new max if this batch is larger
                         max_batch_size = usize::max(max_batch_size, self.data_queue.len());
-                        data_channel
-                            .send(self.data_queue)
+                        send_batch_with_wedge_warn(&data_channel, self.data_queue, "handling_loop")
                             .await
                             .expect("Could not comm data to db thread");
                         // give a vector a size that hopefully is big enough to fit the next batch
                         self.data_queue = Vec::with_capacity((max_batch_size as f32 * 1.05) as usize);
                     }
+                }
+                _ = heartbeat.tick() => {
+                    info!(
+                        task = "handling_loop",
+                        iter = iter_count,
+                        data_queue_len = self.data_queue.len(),
+                        mqtt_recv_len = self.receiver.len(),
+                        msgs_in_window = msgs_since_hb,
+                        "heartbeat"
+                    );
+                    msgs_since_hb = 0;
                 }
             }
         }

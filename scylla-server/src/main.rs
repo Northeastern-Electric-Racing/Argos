@@ -52,7 +52,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
 };
-use tracing::{debug, info, level_filters::LevelFilter, warn};
+use tracing::{debug, error, info, level_filters::LevelFilter, warn};
 use tracing_subscriber::{EnvFilter, fmt::format::FmtSpan};
 
 #[cfg(not(target_env = "msvc"))]
@@ -195,6 +195,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::subscriber::set_global_default(subscriber).expect("Could not init tracing");
     }
 
+    std::panic::set_hook(Box::new(|info| {
+        let bt = std::backtrace::Backtrace::capture();
+        error!(
+            thread = ?std::thread::current().id(),
+            "panic: {}\nbacktrace:\n{}",
+            info,
+            bt
+        );
+    }));
+
     info!("Configuring global variables");
     DATA_UPLOAD_DISABLE.store(cli.disable_data_upload, Ordering::Relaxed);
     BATCH_UPSERT_TIME.store(cli.batch_upsert_time, Ordering::Relaxed);
@@ -258,27 +268,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     if cli.no_metadata {
-        task_tracker.spawn(socket_handler(token.clone(), mqtt_receive_socket, io));
+        let fut = socket_handler(token.clone(), mqtt_receive_socket, io);
+        task_tracker.spawn(async move {
+            let res = tokio::spawn(fut).await;
+            warn!(task = "socket_handler", "task ended: {:?}", res);
+        });
     } else {
-        task_tracker.spawn(socket_handler_with_metadata(
+        let fut = socket_handler_with_metadata(
             token.clone(),
             mqtt_receive_socket,
             rules_manager.clone(),
             io,
-        ));
+        );
+        task_tracker.spawn(async move {
+            let res = tokio::spawn(fut).await;
+            warn!(
+                task = "socket_handler_with_metadata",
+                "task ended: {:?}", res
+            );
+        });
     }
 
     // spawn the database handler
-    task_tracker.spawn(
-        db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
-            .handling_loop(db_send.clone(), token.clone()),
-    );
+    let handling_loop_fut = db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
+        .handling_loop(db_send.clone(), token.clone());
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(handling_loop_fut).await;
+        warn!(task = "handling_loop", "task ended: {:?}", res);
+    });
     // spawn the database inserter
-    task_tracker.spawn(db_handler::DbHandler::batching_loop(
-        db_receive,
-        pool.clone(),
-        token.clone(),
-    ));
+    let batching_loop_fut =
+        db_handler::DbHandler::batching_loop(db_receive, pool.clone(), token.clone());
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(batching_loop_fut).await;
+        warn!(task = "batching_loop", "task ended: {:?}", res);
+    });
 
     // run prod if this isnt present
     // create and spawn the mqtt processor
@@ -293,7 +317,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let (client, eventloop) = AsyncClient::new(opts, 600);
     let client_sharable: Arc<AsyncClient> = Arc::new(client);
-    task_tracker.spawn(recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone()));
+    let process_mqtt_fut = recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone());
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(process_mqtt_fut).await;
+        warn!(task = "mqtt_processor", "task ended: {:?}", res);
+    });
 
     let app = Router::new()
         .merge(
@@ -440,13 +468,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("Could not bind to 8000!");
     let axum_token = token.clone();
-    tokio::spawn(async {
+    let axum_fut = async move {
         axum::serve(listener, app)
             .with_graceful_shutdown(async move {
                 _ = axum_token.cancelled().await;
             })
             .await
             .expect("Failed shutdown init for axum");
+    };
+    tokio::spawn(async move {
+        let res = tokio::spawn(axum_fut).await;
+        warn!(task = "axum_serve", "task ended: {:?}", res);
     });
 
     task_tracker.close();

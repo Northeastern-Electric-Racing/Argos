@@ -13,7 +13,7 @@ use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
 use tokio::sync::{RwLock, broadcast};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 
 use crate::metadata_structs::{
     DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData,
@@ -28,15 +28,31 @@ pub async fn socket_handler(
     mut data_channel: broadcast::Receiver<ClientData>,
     io: SocketIo,
 ) {
+    info!(task = "socket_handler", "starting");
     let mut upload_counter = 0u8;
+    let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+    let mut iter_count: u64 = 0;
+    let mut msgs_since_hb: u64 = 0;
     loop {
+        iter_count = iter_count.wrapping_add(1);
         tokio::select! {
             _ = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
             Ok(data) = data_channel.recv() => {
+                msgs_since_hb = msgs_since_hb.wrapping_add(1);
                 send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
+            }
+            _ = heartbeat.tick() => {
+                info!(
+                    task = "socket_handler",
+                    iter = iter_count,
+                    data_channel_len = data_channel.len(),
+                    msgs_in_window = msgs_since_hb,
+                    "heartbeat"
+                );
+                msgs_since_hb = 0;
             }
         }
     }
@@ -80,6 +96,7 @@ pub async fn socket_handler_with_metadata(
     rules_manager: Arc<RuleManager>,
     io: SocketIo,
 ) {
+    info!(task = "socket_handler_with_metadata", "starting");
     let mut upload_counter = 0u8;
 
     // BEGIN METADATA
@@ -147,7 +164,12 @@ pub async fn socket_handler_with_metadata(
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
 
+    let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+    let mut iter_count: u64 = 0;
+    let mut msgs_since_hb: u64 = 0;
+
     loop {
+        iter_count = iter_count.wrapping_add(1);
         tokio::select! {
             _ = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
@@ -155,6 +177,7 @@ pub async fn socket_handler_with_metadata(
             },
             Ok(data) = data_channel.recv() => {
                 msg_cnt += 1;
+                msgs_since_hb = msgs_since_hb.wrapping_add(1);
                 send_socket_msg(
                     &data,
                     &mut upload_counter,
@@ -163,6 +186,16 @@ pub async fn socket_handler_with_metadata(
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
                 handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+            }
+            _ = heartbeat.tick() => {
+                info!(
+                    task = "socket_handler_with_metadata",
+                    iter = iter_count,
+                    data_channel_len = data_channel.len(),
+                    msgs_in_window = msgs_since_hb,
+                    "heartbeat"
+                );
+                msgs_since_hb = 0;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
