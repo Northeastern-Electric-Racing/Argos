@@ -1,11 +1,18 @@
-import { Component, Injector, OnInit, inject, input, signal } from '@angular/core';
+import { Component, Injector, OnInit, computed, inject, input, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import Storage from 'src/services/storage.service';
 import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
-import { mapNodesToTreeNodes, findSelectedTreeNodes, flattenTreeNodes, TreeNodeData } from 'src/utils/tree.utils';
+import {
+  mapNodesToTreeNodes,
+  findSelectedTreeNodes,
+  flattenTreeNodes,
+  filterSelectedNodes,
+  TreeNodeData
+} from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
@@ -27,6 +34,14 @@ export default class GraphSidebarDesktopComponent implements OnInit {
   flatNodes: TreeNode<TreeNodeData>[] = [];
   selectedNodes?: TreeNode<TreeNodeData>[];
   flattenMode = signal(false);
+  selectedOnly = signal(false);
+
+  private selectedDataTypesSig = toSignal(this.topicSelectionService.getSelectedDataTypes(), { initialValue: [] });
+  private selectedFlatNodes = computed(() => filterSelectedNodes(this.flatNodes, this.selectedDataTypesSig()));
+  activeNodes = computed(() => {
+    if (this.selectedOnly()) return this.selectedFlatNodes();
+    return this.flattenMode() ? this.flatNodes : this.treeNodes;
+  });
 
   ngOnInit(): void {
     const nodes = dataTypesToNodes(this.dataTypes());
@@ -37,8 +52,14 @@ export default class GraphSidebarDesktopComponent implements OnInit {
 
   toggleFlattenMode(value: boolean) {
     this.flattenMode.set(value);
+    if (this.selectedOnly()) return;
     const active = value ? this.flatNodes : this.treeNodes;
     this.selectedNodes = findSelectedTreeNodes(active, this.topicSelectionService);
+  }
+
+  toggleSelectedOnly(value: boolean) {
+    this.selectedOnly.set(value);
+    this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
   }
 
   clearSelections = () => {

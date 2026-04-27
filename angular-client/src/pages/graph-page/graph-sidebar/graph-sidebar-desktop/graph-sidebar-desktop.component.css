@@ -12,6 +12,12 @@
   gap: 12px;
 }
 
+.toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .flatten-toggle {
   display: inline-flex;
   align-items: center;
