@@ -44,6 +44,53 @@ export function mapNodesToTreeNodes(
   return runInInjectionContext(injector, () => nodes.map(mapToTreeNode));
 }
 
+/**
+ * Compacts a slash-separated path so it fits under `maxLength`.
+ * Returns the full path when it already fits. Otherwise keeps the first
+ * segment and as much of the tail as fits, joined by `...`. Falls back to
+ * `first...lastSegment` when even that exceeds `maxLength`.
+ */
+export function compactTopicLabel(name: string, maxLength: number): string {
+  if (name.length <= maxLength) return name;
+  const segments = name.split('/');
+  if (segments.length <= 2) return name;
+  const [first] = segments;
+  for (let tailStart = 1; tailStart < segments.length; tailStart++) {
+    const tail = segments.slice(tailStart).join('/');
+    const candidate = `${first}...${tail}`;
+    if (candidate.length <= maxLength) return candidate;
+  }
+  return `${first}...${segments[segments.length - 1]}`;
+}
+
+/**
+ * Flattens a tree of TreeNodes to a leaf-only list. Each leaf's label is the
+ * full `dataType.name` when it fits under `maxLabelLength`, otherwise compacted
+ * to `<firstSegment>...<tail>` keeping as much of the tail as fits.
+ * Preserves `data` so each leaf's `displayValue` signal stays wired to live values.
+ */
+export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLength = 30): TreeNode<TreeNodeData>[] {
+  const leaves: TreeNode<TreeNodeData>[] = [];
+
+  const collect = (nodes: TreeNode<TreeNodeData>[]): void => {
+    for (const node of nodes) {
+      if (node.children?.length) {
+        collect(node.children as TreeNode<TreeNodeData>[]);
+      } else if (node.data?.dataType) {
+        leaves.push({
+          ...node,
+          label: compactTopicLabel(node.data.dataType.name, maxLabelLength),
+          children: [],
+          selectable: true
+        });
+      }
+    }
+  };
+
+  collect(treeNodes);
+  return leaves.sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
+}
+
 /** Finds already-selected nodes and expands their parents. */
 export function findSelectedTreeNodes(
   treeNodes: TreeNode<TreeNodeData>[],

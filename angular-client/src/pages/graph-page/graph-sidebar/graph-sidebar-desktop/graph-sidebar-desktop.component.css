@@ -5,6 +5,20 @@
   margin-top: 10px;
 }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.flatten-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
 .tree-node-container {
   display: flex;
   align-items: center;
