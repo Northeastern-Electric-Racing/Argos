@@ -5,7 +5,7 @@ import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { DataValue } from 'src/utils/socket.utils';
-import { Node } from 'src/utils/types.utils';
+import { DataType, Node } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 export interface TreeNodeData extends Node {
@@ -89,6 +89,20 @@ export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLe
 
   collect(treeNodes);
   return leaves.sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
+}
+
+/**
+ * Filters a flat list of leaf TreeNodes to only those whose dataType is in
+ * `selectedDataTypes`. Preserves the original node references so PrimeNG's
+ * selection-by-reference matching keeps working.
+ */
+export function filterSelectedNodes(
+  flatNodes: TreeNode<TreeNodeData>[],
+  selectedDataTypes: DataType[]
+): TreeNode<TreeNodeData>[] {
+  if (selectedDataTypes.length === 0) return [];
+  const selectedNames = new Set(selectedDataTypes.map((dt) => dt.name));
+  return flatNodes.filter((n) => n.data?.dataType && selectedNames.has(n.data.dataType.name));
 }
 
 /** Finds already-selected nodes and expands their parents. */

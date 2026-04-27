@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { TreeNode } from 'primeng/api';
-import { compactTopicLabel, flattenTreeNodes, TreeNodeData } from './tree.utils';
+import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNodeData } from './tree.utils';
 import { DataType, Node } from './types.utils';
 
 const EMPTY_DISPLAY = signal('');
@@ -105,5 +105,32 @@ describe('flattenTreeNodes', () => {
   it('returns an empty list when the tree has no leaves', () => {
     const flat = flattenTreeNodes([branch('Empty', [])]);
     expect(flat).toEqual([]);
+  });
+});
+
+describe('filterSelectedNodes', () => {
+  const voltage = leaf('BMS/Pack/Voltage', 'V');
+  const soc = leaf('BMS/Pack/SOC', '%');
+  const speed = leaf('MPU/State/Speed', 'mph');
+  const flat = [voltage, soc, speed];
+
+  it('returns nodes whose dataType matches the selection by name', () => {
+    const result = filterSelectedNodes(flat, [voltage.data!.dataType, speed.data!.dataType]);
+    expect(result).toEqual([voltage, speed]);
+  });
+
+  it('preserves original node references so PrimeNG selection-by-ref works', () => {
+    const [match] = filterSelectedNodes(flat, [voltage.data!.dataType]);
+    expect(match).toBe(voltage);
+  });
+
+  it('returns an empty list when no data types are selected', () => {
+    expect(filterSelectedNodes(flat, [])).toEqual([]);
+  });
+
+  it('ignores selected data types that are not in the flat list', () => {
+    const ghost: DataType = { name: 'Does/Not/Exist', unit: '' };
+    const result = filterSelectedNodes(flat, [ghost, soc.data!.dataType]);
+    expect(result).toEqual([soc]);
   });
 });

@@ -27,12 +27,18 @@
   height: 100%;
 }
 
+.toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  align-self: flex-start;
+}
+
 .flatten-toggle {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  align-self: flex-start;
 }
 
 .tree-node-container {
