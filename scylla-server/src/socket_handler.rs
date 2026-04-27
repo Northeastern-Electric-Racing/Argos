@@ -90,6 +90,9 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
     }
 }
 
+/// Cadence at which Argos/Message_Rate is recomputed and emitted.
+const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
+
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
@@ -105,7 +108,7 @@ pub async fn socket_handler_with_metadata(
     let mut view_interval = tokio::time::interval(Duration::from_millis(500));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
-    let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
+    let mut message_rate_interval = tokio::time::interval(MESSAGE_RATE_INTERVAL);
 
     // init timers
     let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
