@@ -27,6 +27,14 @@
   height: 100%;
 }
 
+.flatten-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
 .tree-node-container {
   display: flex;
   align-items: center;
