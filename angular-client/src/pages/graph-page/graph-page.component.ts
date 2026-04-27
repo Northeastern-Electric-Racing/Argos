@@ -378,10 +378,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private syncUrlToService(params: ParamMap) {
     if (this.dataTypes.length === 0) return;
 
-    const topicNames = new Set(params.get('topics')?.split(',') ?? []);
-    const topics = this.dataTypes.filter((dt) => topicNames.has(dt.name));
+    const topicsParam = params.get('topics');
+    if (!topicsParam) return;
 
-    this.topicSelectionService.setSelectedDataTypes(topics);
+    // URL → service is additive only. The service is source of truth; the URL is a view of
+    // it (kept in sync by updateUrl). When URL and service diverge, we only add what the URL
+    // contributes (deep-link hydration) — never remove. Removals come from explicit UI actions.
+    const topicNames = new Set(topicsParam.split(','));
+    const topicsFromUrl = this.dataTypes.filter((dt) => topicNames.has(dt.name));
+    this.topicSelectionService.addDataTypes(topicsFromUrl);
   }
 
   private updateUrl(selectedDataTypes: DataType[]) {
