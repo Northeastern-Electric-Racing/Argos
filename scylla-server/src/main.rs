@@ -255,6 +255,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
     let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
 
+    // expose the db-bound broadcast Sender so any module can call
+    // `db_handler::insert_argos_data` without plumbing a Sender through
+    db_handler::init_db_sender(mqtt_send_db.clone());
+
     // channel to pass the processed data to the batch uploading thread
     // TODO tune buffer size
     let (db_send, db_receive) = mpsc::channel::<Vec<ClientData>>(1000);
