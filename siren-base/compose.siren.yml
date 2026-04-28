@@ -2,7 +2,7 @@ services:
   siren:
     container_name: siren
     restart: unless-stopped
-    image: eclipse-mosquitto:2.0.22-openssl
+    image: eclipse-mosquitto:latest
     ports:
       - 1883:1883
       - 9002:9001 # win conflict on 9001
