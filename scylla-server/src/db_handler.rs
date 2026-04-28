@@ -1,3 +1,4 @@
+use std::sync::OnceLock;
 use std::sync::atomic::Ordering;
 
 use rustc_hash::FxHashSet;
@@ -10,6 +11,35 @@ use tracing::{Level, debug, info, instrument, trace, warn};
 
 use crate::services::{data_service, data_type_service};
 use crate::{BATCH_UPSERT_TIME, ClientData, DATA_UPLOAD_DISABLE, PoolHandle};
+
+/// Global handle to the broadcast channel feeding `handling_loop`. Set once at
+/// startup from `main.rs` so any module can enqueue synthetic ClientData
+/// without plumbing a Sender through call sites.
+static DB_SENDER: OnceLock<broadcast::Sender<ClientData>> = OnceLock::new();
+
+/// Stash the broadcast Sender for later use by `insert_argos_data`. Logs a
+/// warning if called more than once — second call wins nothing, OnceLock is set.
+pub fn init_db_sender(sender: broadcast::Sender<ClientData>) {
+    if DB_SENDER.set(sender).is_err() {
+        warn!("init_db_sender called more than once; ignoring subsequent call");
+    }
+}
+
+/// Push a synthetic ClientData into the same broadcast channel that MQTT data
+/// flows through, so it goes through `handling_loop` (data_type upsert +
+/// batching) and `batching_loop` (DB write) like any other datapoint.
+///
+/// Warn-logs and returns silently if the sender is uninitialized or the
+/// channel is closed — never panics.
+pub fn insert_argos_data(data: ClientData) {
+    let Some(sender) = DB_SENDER.get() else {
+        warn!("insert_argos_data called before init_db_sender; dropping {}", data.name);
+        return;
+    };
+    if let Err(err) = sender.send(data) {
+        warn!("insert_argos_data send failed (no active receivers): {}", err);
+    }
+}
 
 /// A few threads to manage the processing and inserting of special types,
 /// upserting of metadata for data, and batch uploading the database
