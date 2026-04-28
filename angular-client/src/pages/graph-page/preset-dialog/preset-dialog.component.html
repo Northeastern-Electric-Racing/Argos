@@ -1,0 +1,98 @@
+<div class="dialog-content">
+  <input
+    #fileInput
+    type="file"
+    accept=".json,application/json"
+    class="hidden-file-input"
+    (change)="onFileSelected($event)"
+    aria-hidden="true"
+  />
+
+  <section class="save-section">
+    <div class="actions-row">
+      <div class="save-form">
+        <label for="preset-name">Save current selection</label>
+        <div class="save-form-controls">
+          <input
+            id="preset-name"
+            pInputText
+            [ngModel]="newPresetName()"
+            (ngModelChange)="newPresetName.set($event)"
+            placeholder="Preset name…"
+            (keyup.enter)="onSaveCurrent()"
+          />
+          <button
+            pButton
+            type="button"
+            label="Save"
+            (click)="onSaveCurrent()"
+            [disabled]="!hasSelection() || newPresetName().trim().length === 0"
+          ></button>
+        </div>
+      </div>
+
+      <button pButton type="button" label="Upload JSON" class="p-button-outlined" (click)="onUploadClick()"></button>
+    </div>
+    @if (!hasSelection()) {
+      <small class="hint">Select a topic to save a preset</small>
+    }
+  </section>
+
+  <section class="presets-list">
+    @if (presets().length === 0) {
+      <div class="empty-state">
+        <p>No presets yet</p>
+        <small>
+          Save your current topic selection or upload a JSON of your preset
+        </small>
+      </div>
+    } @else {
+      <table class="preset-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th class="topic-count">Topics</th>
+            <th class="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (preset of presets(); track preset.id) {
+            <tr>
+              <td>{{ preset.name }}</td>
+              <td class="topic-count">{{ preset.topicNames.length }}</td>
+              <td class="actions">
+                <button pButton type="button" label="Apply" (click)="onApply(preset)"></button>
+                <button
+                  pButton
+                  type="button"
+                  label="Download"
+                  class="p-button-outlined"
+                  (click)="onDownload(preset)"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  label="Delete"
+                  class="p-button-text p-button-danger"
+                  (click)="onDelete(preset)"
+                ></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <div class="footer">
+    <button
+      pButton
+      type="button"
+      label="Restore defaults"
+      class="p-button-text"
+      title="Re-add any default preset whose name isn't currently in your list"
+      (click)="onRestoreDefaults()"
+    ></button>
+    <button pButton type="button" label="Close" class="p-button-text" (click)="onClose()"></button>
+  </div>
+</div>

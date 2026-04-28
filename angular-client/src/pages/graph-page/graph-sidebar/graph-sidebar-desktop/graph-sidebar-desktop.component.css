@@ -5,6 +5,19 @@
   margin-top: 10px;
 }
 
+.presets-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.preset-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .header-row {
   display: flex;
   align-items: center;

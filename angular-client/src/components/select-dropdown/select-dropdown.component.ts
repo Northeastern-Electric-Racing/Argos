@@ -39,12 +39,7 @@ export class SelectDropdownComponent {
   constructor() {
     effect(() => {
       const val = this.defaultValue();
-      if (val) {
-        const match = this.options().find((option) => option.name === val);
-        if (match) {
-          this.selectedOption = match;
-        }
-      }
+      this.selectedOption = val ? this.options().find((option) => option.name === val) : undefined;
     });
   }
 

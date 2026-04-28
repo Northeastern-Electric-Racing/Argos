@@ -27,6 +27,17 @@
   height: 100%;
 }
 
+.presets-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preset-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .toggle-group {
   display: inline-flex;
   align-items: center;

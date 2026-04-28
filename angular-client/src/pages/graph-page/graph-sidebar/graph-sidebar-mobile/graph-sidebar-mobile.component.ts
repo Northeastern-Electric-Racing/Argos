@@ -1,12 +1,20 @@
 import { ChangeDetectionStrategy, Component, Injector, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode, PrimeTemplate } from 'primeng/api';
+import { MessageService, TreeNode, PrimeTemplate } from 'primeng/api';
+import { DialogService } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { Sidebar } from 'primeng/sidebar';
 import { ToggleSwitch } from 'primeng/toggleswitch';
+import { take } from 'rxjs';
+import {
+  DropdownOption,
+  SelectDropdownComponent,
+  SelectorConfig
+} from 'src/components/select-dropdown/select-dropdown.component';
+import { GraphPresetService, Preset } from 'src/services/graph-preset.service';
 import Storage from 'src/services/storage.service';
-import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
+import { dataTypesToNodes, partitionDataTypesByName } from 'src/utils/dataTypes.utils';
 import {
   mapNodesToTreeNodes,
   findSelectedTreeNodes,
@@ -18,18 +26,31 @@ import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
+import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Sidebar, PrimeTemplate, Tree, ButtonComponent, TypographyComponent, ToggleSwitch, FormsModule]
+  imports: [
+    Sidebar,
+    PrimeTemplate,
+    Tree,
+    ButtonComponent,
+    TypographyComponent,
+    ToggleSwitch,
+    FormsModule,
+    SelectDropdownComponent
+  ]
 })
 export default class GraphSidebarMobileComponent implements OnInit {
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
+  private presetService = inject(GraphPresetService);
+  private dialogService = inject(DialogService);
+  private messageService = inject(MessageService);
   private storage = inject(Storage);
   private injector = inject(Injector);
 
@@ -46,6 +67,18 @@ export default class GraphSidebarMobileComponent implements OnInit {
     if (this.selectedOnly()) return this.selectedFlatNodes();
     return this.flattenMode() ? this.flatNodes : this.treeNodes;
   });
+
+  private presets = toSignal(this.presetService.getPresets(), { initialValue: [] as Preset[] });
+  presetSelectorConfig = computed<SelectorConfig>(() => ({
+    placeholder: 'Apply Preset…',
+    options: this.presets().map(
+      (p): DropdownOption => ({
+        name: p.name,
+        function: () => this.applyPreset(p)
+      })
+    )
+  }));
+  activePresetName = toSignal(this.presetService.getActivePresetName(), { initialValue: undefined });
 
   ngOnInit(): void {
     const nodes = dataTypesToNodes(this.dataTypes());
@@ -76,6 +109,24 @@ export default class GraphSidebarMobileComponent implements OnInit {
     this.selectedNodes = undefined;
   };
 
+  openPresetsDialog = () => {
+    const ref = this.dialogService.open(PresetDialogComponent, {
+      header: 'Topic Presets',
+      width: '90vw',
+      draggable: true,
+      closable: true,
+      closeAriaLabel: 'Close',
+      data: {
+        dataTypes: this.dataTypes()
+      }
+    });
+    ref.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+      if (matched) {
+        this.applyMatched(matched);
+      }
+    });
+  };
+
   nodeSelect(event: TreeNodeSelectEvent) {
     const dt = event.node.data?.dataType;
     if (dt) {
@@ -96,5 +147,23 @@ export default class GraphSidebarMobileComponent implements OnInit {
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
     }
+  }
+
+  private applyPreset(preset: Preset) {
+    const { matched, unknown } = partitionDataTypesByName(this.dataTypes(), preset.topicNames);
+    if (unknown.length > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Unknown Topics Skipped',
+        detail: unknown.join(', '),
+        life: 8000
+      });
+    }
+    this.applyMatched(matched);
+  }
+
+  private applyMatched(matched: DataType[]) {
+    this.topicSelectionService.setSelectedDataTypes(matched);
+    this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
   }
 }
