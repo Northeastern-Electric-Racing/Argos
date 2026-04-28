@@ -37,9 +37,7 @@ export class GraphPresetService {
     map(([presets, selectedDataTypes]) => {
       const selected = new Set(selectedDataTypes.map((dt) => dt.name));
       if (selected.size === 0) return undefined;
-      return presets.find(
-        (p) => p.topicNames.length === selected.size && p.topicNames.every((n) => selected.has(n))
-      )?.name;
+      return presets.find((p) => p.topicNames.length === selected.size && p.topicNames.every((n) => selected.has(n)))?.name;
     })
   );
 
