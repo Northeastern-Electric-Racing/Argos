@@ -247,6 +247,16 @@ pub async fn socket_handler_with_metadata(
                         &io,
                         METADATA_SOCKET_KEY,
                     ).await;
+                // persist the same rate to the DB under a separate topic so it
+                // shows up in /datatypes and the Data table without affecting
+                // the existing Argos/Message_Rate Socket.io stream
+                crate::db_handler::insert_argos_data(ClientData {
+                    name: "Argos/Message".to_string(),
+                    unit: "".to_string(),
+                    run_id: crate::RUN_ID.load(Ordering::Relaxed),
+                    timestamp: chrono::offset::Utc::now(),
+                    values: vec![rate],
+                });
                 msg_cnt = 0;
                 last_instant = tokio::time::Instant::now();
             }
