@@ -45,7 +45,14 @@ export class SelectDropdownComponent {
     // callers that never unset `defaultValue` see no behavior change.
     effect(() => {
       const val = this.defaultValue();
-      this.selectedOption = val ? this.options().find((option) => option.name === val) : undefined;
+      if (val) {
+        const match = this.options().find((option) => option.name === val);
+        if (match) {
+          this.selectedOption = match;
+        }
+      } else {
+        this.selectedOption = undefined;
+      }
     });
   }
 
