@@ -18,6 +18,14 @@
   user-select: none;
 }
 
+.btn--sm {
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  height: 28px;
+  line-height: 1;
+}
+
 .btn:hover:not(:disabled) {
   transition: ease;
   transition-duration: 0.2s;
@@ -34,5 +42,12 @@
     padding: 6px 8px;
     font-size: 13px;
     min-height: 44px;
+  }
+
+  .btn--sm {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 32px;
+    height: auto;
   }
 }
