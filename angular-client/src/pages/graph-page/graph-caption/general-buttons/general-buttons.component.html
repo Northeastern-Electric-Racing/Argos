@@ -1,16 +1,133 @@
 <div class="general-buttons-row">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
-    <argos-button [onClick]="onSetRealTime()" label="Realtime" additionalStyles="border: 1.4px solid #000" />
+    <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" additionalStyles="border: 1.4px solid #000" />
   }
   <argos-button
     [onClick]="onClearDataType()"
     label="Clear Graph"
+    size="sm"
     additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
   />
-  <select-dropdown
-    [options]="this.selectorConfig().options"
-    [placeholder]="selectorConfig().placeholder"
-    [defaultValue]="selectorConfig().defaultValue"
-  />
+
+  <div class="historical-section">
+    <span class="historical-label">Historical:</span>
+    <select-dropdown
+      [options]="quickSelectConfig().options"
+      [placeholder]="quickSelectConfig().placeholder"
+      [defaultValue]="selectedPresetLabel()"
+    />
+    <div class="custom-stack">
+      <argos-button
+        [onClick]="toggleCustomPopover"
+        label="Custom"
+        size="sm"
+        [additionalStyles]="
+          customActive()
+            ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
+            : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
+        "
+      />
+      @if (customActive() && customCaption()) {
+        <span class="custom-caption">{{ customCaption() }}</span>
+      }
+    </div>
+  </div>
+
+  <p-popover #customPopover styleClass="custom-range-popover" (onShow)="onCustomPopoverShow()">
+    <ng-template #content>
+      <div class="custom-popover-body">
+        <div class="mode-toggle">
+          <button
+            type="button"
+            class="mode-btn"
+            [class.mode-btn--active]="customMode() === 'last-x'"
+            (click)="setCustomMode('last-x')"
+          >
+            Last X
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            [class.mode-btn--active]="customMode() === 'date-range'"
+            (click)="setCustomMode('date-range')"
+          >
+            Date Range
+          </button>
+        </div>
+
+        @if (customMode() === 'last-x') {
+          <div class="mode-body">
+            <div class="field-row">
+              <label class="popover-label">Hours</label>
+              <p-inputNumber
+                [ngModel]="customHours()"
+                (ngModelChange)="customHours.set($event)"
+                mode="decimal"
+                [min]="0"
+                [step]="1"
+                inputStyleClass="text-xs p-1"
+                placeholder="0"
+              />
+            </div>
+            <div class="field-row">
+              <label class="popover-label">Minutes</label>
+              <p-inputNumber
+                [ngModel]="customMinutes()"
+                (ngModelChange)="customMinutes.set($event)"
+                mode="decimal"
+                [min]="0"
+                [step]="1"
+                inputStyleClass="text-xs p-1"
+                placeholder="30"
+              />
+            </div>
+            <argos-button
+              [onClick]="applyCustomLastX"
+              label="Apply"
+              size="sm"
+              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+            />
+          </div>
+        } @else {
+          <div class="mode-body">
+            <div class="field-row">
+              <label class="popover-label">From</label>
+              <p-datepicker
+                [ngModel]="customFromDate()"
+                (ngModelChange)="customFromDate.set($event)"
+                [showTime]="true"
+                [showSeconds]="true"
+                [showIcon]="true"
+                [maxDate]="maxDate()"
+                appendTo="body"
+                hourFormat="24"
+                dateFormat="yy-mm-dd"
+              />
+            </div>
+            <div class="field-row">
+              <label class="popover-label">To</label>
+              <p-datepicker
+                [ngModel]="customToDate()"
+                (ngModelChange)="customToDate.set($event)"
+                [showTime]="true"
+                [showSeconds]="true"
+                [showIcon]="true"
+                [maxDate]="maxDate()"
+                appendTo="body"
+                hourFormat="24"
+                dateFormat="yy-mm-dd"
+              />
+            </div>
+            <argos-button
+              [onClick]="applyCustomDateRange"
+              label="Apply"
+              size="sm"
+              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+            />
+          </div>
+        }
+      </div>
+    </ng-template>
+  </p-popover>
 </div>

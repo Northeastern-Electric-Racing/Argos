@@ -37,6 +37,12 @@ export class SelectDropdownComponent {
   @ViewChild('dropdownRef') dropdownRef: any;
 
   constructor() {
+    // The dropdown's selected display tracks `defaultValue`:
+    //  - when `defaultValue` matches an option name, that option is shown
+    //  - when `defaultValue` is undefined, the placeholder is restored
+    // The clear-on-undefined branch matters for parents that toggle the prop dynamically
+    // (e.g. graph-page deselects the active preset when a Custom range is applied). Static
+    // callers that never unset `defaultValue` see no behavior change.
     effect(() => {
       const val = this.defaultValue();
       if (val) {
@@ -44,6 +50,8 @@ export class SelectDropdownComponent {
         if (match) {
           this.selectedOption = match;
         }
+      } else {
+        this.selectedOption = undefined;
       }
     });
   }

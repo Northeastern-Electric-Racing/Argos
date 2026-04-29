@@ -1,5 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
+export type ButtonSize = 'default' | 'sm';
+
 /**
  * Simple custom button component that does something on click
  * Takes label and onClick function as inputs
@@ -13,11 +15,17 @@ import { Component, computed, input } from '@angular/core';
 })
 export class ButtonComponent {
   label = input.required<string>();
-  onClick = input.required<() => void>();
+  // Event is optional so callers can pass either `() => void` or `(event: Event) => void`;
+  // popover/menu triggers need the event for anchoring.
+  onClick = input.required<(event?: Event) => void>();
   additionalStyles = input<string>();
   disabled = input<boolean>(false);
+  size = input<ButtonSize>('default');
+  cssClass = computed(() => `btn btn--${this.size()}`);
   style = computed(() => {
-    const base = 'width: 140px; height: 45px; ';
+    // The default size keeps the legacy fixed footprint; sm lets CSS drive sizing
+    // so callers don't need to override width/height per-button.
+    const base = this.size() === 'sm' ? '' : 'width: 140px; height: 45px; ';
     const extra = this.additionalStyles();
     return extra ? base + extra : base;
   });
