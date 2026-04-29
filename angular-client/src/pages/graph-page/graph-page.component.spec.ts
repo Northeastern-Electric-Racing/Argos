@@ -32,7 +32,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     const apiServiceMock: Pick<APIService, 'query'> = {
       query: <T>() => {
         queryCalls += 1;
-        const response =
+        const response: QueryResponse<unknown> =
           queryCalls === 1
             ? {
                 isLoading: new BehaviorSubject<boolean>(true),
@@ -46,7 +46,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
                 isError: new BehaviorSubject<boolean>(false),
                 error: new BehaviorSubject<Error | null>(null)
               };
-        return response as unknown as QueryResponse<T>;
+        return response as QueryResponse<T>;
       }
     };
 

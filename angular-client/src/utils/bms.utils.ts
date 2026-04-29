@@ -37,40 +37,19 @@ export type SegmentInfo = {
   totalVoltageKey: string;
 };
 
-/** Lazy: avoids `bms.utils` ↔ `topic.utils` cycle in karma. */
-let _segmentInfoMap: Record<Segment, SegmentInfo> | null = null;
-const buildSegmentInfoMap = (): Record<Segment, SegmentInfo> =>
-  Object.fromEntries(
-    allSegments.map((seg) => [
-      seg,
-      {
-        segmentTempKey: topics.segmentTemp(seg),
-        alphaChipTempKey: topics.dieTemp(seg, Chip.Alpha),
-        betaChipTempKey: topics.dieTemp(seg, Chip.Beta),
-        voltageKey: topics.segmentVoltage(seg),
-        totalVoltageKey: topics.segmentTotalVoltage(seg)
-      }
-    ])
-  );
-
-export const segmentInfoMap: Record<Segment, SegmentInfo> = new Proxy({} as Record<Segment, SegmentInfo>, {
-  get(_target, prop) {
-    if (!_segmentInfoMap) _segmentInfoMap = buildSegmentInfoMap();
-    return _segmentInfoMap[prop as unknown as Segment];
-  },
-  has(_target, prop) {
-    if (!_segmentInfoMap) _segmentInfoMap = buildSegmentInfoMap();
-    return prop in _segmentInfoMap;
-  },
-  ownKeys() {
-    if (!_segmentInfoMap) _segmentInfoMap = buildSegmentInfoMap();
-    return Reflect.ownKeys(_segmentInfoMap);
-  },
-  getOwnPropertyDescriptor(_target, prop) {
-    if (!_segmentInfoMap) _segmentInfoMap = buildSegmentInfoMap();
-    return Object.getOwnPropertyDescriptor(_segmentInfoMap, prop);
-  }
-});
+/** Dynamically generated map of segment index → SegmentInfo topic keys. */
+export const segmentInfoMap: Record<Segment, SegmentInfo> = Object.fromEntries(
+  allSegments.map((seg) => [
+    seg,
+    {
+      segmentTempKey: topics.segmentTemp(seg),
+      alphaChipTempKey: topics.dieTemp(seg, Chip.Alpha),
+      betaChipTempKey: topics.dieTemp(seg, Chip.Beta),
+      voltageKey: topics.segmentVoltage(seg),
+      totalVoltageKey: topics.segmentTotalVoltage(seg)
+    }
+  ])
+);
 
 export const getConnectionDotStatusColor = (voltage: number): string => {
   if (voltage <= 375) {

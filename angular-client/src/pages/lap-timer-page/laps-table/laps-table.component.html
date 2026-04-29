@@ -1,0 +1,74 @@
+<info-background title="Laps" [fill]="true" style="width: 100%; height: 100%">
+  <div class="lap-table-wrap">
+    @if (timer.laps().length === 0) {
+      <div class="empty-laps">
+        @if (timer.activeSession()) {
+          <typography
+            variant="info-subtitle"
+            content="Hit Start then Lap to begin recording"
+            additionalStyles="font-size: 14px; color: var(--color-text-subtitle);"
+          />
+        } @else {
+          <typography
+            variant="info-subtitle"
+            content="No active session"
+            additionalStyles="font-size: 14px; color: var(--color-text-subtitle);"
+          />
+        }
+      </div>
+    } @else {
+      <p-table [value]="lapsNewestFirst()">
+        <ng-template #header>
+          <tr>
+            <th class="col-num">#</th>
+            <th class="col-dur">Duration</th>
+            <th class="col-delta">Δ Best</th>
+            <th class="col-time">Time of Day</th>
+            <th class="col-time">Started At</th>
+            <th class="col-run">Run</th>
+            <th class="col-stat">Avg Speed</th>
+            <th class="col-stat">Energy</th>
+            <th class="col-stat">Max Temp</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-lap>
+          <tr [class.lap-row-best]="isBestLap(lap)" [class.lap-row-worst]="isWorstLap(lap)">
+            <td class="col-num">{{ lap.number }}</td>
+            <td class="col-dur monospace">{{ formatLapMs(lap.durationMs) }}</td>
+            <td class="col-delta monospace" [class.delta-positive]="!isBestLap(lap)">
+              @if (isBestLap(lap)) {
+                <span class="best-flag"><mat-icon>flag</mat-icon> —</span>
+              } @else {
+                {{ formatLapDelta(lap) }}
+              }
+            </td>
+            <td class="col-time monospace">{{ lap.endEpochMs | date: 'HH:mm:ss.SSS' }}</td>
+            <td class="col-time monospace">{{ lap.startEpochMs | date: 'HH:mm:ss.SSS' }}</td>
+            <td class="col-run">{{ lap.runId ?? '—' }}</td>
+            <td class="col-stat">
+              @if (lap.stats.avgSpeed !== null) {
+                {{ lap.stats.avgSpeed | number: '1.0-0' }} mph
+              } @else {
+                —
+              }
+            </td>
+            <td class="col-stat">
+              @if (lap.stats.energyUsed !== null) {
+                {{ lap.stats.energyUsed | number: '1.2-2' }}%
+              } @else {
+                —
+              }
+            </td>
+            <td class="col-stat">
+              @if (lap.stats.maxMotorTemp !== null) {
+                {{ lap.stats.maxMotorTemp | number: '1.0-0' }}°C
+              } @else {
+                —
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </div>
+</info-background>

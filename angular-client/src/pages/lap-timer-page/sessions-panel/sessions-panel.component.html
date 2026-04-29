@@ -1,0 +1,117 @@
+<info-background icon="history" title="Sessions" [fill]="true" style="width: 100%; height: 100%">
+  <div class="sessions-panel">
+    <div class="sessions-toolbar">
+      <span class="sessions-count">
+        @if (timer.sessions().length === 1) {
+          1 session
+        } @else {
+          {{ timer.sessions().length }} sessions
+        }
+      </span>
+      <span class="sessions-toolbar-actions">
+        @if (timer.sessions().length > 0) {
+          <argos-button
+            label="Clear All"
+            [onClick]="onClearAllSessions"
+            additionalStyles="height: 32px; width: 110px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-battery-low);"
+          />
+        }
+        <argos-button
+          label="+ New Session"
+          [onClick]="onNewSession"
+          additionalStyles="height: 32px; width: 140px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
+        />
+      </span>
+    </div>
+
+    @if (timer.sessions().length === 0) {
+      <div class="sessions-empty">
+        <typography
+          variant="info-subtitle"
+          content="Start a new session to begin"
+          additionalStyles="font-size: 14px; color: var(--color-text-subtitle);"
+        />
+      </div>
+    } @else {
+      <div class="sessions-table-wrap">
+        <p-table [value]="timer.sessions()">
+          <ng-template #header>
+            <tr>
+              <th class="col-state"></th>
+              <th class="col-name">Name</th>
+              <th class="col-started">Started</th>
+              <th class="col-laps">Laps</th>
+              <th class="col-best">Best</th>
+              <th class="col-run">Run</th>
+              <th class="col-actions"></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-s>
+            <tr
+              class="session-row"
+              [class.session-row-active]="timer.activeSession()?.id === s.id"
+              (click)="onSelectSession(s.id)"
+              role="button"
+              tabindex="0"
+              (keyup.enter)="onSelectSession(s.id)"
+            >
+              <td class="col-state">
+                @if (activeStateIcon(s); as icon) {
+                  <mat-icon class="session-state-icon">{{ icon }}</mat-icon>
+                }
+              </td>
+              <td class="col-name">
+                @if (editingSessionId() === s.id) {
+                  <input
+                    class="session-rename-input"
+                    type="text"
+                    [(ngModel)]="editingName"
+                    (keydown.enter)="commitEdit(s); $event.stopPropagation()"
+                    (keydown.escape)="cancelEdit(); $event.stopPropagation()"
+                    (blur)="commitEdit(s)"
+                    (click)="$event.stopPropagation()"
+                    autofocus
+                  />
+                } @else {
+                  <span class="session-name" [title]="s.name">{{ s.name }}</span>
+                }
+              </td>
+              <td class="col-started monospace">{{ s.sessionStartEpochMs | date: 'yyyy-MM-dd HH:mm' }}</td>
+              <td class="col-laps">{{ s.laps.length }}</td>
+              <td class="col-best monospace">
+                @if (bestLapMsForSession(s.id) !== null) {
+                  {{ formatLapMs(bestLapMsForSession(s.id)!) }}
+                } @else {
+                  —
+                }
+              </td>
+              <td class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
+              <td class="col-actions">
+                <button
+                  class="session-menu-btn"
+                  (click)="$event.stopPropagation(); rowPopover.toggle($event)"
+                  aria-label="Session actions"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <p-popover #rowPopover>
+                  <div class="session-menu-list">
+                    <button class="session-menu-item" (click)="startEdit(s, rowPopover)">
+                      <mat-icon>edit</mat-icon><span>Rename</span>
+                    </button>
+                    <button class="session-menu-item" (click)="onDownload(s.id, rowPopover)">
+                      <mat-icon>download</mat-icon><span>Download CSV</span>
+                    </button>
+                    <button class="session-menu-item destructive" (click)="onDeleteSession(s, rowPopover)">
+                      <mat-icon>delete</mat-icon><span>Delete</span>
+                    </button>
+                  </div>
+                </p-popover>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </div>
+</info-background>

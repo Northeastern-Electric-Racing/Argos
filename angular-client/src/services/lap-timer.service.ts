@@ -1,5 +1,6 @@
-import { computed, inject, Injectable, InjectionToken, signal, Signal } from '@angular/core';
+import { computed, inject, Injectable, signal, Signal } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { downloadAsFile } from 'src/utils/file-download.utils';
 import { topics } from 'src/utils/topic.utils';
 import {
@@ -20,18 +21,11 @@ import Storage from './storage.service';
 
 export type LapState = 'idle' | 'running' | 'paused';
 
-/** Test override. */
-export const TIME_PROVIDER = new InjectionToken<() => number>('LAP_TIMER_TIME_PROVIDER', {
-  providedIn: 'root',
-  factory: () => () => Date.now()
-});
-
 const TICK_INTERVAL_MS = 100;
 
 @Injectable({ providedIn: 'root' })
 export default class LapTimerService {
   private storage = inject(Storage);
-  private now = inject(TIME_PROVIDER);
 
   private readonly store = signal<LapStore>(hydrate());
 
@@ -69,7 +63,7 @@ export default class LapTimerService {
     const s = this.activeSession();
     if (!s) return 0;
     if (s.isRunning && s.currentLapStartEpochMs !== null) {
-      return s.currentLapAccumulatedMs + (this.now() - s.currentLapStartEpochMs);
+      return s.currentLapAccumulatedMs + (Date.now() - s.currentLapStartEpochMs);
     }
     return s.currentLapAccumulatedMs;
   });
@@ -141,7 +135,7 @@ export default class LapTimerService {
     this.mutateActive((s) => {
       s.isRunning = true;
       s.isPaused = false;
-      s.currentLapStartEpochMs = this.now();
+      s.currentLapStartEpochMs = Date.now();
     });
     this.subscribeTelemetry();
     this.startTickLoop();
@@ -151,7 +145,7 @@ export default class LapTimerService {
     const s = this.activeSession();
     if (!s || !s.isRunning) return;
     this.mutateActive((next) => {
-      const slice = next.currentLapStartEpochMs !== null ? this.now() - next.currentLapStartEpochMs : 0;
+      const slice = next.currentLapStartEpochMs !== null ? Date.now() - next.currentLapStartEpochMs : 0;
       next.currentLapAccumulatedMs += slice;
       next.currentLapStartEpochMs = null;
       next.isRunning = false;
@@ -166,7 +160,7 @@ export default class LapTimerService {
     this.mutateActive((next) => {
       next.isRunning = true;
       next.isPaused = false;
-      next.currentLapStartEpochMs = this.now();
+      next.currentLapStartEpochMs = Date.now();
     });
     if (this.telemetrySubs.length === 0) this.subscribeTelemetry();
     this.startTickLoop();
@@ -176,7 +170,7 @@ export default class LapTimerService {
   lap(): void {
     const session = this.activeSession();
     if (!session || !session.isRunning || session.currentLapStartEpochMs === null) return;
-    const endEpochMs = this.now();
+    const endEpochMs = Date.now();
     const durationMs = session.currentLapAccumulatedMs + (endEpochMs - session.currentLapStartEpochMs);
     if (durationMs === 0) return;
 
@@ -224,10 +218,10 @@ export default class LapTimerService {
     if (this.isRunning()) this.pause();
     this.unsubscribeTelemetry();
 
-    const startEpochMs = this.now();
+    const startEpochMs = Date.now();
     const runId = this.storage.getCurrentRunId().getValue() ?? null;
     const newSession: LapSession = {
-      id: generateId(),
+      id: uuidv4(),
       name: name?.trim() || defaultSessionName(startEpochMs, runId),
       sessionStartEpochMs: startEpochMs,
       runIdAtSessionStart: runId,
@@ -465,7 +459,7 @@ function hydrate(): LapStore {
     try {
       localStorage.removeItem(LAP_STORE_STORAGE_KEY);
     } catch {
-      /* ignore */
+      // localStorage unavailable (e.g. private mode); nothing to recover.
     }
     return emptyLapStore();
   }
@@ -477,12 +471,4 @@ function cloneStore(s: LapStore): LapStore {
     activeSessionId: s.activeSessionId,
     sessions: s.sessions.map((sess) => ({ ...sess, laps: [...sess.laps] }))
   };
-}
-
-function generateId(): string {
-  // Fallback for runners pre-dating crypto.randomUUID.
-  const c: Crypto | undefined = typeof crypto !== 'undefined' ? crypto : undefined;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
-  const r = () => Math.floor(Math.random() * 0x10000).toString(16).padStart(4, '0');
-  return `${r()}${r()}-${r()}-${r()}-${r()}-${r()}${r()}${r()}`;
 }
