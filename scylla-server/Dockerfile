@@ -2,7 +2,7 @@ FROM rust:latest AS builder
 
 WORKDIR /usr/src/myapp
 
-COPY . . 
+COPY . .
 RUN cargo install --path . --locked --profile release
 
 FROM debian:stable-slim

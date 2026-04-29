@@ -17,7 +17,8 @@ export const EFUSE_TOPICS = {
       Motor_Temp: 'VCU/Echo/Motor_Temp',
       Controller_Temp: 'VCU/Echo/Controller_Temp',
       Battbox_Temp: 'VCU/Echo/Battbox_Temp',
-      Brake_State: 'VCU/Echo/Brake_State'
+      Brake_State: 'VCU/Echo/Brake_State',
+      BMS_Shutdown: 'VCU/Echo/BMS_Shutdown_From_VCU'
     },
 
     // RTDS Messages

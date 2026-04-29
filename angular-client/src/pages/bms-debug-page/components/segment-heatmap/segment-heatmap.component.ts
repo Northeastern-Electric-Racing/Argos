@@ -24,7 +24,6 @@ export interface DisplayCell {
   selector: 'segment-heatmap',
   templateUrl: './segment-heatmap.component.html',
   styleUrl: './segment-heatmap.component.css',
-  standalone: true,
   imports: [HexTileComponent]
 })
 export class SegmentHeatmapComponent implements OnInit, OnDestroy {
@@ -117,11 +116,13 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   private getCellBoolValue(cell: CellReading): boolean | undefined {
-    if (this.view !== HeatMapView.Balancing) return undefined;
-    return cell.balancing;
+    if (this.view === HeatMapView.Balancing) return cell.balancing;
+    if (this.view === HeatMapView.CvsFailure) return cell.cvs;
+    return undefined;
   }
 
   getColor(cell: DisplayCell): string {
+    if (this.view === HeatMapView.CvsFailure) return this.getCvsFailureColor(cell.boolValue);
     if (this.view === HeatMapView.Balancing) return this.getBalancingColor(cell.boolValue);
     if (this.view === HeatMapView.Temperature) return this.getTempColor(cell.value);
     return this.getVoltColor(cell.value);
@@ -142,6 +143,11 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   private getBalancingColor(value: boolean | undefined): string {
     if (value === undefined) return 'grey';
     return value ? '#4169e1' : 'yellow';
+  }
+
+  private getCvsFailureColor(value: boolean | undefined): string {
+    if (value === undefined) return 'grey';
+    return value ? '#dc2626' : '#16a34a';
   }
 
   cellClicked(displayCell: DisplayCell): void {

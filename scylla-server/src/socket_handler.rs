@@ -2,16 +2,20 @@ use chrono::Utc;
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use socketioxide::SocketIo;
-use socketioxide::extract::{SocketRef, TryData};
-use socketioxide::socket::Sid;
+use socketioxide::adapter::Adapter;
+use socketioxide::extract::SocketRef;
+use socketioxide::handler::{FromConnectParts, Value};
+use socketioxide::socket::{Sid, Socket};
+use std::convert::Infallible;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
 use tokio::sync::{RwLock, broadcast};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 
+use crate::argos_inserter::ArgosInserter;
 use crate::metadata_structs::{
     DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData,
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
@@ -25,31 +29,79 @@ pub async fn socket_handler(
     mut data_channel: broadcast::Receiver<ClientData>,
     io: SocketIo,
 ) {
+    info!(task = "socket_handler", "starting");
     let mut upload_counter = 0u8;
+    let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+    let mut iter_count: u64 = 0;
+    let mut msgs_since_hb: u64 = 0;
     loop {
+        iter_count = iter_count.wrapping_add(1);
         tokio::select! {
             _ = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
             Ok(data) = data_channel.recv() => {
+                msgs_since_hb = msgs_since_hb.wrapping_add(1);
                 send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
+            }
+            _ = heartbeat.tick() => {
+                info!(
+                    task = "socket_handler",
+                    iter = iter_count,
+                    data_channel_len = data_channel.len(),
+                    msgs_in_window = msgs_since_hb,
+                    "heartbeat"
+                );
+                msgs_since_hb = 0;
             }
         }
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct AuthData {
-    token: String,
+struct SocketClientId(String);
+
+/**
+ * Extracts a client ID from the query string of the socket connection, and uses that as the client ID for rule notifications.
+ * This allows clients to persist their identity across reconnects by including the same clientId in the
+ *
+ * Based on the documentation page and example from socketioxide: https://docs.rs/socketioxide/latest/socketioxide/extract/index.html
+ */
+impl<A: Adapter> FromConnectParts<A> for SocketClientId {
+    type Error = Infallible;
+
+    fn from_connect_parts(s: &Arc<Socket<A>>, _: &Option<Value>) -> Result<Self, Self::Error> {
+        // Use query-string identity to persist client identity across reconnects.
+        let client_id = s
+            .req_parts()
+            .uri
+            .query()
+            .and_then(|query| {
+                query.split('&').find_map(|pair| {
+                    let mut parts = pair.splitn(2, '=');
+                    match (parts.next(), parts.next()) {
+                        (Some("clientId"), Some(value)) if !value.is_empty() => Some(value),
+                        _ => None,
+                    }
+                })
+            })
+            .unwrap_or_default();
+
+        Ok(SocketClientId(client_id.to_string()))
+    }
 }
+
+/// Cadence at which Argos/Message_Rate is recomputed and emitted.
+const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
 
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
     rules_manager: Arc<RuleManager>,
+    argos_inserter: ArgosInserter,
     io: SocketIo,
 ) {
+    info!(task = "socket_handler_with_metadata", "starting");
     let mut upload_counter = 0u8;
 
     // BEGIN METADATA
@@ -58,7 +110,7 @@ pub async fn socket_handler_with_metadata(
     let mut view_interval = tokio::time::interval(Duration::from_millis(500));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
-    let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
+    let mut message_rate_interval = tokio::time::interval(MESSAGE_RATE_INTERVAL);
 
     // init timers
     let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
@@ -93,27 +145,23 @@ pub async fn socket_handler_with_metadata(
     let writable_socket_map = client_socket_map.clone();
     io.ns(
         "/",
-        |socket: SocketRef, TryData(auth): TryData<AuthData>| async move {
+        |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
             // unfortunate locking and ref counting due to the async closures
             let mut owned = writable_socket_map.write().await;
-            let client_id = match auth {
-                Ok(auth) => auth,
-
-                Err(e) => {
-                    warn!("Could not extract auth, client unauthenticated: {}", e);
-                    return;
-                }
-            };
+            if client_id.is_empty() {
+                warn!("Could not extract clientId query parameter, client unauthenticated");
+                return;
+            }
 
             debug!(
-                "Establishing auth connection with {} -- socket {}",
-                client_id.token, socket.id
+                "Establishing client connection with {} on socket_id {}",
+                client_id, socket.id
             );
-            owned.insert(client_id.token.clone(), socket.id);
+            owned.insert(client_id.clone(), socket.id);
             drop(owned);
 
             socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id.token);
+                writable_socket_map.write().await.remove(&client_id);
             });
         },
     );
@@ -121,7 +169,12 @@ pub async fn socket_handler_with_metadata(
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
 
+    let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+    let mut iter_count: u64 = 0;
+    let mut msgs_since_hb: u64 = 0;
+
     loop {
+        iter_count = iter_count.wrapping_add(1);
         tokio::select! {
             _ = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
@@ -129,6 +182,7 @@ pub async fn socket_handler_with_metadata(
             },
             Ok(data) = data_channel.recv() => {
                 msg_cnt += 1;
+                msgs_since_hb = msgs_since_hb.wrapping_add(1);
                 send_socket_msg(
                     &data,
                     &mut upload_counter,
@@ -136,8 +190,17 @@ pub async fn socket_handler_with_metadata(
                     DATA_SOCKET_KEY,
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-
                 handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+            }
+            _ = heartbeat.tick() => {
+                info!(
+                    task = "socket_handler_with_metadata",
+                    iter = iter_count,
+                    data_channel_len = data_channel.len(),
+                    msgs_in_window = msgs_since_hb,
+                    "heartbeat"
+                );
+                msgs_since_hb = 0;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -186,6 +249,16 @@ pub async fn socket_handler_with_metadata(
                         &io,
                         METADATA_SOCKET_KEY,
                     ).await;
+                // persist the same rate to the DB under a separate topic so it
+                // shows up in /datatypes and the Data table without affecting
+                // the existing Argos/Message_Rate Socket.io stream
+                argos_inserter.insert(ClientData {
+                    name: "Argos/Message".to_string(),
+                    unit: "".to_string(),
+                    run_id: crate::RUN_ID.load(Ordering::Relaxed),
+                    timestamp: chrono::offset::Utc::now(),
+                    values: vec![rate],
+                });
                 msg_cnt = 0;
                 last_instant = tokio::time::Instant::now();
             }
@@ -203,27 +276,40 @@ async fn handle_rule_processing(
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
+
     for notification in notifs {
-        let read_clients = client_socket_map.read().await;
-        let Some(sid) = read_clients.get(&notification.0.0) else {
-            warn!("Could not find client to deliver notification, deleting client");
+        // Copy the sid and drop the read lock before any async work
+        let sid_opt = {
+            let read_clients = client_socket_map.read().await;
+            read_clients.get(&notification.0.0).copied()
+        };
+        let Some(sid) = sid_opt else {
+            warn!(
+                "Could not find client to deliver notification, deleting client {}",
+                notification.0.0
+            );
             let _ = rule_manager.delete_client(notification.0).await;
-            return;
+            continue;
         };
         debug!(
             "Sending notification of {} to {}",
             notification.1.topic, notification.0
         );
-        let Some(socket) = io.get_socket(*sid) else {
-            warn!("Could not find client socket, deleting client");
+        let Some(socket) = io.get_socket(sid) else {
+            warn!(
+                "Could not find client socket, deleting client {}",
+                notification.0.0
+            );
             let _ = rule_manager.delete_client(notification.0).await;
-            return;
+            continue;
         };
         if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
             warn!(
                 "Could not send rule notification to {}, err {}",
                 notification.0, err
             );
+        } else {
+            debug!("Successfully sent notification to {}", notification.0);
         };
     }
 }

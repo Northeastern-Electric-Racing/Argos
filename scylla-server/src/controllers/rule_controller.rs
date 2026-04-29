@@ -9,7 +9,7 @@ use serde::Deserialize;
 use serde_with::DurationSeconds;
 use serde_with::serde_as;
 use std::time::Duration;
-use tracing::debug;
+use tracing::{debug, info};
 
 use crate::{
     error::ScyllaError,
@@ -28,7 +28,7 @@ pub async fn add_rule(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule): Json<Rule>,
 ) -> Result<Json<String>, ScyllaError> {
-    debug!(
+    info!(
         "Incoming rules reg: {}, from {}",
         rule.topic,
         auth.username().to_string()
@@ -48,7 +48,7 @@ pub async fn delete_rule(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Path(rule_id): Path<String>,
 ) -> Result<(), ScyllaError> {
-    debug!(
+    info!(
         "Incoming rules del: {}, from {}",
         rule_id,
         auth.username().to_string()
@@ -117,6 +117,7 @@ pub async fn edit_rule(
         debounce_time,
     }): Json<EditRulePayload>,
 ) -> Result<(), ScyllaError> {
+    info!("Incoming rules edit: {}", rule_id);
     rules_manager
         .edit_rule(RuleId(rule_id), expr, debounce_time)
         .await
@@ -128,7 +129,7 @@ pub async fn unsubscribe_rules(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(request): Json<RuleSubscriptionRequest>,
 ) -> Result<Json<String>, ScyllaError> {
-    debug!(
+    info!(
         "Unsubscribing client {} from {} rules",
         request.client_id,
         request.rule_ids.len()
@@ -152,7 +153,7 @@ pub async fn subscribe_rules(
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(request): Json<RuleSubscriptionRequest>,
 ) -> Result<Json<String>, ScyllaError> {
-    debug!(
+    info!(
         "Subscribing client {} to {} rules",
         request.client_id,
         request.rule_ids.len()

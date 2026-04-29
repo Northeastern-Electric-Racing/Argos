@@ -19,6 +19,16 @@ export type DataType = {
   unit: string;
 };
 
+export interface CarCommandRow {
+  dataType: DataType;
+  label: string;
+}
+
+export interface CarCommand {
+  title: string;
+  rows: CarCommandRow[];
+}
+
 /**
  * Frontend type of Scylla Settings
  */
@@ -90,4 +100,11 @@ export interface Timing {
   time: number;
   before: number;
   after: number;
+}
+
+export interface RuleNotification {
+  id: string;
+  topic: string;
+  values: number[];
+  time: string;
 }

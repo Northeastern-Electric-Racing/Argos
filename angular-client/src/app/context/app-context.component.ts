@@ -10,6 +10,20 @@ import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { EnvService } from 'src/services/env.service';
+import { NotificationLogService } from 'src/services/notification-log.service';
+import { v4 as uuidv4 } from 'uuid';
+
+// crypto.randomUUID is only defined in secure contexts (https or loopback);
+// uuidv4 falls back to crypto.getRandomValues so it works on insecure origins.
+function getOrCreateClientId(): string {
+  const key = 'notification_rules_client_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = uuidv4();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -24,8 +38,13 @@ export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
   private cellService = new CellService(this.storage);
   private faultService = inject(FaultService);
+  private notificationLogService = inject(NotificationLogService);
   private envService = inject(EnvService);
-  socket = io(this.envService.backendUrl, { auth: { token: 'some random token' } });
+  socket = io(this.envService.backendUrl, {
+    query: {
+      clientId: getOrCreateClientId()
+    }
+  });
   socketService = new SocketService(this.socket);
 
   constructor(
@@ -88,12 +107,13 @@ export default class AppContextComponent implements OnInit {
       .addSvgIcon('battery', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/battery.svg'))
       .addSvgIcon('linked_camera', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/linked_camera.svg'))
       .addSvgIcon('more_horiz', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/more_horiz.svg'))
-      .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'));
+      .addSvgIcon('edit', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/edit.svg'))
+      .addSvgIcon('notifications', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/icons/notifications.svg'));
   }
 
   ngOnInit(): void {
     document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
-    this.socketService.receiveData(this.storage, this.faultService);
+    this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
   }
 }

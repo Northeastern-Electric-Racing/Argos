@@ -5,6 +5,33 @@
   margin-top: 10px;
 }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.flatten-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.tree-node-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 ::ng-deep .p-tree-node-label {
   width: 100%;
 }

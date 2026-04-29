@@ -19,6 +19,10 @@ import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.compo
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
+import { NotificationLogService } from 'src/services/notification-log.service';
+import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
+import { Popover } from 'primeng/popover';
+import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -43,7 +47,10 @@ export interface NavItem {
     TypographyComponent,
     HStackComponent,
     SidebarChipComponent,
-    MatIcon
+    MatIcon,
+    NotificationListComponent,
+    Popover,
+    Badge
   ]
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
@@ -52,6 +59,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private dialogService = inject(DialogService);
+  protected notificationLogService = inject(NotificationLogService);
   private subscribtions: Subscription[] = [];
 
   ref: DynamicDialogRef | undefined;
@@ -143,7 +151,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       onClick: () => this.navigateTo(appRoutes.graphRoute()),
       icon: 'bar_chart'
     },
-    { id: appRoutes.faultsRoute(), label: 'Fault', onClick: () => this.navigateTo(appRoutes.faultsRoute()), icon: 'error' },
     { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
     {
       id: appRoutes.efusesRoute(),
@@ -164,8 +171,13 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     }
   }
 
-  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems];
   navMenuItems: NavItem[] = [
+    {
+      id: appRoutes.faultsRoute(),
+      label: 'Fault',
+      onClick: () => this.navigateTo(appRoutes.faultsRoute()),
+      icon: 'error'
+    },
     {
       id: appRoutes.mapRoute(),
       label: 'Map',
@@ -191,12 +203,20 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       icon: 'electrical_services'
     },
     {
+      id: appRoutes.rulesRoute(),
+      label: 'Rules',
+      onClick: () => this.navigateTo(appRoutes.rulesRoute()),
+      icon: 'notifications'
+    },
+    {
       id: appRoutes.lapTimerRoute(),
       label: 'Lap Timer',
       onClick: () => this.navigateTo(appRoutes.lapTimerRoute()),
       icon: 'timer'
     }
   ];
+
+  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
   openMenu() {
     this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
@@ -219,6 +239,10 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   navigateTo(route: string): void {
     this.selectedRoute = route;
     this.router.navigate([route]);
+  }
+
+  onNotificationPanelShow(): void {
+    this.notificationLogService.markAllRead();
   }
 
   isSelected(navItem: NavItem) {

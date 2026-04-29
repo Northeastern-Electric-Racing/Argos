@@ -14,7 +14,7 @@ use rumqttc::v5::{
 use rustc_hash::FxHashMap;
 use tokio::{sync::broadcast, time::Instant};
 use tokio_util::sync::CancellationToken;
-use tracing::{Level, debug, instrument, trace, warn};
+use tracing::{Level, debug, info, instrument, trace, warn};
 
 use crate::{
     RATE_LIMIT_MODE, RateLimitMode, STATIC_RATE_LIMIT_VALUE,
@@ -102,8 +102,12 @@ impl MqttProcessor {
         mut eventloop: EventLoop,
         pool: Pool<AsyncPgConnection>,
     ) {
+        info!(task = "mqtt_processor", "starting");
         // let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
+        let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+        let mut iter_count: u64 = 0;
+        let mut msgs_since_hb: u64 = 0;
 
         debug!("Subscribing to siren");
         client
@@ -112,6 +116,7 @@ impl MqttProcessor {
             .expect("Could not subscribe to Siren");
 
         loop {
+            iter_count = iter_count.wrapping_add(1);
             #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
                 _ = self.cancel_token.cancelled() => {
@@ -120,6 +125,7 @@ impl MqttProcessor {
                 },
                 msg = eventloop.poll() => match msg {
                     Ok(Event::Incoming(Packet::Publish(msg))) => {
+                        msgs_since_hb = msgs_since_hb.wrapping_add(1);
                         trace!("Received mqtt message: {:?}", msg);
                         // parse the message into the data and the node name it falls under
                         let (send_db, msg) = self.parse_msg(msg, &pool).await;
@@ -133,6 +139,17 @@ impl MqttProcessor {
                     },
                     Err(msg) => trace!("Received mqtt error: {:?}", msg),
                     _ => trace!("Received misc mqtt: {:?}", msg),
+                },
+                _ = heartbeat.tick() => {
+                    info!(
+                        task = "mqtt_processor",
+                        iter = iter_count,
+                        db_channel_len = self.db_channel.len(),
+                        socket_channel_len = self.socket_channel.len(),
+                        msgs_in_window = msgs_since_hb,
+                        "heartbeat"
+                    );
+                    msgs_since_hb = 0;
                 },
                 // _ = latency_interval.tick() => {
                 //     // set latency to 0 if no messages are in buffer

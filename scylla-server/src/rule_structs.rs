@@ -14,6 +14,8 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::time::Duration;
 use tokio::sync::RwLock;
+use tracing::info;
+use tracing::trace;
 use tracing::warn;
 
 use crate::ClientData;
@@ -182,7 +184,7 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
 }
 
 /// cooldown time
-const COOLDOWN_TIME: std::time::Duration = std::time::Duration::from_secs(60);
+const COOLDOWN_TIME: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// socket key for sending rule notification events
 pub const RULE_SOCKET_KEY: &str = "rule_notify";
@@ -286,7 +288,7 @@ impl Rule {
                 warn!("Don't know when cooldown began!");
                 return None;
             };
-            if tokio::time::Instant::now() - last_seen < COOLDOWN_TIME {
+            if tokio::time::Instant::now().saturating_duration_since(last_seen) < COOLDOWN_TIME {
                 return Some(false);
             } else {
                 // end cooldown, restart counting
@@ -300,18 +302,18 @@ impl Rule {
 
         // if we have triggered and we arent during cooldown
         if res && !self.during_cooldown {
-            self.last_seen = Some(tokio::time::Instant::now());
-            self.first_seen
-                .get_or_insert_with(tokio::time::Instant::now);
+            let now = tokio::time::Instant::now();
+            self.last_seen = Some(now);
+            let first = *self.first_seen.get_or_insert(now);
             // if this is the first time we see it
-            if self.last_seen.expect("impossible last seen")
-                - self.first_seen.expect("impossible first seen")
-                > self.debounce_time
-            {
+            if now.saturating_duration_since(first) >= self.debounce_time {
                 // we have a winner, lets cleanup and enter cooldown state
                 self.during_cooldown = true;
                 return Some(true);
             }
+        } else if !self.during_cooldown {
+            self.first_seen = None;
+            self.last_seen = None;
         }
         Some(false)
     }
@@ -375,11 +377,16 @@ impl RuleManager {
         let rule_ids = match self.topic_index.read().await.get(&data.name) {
             Some(rule_ids) => rule_ids.clone(), // Clone so we can drop resource
             None => {
-                return Err(RuleManagerError::NoMatchingRule);
+                return Ok(None);
             }
         };
 
         let mut notifications: Vec<(ClientId, RuleNotification)> = Vec::new();
+
+        trace!(
+            "Handling rule processing for {} with values: {:?}",
+            data.name, data.values
+        );
         for rule_id in rule_ids {
             let clients_op = self.subscriptions.read().await.get_left(&rule_id).cloned();
 
@@ -407,6 +414,7 @@ impl RuleManager {
             if !triggered {
                 continue;
             }
+            info!("Rule {} triggered", rule_id);
 
             for client in clients {
                 notifications.push((
@@ -452,6 +460,7 @@ impl RuleManager {
 
     /// Deletes a rule from client. \
     /// If no more rules exist for that client, the client is also removed.
+    /// If the rule has zero subscribers remaining, the rule is fully cleaned up.
     pub async fn delete_rule(
         &self,
         client_id: ClientId,
@@ -464,7 +473,26 @@ impl RuleManager {
             .await
             .remove_right_from_left(&client_id, &rule_id)
         {
-            RemovedWithCleanUp(_) | RemovedOnly => Ok(()),
+            RemovedWithCleanUp(orphaned_rule_id) => {
+                // No subscribers remain — clean up the rule and topic_index
+                let topic = self
+                    .rules
+                    .write()
+                    .await
+                    .remove(&orphaned_rule_id)
+                    .map(|r| r.topic.clone());
+                if let Some(topic) = topic {
+                    let mut topic_index = self.topic_index.write().await;
+                    if let Some(rule_ids) = topic_index.get_mut(&topic) {
+                        rule_ids.remove(&orphaned_rule_id);
+                        if rule_ids.is_empty() {
+                            topic_index.remove(&topic);
+                        }
+                    }
+                }
+                Ok(())
+            }
+            RemovedOnly => Ok(()),
             NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete rule: {}",
@@ -480,7 +508,23 @@ impl RuleManager {
     pub async fn delete_client(&self, client_id: ClientId) -> Result<(), RuleManagerError> {
         // Removing from left returns rules that no longer have clients
         match self.subscriptions.write().await.remove_left(&client_id) {
-            RemovedWithCleanUp(_) | RemovedOnly => Ok(()),
+            RemovedWithCleanUp(orphaned_rule_ids) => {
+                // Clean up rules and topic_index for rules with zero subscribers
+                let mut rules = self.rules.write().await;
+                let mut topic_index = self.topic_index.write().await;
+                for orphaned_rule_id in orphaned_rule_ids {
+                    if let Some(removed_rule) = rules.remove(&orphaned_rule_id) {
+                        if let Some(rule_ids) = topic_index.get_mut(&removed_rule.topic) {
+                            rule_ids.remove(&orphaned_rule_id);
+                            if rule_ids.is_empty() {
+                                topic_index.remove(&removed_rule.topic);
+                            }
+                        }
+                    }
+                }
+                Ok(())
+            }
+            RemovedOnly => Ok(()),
             NothingToRemove => {
                 warn!(
                     "Could not find client in subscriptions bimap to delete client: {}",
@@ -543,21 +587,29 @@ impl RuleManager {
         &self,
         requesting_client_id: ClientId,
     ) -> RulesResponse {
-        let rules_guard = self.rules.read().await;
+        // Clone rules data and drop the lock before acquiring the subscriptions lock
+        let rules_snapshot: Vec<(RuleId, Rule)> = {
+            let rules_guard = self.rules.read().await;
+            rules_guard
+                .iter()
+                .map(|(id, rule)| (id.clone(), rule.clone()))
+                .collect()
+        };
+
         let subscriptions_guard = self.subscriptions.read().await;
 
-        let rules = rules_guard
-            .iter()
+        let rules = rules_snapshot
+            .into_iter()
             .map(|(rule_id, rule)| {
                 let subscribers = subscriptions_guard
-                    .get_left(rule_id)
+                    .get_left(&rule_id)
                     .cloned()
                     .unwrap_or_default();
 
                 let is_subscribed = subscribers.contains(&requesting_client_id);
 
                 ClientRule {
-                    rule: rule.clone(),
+                    rule,
                     subscribers: subscribers.into_iter().collect(),
                     is_subscribed,
                 }

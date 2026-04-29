@@ -41,6 +41,14 @@ const pauseLap = () => `${baseURL}/lap-timer/pause`;
 const stopLap = () => `${baseURL}/lap-timer/stop`;
 const getLaps = () => `${baseURL}/lap-timer/laps`;
 
+/* Rules */
+const getRulesByClientId = (clientId: string) => `${baseURL}/rules/${clientId}`;
+const addRule = () => `${baseURL}/rules/add`;
+const deleteRule = (ruleId: string) => `${baseURL}/rules/delete/${ruleId}`;
+const editRule = (ruleId: string) => `${baseURL}/rules/edit/${ruleId}`;
+const subscribeToRule = () => `${baseURL}/rules/subscribe`;
+const unsubscribeFromRule = () => `${baseURL}/rules/unsubscribe`;
+
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
 
@@ -78,6 +86,13 @@ export const urls = {
   pauseLap,
   stopLap,
   getLaps,
+
+  getRulesByClientId,
+  addRule,
+  deleteRule,
+  editRule,
+  subscribeToRule,
+  unsubscribeFromRule,
 
   authenticate,
 

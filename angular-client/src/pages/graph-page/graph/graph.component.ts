@@ -179,8 +179,11 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       yaxis: index
     }));
 
-    // Use time-based range if in time mode, otherwise use calculated timeRangeMs from point-based logic
-    const effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
+    // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
+    let effectiveRange: number | undefined = undefined;
+    if (this.realTime()) {
+      effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
+    }
 
     // Single updateOptions call with series included — avoids two separate re-renders
     // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
