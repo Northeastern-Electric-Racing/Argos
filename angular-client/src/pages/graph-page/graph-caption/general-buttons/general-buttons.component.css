@@ -16,6 +16,116 @@
   flex-wrap: wrap;
 }
 
+.historical-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 1px solid #2a3a44;
+}
+
+.historical-label {
+  color: #8fcadd;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Compress the Quick Select dropdown so it lines up with the sm "Custom" button (28px).
+   The select-dropdown component sets padding-bottom: 10px and width: 10vw with !important
+   on .p-select-label globally, so we have to override with !important to win.
+
+   TODO: select-dropdown.component.css uses !important for sizing rules that should be
+   per-call-site, not global. Cleaning that up would let consumers (us) drop !important here
+   and let any other future caller pick its own dimensions without a CSS arms race. */
+.historical-section ::ng-deep select-dropdown .p-select {
+  height: 28px !important;
+  min-height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.historical-section ::ng-deep select-dropdown .p-select-label,
+.historical-section ::ng-deep select-dropdown .p-select-label.p-placeholder {
+  width: auto !important;
+  min-width: 100px;
+  padding: 0 0.5rem !important;
+  font-size: 12px;
+  line-height: 28px;
+  height: 28px;
+}
+
+.historical-section ::ng-deep select-dropdown .p-select-dropdown {
+  width: 1.75rem;
+}
+
+.custom-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.custom-caption {
+  color: #8fcadd;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.custom-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 260px;
+  padding: 4px;
+}
+
+.mode-toggle {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid #2a3a44;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  flex: 1;
+  background-color: transparent;
+  color: #c9d6dc;
+  border: none;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mode-btn--active {
+  background-color: #027bd7;
+  color: #fff;
+}
+
+.mode-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popover-label {
+  color: #c9d6dc;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 @media (max-width: 768px) {
   :host {
     margin: 0;
@@ -25,6 +135,13 @@
   .general-buttons-row {
     gap: 6px;
     width: 100%;
+  }
+
+  .historical-section {
+    padding-left: 0;
+    border-left: none;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   :host ::ng-deep select-dropdown {
