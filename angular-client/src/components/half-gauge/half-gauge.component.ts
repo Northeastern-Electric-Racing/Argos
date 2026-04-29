@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
 import { NgStyle } from '@angular/common';
@@ -18,7 +18,7 @@ export type ChartOptions = {
   standalone: true,
   imports: [NgStyle, NgApexchartsModule]
 })
-export default class HalfGaugeComponent implements OnInit {
+export default class HalfGaugeComponent implements OnInit, OnChanges {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public chartOptions!: Partial<ChartOptions> | any;
   @Input() current: number = 50;
@@ -30,26 +30,52 @@ export default class HalfGaugeComponent implements OnInit {
 
   widthpx: string = '200px';
   heightpx: string = '200px';
-  paddingTop: string = '20px';
   label: string = 'm/s';
   percentage: number = 50;
   fontsize: string = '50px';
 
   ngOnInit() {
+    this.rebuildChart();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (!this.chartOptions) return; // ngOnInit handles the first build
+    if (changes['size']) {
+      this.widthpx = this.size + 'px';
+      this.heightpx = this.size * 0.5 + 'px';
+      this.fontsize = this.size / 10 + 'px';
+    }
+    if (changes['current'] || changes['min'] || changes['max']) {
+      this.percentage = ((this.current - this.min) / (this.max - this.min)) * 100;
+      this.label = formatGaugeValue(this.current) + this.unit;
+      // New object so ng-apexcharts diffs and re-renders.
+      this.chartOptions = {
+        ...this.chartOptions,
+        series: [this.percentage],
+        labels: [this.label]
+      };
+    } else if (changes['unit']) {
+      this.label = formatGaugeValue(this.current) + this.unit;
+      this.chartOptions = { ...this.chartOptions, labels: [this.label] };
+    }
+    if (changes['color']) {
+      this.chartOptions = { ...this.chartOptions, fill: { ...this.chartOptions.fill, colors: [this.color] } };
+    }
+  }
+
+  private rebuildChart(): void {
     this.widthpx = this.size + 'px';
     this.heightpx = this.size * 0.5 + 'px';
-    this.paddingTop = '';
-    this.label = this.current + this.unit;
+    this.label = formatGaugeValue(this.current) + this.unit;
     this.percentage = ((this.current - this.min) / (this.max - this.min)) * 100;
     this.fontsize = this.size / 10 + 'px';
 
-    // apex radial charts are hard coded to work with percentages, so converting to percentage to
-    // accurately represent min and max in chart and then using actual value and unit as label
+    // radialBar takes percentages; raw value goes in the label.
     this.chartOptions = {
       series: [this.percentage],
       chart: {
         type: 'radialBar',
-        foreColor: '#eeeeee', // text color
+        foreColor: '#eeeeee',
         redrawOnParentResize: true,
         offsetY: -100
       },
@@ -65,7 +91,7 @@ export default class HalfGaugeComponent implements OnInit {
           track: {
             background: '#1d1d1d',
             strokeWidth: '97%',
-            margin: 5, // margin is in pixels
+            margin: 5,
             dropShadow: {
               enabled: false,
               top: 2,
@@ -96,4 +122,8 @@ export default class HalfGaugeComponent implements OnInit {
       labels: [this.label]
     };
   }
+}
+
+function formatGaugeValue(n: number): string {
+  return (Math.round(n * 100) / 100).toFixed(2);
 }

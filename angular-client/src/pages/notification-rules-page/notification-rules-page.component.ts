@@ -21,6 +21,7 @@ import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-con
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 import { RulesTableComponent } from './rules-table/rules-table.component';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
+import { downloadAsFile } from 'src/utils/file-download.utils';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -397,15 +398,8 @@ export default class NotificationRulesPageComponent implements OnInit {
       );
 
       const csvContent = [header, ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `notification-rules-${new Date().toISOString().slice(0, 10)}.csv`;
-      link.click();
-
-      URL.revokeObjectURL(url);
+      const filename = `notification-rules-${new Date().toISOString().slice(0, 10)}.csv`;
+      downloadAsFile(filename, csvContent, 'text/csv;charset=utf-8;');
       this.messageService.add({ severity: 'success', summary: 'Downloaded', detail: `Exported ${rules.length} rule(s)` });
     } catch {
       this.messageService.add({ severity: 'error', summary: 'Download Error', detail: 'Failed to download rules' });
