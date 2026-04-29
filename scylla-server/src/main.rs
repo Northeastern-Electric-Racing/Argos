@@ -38,7 +38,9 @@ use scylla_server::{
     socket_handler::{socket_handler, socket_handler_with_metadata},
 };
 use scylla_server::{
-    ClientData, db_handler,
+    ClientData,
+    argos_inserter::ArgosInserter,
+    db_handler,
     mqtt_processor::{MqttProcessor, MqttProcessorOptions},
 };
 use socketioxide::{SocketIo, extract::SocketRef};
@@ -255,9 +257,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
     let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
 
-    // expose the db-bound broadcast Sender so any module can call
-    // `db_handler::insert_argos_data` without plumbing a Sender through
-    db_handler::init_db_sender(mqtt_send_db.clone());
+    // wraps a clone of the db-bound broadcast Sender so server-generated
+    // datapoints (e.g. Argos/Message rate) can be inserted alongside MQTT data
+    let argos_inserter = ArgosInserter::new(mqtt_send_db.clone());
 
     // channel to pass the processed data to the batch uploading thread
     // TODO tune buffer size
@@ -282,6 +284,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             token.clone(),
             mqtt_receive_socket,
             rules_manager.clone(),
+            argos_inserter.clone(),
             io,
         );
         task_tracker.spawn(async move {
