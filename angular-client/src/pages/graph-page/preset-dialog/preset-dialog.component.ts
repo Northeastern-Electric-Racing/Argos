@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { partitionDataTypesByName } from 'src/utils/dataTypes.utils';
+import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { DataType } from 'src/utils/types.utils';
 
 interface PresetDialogData {
@@ -19,7 +20,8 @@ interface PresetDialogData {
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputText, ButtonDirective]
+  providers: [ConfirmationService],
+  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
 })
 export class PresetDialogComponent {
   private ref = inject(DynamicDialogRef);
@@ -27,6 +29,7 @@ export class PresetDialogComponent {
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
   private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
 
   private data = this.config.data as PresetDialogData;
   private dataTypes = this.data.dataTypes;
@@ -46,12 +49,14 @@ export class PresetDialogComponent {
     const topicNames = this.currentSelection().map((dt) => dt.name);
     const existing = this.presetService.findByName(name);
     if (existing) {
-      if (!confirm(`A preset named "${name}" already exists. Replace its topics?`)) return;
-      this.presetService.replacePreset(existing.id, { topicNames });
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Preset Replaced',
-        detail: `"${name}" now contains ${topicNames.length} topic(s)`
+      this.confirmReplace(name, () => {
+        this.presetService.replacePreset(existing.id, { topicNames });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Preset Replaced',
+          detail: `"${name}" now contains ${topicNames.length} topic(s)`
+        });
+        this.newPresetName.set('');
       });
     } else {
       this.presetService.addPreset(name, topicNames);
@@ -60,84 +65,94 @@ export class PresetDialogComponent {
         summary: 'Preset Saved',
         detail: `"${name}" with ${topicNames.length} topic(s)`
       });
+      this.newPresetName.set('');
     }
-    this.newPresetName.set('');
   }
 
   onUploadClick(): void {
     this.fileInput()?.nativeElement.click();
   }
 
-  onFileSelected(event: Event): void {
+  async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
     input.value = '';
 
-    if (!file.name.toLowerCase().endsWith('.json')) {
-      this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .json file' });
+    let text: string;
+    try {
+      text = await readTextFile(file, '.json');
+    } catch (err) {
+      if (err instanceof FileReadError && err.kind === 'invalid-extension') {
+        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .json file' });
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+      }
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
-      const parsed = this.parsePresetJson(text);
-      if (!parsed) return;
+    const parsed = this.parsePresetJson(text);
+    if (!parsed) return;
 
-      const fallbackName = file.name.replace(/\.json$/i, '').trim() || 'Untitled Preset';
-      const name = parsed.name?.trim() || fallbackName;
+    const fallbackName = file.name.replace(/\.json$/i, '').trim() || 'Untitled Preset';
+    const name = parsed.name?.trim() || fallbackName;
 
-      const existing = this.presetService.findByName(name);
-      if (existing) {
-        if (!confirm(`A preset named "${name}" already exists. Replace its topics?`)) return;
+    const existing = this.presetService.findByName(name);
+    if (existing) {
+      this.confirmReplace(name, () => {
         this.presetService.replacePreset(existing.id, { topicNames: parsed.topicNames });
-      } else {
-        this.presetService.addPreset(name, parsed.topicNames);
-      }
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Preset Imported',
-        detail: `"${name}" with ${parsed.topicNames.length} topic(s)`
+        this.toastImported(name, parsed.topicNames.length);
       });
-    };
-    reader.onerror = () => {
-      this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
-    };
-    reader.readAsText(file);
+    } else {
+      this.presetService.addPreset(name, parsed.topicNames);
+      this.toastImported(name, parsed.topicNames.length);
+    }
   }
 
   onApply(preset: Preset): void {
-    const { matched, unknown } = partitionDataTypesByName(this.dataTypes, preset.topicNames);
-    if (unknown.length > 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Unknown Topics Skipped',
-        detail: unknown.join(', '),
-        life: 8000
-      });
-    }
+    const matched = this.presetService.resolvePresetTopics(preset, this.dataTypes);
     this.ref.close(matched);
   }
 
   onDownload(preset: Preset): void {
     const exported: PresetSeed = { name: preset.name, topicNames: [...preset.topicNames] };
-    const blob = new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${this.sanitizeFilename(preset.name)}.json`;
-    link.click();
-
-    URL.revokeObjectURL(url);
+    downloadAsFile(
+      `${this.sanitizeFilename(preset.name)}.json`,
+      JSON.stringify(exported, null, 2),
+      'application/json;charset=utf-8;'
+    );
   }
 
   onDelete(preset: Preset): void {
-    if (!confirm(`Delete preset "${preset.name}"?`)) return;
-    this.presetService.deletePreset(preset.id);
-    this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
+    this.confirmationService.confirm({
+      message: `Delete preset "${preset.name}"?`,
+      header: 'Delete Preset',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      accept: () => {
+        this.presetService.deletePreset(preset.id);
+        this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
+      }
+    });
+  }
+
+  private confirmReplace(name: string, onAccept: () => void): void {
+    this.confirmationService.confirm({
+      message: `A preset named "${name}" already exists. Replace its topics?`,
+      header: 'Replace Preset',
+      acceptLabel: 'Replace',
+      rejectLabel: 'Cancel',
+      accept: onAccept
+    });
+  }
+
+  private toastImported(name: string, count: number): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Preset Imported',
+      detail: `"${name}" with ${count} topic(s)`
+    });
   }
 
   onRestoreDefaults(): void {

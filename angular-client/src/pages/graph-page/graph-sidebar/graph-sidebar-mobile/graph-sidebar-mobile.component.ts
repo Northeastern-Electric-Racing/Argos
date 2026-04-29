@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Injector, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MessageService, TreeNode, PrimeTemplate } from 'primeng/api';
+import { TreeNode, PrimeTemplate } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { Sidebar } from 'primeng/sidebar';
@@ -14,7 +14,7 @@ import {
 } from 'src/components/select-dropdown/select-dropdown.component';
 import { GraphPresetService, Preset } from 'src/services/graph-preset.service';
 import Storage from 'src/services/storage.service';
-import { dataTypesToNodes, partitionDataTypesByName } from 'src/utils/dataTypes.utils';
+import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import {
   mapNodesToTreeNodes,
   findSelectedTreeNodes,
@@ -50,7 +50,6 @@ export default class GraphSidebarMobileComponent implements OnInit {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
   private dialogService = inject(DialogService);
-  private messageService = inject(MessageService);
   private storage = inject(Storage);
   private injector = inject(Injector);
 
@@ -150,15 +149,7 @@ export default class GraphSidebarMobileComponent implements OnInit {
   }
 
   private applyPreset(preset: Preset) {
-    const { matched, unknown } = partitionDataTypesByName(this.dataTypes(), preset.topicNames);
-    if (unknown.length > 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Unknown Topics Skipped',
-        detail: unknown.join(', '),
-        life: 8000
-      });
-    }
+    const matched = this.presetService.resolvePresetTopics(preset, this.dataTypes());
     this.applyMatched(matched);
   }
 

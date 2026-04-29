@@ -1,6 +1,9 @@
 import { Injectable, inject } from '@angular/core';
+import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+import { partitionDataTypesByName } from 'src/utils/dataTypes.utils';
+import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from './topic-selection.service';
 
 export interface Preset {
@@ -17,19 +20,14 @@ export interface PresetSeed {
 
 const STORAGE_KEY = 'argos.graphPresets';
 
-// Names that don't match the live schema in src/utils/topic.utils.ts get
-// silently skipped on Apply (with a warn toast), not hard-errored.
-export const PRESET_SEEDS: PresetSeed[] = [
-  {
-    name: 'test preset',
-    topicNames: ['BMS/Pack/SOC']
-  }
-];
+export const PRESET_SEEDS: PresetSeed[] = [];
 
 @Injectable({ providedIn: 'root' })
 export class GraphPresetService {
   private topicSelectionService = inject(TopicSelectionService);
+  private messageService = inject(MessageService);
   private subject = new BehaviorSubject<Preset[]>([]);
+  private presets$ = this.subject.asObservable();
   private activePresetName$: Observable<string | undefined> = combineLatest([
     this.subject,
     this.topicSelectionService.getSelectedDataTypes()
@@ -45,9 +43,22 @@ export class GraphPresetService {
     this.subject.next(this.loadOrSeed());
   }
 
-  getPresets = (): BehaviorSubject<Preset[]> => this.subject;
+  getPresets = (): Observable<Preset[]> => this.presets$;
 
   getActivePresetName = (): Observable<string | undefined> => this.activePresetName$;
+
+  resolvePresetTopics = (preset: Preset, dataTypes: DataType[]): DataType[] => {
+    const { matched, unknown } = partitionDataTypesByName(dataTypes, preset.topicNames);
+    if (unknown.length > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Unknown Topics Skipped',
+        detail: unknown.join(', '),
+        life: 8000
+      });
+    }
+    return matched;
+  };
 
   addPreset = (name: string, topicNames: string[]): Preset => {
     const trimmed = name.trim();
@@ -104,7 +115,7 @@ export class GraphPresetService {
   private loadOrSeed(): Preset[] {
     const raw = localStorage.getItem(STORAGE_KEY);
 
-    // null = first visit (seed); '[]' = user cleared all (don't re-seed).
+    // null = first visit, seed; '[]' = user cleared, don't re-seed.
     if (raw === null) {
       const seeded = PRESET_SEEDS.map(seedToPreset);
       this.save(seeded);
