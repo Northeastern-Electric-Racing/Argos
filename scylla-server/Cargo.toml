@@ -11,7 +11,7 @@ dotenvy = "0.15"
 serde = "1.0.228"
 protobuf-codegen = "3.7.1"
 protobuf = { version = "3.7.1", features = ["with-bytes"] }
-tokio = { version = "1.49.0", features = ["full", "tracing"] }
+tokio = { version = "1.52.1", features = ["full", "tracing"] }
 axum = { version = "0.8.8", features = ["multipart", "macros"] }
 tower = { version = "0.5.2", features = ["timeout"] }
 tower-http = { version = "0.6.8", features = ["cors", "trace"] }
