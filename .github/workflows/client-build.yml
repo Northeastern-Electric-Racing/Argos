@@ -34,7 +34,7 @@ jobs:
       - name: Stage dist into docker context
         run: cp -r dist/angular-client/browser browser
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
 
