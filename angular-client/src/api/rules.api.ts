@@ -21,27 +21,21 @@ export interface RulesResponse {
   client_rules: ClientRule[];
 }
 
-const basicAuthHeader = (clientId: string): string => 'Basic ' + btoa(`${clientId}:`);
-
 export const getRulesByClientId = (clientId: string): Promise<Response> => {
   return fetch(urls.getRulesByClientId(clientId));
 };
 
 export const addRule = (clientId: string, rule: RulePayload): Promise<Response> => {
-  return fetch(urls.addRule(), {
+  return fetch(urls.addRule(clientId), {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: basicAuthHeader(clientId)
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(rule)
   });
 };
 
 export const deleteRule = (clientId: string, ruleId: string): Promise<Response> => {
-  return fetch(urls.deleteRule(ruleId), {
-    method: 'POST',
-    headers: { Authorization: basicAuthHeader(clientId) }
+  return fetch(urls.deleteRule(clientId, ruleId), {
+    method: 'POST'
   });
 };
 
@@ -53,23 +47,18 @@ export const editRule = (ruleId: string, rule: object): Promise<Response> => {
   });
 };
 
-export interface RuleSubscriptionRequest {
-  rule_ids: string[];
-  client_id: string;
-}
-
-export const subscribeToRules = (request: RuleSubscriptionRequest): Promise<Response> => {
-  return fetch(urls.subscribeToRule(), {
+export const subscribeToRules = (clientId: string, ruleIds: string[]): Promise<Response> => {
+  return fetch(urls.subscribeToRule(clientId), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request)
+    body: JSON.stringify(ruleIds)
   });
 };
 
-export const unsubscribeFromRules = (request: RuleSubscriptionRequest): Promise<Response> => {
-  return fetch(urls.unsubscribeFromRule(), {
+export const unsubscribeFromRules = (clientId: string, ruleIds: string[]): Promise<Response> => {
+  return fetch(urls.unsubscribeFromRule(clientId), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request)
+    body: JSON.stringify(ruleIds)
   });
 };

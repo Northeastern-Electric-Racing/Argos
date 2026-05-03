@@ -1,10 +1,6 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, debug_handler, extract::Path};
-use axum_extra::{
-    TypedHeader,
-    headers::{Authorization, authorization::Basic},
-};
 use serde::Deserialize;
 use serde_with::DurationSeconds;
 use serde_with::serde_as;
@@ -16,27 +12,14 @@ use crate::{
     rule_structs::{ClientId, Rule, RuleId, RuleManager, RulesResponse},
 };
 
-#[derive(Deserialize)]
-pub struct RuleSubscriptionRequest {
-    rule_ids: Vec<String>,
-    client_id: String,
-}
-
 #[debug_handler]
 pub async fn add_rule(
-    TypedHeader(auth): TypedHeader<Authorization<Basic>>,
+    Path(client_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule): Json<Rule>,
 ) -> Result<Json<String>, ScyllaError> {
-    info!(
-        "Incoming rules reg: {}, from {}",
-        rule.topic,
-        auth.username().to_string()
-    );
-    match rules_manager
-        .add_rule(ClientId(auth.username().to_string()), rule)
-        .await
-    {
+    info!("Incoming rules reg: {}, from {}", rule.topic, client_id);
+    match rules_manager.add_rule(ClientId(client_id), rule).await {
         Ok(_) => Ok(Json::from("Rule added!".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
@@ -44,17 +27,12 @@ pub async fn add_rule(
 
 #[debug_handler]
 pub async fn delete_rule(
-    TypedHeader(auth): TypedHeader<Authorization<Basic>>,
+    Path((client_id, rule_id)): Path<(String, String)>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
-    Path(rule_id): Path<String>,
 ) -> Result<(), ScyllaError> {
-    info!(
-        "Incoming rules del: {}, from {}",
-        rule_id,
-        auth.username().to_string()
-    );
+    info!("Incoming rules del: {}, from {}", rule_id, client_id);
     match rules_manager
-        .delete_rule(ClientId(auth.username().to_string()), RuleId(rule_id))
+        .delete_rule(ClientId(client_id), RuleId(rule_id))
         .await
     {
         Ok(_) => Ok(()),
@@ -126,19 +104,20 @@ pub async fn edit_rule(
 
 #[debug_handler]
 pub async fn unsubscribe_rules(
+    Path(client_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
-    Json(request): Json<RuleSubscriptionRequest>,
+    Json(rule_ids): Json<Vec<String>>,
 ) -> Result<Json<String>, ScyllaError> {
     info!(
         "Unsubscribing client {} from {} rules",
-        request.client_id,
-        request.rule_ids.len()
+        client_id,
+        rule_ids.len()
     );
 
-    let rule_ids: Vec<RuleId> = request.rule_ids.into_iter().map(RuleId).collect();
+    let rule_ids: Vec<RuleId> = rule_ids.into_iter().map(RuleId).collect();
 
     match rules_manager
-        .unsubscribe_rules(ClientId(request.client_id), rule_ids)
+        .unsubscribe_rules(ClientId(client_id), rule_ids)
         .await
     {
         Ok(_) => Ok(Json::from(
@@ -150,19 +129,20 @@ pub async fn unsubscribe_rules(
 
 #[debug_handler]
 pub async fn subscribe_rules(
+    Path(client_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
-    Json(request): Json<RuleSubscriptionRequest>,
+    Json(rule_ids): Json<Vec<String>>,
 ) -> Result<Json<String>, ScyllaError> {
     info!(
         "Subscribing client {} to {} rules",
-        request.client_id,
-        request.rule_ids.len()
+        client_id,
+        rule_ids.len()
     );
 
-    let rule_ids: Vec<RuleId> = request.rule_ids.into_iter().map(RuleId).collect();
+    let rule_ids: Vec<RuleId> = rule_ids.into_iter().map(RuleId).collect();
 
     match rules_manager
-        .subscribe_rules(ClientId(request.client_id), rule_ids)
+        .subscribe_rules(ClientId(client_id), rule_ids)
         .await
     {
         Ok(_) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
