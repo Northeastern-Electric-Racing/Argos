@@ -1,16 +1,18 @@
 #!/bin/sh
 
+PROJECT=odyssey_integration_test
+
 # Navigate to the compose directory
 echo "Navigating to compose directory..."
 cd ../compose || { echo "Compose directory not found"; exit 1; }
 
-# Remove any existing odyssey-timescale container
-echo "Stopping and removing any existing odyssey-timescale container..."
-docker rm -f odyssey-db 2>/dev/null || echo "No existing container to remove."
+# Tear down any leftover integration-test stack from a previous run
+echo "Stopping any existing integration-test stack..."
+docker compose -p "$PROJECT" down 2>/dev/null || true
 
-# Start a new odyssey-timescale container
-echo "Starting a new odyssey-timescale container..."
-docker compose up -d odyssey-db || { echo "Failed to start odyssey-timescale"; exit 1; }
+# Start a new odyssey-db container under our project
+echo "Starting odyssey-db..."
+docker compose -p "$PROJECT" up -d odyssey-db || { echo "Failed to start odyssey-db"; exit 1; }
 
 # Wait for the database to initialize
 echo "Waiting for the database to initialize..."
@@ -32,6 +34,6 @@ cd ../compose || { echo "Compose directory not found"; exit 1; }
 
 # Stop and clean up containers
 echo "Stopping and cleaning up containers..."
-docker compose down || { echo "Failed to clean up containers"; exit 1; }
+docker compose -p "$PROJECT" down || { echo "Failed to clean up containers"; exit 1; }
 
 echo "Script completed successfully!"
