@@ -30,6 +30,24 @@ The base docker compose (`compose.yml`) contains some important features to note
 
 *These profiles are non-exhuastive, there are plently of use cases these profiles do not cover.  In that case, you can write your own profile to cover it.*
 
+#### Running multiple dev stacks side-by-side
+
+Set `STACK_OFFSET=N` in front of `argos.sh` to shift every published host port by `N` and suffix the compose project name with `_oN`, so a second dev stack runs alongside the first with no name or port collisions. Unset (or `0`) means today's exact behavior, byte-identical to before.
+
+```
+# stack 1: today's ports (db 5432, scylla 8000, client 80, siren 1883/9002, grafana 3002)
+./argos.sh client-dev up -d
+
+# stack 2: every port shifted by 10 (db 5442, scylla 8010, client 90, siren 1893/9012, grafana 3012)
+STACK_OFFSET=10 ./argos.sh fake-data up -d
+
+# tear each down with the same offset that started it
+./argos.sh client-dev down
+STACK_OFFSET=10 ./argos.sh fake-data down
+```
+
+`STACK_OFFSET` is honored for the dev profiles (`client-dev`, `scylla-dev`, `fake-data`). Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
+
 #### Examples with and without profiles
 
 - To send some simulated data to a client you are running with `npm`: `./argos.sh client-dev up`
