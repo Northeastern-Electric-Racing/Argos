@@ -32,21 +32,30 @@ The base docker compose (`compose.yml`) contains some important features to note
 
 #### Running multiple dev stacks side-by-side
 
-Set `STACK_OFFSET=N` in front of `argos.sh` to shift every published host port by `N` and suffix the compose project name with `_oN`, so a second dev stack runs alongside the first with no name or port collisions. Unset (or `0`) means today's exact behavior, byte-identical to before.
+Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3002). With no env vars set, behavior is byte-identical to before.
+
+To run a second dev stack alongside the first, set those vars (shifted to free values) plus `STACK_OFFSET=N`, which `argos.sh` appends to the project name as `_oN` so `down`, `logs`, and `exec` target the right stack:
 
 ```
-# stack 1: today's ports (db 5432, scylla 8000, client 80, siren 1883/9002, grafana 3002)
+# stack 1 at defaults
 ./argos.sh client-dev up -d
 
-# stack 2: every port shifted by 10 (db 5442, scylla 8010, client 90, siren 1893/9012, grafana 3012)
-STACK_OFFSET=10 ./argos.sh fake-data up -d
+# stack 2, shifted by 10 — each profile only consumes the vars its services need.
+# Use 'env' so the vars don't leak into stack 1's teardown.
+N=10
+env STACK_OFFSET=$N \
+    ODYSSEY_DB_PORT=$((5432+N))   SCYLLA_HOST_PORT=$((8000+N)) \
+    CLIENT_HOST_PORT=$((80+N))    SIREN_MQTT_PORT=$((1883+N)) \
+    SIREN_WS_PORT=$((9002+N))     GRAFANA_HOST_PORT=$((3002+N)) \
+    ./argos.sh fake-data up -d
 
-# tear each down with the same offset that started it
+# Teardown: stack 1 needs nothing; stack 2 only needs STACK_OFFSET since
+# 'compose down' targets containers by project name, not by port.
 ./argos.sh client-dev down
 STACK_OFFSET=10 ./argos.sh fake-data down
 ```
 
-`STACK_OFFSET` is honored for the dev profiles (`client-dev`, `scylla-dev`, `fake-data`). Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
+Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
 
 #### Examples with and without profiles
 
