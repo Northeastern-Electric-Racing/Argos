@@ -34,7 +34,7 @@ The base docker compose (`compose.yml`) contains some important features to note
 
 Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3002). With no env vars set, behavior is byte-identical to before.
 
-To run a second dev stack alongside the first, set those vars (shifted to free values) plus `STACK_OFFSET=N`, which `argos.sh` appends to the project name as `_oN` so `down`, `logs`, and `exec` target the right stack:
+To run a second dev stack alongside the first, set those vars (shifted to free values) plus `STACK_OFFSET=N`, which `argos.sh` appends to the project name as `_N` so `down`, `logs`, and `exec` target the right stack:
 
 ```
 # stack 1 at defaults
