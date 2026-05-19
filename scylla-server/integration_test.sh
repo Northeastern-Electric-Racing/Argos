@@ -23,11 +23,11 @@ cd ../scylla-server || { echo "scylla-server directory not found"; exit 1; }
 
 # Run database migrations
 echo "Running database migrations..."
-DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres diesel migration run || { echo "Migration failed"; exit 1; }
+DATABASE_URL=postgresql://postgres:password@127.0.0.1:${ODYSSEY_DB_PORT:-5432}/postgres diesel migration run || { echo "Migration failed"; exit 1; }
 
 # Run tests
 echo "Running tests..."
-DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres cargo test -- --test-threads=1 || { echo "Tests failed"; exit 1; }
+DATABASE_URL=postgresql://postgres:password@127.0.0.1:${ODYSSEY_DB_PORT:-5432}/postgres cargo test -- --test-threads=1 || { echo "Tests failed"; exit 1; }
 
 # Navigate back to the compose directory
 cd ../compose || { echo "Compose directory not found"; exit 1; }

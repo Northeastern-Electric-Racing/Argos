@@ -24,7 +24,7 @@ Profiles:
 
 
 The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
-- It persists the database between `down` commands via a volume called `argos_db-data`.  Delete it with `docker volume rm argos_db-data` to start with a new database next `up`.
+- It persists the database between `down` commands via a volume named `<project>_db-data` (e.g. `odyssey_client-dev_db-data` for the default `client-dev` stack).  Wipe it with `./argos.sh <profile> down -v` or `docker volume rm <project>_db-data` to start with a new database next `up`.
 - It weighs the CPU usage of siren higher, so it is prioritized in CPU starvation scenarios.
 
 
@@ -52,10 +52,10 @@ env STACK_OFFSET=$N \
 # Teardown: stack 1 needs nothing; stack 2 only needs STACK_OFFSET since
 # 'compose down' targets containers by project name, not by port.
 ./argos.sh client-dev down
-STACK_OFFSET=10 ./argos.sh fake-data down
+STACK_OFFSET=$N ./argos.sh fake-data down
 ```
 
-Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
+`STACK_OFFSET` is purely a project-name suffix: any non-empty value (including `0`) creates a separate compose project, so don't set it when running production profiles. Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
 
 #### Examples with and without profiles
 
