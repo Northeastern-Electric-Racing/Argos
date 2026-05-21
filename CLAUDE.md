@@ -14,4 +14,4 @@ Canonical five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`,
 
 ### Domain docs
 
-Multi-context: per-component `CONTEXT.md` and `docs/adr/` under `angular-client/`, `scylla-server/`, `siren-base/`, `charybdis/`, indexed by `CONTEXT-MAP.md` at the root; system-wide decisions live in the root `docs/adr/`. See `docs/agents/domain.md`.
+Single-context: one `CONTEXT.md` and one `docs/adr/` at the repo root. Component-scoped decisions live in the same root `docs/adr/`, distinguished by descriptive titles. See `docs/agents/domain.md`.
