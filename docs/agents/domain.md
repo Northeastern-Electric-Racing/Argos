@@ -36,7 +36,8 @@ All ADRs live in a single root `docs/adr/` (per the single-context decision). To
 | `siren-base-` | MQTT broker config only |
 | `charybdis-` | schema / codegen only |
 | `full-stack-` | `scylla-server` + `angular-client` (the standard client/server pair) |
-| `multi-comp-` | any other cross-component combination (e.g. touches `charybdis` and `scylla-server`, or `siren-base` and `scylla-server`) |
+| `multi-comp-` | any other cross-component code integration (e.g. touches `charybdis` and `scylla-server`, or `siren-base` and `scylla-server`); also repo-wide infrastructure that affects how components run (Docker compose, root scripts, CI) |
+| `misc-` | decisions that don't touch any code component or system integration — e.g. docs structure, agent tooling, workflow conventions |
 
 Filename shape: `<NNNN>-<prefix>-<topic-slug>.md`.
 
@@ -45,8 +46,9 @@ Examples:
 - `0007-scylla-server-diesel-migration-policy.md`
 - `0012-full-stack-protobuf-versioning.md`
 - `0019-multi-comp-mqtt-topic-naming.md`
+- `0023-misc-adr-component-prefix-convention.md`
 
-Repo-wide infrastructure decisions (Docker compose, root scripts, CI) use `multi-comp-` since they affect multiple components.
+Quick test for picking a prefix: *would this decision change if we rewrote the production code in a different language/framework?* If yes, it's component or integration scoped. If no (it's about how the team works on the repo), it's `misc-`.
 
 ## Use the glossary's vocabulary
 
