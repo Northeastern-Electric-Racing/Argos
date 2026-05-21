@@ -25,6 +25,29 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 └── charybdis/
 ```
 
+## ADR naming convention
+
+All ADRs live in a single root `docs/adr/` (per the single-context decision). To keep component-scoped decisions visible at a glance, prefix the slug with a component tag:
+
+| Prefix | Scope |
+|---|---|
+| `angular-client-` | frontend only |
+| `scylla-server-` | backend only |
+| `siren-base-` | MQTT broker config only |
+| `charybdis-` | schema / codegen only |
+| `full-stack-` | `scylla-server` + `angular-client` (the standard client/server pair) |
+| `multi-comp-` | any other cross-component combination (e.g. touches `charybdis` and `scylla-server`, or `siren-base` and `scylla-server`) |
+
+Filename shape: `<NNNN>-<prefix>-<topic-slug>.md`.
+
+Examples:
+- `0001-angular-client-routing-strategy.md`
+- `0007-scylla-server-diesel-migration-policy.md`
+- `0012-full-stack-protobuf-versioning.md`
+- `0019-multi-comp-mqtt-topic-naming.md`
+
+Repo-wide infrastructure decisions (Docker compose, root scripts, CI) use `multi-comp-` since they affect multiple components.
+
 ## Use the glossary's vocabulary
 
 When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids. If a term is flagged as ambiguous (e.g. "Node" — which could mean Angular tree-node, CAN-bus node, or MQTT client), qualify it.
