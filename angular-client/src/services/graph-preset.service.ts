@@ -77,15 +77,10 @@ export class GraphPresetService {
   };
 
   replacePreset = (id: string, patch: Partial<Pick<Preset, 'name' | 'topicNames'>>): void => {
-    const next = this.presets.value.map((p) => {
-      if (p.id !== id) return p;
-      return {
-        ...p,
-        ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
-        ...(patch.topicNames !== undefined ? { topicNames: [...patch.topicNames] } : {})
-      };
-    });
-    this.presets.next(next);
+    const updates: Partial<Preset> = {};
+    if (patch.name !== undefined) updates.name = patch.name.trim();
+    if (patch.topicNames !== undefined) updates.topicNames = [...patch.topicNames];
+    this.presets.next(this.presets.value.map((p) => (p.id === id ? { ...p, ...updates } : p)));
     this.save();
   };
 
