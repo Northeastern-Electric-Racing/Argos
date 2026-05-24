@@ -154,6 +154,7 @@ export default class GraphSidebarMobileComponent implements OnInit {
   }
 
   private applyMatched(matched: DataType[]) {
+    if (matched.length === 0) return; // unknown topics warn toast
     this.topicSelectionService.setSelectedDataTypes(matched);
     this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
   }
