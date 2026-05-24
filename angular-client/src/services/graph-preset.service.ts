@@ -26,10 +26,10 @@ export const PRESET_SEEDS: PresetSeed[] = [];
 export class GraphPresetService {
   private topicSelectionService = inject(TopicSelectionService);
   private messageService = inject(MessageService);
-  private subject = new BehaviorSubject<Preset[]>([]);
-  private presets$ = this.subject.asObservable();
+  private presets = new BehaviorSubject<Preset[]>([]);
+  private presets$ = this.presets.asObservable();
   private activePresetName$: Observable<string | undefined> = combineLatest([
-    this.subject,
+    this.presets,
     this.topicSelectionService.getSelectedDataTypes()
   ]).pipe(
     map(([presets, selectedDataTypes]) => {
@@ -40,7 +40,7 @@ export class GraphPresetService {
   );
 
   constructor() {
-    this.subject.next(this.loadOrSeed());
+    this.presets.next(this.loadOrSeed());
   }
 
   getPresets = (): Observable<Preset[]> => this.presets$;
@@ -71,13 +71,13 @@ export class GraphPresetService {
       topicNames: [...topicNames],
       createdAt: Date.now()
     };
-    this.subject.next([...this.subject.value, preset]);
+    this.presets.next([...this.presets.value, preset]);
     this.save();
     return preset;
   };
 
   replacePreset = (id: string, patch: Partial<Pick<Preset, 'name' | 'topicNames'>>): void => {
-    const next = this.subject.value.map((p) => {
+    const next = this.presets.value.map((p) => {
       if (p.id !== id) return p;
       return {
         ...p,
@@ -85,29 +85,29 @@ export class GraphPresetService {
         ...(patch.topicNames !== undefined ? { topicNames: [...patch.topicNames] } : {})
       };
     });
-    this.subject.next(next);
+    this.presets.next(next);
     this.save();
   };
 
   deletePreset = (id: string): void => {
-    this.subject.next(this.subject.value.filter((p) => p.id !== id));
+    this.presets.next(this.presets.value.filter((p) => p.id !== id));
     this.save();
   };
 
   findByName = (name: string): Preset | undefined => {
-    return this.subject.value.find((p) => p.name === name);
+    return this.presets.value.find((p) => p.name === name);
   };
 
   clearAll = (): void => {
-    this.subject.next([]);
+    this.presets.next([]);
     this.save();
   };
 
   addDefaultPresets = (): number => {
-    const existingNames = new Set(this.subject.value.map((p) => p.name));
+    const existingNames = new Set(this.presets.value.map((p) => p.name));
     const toAdd = PRESET_SEEDS.filter((s) => !existingNames.has(s.name)).map(seedToPreset);
     if (toAdd.length === 0) return 0;
-    this.subject.next([...this.subject.value, ...toAdd]);
+    this.presets.next([...this.presets.value, ...toAdd]);
     this.save();
     return toAdd.length;
   };
@@ -131,7 +131,7 @@ export class GraphPresetService {
     }
   }
 
-  private save(list: Preset[] = this.subject.value): void {
+  private save(list: Preset[] = this.presets.value): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   }
 }
