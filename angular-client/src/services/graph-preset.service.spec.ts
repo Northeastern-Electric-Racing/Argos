@@ -132,13 +132,13 @@ describe('GraphPresetService', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([]);
   });
 
-  it('restoreDefaults adds only seed entries whose names are missing', () => {
+  it('addDefaultPresets adds only seed entries whose names are missing', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
     const [firstSeed] = PRESET_SEEDS;
     service.addPreset(firstSeed.name, ['existing-topic']);
 
-    const added = service.restoreDefaults();
+    const added = service.addDefaultPresets();
 
     expect(added).toBe(PRESET_SEEDS.length - 1);
     const namesNow = service.getPresets().value.map((p) => p.name);
@@ -147,12 +147,12 @@ describe('GraphPresetService', () => {
     expect(kept!.topicNames).toEqual(['existing-topic']);
   });
 
-  it('restoreDefaults assigns fresh ids and createdAt to new seeded entries', () => {
+  it('addDefaultPresets assigns fresh ids and createdAt to new seeded entries', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
 
     const before = Date.now();
-    service.restoreDefaults();
+    service.addDefaultPresets();
     const after = Date.now();
 
     const presets = service.getPresets().value;
@@ -164,12 +164,12 @@ describe('GraphPresetService', () => {
     });
   });
 
-  it('restoreDefaults returns 0 when all defaults are already present', () => {
+  it('addDefaultPresets returns 0 when all defaults are already present', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
-    service.restoreDefaults();
+    service.addDefaultPresets();
 
-    const added = service.restoreDefaults();
+    const added = service.addDefaultPresets();
 
     expect(added).toBe(0);
   });

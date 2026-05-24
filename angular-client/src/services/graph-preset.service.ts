@@ -103,7 +103,7 @@ export class GraphPresetService {
     this.save();
   };
 
-  restoreDefaults = (): number => {
+  addDefaultPresets = (): number => {
     const existingNames = new Set(this.subject.value.map((p) => p.name));
     const toAdd = PRESET_SEEDS.filter((s) => !existingNames.has(s.name)).map(seedToPreset);
     if (toAdd.length === 0) return 0;

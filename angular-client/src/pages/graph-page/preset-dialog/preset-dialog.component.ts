@@ -155,8 +155,8 @@ export class PresetDialogComponent {
     });
   }
 
-  onRestoreDefaults(): void {
-    const added = this.presetService.restoreDefaults();
+  onAddDefaultPresets(): void {
+    const added = this.presetService.addDefaultPresets();
     if (added === 0) {
       this.messageService.add({
         severity: 'info',
@@ -166,7 +166,7 @@ export class PresetDialogComponent {
     } else {
       this.messageService.add({
         severity: 'success',
-        summary: 'Defaults Restored',
+        summary: 'Defaults Added',
         detail: `Added ${added} default preset${added === 1 ? '' : 's'}.`
       });
     }
