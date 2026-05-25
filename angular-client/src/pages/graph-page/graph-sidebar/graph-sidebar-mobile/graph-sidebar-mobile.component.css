@@ -30,12 +30,35 @@
 .presets-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 6px;
 }
 
 .preset-select {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.preset-select ::ng-deep .p-select {
+  height: 28px !important;
+  min-height: 28px;
+  min-width: 130px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.preset-select ::ng-deep .p-select-label,
+.preset-select ::ng-deep .p-select-label.p-placeholder {
+  width: auto !important;
+  min-width: 100px;
+  padding: 0 0.5rem !important;
+  font-size: 12px;
+  line-height: 28px;
+  height: 28px;
+}
+
+.preset-select ::ng-deep .p-select-dropdown {
+  width: 1.75rem;
 }
 
 .toggle-group {

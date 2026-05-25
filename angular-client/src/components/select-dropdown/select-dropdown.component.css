@@ -52,3 +52,7 @@
 ::ng-deep .p-select-option {
   font-size: 0.8rem;
 }
+
+::ng-deep .p-select-empty-message {
+  font-size: 0.8rem;
+}
