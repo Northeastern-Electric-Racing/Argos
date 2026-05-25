@@ -1,8 +1,8 @@
-import { Component, Injector, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, Injector, OnDestroy, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { take } from 'rxjs';
@@ -33,12 +33,13 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
 })
-export default class GraphSidebarDesktopComponent implements OnInit {
+export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
   private dialogService = inject(DialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
+  private presetDialogRef?: DynamicDialogRef;
 
   dataTypes = input<DataType[]>([]);
   treeNodes: TreeNode<TreeNodeData>[] = [];
@@ -92,7 +93,7 @@ export default class GraphSidebarDesktopComponent implements OnInit {
   };
 
   openPresetsDialog = () => {
-    const ref = this.dialogService.open(PresetDialogComponent, {
+    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
       header: 'Topic Presets',
       width: '640px',
       draggable: true,
@@ -102,12 +103,18 @@ export default class GraphSidebarDesktopComponent implements OnInit {
         dataTypes: this.dataTypes()
       }
     });
-    ref.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
       if (matched) {
         this.applyMatched(matched);
       }
     });
   };
+
+  ngOnDestroy(): void {
+    if (this.presetDialogRef) {
+      this.presetDialogRef.close();
+    }
+  }
 
   nodeSelect(event: TreeNodeSelectEvent) {
     const dt = event.node.data?.dataType;
