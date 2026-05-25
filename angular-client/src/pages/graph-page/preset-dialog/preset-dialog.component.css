@@ -70,6 +70,7 @@
 
 .preset-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   color: #eee;
 }
@@ -96,12 +97,19 @@
 .preset-table td.actions,
 .preset-table th.actions {
   text-align: right;
-  width: 1%;
+  width: 16rem;
   white-space: nowrap;
 }
 
 .preset-table td.actions button {
   margin-left: 6px;
+}
+
+.preset-table .name-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .footer {
