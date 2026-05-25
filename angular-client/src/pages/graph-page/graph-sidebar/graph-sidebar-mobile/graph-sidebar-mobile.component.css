@@ -35,13 +35,23 @@
 }
 
 .preset-select {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.presets-row argos-button {
+  flex-shrink: 0;
+}
+
+.presets-row argos-button ::ng-deep .btn {
+  white-space: nowrap;
 }
 
 .preset-select ::ng-deep .p-select {
   height: 28px !important;
   min-height: 28px;
-  min-width: 130px;
+  width: 100%;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
@@ -49,12 +59,14 @@
 
 .preset-select ::ng-deep .p-select-label,
 .preset-select ::ng-deep .p-select-label.p-placeholder {
-  width: auto !important;
-  min-width: 100px;
+  width: 100% !important;
   padding: 0 0.5rem !important;
   font-size: 12px;
   line-height: 28px;
   height: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preset-select ::ng-deep .p-select-dropdown {
