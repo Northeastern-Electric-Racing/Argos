@@ -20,22 +20,28 @@ export interface PresetSeed {
 
 const STORAGE_KEY = 'argos.graphPresets';
 
+// Empty until we ship default presets
 export const PRESET_SEEDS: PresetSeed[] = [];
 
+/**
+ * Service for managing graph topic-selection presets, persisted to localStorage.
+ */
 @Injectable({ providedIn: 'root' })
 export class GraphPresetService {
   private topicSelectionService = inject(TopicSelectionService);
   private messageService = inject(MessageService);
   private presets = new BehaviorSubject<Preset[]>([]);
   private presets$ = this.presets.asObservable();
+
+  // Preset whose topics exactly match the current selection
   private activePresetName$: Observable<string | undefined> = combineLatest([
     this.presets,
     this.topicSelectionService.getSelectedDataTypes()
   ]).pipe(
     map(([presets, selectedDataTypes]) => {
-      const selected = new Set(selectedDataTypes.map((dt) => dt.name));
-      if (selected.size === 0) return undefined;
-      return presets.find((p) => p.topicNames.length === selected.size && p.topicNames.every((n) => selected.has(n)))?.name;
+      const selectedNames = new Set(selectedDataTypes.map((dt) => dt.name));
+      if (selectedNames.size === 0) return undefined;
+      return presets.find((preset) => presetMatchesSelection(preset, selectedNames))?.name;
     })
   );
 
@@ -98,6 +104,7 @@ export class GraphPresetService {
     this.save();
   };
 
+  // Skip seeds already present by name
   addDefaultPresets = (): number => {
     const existingNames = new Set(this.presets.value.map((p) => p.name));
     const toAdd = PRESET_SEEDS.filter((s) => !existingNames.has(s.name)).map(seedToPreset);
@@ -131,6 +138,10 @@ export class GraphPresetService {
   }
 }
 
+function presetMatchesSelection(preset: Preset, selectedNames: Set<string>): boolean {
+  return preset.topicNames.length === selectedNames.size && preset.topicNames.every((name) => selectedNames.has(name));
+}
+
 function seedToPreset(seed: PresetSeed): Preset {
   return {
     id: uuidv4(),
@@ -140,6 +151,7 @@ function seedToPreset(seed: PresetSeed): Preset {
   };
 }
 
+// Guards against malformed localStorage data
 function isValidPreset(value: unknown): value is Preset {
   if (typeof value !== 'object' || value === null) return false;
   const { id, name, topicNames, createdAt } = value as Record<string, unknown>;
