@@ -440,17 +440,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .merge(
             Router::new()
+                // client id arrives in the x-client-id header, never the path
                 .route("/rules", get(get_all_rules))
-                .route("/rules/{client_id}", get(get_all_rules_with_client_info))
-                .route("/rules/{client_id}/add", put(add_rule))
-                .route("/rules/{client_id}/delete/{rule_id}", post(delete_rule))
                 .route(
-                    "/rules/{client_id}/subscribed",
-                    get(get_client_subscribed_rules),
+                    "/rules/subscription-status",
+                    get(get_all_rules_with_client_info),
                 )
-                .route("/rules/{client_id}/subscribe", post(subscribe_rules))
-                .route("/rules/{client_id}/unsubscribe", post(unsubscribe_rules))
+                .route("/rules/subscribed", get(get_client_subscribed_rules))
+                .route("/rules/add", put(add_rule))
+                .route("/rules/delete/{rule_id}", post(delete_rule))
                 .route("/rules/edit/{rule_id}", put(edit_rule))
+                .route("/rules/subscribe", post(subscribe_rules))
+                .route("/rules/unsubscribe", post(unsubscribe_rules))
                 .layer(Extension(rules_manager)),
         )
         // for CORS handling

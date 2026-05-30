@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
-use axum::{Extension, Json, debug_handler, extract::Path};
+use axum::{
+    Extension, Json, debug_handler,
+    extract::{FromRequestParts, Path},
+    http::{StatusCode, request::Parts},
+};
 use serde::Deserialize;
 use serde_with::DurationSeconds;
 use serde_with::serde_as;
@@ -12,14 +16,39 @@ use crate::{
     rule_structs::{ClientId, Rule, RuleId, RuleManager, RulesResponse},
 };
 
+const CLIENT_ID_HEADER: &str = "x-client-id";
+
+/// client id comes from the x-client-id header, keeping it out of conflict-prone route paths
+impl<S> FromRequestParts<S> for ClientId
+where
+    S: Send + Sync,
+{
+    type Rejection = ScyllaError;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        parts
+            .headers
+            .get(CLIENT_ID_HEADER)
+            .and_then(|value| value.to_str().ok())
+            .filter(|value| !value.is_empty())
+            .map(|value| ClientId(value.to_owned()))
+            .ok_or_else(|| {
+                ScyllaError::HttpError(
+                    StatusCode::BAD_REQUEST,
+                    format!("Missing or empty {CLIENT_ID_HEADER} header"),
+                )
+            })
+    }
+}
+
 #[debug_handler]
 pub async fn add_rule(
-    Path(client_id): Path<String>,
+    client_id: ClientId,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule): Json<Rule>,
 ) -> Result<Json<String>, ScyllaError> {
     info!("Incoming rules reg: {}, from {}", rule.topic, client_id);
-    match rules_manager.add_rule(ClientId(client_id), rule).await {
+    match rules_manager.add_rule(client_id, rule).await {
         Ok(_) => Ok(Json::from("Rule added!".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
@@ -27,14 +56,12 @@ pub async fn add_rule(
 
 #[debug_handler]
 pub async fn delete_rule(
-    Path((client_id, rule_id)): Path<(String, String)>,
+    client_id: ClientId,
+    Path(rule_id): Path<String>,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
 ) -> Result<(), ScyllaError> {
     info!("Incoming rules del: {}, from {}", rule_id, client_id);
-    match rules_manager
-        .delete_rule(ClientId(client_id), RuleId(rule_id))
-        .await
-    {
+    match rules_manager.delete_rule(client_id, RuleId(rule_id)).await {
         Ok(_) => Ok(()),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
@@ -50,22 +77,22 @@ pub async fn get_all_rules(
 
 #[debug_handler]
 pub async fn get_client_subscribed_rules(
-    Path(client_id): Path<String>,
+    client_id: ClientId,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
 ) -> Json<Vec<Rule>> {
     debug!("Fetching subscribed rules for client {}", client_id);
-    Json(rules_manager.get_client_rules(ClientId(client_id)).await)
+    Json(rules_manager.get_client_rules(client_id).await)
 }
 
 #[debug_handler]
 pub async fn get_all_rules_with_client_info(
-    Path(client_id): Path<String>,
+    client_id: ClientId,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
 ) -> Result<Json<RulesResponse>, ScyllaError> {
     debug!("Fetching all rules");
     Ok(Json(
         rules_manager
-            .get_all_rules_with_subscription_status(ClientId(client_id))
+            .get_all_rules_with_subscription_status(client_id)
             .await,
     ))
 }
@@ -104,7 +131,7 @@ pub async fn edit_rule(
 
 #[debug_handler]
 pub async fn unsubscribe_rules(
-    Path(client_id): Path<String>,
+    client_id: ClientId,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule_ids): Json<Vec<String>>,
 ) -> Result<Json<String>, ScyllaError> {
@@ -116,10 +143,7 @@ pub async fn unsubscribe_rules(
 
     let rule_ids: Vec<RuleId> = rule_ids.into_iter().map(RuleId).collect();
 
-    match rules_manager
-        .unsubscribe_rules(ClientId(client_id), rule_ids)
-        .await
-    {
+    match rules_manager.unsubscribe_rules(client_id, rule_ids).await {
         Ok(_) => Ok(Json::from(
             "Successfully unsubscribed from rules".to_owned(),
         )),
@@ -129,7 +153,7 @@ pub async fn unsubscribe_rules(
 
 #[debug_handler]
 pub async fn subscribe_rules(
-    Path(client_id): Path<String>,
+    client_id: ClientId,
     Extension(rules_manager): Extension<Arc<RuleManager>>,
     Json(rule_ids): Json<Vec<String>>,
 ) -> Result<Json<String>, ScyllaError> {
@@ -141,10 +165,7 @@ pub async fn subscribe_rules(
 
     let rule_ids: Vec<RuleId> = rule_ids.into_iter().map(RuleId).collect();
 
-    match rules_manager
-        .subscribe_rules(ClientId(client_id), rule_ids)
-        .await
-    {
+    match rules_manager.subscribe_rules(client_id, rule_ids).await {
         Ok(_) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
