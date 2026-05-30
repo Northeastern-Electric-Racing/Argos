@@ -3,4 +3,5 @@
 profile=$1
 shift 1
 cd ./compose
-docker compose -f compose.yml -f "compose.$profile.yml" -p "odyssey_$profile" "$@"
+docker compose -f compose.yml -f "compose.$profile.yml" \
+    -p "odyssey_$profile${STACK_OFFSET:+_$STACK_OFFSET}" "$@"
