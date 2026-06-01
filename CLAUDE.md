@@ -9,6 +9,7 @@ Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). 
   - Frontend-only changes: `./argos.sh client-dev up` runs everything in Docker, including scylla-server.
   - Changes to `scylla-server/`: `./argos.sh scylla-dev up` (everything except scylla-server) plus `cd scylla-server && cargo run` in a separate terminal, so you are not testing a stale binary.
 - Frontend client: `cd angular-client && npm run start` (default port 4200). The first Angular compile takes 60-90s.
+- The shell workflow (`argos.sh`, the `run-local`/`verify-*` skills, and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
 
 ## Testing
 
