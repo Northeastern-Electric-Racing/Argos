@@ -1,6 +1,6 @@
 ---
 name: run-local
-description: Bring up the local Argos environment for running and testing — Docker backend (right profile for what changed) + Angular client on the next free port. Use whenever you need to actually run the app locally, not just start the frontend.
+description: Bring up the local Argos environment for running or testing — Docker backend (right profile for what changed) + Angular client on the next free port. Use whenever you need to actually run the app locally, not just start the frontend.
 allowed-tools: Bash(lsof:*), Bash(npx ng serve:*), Bash(curl:*), Bash(sleep:*), Bash(pkill:*), Bash(tail:*), Bash(timeout:*), Bash(docker ps:*), Bash(./argos.sh:*)
 user-invocable: true
 ---
