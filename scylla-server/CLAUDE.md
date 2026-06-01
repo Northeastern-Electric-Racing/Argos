@@ -1,7 +1,7 @@
 # Backend Development Guidelines
 
 ## Stack
-- Rust 1.88, edition 2024
+- Rust (edition and minimum version per `Cargo.toml`)
 - Axum (HTTP), Diesel (PostgreSQL ORM), Tokio (async runtime)
 - SocketIOxide (WebSocket), rumqttc (MQTT client)
 - Protobuf for wire format (definitions in `src/proto/`)
