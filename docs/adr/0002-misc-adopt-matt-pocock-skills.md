@@ -15,7 +15,7 @@ Drop YAML templates entirely; humans and AI both file via Matt's shapes.
 
 ## Consequences
 
-- `.claude/skills/create-ticket/` and `.claude/skills/brainstorm-ticket/` are removed from the worktrees-root `.claude/skills/`.
+- `.claude/skills/create-ticket/` and `.claude/skills/brainstorm-ticket/` are removed from `.claude/skills/`.
 - `.github/ISSUE_TEMPLATE/spike.yml` and `other.yml` are removed; the surviving four templates are `task.yml`, `bug-form.yml`, `feature-request.yml`, `epic.yml`.
 - `docs/agents/issue-tracker.md` ports the Argos ticketing conventions from `create-ticket`: title rules (concise, imperative, no `[Area] -` prefix), label palette (area + type + difficulty), backtick rule (max 3 per body), `--assignee @me` default.
 - Triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are created via `gh label create` and coexist with existing area / type / difficulty labels.

@@ -84,7 +84,7 @@ The bad version repeats the same information in prose and bullets, narrates the 
 
 ### 4. Update the PR
 
-Write the new body to `/tmp/<branch-name>-pr-body.md`, where `<branch-name>` is the current git branch (which matches this worktree's folder name per the repo's worktree convention — e.g. worktree `544-notification-log-for-triggered-rule-events/` → `/tmp/544-notification-log-for-triggered-rule-events-pr-body.md`). Using a branch-specific filename avoids stale content from previous PRs leaking in.
+Write the new body to `/tmp/<branch-name>-pr-body.md`, where `<branch-name>` is the current git branch (`git branch --show-current`). Using a branch-specific filename avoids stale content from previous PRs leaking in.
 
 ```bash
 gh pr edit --body-file "/tmp/$(git branch --show-current)-pr-body.md"

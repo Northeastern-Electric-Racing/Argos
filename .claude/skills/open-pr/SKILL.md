@@ -9,8 +9,6 @@ user-invocable: true
 
 Run each step in order. Stop and report if any step fails.
 
-**Important:** This repo uses git worktrees. Never run git commands from the bare repo root. Always `cd` into the current worktree first.
-
 ### 1. Verify commit format
 ```bash
 git log --oneline develop..HEAD
@@ -71,7 +69,7 @@ The bad version repeats the same information in prose and bullets, narrates the 
 
 **Backtick rule:** Max 3 backtick usages in the entire PR description. You can reference files, functions, and identifiers without backticks — only use them for commands worth copy-pasting.
 
-Write the PR body to `/tmp/<branch-name>-pr-body.md`, where `<branch-name>` is the current git branch (which matches this worktree's folder name per the repo's worktree convention — e.g. worktree `544-notification-log-for-triggered-rule-events/` → `/tmp/544-notification-log-for-triggered-rule-events-pr-body.md`). Using a branch-specific filename avoids stale content from previous PRs leaking in.
+Write the PR body to `/tmp/<branch-name>-pr-body.md`, where `<branch-name>` is the current git branch (`git branch --show-current`). Using a branch-specific filename avoids stale content from previous PRs leaking in.
 
 ### 5. Clean working tree
 
@@ -85,7 +83,7 @@ git checkout -- . 2>/dev/null || true
 
 Extract the ticket number from the branch name (e.g., `174-mqtt-screen-mobile-view` → `#174`).
 
-Always use `--head` with the branch name — gh cli can't always detect the remote branch in a worktree without it.
+Always use `--head` with the branch name — gh cli can't always detect the remote branch without it.
 
 ```bash
 git push -u origin $(git branch --show-current)

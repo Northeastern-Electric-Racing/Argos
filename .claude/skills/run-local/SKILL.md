@@ -7,7 +7,7 @@ user-invocable: true
 
 ## Context
 
-Current worktree:
+Current directory:
 `!pwd`
 
 Running Angular instances:
@@ -19,14 +19,14 @@ Docker backend status (scylla-server on :8000/8010/.../8090, one per STACK_OFFSE
 
 ## Task
 
-Start the Angular dev client for the current worktree on the next available port — and make sure the backend is running, because `ng serve` alone is a silent false negative for UI verification. The few lines this skill adds to runtime cost save hours of chasing "my fix works" when it actually doesn't.
+Start the Angular dev client on the next available port — and make sure the backend is running, because `ng serve` alone is a silent false negative for UI verification. The few lines this skill adds to runtime cost save hours of chasing "my fix works" when it actually doesn't.
 
 ### Step 1: Confirm the backend is up (and on the right profile)
 
 Check the scan from the Context block (ports 8000/8010/.../8090) AND `docker ps`. If no backend is listening anywhere in that range, stop and ask the user to bring one up. If at least one is up, read its port and project name straight from the scan (`odyssey_<profile>` = default stack on :8000; `odyssey_<profile>_N` = a parallel stack, conventionally on `:$((8000+N))` per the `compose/README.md` recipe — but trust the scan, not the suffix) and confirm:
 
 - **Frontend-only changes** → the Docker'd backend is fine. Profile: `./argos.sh client-dev up` (runs scylla-server inside Docker).
-- **Changes to `scylla-server/`** → the Docker'd scylla-server is stale. They need `./argos.sh scylla-dev up` (brings up everything EXCEPT scylla-server) and then `cd scylla-server && cargo run` in a separate terminal so their local build is exercised. If you see Docker running scylla-server but the worktree has scylla-server changes, flag it — their UI test will hit the wrong binary.
+- **Changes to `scylla-server/`** → the Docker'd scylla-server is stale. They need `./argos.sh scylla-dev up` (brings up everything EXCEPT scylla-server) and then `cd scylla-server && cargo run` in a separate terminal so their local build is exercised. If you see Docker running scylla-server but your checkout has scylla-server changes, flag it — their UI test will hit the wrong binary.
 
 If the chosen scylla isn't on `:8000`, surface that explicitly in your summary so the user knows which port their `ng serve` and any curl examples need to point at. Use the port shown by the scan, not a value computed from the suffix.
 
@@ -40,12 +40,12 @@ The only exception: pure static/style changes with no server-driven content in t
 Do NOT proceed to Step 2 silently when the backend is down and the change needs it.
 
 ### Step 2: Find `angular-client/`
-Resolve the path from the current working directory. If already inside `angular-client/`, use `.`. Otherwise look for it relative to the worktree root.
+Resolve the path from the current working directory. If already inside `angular-client/`, use `.`. Otherwise look for it relative to the repo root.
 
 ### Step 3: Find a free port
 Starting from 4200, check each port with `lsof -i :<port> -sTCP:LISTEN`. Use the first port with no listener. Cap at 4210.
 
-If a server is already running for this worktree's `angular-client/`, report that port instead of starting a new one.
+If a server is already running for this repo's `angular-client/`, report that port instead of starting a new one.
 
 ### Step 4: Start the server
 Run in background, capturing output to a temp log file:
