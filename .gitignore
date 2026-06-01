@@ -114,5 +114,7 @@ compose.override.yml
 .playwright-mcp/
 .wolf/
 .context/
+# Playwright verification screenshots (see CLAUDE.md "Screenshots")
+pictures/
 .claude/*
 !.claude/skills/

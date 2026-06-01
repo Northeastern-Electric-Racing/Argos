@@ -30,7 +30,7 @@ Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). 
 
 ## Screenshots
 
-Save all Playwright screenshots under `pictures/<branch-name>/` at the worktrees root, never inside a worktree and never committed to the repo. Use kebab-case descriptive filenames.
+Save all Playwright screenshots under `pictures/<branch-name>/` at the repo root, using kebab-case descriptive filenames. The `pictures/` folder is git-ignored, so screenshots are never committed; drag-drop them into the PR via the GitHub web UI instead.
 
 ## Safety Rules
 
