@@ -46,7 +46,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow is `grill-with-docs → to-prd → to-issues → triage`. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`.
+Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph, qa) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow is `grill-with-docs → to-prd → to-issues → triage`. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`.
 
 ### Issue tracker
 
