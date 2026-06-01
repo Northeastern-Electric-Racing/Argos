@@ -103,11 +103,7 @@ The block:
 [one-line summary of layout — "single-context" or "multi-context"]. See `docs/agents/domain.md`.
 ```
 
-Then write the three docs files using the seed templates in this skill folder as a starting point:
-
-- [issue-tracker-github.md](./issue-tracker-github.md) — GitHub issue tracker
-- [triage-labels.md](./triage-labels.md) — label mapping
-- [domain.md](./domain.md) — domain doc consumer rules + layout
+Then write the three docs files — `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, and `docs/agents/domain.md`. If they already exist, update them in place; otherwise generate them from the user's answers above (and, when present, use any existing `docs/agents/*.md` as the reference shape).
 
 For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
 
