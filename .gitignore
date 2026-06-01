@@ -5,7 +5,8 @@
 **/.env
 
 # local Claude Code config (worktree symlink)
-.claude/
+.claude/*
+!.claude/skills/
 scylla-server-typescript/src/prisma/mydatabase.db
 scylla-server-typescript/src/prisma/mydatabase.db-journal
 scylla-server/files
@@ -112,4 +113,5 @@ compose.override.yml
 # AI tooling
 .playwright-mcp/
 .wolf/
-.claude/
+.claude/*
+!.claude/skills/
