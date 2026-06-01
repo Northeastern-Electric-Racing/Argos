@@ -34,7 +34,7 @@ Assume the user does not know what these terms mean. Each section starts with a 
 
 **Section A — Issue tracker.**
 
-> Explainer: The "issue tracker" is where issues live for this repo. Skills like `to-issues`, `triage`, `to-prd`, and `qa` read from and write to it — they need to know whether to call `gh issue create` or follow some other workflow you describe. Pick the place you actually track work for this repo.
+> Explainer: The "issue tracker" is where issues live for this repo. Skills like `to-issues`, `triage`, and `to-prd` read from and write to it — they need to know whether to call `gh issue create` or follow some other workflow you describe. Pick the place you actually track work for this repo.
 
 Default posture: this repo tracks work in GitHub Issues, so propose that. If the user tracks work elsewhere, offer:
 
