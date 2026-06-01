@@ -19,10 +19,10 @@ If the subscription is missing, that's the bug — add it before continuing.
 
 ### 2. Match against CAN definitions
 
-Open the corresponding JSON in the firmware definitions repo:
-```
-/Users/wyattbracy/Desktop/ner/firmware/Odyssey-Definitions/can-messages/
-```
+Open the corresponding JSON in the firmware definitions repo, under `can-messages/`:
+
+https://github.com/Northeastern-Electric-Racing/Odyssey-Definitions/tree/main/can-messages
+
 Files: `bms.json`, `dti.json`, `vcu.json`, `charger.json`, etc.
 
 Confirm the topic string from step 1 exactly matches a `"name"` field in the CAN definition. Check the `"unit"` and `"values"` array index too.
