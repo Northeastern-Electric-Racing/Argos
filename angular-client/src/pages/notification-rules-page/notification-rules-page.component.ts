@@ -21,7 +21,7 @@ import { UploadConfirmDialogComponent } from './upload-confirm-dialog/upload-con
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 import { RulesTableComponent } from './rules-table/rules-table.component';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { downloadAsFile } from 'src/utils/file-download.utils';
+import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -180,7 +180,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     this.streamRailOpen.update((open) => !open);
   };
 
-  onFileSelected(event: Event): void {
+  async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -188,20 +188,16 @@ export default class NotificationRulesPageComponent implements OnInit {
     // Reset input so same file can be re-selected
     input.value = '';
 
-    if (!file.name.endsWith('.csv')) {
-      this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .csv file' });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
+    try {
+      const text = await readTextFile(file, '.csv');
       this.parseCsvAndConfirm(text);
-    };
-    reader.onerror = () => {
-      this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      if (err instanceof FileReadError && err.kind === 'invalid-extension') {
+        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .csv file' });
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+      }
+    }
   }
 
   private parseCsvAndConfirm(csv: string): void {
@@ -398,8 +394,11 @@ export default class NotificationRulesPageComponent implements OnInit {
       );
 
       const csvContent = [header, ...rows].join('\n');
-      const filename = `notification-rules-${new Date().toISOString().slice(0, 10)}.csv`;
-      downloadAsFile(filename, csvContent, 'text/csv;charset=utf-8;');
+      downloadAsFile(
+        `notification-rules-${new Date().toISOString().slice(0, 10)}.csv`,
+        csvContent,
+        'text/csv;charset=utf-8;'
+      );
       this.messageService.add({ severity: 'success', summary: 'Downloaded', detail: `Exported ${rules.length} rule(s)` });
     } catch {
       this.messageService.add({ severity: 'error', summary: 'Download Error', detail: 'Failed to download rules' });
