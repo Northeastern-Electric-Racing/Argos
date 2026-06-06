@@ -35,12 +35,6 @@ const updateVideos = () => `${getAllVideos()}/update`;
 const carCommandConfig = (key: string, values: number[]) =>
   `${baseURL}/config/set/${key}?${values.map((value) => `data=${value}`).join('&')}`;
 
-/* Lap Timer */
-const startLap = () => `${baseURL}/lap-timer/start`;
-const pauseLap = () => `${baseURL}/lap-timer/pause`;
-const stopLap = () => `${baseURL}/lap-timer/stop`;
-const getLaps = () => `${baseURL}/lap-timer/laps`;
-
 /* Rules */
 const getRulesByClientId = (clientId: string) => `${baseURL}/rules/${clientId}`;
 const addRule = () => `${baseURL}/rules/add`;
@@ -81,11 +75,6 @@ export const urls = {
   updateVideos,
 
   carCommandConfig,
-
-  startLap,
-  pauseLap,
-  stopLap,
-  getLaps,
 
   getRulesByClientId,
   addRule,

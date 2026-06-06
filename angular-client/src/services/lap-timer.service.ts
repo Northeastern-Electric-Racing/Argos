@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal, Signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { downloadAsFile } from 'src/utils/file-download.utils';
+import { downloadAsFile } from 'src/utils/file.utils';
 import { topics } from 'src/utils/topic.utils';
 import {
   defaultSessionName,
