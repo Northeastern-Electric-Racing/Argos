@@ -217,6 +217,7 @@ export default class LapTimerService {
   createSession(name?: string): string {
     if (this.isRunning()) this.pause();
     this.unsubscribeTelemetry();
+    this.resetSocBaseline();
 
     const startEpochMs = Date.now();
     const runId = this.storage.getCurrentRunId().getValue() ?? null;
@@ -243,6 +244,7 @@ export default class LapTimerService {
     if (this.store().activeSessionId === id) return;
     if (this.isRunning()) this.pause();
     this.unsubscribeTelemetry();
+    this.resetSocBaseline();
     this.stopTickLoop();
     this.mutateStore((store) => {
       if (store.sessions.some((s) => s.id === id)) {
@@ -438,6 +440,12 @@ export default class LapTimerService {
     // Carry latest SOC into next lap's start.
     this.lapSocStart = this.lastSoc;
     this.lapMaxMotorTemp = null;
+  }
+
+  // Prevent SOC carry-over between sessions.
+  private resetSocBaseline(): void {
+    this.lastSoc = null;
+    this.lapSocStart = null;
   }
 }
 
