@@ -25,19 +25,13 @@
 
     <mat-grid-tile [colspan]="1" [rowspan]="4">
       <info-background title="Battery" style="width: 100%; height: 100%">
-        <div class="gauge-stat">
-          <span class="gauge-value" [style.color]="socColor()">{{ liveSoc() | number: '1.0-0' }}</span>
-          <span class="gauge-unit">%</span>
-        </div>
+        <gauge-stat [value]="liveSoc()" unit="%" [color]="socColor()" />
       </info-background>
     </mat-grid-tile>
 
     <mat-grid-tile [colspan]="1" [rowspan]="4">
       <info-background title="Motor" style="width: 100%; height: 100%">
-        <div class="gauge-stat">
-          <span class="gauge-value" [style.color]="motorTempColor()">{{ liveMotorTemp() | number: '1.0-0' }}</span>
-          <span class="gauge-unit">°C</span>
-        </div>
+        <gauge-stat [value]="liveMotorTemp()" unit="°C" [color]="motorTempColor()" />
       </info-background>
     </mat-grid-tile>
 

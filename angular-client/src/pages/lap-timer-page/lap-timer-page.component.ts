@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -7,6 +6,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import HalfGaugeComponent from 'src/components/half-gauge/half-gauge.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
+import { GaugeStatComponent } from 'src/components/gauge-stat/gauge-stat.component';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import SessionsPanelComponent from './sessions-panel/sessions-panel.component';
@@ -23,11 +23,11 @@ import LapsTableComponent from './laps-table/laps-table.component';
   imports: [
     MatGridList,
     MatGridTile,
-    DecimalPipe,
     ConfirmDialog,
     Toast,
     HalfGaugeComponent,
     InfoBackgroundComponent,
+    GaugeStatComponent,
     SessionsPanelComponent,
     TimerHeroComponent,
     SessionSummaryComponent,

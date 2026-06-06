@@ -10,22 +10,3 @@
   width: 100%;
   overflow: hidden;
 }
-
-.gauge-stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 0;
-}
-.gauge-value {
-  font-family: var(--font-family);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--font-size-xxl);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-.gauge-unit {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
