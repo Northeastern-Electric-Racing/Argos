@@ -456,11 +456,6 @@ function hydrate(): LapStore {
     }
     return parsed;
   } catch {
-    try {
-      localStorage.removeItem(LAP_STORE_STORAGE_KEY);
-    } catch {
-      // localStorage unavailable (e.g. private mode); nothing to recover.
-    }
     return emptyLapStore();
   }
 }
