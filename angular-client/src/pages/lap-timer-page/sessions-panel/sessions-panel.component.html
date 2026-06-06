@@ -65,7 +65,8 @@
                   <input
                     class="session-rename-input"
                     type="text"
-                    [(ngModel)]="editingName"
+                    [ngModel]="editingName()"
+                    (ngModelChange)="editingName.set($event)"
                     (keydown.enter)="commitEdit(s); $event.stopPropagation()"
                     (keydown.escape)="cancelEdit(); $event.stopPropagation()"
                     (blur)="commitEdit(s)"
