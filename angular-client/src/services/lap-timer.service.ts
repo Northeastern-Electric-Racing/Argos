@@ -137,7 +137,7 @@ export default class LapTimerService {
       s.isPaused = false;
       s.currentLapStartEpochMs = Date.now();
     });
-    this.subscribeTelemetry();
+    if (this.telemetrySubs.length === 0) this.subscribeTelemetry();
     this.startTickLoop();
   }
 
