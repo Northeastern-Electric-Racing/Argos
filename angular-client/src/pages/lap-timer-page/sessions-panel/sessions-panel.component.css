@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px 8px 8px;
+  padding: 4px 8px 8px;
   flex: 0 0 auto;
 }
 .sessions-toolbar-actions {
@@ -30,12 +30,16 @@
   gap: 8px;
 }
 
-.sessions-count {
-  font-family: var(--font-family);
+/* Uppercase label style shared by the count and table headers. */
+.sessions-count,
+.sessions-table-wrap :where(th) {
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.sessions-count {
+  font-family: var(--font-family);
 }
 
 .sessions-empty {
@@ -49,8 +53,7 @@
 .sessions-table-wrap {
   flex: 1 1 0;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   scrollbar-width: thin;
   scrollbar-color: var(--color-divider) transparent;
 }
@@ -66,17 +69,18 @@
   background: transparent;
 }
 
-.sessions-table-wrap :where(.p-datatable) {
+/* Body font shared by the table, rename input, and menu items. */
+.sessions-table-wrap :where(.p-datatable),
+.session-rename-input,
+.session-menu-item {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
+}
+.sessions-table-wrap :where(.p-datatable) {
   color: var(--color-text-primary);
 }
 .sessions-table-wrap :where(th) {
-  font-size: var(--font-size-xs);
   font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
   background: transparent;
   border-bottom: 1px solid var(--color-divider);
   padding: 8px 12px;
@@ -147,14 +151,6 @@
   text-align: right !important;
 }
 
-.session-state-icon {
-  color: var(--color-battery-high);
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  vertical-align: middle;
-}
-
 .session-name {
   display: inline-block;
   max-width: 100%;
@@ -173,8 +169,6 @@
   border: 1px solid var(--color-divider);
   border-radius: 4px;
   color: var(--color-text-primary);
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
   font-weight: 600;
   padding: 2px 6px;
   outline: none;
@@ -198,11 +192,6 @@
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.06);
 }
-.session-menu-btn mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
 
 .session-menu-list {
   display: flex;
@@ -218,8 +207,6 @@
   border: none;
   color: var(--color-text-primary);
   cursor: pointer;
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
   text-align: left;
 }
 .session-menu-item:hover {
@@ -228,8 +215,16 @@
 .session-menu-item.destructive {
   color: var(--color-battery-low);
 }
+
+/* Shared 18px icon sizing for the state icon and menu icons. */
+.session-state-icon,
+.session-menu-btn mat-icon,
 .session-menu-item mat-icon {
   font-size: 18px;
   width: 18px;
   height: 18px;
+}
+.session-state-icon {
+  color: var(--color-battery-high);
+  vertical-align: middle;
 }
