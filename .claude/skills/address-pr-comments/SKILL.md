@@ -1,7 +1,7 @@
 ---
 name: address-pr-comments
 description: Fetch review comments on the current branch's PR, judge whether each (including outdated ones) still applies, and walk through fixes
-allowed-tools: Bash(git:*), Bash(gh pr:*), Bash(gh api:*)
+allowed-tools: Bash(git:*), Bash(gh pr:*), Bash(gh api:*), Bash(gh repo view:*), Bash(.claude/skills/address-pr-comments/scripts/fetch-review-threads.sh:*)
 user-invocable: true
 ---
 
@@ -23,12 +23,17 @@ Capture the PR number — you'll need it for every subsequent `gh api` call.
 
 ### 2. Fetch all review feedback
 
-Pull the three comment surfaces GitHub exposes. You need all of them — reviewers use different ones and they don't overlap:
+Start with the bundled script — it returns every review **thread** with the `isResolved` / `isOutdated` state that the REST endpoints don't expose, so it's the single most reliable source:
 
 ```bash
-# Inline review comments (line-level, "Files changed" tab) — includes outdated ones
-gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --paginate
+.claude/skills/address-pr-comments/scripts/fetch-review-threads.sh
+```
 
+Each node carries `id`, `isResolved`, `isOutdated`, and its comments (`databaseId`, `body`, `path`, `line`, `originalLine`, `diffHunk`, `author.login`) in order. An outdated thread has `isOutdated: true` — GitHub no longer anchors it to a current line, but the concern may still apply (see step 4).
+
+Then pull the two surfaces the thread query doesn't cover — top-level conversation comments and review summaries — since reviewers use them too and they don't overlap with line-level threads:
+
+```bash
 # Top-level PR conversation comments ("Conversation" tab)
 gh api "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments" --paginate
 
@@ -38,8 +43,6 @@ gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews" --paginate
 
 Derive `{owner}/{repo}` from `gh repo view --json nameWithOwner -q .nameWithOwner`.
 
-For each inline review comment, note: `id`, `path`, `line` (or `original_line`), `body`, `user.login`, `commit_id`, `original_commit_id`, `diff_hunk`, `in_reply_to_id`, and the `position` / `original_position` fields. `position: null` means GitHub considers the comment **outdated**.
-
 ### 3. Filter to unresolved, unique threads
 
 - Collapse reply chains by `in_reply_to_id` — keep the whole chain together and treat the latest message as the current state of the thread.
@@ -47,22 +50,7 @@ For each inline review comment, note: `id`, `path`, `line` (or `original_line`),
 - Skip bot comments (dependabot, codecov, etc.) unless they flag something a human should act on.
 - Deduplicate comments that overlap with the Phase 1/2/3 review findings you already fixed — if a fix is already in the latest commit, note it as already-addressed and move on.
 
-**GraphQL fallback for resolved state** (REST doesn't expose it directly):
-
-```bash
-gh api graphql -f query='
-query($owner:String!, $repo:String!, $num:Int!) {
-  repository(owner:$owner, name:$repo) {
-    pullRequest(number:$num) {
-      reviewThreads(first:100) {
-        nodes { id isResolved isOutdated comments(first:20) { nodes { id databaseId body path line originalLine author { login } } } }
-      }
-    }
-  }
-}' -f owner=OWNER -f repo=REPO -F num=PR_NUMBER
-```
-
-This is the most reliable source: `isResolved` and `isOutdated` on each thread, plus all comments in order.
+Resolved/outdated state comes from `isResolved` / `isOutdated` in the step 2 script output — that's the authoritative source. Skip threads with `isResolved: true`.
 
 ### 4. Understand outdated comments (CRITICAL)
 
