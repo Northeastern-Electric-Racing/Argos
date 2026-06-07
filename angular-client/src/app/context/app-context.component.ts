@@ -11,6 +11,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { EnvService } from 'src/services/env.service';
 import { NotificationLogService } from 'src/services/notification-log.service';
+import { SeedDataService } from 'src/services/seed-data.service';
 import { v4 as uuidv4 } from 'uuid';
 
 // crypto.randomUUID is only defined in secure contexts (https or loopback);
@@ -40,6 +41,7 @@ export default class AppContextComponent implements OnInit {
   private faultService = inject(FaultService);
   private notificationLogService = inject(NotificationLogService);
   private envService = inject(EnvService);
+  private seedDataService = inject(SeedDataService);
   socket = io(this.envService.backendUrl, {
     query: {
       clientId: getOrCreateClientId()
@@ -114,6 +116,11 @@ export default class AppContextComponent implements OnInit {
   ngOnInit(): void {
     document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
-    this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
+    const seeded = this.seedDataService.start();
+    if (!seeded) {
+      // Only listen to live MQTT when seed mode is off — otherwise real data
+      // would clobber the hard-coded values.
+      this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
+    }
   }
 }
