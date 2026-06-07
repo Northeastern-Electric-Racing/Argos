@@ -69,7 +69,7 @@ Use this format:
 Comment: "<excerpt from body>"
 Status: <active | outdated>
 Classification: <one of the 5 above>
-Proposed fix: <what you'd change>
+Proposed fix: <plain-words description of the change — no code or diffs>
 ```
 
 If there are many comments (>8), ask the user whether they want to go one-by-one or have you implement all the clearly-valid ones in a batch and only interrupt on unclear ones.
