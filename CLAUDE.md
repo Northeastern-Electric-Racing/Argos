@@ -2,6 +2,10 @@
 
 Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). Angular 19 frontend (`angular-client/`) and Rust backend (`scylla-server/`), with schema tooling in `charybdis/` and MQTT broker config in `siren-base/`.
 
+## Communication
+
+Respond in `caveman` terse mode by default — a repo-wide pilot. Drop articles, filler, and pleasantries; keep full technical accuracy, exact code, and exact error text. See the `caveman` skill in `.claude/skills/caveman/` for the ruleset and the auto-clarity exceptions — security warnings, irreversible-action confirmations, and order-sensitive multi-step sequences stay in plain prose. Turn it off for a session with "stop caveman" or "normal mode".
+
 ## Local Development
 
 - The backend stack (Postgres, MQTT, Scylla server, Calypso simulator) runs in Docker via the compose files in `compose/`, driven by `argos.sh`.
@@ -46,7 +50,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow is `grill-with-docs → to-prd → to-issues → triage`. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`. Communication skills like `caveman` (terse mode) are opt-in via `/caveman` or its trigger phrases — off by default.
+Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow is `grill-with-docs → to-prd → to-issues → triage`. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`. The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
 
 ### Issue tracker
 
