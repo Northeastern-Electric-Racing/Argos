@@ -19,6 +19,7 @@ use crate::{
 const CLIENT_ID_HEADER: &str = "x-client-id";
 
 /// client id comes from the x-client-id header, keeping it out of conflict-prone route paths
+/// extractor pattern: <https://docs.rs/axum/latest/axum/extract/index.html#defining-custom-extractors>
 impl<S> FromRequestParts<S> for ClientId
 where
     S: Send + Sync,
