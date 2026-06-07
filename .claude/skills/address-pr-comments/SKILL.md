@@ -11,50 +11,33 @@ Walk through unresolved review feedback on the current branch's PR. For every co
 
 Run each step in order. Stop and report if any step fails.
 
-**Tooling fallback.** Steps below use the `gh` CLI. If `gh` is missing or unauthenticated (`gh auth status` fails), use the GitHub MCP server (`mcp__github__*`) for the equivalent reads: `pull_request_read` with `method: get` for step 1, `get_review_comments` for step 2's threads (it returns the same `is_resolved`/`is_outdated` state as the bundled script — use it instead of the script), and `get_comments` + `get_reviews` for the other two surfaces.
+### 1. Identify the PR and fetch all feedback
 
-### 1. Identify the PR
+Pick the tool once with `gh auth status`, then fetch the PR plus all three comment surfaces — line-level threads, conversation comments, and review summaries (reviewers use all three and they don't overlap).
 
-```bash
-gh pr view --json number,title,headRefName,baseRefName
-```
-
-If no PR exists for the current branch, stop and tell the user there's nothing to address.
-
-Capture the PR number — you'll need it for every subsequent `gh api` call.
-
-### 2. Fetch all review feedback
-
-Start with the bundled script — it returns every review **thread** with the `isResolved` / `isOutdated` state that the REST endpoints don't expose, so it's the single most reliable source:
+**`gh` available and authenticated** — run the bundled script for the threads (it exposes the `isResolved`/`isOutdated` state the REST endpoints don't), then the two surfaces it doesn't cover:
 
 ```bash
-.claude/skills/address-pr-comments/scripts/fetch-review-threads.sh
-```
-
-Each node carries `id`, `isResolved`, `isOutdated`, and its comments (`databaseId`, `body`, `path`, `line`, `originalLine`, `diffHunk`, `author.login`) in order. An outdated thread has `isOutdated: true` — GitHub no longer anchors it to a current line, but the concern may still apply (see step 4).
-
-Then pull the two surfaces the thread query doesn't cover — top-level conversation comments and review summaries — since reviewers use them too and they don't overlap with line-level threads:
-
-```bash
-# Top-level PR conversation comments ("Conversation" tab)
-gh api "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments" --paginate
-
-# Review summaries (approve/request-changes/comment with a top-level body)
-gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews" --paginate
+gh pr view --json number,title,headRefName,baseRefName              # identify PR; stop if none exists
+.claude/skills/address-pr-comments/scripts/fetch-review-threads.sh  # review threads + resolved/outdated state
+gh api "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments" --paginate # conversation comments
+gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews"   --paginate # review summaries
 ```
 
 Derive `{owner}/{repo}` from `gh repo view --json nameWithOwner -q .nameWithOwner`.
 
-### 3. Filter to unresolved, unique threads
+**`gh` missing or unauthenticated** — use the GitHub MCP server instead, all via `pull_request_read`: `method: get` to identify the PR, `get_review_comments` for the threads (same `is_resolved`/`is_outdated` state, so no script needed), `get_comments` for conversation comments, and `get_reviews` for review summaries.
+
+Either path yields review threads carrying `isResolved`/`isOutdated` plus each comment's `body`, `path`, `line`/`originalLine`, `diffHunk`, and `author`. An outdated thread (`isOutdated: true`) is no longer anchored to a current line, but the concern may still apply (see step 3).
+
+### 2. Filter to unresolved, unique threads
 
 - Collapse reply chains by `in_reply_to_id` — keep the whole chain together and treat the latest message as the current state of the thread.
-- Drop threads that have been resolved (use the `isResolved` field from the step 2 thread output).
+- Drop threads that have been resolved (use the `isResolved` field from the step 1 output) — it's the authoritative source.
 - Skip bot comments (dependabot, codecov, etc.) unless they flag something a human should act on.
 - Deduplicate comments that overlap with the Phase 1/2/3 review findings you already fixed — if a fix is already in the latest commit, note it as already-addressed and move on.
 
-Resolved/outdated state comes from `isResolved` / `isOutdated` in the step 2 script output — that's the authoritative source. Skip threads with `isResolved: true`.
-
-### 4. Understand outdated comments (CRITICAL)
+### 3. Understand outdated comments (CRITICAL)
 
 An **outdated** comment is one whose original line no longer exists at the same position in HEAD — usually because the code around it was rewritten, reformatted, or moved. GitHub hides these behind a "show outdated" toggle, but **the reviewer's concern may still apply**. Do not auto-dismiss them.
 
@@ -71,7 +54,7 @@ For every outdated comment, do this analysis:
 
 State your classification explicitly for each outdated comment before proposing a fix. Do not silently skip outdated comments.
 
-### 5. Present the comment list
+### 4. Present the comment list
 
 Before making any changes, show the user a structured summary:
 
@@ -91,7 +74,7 @@ Proposed fix: <what you'd change>
 
 If there are many comments (>8), ask the user whether they want to go one-by-one or have you implement all the clearly-valid ones in a batch and only interrupt on unclear ones.
 
-### 6. Apply fixes
+### 5. Apply fixes
 
 Make the code changes. Commit at logical boundaries (not one commit per comment — group related fixes). Use the repo's commit convention (`/commit` skill).
 
@@ -99,6 +82,6 @@ Make the code changes. Commit at logical boundaries (not one commit per comment 
 
 **Do not post replies to any comment thread.** The user will reply manually after reviewing your fixes. Your job ends at the code change + commit.
 
-### 7. Report
+### 6. Report
 
 List the comments addressed (with file:line and one-line summary of the fix), the ones you classified as already-addressed or obsoleted (with reasoning), and any you flagged as unclear. Include the commit SHAs so the user can reference them in their manual replies.
