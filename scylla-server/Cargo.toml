@@ -33,7 +33,7 @@ axum-macros = "0.5.1"
 diesel-async = { version = "0.6.1", features = ["postgres", "bb8", "async-connection-wrapper", "sync-connection-wrapper", "tokio"] }
 rustc-hash = "2.1.2"
 evalexpr = "13.1.0"
-serde_with = "3.18.0"
+serde_with = "3.21.0"
 derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.7"
