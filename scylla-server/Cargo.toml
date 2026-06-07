@@ -36,7 +36,7 @@ evalexpr = "13.1.0"
 serde_with = "3.18.0"
 derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
-tikv-jemallocator = "0.6"
+tikv-jemallocator = "0.7"
 
 
 [features]
