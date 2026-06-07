@@ -11,6 +11,8 @@ Walk through unresolved review feedback on the current branch's PR. For every co
 
 Run each step in order. Stop and report if any step fails.
 
+**Tooling fallback.** Steps below use the `gh` CLI. If `gh` is missing or unauthenticated (`gh auth status` fails), use the GitHub MCP server (`mcp__github__*`) for the equivalent reads: `pull_request_read` with `method: get` for step 1, `get_review_comments` for step 2's threads (it returns the same `is_resolved`/`is_outdated` state as the bundled script — use it instead of the script), and `get_comments` + `get_reviews` for the other two surfaces.
+
 ### 1. Identify the PR
 
 ```bash
@@ -46,7 +48,7 @@ Derive `{owner}/{repo}` from `gh repo view --json nameWithOwner -q .nameWithOwne
 ### 3. Filter to unresolved, unique threads
 
 - Collapse reply chains by `in_reply_to_id` — keep the whole chain together and treat the latest message as the current state of the thread.
-- Drop threads that have been resolved (check the `resolved` field on review threads via GraphQL if needed — see fallback below).
+- Drop threads that have been resolved (use the `isResolved` field from the step 2 thread output).
 - Skip bot comments (dependabot, codecov, etc.) unless they flag something a human should act on.
 - Deduplicate comments that overlap with the Phase 1/2/3 review findings you already fixed — if a fix is already in the latest commit, note it as already-addressed and move on.
 
