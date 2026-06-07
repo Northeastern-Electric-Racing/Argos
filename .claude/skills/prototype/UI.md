@@ -48,26 +48,28 @@ This works whether the user is here to push back or not.
 Draft each variant. Hold each one to:
 
 - The page's purpose and the data it has access to.
-- The project's component library / styling system (TailwindCSS, shadcn, MUI, plain CSS, whatever).
-- A clear exported component name, e.g. `VariantA`, `VariantB`, `VariantC`.
+- The project's component library / styling system — in Argos that's Angular standalone components, PrimeNG widgets, and SCSS. Match the host page's existing density, tokens, and component choices rather than introducing a new styling system.
+- A clear exported component name, e.g. `VariantAComponent`, `VariantBComponent`, `VariantCComponent`.
 
 Variants must be **structurally different** — different layout, different information hierarchy, different primary affordance, not just different colours. Three slightly-tweaked card grids isn't a UI prototype, it's wallpaper. If two drafts come out too similar, redo one with explicit "do not use a card grid" guidance.
 
 ### 3. Wire them together
 
-Create a single switcher component on the route:
+Create a single switcher on the host route. In Argos the host component reads `?variant=` from the route and an Angular template control-flow block swaps the subtree:
 
-```tsx
-// pseudo-code — adapt to the project's framework
-const variant = searchParams.get('variant') ?? 'A';
-return (
-  <>
-    {variant === 'A' && <VariantA {...data} />}
-    {variant === 'B' && <VariantB {...data} />}
-    {variant === 'C' && <VariantC {...data} />}
-    <PrototypeSwitcher variants={['A','B','C']} current={variant} />
-  </>
-);
+```ts
+// host component — read ?variant= from the route
+variant$ = this.route.queryParamMap.pipe(map((p) => p.get('variant') ?? 'A'));
+```
+
+```html
+<!-- host template — only the rendered subtree swaps per variant -->
+@switch (variant$ | async) {
+  @case ('A') { <app-variant-a [data]="data" /> }
+  @case ('B') { <app-variant-b [data]="data" /> }
+  @case ('C') { <app-variant-c [data]="data" /> }
+}
+<app-prototype-switcher [variants]="['A', 'B', 'C']" />
 ```
 
 For sub-shape A (existing page): keep all the existing data fetching above the switcher; only the rendered subtree changes per variant.
@@ -84,10 +86,10 @@ A small fixed-position bar at the bottom-centre of the screen with three pieces:
 
 Behaviour:
 
-- Clicking an arrow updates the URL search param (use the framework's router — `router.replace` on Next, `navigate` on React Router, etc) so the variant is shareable and reload-stable.
+- Clicking an arrow updates the `variant` query param via the Angular Router — `this.router.navigate([], { queryParams: { variant }, queryParamsHandling: 'merge' })` — so the variant is shareable and reload-stable.
 - Keyboard: `←` and `→` arrow keys also cycle. Don't intercept arrow keys when an `<input>`, `<textarea>`, or `[contenteditable]` is focused.
 - Visually distinct from the page (e.g. high-contrast pill, subtle shadow) so it's obviously not part of the design being evaluated.
-- Hidden in production builds — gate on `process.env.NODE_ENV !== 'production'` or an equivalent check, so a stray prototype merge can't ship the bar to users.
+- Hidden in production builds — gate on Angular's `isDevMode()` (from `@angular/core`), so a stray prototype merge can't ship the bar to users.
 
 Put the switcher in a single shared component so both sub-shapes can reuse it. Locate it wherever shared UI lives in the project.
 

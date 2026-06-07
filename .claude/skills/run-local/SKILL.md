@@ -21,6 +21,8 @@ Docker backend status (scylla-server on :8000/8010/.../8090, one per STACK_OFFSE
 
 Start the Angular dev client on the next available port — and make sure the backend is running, because `ng serve` alone is a silent false negative for UI verification. The few lines this skill adds to runtime cost save hours of chasing "my fix works" when it actually doesn't.
 
+**Ports are not fixed — never assume 8000/4200.** The backend lands on `:$((8000 + 10*STACK_OFFSET))` (default stack `:8000`, parallel stacks shift by 10 — see `compose/README.md`), and the client takes the first free port in `4200–4210`. Always read the actual port from the Context scan above and carry it into every `curl`/`ng serve` you run.
+
 ### Step 1: Confirm the backend is up (and on the right profile)
 
 Check the scan from the Context block (ports 8000/8010/.../8090) AND `docker ps`. If no backend is listening anywhere in that range, stop and ask the user to bring one up. If at least one is up, read its port and project name straight from the scan (`odyssey_<profile>` = default stack on :8000; `odyssey_<profile>_N` = a parallel stack, conventionally on `:$((8000+N))` per the `compose/README.md` recipe — but trust the scan, not the suffix) and confirm:
@@ -33,7 +35,7 @@ If the chosen scylla isn't on `:8000`, surface that explicitly in your summary s
 If the backend is DOWN, do one of:
 
 - Suggest the user run `! ./argos.sh client-dev up` (or `scylla-dev` per above) so output streams into the conversation. To run a parallel stack alongside an existing one, see the `env STACK_OFFSET=N ... ./argos.sh ...` recipe in `compose/README.md`.
-- If they've authorized container starts in this session, run `./argos.sh <profile> up -d` yourself and wait for `scylla-server` on `:8000` to be reachable (`curl -s http://localhost:8000/datatypes`) before continuing.
+- If they've authorized container starts in this session, run `./argos.sh <profile> up -d` yourself and wait for `scylla-server` to be reachable on its port — `:8000` for the default stack, `:$((8000 + 10*STACK_OFFSET))` for a parallel one — before continuing (`curl -s http://localhost:<port>/datatypes`).
 
 The only exception: pure static/style changes with no server-driven content in the affected component tree. In that case, note in your final summary that only layout was verified — no data was exercised.
 
@@ -54,7 +56,7 @@ cd <angular-client-path> && npx ng serve --port <port> > /tmp/ng-serve-<port>.lo
 ```
 
 ### Step 5: Wait for readiness
-Do NOT poll with `curl` on short intervals — the build takes 60-90s and curl returns connection refused until then.
+Do NOT poll with `curl` on short intervals — the first compile takes ~10-60s and curl returns connection refused until then.
 
 Tail the log file and wait for the build-complete signal:
 ```bash
