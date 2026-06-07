@@ -93,6 +93,8 @@ If there are many comments (>8), ask the user whether they want to go one-by-one
 
 Make the code changes. Commit at logical boundaries (not one commit per comment — group related fixes). Use the repo's commit convention (`/commit` skill).
 
+**Comment asks to file a follow-up ticket?** Search the tracker first (`gh issue list --search "<keywords>"`) and reuse any match — never open a duplicate.
+
 **Do not post replies to any comment thread.** The user will reply manually after reviewing your fixes. Your job ends at the code change + commit.
 
 ### 7. Report
