@@ -1,11 +1,16 @@
-<div class="gauge-container" [ngStyle]="{ width: widthpx, height: heightpx }">
-  <apx-chart
-    [series]="chartOptions.series"
-    [colors]="chartOptions.colors"
-    [stroke]="chartOptions.stroke"
-    [chart]="chartOptions.chart"
-    [plotOptions]="chartOptions.plotOptions"
-    [labels]="chartOptions.labels"
-    [fill]="chartOptions.fill"
-  />
+<div class="gauge-container">
+  <svg class="gauge-svg" [attr.viewBox]="viewBox()" preserveAspectRatio="xMidYMid meet">
+    <path class="gauge-track" [attr.d]="arcPath()" [attr.stroke-width]="stroke()" fill="none" stroke-linecap="round" />
+    <path
+      class="gauge-arc"
+      [attr.d]="arcPath()"
+      [attr.stroke]="color()"
+      [attr.stroke-width]="stroke()"
+      [attr.stroke-dasharray]="arcLength()"
+      [attr.stroke-dashoffset]="dashOffset()"
+      fill="none"
+      stroke-linecap="butt"
+    />
+  </svg>
+  <span class="gauge-value" [style.font-size.px]="fontSizePx()">{{ label() }}</span>
 </div>
