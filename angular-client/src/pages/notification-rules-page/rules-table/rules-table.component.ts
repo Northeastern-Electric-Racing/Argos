@@ -73,9 +73,11 @@ export class RulesTableComponent implements OnInit {
   }
 
   async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
-    const request = { rule_ids: [rule.id], client_id: this.clientId() };
+    const ruleIds = [rule.id];
     try {
-      const response = subscribed ? await subscribeToRules(request) : await unsubscribeFromRules(request);
+      const response = subscribed
+        ? await subscribeToRules(this.clientId(), ruleIds)
+        : await unsubscribeFromRules(this.clientId(), ruleIds);
       if (response.ok) {
         this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: subscribed } : r)));
       } else {

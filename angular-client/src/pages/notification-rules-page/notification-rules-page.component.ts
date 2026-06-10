@@ -143,10 +143,10 @@ export default class NotificationRulesPageComponent implements OnInit {
     try {
       const promises: Promise<Response>[] = [];
       if (toSubscribe.length > 0) {
-        promises.push(subscribeToRules({ rule_ids: toSubscribe, client_id: this.clientId }));
+        promises.push(subscribeToRules(this.clientId, toSubscribe));
       }
       if (toUnsubscribe.length > 0) {
-        promises.push(unsubscribeFromRules({ rule_ids: toUnsubscribe, client_id: this.clientId }));
+        promises.push(unsubscribeFromRules(this.clientId, toUnsubscribe));
       }
 
       const results = await Promise.all(promises);
