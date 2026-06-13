@@ -24,6 +24,9 @@ use crate::{
 
 use super::ClientData;
 
+const YEAR_2000: chrono::DateTime<chrono::Utc> =
+    chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap();
+
 /// The chief processor of incoming mqtt data, this handles
 /// - mqtt state
 /// - reception via mqtt and subsequent parsing
@@ -51,12 +54,15 @@ impl MqttProcessor {
     /// * `socket_channel` - The mpsc channel to send the socket data to
     /// * `cancel_token` - The token which indicates cancellation of the task
     /// * `opts` - The mqtt processor options to use
-    ///   Returns the instance and options to create a client, which is then used in the process_mqtt loop
+    ///   Returns the instance and options to create a client, which is then used in the `process_mqtt` loop
+    /// # Panics
+    /// Panics if time went backwards
+    #[must_use]
     pub fn new(
         db_channel: broadcast::Sender<ClientData>,
         socket_channel: broadcast::Sender<ClientData>,
         cancel_token: CancellationToken,
-        opts: MqttProcessorOptions,
+        opts: &MqttProcessorOptions,
     ) -> (MqttProcessor, MqttOptions) {
         // create the mqtt client and configure it
         let mut mqtt_opts = MqttOptions::new(
@@ -94,8 +100,10 @@ impl MqttProcessor {
     }
 
     /// This handles the reception of mqtt messages, will not return
-    /// * `eventloop` - The eventloop returned by ::new to connect to.  The loop isnt sync so this is the best that can be done
+    /// * `eventloop` - The eventloop returned by `::new` to connect to.  The loop isnt sync so this is the best that can be done
     /// * `client` - The async mqttt v5 client to use for subscriptions
+    /// # Panics
+    /// Panics if subscription call fails
     pub async fn process_mqtt(
         mut self,
         client: Arc<AsyncClient>,
@@ -114,7 +122,7 @@ impl MqttProcessor {
         loop {
             #[rustfmt::skip] // rust cannot format this macro for some reason
             tokio::select! {
-                _ = self.cancel_token.cancelled() => {
+                () = self.cancel_token.cancelled() => {
                     debug!("Shutting down MQTT processor!");
                     break;
                 },
@@ -126,9 +134,9 @@ impl MqttProcessor {
                         if let Some(msg) = msg {
                             latency_ringbuffer.enqueue(chrono::offset::Utc::now() - msg.timestamp);
                             if send_db {
-                                self.send_db_msg(msg.clone()).await;
+                                self.send_db_msg(msg.clone());
                             }
-                            self.send_channel_msg(msg.clone()).await;
+                            self.send_channel_msg(msg.clone());
                         }
                     },
                     Err(msg) => trace!("Received mqtt error: {:?}", msg),
@@ -158,7 +166,7 @@ impl MqttProcessor {
 
     /// Parse the message
     /// * `msg` - The mqtt message to parse
-    /// returns the ClientData, or the Err of something that can be debug printed
+    /// returns the `ClientData`, or the Err of something that can be debug printed
     #[instrument(skip(self), level = Level::TRACE)]
     async fn parse_msg(
         &mut self,
@@ -191,10 +199,9 @@ impl MqttProcessor {
                 {
                     trace!("Static rate limit skipping message with topic {}", topic);
                     return (false, None);
-                } else {
-                    // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
-                    self.rate_limiter.insert(topic.to_string(), Instant::now());
                 }
+                // if the message is past the rate limit, continue with the parsing of it and mark the new time last received
+                self.rate_limiter.insert(topic.to_string(), Instant::now());
             } else {
                 // here is the first insertion of the topic (the first time we receive the topic in scylla's lifetime)
                 self.rate_limiter.insert(topic.to_string(), Instant::now());
@@ -215,7 +222,8 @@ impl MqttProcessor {
         // note protobuf defaults to 0 for unfilled time
 
         // A
-        let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time_us as i64) else {
+        let Some(unix_time) = chrono::DateTime::from_timestamp_micros(data.time_us.cast_signed())
+        else {
             warn!(
                 "Corrupted time in protobuf: {}, discarding message!",
                 data.time_us
@@ -225,28 +233,27 @@ impl MqttProcessor {
 
         // ts check for bad sources of time which may return 1970
         // if both system time and packet timestamp are before year 2000, the message cannot be recorded
-        let unix_clean =
-            if unix_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
-                debug!("Timestamp before year 2000: {}", unix_time.to_string());
-                // B
-                let sys_time = chrono::offset::Utc::now();
-                if sys_time < chrono::DateTime::from_timestamp_millis(963014966000).unwrap() {
-                    warn!("System has no good time, discarding message!");
-                    return (
-                        false,
-                        Some(ClientData {
-                            run_id: crate::RUN_ID.load(Ordering::Relaxed),
-                            name: topic.to_string(),
-                            unit: data.unit,
-                            values: data.values,
-                            timestamp: sys_time,
-                        }),
-                    );
-                }
-                sys_time
-            } else {
-                unix_time
-            };
+        let unix_clean = if unix_time < YEAR_2000 {
+            debug!("Timestamp before year 2000: {}", unix_time.to_string());
+            // B
+            let sys_time = chrono::offset::Utc::now();
+            if sys_time < YEAR_2000 {
+                warn!("System has no good time, discarding message!");
+                return (
+                    false,
+                    Some(ClientData {
+                        run_id: crate::RUN_ID.load(Ordering::Relaxed),
+                        name: topic.to_string(),
+                        unit: data.unit,
+                        values: data.values,
+                        timestamp: sys_time,
+                    }),
+                );
+            }
+            sys_time
+        } else {
+            unix_time
+        };
 
         if crate::RUN_ID.load(Ordering::Relaxed) == -1 {
             // creates the initial run
@@ -272,7 +279,7 @@ impl MqttProcessor {
 
     /// Send a message to the channel, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    async fn send_db_msg(&self, client_data: ClientData) {
+    fn send_db_msg(&self, client_data: ClientData) {
         if let Err(err) = self.db_channel.send(client_data) {
             warn!("Error sending through channel: {:?}", err);
         }
@@ -280,7 +287,7 @@ impl MqttProcessor {
 
     /// Send a message to the socket channel, printing and IGNORING any error that may occur
     /// * `client_data` - The client data to send over the broadcast
-    async fn send_channel_msg(&self, client_data: ClientData) {
+    fn send_channel_msg(&self, client_data: ClientData) {
         if let Err(err) = self.socket_channel.send(client_data) {
             warn!("Error sending through channel: {:?}", err);
         }

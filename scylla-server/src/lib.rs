@@ -16,6 +16,7 @@ pub mod models;
 #[allow(non_snake_case)]
 pub mod schema;
 
+#[allow(clippy::pedantic)]
 pub mod proto;
 
 pub mod transformers;

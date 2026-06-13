@@ -149,11 +149,11 @@ const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
     let dir_path = Path::new(path);
-    if !dir_path.exists() {
+    if dir_path.exists() {
+        println!("Directory already exists: {path}");
+    } else {
         fs::create_dir_all(dir_path)?;
         println!("Directory created: {path}");
-    } else {
-        println!("Directory already exists: {path}");
     }
 
     Ok(())
@@ -237,7 +237,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ack_timeout(Duration::from_millis(1500)) // this should be well below the time to fill max buffer size above
         .build_layer();
     io.ns("/", async |s: SocketRef| {
-        s.on_disconnect(async |_: SocketRef| debug!("Socket: Client disconnected from socket"))
+        s.on_disconnect(async |_: SocketRef| debug!("Socket: Client disconnected from socket"));
     });
 
     // channel to pass the mqtt data
@@ -287,7 +287,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         mqtt_send_db,
         mqtt_send_socket,
         token.clone(),
-        MqttProcessorOptions {
+        &MqttProcessorOptions {
             mqtt_path: cli.siren_host_url,
         },
     );
@@ -443,7 +443,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(async {
         axum::serve(listener, app)
             .with_graceful_shutdown(async move {
-                _ = axum_token.cancelled().await;
+                () = axum_token.cancelled().await;
             })
             .await
             .expect("Failed shutdown init for axum");

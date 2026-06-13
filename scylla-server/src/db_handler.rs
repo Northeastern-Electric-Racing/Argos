@@ -25,11 +25,12 @@ pub struct DbHandler {
 }
 
 /// Chunks a vec into roughly equal vectors all under size `max_chunk_size`
-/// This precomputes vec capacity but does however call to_vec(), reallocating the slices
+/// This precomputes vec capacity but does however call `to_vec()`, reallocating the slices
 fn chunk_vec<T: Clone>(input: &[T], max_chunk_size: usize) -> Vec<Vec<T>> {
-    if max_chunk_size == 0 {
-        panic!("Maximum chunk size must be greater than zero");
-    }
+    assert!(
+        max_chunk_size != 0,
+        "Maximum chunk size must be greater than zero"
+    );
 
     let len = input.len();
     if len == 0 {
@@ -56,6 +57,7 @@ fn chunk_vec<T: Clone>(input: &[T], max_chunk_size: usize) -> Vec<Vec<T>> {
 impl DbHandler {
     /// Make a new db handler
     /// * `recv` - the broadcast reciver of which clientdata will be sent
+    #[must_use]
     pub fn new(receiver: broadcast::Receiver<ClientData>, pool: PoolHandle) -> DbHandler {
         DbHandler {
             datatype_list: FxHashSet::default(),
@@ -77,7 +79,7 @@ impl DbHandler {
         loop {
             if DATA_UPLOAD_DISABLE.load(Ordering::Relaxed) {
                 tokio::select! {
-                    _ = cancel_token.cancelled() => {
+                    () = cancel_token.cancelled() => {
                         warn!("Cancelling fake upload with {} batches left in queue!", batch_queue.len());
                         break;
                     },
@@ -87,7 +89,7 @@ impl DbHandler {
                 }
             } else {
                 tokio::select! {
-                    _ = cancel_token.cancelled() => {
+                    () = cancel_token.cancelled() => {
                         let Ok(mut database) = pool.get().await else {
                             warn!("Could not get connection for cleanup");
                             break;
@@ -153,9 +155,11 @@ impl DbHandler {
 
     /// A loop which uses self and a sender channel to process data
     /// If the data is special, i.e. coordinates, driver, etc. it will store it in its special location of the db immediately
-    /// For all data points it will add the to the data_channel for batch uploading logic when a certain time has elapsed
+    /// For all data points it will add the to the `data_channel` for batch uploading logic when a certain time has elapsed
     /// Before this time the data is stored in an internal queue.
     /// On cancellation, the messages currently in the queue will be sent as a final flush of any remaining messages received before cancellation
+    /// # Panics
+    /// Panics if channel calls fail
     pub async fn handling_loop(
         mut self,
         data_channel: mpsc::Sender<Vec<ClientData>>,
@@ -168,7 +172,8 @@ impl DbHandler {
         let mut max_batch_size = 2usize;
         loop {
             // if the batch interval changed, act. this is run per message, which is a performance concern
-            if BATCH_UPSERT_TIME.load(Ordering::Relaxed) as u64 != batch_interval.period().as_secs()
+            if u64::from(BATCH_UPSERT_TIME.load(Ordering::Relaxed))
+                != batch_interval.period().as_secs()
             {
                 // if the setting is changed, unfortunately the interval is reset
                 batch_interval = tokio::time::interval(Duration::from_secs(
@@ -176,7 +181,7 @@ impl DbHandler {
                 ));
             }
             tokio::select! {
-                _ = cancel_token.cancelled() => {
+                () = cancel_token.cancelled() => {
                     debug!("Pushing final messages to queue");
                     data_channel.send(self.data_queue).await.expect("Could not comm data to db thread, shutdown");
                     break;
