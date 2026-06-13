@@ -83,9 +83,12 @@ impl MqttProcessor {
         );
         mqtt_opts
             .set_keep_alive(Duration::from_secs(20))
-            .set_clean_start(false)
+            // clean session: discard any prior session state on connect and let it expire
+            // immediately on disconnect, so the broker never queues a backlog to replay.
+            // Gaps while disconnected are covered by a separate backup program.
+            .set_clean_start(true)
             .set_connection_timeout(3)
-            .set_session_expiry_interval(Some(u32::MAX))
+            .set_session_expiry_interval(Some(0))
             .set_topic_alias_max(Some(600));
 
         (
@@ -112,10 +115,14 @@ impl MqttProcessor {
     ) {
         // let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
+        // DIAGNOSTIC PROBE (disabled): sampled counter for how stale messages already are at
+        // the instant MQTT delivers them. Re-enable alongside the block below to measure
+        // reception age (e.g. when chasing broker-bridge lag).
+        // let mut recv_cnt = 0u64;
 
         debug!("Subscribing to siren");
         client
-            .subscribe("#", rumqttc::v5::mqttbytes::QoS::ExactlyOnce)
+            .subscribe("#", rumqttc::v5::mqttbytes::QoS::AtMostOnce)
             .await
             .expect("Could not subscribe to Siren");
 
@@ -133,6 +140,14 @@ impl MqttProcessor {
                         let (send_db, msg) = self.parse_msg(msg, &pool).await;
                         if let Some(msg) = msg {
                             latency_ringbuffer.enqueue(chrono::offset::Utc::now() - msg.timestamp);
+                            // DIAGNOSTIC PROBE (disabled): reception age at eventloop.poll().
+                            // recv_cnt += 1;
+                            // if recv_cnt % 1000 == 0 {
+                            //     debug!(
+                            //         "MQTT reception age sample: message is {} ms old at the moment eventloop.poll() delivered it (before channel/socket)",
+                            //         (chrono::offset::Utc::now() - msg.timestamp).num_milliseconds()
+                            //     );
+                            // }
                             if send_db {
                                 self.send_db_msg(msg.clone());
                             }

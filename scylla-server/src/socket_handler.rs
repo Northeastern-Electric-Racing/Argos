@@ -35,8 +35,17 @@ pub async fn socket_handler(
                 debug!("Shutting down socket handler!");
                 break;
             },
-            Ok(data) = data_channel.recv() => {
-                send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
+            res = data_channel.recv() => {
+                match res {
+                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!("Socket handler lagged behind, skipped {} messages!", n);
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        debug!("Socket data channel closed, shutting down socket handler!");
+                        break;
+                    }
+                }
             }
         }
     }
@@ -156,16 +165,41 @@ pub async fn socket_handler_with_metadata(
                 debug!("Shutting down socket handler!");
                 break;
             },
-            Ok(data) = data_channel.recv() => {
-                msg_cnt += 1;
-                send_socket_msg(
-                    &data,
-                    &mut upload_counter,
-                    &io,
-                    DATA_SOCKET_KEY,
-                ).await;
-                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+            res = data_channel.recv() => {
+                match res {
+                    Ok(data) => {
+                        msg_cnt += 1;
+                        // DIAGNOSTIC PROBE (disabled): sample 1/500 messages to localize lag --
+                        // emit() duration vs data age at emit. Re-enable when isolating socket
+                        // vs upstream latency.
+                        // let sample = msg_cnt % 500 == 0;
+                        // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
+                        // let emit_start = sample.then(tokio::time::Instant::now);
+                        send_socket_msg(
+                            &data,
+                            &mut upload_counter,
+                            &io,
+                            DATA_SOCKET_KEY,
+                        ).await;
+                        // if let (Some(age), Some(start)) = (age_ms, emit_start) {
+                        //     debug!(
+                        //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
+                        //         start.elapsed(),
+                        //         age,
+                        //         io.sockets().len()
+                        //     );
+                        // }
+                        handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                    }
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!("Socket handler lagged behind, skipped {} messages!", n);
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        debug!("Socket data channel closed, shutting down socket handler!");
+                        break;
+                    }
+                }
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -374,8 +408,7 @@ fn handle_socket_msg(
 
 /// Sends a message to the socket, printing and IGNORING any error that may occur
 /// * `client_data` - The client data to send over the broadcast
-/// * `upload_counter` - The counter of data that has been uploaded, for basic rate limiting
-/// * `upload-ratio` - The rate limit ratio
+/// * `upload_counter` - A rolling 0..100 position used to decide whether to keep this message
 /// * `io` - The socket to upload to
 /// * `socket_key` - The socket key to send to
 async fn send_socket_msg<T>(
@@ -386,7 +419,11 @@ async fn send_socket_msg<T>(
 ) where
     T: Serialize,
 {
-    *upload_counter = upload_counter.wrapping_add(1);
+    // `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
+    // 100 drops everything. Cycle the counter through 0..100 and keep the message only
+    // when its position is at or above the discard threshold, e.g. a value of 25 drops
+    // positions 0..24 (~25%) and keeps positions 25..99 (~75%).
+    *upload_counter = upload_counter.wrapping_add(1) % 100;
     if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
         match io
             .emit(

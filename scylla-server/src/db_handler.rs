@@ -186,8 +186,18 @@ impl DbHandler {
                     data_channel.send(self.data_queue).await.expect("Could not comm data to db thread, shutdown");
                     break;
                 },
-                Ok(msg) = self.receiver.recv() => {
-                    self.handle_msg(msg, &data_channel).await;
+                res = self.receiver.recv() => {
+                    match res {
+                        Ok(msg) => self.handle_msg(msg, &data_channel).await,
+                        Err(broadcast::error::RecvError::Lagged(n)) => {
+                            warn!("DB handler lagged behind, skipped {} messages!", n);
+                        }
+                        Err(broadcast::error::RecvError::Closed) => {
+                            debug!("DB data channel closed, flushing and shutting down DB handler!");
+                            data_channel.send(self.data_queue).await.expect("Could not comm data to db thread, shutdown");
+                            break;
+                        }
+                    }
                 }
                 _ = batch_interval.tick() => {
                     if !self.data_queue.is_empty() {
