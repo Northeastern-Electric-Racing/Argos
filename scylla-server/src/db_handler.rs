@@ -69,7 +69,7 @@ async fn send_batch_with_wedge_warn(
         tokio::select! {
             biased;
             res = &mut send_fut => return res,
-            _ = &mut wedge_at => {
+            () = &mut wedge_at => {
                 warn!(task, "mpsc send slow/wedged, downstream likely blocked");
                 wedge_at = Box::pin(tokio::time::sleep(Duration::from_secs(5)));
             }

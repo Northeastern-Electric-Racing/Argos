@@ -99,7 +99,7 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
     }
 }
 
-/// Cadence at which Argos/Message_Rate is recomputed and emitted.
+/// Cadence at which `Argos/Message_Rate` is recomputed and emitted.
 const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
 
 ///
@@ -289,7 +289,7 @@ pub async fn socket_handler_with_metadata(
                 // the existing Argos/Message_Rate Socket.io stream
                 argos_inserter.insert(ClientData {
                     name: "Argos/Message".to_string(),
-                    unit: "".to_string(),
+                    unit: String::new(),
                     run_id: crate::RUN_ID.load(Ordering::Relaxed),
                     timestamp: chrono::offset::Utc::now(),
                     values: vec![rate],
