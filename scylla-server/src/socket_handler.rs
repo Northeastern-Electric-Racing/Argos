@@ -13,8 +13,9 @@ use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
 use tokio::sync::{RwLock, broadcast};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 
+use crate::argos_inserter::ArgosInserter;
 use crate::metadata_structs::{
     DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData,
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
@@ -28,8 +29,13 @@ pub async fn socket_handler(
     mut data_channel: broadcast::Receiver<ClientData>,
     io: SocketIo,
 ) {
+    info!(task = "socket_handler", "starting");
     let mut upload_counter = 0u8;
+    let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+    let mut iter_count: u64 = 0;
+    let mut msgs_since_hb: u64 = 0;
     loop {
+        iter_count = iter_count.wrapping_add(1);
         tokio::select! {
             () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
@@ -46,6 +52,16 @@ pub async fn socket_handler(
                         break;
                     }
                 }
+            }
+            _ = heartbeat.tick() => {
+                info!(
+                    task = "socket_handler",
+                    iter = iter_count,
+                    data_channel_len = data_channel.len(),
+                    msgs_in_window = msgs_since_hb,
+                    "heartbeat"
+                );
+                msgs_since_hb = 0;
             }
         }
     }
@@ -83,6 +99,9 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
     }
 }
 
+/// Cadence at which Argos/Message_Rate is recomputed and emitted.
+const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
+
 ///
 /// # Panics
 /// Panics if Regex is invalid
@@ -90,8 +109,10 @@ pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
     rules_manager: Arc<RuleManager>,
+    argos_inserter: ArgosInserter,
     io: SocketIo,
 ) {
+    info!(task = "socket_handler_with_metadata", "starting");
     let mut upload_counter = 0u8;
 
     // BEGIN METADATA
@@ -100,7 +121,7 @@ pub async fn socket_handler_with_metadata(
     let mut view_interval = tokio::time::interval(Duration::from_millis(500));
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
-    let mut message_rate_interval = tokio::time::interval(Duration::from_secs(2));
+    let mut message_rate_interval = tokio::time::interval(MESSAGE_RATE_INTERVAL);
 
     // init timers
     let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
@@ -159,7 +180,12 @@ pub async fn socket_handler_with_metadata(
     let mut msg_cnt = 0u64;
     let mut last_instant = tokio::time::Instant::now();
 
+    let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
+    let mut iter_count: u64 = 0;
+    let mut msgs_since_hb: u64 = 0;
+
     loop {
+        iter_count = iter_count.wrapping_add(1);
         tokio::select! {
             () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
@@ -200,6 +226,16 @@ pub async fn socket_handler_with_metadata(
                         break;
                     }
                 }
+            }
+            _ = heartbeat.tick() => {
+                info!(
+                    task = "socket_handler_with_metadata",
+                    iter = iter_count,
+                    data_channel_len = data_channel.len(),
+                    msgs_in_window = msgs_since_hb,
+                    "heartbeat"
+                );
+                msgs_since_hb = 0;
             }
             _ = recent_faults_interval.tick() => {
                 send_socket_msg(
@@ -248,6 +284,16 @@ pub async fn socket_handler_with_metadata(
                         &io,
                         METADATA_SOCKET_KEY,
                     ).await;
+                // persist the same rate to the DB under a separate topic so it
+                // shows up in /datatypes and the Data table without affecting
+                // the existing Argos/Message_Rate Socket.io stream
+                argos_inserter.insert(ClientData {
+                    name: "Argos/Message".to_string(),
+                    unit: "".to_string(),
+                    run_id: crate::RUN_ID.load(Ordering::Relaxed),
+                    timestamp: chrono::offset::Utc::now(),
+                    values: vec![rate],
+                });
                 msg_cnt = 0;
                 last_instant = tokio::time::Instant::now();
             }

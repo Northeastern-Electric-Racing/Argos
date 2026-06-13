@@ -64,3 +64,18 @@ export const dataTypeNamePipe = (dataTypeName: string) => {
   const updatedName = updatedNameArray.join('-');
   return updatedName;
 };
+
+export const partitionDataTypesByName = (
+  dataTypes: DataType[],
+  names: string[]
+): { matched: DataType[]; unknown: string[] } => {
+  const known = new Map(dataTypes.map((dt) => [dt.name, dt]));
+  const matched: DataType[] = [];
+  const unknown: string[] = [];
+  for (const name of names) {
+    const dt = known.get(name);
+    if (dt) matched.push(dt);
+    else unknown.push(name);
+  }
+  return { matched, unknown };
+};

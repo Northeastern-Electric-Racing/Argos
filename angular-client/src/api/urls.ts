@@ -35,8 +35,8 @@ const updateVideos = () => `${getAllVideos()}/update`;
 const carCommandConfig = (key: string, values: number[]) =>
   `${baseURL}/config/set/${key}?${values.map((value) => `data=${value}`).join('&')}`;
 
-/* Rules */
-const getRulesByClientId = (clientId: string) => `${baseURL}/rules/${clientId}`;
+/* Rules — client id travels in the X-Client-Id header, not the path */
+const getRulesWithSubscriptionStatus = () => `${baseURL}/rules/subscription-status`;
 const addRule = () => `${baseURL}/rules/add`;
 const deleteRule = (ruleId: string) => `${baseURL}/rules/delete/${ruleId}`;
 const editRule = (ruleId: string) => `${baseURL}/rules/edit/${ruleId}`;
@@ -76,7 +76,7 @@ export const urls = {
 
   carCommandConfig,
 
-  getRulesByClientId,
+  getRulesWithSubscriptionStatus,
   addRule,
   deleteRule,
   editRule,

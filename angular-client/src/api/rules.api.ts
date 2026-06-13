@@ -21,19 +21,16 @@ export interface RulesResponse {
   client_rules: ClientRule[];
 }
 
-const basicAuthHeader = (clientId: string): string => 'Basic ' + btoa(`${clientId}:`);
+const clientIdHeader = (clientId: string): Record<string, string> => ({ 'X-Client-Id': clientId });
 
 export const getRulesByClientId = (clientId: string): Promise<Response> => {
-  return fetch(urls.getRulesByClientId(clientId));
+  return fetch(urls.getRulesWithSubscriptionStatus(), { headers: clientIdHeader(clientId) });
 };
 
 export const addRule = (clientId: string, rule: RulePayload): Promise<Response> => {
   return fetch(urls.addRule(), {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: basicAuthHeader(clientId)
-    },
+    headers: { 'Content-Type': 'application/json', ...clientIdHeader(clientId) },
     body: JSON.stringify(rule)
   });
 };
@@ -41,7 +38,7 @@ export const addRule = (clientId: string, rule: RulePayload): Promise<Response> 
 export const deleteRule = (clientId: string, ruleId: string): Promise<Response> => {
   return fetch(urls.deleteRule(ruleId), {
     method: 'POST',
-    headers: { Authorization: basicAuthHeader(clientId) }
+    headers: clientIdHeader(clientId)
   });
 };
 
@@ -53,23 +50,18 @@ export const editRule = (ruleId: string, rule: object): Promise<Response> => {
   });
 };
 
-export interface RuleSubscriptionRequest {
-  rule_ids: string[];
-  client_id: string;
-}
-
-export const subscribeToRules = (request: RuleSubscriptionRequest): Promise<Response> => {
+export const subscribeToRules = (clientId: string, ruleIds: string[]): Promise<Response> => {
   return fetch(urls.subscribeToRule(), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request)
+    headers: { 'Content-Type': 'application/json', ...clientIdHeader(clientId) },
+    body: JSON.stringify(ruleIds)
   });
 };
 
-export const unsubscribeFromRules = (request: RuleSubscriptionRequest): Promise<Response> => {
+export const unsubscribeFromRules = (clientId: string, ruleIds: string[]): Promise<Response> => {
   return fetch(urls.unsubscribeFromRule(), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request)
+    headers: { 'Content-Type': 'application/json', ...clientIdHeader(clientId) },
+    body: JSON.stringify(ruleIds)
   });
 };

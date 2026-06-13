@@ -2,7 +2,6 @@ version: "3.8"
 
 services:
   odyssey-db:
-    container_name: odyssey-db
     image: postgres:17.2
     restart: unless-stopped
     environment:
@@ -12,7 +11,7 @@ services:
       - "-c"
       - "shared_buffers=256MB"
     ports:
-      - 5432:5432 # Exposed for external access if needed
+      - ${ODYSSEY_DB_PORT:-5432}:5432 # Exposed for external access if needed
     expose:
       - 5432 # Allow inter-container communication
     volumes:
@@ -21,18 +20,18 @@ services:
     stop_grace_period: 2m
 
   scylla-server:
-    container_name: scylla-server
     image: ghcr.io/northeastern-electric-racing/argos-scylla:develop
     build:
       context: ../scylla-server
     restart: unless-stopped
     ports:
-      - 8000:8000
+      - ${SCYLLA_HOST_PORT:-8000}:${SCYLLA_HOST_PORT:-8000}
     depends_on:
       - odyssey-db
     environment:
       - DATABASE_URL=postgresql://postgres:password@odyssey-db:5432/postgres
       - RUST_LOG=warn,scylla_server=debug
+      - SCYLLA_PORT=${SCYLLA_HOST_PORT:-8000}
     cpu_shares: 1024
     stop_grace_period: 2m
     stop_signal: SIGINT

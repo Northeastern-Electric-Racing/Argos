@@ -1,11 +1,46 @@
 <div class="background">
-  <argos-button
-    [onClick]="clearSelections"
-    label="Clear Topics"
-    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-  />
+  <div class="presets-row">
+    <select-dropdown
+      class="preset-select"
+      [options]="presetSelectorConfig().options"
+      [placeholder]="presetSelectorConfig().placeholder"
+      [defaultValue]="activePresetName()"
+    />
+    <argos-button
+      [onClick]="openPresetsDialog"
+      label="Manage Presets"
+      size="sm"
+      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+    />
+  </div>
+  <div class="header-row">
+    <argos-button
+      [onClick]="clearSelections"
+      label="Clear Topics"
+      size="sm"
+      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+    />
+    <div class="toggle-group">
+      <label class="flatten-toggle">
+        <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
+        <p-toggleSwitch
+          [ngModel]="selectedOnly()"
+          (ngModelChange)="toggleSelectedOnly($event)"
+          ariaLabel="Show only selected topics"
+        />
+      </label>
+      <label class="flatten-toggle">
+        <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
+        <p-toggleSwitch
+          [ngModel]="flattenMode()"
+          (ngModelChange)="toggleFlattenMode($event)"
+          ariaLabel="Flatten topic tree"
+        />
+      </label>
+    </div>
+  </div>
   <p-tree
-    [value]="treeNodes"
+    [value]="activeNodes()"
     styleClass="w-full md:w-[30rem]"
     (onNodeSelect)="nodeSelect($event)"
     (onNodeUnselect)="onNodeUnselect($event)"
