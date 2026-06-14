@@ -1,0 +1,81 @@
+:host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.timer-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.hero-label {
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.hero-total {
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  font-size: 64px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.hero-divider {
+  width: 60%;
+  border-top: 1px solid var(--color-divider);
+  margin: 4px 0;
+}
+
+.hero-current-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  width: 80%;
+}
+
+.hero-current-time {
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-subtitle);
+  text-align: center;
+}
+
+.hero-current-delta {
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  text-align: right;
+}
+
+.delta-positive {
+  color: var(--color-battery-low);
+}
+.delta-negative {
+  color: var(--color-battery-high);
+}
+.delta-neutral {
+  color: var(--color-text-secondary);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}

@@ -1,0 +1,12 @@
+.page-grid {
+  margin: 0 16px;
+}
+
+.gauge-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}

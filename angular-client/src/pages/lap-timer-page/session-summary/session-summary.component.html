@@ -1,0 +1,35 @@
+<info-background title="Session" style="width: 100%; height: 100%">
+  <div class="session-summary">
+    <div class="session-laps-hero">{{ timer.lapCount() }}</div>
+    <div class="hero-label">LAPS</div>
+    <div class="summary-divider"></div>
+    <div class="stat-row">
+      <span class="stat-label">Best</span>
+      <span class="stat-value best-text">
+        @if (timer.bestLap(); as best) {
+          {{ formatLapMs(best.durationMs) }}
+        } @else {
+          —
+        }
+      </span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Avg</span>
+      <span class="stat-value">
+        @if (timer.lapCount() > 0) {
+          {{ formatLapMs(timer.averageLapTime()) }}
+        } @else {
+          —
+        }
+      </span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Energy</span>
+      <span class="stat-value">{{ timer.totalEnergyUsed() | number: '1.2-2' }}%</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Run</span>
+      <span class="stat-value">{{ timer.activeSession()?.runIdAtSessionStart ?? '—' }}</span>
+    </div>
+  </div>
+</info-background>
