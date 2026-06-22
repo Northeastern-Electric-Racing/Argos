@@ -104,7 +104,7 @@ export const gpsLocation = () => `TPU/GPS/Location`;
 
 // BMS Status / Pack
 export const packTemp = () => `BMS/Status/Temp_Average`;
-export const stateOfCharge = () => `BMS/Pack/SOC`;
+export const stateOfCharge = () => `BMS/Pack/SoC`;
 export const current = () => `BMS/Charging/Current`;
 // BMS/Pack no longer publishes CCL/DCL in the current bms.json; the CCL/DCL
 // values are now conveyed via BMS/Commands/Max_DC_{Brake_,}Current_Target

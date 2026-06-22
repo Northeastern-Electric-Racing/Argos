@@ -6,7 +6,7 @@
  * between bms.utils.ts and topic.utils.ts.
  */
 export const BMS_CONFIG = {
-  NUM_SEGMENTS: 5,
+  NUM_SEGMENTS: 4,
   ALPHA_VOLT_COUNT: 13,
   BETA_VOLT_COUNT: 13,
   ALPHA_THERM_COUNT: 7,
