@@ -1,8 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, HostListener, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { combineLatest, map } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { getCellChipLabel, getChipFromTopicValue, getConnectionDotStatusColor } from 'src/utils/bms.utils';
+import {
+  allSegments,
+  getCellChipLabel,
+  getChipFromTopicValue,
+  getConnectionDotStatusColor,
+  segmentInfoMap
+} from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { BatteryLevelIndicatorComponent } from '../../../../components/battery-level-indicator/battery-level-indicator.component';
 import { GlanceThermometerComponent } from '../../../../components/glance-thermometer/glance-thermometer.component';
@@ -26,9 +32,15 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
 export class BmsAtAGlanceComponent {
   private storage = inject(Storage);
 
-  protected packVoltage = toSignal(this.storage.get(topics.packVoltage()).pipe(map((v) => parseFloat(v.values[0]))));
+  protected packVoltage = toSignal(
+    combineLatest(allSegments.map((seg) => this.storage.get(segmentInfoMap[seg].totalVoltageKey))).pipe(
+      map((segments) => segments.reduce((sum, v) => sum + parseFloat(v.values[0]), 0))
+    )
+  );
   protected packTemp = toSignal(this.storage.get(topics.packTemp()).pipe(map((v) => parseInt(v.values[0]))));
-  protected chargeState = toSignal(this.storage.get(topics.stateOfCharge()).pipe(map((v) => parseInt(v.values[0]))));
+  // SoC is published as a 0–1 fraction, the battery indicator wants a 0–100 percent.
+  protected chargeState = toSignal(this.storage.get(topics.stateOfCharge()).pipe(map((v) => parseFloat(v.values[0]))));
+  protected chargeStatePercent = computed(() => (this.chargeState() ?? 0) * 100);
   protected ccl = toSignal(this.storage.get(topics.accCCL()).pipe(map((v) => parseInt(v.values[0]))));
   protected dcl = toSignal(this.storage.get(topics.accDCL()).pipe(map((v) => parseInt(v.values[0]))));
 
