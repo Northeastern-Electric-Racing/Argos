@@ -88,9 +88,7 @@ impl MqttProcessor {
             // Gaps while disconnected are covered by a separate backup program.
             .set_clean_start(true)
             .set_connection_timeout(3)
-            .set_session_expiry_interval(Some(0))
-            .set_topic_alias_max(Some(600));
-
+            .set_session_expiry_interval(Some(0));
         (
             MqttProcessor {
                 db_channel,
@@ -215,6 +213,12 @@ impl MqttProcessor {
         // ignore command messages, less confusing in logs than just failing to decode protobuf
         if topic.starts_with(CALYPSO_BIDIR_CMD_PREFIX) {
             debug!("Skipping command message: {}", topic);
+            return (false, None);
+        }
+
+        // ignore blank topics
+        if topic.is_empty() {
+            debug!("Skipping empty topic!");
             return (false, None);
         }
 

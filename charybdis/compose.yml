@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       - LOCAL_DATABASE_URL=postgresql://postgres:docker@192.168.100.11:5432/postgres
-      - CLOUD_DATABASE_URL=postgresql://postgres:docker@192.168.100.57:5432/penelope25a
+      - CLOUD_DATABASE_URL=postgresql://postgres:docker@server.finishlinebyner.com:59021/penelope25a
 
     volumes:
       - .:/app
@@ -19,6 +19,7 @@ services:
     tty: true  # Allows interactive shell
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    network_mode: host
 
   charybdis_local:
     container_name: charybdis_local
