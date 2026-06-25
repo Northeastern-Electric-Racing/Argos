@@ -32,9 +32,9 @@ Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — 
 
 The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
 
-## Research tickets
+## Planning tickets
 
-Research-heavy tickets — anything that needs a grill-with-docs / to-prd session before implementation — flow through the branch-based research pipeline: the session's artifacts are committed to a branch tied to the ticket and reviewed as a draft PR before implementation issues are broken out. See research-pipeline.md.
+Planning-heavy tickets — anything that needs a grill-with-docs / to-prd session before implementation — flow through the branch-based planning pipeline: the session's artifacts are committed to a branch tied to the ticket and reviewed as a draft PR before implementation issues are broken out. See planning-pipeline.md.
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 
