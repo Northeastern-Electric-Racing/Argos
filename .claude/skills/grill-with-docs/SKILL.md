@@ -87,6 +87,6 @@ If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](
 
 ## Planning pipeline
 
-When this session is part of Argos's planning pipeline (see docs/agents/planning-pipeline.md), it runs on a branch tied to a planning ticket. The CONTEXT.md edits and ADRs you create are committed to that branch and reviewed as a draft PR against develop before any implementation issues are broken out — not filed straight from chat. Keep capturing artifacts inline as decisions crystallise; the branch is where they durably land.
+By default this session runs through Argos's planning pipeline (see docs/agents/planning-pipeline.md): on a branch off develop, not develop itself. The CONTEXT.md edits and ADRs you create are committed to that branch and reviewed as a draft PR before any implementation issues are broken out — so the work is saved and recorded, not lost to chat or committed straight to develop. Keep capturing artifacts inline as decisions crystallise; the branch is where they durably land.
 
 </supporting-info>

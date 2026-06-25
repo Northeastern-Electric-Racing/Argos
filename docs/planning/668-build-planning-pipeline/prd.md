@@ -41,4 +41,4 @@ This slice is documentation and skill guidance — no automated tests. Verificat
 
 ## Further Notes
 
-The pipeline applies to planning-heavy work generally; the ai-workflow label is an orthogonal marker for the subset whose subject is the workflow itself.
+The pipeline is the default for planning a feature with grill-with-docs or to-prd, not a special case for big tickets; the ai-workflow label is an orthogonal marker for the subset whose subject is the workflow itself.

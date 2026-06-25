@@ -1,10 +1,10 @@
 # Planning pipeline
 
-How AI-authored work moves from an open question to implementation issues as reviewable git history, instead of an ephemeral chat session. It covers the whole planning step — research, terminology, ADRs, and PRD authoring — not just research. Decision and rationale: ADR 0003.
+The default way to plan a feature with grill-with-docs or to-prd. Instead of doing that work in an ephemeral chat — or committing it straight to develop — you do it on a branch, so the artifacts it produces (CONTEXT.md edits, ADRs, the PRD) are saved, recorded, reviewed, and testable before anything lands on develop. Decision and rationale: ADR 0003.
 
 ## When to use it
 
-Reach for the pipeline when the work needs planning before implementation — research, terminology decisions, or an architecture call — the kind of session that runs grill-with-docs and to-prd. Small, well-understood tickets don't need it; file them and go.
+Most of the time. Any session that runs grill-with-docs or to-prd to plan a feature goes through the pipeline — that is just what it means to plan on a branch rather than in chat. Skip it only for trivial, well-understood changes that need no planning session at all.
 
 ## Stages
 

@@ -50,7 +50,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow starts with `grill-with-docs` and proceeds `grill-with-docs → to-prd → to-issues → triage` — always open with the grilling session, don't jump straight to drafting issues. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`. Planning-heavy work runs through the branch-based planning pipeline: open a planning ticket and run `grill-with-docs` on a branch first, so its artifacts are committed and reviewed before issues spawn; see `docs/agents/planning-pipeline.md` (ADR 0003). The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
+Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow starts with `grill-with-docs` and proceeds `grill-with-docs → to-prd → to-issues → triage` — always open with the grilling session, don't jump straight to drafting issues. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`. By default, plan features through the branch-based planning pipeline: run `grill-with-docs`/`to-prd` on a branch off develop (not on develop itself), so their artifacts are saved, committed, and reviewed before issues spawn; see `docs/agents/planning-pipeline.md` (ADR 0003). The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
 
 ### Issue tracker
 
