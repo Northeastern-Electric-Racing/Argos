@@ -28,13 +28,13 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 | Difficulty | `straightforward`, `medium`, `difficult` |
 | Workflow | `ai-workflow` |
 
-Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — the skills, docs/agents, or the issue pipeline — rather than product code. It is orthogonal to the area labels (a ticket is about the workflow or about a product component, not both). Created via `gh label create`, like the triage roles.
+Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — the skills, docs/agents, or the issue pipeline — not product code. Orthogonal to the area labels (a ticket is about the workflow or a product component, not both). Created via `gh label create`, like the triage roles.
 
 The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
 
 ## Planning tickets
 
-Whenever you plan a feature with grill-with-docs or to-prd, do it through the branch-based planning pipeline: the session runs on a branch off develop, its artifacts are committed and reviewed as a draft PR, and implementation issues are broken out after merge — not filed straight from chat or committed to develop. This is the normal path, not a special case. See planning-pipeline.md.
+Plan features with grill-with-docs or to-prd through the branch-based planning pipeline: the session runs on a branch off develop, its artifacts are committed and reviewed as a draft PR, and implementation issues are broken out after merge — not filed from chat or committed to develop. The normal path, not a special case. See planning-pipeline.md.
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 

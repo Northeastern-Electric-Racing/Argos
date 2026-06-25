@@ -1,6 +1,6 @@
 # Branch-based planning pipeline for AI-authored issues
 
-The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produces its research, terminology decisions, ADRs, and PRD inside one ephemeral chat session, then files implementation issues directly from chat with no review gate. Argos moves that flow onto a branch: a planning ticket opens the work, the grilling session's artifacts (CONTEXT.md edits, ADRs, PRD) are committed to a branch tied to that ticket, and the branch is reviewed as a draft PR against develop before any implementation issues are spawned. Implementation issues are broken out after merge. A new ai-workflow label marks tickets whose subject is the AI dev workflow itself.
+The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produced its research, terminology, ADRs, and PRD inside one ephemeral chat session, then filed implementation issues from chat with no review gate. Argos moves that flow onto a branch: a planning ticket opens the work, the session's artifacts (CONTEXT.md edits, ADRs, PRD) are committed to the branch, and it's reviewed as a draft PR against develop before any issues spawn. Issues are broken out after merge. A new ai-workflow label marks tickets whose subject is the AI dev workflow itself.
 
 ## Considered Options
 

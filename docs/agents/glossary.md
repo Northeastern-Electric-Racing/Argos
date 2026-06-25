@@ -14,8 +14,8 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 
 **PRD (Product Requirements Document).** A feature spec. The `to-prd` skill writes one; `to-issues` then breaks it into tracer-bullet tickets.
 
-**Planning pipeline.** The default flow for planning a feature with grill-with-docs or to-prd: the session runs on a branch off develop and commits its artifacts (CONTEXT.md edits, ADRs, PRD) there, so they are saved and reviewable as a draft PR before implementation issues are broken out — rather than lost to chat or committed straight to develop. See planning-pipeline.md; ADR 0003 records the decision.
+**Planning pipeline.** The default flow for planning a feature with grill-with-docs or to-prd: the session runs on a branch off develop and commits its artifacts (CONTEXT.md edits, ADRs, PRD) there, reviewed as a draft PR before issues are broken out — not lost to chat or committed straight to develop. See planning-pipeline.md; ADR 0003 records the decision.
 
-**Planning ticket.** The entry-point ticket of the planning pipeline. It describes what is being researched or triaged — the question, not the answer — and names the branch the session runs on.
+**Planning ticket.** Entry point of the planning pipeline: a ticket stating what's being researched or triaged — the question, not the answer — that names the branch.
 
 **ai-workflow label.** Marks tickets whose subject is the AI dev workflow itself (the skills, docs/agents, the issue pipeline), as opposed to product code. See issue-tracker.md.
