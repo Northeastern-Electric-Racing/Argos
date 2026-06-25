@@ -13,3 +13,9 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 **Tracer-bullet issue / vertical slice.** A scoping pattern where each ticket cuts a thin slice through every layer it touches (database, API, UI, tests) end-to-end, instead of completing one layer at a time. Each slice stands on its own. The `to-issues` skill breaks plans into these.
 
 **PRD (Product Requirements Document).** A feature spec. The `to-prd` skill writes one; `to-issues` then breaks it into tracer-bullet tickets.
+
+**Research pipeline.** The branch-based flow that carries research-heavy work from an open question to implementation issues as reviewable git history: a research ticket opens the work, a grill-with-docs / to-prd session commits its artifacts (CONTEXT.md edits, ADRs, PRD) to a branch tied to that ticket, and the branch is reviewed as a draft PR before issues are broken out. See research-pipeline.md; ADR 0003 records the decision.
+
+**Research ticket.** The entry-point ticket of the research pipeline. It describes what is being researched or triaged — the question, not the answer — and names the branch the session runs on.
+
+**ai-workflow label.** Marks tickets whose subject is the AI dev workflow itself (the skills, docs/agents, the issue pipeline), as opposed to product code. See issue-tracker.md.

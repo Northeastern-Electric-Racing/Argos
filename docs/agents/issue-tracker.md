@@ -26,8 +26,15 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 | Area | `angular-client`, `scylla-server`, `DevOps` |
 | Type | `bug`, `new feature`, `feature enhancement`, `good first issue`, `epic` |
 | Difficulty | `straightforward`, `medium`, `difficult` |
+| Workflow | `ai-workflow` |
+
+Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — the skills, docs/agents, or the issue pipeline — rather than product code. It is orthogonal to the area labels (a ticket is about the workflow or about a product component, not both). Created via `gh label create`, like the triage roles.
 
 The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
+
+## Research tickets
+
+Research-heavy tickets — anything that needs a grill-with-docs / to-prd session before implementation — flow through the branch-based research pipeline: the session's artifacts are committed to a branch tied to the ticket and reviewed as a draft PR before implementation issues are broken out. See research-pipeline.md.
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 

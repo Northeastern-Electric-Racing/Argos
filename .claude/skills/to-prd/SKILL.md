@@ -17,7 +17,11 @@ A deep module (as opposed to a shallow module) is one which encapsulates a lot o
 
 Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
 
-3. Write the PRD using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
+3. Write the PRD using the template below.
+
+   **Pipeline mode** — when operating within the research pipeline (docs/agents/research-pipeline.md), you are on a branch tied to a research ticket. Write the PRD to docs/research/<ticket>/prd.md and commit it on the branch instead of filing it as an issue. It is reviewed in the branch's draft PR; implementation issues are broken out with `to-issues` after merge. <ticket> is the kebab-case branch name.
+
+   **Standalone mode** — otherwise, publish the PRD to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
 
 <prd-template>
 

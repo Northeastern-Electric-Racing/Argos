@@ -85,4 +85,8 @@ Only offer to create an ADR when all three are true:
 
 If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md).
 
+## Research pipeline
+
+When this session is part of Argos's research pipeline (see docs/agents/research-pipeline.md), it runs on a branch tied to a research ticket. The CONTEXT.md edits and ADRs you create are committed to that branch and reviewed as a draft PR against develop before any implementation issues are broken out — not filed straight from chat. Keep capturing artifacts inline as decisions crystallise; the branch is where they durably land.
+
 </supporting-info>
