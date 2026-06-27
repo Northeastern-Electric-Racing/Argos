@@ -123,25 +123,32 @@ class _GraphLiveState extends ConsumerState<GraphLive> {
     _subs[item.topic] = item.getStream().listen((
       final (List<double>, DateTime) point,
     ) {
-      bool addedSeries = false;
+      bool needsRelayout = false;
       for (int i = 0; i < point.$1.length; i++) {
         final String key = '${item.topic} $i';
         LiveGraphRenderInfo? ri = info[key];
         if (ri == null) {
           ri = LiveGraphRenderInfo(item, i, widget.liveGraphDur);
           info[key] = ri;
-          addedSeries = true;
+          needsRelayout = true; // brand-new series must be added to the chart
+        }
+        // The FIRST point for a series must also trigger a relayout: the axis
+        // range/association is computed on layout, and a series whose
+        // placeholder was laid out while empty would otherwise stay invisible
+        // (live updateDataSource alone does not rebind a named axis). This is
+        // why a single placeholder-backed topic needed a manual legend toggle.
+        if (ri.data.isEmpty) {
+          needsRelayout = true;
         }
         ri.addPoint(
           ChartData(point.$2, point.$1.elementAt(i)),
           widget.liveGraphDur,
         );
       }
-      // A new series appeared (a multi-value topic's extra indices): rebuild so
-      // it is added to the chart, then relayout so it binds to its axis. Once
-      // every series exists this path goes quiet and updates flow through the
-      // series controller alone.
-      if (addedSeries && mounted) {
+      // Rebuild so new series are added, then relayout so they bind to their
+      // axes. Once every series has data this path goes quiet and updates flow
+      // through the series controller alone.
+      if (needsRelayout && mounted) {
         setState(() {});
         _scheduleRelayout();
       }
