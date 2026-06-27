@@ -63,8 +63,9 @@ impl IntoResponse for ScyllaError {
             ),
             ScyllaError::InvalidSetting(reason) => (StatusCode::BAD_REQUEST, reason),
             ScyllaError::HttpError(code, reason) => (code, reason),
-            ScyllaError::FileError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
-            ScyllaError::MqttError(reason) => (StatusCode::INTERNAL_SERVER_ERROR, reason),
+            ScyllaError::FileError(reason) | ScyllaError::MqttError(reason) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, reason)
+            }
             ScyllaError::RuleError(err_type) => match err_type {
                 RuleManagerError::NoMatchingRule => {
                     (StatusCode::NOT_FOUND, "No rule found".to_owned())

@@ -5,6 +5,15 @@ edition = "2024"
 rust-version = "1.88"
 default-run = "scylla-server"
 
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+cast_possible_truncation = "allow"
+too_many_lines = "allow"
+cast_precision_loss = "allow"
+cast_sign_loss = "allow"
+unused-async = "allow" # cant handle axum callbacks
+missing-errors-doc = "allow"
+
 [dependencies]
 diesel = { version = "2.2.12", features = ["postgres", "chrono"] }
 dotenvy = "0.15"
