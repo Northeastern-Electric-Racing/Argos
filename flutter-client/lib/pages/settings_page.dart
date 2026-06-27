@@ -78,13 +78,7 @@ class _SettingRow extends StatelessWidget {
                   ],
                 );
               }
-              return Row(
-                children: <Widget>[
-                  titleRow,
-                  const Spacer(),
-                  control,
-                ],
-              );
+              return Row(children: <Widget>[titleRow, const Spacer(), control]);
             },
       ),
     );
