@@ -36,6 +36,61 @@ class Settings extends StatelessWidget {
   );
 }
 
+/// A settings row that vertically centers an icon + title against a trailing
+/// [control] when there is room, and stacks them (control below, right-aligned)
+/// on narrow screens so wide controls do not overflow horizontally.
+class _SettingRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Widget control;
+  const _SettingRow({
+    required this.icon,
+    required this.title,
+    required this.control,
+  });
+
+  @override
+  Widget build(final BuildContext context) {
+    final Widget titleRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon),
+        const SizedBox(width: 16.0),
+        Flexible(
+          child: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        ),
+      ],
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: LayoutBuilder(
+        builder:
+            (final BuildContext context, final BoxConstraints constraints) {
+              // Stack on narrow (mobile) widths so wide controls do not
+              // overflow; keep inline centered layout on larger screens.
+              if (constraints.maxWidth < 450) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    titleRow,
+                    const SizedBox(height: 8.0),
+                    Align(alignment: Alignment.centerRight, child: control),
+                  ],
+                );
+              }
+              return Row(
+                children: <Widget>[
+                  titleRow,
+                  const Spacer(),
+                  control,
+                ],
+              );
+            },
+      ),
+    );
+  }
+}
+
 /// Light / Dark / System theme mode picker.
 class ThemeModeSelector extends ConsumerWidget {
   const ThemeModeSelector({super.key});
@@ -45,44 +100,37 @@ class ThemeModeSelector extends ConsumerWidget {
     final ThemeMode mode = ref.watch(
       themeSettingsManagerProvider.select((final ThemeSettings it) => it.mode),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: <Widget>[
-          const Icon(Icons.brightness_6),
-          const SizedBox(width: 16.0),
-          Text('Theme mode', style: Theme.of(context).textTheme.bodyLarge),
-          const Spacer(),
-          SegmentedButton<ThemeMode>(
-            showSelectedIcon: false,
-            segments: const <ButtonSegment<ThemeMode>>[
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.light,
-                icon: Icon(Icons.light_mode),
-                label: Text('Light'),
-                tooltip: 'Always use the light theme',
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.dark,
-                icon: Icon(Icons.dark_mode),
-                label: Text('Dark'),
-                tooltip: 'Always use the dark theme',
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.system,
-                icon: Icon(Icons.brightness_auto),
-                label: Text('System'),
-                tooltip: 'Follow the device system light/dark setting',
-              ),
-            ],
-            selected: <ThemeMode>{mode},
-            onSelectionChanged: (final Set<ThemeMode> selected) async {
-              await ref
-                  .read(themeSettingsManagerProvider.notifier)
-                  .setMode(selected.first);
-            },
+    return _SettingRow(
+      icon: Icons.brightness_6,
+      title: 'Theme mode',
+      control: SegmentedButton<ThemeMode>(
+        showSelectedIcon: false,
+        segments: const <ButtonSegment<ThemeMode>>[
+          ButtonSegment<ThemeMode>(
+            value: ThemeMode.light,
+            icon: Icon(Icons.light_mode),
+            label: Text('Light'),
+            tooltip: 'Always use the light theme',
+          ),
+          ButtonSegment<ThemeMode>(
+            value: ThemeMode.dark,
+            icon: Icon(Icons.dark_mode),
+            label: Text('Dark'),
+            tooltip: 'Always use the dark theme',
+          ),
+          ButtonSegment<ThemeMode>(
+            value: ThemeMode.system,
+            icon: Icon(Icons.brightness_auto),
+            label: Text('System'),
+            tooltip: 'Follow the device system light/dark setting',
           ),
         ],
+        selected: <ThemeMode>{mode},
+        onSelectionChanged: (final Set<ThemeMode> selected) async {
+          await ref
+              .read(themeSettingsManagerProvider.notifier)
+              .setMode(selected.first);
+        },
       ),
     );
   }
@@ -101,40 +149,31 @@ class ThemeSeedSelector extends ConsumerWidget {
           ),
         )
         .toARGB32();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: <Widget>[
-          const Icon(Icons.palette),
-          const SizedBox(width: 16.0),
-          Text('Theme color', style: Theme.of(context).textTheme.bodyLarge),
-          const SizedBox(width: 16.0),
-          Expanded(
-            child: Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 12.0,
-              runSpacing: 12.0,
-              children: THEME_SEED_PRESETS.map((final int preset) {
-                final bool isSelected = preset == seed;
-                return InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () async {
-                    await ref
-                        .read(themeSettingsManagerProvider.notifier)
-                        .setSeed(Color(preset));
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Color(preset),
-                    radius: 18.0,
-                    child: isSelected
-                        ? const Icon(Icons.check, color: Colors.white)
-                        : null,
-                  ),
-                );
-              }).toList(),
+    return _SettingRow(
+      icon: Icons.palette,
+      title: 'Theme color',
+      control: Wrap(
+        alignment: WrapAlignment.end,
+        spacing: 12.0,
+        runSpacing: 12.0,
+        children: THEME_SEED_PRESETS.map((final int preset) {
+          final bool isSelected = preset == seed;
+          return InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () async {
+              await ref
+                  .read(themeSettingsManagerProvider.notifier)
+                  .setSeed(Color(preset));
+            },
+            child: CircleAvatar(
+              backgroundColor: Color(preset),
+              radius: 18.0,
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.white)
+                  : null,
             ),
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }

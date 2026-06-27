@@ -7,9 +7,9 @@ on:
       - develop
       - main
       - argos2
-  paths:
-    - 'flutter-client/**'
-    - '.github/workflows/client-flutter-build.yml'
+    paths:
+      - 'flutter-client/**'
+      - '.github/workflows/client-flutter-build.yml'
 
 jobs:
   build:
