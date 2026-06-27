@@ -1,0 +1,33 @@
+name: Flutter Format Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  format-verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./flutter-client
+
+    steps:
+      # Step 1: Fetch repository files
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Initialize Flutter environment
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Step 3: Fetch project dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # Step 4: Validate formatting across the project
+      - name: Check Formatting
+        run: dart format --set-exit-if-changed .
