@@ -55,6 +55,8 @@ For each approved slice, publish a new issue to the issue tracker. Use the issue
 
 Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
 
+When breaking out a planning-pipeline PRD (docs/planning/<ticket>/prd.md), set the Parent of every spawned issue to the planning ticket the branch is named for, even though the immediate source is the PRD file, so the issues link back to it.
+
 <issue-template>
 ## Parent
 

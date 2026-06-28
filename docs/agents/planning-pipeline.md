@@ -8,16 +8,16 @@ Most of the time — any grill-with-docs or to-prd session for planning a featur
 
 ## Stages
 
-1. **Planning ticket.** A lightweight ticket stating what's being researched or triaged — the question, not the answer. It's the entry point and names the branch. Apply the ai-workflow label if its subject is the AI dev workflow itself (the skills, docs/agents, the issue pipeline); otherwise label by product area.
+1. **Planning ticket.** A lightweight ticket stating what's being researched or triaged — the question, not the answer. It's the entry point and names the branch. Title it as a normal imperative with no special prefix (e.g. "Build grill-with-docs into a planning pipeline"), the same as any other ticket. Apply the ai-workflow label if its subject is the AI dev workflow itself (the skills, docs/agents, the issue pipeline); otherwise label by product area.
 
 2. **Planning session on a branch.** Branch from develop as {issue}-{kebab-title}; run grill-with-docs (and to-prd) against the ticket. Commit every artifact to the branch:
    - CONTEXT.md edits at the repo root (glossary).
    - New ADRs in docs/adr/.
    - The PRD in docs/planning/<ticket>/prd.md, plus any planning notes in the same folder.
 
-3. **Push + review.** Push, open a draft PR against develop. Humans review the artifacts in the diff before any issues are broken out.
+3. **Push + review.** Push and open a draft PR against develop; reference the planning ticket in the PR body with "Closes #<planning-ticket>" so merging the reviewed plan closes it automatically. Humans review the artifacts in the diff before any issues are broken out.
 
-4. **Merge to implementation issues.** On merge, break the PRD into tracer-bullet issues with to-issues, linked back to the planning ticket. Manual after merge today; auto-creation on merge is a planned follow-up (keyed off the committed PRD path).
+4. **Merge to implementation issues.** On merge, break the PRD into tracer-bullet issues with to-issues, setting each issue's Parent to the planning ticket so they link back to it (the merge closes that ticket, but a closed issue is still a valid Parent reference). Manual after merge today; auto-creation on merge is a planned follow-up (keyed off the committed PRD path).
 
 ## Where artifacts live
 
@@ -27,7 +27,9 @@ Most of the time — any grill-with-docs or to-prd session for planning a featur
 | ADRs | docs/adr/ (see domain.md for the naming convention) |
 | Glossary updates | CONTEXT.md (root) |
 
-<ticket> is the kebab-case branch name, e.g. docs/planning/668-build-planning-pipeline/.
+<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/.
+
+Planning artifacts are retained in-repo as durable history; they are not pruned after issues are created (stage-4 automation keys off the committed PRD path).
 
 ## Conventions
 

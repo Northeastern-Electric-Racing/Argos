@@ -19,7 +19,7 @@ Check with the user that these modules match their expectations. Check with the 
 
 3. Write the PRD using the template below.
 
-   By default, work through the planning pipeline (docs/agents/planning-pipeline.md): on a branch off develop, write the PRD to docs/planning/<ticket>/prd.md and commit it — reviewed in a draft PR, then broken into issues with `to-issues` after merge. <ticket> is the kebab-case branch name.
+   By default, work through the planning pipeline (docs/agents/planning-pipeline.md): on a branch off develop, write the PRD to docs/planning/<ticket>/prd.md and commit it — reviewed in a draft PR, then broken into issues with `to-issues` after merge. <ticket> is the planning ticket's number and kebab-title, the same as the branch name.
 
    For a quick one-off not planned on a branch, publish the PRD straight to the issue tracker instead, applying the `ready-for-agent` triage label.
 

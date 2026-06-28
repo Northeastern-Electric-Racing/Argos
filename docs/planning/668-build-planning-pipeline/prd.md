@@ -37,7 +37,6 @@ This slice is documentation and skill guidance — no automated tests. Verificat
 ## Out of Scope
 
 - Stage 4 automation: auto-creating implementation issues on merge (a GitHub Action or merge hook running to-issues, keyed off the PRD path). Tracked as a separate follow-up PR. Until then, to-issues is run manually after merge.
-- Creating the ai-workflow label in the tracker (run via gh label create when access allows).
 
 ## Further Notes
 
