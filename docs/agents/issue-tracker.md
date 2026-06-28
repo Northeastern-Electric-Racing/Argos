@@ -32,13 +32,13 @@ Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — 
 
 The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
 
-## Planning tickets
-
-Plan features with grill-with-docs or to-prd through the branch-based planning pipeline: the session runs on a branch off develop, its artifacts are committed and reviewed as a draft PR, and implementation issues are broken out after merge — not filed from chat or committed to develop. The normal path, not a special case. See planning-pipeline.md.
-
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 
 **Assignment:** pass `--assignee @me` by default. This repo self-assigns issues.
+
+## Planning tickets
+
+Plan features with grill-with-docs or to-prd through the branch-based planning pipeline: the session runs on a branch off develop, its artifacts are committed and reviewed as a draft PR, and implementation issues are broken out after merge — not filed from chat or committed to develop. The normal path, not a special case. See planning-pipeline.md.
 
 ## When a skill says "publish to the issue tracker"
 
