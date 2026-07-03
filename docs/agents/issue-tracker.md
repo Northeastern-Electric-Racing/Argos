@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`; use the `gh` CLI for all operations. PRDs live on a branch under docs/planning/ by default (see planning-pipeline.md) — only quick one-off PRDs are filed as issues.
+Issues and PRDs for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`; use the `gh` CLI for all operations. The planning pipeline stages a PRD as a temporary file on a branch for review before it graduates to an issue; see planning-pipeline.md.
 
 ## Conventions
 

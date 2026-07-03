@@ -17,10 +17,10 @@ The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produced i
 
 ## Consequences
 
-- PRDs and planning notes live in docs/planning/<ticket>/; ADRs still go in docs/adr/, and CONTEXT.md stays at the repo root.
-- to-prd gains a pipeline mode: write the PRD to docs/planning/<ticket>/ and commit it on the branch, rather than only filing an issue from chat. Standalone mode (no planning branch) still publishes to the tracker.
+- A PRD's home stays a GitHub issue. The pipeline only stages it as a temporary file in docs/planning/<ticket>/ so the plan is reviewable in the PR diff; on graduation it is published as an issue, broken into implementation tickets, and the file is deleted. ADRs (docs/adr/) and CONTEXT.md edits are real docs and persist.
+- to-prd gains a pipeline mode: stage the PRD as docs/planning/<ticket>/prd.md on the branch for review. Standalone mode (no planning branch) publishes straight to the tracker.
 - grill-with-docs's CONTEXT.md and ADR edits are committed to the planning branch and reviewed in the draft PR.
-- Stage 4 (auto-create implementation issues on merge) is not built here — to-issues is still run manually after merge. Tracked as a follow-up.
+- Stage 4 (graduate on merge: publish the PRD issue, create implementation tickets, delete the file) is not built here — done manually after merge. Tracked as a follow-up.
 - The ai-workflow label is created via gh label create and documented in docs/agents/issue-tracker.md.
 
 See docs/agents/planning-pipeline.md for the operative stages and conventions.

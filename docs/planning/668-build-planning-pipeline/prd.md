@@ -8,7 +8,7 @@ As a maintainer running the AI issue-authoring flow (grill-with-docs to-prd to-i
 
 ## Solution
 
-Move the planning flow onto a branch gated by PR review. A planning ticket opens the work and names the branch. The planning session commits its artifacts — CONTEXT.md edits, ADRs, and the PRD — to that branch. The branch is pushed and reviewed as a draft PR against develop. Only after merge are implementation issues broken out. A new ai-workflow label marks tickets about the workflow itself.
+Move the planning flow onto a branch gated by PR review. A planning ticket opens the work and names the branch. The planning session commits its persistent artifacts — CONTEXT.md edits and ADRs — to that branch, and stages the PRD there as a temporary file. The branch is pushed and reviewed as a draft PR against develop. After merge the PRD graduates: published as a GitHub issue, broken into implementation tickets, and the file deleted. A new ai-workflow label marks tickets about the workflow itself.
 
 ## User Stories
 
@@ -22,9 +22,9 @@ Move the planning flow onto a branch gated by PR review. A planning ticket opens
 
 ## Implementation Decisions
 
-- Planning artifacts (PRD + notes) live in docs/planning/<ticket>/. ADRs stay in docs/adr/; CONTEXT.md stays at the root.
+- A PRD's home is a GitHub issue. It's staged as a temporary file in docs/planning/<ticket>/ only for PR review, then graduates to an issue on merge and the file is deleted. ADRs (docs/adr/) and CONTEXT.md edits persist.
 - Branch naming reuses the existing {issue}-{kebab-title} convention — no new namespace.
-- to-prd gains a pipeline mode (commit PRD to the branch) alongside its existing standalone mode (file an issue).
+- to-prd gains a pipeline mode (stage the PRD file for review) alongside its standalone mode (publish straight to the tracker).
 - grill-with-docs documents that, in pipeline mode, its edits are committed to the branch and reviewed in the PR.
 - ai-workflow is a workflow-group label, orthogonal to area labels, created via gh label create.
 - The decision is recorded in ADR 0003 (misc-planning-pipeline); operative mechanics live in docs/agents/planning-pipeline.md.
@@ -36,7 +36,7 @@ This slice is documentation and skill guidance — no automated tests. Verificat
 
 ## Out of Scope
 
-- Stage 4 automation: auto-creating implementation issues on merge (a GitHub Action or merge hook running to-issues, keyed off the PRD path). Tracked as a separate follow-up PR. Until then, to-issues is run manually after merge.
+- Stage 4 automation: graduating on merge (publish the PRD issue, create implementation tickets, delete the file) via a GitHub Action or merge hook keyed off the PRD path. Tracked as a separate follow-up PR. Until then, graduation is done manually after merge.
 
 ## Further Notes
 

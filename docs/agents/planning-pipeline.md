@@ -17,19 +17,19 @@ Most of the time — any grill-with-docs or to-prd session for planning a featur
 
 3. **Push + review.** Push and open a draft PR against develop; reference the planning ticket in the PR body with "Closes #<planning-ticket>" so merging the reviewed plan closes it automatically. Humans review the artifacts in the diff before any issues are broken out.
 
-4. **Merge to implementation issues.** On merge, break the PRD into tracer-bullet issues with to-issues, setting each issue's Parent to the planning ticket so they link back to it (the merge closes that ticket, but a closed issue is still a valid Parent reference). Manual after merge today; auto-creation on merge is a planned follow-up (keyed off the committed PRD path).
+4. **Merge, then graduate.** On merge the PRD file lands in develop. Graduating it publishes the PRD as a GitHub issue and breaks it into tracer-bullet implementation tickets with to-issues, each issue's Parent set to the planning ticket so they link back (the merge closes that ticket, but a closed issue is still a valid Parent). Then delete docs/planning/<ticket>/prd.md — the PRD's home is the tracker, not docs. Manual after merge today; auto-graduation on merge is a planned follow-up (keyed off the committed PRD path).
 
 ## Where artifacts live
 
-| Artifact | Location |
-| --- | --- |
-| PRD + planning notes | docs/planning/<ticket>/ |
-| ADRs | docs/adr/ (see domain.md for the naming convention) |
-| Glossary updates | CONTEXT.md (root) |
+| Artifact | Location | Lifetime |
+| --- | --- | --- |
+| PRD + planning notes | docs/planning/<ticket>/ | temporary |
+| ADRs | docs/adr/ (see domain.md for the naming convention) | persist |
+| Glossary updates | CONTEXT.md (root) | persist |
 
-<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/. The branch is deleted on merge, but the folder persists.
+<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/.
 
-Planning artifacts are retained in-repo as durable history; they are not pruned after issues are created (stage-4 automation keys off the committed PRD path).
+The PRD file is a temporary home. It merges into develop as the record of what was reviewed, then graduation (stage 4) publishes the PRD as a GitHub issue, breaks it into implementation tickets, and deletes the file — the PRD's durable home is the tracker, not docs. The ADRs and CONTEXT.md edits are real docs and persist as normal.
 
 ## Conventions
 
