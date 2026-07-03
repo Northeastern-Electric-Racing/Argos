@@ -4,8 +4,9 @@ One folder per planning ticket, named for its branch (`<issue>-<kebab-title>`). 
 
 ```
 docs/planning/
-└── 668-build-planning-pipeline/
-    └── prd.md
+└── <issue>-<kebab-title>/        # created during a planning session, deleted in phase 3
+    ├── prd.md
+    └── issues/                   # drafted implementation tickets (phase 2)
 ```
 
 ADRs do not live here — they go in docs/adr/. Glossary updates go in the root CONTEXT.md. See docs/agents/planning-pipeline.md for the full flow and ADR 0003 for the decision.
