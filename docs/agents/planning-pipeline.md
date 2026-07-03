@@ -27,7 +27,7 @@ Most of the time — any grill-with-docs or to-prd session for planning a featur
 | ADRs | docs/adr/ (see domain.md for the naming convention) |
 | Glossary updates | CONTEXT.md (root) |
 
-<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/.
+<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/. The branch is deleted on merge, but the folder persists.
 
 Planning artifacts are retained in-repo as durable history; they are not pruned after issues are created (stage-4 automation keys off the committed PRD path).
 

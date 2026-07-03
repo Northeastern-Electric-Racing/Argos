@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and PRDs for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`. Use the `gh` CLI for all operations.
+Issues for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`; use the `gh` CLI for all operations. PRDs live on a branch under docs/planning/ by default (see planning-pipeline.md) — only quick one-off PRDs are filed as issues.
 
 ## Conventions
 
@@ -28,7 +28,7 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 | Difficulty | `straightforward`, `medium`, `difficult` |
 | Workflow | `ai-workflow` |
 
-Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — the skills, docs/agents, or the issue pipeline — not product code. Orthogonal to the area labels (a ticket is about the workflow or a product component, not both). Created via `gh label create`, like the triage roles.
+Apply `ai-workflow` when the ticket's subject is the AI dev workflow itself — the skills, docs/agents, or the issue pipeline — not product code. It replaces the area label (a ticket is about the workflow or a product component, not both) but still takes a type and difficulty label where they fit. Created via `gh label create`, like the triage roles.
 
 The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
 

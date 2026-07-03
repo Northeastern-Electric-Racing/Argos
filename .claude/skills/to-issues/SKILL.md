@@ -15,6 +15,8 @@ Issue tracker conventions live in `docs/agents/issue-tracker.md`; the triage lab
 
 Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
 
+In the planning pipeline (docs/agents/planning-pipeline.md) you run after the PRD merges, so read the merged PRD at docs/planning/<ticket>/prd.md — reference that folder, not the planning branch, which is deleted on merge.
+
 ### 2. Explore the codebase (optional)
 
 If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
