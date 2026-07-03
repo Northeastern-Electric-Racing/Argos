@@ -1,39 +1,46 @@
 # Planning pipeline
 
-The default way to plan a feature with grill-with-docs or to-prd: do it on a branch, not in chat or straight on develop, so its artifacts (CONTEXT.md edits, ADRs, the PRD) are saved, reviewed, and testable before anything lands on develop. Decision and rationale: ADR 0003.
+The default way to plan a feature: grill on a branch, review the plan, then create the tickets — as reviewable git history and GitHub issues, not an ephemeral chat session. Decision and rationale: ADR 0003.
 
 ## When to use it
 
 Most of the time — any grill-with-docs or to-prd session for planning a feature. Skip only for trivial changes that need no planning session.
 
-## Stages
+## Hierarchy
 
-1. **Planning ticket.** A lightweight ticket stating what's being researched or triaged — the question, not the answer. It's the entry point and names the branch. Title it as a normal imperative with no special prefix (e.g. "Build grill-with-docs into a planning pipeline"), the same as any other ticket. Apply the ai-workflow label if its subject is the AI dev workflow itself (the skills, docs/agents, the issue pipeline); otherwise label by product area.
+- **Planning ticket** — the idea/question. Entry point; names the branch.
+- **PRD** — the plan, published as an epic issue that links up to the planning ticket. Parent of the implementation tickets.
+- **Implementation tickets** — tracer-bullet slices; each has Parent = the PRD, not the planning ticket.
 
-2. **Planning session on a branch.** Branch from develop as {issue}-{kebab-title}; run grill-with-docs (and to-prd) against the ticket. Commit every artifact to the branch:
-   - CONTEXT.md edits at the repo root (glossary).
-   - New ADRs in docs/adr/.
-   - The PRD in docs/planning/<ticket>/prd.md, plus any planning notes in the same folder.
+Only the PRD links to the planning ticket; everything else hangs off the PRD.
 
-3. **Push + review.** Push and open a draft PR against develop; reference the planning ticket in the PR body with "Closes #<planning-ticket>" so merging the reviewed plan closes it automatically. Humans review the artifacts in the diff before any issues are broken out.
+## Phases
 
-4. **Merge, then graduate.** On merge the PRD file lands in develop. Graduating it publishes the PRD as a GitHub issue and breaks it into tracer-bullet implementation tickets with to-issues, each issue's Parent set to the planning ticket so they link back (the merge closes that ticket, but a closed issue is still a valid Parent). Then delete docs/planning/<ticket>/prd.md — the PRD's home is the tracker, not docs. Manual after merge today; auto-graduation on merge is a planned follow-up (keyed off the committed PRD path).
+Each phase is its own PR against develop, on a branch reused per phase (recreate {issue}-{kebab-title} off develop after each merge). "Under X" means the PR references issue X.
+
+1. **PRD — PR under the planning ticket.** Run grill-with-docs (CONTEXT.md + ADR edits) and to-prd (PRD saved to docs/planning/<ticket>/prd.md). Review the plan in the draft PR. Once it's approved and merged, publish the PRD as an epic issue (to-prd) linked to the planning ticket.
+
+2. **Issues — PR under the PRD.** Draft the implementation tickets as local files under docs/planning/<ticket>/ with to-issues. Review them in the draft PR. Once merged, create the child issues (to-issues) with Parent = the PRD.
+
+3. **Cleanup — PR under the PRD.** Delete the temporary planning files (PRD + issue drafts); the epic and its child issues are now the durable home.
+
+Creating the issues is a manual skill step at each phase (to-prd for the epic, to-issues for the children) — there is no merge automation, and the planning ticket is not reopened.
 
 ## Where artifacts live
 
 | Artifact | Location | Lifetime |
 | --- | --- | --- |
-| PRD + planning notes | docs/planning/<ticket>/ | temporary |
+| PRD + issue drafts + notes | docs/planning/<ticket>/ | temporary (deleted in phase 3) |
 | ADRs | docs/adr/ (see domain.md for the naming convention) | persist |
 | Glossary updates | CONTEXT.md (root) | persist |
 
 <ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/.
 
-The PRD file is a temporary home. It merges into develop as the record of what was reviewed, then graduation (stage 4) publishes the PRD as a GitHub issue, breaks it into implementation tickets, and deletes the file — the PRD's durable home is the tracker, not docs. The ADRs and CONTEXT.md edits are real docs and persist as normal.
+The planning files are temporary — they exist so the plan and the drafted tickets are reviewable in the diff, and are deleted in phase 3 once the epic and child issues exist on the tracker. The ADRs and CONTEXT.md edits are real docs and persist.
 
 ## Conventions
 
-- **Branch:** {issue}-{kebab-title}, same as feature branches — no separate namespace.
+- **Branch:** {issue}-{kebab-title}, recreated off develop for each phase — no separate namespace.
 - **PR:** draft, against develop, per the repo PR convention.
 - **ai-workflow label:** marks tickets whose subject is the AI dev workflow itself, distinct from the product area labels. See issue-tracker.md for the palette.
 

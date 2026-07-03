@@ -12,15 +12,16 @@ The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produced i
 
 - Planning artifacts become reviewable git history. The PRD and any ADRs land in a PR diff teammates can comment on before the work fans out into issues.
 - A planning ticket gives the branch a tracked entry point, consistent with the existing {issue}-{kebab-title} branch convention — no new branch namespace to learn.
-- Decoupling issue creation from the chat session is what makes stage-4 automation possible later: implementation issues can be generated from the merged PRD, keyed off its committed file path.
+- Reviewing the plan before it fans out means the tickets that get created reflect an approved PRD, not a chat draft nobody signed off on.
 - The ai-workflow label gives meta-work (changes to the skills and docs/agents themselves) a first-class category, instead of mis-filing it under a product area label.
 
 ## Consequences
 
-- A PRD's home stays a GitHub issue. The pipeline only stages it as a temporary file in docs/planning/<ticket>/ so the plan is reviewable in the PR diff; on graduation it is published as an issue, broken into implementation tickets, and the file is deleted. ADRs (docs/adr/) and CONTEXT.md edits are real docs and persist.
-- to-prd gains a pipeline mode: stage the PRD as docs/planning/<ticket>/prd.md on the branch for review. Standalone mode (no planning branch) publishes straight to the tracker.
-- grill-with-docs's CONTEXT.md and ADR edits are committed to the planning branch and reviewed in the draft PR.
-- Stage 4 (graduate on merge: publish the PRD issue, create implementation tickets, delete the file) is not built here — done manually after merge. Tracked as a follow-up.
+- Hierarchy: planning ticket → PRD (published as an epic issue that links to the planning ticket) → implementation tickets (Parent = the PRD). Only the PRD links to the planning ticket; the sub-tickets hang off the PRD.
+- Three phases, each its own PR on a branch reused off develop: (1) PRD file, PR under the planning ticket; (2) implementation tickets drafted as local files, PR under the PRD; (3) delete the temporary files, PR under the PRD.
+- Planning files (PRD + issue drafts) in docs/planning/<ticket>/ are temporary — they exist for PR review and are deleted in phase 3, once the epic and child issues exist. ADRs (docs/adr/) and CONTEXT.md edits are real docs and persist.
+- to-prd gains a pipeline mode: stage the PRD as docs/planning/<ticket>/prd.md for review. to-issues drafts the sub-tickets as local files with Parent = the PRD. Standalone mode still publishes straight to the tracker.
+- Issue creation is a manual skill step at each phase (to-prd publishes the epic, to-issues the children). No merge automation, and the planning ticket is not reopened — phase 1 runs under the planning ticket, phases 2 and 3 under the PRD.
 - The ai-workflow label is created via gh label create and documented in docs/agents/issue-tracker.md.
 
 See docs/agents/planning-pipeline.md for the operative stages and conventions.

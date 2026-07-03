@@ -15,7 +15,7 @@ Issue tracker conventions live in `docs/agents/issue-tracker.md`; the triage lab
 
 Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
 
-In the planning pipeline (docs/agents/planning-pipeline.md) you run after the PRD merges, so read the merged PRD at docs/planning/<ticket>/prd.md — reference that folder, not the planning branch, which is deleted on merge.
+In the planning pipeline (docs/agents/planning-pipeline.md) the source is the PRD at docs/planning/<ticket>/prd.md, and the PRD is published as an epic issue that parents these tickets. You draft the tickets as local files under that folder for review in a phase-2 PR (under the PRD), then create them on the tracker after it merges — reference the folder, not the branch, which is recreated per phase.
 
 ### 2. Explore the codebase (optional)
 
@@ -57,7 +57,7 @@ For each approved slice, publish a new issue to the issue tracker. Use the issue
 
 Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
 
-When breaking out a planning-pipeline PRD (docs/planning/<ticket>/prd.md), set the Parent of every spawned issue to the planning ticket the branch is named for, even though the immediate source is the PRD file, so the issues link back to it.
+When breaking out a planning-pipeline PRD (docs/planning/<ticket>/prd.md), set the Parent of every spawned issue to the PRD's epic issue — not the planning ticket. The epic is what links back to the planning ticket; the sub-tickets hang off the epic.
 
 <issue-template>
 ## Parent
