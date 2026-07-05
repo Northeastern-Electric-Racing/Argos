@@ -15,7 +15,7 @@ Issue tracker conventions live in `docs/agents/issue-tracker.md`; the triage lab
 
 Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
 
-In the planning pipeline (docs/agents/planning-pipeline.md) the source is the PRD at docs/planning/<ticket>/prd.md, and the PRD is published as an issue that parents these tickets. You draft the tickets as local files under that folder for review in a phase-2 PR (under the PRD), then create them on the tracker after it merges — reference the folder, not the branch, which is recreated per phase.
+In the planning pipeline (docs/agents/planning-pipeline.md) the source is the PRD at docs/planning/<ticket>/prd.md, and the PRD is published as an issue that parents these tickets. You draft the tickets as local files under docs/planning/<ticket>/tickets/ for review in a phase-2 PR (under the PRD), then create them on the tracker after it merges — reference the folder, not the branch, which is recreated per phase.
 
 ### 2. Explore the codebase (optional)
 
