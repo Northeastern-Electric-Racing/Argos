@@ -18,9 +18,9 @@ Only the PRD links to the planning ticket; everything else hangs off the PRD.
 
 Each phase is its own PR against develop, on a branch reused per phase (recreate {issue}-{kebab-title} off develop after each merge). "Under X" means the PR references issue X.
 
-1. **PRD — PR under the planning ticket.** Run grill-with-docs (CONTEXT.md + ADR edits) and to-prd (PRD saved to docs/planning/<ticket>/prd.md). Review the plan in the draft PR. Once it's approved and merged, publish the PRD as an issue (to-prd) linked to the planning ticket.
+1. **PRD — PR under the planning ticket.** Run grill-with-docs (CONTEXT.md + ADR edits) and to-prd (PRD saved to docs/prd/<ticket>/prd.md). Review the plan in the draft PR. Once it's approved and merged, publish the PRD as an issue (to-prd) linked to the planning ticket.
 
-2. **Issues — PR under the PRD.** Draft the implementation tickets as local files under docs/planning/<ticket>/tickets/ with to-issues. Review them in the draft PR. Once merged, create the child issues (to-issues) with Parent = the PRD.
+2. **Issues — PR under the PRD.** Draft the implementation tickets as local files in docs/prd/<ticket>/ — one kebab-named file per proposed ticket — with to-issues. Review them in the draft PR. Once merged, create the child issues (to-issues) with Parent = the PRD.
 
 3. **Cleanup — PR under the PRD.** Delete the temporary planning files (PRD + issue drafts); the PRD issue and its child issues are now the durable home.
 
@@ -30,11 +30,11 @@ Creating the issues is a manual skill step at each phase (to-prd for the PRD iss
 
 | Artifact | Location | Lifetime |
 | --- | --- | --- |
-| PRD + ticket drafts | docs/planning/<ticket>/ (prd.md + tickets/) | temporary (deleted in phase 3) |
+| PRD + ticket drafts | docs/prd/<ticket>/ (prd.md + one file per proposed ticket) | temporary (deleted in phase 3) |
 | ADRs | docs/adr/ (see domain.md for the naming convention) | persist |
 | Glossary updates | CONTEXT.md (root) | persist |
 
-<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/planning/668-build-planning-pipeline/.
+<ticket> is the planning ticket's number and kebab-title (the same string as the branch name), e.g. docs/prd/668-build-planning-pipeline/.
 
 The planning files are temporary — they exist so the plan and the drafted tickets are reviewable in the diff, and are deleted in phase 3 once the PRD issue and child issues exist on the tracker. The ADRs and CONTEXT.md edits are real docs and persist.
 
