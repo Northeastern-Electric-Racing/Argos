@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and PRDs for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`; use the `gh` CLI for all operations. The planning pipeline stages a PRD as a temporary file on a branch for review before it's published as an epic issue; see planning-pipeline.md.
+Issues and PRDs for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`; use the `gh` CLI for all operations. The planning pipeline stages a PRD as a temporary file on a branch for review before it's published as an issue; see planning-pipeline.md.
 
 ## Conventions
 

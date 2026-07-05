@@ -1,6 +1,6 @@
 # Planning artifacts (temporary)
 
-One folder per planning ticket, named for its branch (`<issue>-<kebab-title>`). It temporarily holds a planning-pipeline session's PRD and the drafted implementation tickets so they're reviewable in a draft PR. Once the PRD is published as an epic issue and its child tickets are created, the folder is deleted (phase 3) — their durable home is the tracker, not docs.
+One folder per planning ticket, named for its branch (`<issue>-<kebab-title>`). It temporarily holds a planning-pipeline session's PRD and the drafted implementation tickets so they're reviewable in a draft PR. Once the PRD is published as an issue and its child tickets are created, the folder is deleted (phase 3) — their durable home is the tracker, not docs.
 
 ```
 docs/planning/

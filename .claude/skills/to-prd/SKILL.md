@@ -1,6 +1,6 @@
 ---
 name: to-prd
-description: Turn the current conversation context into a PRD. A PRD's home is a GitHub epic issue that parents the implementation tickets; in the planning pipeline it's first staged as a temporary file on a branch for review, then published as that epic. Use when user wants to create a PRD from the current context.
+description: Turn the current conversation context into a PRD. A PRD's home is a GitHub issue that parents the implementation tickets; in the planning pipeline it's first staged as a temporary file on a branch for review, then published as that issue. Use when user wants to create a PRD from the current context.
 ---
 
 This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user — just synthesize what you already know.
@@ -19,7 +19,7 @@ Check with the user that these modules match their expectations. Check with the 
 
 3. Write the PRD using the template below.
 
-   A PRD's home is a GitHub epic issue that parents the implementation tickets. By default, work through the planning pipeline (docs/agents/planning-pipeline.md): on a branch off develop, stage the PRD as docs/planning/<ticket>/prd.md and commit it (phase 1, PR under the planning ticket) so it's reviewed in a draft PR. Once that PR is approved and merged, publish the PRD as the epic issue and link it to the planning ticket; to-issues then handles the child tickets (phase 2). <ticket> is the planning ticket's number and kebab-title, the same as the branch name.
+   A PRD's home is a GitHub issue that parents the implementation tickets. By default, work through the planning pipeline (docs/agents/planning-pipeline.md): on a branch off develop, stage the PRD as docs/planning/<ticket>/prd.md and commit it (phase 1, PR under the planning ticket) so it's reviewed in a draft PR. Once that PR is approved and merged, publish the PRD as the issue and link it to the planning ticket; to-issues then handles the child tickets (phase 2). <ticket> is the planning ticket's number and kebab-title, the same as the branch name.
 
    For a quick one-off not planned on a branch, skip the file and publish the PRD straight to the issue tracker, applying the `ready-for-agent` triage label.
 

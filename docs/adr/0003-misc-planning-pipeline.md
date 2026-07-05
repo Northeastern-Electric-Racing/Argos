@@ -17,11 +17,11 @@ The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produced i
 
 ## Consequences
 
-- Hierarchy: planning ticket → PRD (published as an epic issue that links to the planning ticket) → implementation tickets (Parent = the PRD). Only the PRD links to the planning ticket; the sub-tickets hang off the PRD.
+- Hierarchy: planning ticket → PRD (published as an issue that links to the planning ticket) → implementation tickets (Parent = the PRD). Only the PRD links to the planning ticket; the sub-tickets hang off the PRD.
 - Three phases, each its own PR on a branch reused off develop: (1) PRD file, PR under the planning ticket; (2) implementation tickets drafted as local files, PR under the PRD; (3) delete the temporary files, PR under the PRD.
-- Planning files (PRD + issue drafts) in docs/planning/<ticket>/ are temporary — they exist for PR review and are deleted in phase 3, once the epic and child issues exist. ADRs (docs/adr/) and CONTEXT.md edits are real docs and persist.
+- Planning files (PRD + issue drafts) in docs/planning/<ticket>/ are temporary — they exist for PR review and are deleted in phase 3, once the PRD issue and child issues exist. ADRs (docs/adr/) and CONTEXT.md edits are real docs and persist.
 - to-prd gains a pipeline mode: stage the PRD as docs/planning/<ticket>/prd.md for review. to-issues drafts the sub-tickets as local files with Parent = the PRD. Standalone mode still publishes straight to the tracker.
-- Issue creation is a manual skill step at each phase (to-prd publishes the epic, to-issues the children). No merge automation, and the planning ticket is not reopened — phase 1 runs under the planning ticket, phases 2 and 3 under the PRD.
+- Issue creation is a manual skill step at each phase (to-prd publishes the PRD issue, to-issues the children). No merge automation, and the planning ticket is not reopened — phase 1 runs under the planning ticket, phases 2 and 3 under the PRD.
 - The ai-workflow label is created via gh label create and documented in docs/agents/issue-tracker.md.
 
 See docs/agents/planning-pipeline.md for the operative stages and conventions.
