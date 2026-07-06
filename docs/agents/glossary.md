@@ -13,3 +13,5 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 **Tracer-bullet issue / vertical slice.** A scoping pattern where each ticket cuts a thin slice through every layer it touches (database, API, UI, tests) end-to-end, instead of completing one layer at a time. Each slice stands on its own. The `to-issues` skill breaks plans into these.
 
 **PRD (Product Requirements Document).** A feature spec. The `to-prd` skill writes one; `to-issues` then breaks it into tracer-bullet tickets.
+
+**Idea.** A raw, un-fleshed feature or bug scrap filed as a single ticket before anyone has classified it — the lightweight counterpart to a PRD. Carries the `idea` label (and an area label only when obvious), no type or difficulty, and lands un-triaged for `/triage` to classify. Filed by the single-idea skill; anything already thought through should go to `to-prd` or `grill-with-docs` instead.
