@@ -12,4 +12,4 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
-These labels are created on the repo via `gh label create` (see issue-tracker.md and ADR 0002); `/triage` then applies them. Existing Argos labels (`bug`, `new feature`, `epic`, `idea`, `angular-client`, `scylla-server`, `straightforward`, `medium`, `difficult`, `DevOps`, `good first issue`) are content/area labels and live alongside the triage labels above without overlap. See glossary.md for AFK, HITL, triage, and the other workflow terms.
+These labels are created on the repo via `gh label create` (see issue-tracker.md and ADR 0002); `/triage` then applies them. Existing Argos labels (`bug`, `new feature`, `epic`, `angular-client`, `scylla-server`, `straightforward`, `medium`, `difficult`, `DevOps`, `good first issue`) are content/area labels and live alongside the triage labels above without overlap. See glossary.md for AFK, HITL, triage, and the other workflow terms.

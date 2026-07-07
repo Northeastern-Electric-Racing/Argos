@@ -56,24 +56,24 @@ One or two sentences describing the idea, in the user's own framing.
 
 The motivation, or the scrap it came from. Omit this section entirely if there is nothing to add.
 
-> *Logged as a future addition — un-triaged.*
+> *Logged as a raw idea via log-future-addition.*
 </issue-template>
 
 Keep to at most three backtick usages in the whole body (per `issue-tracker.md`).
 
 ### 4. Choose labels
 
-- **`idea`** — always. Marks provenance and "not yet classified". If the label does not exist yet, create it first: `gh label create idea --color FBCA04 --description "A raw, un-triaged idea for a future addition"`.
+- **`needs-triage`** — always. Files the idea straight into the triage queue as intake. This is the one place a triage role is applied at creation instead of by `/triage` (see `issue-tracker.md`).
 - **Type** (`bug` / `new feature` / `feature enhancement`) — apply when the idea clearly is one; otherwise leave it for `/triage`.
-- **Area** (`angular-client` / `scylla-server` / `DevOps`) — apply only when obvious; otherwise omit. This skill relaxes the "at least one area label" rule in `issue-tracker.md` because a raw idea often is not scoped to an area yet.
+- **Area** (`angular-client` / `scylla-server` / `DevOps`) — apply only when obvious; otherwise omit. A raw idea often is not scoped to an area yet, so area is not required.
 - **Difficulty** — never. That is `/triage`'s call.
 
-The issue lands un-triaged; `/triage` fills in category, area, and difficulty later.
+`/triage` then classifies it (category, area, difficulty) like any other needs-triage issue.
 
 ### 5. Confirm, then file
 
 Show the drafted title, body, and labels. On consent, file it:
 
-`gh issue create --title "..." --body "..." --assignee @me --label idea[,<others>]`
+`gh issue create --title "..." --body "..." --assignee @me --label needs-triage[,<others>]`
 
 Report the new issue number and URL. Do not triage it, and do not run any further work on it.

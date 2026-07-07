@@ -14,4 +14,4 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 
 **PRD (Product Requirements Document).** A feature spec. The `to-prd` skill writes one; `to-issues` then breaks it into tracer-bullet tickets.
 
-**Idea.** A raw, un-fleshed feature or bug scrap filed as a single ticket before anyone has classified it — the lightweight counterpart to a PRD. Always carries the `idea` label, plus an inferred type label when clear and an area label when obvious, but never a difficulty, and lands un-triaged for `/triage` to fill in the rest. Filed by the single-idea skill; anything already thought through should go to `to-prd` or `grill-with-docs` instead.
+**Idea.** A raw, un-fleshed feature or bug scrap filed as a single ticket before anyone has classified it — the lightweight counterpart to a PRD. The `log-future-addition` skill files it directly into `needs-triage` (adding a type or area only where clear, never a difficulty), so `/triage` classifies it like any other intake. Deliberately thin — a seed to shape or park, not a deficient spec. Anything already thought through should go to `to-prd` or `grill-with-docs` instead.
