@@ -27,7 +27,7 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 | Type | `bug`, `new feature`, `feature enhancement`, `good first issue`, `epic` |
 | Difficulty | `straightforward`, `medium`, `difficult` |
 
-The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
+The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time (see triage-labels.md) — with one exception: the `log-future-addition` skill files a raw idea directly with `needs-triage`, placing it straight in the triage queue (a type or area is added only where clear, area not required; see glossary.md).
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 
