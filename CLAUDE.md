@@ -56,6 +56,8 @@ Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, ver
 
 Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label, and assignment conventions.
 
+When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a single un-triaged issue with the `log-future-addition` skill instead of letting it slip.
+
 ### Triage labels
 
 Five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), created via `gh label create` and applied by `/triage`. See `docs/agents/triage-labels.md`.

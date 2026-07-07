@@ -24,10 +24,12 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 | Group | Labels |
 | --- | --- |
 | Area | `angular-client`, `scylla-server`, `DevOps` |
-| Type | `bug`, `new feature`, `feature enhancement`, `good first issue`, `epic` |
+| Type | `bug`, `new feature`, `feature enhancement`, `good first issue`, `epic`, `idea` |
 | Difficulty | `straightforward`, `medium`, `difficult` |
 
 The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
+
+The `idea` type marks a raw, un-triaged idea filed by the `log-future-addition` skill (see glossary.md). Issues filed that way carry `idea` plus an inferred type and area only where those are clear; they are exempt from the "at least one area label" rule above, since a raw idea is often not scoped to an area yet. `/triage` fills in the rest later.
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 
