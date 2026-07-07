@@ -25,6 +25,7 @@ Read the issue (title, body, labels). Locally use `gh issue view <number>`; on C
 - **State:** if the issue carries `needs-triage`, `needs-info`, or `wontfix`, or has no triage label at all, warn and suggest running `/triage` first. Triage roles: see triage-labels.md.
 - **Labels:** note any missing area (`angular-client` / `scylla-server` / `DevOps`) or type (`bug`, `new feature`, …) label — see issue-tracker.md.
 - **Title:** if the title is empty or too vague to make a sensible branch name, say so and propose one.
+- **Epic:** if the issue is type `epic`, it's tracked by its child slices, not implemented directly. Warn and ask which child slice to start rather than branching the epic itself.
 
 ### 3. Derive the branch name
 
@@ -42,9 +43,11 @@ If a branch for this issue already exists (local or origin), offer to check it o
 
 `git checkout -B` carries uncommitted changes onto the new branch. If `git status --porcelain` is non-empty, list the dirty files and confirm before proceeding.
 
+Base defaults to `origin/develop`. For a slice that depends on another unmerged slice, the user can pass that slice's branch as the base to stack on top of it — one issue still gets one branch and one PR; only the base changes.
+
 ```bash
-git fetch origin develop
-git checkout -B <name> origin/develop
+git fetch origin <base>          # <base> defaults to develop
+git checkout -B <name> origin/<base>
 ```
 
 ### 6. Confirm and stop
