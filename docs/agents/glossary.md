@@ -15,3 +15,9 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 **PRD (Product Requirements Document).** A feature spec. The `to-prd` skill writes one; `to-issues` then breaks it into tracer-bullet tickets.
 
 **Idea.** A raw, un-fleshed feature or bug scrap filed as a single needs-triage ticket before anyone has classified it — the lightweight counterpart to a PRD. Filed by the `log-future-addition` skill for `/triage` to classify like any other intake. Deliberately thin; anything already thought through belongs in `to-prd` or `grill-with-docs`.
+
+**Journal.** A local, gitignored `.journal/` folder at the repo root for parking rough thoughts mid-task with zero ceremony. Managed by the `journal` skill, which has two halves: capture (local, formless, git-free) and export (an opt-in dispatcher that routes a ripe note to the skill owning its permanent home). The journal captures and routes only — it never reimplements formatting or ticketing and never contacts GitHub itself.
+
+**entry (journal entry).** A single note file in the journal. Lives either loose at the journal root or inside a category. On export, one entry can be split across several destinations.
+
+**category.** A subfolder under `.journal/` that clusters related entries. On export, a category's entries can be merged into one coherent output.
