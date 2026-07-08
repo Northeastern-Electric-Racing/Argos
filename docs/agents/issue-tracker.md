@@ -15,7 +15,7 @@ Infer the repo from `git remote -v` — `gh` does this automatically when run in
 
 ## Argos ticket conventions
 
-These apply when an AI skill files an issue with `gh issue create`. They govern the title, labels, body length, and assignment only. The body *shape* (which sections exist and how they are structured) is owned by the authoring skill (`to-issues`, `to-prd`), not by this file. See glossary.md for ADR, triage, AFK, and the other workflow terms.
+These apply when an AI skill files an issue with `gh issue create`. They govern the title, labels, body length, and assignment only. The body *shape* (which sections exist and how they are structured) is owned by the authoring skill (`to-tickets`, `to-spec`), not by this file. See glossary.md for ADR, triage, AFK, and the other workflow terms.
 
 **Title:** concise, imperative mood (e.g. "Add pagination to the run list", "Fix redirect loop on login"). Do not prefix with `[Area] -`, even though the YAML form templates suggest it; real issues in this repo do not use that prefix.
 

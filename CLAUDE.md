@@ -50,7 +50,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow is `grill-with-docs → to-prd → to-issues → triage`. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`. The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
+Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The AI issue-authoring flow is `grill-with-docs → to-spec → to-tickets → triage`. See `docs/adr/0002-misc-adopt-matt-pocock-skills.md` and `docs/adr/0003-misc-rename-to-spec-to-tickets.md`. The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
 
 ### Issue tracker
 
