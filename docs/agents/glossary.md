@@ -14,6 +14,8 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 
 **PRD (Product Requirements Document).** A feature spec. The `to-prd` skill writes one; `to-issues` then breaks it into tracer-bullet tickets.
 
+**Idea.** A raw, un-fleshed feature or bug scrap filed as a single needs-triage ticket before anyone has classified it — the lightweight counterpart to a PRD. Filed by the `log-future-addition` skill for `/triage` to classify like any other intake. Deliberately thin; anything already thought through belongs in `to-prd` or `grill-with-docs`.
+
 **Planning pipeline.** The default flow for planning a feature: on a branch, grill-with-docs commits its ADRs and CONTEXT.md edits (which persist) and to-prd stages the PRD as a temporary file, all reviewed as a draft PR. The PRD is then published as an issue (linked to the planning ticket) that parents the implementation tickets, which to-issues creates as its children; the temporary files are deleted. Runs as three phased PRs — PRD, then issues, then cleanup — with issue creation done manually. See planning-pipeline.md; ADR 0003 records the decision.
 
 **Planning ticket.** Entry point of the planning pipeline: a ticket stating what's being researched or triaged — the question, not the answer — that names the branch.

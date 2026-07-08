@@ -37,13 +37,21 @@ pub async fn socket_handler(
     loop {
         iter_count = iter_count.wrapping_add(1);
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
-            Ok(data) = data_channel.recv() => {
-                msgs_since_hb = msgs_since_hb.wrapping_add(1);
-                send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
+            res = data_channel.recv() => {
+                match res {
+                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!("Socket handler lagged behind, skipped {} messages!", n);
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        debug!("Socket data channel closed, shutting down socket handler!");
+                        break;
+                    }
+                }
             }
             _ = heartbeat.tick() => {
                 info!(
@@ -65,7 +73,7 @@ struct SocketClientId(String);
  * Extracts a client ID from the query string of the socket connection, and uses that as the client ID for rule notifications.
  * This allows clients to persist their identity across reconnects by including the same clientId in the
  *
- * Based on the documentation page and example from socketioxide: https://docs.rs/socketioxide/latest/socketioxide/extract/index.html
+ * Based on the documentation page and example from socketioxide: <https://docs.rs/socketioxide/latest/socketioxide/extract/index.html>
  */
 impl<A: Adapter> FromConnectParts<A> for SocketClientId {
     type Error = Infallible;
@@ -91,9 +99,12 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
     }
 }
 
-/// Cadence at which Argos/Message_Rate is recomputed and emitted.
+/// Cadence at which `Argos/Message_Rate` is recomputed and emitted.
 const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
 
+///
+/// # Panics
+/// Panics if Regex is invalid
 pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
@@ -176,21 +187,45 @@ pub async fn socket_handler_with_metadata(
     loop {
         iter_count = iter_count.wrapping_add(1);
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("Shutting down socket handler!");
                 break;
             },
-            Ok(data) = data_channel.recv() => {
-                msg_cnt += 1;
-                msgs_since_hb = msgs_since_hb.wrapping_add(1);
-                send_socket_msg(
-                    &data,
-                    &mut upload_counter,
-                    &io,
-                    DATA_SOCKET_KEY,
-                ).await;
-                handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+            res = data_channel.recv() => {
+                match res {
+                    Ok(data) => {
+                        msg_cnt += 1;
+                        // DIAGNOSTIC PROBE (disabled): sample 1/500 messages to localize lag --
+                        // emit() duration vs data age at emit. Re-enable when isolating socket
+                        // vs upstream latency.
+                        // let sample = msg_cnt % 500 == 0;
+                        // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
+                        // let emit_start = sample.then(tokio::time::Instant::now);
+                        send_socket_msg(
+                            &data,
+                            &mut upload_counter,
+                            &io,
+                            DATA_SOCKET_KEY,
+                        ).await;
+                        // if let (Some(age), Some(start)) = (age_ms, emit_start) {
+                        //     debug!(
+                        //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
+                        //         start.elapsed(),
+                        //         age,
+                        //         io.sockets().len()
+                        //     );
+                        // }
+                        handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
+                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                    }
+                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                        warn!("Socket handler lagged behind, skipped {} messages!", n);
+                    }
+                    Err(broadcast::error::RecvError::Closed) => {
+                        debug!("Socket data channel closed, shutting down socket handler!");
+                        break;
+                    }
+                }
             }
             _ = heartbeat.tick() => {
                 info!(
@@ -208,7 +243,7 @@ pub async fn socket_handler_with_metadata(
                     &mut upload_counter,
                         &io,
                         FAULT_SOCKET_KEY,
-                ).await
+                ).await;
             },
             _ = timers_interval.tick() => {
                 trace!("Sending Timers Intervals!");
@@ -221,7 +256,7 @@ pub async fn socket_handler_with_metadata(
                     let sockets_cnt = io.sockets().len() as f32;
                     let item = ClientData {
                         name: "Argos/Viewers".to_string(),
-                        unit: "".to_string(),
+                        unit: String::new(),
                         run_id: crate::RUN_ID.load(Ordering::Relaxed),
                         timestamp: chrono::offset::Utc::now(),
                         values: vec![sockets_cnt]
@@ -238,7 +273,7 @@ pub async fn socket_handler_with_metadata(
                 debug!("Updating message rate to be {} msg/sec", rate);
                 let item = ClientData {
                     name: "Argos/Message_Rate".to_string(),
-                    unit: "".to_string(),
+                    unit: String::new(),
                     run_id: crate::RUN_ID.load(Ordering::Relaxed),
                     timestamp: chrono::offset::Utc::now(),
                     values: vec![rate]
@@ -254,7 +289,7 @@ pub async fn socket_handler_with_metadata(
                 // the existing Argos/Message_Rate Socket.io stream
                 argos_inserter.insert(ClientData {
                     name: "Argos/Message".to_string(),
-                    unit: "".to_string(),
+                    unit: String::new(),
                     run_id: crate::RUN_ID.load(Ordering::Relaxed),
                     timestamp: chrono::offset::Utc::now(),
                     values: vec![rate],
@@ -310,7 +345,7 @@ async fn handle_rule_processing(
             );
         } else {
             debug!("Successfully sent notification to {}", notification.0);
-        };
+        }
     }
 }
 
@@ -328,7 +363,7 @@ fn handle_socket_msg(
     if let Some(time) = timer_map.get_mut(&data.name) {
         trace!("Triggering timer: {}", data.name);
         let new_val = *data.values.first().unwrap_or(&-1f32);
-        if time.last_value != new_val {
+        if (time.last_value - new_val).abs() > 0.001 {
             // retrieves previous total time for the last value
             let prev_val = time
                 .total_time_per_value_map
@@ -342,7 +377,7 @@ fn handle_socket_msg(
             // (e.g. '0' was on from 10:00 to 10:15, is added to the vec
             // of all the previous)
             if let Some(prev_val) = prev_val {
-                let mut new_vec = prev_val.to_vec();
+                let mut new_vec = prev_val.clone();
                 new_vec.push(new_total_val);
                 time.total_time_per_value_map
                     .insert(time.last_value.to_string(), new_vec);
@@ -419,8 +454,7 @@ fn handle_socket_msg(
 
 /// Sends a message to the socket, printing and IGNORING any error that may occur
 /// * `client_data` - The client data to send over the broadcast
-/// * `upload_counter` - The counter of data that has been uploaded, for basic rate limiting
-/// * `upload-ratio` - The rate limit ratio
+/// * `upload_counter` - A rolling 0..100 position used to decide whether to keep this message
 /// * `io` - The socket to upload to
 /// * `socket_key` - The socket key to send to
 async fn send_socket_msg<T>(
@@ -431,7 +465,11 @@ async fn send_socket_msg<T>(
 ) where
     T: Serialize,
 {
-    *upload_counter = upload_counter.wrapping_add(1);
+    // `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
+    // 100 drops everything. Cycle the counter through 0..100 and keep the message only
+    // when its position is at or above the discard threshold, e.g. a value of 25 drops
+    // positions 0..24 (~25%) and keeps positions 25..99 (~75%).
+    *upload_counter = upload_counter.wrapping_add(1) % 100;
     if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
         match io
             .emit(
@@ -440,16 +478,16 @@ async fn send_socket_msg<T>(
             )
             .await
         {
-            Ok(_) => (),
+            Ok(()) => (),
             Err(err) => match err {
                 socketioxide::BroadcastError::Socket(e) => {
                     trace!("Socket: Transmit error: {:?}", e);
                 }
                 socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err)
+                    warn!("Socket: Serialize error: {}", err);
                 }
                 socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err)
+                    warn!("Socket: Adapter error: {}", err);
                 }
             },
         }

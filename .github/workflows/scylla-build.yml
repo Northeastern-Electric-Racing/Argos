@@ -20,13 +20,13 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # restore-keys: closest-match cache on key miss
       # https://github.com/actions/cache/blob/main/caching-strategies.md#using-restore-keys-to-download-the-closest-matching-cache
       # cargo reuses unchanged compiled artifacts
       # https://doc.rust-lang.org/cargo/guide/build-cache.html
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry

@@ -23,6 +23,8 @@ use super::OutputDirectory;
 
 /// Inserts a logger file using http multipart
 /// This file is parsed and clientdata values are extracted, the run ID of each variable is inferred, and then data is batch uploaded
+/// # Panics
+/// Panics if time is corrupted
 // super cool: adding this tag tells you what variable is misbehaving in cases of axum Send+Sync Handler fails
 #[debug_handler]
 pub async fn insert_logger_file(
@@ -41,15 +43,11 @@ pub async fn insert_logger_file(
     let mut run_rng: RangeInclusiveMap<u64, i32> = RangeInclusiveMap::new();
     // this actual formulates the list, where keys are ranges of times (us) and the values are the run IDs
     while let Some(it) = run_iter.next() {
-        match run_iter.peek() {
-            Some(next) => {
-                run_rng.insert(it.1..=next.1, it.0);
-            }
+        if let Some(next) = run_iter.peek() {
+            run_rng.insert(it.1..=next.1, it.0);
+        } else {
             // if this is the last item in the list
-            None => {
-                run_rng.insert(it.1..=u64::MAX, it.0);
-                continue;
-            }
+            run_rng.insert(it.1..=u64::MAX, it.0);
         }
     }
 
@@ -70,19 +68,18 @@ pub async fn insert_logger_file(
                 match stream.read_message::<playback_data::PlaybackData>() {
                     Ok(f) => {
                         trace!("Decoded file msg: {}", f);
-                        let f = match run_rng.get(&f.time_us) {
-                            Some(a) => ClientData {
+                        let f = if let Some(a) = run_rng.get(&f.time_us) {
+                            ClientData {
                                 run_id: *a,
                                 name: f.topic.clone(),
                                 unit: f.unit,
                                 values: f.values,
-                                timestamp: DateTime::from_timestamp_micros(f.time_us as i64)
+                                timestamp: DateTime::from_timestamp_micros(f.time_us.cast_signed())
                                     .unwrap(),
-                            },
-                            None => {
-                                count_bad_run += 1;
-                                continue;
                             }
+                        } else {
+                            count_bad_run += 1;
+                            continue;
                         };
                         insertable_data.push(f);
                     }
@@ -100,7 +97,7 @@ pub async fn insert_logger_file(
         );
         if let Err(err) = batcher.send(insertable_data).await {
             warn!("Error sending logger file insert data to batcher! {}", err);
-        };
+        }
     }
     info!("Finished logger file insert request!");
     Ok("Successfully sent all to batcher!".to_string())
@@ -112,7 +109,7 @@ pub async fn insert_file(
     mut multipart: Multipart,
 ) -> Result<String, ScyllaError> {
     while let Ok(Some(field)) = multipart.next_field().await {
-        let name = field.name().map(|s| s.to_string());
+        let name = field.name().map(std::string::ToString::to_string);
 
         let Ok(data) = field.bytes().await else {
             warn!("Could not decode file insert");

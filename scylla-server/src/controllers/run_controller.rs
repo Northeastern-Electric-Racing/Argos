@@ -41,11 +41,7 @@ pub async fn get_run_by_id(
     let mut db = pool.get().await?;
     let run_data = run_service::get_run_by_id(&mut db, run_id).await?;
 
-    if run_data.is_none() {
-        return Err(ScyllaError::EmptyResult);
-    }
-
-    let run_data_safe = run_data.unwrap();
+    let run_data_safe = run_data.ok_or(ScyllaError::EmptyResult)?;
 
     let transformed_run_data = PublicRun::from(run_data_safe);
 
