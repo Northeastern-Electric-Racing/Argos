@@ -1,6 +1,6 @@
 # Branch-based planning pipeline for AI-authored issues
 
-The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produced its research, terminology, ADRs, and PRD inside one ephemeral chat session, then filed implementation issues from chat with no review gate. Argos moves that flow onto a branch: a planning ticket opens the work, the session's artifacts (CONTEXT.md edits, ADRs, PRD) are committed to the branch, and it's reviewed as a draft PR against develop before any issues spawn. Issues are broken out after merge. A new ai-workflow label marks tickets whose subject is the AI dev workflow itself.
+The AI issue-authoring flow (grill-with-docs → to-prd → to-issues → triage) produced its research, terminology, ADRs, and PRD inside one ephemeral chat session, then filed implementation issues from chat with no review gate. Argos moves that flow onto a branch: a planning ticket opens the work, the session's artifacts (CONTEXT.md edits, ADRs, PRD) are committed to the branch, and it's reviewed as a draft PR against develop before any issues spawn. Issues are broken out after merge. A new ai-workflow label marks tickets whose subject is the AI dev workflow itself.
 
 ## Considered Options
 
@@ -24,4 +24,4 @@ The AI issue-authoring flow (grill-with-docs to-prd to-issues triage) produced i
 - Issue creation is a manual skill step at each phase (to-prd publishes the PRD issue, to-issues the children). No merge automation, and the planning ticket is not reopened — phase 1 runs under the planning ticket, phases 2 and 3 under the PRD.
 - The ai-workflow label is created via gh label create and documented in docs/agents/issue-tracker.md.
 
-See docs/agents/planning-pipeline.md for the operative stages and conventions.
+See docs/agents/planning-pipeline.md for the phases and conventions.
