@@ -15,3 +15,15 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 **Spec (PRD).** A feature spec — you may also know this document as a PRD (Product Requirements Document). The `to-spec` skill writes one; `to-tickets` then breaks it into tracer-bullet tickets.
 
 **Idea.** A raw, un-fleshed feature or bug scrap filed as a single needs-triage ticket before anyone has classified it — the lightweight counterpart to a spec. Filed by the `log-future-addition` skill for `/triage` to classify like any other intake. Deliberately thin; anything already thought through belongs in `to-spec` or `grill-with-docs`.
+
+**Spec/plan review.** The requirement that a spec (`to-spec`) or a ticket set (`to-tickets`) is staged as a file and reviewed as a PR before it publishes to the tracker — the gate that keeps unreviewed tickets off the tracker. Not a planning flow, not attached to grilling. See spec-review.md.
+
+**Wayfinder map.** For an effort too big for one session, a single `wayfinder:map` issue that charts the way to a **destination** as a set of **investigation tickets** (child issues) resolved one at a time. Produced and worked by the `/wayfinder` skill; it merges onto the main flow at `to-spec` (one map can feed several specs).
+
+**Destination.** What a wayfinder map is finding its way to — a spec, a locked decision, or an in-place change. Named first; it fixes the map's scope.
+
+**Frontier.** On a wayfinder map, the open, unblocked, unclaimed tickets — the takeable edge of the known. Everything past it is **fog of war**: decisions you can see coming but can't yet phrase sharply, recorded in the map's "Not yet specified" section until a resolution graduates them into tickets.
+
+**Investigation ticket.** A wayfinder child issue that resolves one decision, of type `research` / `prototype` / `grilling` / `task`. Distinct from a tracer-bullet *implementation* ticket, which builds code; an investigation ticket produces a decision.
+
+**ai-workflow.** A label marking issues whose subject is the AI dev workflow itself (skills, `docs/agents/`), orthogonal to the area labels.
