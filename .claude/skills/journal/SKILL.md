@@ -1,6 +1,6 @@
 ---
 name: journal
-description: Capture rough notes locally with zero ceremony, then export them to their right permanent home. Use when the user wants to jot/park/stash a thought mid-task without derailing ("note to self", "remember to", "journal this"), or when they later want to export/file/route parked notes into an issue, PRD, ADR, CONTEXT term, or docs. Capture is local and gitignored; export delegates to log-future-addition, to-issues, to-prd, or grill-with-docs.
+description: Capture rough notes locally with zero ceremony, then export them to their right permanent home. Use when the user wants to jot/park/stash a thought mid-task without derailing ("note to self", "remember to", "journal this"), or when they later want to export/file/route parked notes into an issue, spec, ADR, CONTEXT term, or docs. Capture is local and gitignored; export delegates to log-future-addition, to-tickets, to-spec, grill-with-docs, or research.
 ---
 
 # Journal
@@ -51,12 +51,12 @@ The dispatcher. Work through these steps in order:
 | Note is… | Delegate to | Result |
 |---|---|---|
 | a rough, out-of-scope idea | `log-future-addition` | one un-triaged issue |
-| a set of work items / a plan to break down | `to-issues` | tracer-bullet tickets |
-| a fleshed-out feature or spec | `to-prd` | a PRD |
+| a set of work items / a plan to break down | `to-tickets` | tracer-bullet tickets |
+| a fleshed-out feature or spec | `to-spec` | a spec |
 | a decision or a new term | `grill-with-docs` | an ADR or a CONTEXT entry, in the right format |
-| research / preserved thinking | *plain docs write* | recorded in the appropriate existing docs section |
+| research / preserved thinking | `research` | findings captured as a Markdown docs file by a background agent |
 
-Each downstream skill already owns its conventions (issue/label rules via `docs/agents/issue-tracker.md`, ADR/CONTEXT shapes via `grill-with-docs`). Link and follow — do not duplicate. Research is the one flow with no owning skill: write it into an existing docs section yourself, still behind the confirm gate.
+Each downstream skill already owns its conventions (issue/label rules via `docs/agents/issue-tracker.md`, ADR/CONTEXT shapes via `grill-with-docs`, which orchestrates the grilling and domain-modeling skills). Link and follow — do not duplicate. The `research` flow delegates the reading to a background agent that writes the findings as a docs file; still pass the confirm gate on where it lands.
 
 ## Guardrails
 
