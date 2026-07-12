@@ -54,7 +54,7 @@ The delegated skill owns everything past the handoff — formatting, ticketing, 
 
 ## Guardrails
 
-- Capture touches nothing but the filesystem under `.journal/`.
+- Capture touches nothing but the filesystem under the gitignored `.journal/` folder at the repo root.
 - The journal never pushes, opens PRs, or contacts GitHub on its own.
 - Never create anything on export without passing the confirm gate first.
 - Prefer an existing docs area over a new one; surface any new section for approval.
