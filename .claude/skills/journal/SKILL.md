@@ -48,18 +48,9 @@ The dispatcher. Work through these steps in order:
 
 ### Flow-picker
 
-Match the note to the skill that owns its permanent home, then delegate. Each skill's own description is the source of truth for what it produces and the conventions it follows — read it there, don't restate it here.
+Every export destination is an existing skill. Match the note to the skill whose own description fits its permanent home, then delegate — the journal only routes. Read the available skills and how they fit the idea-to-ship flow in the Agent skills section of CLAUDE.md and each skill's own description; don't mirror that list here, it drifts as skills are added or renamed.
 
-| Note is… | Delegate to |
-|---|---|
-| a rough, out-of-scope idea | `log-future-addition` |
-| a set of work items / a plan to break down | `to-tickets` |
-| a fleshed-out feature or spec | `to-spec` |
-| an effort too big for one spec or one session | `wayfinder` |
-| a decision or a new term | `grill-with-docs` |
-| research / preserved thinking | `research` |
-
-The journal only routes; the delegated skill owns formatting, ticketing, and any GitHub contact. Conventions live in their standard places — issue/label rules in `docs/agents/issue-tracker.md`, term definitions in `docs/agents/glossary.md`. Do not duplicate them here.
+The delegated skill owns everything past the handoff — formatting, ticketing, GitHub contact, and its conventions (issue/label rules in `docs/agents/issue-tracker.md`, term definitions in `docs/agents/glossary.md`).
 
 ## Guardrails
 
