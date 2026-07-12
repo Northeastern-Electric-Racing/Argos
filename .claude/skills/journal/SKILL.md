@@ -55,6 +55,7 @@ Match the note to the skill that owns its permanent home, then delegate. Each sk
 | a rough, out-of-scope idea | `log-future-addition` |
 | a set of work items / a plan to break down | `to-tickets` |
 | a fleshed-out feature or spec | `to-spec` |
+| an effort too big for one spec or one session | `wayfinder` |
 | a decision or a new term | `grill-with-docs` |
 | research / preserved thinking | `research` |
 
