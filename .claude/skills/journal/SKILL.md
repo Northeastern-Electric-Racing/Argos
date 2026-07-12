@@ -1,6 +1,6 @@
 ---
 name: journal
-description: Capture rough notes locally with zero ceremony, then export them to their right permanent home. Use when the user wants to jot/park/stash a thought mid-task without derailing ("note to self", "remember to", "journal this"), or when they later want to export/file/route parked notes into an issue, spec, ADR, CONTEXT term, or docs. Capture is local and gitignored; export delegates to log-future-addition, to-tickets, to-spec, grill-with-docs, or research.
+description: Capture rough notes locally with zero ceremony, then export them to their right permanent home. Use when the user wants to jot/park/stash a thought mid-task without derailing ("note to self", "remember to", "journal this"), or when they later want to export/file/route parked notes into an issue, spec, ADR, CONTEXT term, or docs. Capture is local and gitignored; export delegates to whichever existing skill owns the note's permanent home.
 ---
 
 # Journal
@@ -48,15 +48,17 @@ The dispatcher. Work through these steps in order:
 
 ### Flow-picker
 
-| Note is… | Delegate to | Result |
-|---|---|---|
-| a rough, out-of-scope idea | `log-future-addition` | one un-triaged issue |
-| a set of work items / a plan to break down | `to-tickets` | tracer-bullet tickets |
-| a fleshed-out feature or spec | `to-spec` | a spec |
-| a decision or a new term | `grill-with-docs` | an ADR or a CONTEXT entry, in the right format |
-| research / preserved thinking | `research` | findings captured as a Markdown docs file by a background agent |
+Match the note to the skill that owns its permanent home, then delegate. Each skill's own description is the source of truth for what it produces and the conventions it follows — read it there, don't restate it here.
 
-Each downstream skill already owns its conventions (issue/label rules via `docs/agents/issue-tracker.md`, ADR/CONTEXT shapes via `grill-with-docs`, which orchestrates the grilling and domain-modeling skills). Link and follow — do not duplicate. The `research` flow delegates the reading to a background agent that writes the findings as a docs file; still pass the confirm gate on where it lands.
+| Note is… | Delegate to |
+|---|---|
+| a rough, out-of-scope idea | `log-future-addition` |
+| a set of work items / a plan to break down | `to-tickets` |
+| a fleshed-out feature or spec | `to-spec` |
+| a decision or a new term | `grill-with-docs` |
+| research / preserved thinking | `research` |
+
+The journal only routes; the delegated skill owns formatting, ticketing, and any GitHub contact. Conventions live in their standard places — issue/label rules in `docs/agents/issue-tracker.md`, term definitions in `docs/agents/glossary.md`. Do not duplicate them here.
 
 ## Guardrails
 
