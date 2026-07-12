@@ -128,10 +128,10 @@ The user may run unblocked tickets in parallel, so expect other sessions to be e
 
 ## Reaching the destination
 
-The map is done when the frontier is empty and no fog remains — the way to the destination is clear. Wayfinder **hands off** here; it does not build. What happens next depends on the destination:
+The map is done when the frontier is empty and no fog remains — the way to the destination is clear. Wayfinder **hands off** here; it does not build. The handoff target depends on the destination:
 
 - **A spec** → run `/to-spec` to synthesise the map's Decisions-so-far into one spec, linked back to the map. A large effort may be **several** specs — run `/to-spec` once per coherent feature, each reading its slice of the map. Each spec then goes through `/to-tickets` → `/implement`.
-- **A locked decision** → the map itself is the artifact; hand it off.
-- **An in-place change** → hand off to `/to-tickets` (or, if it collapsed to a single slice, straight to `/implement`).
+- **An in-place change** (no consolidated spec needed) → hand off straight to `/to-tickets` → `/implement`.
+- **A locked decision** → the map itself is the artifact; hand it off, nothing to build.
 
-Specs and ticket sets produced on the way out are review artifacts — see `docs/agents/spec-review.md`.
+Whichever the destination, `/to-spec` and `/to-tickets` are **review artifacts** — each stages and reviews before publishing (`docs/agents/spec-review.md`). Build work always goes through a reviewed ticket: wayfinder never hands off straight to `/implement`.
