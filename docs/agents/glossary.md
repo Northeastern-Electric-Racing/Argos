@@ -14,11 +14,11 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 
 **Spec (PRD).** A feature spec — you may also know this document as a PRD (Product Requirements Document). The `to-spec` skill writes one; `to-tickets` then breaks it into tracer-bullet tickets.
 
+**Spec/plan review.** The *process* the two artifacts above pass through, not an artifact itself: a spec (`to-spec`) or a ticket set (`to-tickets`) is staged as a file and reviewed as a PR before it publishes, so unreviewed tickets never reach the tracker. Not a planning flow, and not attached to grilling or wayfinder. See spec-review.md.
+
 **Idea.** A raw, un-fleshed feature or bug scrap filed as a single needs-triage ticket before anyone has classified it — the lightweight counterpart to a spec. Filed by the `log-future-addition` skill for `/triage` to classify like any other intake. Deliberately thin; anything already thought through belongs in `to-spec` or `grill-with-docs`.
 
-**Spec/plan review.** The requirement that a spec (`to-spec`) or a ticket set (`to-tickets`) is staged as a file and reviewed as a PR before it publishes to the tracker — the gate that keeps unreviewed tickets off the tracker. Not a planning flow, not attached to grilling. See spec-review.md.
-
-**Wayfinder map.** For an effort too big for one session, a single `wayfinder:map` issue that charts the way to a **destination** as a set of **investigation tickets** (child issues) resolved one at a time. Produced and worked by the `/wayfinder` skill; it merges onto the main flow at `to-spec` (one map can feed several specs).
+**Wayfinder map.** For an effort too big for one session, a single `wayfinder:map` issue that charts the way to a **destination** as a set of **investigation tickets** (child issues) resolved one at a time. Produced and worked by the `/wayfinder` skill — the authoritative source for the wayfinder terms below; it merges onto the main flow at `to-spec` (one map can feed several specs).
 
 **Destination.** What a wayfinder map is finding its way to — a spec, a locked decision, or an in-place change. Named first; it fixes the map's scope.
 

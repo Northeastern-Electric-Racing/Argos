@@ -1,4 +1,4 @@
-# Spec & plan review
+# Spec/plan review
 
 Specs and plans are **review artifacts**. Before either publishes to the tracker as issues, it is staged as a file and reviewed as a git pull request. This is the one gate that keeps unreviewed tickets off the tracker.
 
