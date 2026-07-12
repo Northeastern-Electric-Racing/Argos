@@ -125,13 +125,3 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 
 The user may run unblocked tickets in parallel, so expect other sessions to be editing the tracker concurrently.
-
-## Reaching the destination
-
-The map is done when the frontier is empty and no fog remains — the way to the destination is clear. Wayfinder **hands off** here; it does not build. The handoff target depends on the destination:
-
-- **A spec** → run `/to-spec` to synthesise the map's Decisions-so-far into one spec, linked back to the map. A large effort may be **several** specs — run `/to-spec` once per coherent feature, each reading its slice of the map. Each spec then goes through `/to-tickets` → `/implement`.
-- **An in-place change** (no consolidated spec needed) → hand off straight to `/to-tickets` → `/implement`.
-- **A locked decision** → the map itself is the artifact; hand it off, nothing to build.
-
-Whichever the destination, `/to-spec` and `/to-tickets` are **review artifacts** — each stages and reviews before publishing (`docs/agents/spec-review.md`). Build work always goes through a reviewed ticket: wayfinder never hands off straight to `/implement`.
