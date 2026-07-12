@@ -68,7 +68,9 @@ Draft the approved tickets as local files under `docs/spec/<name>/` — one keba
 
 ### 6. Publish once the review PR merges
 
-After the PR is approved and merged, create the tickets on the issue tracker (GitHub Issues — see `docs/agents/issue-tracker.md`), one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real issue identifiers. Use GitHub's native sub-issue / blocking relationship where it fits; otherwise set each ticket's "Blocked by" to the blocking issues. Set each ticket's `Parent` to the spec issue. Apply the `ready-for-agent` triage label unless instructed otherwise — the tickets are agent-grabbable by construction. Then delete the temporary `docs/spec/<name>/` drafts; the tracker issues are the durable home.
+After the PR is approved and merged, create the tickets on the issue tracker (GitHub Issues — see `docs/agents/issue-tracker.md`), one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real issue identifiers. Use GitHub's native sub-issue / blocking relationship where it fits; otherwise set each ticket's "Blocked by" to the blocking issues. Set each ticket's `Parent` to the spec issue. Apply the `ready-for-agent` triage label unless instructed otherwise — the tickets are agent-grabbable by construction.
+
+The temporary `docs/spec/<name>/` drafts are now on protected `develop`, so removing them needs its own commit: open a **small follow-up PR against `develop`** that deletes the folder once the tracker issues exist. The tracker issues are the durable home.
 
 Do NOT close or modify any parent issue.
 

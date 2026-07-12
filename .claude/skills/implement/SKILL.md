@@ -12,7 +12,7 @@ Use `/tdd` where possible, at pre-agreed seams.
 
 Run checks as you go, not just at the end:
 
-- **Frontend** (`angular-client/`): typecheck/build regularly; run single Karma specs while iterating (`ng test`), the full suite once at the end; `npx prettier --check` + `npx ng lint` before finishing.
+- **Frontend** (`angular-client/`): typecheck/build regularly. Run single Karma specs while iterating with `ng test --include='src/**/thing.spec.ts' --watch=false`, and the full suite once at the end with `ng test --watch=false` — bare `ng test` watches and blocks the shell. Then `npx prettier --check` + `npx ng lint` before finishing.
 - **Backend** (`scylla-server/`): `cargo build` and single tests regularly, `cargo test` once at the end.
 
 Once the behaviour is done, use `/code-review` to review the work.

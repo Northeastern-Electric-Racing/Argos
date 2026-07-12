@@ -26,8 +26,8 @@ Before going further, confirm the fixed point resolves (`git rev-parse <fixed-po
 
 Look for the originating spec, in this order:
 
-1. Issue references in the commit messages (`#123`, `Closes #45`) — fetch via the workflow in `docs/agents/issue-tracker.md`.
-2. A path the user passed as an argument.
+1. A path the user passed as an argument — an explicit spec path always wins.
+2. Issue references in the commit messages (`#123`, `Closes #45`) — fetch via the workflow in `docs/agents/issue-tracker.md`. (Argos commits always carry a ticket ref, so this almost always resolves; it comes after the explicit argument so a caller can override it.)
 3. A spec file under `docs/spec/` matching the branch name or feature (see `docs/agents/spec-review.md`).
 4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
 
