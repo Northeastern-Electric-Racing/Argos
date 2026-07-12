@@ -10,6 +10,8 @@ Break a plan, spec, or conversation into a set of **tickets** — tracer-bullet 
 
 Issue tracker conventions live in `docs/agents/issue-tracker.md`; the triage label vocabulary lives in `docs/agents/triage-labels.md`.
 
+A ticket set is a **review artifact** — it is drafted as files and reviewed as a PR before the tickets publish. This is the gate that keeps unreviewed tickets off the tracker. See `docs/agents/spec-review.md`.
+
 ## Process
 
 ### 1. Gather context
@@ -60,9 +62,15 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 5. Publish the tickets to the issue tracker
+### 5. Stage the tickets for review
 
-Publish the approved tickets to the project issue tracker (GitHub Issues — see `docs/agents/issue-tracker.md`). Publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real issue identifiers. Use GitHub's native sub-issue / blocking relationship where it fits; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise — the tickets are agent-grabbable by construction.
+Draft the approved tickets as local files under `docs/spec/<name>/` — one kebab-named file per ticket, using the issue-body template below — and open them as a PR against `develop` (draft per the repo convention, marked ready when set). This is the review gate (`docs/agents/spec-review.md`): the slicing is reviewed as a diff before any issue exists.
+
+### 6. Publish once the review PR merges
+
+After the PR is approved and merged, create the tickets on the issue tracker (GitHub Issues — see `docs/agents/issue-tracker.md`), one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real issue identifiers. Use GitHub's native sub-issue / blocking relationship where it fits; otherwise set each ticket's "Blocked by" to the blocking issues. Set each ticket's `Parent` to the spec issue. Apply the `ready-for-agent` triage label unless instructed otherwise — the tickets are agent-grabbable by construction.
+
+The temporary `docs/spec/<name>/` drafts are now on protected `develop`, so removing them needs its own commit: open a **small follow-up PR against `develop`** that deletes the folder once the tracker issues exist. The tracker issues are the durable home.
 
 Do NOT close or modify any parent issue.
 
