@@ -74,7 +74,7 @@ Do NOT close or modify any parent issue.
 
 ## Parent
 
-A reference to the parent issue on the issue tracker (if the source was an existing issue, otherwise omit this section).
+A reference to the originating spec issue or wayfinder map, if one exists — otherwise omit this section.
 
 ## What to build
 
