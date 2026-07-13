@@ -32,6 +32,10 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
       function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Voltage)
     },
     {
+      name: HeatMapView.SVolts.toString(),
+      function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.SVolts)
+    },
+    {
       name: HeatMapView.Temperature.toString(),
       function: () => this.heatMapService.setCurrentView(this.segment(), HeatMapView.Temperature)
     },
@@ -48,14 +52,14 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
   constructor() {}
 
   ngOnInit(): void {
-    this.viewSelectorConfig = { options: this.viewOptions, placeholder: 'Voltage' };
+    this.viewSelectorConfig = { options: this.viewOptions, placeholder: HeatMapView.Voltage.toString() };
     const viewSub = this.heatMapService.getCurrentView(this.segment());
     if (viewSub) {
       this.subscriptions.push(
         viewSub.subscribe((view) => {
           this.viewSelectorConfig = {
             ...this.viewSelectorConfig,
-            defaultValue: view !== undefined ? view : 'Voltage'
+            defaultValue: view !== undefined ? view : HeatMapView.Voltage.toString()
           };
         })
       );
