@@ -12,15 +12,17 @@ A spec is a **review artifact** — it is staged and reviewed as a PR before it 
 
 ## Process
 
-1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
+1. **Ensure a tracking issue exists.** `wayfinder` and `triage` both arrive here with a tracker issue already (the map and its children; the incoming issue). Reaching `to-spec` directly from `grill-with-docs` — a well-understood single feature — does not, so mint one now (`docs/agents/issue-tracker.md`): a stub issue whose number names the spec-review branch `{issue-number}-{slug}` and anchors its PR. On merge (step 4), populate that same issue with the spec body and `ready-for-agent` rather than opening a new one. If a ticket already exists, use it and skip creation.
+
+2. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
 
 If a wayfinder map fed this spec, read the map's Decisions-so-far as the source and link the spec back to it. A large effort may be several specs — run this skill once per coherent feature.
 
-2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better — the ideal number is one.
+3. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better — the ideal number is one.
 
 Check with the user that these seams match their expectations.
 
-3. Write the spec using the template below to `docs/spec/<name>/spec.md`, and open it as a PR for review (`docs/agents/spec-review.md`). Once the PR is approved and merged, publish the spec as an issue and apply the `ready-for-agent` triage label - no need for additional triage. `to-tickets` then breaks it into implementation tickets parented to this spec.
+4. Write the spec using the template below to `docs/spec/<name>/spec.md`, and open it as a PR for review (`docs/agents/spec-review.md`). Once the PR is approved and merged, publish the spec to the tracking issue from step 1 (creating one only if none exists yet) and apply the `ready-for-agent` triage label - no need for additional triage. `to-tickets` then breaks it into implementation tickets parented to this spec.
 
    The staged `docs/spec/<name>/spec.md` is temporary. If `to-tickets` will run next, it drafts into the same folder and removes it (via its follow-up PR) after publishing; if this is a spec-only effort with no ticket breakout, remove `spec.md` in a small follow-up PR against `develop` once the spec issue exists.
 
