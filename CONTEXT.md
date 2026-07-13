@@ -26,6 +26,20 @@ _Avoid_: Path, channel, stream.
 An on-vehicle CAN device that reports faults — one of `Bms`, `Dti`, `Mpu`, `Charger`. Used for attributing faults to their source.
 _Avoid_: Device, ECU, board, unit.
 
+### BMS cell voltages
+
+**C-ADC voltage** (**C Volts**):
+A cell's voltage from the ADBMS chip's primary C-ADC. Published per cell at `BMS/PerCell/{Alpha|Beta}/{segment}/Volts/{cell}` in `V`; rendered as the **C Volts** BMS-heatmap view (formerly labelled "Voltage").
+_Avoid_: "the voltage" — ambiguous now that the S-ADC reading also exists.
+
+**S-ADC voltage** (**S Volts**):
+The same cell measured independently by the ADBMS chip's redundant S-ADC. Expected per-cell topic `BMS/PerCell/{Alpha|Beta}/{segment}/S_Volts/{cell}` in `V`, mirroring the C-ADC's `Volts`; rendered as the **S Volts** BMS-heatmap view.
+_Avoid_: sense voltage.
+
+**CvS**:
+Per-cell boolean the BMS raises when a cell's C-ADC and S-ADC readings diverge past threshold. Topic `BMS/PerCell/{Alpha|Beta}/{segment}/CvS/{cell}`; rendered as the **CvS Failure** heatmap view.
+_Avoid_: C-vs-S failure (say "CvS").
+
 ### Alerting
 
 **Fault**:
