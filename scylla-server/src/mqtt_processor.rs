@@ -28,7 +28,7 @@ const YEAR_2000: chrono::DateTime<chrono::Utc> =
     chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap();
 
 /// The chief processor of incoming mqtt data, this handles
-/// - mqtt state
+/// - zenoh state
 /// - reception via mqtt and subsequent parsing
 /// - labeling of data with runs
 /// - sending data over the channel to a db handler and socket
@@ -168,9 +168,9 @@ impl MqttProcessor {
                         task = "mqtt_processor",
                         iter = iter_count,
                         db_channel_len = self.db_channel.len(),
-                        socket_channel_len = self.socket_channel.len(),
-                        msgs_in_window = msgs_since_hb,
-                        "heartbeat"
+                          socket_channel_len = self.socket_channel.len(),
+                          msgs_in_window = msgs_since_hb,
+                          "heartbeat"
                     );
                     msgs_since_hb = 0;
                 },
@@ -192,7 +192,7 @@ impl MqttProcessor {
                 //     };
                 //     trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&0.0f32));
                 //     self.send_socket_msg(client_data, &mut upload_counter);
-                }
+            }
         }
     }
 

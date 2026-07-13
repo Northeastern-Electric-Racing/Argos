@@ -1,6 +1,6 @@
 use std::{
     fs,
-    path::Path,
+    path::{Path, PathBuf},
     sync::{Arc, atomic::Ordering},
     time::Duration,
 };
@@ -22,7 +22,7 @@ use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
     BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode, SOCKET_DISCARD_PERCENT,
-    STATIC_RATE_LIMIT_VALUE,
+    STATIC_RATE_LIMIT_VALUE, SirenSendable,
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -36,6 +36,7 @@ use scylla_server::{
     },
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
+    zenoh_processor::ZenohProcessor,
 };
 use scylla_server::{
     ClientData,
@@ -145,6 +146,14 @@ struct ScyllaArgs {
     /// The authentication password for privileged pages
     #[arg(long, env = "SCYLLA_PASSWORD", default_value = "admin")]
     password: String,
+
+    /// Use Zenoh instead of MQTT -- will eventually become default
+    #[arg(short = 'z', long, env = "SCYLLA_ZENOH")]
+    zenoh: bool,
+
+    /// Zenoh conf file
+    #[arg(long, env = "SCYLLA_ZENOH_CONF", default_value_os = "./zenoh.json5")]
+    zenoh_conf: PathBuf,
 }
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -236,8 +245,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool: Pool<AsyncPgConnection> = Pool::builder()
         .max_size(10)
         .min_idle(Some(2))
-        .max_lifetime(Some(Duration::from_secs(60 * 60 * 24)))
-        .idle_timeout(Some(Duration::from_secs(60 * 2)))
+        .max_lifetime(Some(Duration::from_hours(24)))
+        .idle_timeout(Some(Duration::from_mins(2)))
         .build(manager)
         .await?;
 
@@ -256,6 +265,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO tune buffer size
     let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
     let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
+    let (mqtt_send_out, mqtt_recv_out) = mpsc::channel::<SirenSendable>(100);
 
     // wraps a clone of the db-bound broadcast Sender so server-generated
     // datapoints (e.g. Argos/Message rate) can be inserted alongside MQTT data
@@ -312,23 +322,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     // run prod if this isnt present
-    // create and spawn the mqtt processor
-    info!("Running processor in MQTT (production) mode");
-    let (recv, opts) = MqttProcessor::new(
-        mqtt_send_db,
-        mqtt_send_socket,
-        token.clone(),
-        &MqttProcessorOptions {
-            mqtt_path: cli.siren_host_url,
-        },
-    );
-    let (client, eventloop) = AsyncClient::new(opts, 600);
-    let client_sharable: Arc<AsyncClient> = Arc::new(client);
-    let process_mqtt_fut = recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone());
-    task_tracker.spawn(async move {
-        let res = tokio::spawn(process_mqtt_fut).await;
-        warn!(task = "mqtt_processor", "task ended: {:?}", res);
-    });
+    if cli.zenoh {
+        info!("Running processor in Zenoh mode");
+        let recv = ZenohProcessor::new(
+            mqtt_send_db,
+            mqtt_send_socket,
+            mqtt_recv_out,
+            token.clone(),
+            cli.zenoh_conf,
+        )
+        .await;
+        task_tracker.spawn(recv.process_zenoh(pool.clone()));
+    } else {
+        // create and spawn the mqtt processor
+        info!("Running processor in MQTT (production) mode");
+        let (recv, opts) = MqttProcessor::new(
+            mqtt_send_db,
+            mqtt_send_socket,
+            token.clone(),
+            &MqttProcessorOptions {
+                mqtt_path: cli.siren_host_url,
+            },
+        );
+        let (client, eventloop) = AsyncClient::new(opts, 600);
+        let client_sharable: Arc<AsyncClient> = Arc::new(client);
+        let process_mqtt_fut = recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone());
+        task_tracker.spawn(async move {
+            let res = tokio::spawn(process_mqtt_fut).await;
+            warn!(task = "mqtt_processor", "task ended: {:?}", res);
+        });
+    }
 
     let app = Router::new()
         .merge(
@@ -364,7 +387,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "/config/set/{configKey}",
                     post(car_command_controller::send_config_command),
                 )
-                .layer(Extension(client_sharable)),
+                .layer(Extension(mqtt_send_out)),
         )
         .merge(
             Router::new()
