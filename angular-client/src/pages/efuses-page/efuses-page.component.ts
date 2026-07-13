@@ -6,6 +6,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import EfuseCardComponent, { EfuseLockMode } from './components/efuse-card/efuse-card.component';
 import RtdsDebugCardComponent from './components/rtds-debug-card/rtds-debug-card.component';
 import GridLayoutComponent from 'src/components/grid-layout/grid-layout.component';
+import LvBatteryCardComponent from './components/lv-battery-card/lv-battery-card.component';
 
 /**
  * Container for the eFuses page, displays eFuse status and controls.
@@ -15,7 +16,7 @@ import GridLayoutComponent from 'src/components/grid-layout/grid-layout.componen
   styleUrls: ['./efuses-page.component.css'],
   templateUrl: './efuses-page.component.html',
   standalone: true,
-  imports: [GridLayoutComponent, TypographyComponent, EfuseCardComponent, RtdsDebugCardComponent]
+  imports: [GridLayoutComponent, TypographyComponent, EfuseCardComponent, RtdsDebugCardComponent, LvBatteryCardComponent]
 })
 export default class EfusesPageComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];

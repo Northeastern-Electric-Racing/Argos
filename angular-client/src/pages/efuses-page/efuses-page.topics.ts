@@ -42,6 +42,13 @@ export const EFUSE_TOPICS = {
       Spare: _FORMAT_EFUSE_TOPICS('Spare'),
       Battbox: _FORMAT_EFUSE_TOPICS('Battbox'),
       MC: _FORMAT_EFUSE_TOPICS('MC')
+    },
+
+    // Low-voltage battery — the physical LV battery pack.
+    // Distinct from the LV eFuse (VCU/eFuses/LV/...) above.
+    LV: {
+      Voltage: 'VCU/LV/voltage',
+      LowVoltageFault: 'VCU/Faults/Non-Critical/LV_LOW_VOLTAGE_FAULT'
     }
   },
 
