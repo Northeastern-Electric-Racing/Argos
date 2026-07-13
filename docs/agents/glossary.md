@@ -14,7 +14,7 @@ Plain-language definitions of the workflow and agent-tooling terms used across t
 
 **Spec (PRD).** A feature spec — you may also know this document as a PRD (Product Requirements Document). The `to-spec` skill writes one; `to-tickets` then breaks it into tracer-bullet tickets.
 
-**Spec/plan review.** The *process* the two artifacts above pass through, not an artifact itself: a spec (`to-spec`) or a ticket set (`to-tickets`) is staged as a file and reviewed as a PR before it publishes, so unreviewed tickets never reach the tracker. Not a planning flow, and not attached to grilling or wayfinder. See spec-review.md.
+**Spec review.** The *process* a spec passes through, not an artifact itself: a spec (`to-spec`) is staged as a file and reviewed as a PR before it publishes as an issue. Implementation tickets (`to-tickets`) are created directly on the tracker after the skill's quiz — not gated as files — so only a spec passes through this gate. Not a planning flow, and not attached to grilling or wayfinder. See spec-review.md.
 
 **Idea.** A raw, un-fleshed feature or bug scrap filed as a single needs-triage ticket before anyone has classified it — the lightweight counterpart to a spec. Filed by the `log-future-addition` skill for `/triage` to classify like any other intake. Deliberately thin; anything already thought through belongs in `to-spec` or `grill-with-docs`.
 

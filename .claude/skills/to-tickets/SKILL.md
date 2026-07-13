@@ -10,25 +10,21 @@ Break a plan, spec, or conversation into a set of **tickets** — tracer-bullet 
 
 Issue tracker conventions live in `docs/agents/issue-tracker.md`; the triage label vocabulary lives in `docs/agents/triage-labels.md`.
 
-A ticket set is a **review artifact** — it is drafted as files and reviewed as a PR before the tickets publish. This is the gate that keeps unreviewed tickets off the tracker. See `docs/agents/spec-review.md`.
+Tickets are **created directly on the tracker** after the quiz below — not staged as files or gated behind a PR. Their slicing is reviewed interactively here and then on the tracker, the same way `wayfinder` investigation tickets are; only a **spec** passes through the file-review gate (see `docs/agents/spec-review.md`).
 
 ## Process
 
-### 1. Ensure a parent issue exists
-
-The tickets are parented to an issue, and the review branch is named for it (`{issue-number}-{slug}`). Most paths here already have one — `to-spec` published a spec issue, `wayfinder` has its map, `triage` has the incoming issue — so use it and skip creation. Reaching `to-tickets` directly from `grill-with-docs` — a well-understood feature that needs several tickets but no spec prose — does not, so mint an **epic** issue now (`docs/agents/issue-tracker.md`, `epic` label): a short parent that names the review branch, anchors its PR, and becomes each ticket's `Parent`. A genuinely standalone single ticket may omit the parent (the `Parent` template section is optional), but a set of related tickets should share one.
-
-### 2. Gather context
+### 1. Gather context
 
 Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
 
-### 3. Explore the codebase (optional)
+### 2. Explore the codebase (optional)
 
 If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
 
 Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
 
-### 4. Draft vertical slices
+### 3. Draft vertical slices
 
 Break the work into **tracer bullet** tickets.
 
@@ -48,7 +44,7 @@ Give each ticket its **blocking edges** — the other tickets that must complete
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change — rename a column, retype a shared symbol — whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket — green is promised only there.
 
-### 5. Quiz the user
+### 4. Quiz the user
 
 Present the proposed breakdown as a numbered list. For each ticket, show:
 
@@ -66,15 +62,11 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 6. Stage the tickets for review
+### 5. Create the tickets on the tracker
 
-Draft the approved tickets as local files under `docs/spec/<name>/` — one kebab-named file per ticket, using the issue-body template below — and open them as a PR against `develop` (draft per the repo convention, marked ready when set). This is the review gate (`docs/agents/spec-review.md`): the slicing is reviewed as a diff before any issue exists.
+Once the user approves the breakdown, create the tickets directly on the issue tracker (GitHub Issues — see `docs/agents/issue-tracker.md`), one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real issue identifiers, using the issue-body template below. There is no file-staging step and no review PR — the slicing was reviewed in the quiz and stays reviewable on the tracker.
 
-### 7. Publish once the review PR merges
-
-After the PR is approved and merged, create the tickets on the issue tracker (GitHub Issues — see `docs/agents/issue-tracker.md`), one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real issue identifiers. Use GitHub's native sub-issue / blocking relationship where it fits; otherwise set each ticket's "Blocked by" to the blocking issues. Set each ticket's `Parent` to the parent issue from step 1 — a spec issue, wayfinder map, or the minted epic. Apply the `ready-for-agent` triage label unless instructed otherwise — the tickets are agent-grabbable by construction.
-
-The temporary `docs/spec/<name>/` drafts are now on protected `develop`, so removing them needs its own commit: open a **small follow-up PR against `develop`** that deletes the folder once the tracker issues exist. The tracker issues are the durable home.
+Use GitHub's native sub-issue / blocking relationship where it fits; otherwise set each ticket's "Blocked by" to the blocking issues. Set each ticket's `Parent` to the originating spec issue (or wayfinder map) **if one exists** — otherwise omit it; do not invent a parent. Apply the `ready-for-agent` triage label unless instructed otherwise — the tickets are agent-grabbable by construction.
 
 Do NOT close or modify any parent issue.
 

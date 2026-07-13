@@ -56,9 +56,9 @@ The **main flow** (idea → ship): `grill-with-docs` sharpen the idea → `to-sp
 
 **On-ramps** merge onto that flow: a huge, foggy effort too big for one session → `wayfinder`, which charts a map of investigation tickets on the tracker, then merges at `to-spec` (one map can feed several specs); raw incoming issues → `triage`.
 
-**Spec/plan review:** a spec (`to-spec`) or ticket set (`to-tickets`) is staged as a file and reviewed as a PR before it publishes to the tracker — see `docs/agents/spec-review.md`. Wayfinder investigation tickets are reviewed on the tracker instead and don't pass through this gate.
+**Spec review:** a spec (`to-spec`) is staged as a file and reviewed as a PR before it publishes to the tracker — see `docs/agents/spec-review.md`. Implementation tickets (`to-tickets`) and wayfinder investigation tickets are created directly on the tracker and reviewed there instead — they don't pass through this gate.
 
-See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`, `docs/adr/0003-misc-rename-to-spec-to-tickets.md`, `docs/adr/0004-misc-split-grill-with-docs.md`, and `docs/adr/0005-misc-wayfinder-and-spec-review.md`. The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
+See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`, `docs/adr/0003-misc-rename-to-spec-to-tickets.md`, `docs/adr/0004-misc-split-grill-with-docs.md`, `docs/adr/0005-misc-wayfinder-and-spec-review.md`, and `docs/adr/0006-misc-spec-review-gate-specs-only.md`. The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
 
 ### Issue tracker
 

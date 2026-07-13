@@ -24,7 +24,7 @@ Check with the user that these seams match their expectations.
 
 4. Write the spec using the template below to `docs/spec/<name>/spec.md`, and open it as a PR for review (`docs/agents/spec-review.md`). Once the PR is approved and merged, publish the spec to the tracking issue from step 1 (creating one only if none exists yet) and apply the `ready-for-agent` triage label - no need for additional triage. `to-tickets` then breaks it into implementation tickets parented to this spec.
 
-   The staged `docs/spec/<name>/spec.md` is temporary. If `to-tickets` will run next, it drafts into the same folder and removes it (via its follow-up PR) after publishing; if this is a spec-only effort with no ticket breakout, remove `spec.md` in a small follow-up PR against `develop` once the spec issue exists.
+   The staged `docs/spec/<name>/spec.md` is temporary — it exists only for review. Once the spec issue exists, remove `spec.md` in a small follow-up PR against `develop`. (`to-tickets` creates its tickets directly on the tracker and no longer stages files, so it won't clean this up.)
 
 <spec-template>
 

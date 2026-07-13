@@ -1,5 +1,7 @@
 # Adopt wayfinder + implement, and reshape the planning pipeline into a spec/plan review requirement
 
+> **Amended by [ADR-0006](0006-misc-spec-review-gate-specs-only.md).** The review gate described here as covering *two* artifact types — a spec and a plan/ticket set — was later narrowed to **specs only**. Implementation tickets (`to-tickets`) are now created directly on the tracker and reviewed there, like wayfinder investigation tickets. Read the plan/ticket-set gating below as superseded; the spec gating and everything else in this ADR stand.
+
 Argos completes the Matt Pocock engineering-flow adoption. It takes his main flow as the spine — `grill-with-docs → to-spec → to-tickets → implement` — adds `wayfinder` as the exploration on-ramp and `research` as a delegated-reading skill, and reshapes the branch-based planning pipeline (proposed in #669) from a default multi-phase flow into a narrow **spec/plan review requirement**. This supersedes the planning-pipeline design; #669 is closed in its favour.
 
 ## Considered Options

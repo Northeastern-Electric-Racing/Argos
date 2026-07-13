@@ -1,22 +1,22 @@
-# Spec/plan review
+# Spec review
 
-Specs and plans are **review artifacts**. Before either publishes to the tracker as issues, it is staged as a file and reviewed as a git pull request. This is the one gate that keeps unreviewed tickets off the tracker.
+A **spec** is a review artifact. Before it publishes to the tracker as an issue, it is staged as a file and reviewed as a git pull request. This is the one gate that keeps an unreviewed feature direction off the tracker.
 
-It is **not** a planning flow and **not** attached to grilling or wayfinder. It attaches to two artifact types only — a **spec** (from `/to-spec`) and a **plan** / ticket set (from `/to-tickets`) — however they were produced.
+It is **not** a planning flow and **not** attached to grilling or wayfinder. It attaches to one artifact type — a **spec** (from `/to-spec`) — however it was produced.
 
 ## The requirement
 
 - **A spec** (`/to-spec`) is written to `docs/spec/<name>/spec.md`, opened as a PR against `develop` (draft per the repo PR convention, marked ready when set), reviewed, and merged. Only then is the spec published as its issue. If it came from a wayfinder map, the spec reads the map and links back to it.
-- **A plan** (`/to-tickets`) is drafted as local files under `docs/spec/<name>/` — one kebab-named file per proposed ticket — opened as a PR, reviewed, and merged. Only then are the tickets created on the tracker, each with `Parent` = the parent issue (a spec issue, a wayfinder map, or an epic minted by `/to-tickets` when it is entered directly).
-- The staged files under `docs/spec/<name>/` are **temporary** — they exist for review. Once the issues exist, they are removed in a **small follow-up PR against `develop`** (the drafts merged to protected `develop`, so the deletion needs its own commit). The spec and its tickets are the durable home.
+- The staged `docs/spec/<name>/spec.md` is **temporary** — it exists for review. Once the spec issue exists, it is removed in a **small follow-up PR against `develop`** (the draft merged to protected `develop`, so the deletion needs its own commit). The spec issue is the durable home.
 
 ## What is *not* gated
 
-- **Wayfinder investigation tickets** — reviewed continuously on the tracker as each resolves; they don't pass through this gate.
-- **A trivial one-liner** with no spec and no ticket set — nothing to review; `/implement` in place at the author's discretion.
+- **Implementation tickets** (`/to-tickets`) — created directly on the tracker after the skill's interactive quiz, then reviewed and refined as issues. Their slicing is reviewed live, not as a file diff, so they don't pass through this gate. Each links to its spec via `Parent` when one exists, and to its blockers via `Blocked by`.
+- **Wayfinder investigation tickets** — reviewed continuously on the tracker as each resolves; they don't pass through this gate either.
+- **A trivial one-liner** with no spec — nothing to review; `/implement` in place at the author's discretion.
 
 ## Why
 
-Two reasons, both about handoff. First, a plan people can see and comment on as a diff before it fans out into issues. Second — and this is the load-bearing one — **no unreviewed tickets spam the tracker**: an implementation ticket only exists once its slicing was approved.
+A spec is where a feature's direction is decided, so it is the thing worth reviewing as a diff before the team commits to it and before it fans out into implementation tickets. Ticket slicing is still reviewed — interactively in the `to-tickets` quiz and then on the tracker — just not as a staged file, matching how wayfinder tickets are handled.
 
 Issues carry the `ai-workflow` label when the subject is the AI dev workflow itself. See `issue-tracker.md` for the label palette and `glossary.md` for the terms.
