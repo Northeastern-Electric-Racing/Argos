@@ -2,7 +2,7 @@
 name = "scylla-server"
 version = "0.0.1"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.95"
 default-run = "scylla-server"
 
 [lints.clippy]
@@ -44,6 +44,7 @@ rustc-hash = "2.1.2"
 evalexpr = "13.1.0"
 serde_with = "3.21.0"
 derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
+zenoh = "1.9.0"
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.7"
 
