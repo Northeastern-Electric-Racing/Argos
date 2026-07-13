@@ -7,7 +7,7 @@ import {
   getCellChipLabel,
   getChipFromTopicValue,
   getConnectionDotStatusColor,
-  segmentInfoMap
+  segmentInfo
 } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
 import { BatteryLevelIndicatorComponent } from '../../../../components/battery-level-indicator/battery-level-indicator.component';
@@ -33,7 +33,7 @@ export class BmsAtAGlanceComponent {
   private storage = inject(Storage);
 
   protected packVoltage = toSignal(
-    combineLatest(allSegments.map((seg) => this.storage.get(segmentInfoMap[seg].totalVoltageKey))).pipe(
+    combineLatest(allSegments.map((seg) => this.storage.get(segmentInfo(seg).totalVoltageKey))).pipe(
       map((segments) => segments.reduce((sum, v) => sum + parseFloat(v.values[0]), 0))
     )
   );
