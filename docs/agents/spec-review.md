@@ -7,7 +7,7 @@ It is **not** a planning flow and **not** attached to grilling or wayfinder. It 
 ## The requirement
 
 - **A spec** (`/to-spec`) is written to `docs/spec/<name>/spec.md`, opened as a PR against `develop` (draft per the repo PR convention, marked ready when set), reviewed, and merged. Only then is the spec published as its issue. If it came from a wayfinder map, the spec reads the map and links back to it.
-- **A plan** (`/to-tickets`) is drafted as local files under `docs/spec/<name>/` — one kebab-named file per proposed ticket — opened as a PR, reviewed, and merged. Only then are the tickets created on the tracker, each with `Parent` = the spec issue.
+- **A plan** (`/to-tickets`) is drafted as local files under `docs/spec/<name>/` — one kebab-named file per proposed ticket — opened as a PR, reviewed, and merged. Only then are the tickets created on the tracker, each with `Parent` = the parent issue (a spec issue, a wayfinder map, or an epic minted by `/to-tickets` when it is entered directly).
 - The staged files under `docs/spec/<name>/` are **temporary** — they exist for review. Once the issues exist, they are removed in a **small follow-up PR against `develop`** (the drafts merged to protected `develop`, so the deletion needs its own commit). The spec and its tickets are the durable home.
 
 ## What is *not* gated
