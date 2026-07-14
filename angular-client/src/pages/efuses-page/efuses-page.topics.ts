@@ -4,8 +4,8 @@ const _FORMAT_EFUSE_TOPICS = (eFuse: string) =>
     ADC: `VCU/eFuses/${eFuse}/ADC`,
     Voltage: `VCU/eFuses/${eFuse}/Voltage`,
     Current: `VCU/eFuses/${eFuse}/Current`,
-    Faulted: `VCU/eFuses/${eFuse}/Faulted?`,
-    Enabled: `VCU/eFuses/${eFuse}/Enabled?`,
+    Faulted: `VCU/eFuses/${eFuse}/Faulted`,
+    Enabled: `VCU/eFuses/${eFuse}/Enabled`,
     Control_State: `VCU/eFuses/${eFuse}/Control_State`
   }) as const;
 
