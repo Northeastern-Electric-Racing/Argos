@@ -34,6 +34,7 @@ use scylla_server::{
         run_controller, scylla_config_controller,
         video_streamer_controller::{self},
     },
+    mqtt_processor::pub_handle,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
     zenoh_processor::ZenohProcessor,
@@ -345,12 +346,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
-        let client_sharable: Arc<AsyncClient> = Arc::new(client);
-        let process_mqtt_fut = recv.process_mqtt(client_sharable.clone(), eventloop, pool.clone());
+        let process_mqtt_fut = recv.process_mqtt(eventloop, pool.clone());
         task_tracker.spawn(async move {
             let res = tokio::spawn(process_mqtt_fut).await;
             warn!(task = "mqtt_processor", "task ended: {:?}", res);
         });
+        task_tracker.spawn(pub_handle(token.clone(), mqtt_recv_out, client));
     }
 
     let app = Router::new()
