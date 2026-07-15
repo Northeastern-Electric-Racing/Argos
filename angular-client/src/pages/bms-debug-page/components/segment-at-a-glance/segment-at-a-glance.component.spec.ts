@@ -13,6 +13,7 @@ describe('SegmentAtAGlanceComponent', () => {
 
     fixture = TestBed.createComponent(SegmentAtAGlanceComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('segmentNumber', 0);
     fixture.detectChanges();
   });
 

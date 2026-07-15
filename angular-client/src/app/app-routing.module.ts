@@ -13,39 +13,7 @@ import LandingPageComponent from 'src/pages/landing-page/landing-page.component'
 import LapTimerPageComponent from 'src/pages/lap-timer-page/lap-timer-page.component';
 import MapComponent from 'src/pages/map/map.component';
 import NotificationRulesPageComponent from 'src/pages/notification-rules-page/notification-rules-page.component';
-import { Segment } from 'src/utils/bms.utils';
-
-const landingRoute = () => `/landing`;
-const graphRoute = () => `/graph`;
-const mapRoute = () => `/map`;
-const chargingRoute = () => `/charging`;
-const bmsRoute = () => `/bms`;
-const bmsSegmentViewRoute = (id: Segment) => `/bms/segment/${id + 1}`;
-const cameraRoute = () => `/camera`;
-const faultsRoute = () => `/faults`;
-const faultsGraphRoute = () => `/faults/fault-graph`;
-const commandsRoute = () => `/commands`;
-const rulesRoute = () => `/rules`;
-const efusesRoute = () => `/efuses`;
-const notificationLogRoute = () => `/notification-log`;
-const lapTimerRoute = () => `/lap-timer`;
-
-export const appRoutes = {
-  landingRoute,
-  graphRoute,
-  mapRoute,
-  chargingRoute,
-  bmsRoute,
-  bmsSegmentViewRoute,
-  cameraRoute,
-  faultsRoute,
-  faultsGraphRoute,
-  commandsRoute,
-  rulesRoute,
-  efusesRoute,
-  notificationLogRoute,
-  lapTimerRoute
-};
+import { appRoutes } from './app-routes';
 
 // Routes should be defined carefully in accordance with the appRoutes
 const routes: Routes = [

@@ -4,6 +4,7 @@ import { HeatMapView } from 'src/services/heat-map.service';
 /** Maps each HeatMapView to its CSS modifier class suffix */
 const VIEW_CLASS_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'view-voltage',
+  [HeatMapView.SVolts]: 'view-voltage',
   [HeatMapView.Balancing]: 'view-balancing',
   [HeatMapView.Temperature]: 'view-temperature',
   [HeatMapView.CvsFailure]: 'view-cvs-failure'
@@ -12,6 +13,7 @@ const VIEW_CLASS_MAP: Record<HeatMapView, string> = {
 /** Maps each HeatMapView to the unit label shown inside the hex */
 const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'V',
+  [HeatMapView.SVolts]: 'V',
   [HeatMapView.Temperature]: '°C',
   [HeatMapView.Balancing]: '',
   [HeatMapView.CvsFailure]: ''
