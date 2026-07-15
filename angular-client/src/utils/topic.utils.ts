@@ -22,6 +22,9 @@ export const alphaTemp = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/
 export const betaTemp = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Therms/${cell}`;
 export const alphaVolt = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Volts/${cell}`;
 export const betaVolt = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Volts/${cell}`;
+// S-ADC per-cell voltage (S Volts) — mirrors the C-ADC Volts topics above.
+export const alphaSVolt = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/S_Volts/${cell}`;
+export const betaSVolt = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/S_Volts/${cell}`;
 export const alphaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/Burning/${cell}`;
 export const betaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
 export const alphaCvs = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/CvS/${cell}`;
@@ -173,6 +176,8 @@ export const topics = {
   betaTemp,
   alphaVolt,
   betaVolt,
+  alphaSVolt,
+  betaSVolt,
   alphaBurning,
   betaBurning,
   alphaCvs,
@@ -270,6 +275,9 @@ export const allAlphaThermValues: number[] = Array.from({ length: BMS_CONFIG.ALP
 export const allBetaThermValues: number[] = Array.from({ length: BMS_CONFIG.BETA_THERM_COUNT }, (_, i) => i * 2);
 export const allAlphaVoltValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_VOLT_COUNT }, (_, i) => i);
 export const allBetaVoltValues: number[] = Array.from({ length: BMS_CONFIG.BETA_VOLT_COUNT }, (_, i) => i);
+// S Volts cover the same per-cell set as C Volts, so reuse the Volts cell counts.
+export const allAlphaSVoltValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_VOLT_COUNT }, (_, i) => i);
+export const allBetaSVoltValues: number[] = Array.from({ length: BMS_CONFIG.BETA_VOLT_COUNT }, (_, i) => i);
 export const allAlphaBurnValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_BURN_COUNT }, (_, i) => i);
 export const allBetaBurnValues: number[] = Array.from({ length: BMS_CONFIG.BETA_BURN_COUNT }, (_, i) => i);
 export const allAlphaCvsValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_CVS_COUNT }, (_, i) => i);

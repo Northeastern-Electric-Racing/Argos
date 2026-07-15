@@ -63,6 +63,12 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
       }
     },
     {
+      name: HeatMapView.SVolts.toString(),
+      function: () => {
+        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.SVolts);
+      }
+    },
+    {
       name: HeatMapView.Balancing.toString(),
       function: () => {
         this.heatMapService.setCurrentView(this.segmentId, HeatMapView.Balancing);
