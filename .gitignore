@@ -7,6 +7,9 @@
 # local Claude Code config (worktree symlink)
 .claude/*
 !.claude/skills/
+
+# local journal notes (journal skill) — capture-only, never committed
+.journal/
 scylla-server-typescript/src/prisma/mydatabase.db
 scylla-server-typescript/src/prisma/mydatabase.db-journal
 scylla-server/files

@@ -99,7 +99,7 @@ describe('flattenTreeNodes', () => {
     ];
     const flat = flattenTreeNodes(tree);
     const labels = flat.map((n) => n.label);
-    expect(labels).toEqual(['Aux/Sensor/Zeta', 'BMS/Pack/SOC', 'BMS/Pack/Voltage', 'MPU/State/Speed']);
+    expect(labels).toEqual(['Aux/Sensor/Zeta', 'BMS/Pack/SoC', 'BMS/Pack/Voltage', 'MPU/State/Speed']);
   });
 
   it('returns an empty list when the tree has no leaves', () => {

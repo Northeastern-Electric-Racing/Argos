@@ -9,6 +9,9 @@ describe('NotificationRulesPageComponent', () => {
   let messageService: MessageService;
 
   beforeEach(async () => {
+    // The real app eagerly creates the client ID in AppContextComponent; the page only reads it.
+    localStorage.setItem('notification_rules_client_id', 'test-client-id');
+
     await TestBed.configureTestingModule({
       imports: [NotificationRulesPageComponent],
       providers: [MessageService, DialogService]
@@ -39,7 +42,7 @@ describe('NotificationRulesPageComponent', () => {
   });
 
   describe('CSV parsing', () => {
-    it('should reject files without .csv extension', () => {
+    it('should reject files without .csv extension', async () => {
       const addSpy = spyOn(messageService, 'add');
       const event = {
         target: {
@@ -48,7 +51,7 @@ describe('NotificationRulesPageComponent', () => {
         }
       } as unknown as Event;
 
-      component.onFileSelected(event);
+      await component.onFileSelected(event);
       expect(addSpy).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'error', summary: 'Invalid File' }));
     });
   });

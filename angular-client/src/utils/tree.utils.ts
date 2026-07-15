@@ -76,7 +76,7 @@ export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLe
     for (const node of nodes) {
       if (node.children?.length) {
         collect(node.children as TreeNode<TreeNodeData>[]);
-      } else if (node.data?.dataType) {
+      } else if (node.selectable && node.data?.dataType) {
         leaves.push({
           ...node,
           label: compactTopicLabel(node.data.dataType.name, maxLabelLength),
