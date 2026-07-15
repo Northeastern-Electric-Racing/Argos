@@ -1,3 +1,8 @@
+<!-- #705 LV Battery status bar (Quick view pop-out; foundation for #709). -->
+<proto-status-bar>
+  <proto-lv-chip-c [voltage]="voltage()" [faulted]="faulted()" />
+</proto-status-bar>
+
 <div style="padding: 20px">
   <div class="zone-title" style="padding-top: 0px">Normal eFuses</div>
   <div class="zone-subtext">
@@ -116,9 +121,6 @@
       [notice]="'Warning: Disabling this eFuse will literally turn off the car\'s entire low-voltage system.'"
       [lockMode]="EfuseLockMode.UnlockToEdit"
     />
-
-    <!-- LV Battery (the physical low-voltage battery — distinct from the LV eFuse above) -->
-    <lv-battery-card />
 
     <!-- Battbox eFuse -->
     <efuse-card
