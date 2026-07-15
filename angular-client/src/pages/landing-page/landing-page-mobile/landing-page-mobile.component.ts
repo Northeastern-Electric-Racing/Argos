@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { DriverComponent } from '../../../components/driver-component/driver-component';
 import { AccelerationGraphsComponent } from '../../../components/acceleration-graphs/acceleration-graphs.component';
@@ -15,8 +15,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 @Component({
   selector: 'landing-page-mobile',
   templateUrl: './landing-page-mobile.component.html',
-  styleUrls: ['./landing-page-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TypographyComponent,
     VStackComponent,

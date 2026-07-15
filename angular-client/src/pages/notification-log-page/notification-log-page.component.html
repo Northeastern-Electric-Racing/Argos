@@ -1,0 +1,66 @@
+<div class="page-container">
+  <header class="page-header">
+    <div class="header-title">
+      <typography variant="x-large-title" content="Notification Log" />
+      @if (hasEntries()) {
+        <span class="entry-count">{{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}</span>
+      }
+    </div>
+    @if (hasEntries()) {
+      <p-button
+        label="Clear All"
+        icon="pi pi-trash"
+        severity="danger"
+        [text]="true"
+        (onClick)="notificationLogService.clearAll()"
+        ariaLabel="Clear all notifications"
+      />
+    }
+  </header>
+
+  @if (!hasEntries()) {
+    <div class="empty-state">
+      <i class="pi pi-bell-slash empty-icon"></i>
+      <typography variant="subheader" content="No notifications have been triggered yet" />
+      <span class="empty-hint">Triggered rules will appear here in real-time</span>
+    </div>
+  } @else {
+    <div class="log-table-wrapper">
+      <p-table [value]="entries()" stripedRows [scrollable]="true" scrollHeight="flex">
+        <ng-template #header>
+          <tr>
+            <th class="col-rule">Rule ID</th>
+            <th class="col-topic">Topic</th>
+            <th class="col-values">Values</th>
+            <th class="col-time">Time</th>
+            <th class="col-actions"></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-entry>
+          <tr [class.unread]="!entry.read">
+            <td class="col-rule">
+              <span class="rule-cell">
+                <span class="rule-dot" [class.unread-dot]="!entry.read" aria-hidden="true"></span>
+                {{ entry.notification.id }}
+              </span>
+            </td>
+            <td class="col-topic">{{ entry.notification.topic }}</td>
+            <td class="col-values">{{ entry.notification.values.join(', ') }}</td>
+            <td class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
+            <td class="col-actions">
+              <p-button
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                (onClick)="notificationLogService.dismissEntry(entry.id)"
+                [ariaLabel]="'Dismiss notification ' + entry.notification.id"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

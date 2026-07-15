@@ -10,6 +10,9 @@
 <div class="value-row">
   <span class="value">{{ formattedValue() }}</span>
   <span class="unit" [class.unit-below]="unitBelow()">{{ unit() }}</span>
+  @if (connectionDotStatusColor(); as statusColor) {
+    <connection-dot-with-message [getStatusColor]="statusColor" style="margin-left: 5px" />
+  }
   <ng-content />
 </div>
 

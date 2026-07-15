@@ -1,12 +1,11 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, OnDestroy, OnInit, signal, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
-import { appRoutes } from 'src/app/app-routing.module';
-import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
+import { appRoutes } from 'src/app/app-routes';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
@@ -15,10 +14,10 @@ import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
-import { GeneralButtonsComponent } from './graph-caption/general-buttons/general-buttons.component';
+import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
 import CustomGraphComponent from './graph/graph.component';
+import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
@@ -29,7 +28,6 @@ import { FormsModule } from '@angular/forms';
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
   styleUrls: ['./graph-page.component.css'],
-  standalone: true,
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
@@ -37,8 +35,8 @@ import { FormsModule } from '@angular/forms';
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
-    HStackComponent,
     CustomGraphComponent,
+    LiveValueStripComponent,
     TypographyComponent,
     InputNumberModule,
     FormsModule
@@ -52,6 +50,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
   private route = inject(ActivatedRoute);
+  // Required: forces CD when the isLoading BehaviorSubject transitions during the initial CD cycle
+  // (removing this re-introduces NG0100 on the loading→content branch flip). See PR #550 review thread.
+  private cdr = inject(ChangeDetectorRef);
 
   // keep track of the subscriptions, that way we cancel all subs anywhere anytime
   subscriptions: Subscription[] = [];
@@ -84,7 +85,12 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   // GRAPH State variables
   realTime: boolean = true;
   run?: Run;
-  minutesToQuery: number | undefined = undefined;
+  // Historical-range state. Exactly one of these is set when the user is in historical mode.
+  // Signals so derived computeds and downstream OnPush children update reliably even if
+  // graph-page itself is later switched to OnPush change detection.
+  selectedPresetMinutes = signal<number | undefined>(undefined);
+  customLastXMinutes = signal<number | undefined>(undefined);
+  customDateRange = signal<{ startMs: number; endMs: number } | undefined>(undefined);
   showMultiYaxis = false;
   toggleMultiYaxis = () => {
     this.showMultiYaxis = !this.showMultiYaxis;
@@ -94,54 +100,38 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.isPaused = !this.isPaused;
   };
 
-  // Selector config for querying time ranges form now.
-  queryMinutesConfig: SelectorConfig = {
-    options: [
-      {
-        name: '1 minute',
-        function: () => {
-          this.onQueryTimeSelected(1);
-        }
-      },
-      {
-        name: '2 minutes',
-        function: () => {
-          this.onQueryTimeSelected(2);
-        }
-      },
-      {
-        name: '5 minutes',
-        function: () => {
-          this.onQueryTimeSelected(5);
-        }
-      },
-      {
-        name: '10 minutes',
-        function: () => {
-          this.onQueryTimeSelected(10);
-        }
-      },
-      {
-        name: '15 minutes',
-        function: () => {
-          this.onQueryTimeSelected(15);
-        }
-      },
-      {
-        name: '30 minutes',
-        function: () => {
-          this.onQueryTimeSelected(30);
-        }
-      },
-      {
-        name: '1 hour',
-        function: () => {
-          this.onQueryTimeSelected(60);
-        }
-      }
-    ],
-    placeholder: 'Select Range'
-  };
+  rangePresets: RangePreset[] = [
+    { label: '1 minute', minutes: 1 },
+    { label: '2 minutes', minutes: 2 },
+    { label: '5 minutes', minutes: 5 },
+    { label: '10 minutes', minutes: 10 },
+    { label: '15 minutes', minutes: 15 },
+    { label: '30 minutes', minutes: 30 },
+    { label: '1 hour', minutes: 60 },
+    { label: '2 hours', minutes: 120 },
+    { label: '4 hours', minutes: 240 },
+    { label: '8 hours', minutes: 480 },
+    { label: '24 hours', minutes: 1440 }
+  ];
+
+  historicalRangeActive = computed<boolean>(
+    () =>
+      this.selectedPresetMinutes() !== undefined ||
+      this.customLastXMinutes() !== undefined ||
+      this.customDateRange() !== undefined
+  );
+
+  customRangeActive = computed<boolean>(
+    () => this.customLastXMinutes() !== undefined || this.customDateRange() !== undefined
+  );
+
+  customRangeCaption = computed<string | null>(() => {
+    const lastX = this.customLastXMinutes();
+    if (lastX !== undefined) return `Last ${this.formatMinutes(lastX)}`;
+    const range = this.customDateRange();
+    if (range !== undefined) return this.formatDateRange(range.startMs, range.endMs);
+    return null;
+  });
 
   // store the values for each selected data type.
   // When we are in live mode the data  is constantly udpated.
@@ -247,7 +237,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.realTime = true;
     this.selectedFault = undefined;
     this.renderFaultPage = false;
-    this.minutesToQuery = undefined;
+    this.clearHistoricalRangeState();
     this.rightHeader = `Real Time`;
 
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
@@ -273,7 +263,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   };
   private initFaultPage = () => {
     this.renderFaultPage = true;
-    this.minutesToQuery = undefined;
+    this.clearHistoricalRangeState();
 
     const selectedFaultSubscription = this.faultService.getSelectedFault();
     this.selectedFault = selectedFaultSubscription.value;
@@ -284,7 +274,13 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.rightHeader = `Fault: ${this.selectedFault?.name}`;
   };
 
-  // reset shit when a run is selected.
+  private clearHistoricalRangeState() {
+    this.selectedPresetMinutes.set(undefined);
+    this.customLastXMinutes.set(undefined);
+    this.customDateRange.set(undefined);
+  }
+
+  // Reset graph state and switch into Run mode when a run is selected.
   onRunSelected = (run: Run) => {
     this.isPaused = false;
 
@@ -293,7 +289,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
     this.run = run;
     this.realTime = false;
-    this.minutesToQuery = undefined;
+    this.clearHistoricalRangeState();
     this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
@@ -305,23 +301,61 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.processDataTypeSelection(currentSelection);
   };
 
-  onQueryTimeSelected = (queryTime: number) => {
-    // Clear existing state first
-    this.clearDataType();
-
+  private startHistoricalQuery() {
     this.isPaused = false;
     this.run = undefined;
-    this.minutesToQuery = queryTime;
     this.realTime = false;
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
     this.selectedDataTypeValuesError = undefined;
-    this.rightHeader = 'Hist Range';
+    this.rightHeader = 'Historical';
 
     // Re-apply current selection from service to trigger data load for this time range
     const currentSelection = this.topicSelectionService.getSelectedDataTypes().value;
     this.processDataTypeSelection(currentSelection);
+  }
+
+  onSelectPreset = (minutes: number) => {
+    this.clearDataType();
+    this.clearHistoricalRangeState();
+    this.selectedPresetMinutes.set(minutes);
+    this.startHistoricalQuery();
   };
+
+  onApplyCustomLastX = (totalMinutes: number) => {
+    this.clearDataType();
+    this.clearHistoricalRangeState();
+    this.customLastXMinutes.set(totalMinutes);
+    this.startHistoricalQuery();
+  };
+
+  onApplyCustomDateRange = (startMs: number, endMs: number) => {
+    this.clearDataType();
+    this.clearHistoricalRangeState();
+    this.customDateRange.set({ startMs, endMs });
+    this.startHistoricalQuery();
+  };
+
+  private formatMinutes(mins: number): string {
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  }
+
+  private formatDateRange(startMs: number, endMs: number): string {
+    const start = new Date(startMs);
+    const end = new Date(endMs);
+    const sameDay =
+      start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate();
+    const dateOpts: Intl.DateTimeFormatOptions = { month: 'numeric', day: 'numeric' };
+    const timeOpts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
+    const startStr = `${start.toLocaleDateString('en-US', dateOpts)} ${start.toLocaleTimeString('en-US', timeOpts)}`;
+    const endStr = sameDay
+      ? end.toLocaleTimeString('en-US', timeOpts)
+      : `${end.toLocaleDateString('en-US', dateOpts)} ${end.toLocaleTimeString('en-US', timeOpts)}`;
+    return `${startStr} → ${endStr}`;
+  }
 
   // get real time ready
   onSetRealtime = () => {
@@ -330,7 +364,11 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
     this.run = undefined;
     this.realTime = true;
-    this.minutesToQuery = undefined;
+    // Clear pause explicitly: today the only path back to RT is via the historical-mode
+    // Realtime button (which goes through startHistoricalQuery — also clears pause), but
+    // making the reset explicit here keeps the invariant local to the transition itself.
+    this.isPaused = false;
+    this.clearHistoricalRangeState();
     this.selectedDataTypeValuesSubject = [];
     this.selectedDataTypeValuesIsLoading = false;
     this.selectedDataTypeValuesIsError = false;
@@ -350,6 +388,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.persistentSubscriptions.push(
       dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
         this.dataTypesIsLoading = isLoading;
+        this.cdr.detectChanges();
       })
     );
     this.persistentSubscriptions.push(
@@ -375,10 +414,15 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private syncUrlToService(params: ParamMap) {
     if (this.dataTypes.length === 0) return;
 
-    const topicNames = new Set(params.get('topics')?.split(',') ?? []);
-    const topics = this.dataTypes.filter((dt) => topicNames.has(dt.name));
+    const topicsParam = params.get('topics');
+    if (!topicsParam) return;
 
-    this.topicSelectionService.setSelectedDataTypes(topics);
+    // URL → service is additive only. The service is source of truth; the URL is a view of
+    // it (kept in sync by updateUrl). When URL and service diverge, we only add what the URL
+    // contributes (deep-link hydration) — never remove. Removals come from explicit UI actions.
+    const topicNames = new Set(topicsParam.split(','));
+    const topicsFromUrl = this.dataTypes.filter((dt) => topicNames.has(dt.name));
+    this.topicSelectionService.addDataTypes(topicsFromUrl);
   }
 
   private updateUrl(selectedDataTypes: DataType[]) {
@@ -427,12 +471,25 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       let queryFn: () => Promise<Response>;
       if (this.run !== undefined) {
         queryFn = () => getDataByDataTypeNameAndRunId(dataType.name, this.run!.id);
-      } else if (this.minutesToQuery !== undefined) {
-        const realMinutes = this.minutesToQuery;
+      } else if (this.customDateRange() !== undefined) {
+        // Anchor the lookback at endMs and treat the span as `before` minutes. The backend's
+        // Timing payload is minute-granularity, so we ceil; this can return up to ~60s of
+        // extra data on the start side relative to the picker (which exposes seconds), which
+        // is preferable to losing data — a "5:00:30 → 5:05:15" pick fetches "5:00:15 → 5:05:15".
+        const { startMs, endMs } = this.customDateRange()!;
+        const beforeMinutes = Math.max(1, Math.ceil((endMs - startMs) / 60000));
+        queryFn = () =>
+          getDataByDatatTypeNameAndTiming(dataType.name, {
+            time: endMs,
+            before: beforeMinutes,
+            after: 0
+          });
+      } else if (this.selectedPresetMinutes() !== undefined || this.customLastXMinutes() !== undefined) {
+        const minutes = (this.selectedPresetMinutes() ?? this.customLastXMinutes())!;
         queryFn = () =>
           getDataByDatatTypeNameAndTiming(dataType.name, {
             time: new Date().getTime(),
-            before: realMinutes,
+            before: minutes,
             after: 0
           });
       } else {
@@ -508,7 +565,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
     if (this.realTime) {
       this.processRealTimeDataTypeSelection(dataTypes);
-    } else if (this.run !== undefined || this.selectedFault !== undefined || this.minutesToQuery !== undefined) {
+    } else if (this.run !== undefined || this.selectedFault !== undefined || this.historicalRangeActive()) {
       this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
     } else {
       this.toastService.add({

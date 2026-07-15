@@ -58,6 +58,8 @@ pub const FAULT_SOCKET_KEY: &str = "faults";
 pub const FAULT_MIN_REG_GAP: TimeDelta = TimeDelta::seconds(8);
 
 pub const FAULT_BINS: &[&str] = &["DTI/Fault/FaultCode"];
+#[must_use]
+#[allow(clippy::match_same_arms)]
 pub const fn map_dti_flt(index: usize) -> Option<&'static str> {
     match index {
         0 => None,

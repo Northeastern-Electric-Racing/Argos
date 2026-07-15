@@ -4,8 +4,12 @@
 # environment config
 **/.env
 
-# Claude Code
-.claude/settings.json
+# local Claude Code config (worktree symlink)
+.claude/*
+!.claude/skills/
+
+# local journal notes (journal skill) — capture-only, never committed
+.journal/
 scylla-server-typescript/src/prisma/mydatabase.db
 scylla-server-typescript/src/prisma/mydatabase.db-journal
 scylla-server/files
@@ -108,3 +112,13 @@ iOSInjectionProject/
 compose.override.yml
 **/.DS_Store
 **/.vs
+
+# AI tooling
+.playwright-mcp/
+.wolf/
+# .context/ — local agent context scratch (ironically, not the context we track in CONTEXT.md/docs)
+.context/
+# Playwright verification screenshots (see CLAUDE.md "Screenshots")
+pictures/
+.claude/*
+!.claude/skills/

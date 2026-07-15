@@ -1,0 +1,7 @@
+# Used by .github/workflows/scylla-build.yml — expects the scylla-server binary
+# to already be built on the runner and staged at bin/scylla-server.
+# For local/compose builds that build from source, use Dockerfile.
+FROM debian:stable-slim
+COPY bin/scylla-server /usr/local/bin/scylla-server
+RUN apt-get update && apt-get install -y openssl && apt-get clean && rm -rf /var/lib/apt/lists/*
+ENTRYPOINT ["/usr/local/bin/scylla-server"]

@@ -23,10 +23,10 @@ pub struct ConfigRequest {
 
 /// Sends a configuration to the car over MQTT
 /// * `key` - The key of the configuration, as defined in the cangen YAML
-/// * `data_query` - The data of the configuration, a URI query list of data=<f32>.  If empty or too short, filled with cangen YAMl defaults
+/// * `data_query` - The data of the configuration, a URI query list of data=<f32>.  If empty or too short, filled with cangen `YAMl` defaults
 /// * `client` - The MQTT client to be used to send the data
 ///
-/// More info: This follows the specification of sending a command_data object over siren to topic CALYPSO_BIDIR_CMD_PREFIX/<key>
+/// More info: This follows the specification of sending a `command_data` object over siren to topic `CALYPSO_BIDIR_CMD_PREFIX`/<key>
 pub async fn send_config_command(
     Path(key): Path<String>,
     Query(data_query): Query<ConfigRequest>,

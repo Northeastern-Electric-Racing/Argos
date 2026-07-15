@@ -4,9 +4,13 @@ import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
 import Storage from './storage.service';
 import {
   allAlphaBurnValues,
+  allAlphaCvsValues,
+  allAlphaSVoltValues,
   allAlphaThermValues,
   allAlphaVoltValues,
   allBetaBurnValues,
+  allBetaCvsValues,
+  allBetaSVoltValues,
   allBetaThermValues,
   allBetaVoltValues,
   topics
@@ -17,7 +21,9 @@ export type CellReading = {
   segment: Segment;
   temp: number | undefined;
   voltage: number | undefined;
+  svolts: number | undefined;
   balancing: boolean | undefined;
+  cvs: boolean | undefined;
   cellNumber: number;
 };
 
@@ -29,7 +35,9 @@ const createSegmentCells = (segment: number, chip: Chip, count: number): CellRea
       segment,
       temp: undefined,
       voltage: undefined,
+      svolts: undefined,
       balancing: undefined,
+      cvs: undefined,
       cellNumber: i
     })
   );
@@ -78,10 +86,17 @@ export class CellService {
         });
       });
 
-      // Volts: one per cell
+      // Volts: one per cell (C-ADC voltage)
       allAlphaVoltValues.forEach((volt, voltIndex) => {
         this.storageService.get(topics.alphaVolt(segmentNumber, volt)).subscribe((data) => {
           segmentAlphaCells[voltIndex].voltage = parseFloat(data.values[0]);
+        });
+      });
+
+      // S Volts: one per cell (S-ADC voltage, mirrors Volts)
+      allAlphaSVoltValues.forEach((sVolt, sVoltIndex) => {
+        this.storageService.get(topics.alphaSVolt(segmentNumber, sVolt)).subscribe((data) => {
+          segmentAlphaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
         });
       });
 
@@ -89,6 +104,13 @@ export class CellService {
       allAlphaBurnValues.forEach((burn, burnIndex) => {
         this.storageService.get(topics.alphaBurning(segmentNumber, burn)).subscribe((data) => {
           segmentAlphaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
+        });
+      });
+
+      // CvS: one per cell
+      allAlphaCvsValues.forEach((cvs, cvsIndex) => {
+        this.storageService.get(topics.alphaCvs(segmentNumber, cvs)).subscribe((data) => {
+          segmentAlphaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
         });
       });
     });
@@ -111,10 +133,17 @@ export class CellService {
         });
       });
 
-      // Volts: one per cell
+      // Volts: one per cell (C-ADC voltage)
       allBetaVoltValues.map((volt, voltIndex) => {
         this.storageService.get(topics.betaVolt(segmentNumber, volt)).subscribe((data) => {
           segmentBetaCells[voltIndex].voltage = parseFloat(data.values[0]);
+        });
+      });
+
+      // S Volts: one per cell (S-ADC voltage, mirrors Volts)
+      allBetaSVoltValues.map((sVolt, sVoltIndex) => {
+        this.storageService.get(topics.betaSVolt(segmentNumber, sVolt)).subscribe((data) => {
+          segmentBetaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
         });
       });
 
@@ -122,6 +151,13 @@ export class CellService {
       allBetaBurnValues.map((burn, burnIndex) => {
         this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
           segmentBetaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
+        });
+      });
+
+      // CvS: one per cell
+      allBetaCvsValues.forEach((cvs, cvsIndex) => {
+        this.storageService.get(topics.betaCvs(segmentNumber, cvs)).subscribe((data) => {
+          segmentBetaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
         });
       });
     });

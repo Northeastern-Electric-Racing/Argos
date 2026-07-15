@@ -34,6 +34,7 @@ import { PasswordModule } from 'primeng/password';
 import { importProvidersFrom, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import AppContextComponent from './app/context/app-context.component';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 bootstrapApplication(AppContextComponent, {
   providers: [
@@ -67,7 +68,8 @@ bootstrapApplication(AppContextComponent, {
       InputTextModule,
       InputNumberModule,
       PasswordModule,
-      ToggleSwitchModule
+      ToggleSwitchModule,
+      AutoCompleteModule
     ),
     DialogService,
     MessageService,

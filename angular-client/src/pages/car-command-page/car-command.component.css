@@ -1,0 +1,101 @@
+.page-container {
+  padding: 20px;
+}
+
+/* ---- Header ---- */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* ---- Auth Section ---- */
+.auth-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.auth-section info-background {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 12px;
+}
+
+.auth-description {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  margin: 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-input-group label {
+  color: var(--color-text-subtitle);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+}
+
+.auth-input-group ::ng-deep p-password,
+.auth-input-group ::ng-deep .p-password,
+.auth-input-group ::ng-deep .p-inputtext {
+  width: 100%;
+}
+
+.auth-error {
+  color: #f04346;
+  font-size: var(--font-size-sm);
+  text-align: center;
+  margin: 0;
+}
+
+/* ---- Commands Grid ---- */
+.commands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ---- Settings ---- */
+.section-spacer {
+  margin-top: 24px;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 16px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}

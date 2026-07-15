@@ -16,6 +16,11 @@ mat-icon {
   clip-path: polygon(var(--slice-x, 125px) 0, 100% 0, 100% 100%, 0 100%, 0 var(--slice-y, 145px));
 }
 
+.container.fill {
+  display: flex;
+  flex-direction: column;
+}
+
 .title-container {
   display: flex;
   flex-direction: row;

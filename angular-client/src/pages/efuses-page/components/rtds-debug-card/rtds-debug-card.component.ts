@@ -7,19 +7,27 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import VStackComponent from 'src/components/vstack/vstack.component';
 import SevenSegmentDisplayComponent from '../seven-segment-display/seven-segment-display.component';
 import { LockButtonComponent } from '../lock-button/lock-button.component';
+import IndicatorLightComponent from '../indicator-light/indicator-light.component';
 
 @Component({
   selector: 'rtds-debug-card',
   templateUrl: './rtds-debug-card.component.html',
   styleUrls: ['./rtds-debug-card.component.css'],
   standalone: true,
-  imports: [InfoBackgroundComponent, VStackComponent, SevenSegmentDisplayComponent, LockButtonComponent]
+  imports: [
+    InfoBackgroundComponent,
+    VStackComponent,
+    SevenSegmentDisplayComponent,
+    LockButtonComponent,
+    IndicatorLightComponent
+  ]
 })
 export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
 
   readonly rtdsTopics = EFUSE_TOPICS.VCU.RTDS;
+  readonly echo = EFUSE_TOPICS.VCU.Echo;
 
   isLocked = signal<boolean>(true);
 
@@ -27,12 +35,14 @@ export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
   soundingState = 0;
   reverseState = 0;
   errorState = 0;
+  shutdown = false;
 
   ngOnInit(): void {
     this.subscribeState(this.rtdsTopics.Pin_State, (value) => (this.pinState = value));
     this.subscribeState(this.rtdsTopics.Sounding_State, (value) => (this.soundingState = value));
     this.subscribeState(this.rtdsTopics.Reverse_State, (value) => (this.reverseState = value));
     this.subscribeState(this.rtdsTopics.Error_State, (value) => (this.errorState = value));
+    this.subscribeState(this.echo.BMS_Shutdown, (value) => (this.shutdown = value !== 0));
   }
 
   ngOnDestroy(): void {

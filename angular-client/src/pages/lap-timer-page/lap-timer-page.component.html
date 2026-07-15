@@ -1,0 +1,42 @@
+<div class="page-grid">
+  <p-toast position="top-right" />
+  <p-confirmDialog />
+
+  <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem">
+    <mat-grid-tile [colspan]="6" [rowspan]="8">
+      <sessions-panel />
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="3" [rowspan]="9">
+      <timer-hero />
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="1" [rowspan]="9">
+      <session-summary />
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="2" [rowspan]="5">
+      <info-background svgIcon="speed" title="Speed" style="width: 100%; height: 100%">
+        <div class="gauge-wrap">
+          <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" [color]="speedGaugeColor()" [size]="320" />
+        </div>
+      </info-background>
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="1" [rowspan]="4">
+      <info-background title="Battery" style="width: 100%; height: 100%">
+        <gauge-stat [value]="liveSoc()" unit="%" [color]="socColor()" />
+      </info-background>
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="1" [rowspan]="4">
+      <info-background title="Motor" style="width: 100%; height: 100%">
+        <gauge-stat [value]="liveMotorTemp()" unit="°C" [color]="motorTempColor()" />
+      </info-background>
+    </mat-grid-tile>
+
+    <mat-grid-tile [colspan]="6" [rowspan]="22">
+      <laps-table />
+    </mat-grid-tile>
+  </mat-grid-list>
+</div>

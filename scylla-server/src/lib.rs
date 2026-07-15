@@ -4,6 +4,7 @@ pub mod controllers;
 pub mod error;
 pub mod services;
 
+pub mod argos_inserter;
 pub mod db_handler;
 pub mod mqtt_processor;
 
@@ -16,6 +17,7 @@ pub mod models;
 #[allow(non_snake_case)]
 pub mod schema;
 
+#[allow(clippy::pedantic)]
 pub mod proto;
 
 pub mod transformers;

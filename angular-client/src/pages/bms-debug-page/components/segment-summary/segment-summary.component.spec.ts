@@ -13,6 +13,7 @@ describe('SegmentSummaryComponent', () => {
 
     fixture = TestBed.createComponent(SegmentSummaryComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('segmentNumber', 0);
     fixture.detectChanges();
   });
 
