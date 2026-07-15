@@ -33,12 +33,16 @@ A cell's voltage from the ADBMS chip's primary C-ADC. Published per cell at `BMS
 _Avoid_: "the voltage" — ambiguous now that the S-ADC reading also exists.
 
 **S-ADC voltage** (**S Volts**):
-The same cell measured independently by the ADBMS chip's redundant S-ADC. Expected per-cell topic `BMS/PerCell/{Alpha|Beta}/{segment}/S_Volts/{cell}` in `V`, mirroring the C-ADC's `Volts`; rendered as the **S Volts** BMS-heatmap view.
+The same cell measured independently by the ADBMS chip's redundant S-ADC. Per-cell topic `BMS/PerCell/{Alpha|Beta}/{segment}/S_Volts/{cell}` in `V`, mirroring the C-ADC's `Volts`; rendered as the **S Volts** BMS-heatmap view.
 _Avoid_: sense voltage.
 
 **CvS**:
 Per-cell boolean the BMS raises when a cell's C-ADC and S-ADC readings diverge past threshold. Topic `BMS/PerCell/{Alpha|Beta}/{segment}/CvS/{cell}`; rendered as the **CvS Failure** heatmap view.
 _Avoid_: C-vs-S failure (say "CvS").
+
+**OW** (**Open Wire**):
+Per-cell boolean the BMS raises when it detects an open sense wire on a cell tap. Topic `BMS/PerCell/{Alpha|Beta}/{segment}/OW/{cell}`; rendered as the **Open Wire** heatmap view, styled identically to CvS Failure. Distinct from the pack-level critical fault `BMS/Faults/Critical/Open_Wire`, which is unrelated to the per-cell flags.
+_Avoid_: open wire detect (say "Open Wire" or "OW").
 
 ### Alerting
 
