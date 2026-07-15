@@ -4,7 +4,7 @@
 
     <typography variant="info-subtitle" content="CPU Usage" />
   </vstack>
-  <divider style="height: 100px" />
+  <divider style="height: 150px" />
 
   <vstack style="width: 20%">
     <hstack>
@@ -16,7 +16,7 @@
     <typography variant="info-subtitle" content="CPU Temp" />
   </vstack>
 
-  <divider style="height: 100px" />
+  <divider style="height: 150px" />
 
   <vstack style="width: 20%">
     <circular-percentage [percentage]="ramUsage" [dimension]="85" [ringColor]="colorPurple" />
@@ -25,11 +25,13 @@
     </div>
   </vstack>
 
-  <divider style="height: 100px" />
+  <divider style="height: 150px" />
 
   <vstack style="width: 20%">
-    <hstack style="height: 110px">
-      <typography variant="info-value" [content]="wifiRSSI.toString()" />
+    <hstack>
+      <div class="wifi-container">
+        <typography variant="info-value" [content]="wifiRSSI.toString()" />
+      </div>
       <div>
         <mat-icon svgIcon="wifi" />
         <span class="wifi-dbm-unit">dBM</span>
@@ -37,11 +39,13 @@
     </hstack>
     <typography variant="info-subtitle" content="Wi-Fi RSSI" />
   </vstack>
-  <divider style="height: 100px" />
+  <divider style="height: 150px" />
 
   <vstack style="width: 20%">
     <hstack style="height: 110px">
-      <typography variant="info-value" [content]="mcs.toString()" />
+      <div class="mcs-container">
+        <typography variant="info-value" [content]="mcs.toString()" />
+      </div>
     </hstack>
     <typography variant="info-subtitle" content="MCS" />
   </vstack>

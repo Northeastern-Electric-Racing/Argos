@@ -97,8 +97,9 @@
   padding-bottom: 16%;
 }
 
-/* Temperature: same top-left number, value pushed to bottom */
-.hex-tile.view-temperature .cell-number {
+/* Temperature & CvS Failure: top-left number anchored away from the value */
+.hex-tile.view-temperature .cell-number,
+.hex-tile.view-cvs-failure .cell-number {
   top: 22%;
   left: 20%;
   transform: none;
@@ -110,6 +111,16 @@
 .hex-tile.view-temperature {
   justify-content: flex-end;
   padding-bottom: 16%;
+}
+
+.hex-tile.view-cvs-failure {
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.hex-tile.view-cvs-failure .cell-value {
+  font-size: calc(var(--hex-w, 42px) * 0.19);
 }
 
 /* ── heatmap-cell variant: used inside segment rows; number stacked above value, left-aligned ── */
@@ -148,6 +159,23 @@
 :host(.heatmap-cell) .cell-unit {
   font-size: calc(var(--hex-w, 48px) * 0.2);
   color: #1a1a1a;
+}
+
+/* CvS Failure (heatmap variant): center TRUE/FALSE; keep cell number anchored top-left */
+:host(.heatmap-cell) .hex-tile.view-cvs-failure {
+  padding-left: 0;
+}
+
+:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-number {
+  padding-left: 8%;
+}
+
+:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-value-container {
+  align-self: center;
+}
+
+:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-value {
+  font-size: calc(var(--hex-w, 48px) * 0.24);
 }
 
 /* ── Double-hex variant: two merged pointy-top hexes for thermistor groups that span two cells ── */

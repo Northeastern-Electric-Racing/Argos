@@ -1,14 +1,19 @@
 <div style="padding: 20px">
-  <typography
-    class="title-style"
-    variant="x-large-title"
-    content="eFuses!"
-    additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: center; margin-top: 0;"
-  />
+  <div class="zone-title" style="padding-top: 0px">Normal eFuses</div>
+  <div class="zone-subtext">
+    Note: You shouldn't have to manually override the states of these eFuses during normal operation, but you can for
+    debugging.
+  </div>
 
   <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
     <!-- Dashboard eFuse -->
-    <efuse-card efuseName="Dashboard" [efuseTopicKey]="'Dashboard'" commandKey="Dashboard" [maxCurrent]="'3'" />
+    <efuse-card
+      efuseName="Dashboard"
+      [efuseTopicKey]="'Dashboard'"
+      commandKey="Dashboard"
+      [maxCurrent]="'3'"
+      [lockMode]="EfuseLockMode.Unlocked"
+    />
 
     <!-- Brake eFuse (Type 2: AUTO based on braking state) -->
     <efuse-card
@@ -21,13 +26,8 @@
       [autoUnit]="''"
       [autoDecimals]="0"
       [autoDigits]="1"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
-
-    <!-- Shutdown eFuse -->
-    <efuse-card efuseName="Shutdown" [efuseTopicKey]="'Shutdown'" commandKey="Shutdown" [maxCurrent]="'1'" />
-
-    <!-- LV eFuse -->
-    <efuse-card efuseName="LV" [efuseTopicKey]="'LV'" commandKey="LV" [maxCurrent]="'3'" />
 
     <!-- Radfan eFuse (Type 2: AUTO based on DTI motor temp) -->
     <efuse-card
@@ -38,6 +38,7 @@
       [autoDataType]="topics.VCU.Echo.Motor_Temp"
       [autoLabel]="'Motor Temp'"
       [autoUnit]="'°C'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- Fanbatt eFuse (Type 2: AUTO based on BMS battbox temp) -->
@@ -49,6 +50,7 @@
       [autoDataType]="topics.VCU.Echo.Battbox_Temp"
       [autoLabel]="'Battbox Temp'"
       [autoUnit]="'°C'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- PumpOne eFuse (Type 2: AUTO based on DTI motor temp) -->
@@ -57,9 +59,10 @@
       [efuseTopicKey]="'PumpOne'"
       commandKey="PumpOne"
       [maxCurrent]="'2.5'"
-      [autoDataType]="topics.VCU.Echo.Motor_Temp"
-      [autoLabel]="'Motor Temp'"
+      [autoDataType]="topics.VCU.Echo.Controller_Temp"
+      [autoLabel]="'Controller Temp'"
       [autoUnit]="'°C'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- PumpTwo eFuse (Type 2: AUTO based on DTI controller temp) -->
@@ -68,9 +71,10 @@
       [efuseTopicKey]="'PumpTwo'"
       commandKey="PumpTwo"
       [maxCurrent]="'2.5'"
-      [autoDataType]="topics.VCU.Echo.Controller_Temp"
-      [autoLabel]="'Controller Temp'"
+      [autoDataType]="topics.VCU.Echo.Motor_Temp"
+      [autoLabel]="'Motor Temp'"
       [autoUnit]="'°C'"
+      [lockMode]="EfuseLockMode.Unlocked"
     />
 
     <!-- Spare eFuse (Type 2: AUTO based on DTI controller temp) -->
@@ -82,15 +86,60 @@
       [autoDataType]="topics.VCU.Echo.Controller_Temp"
       [autoLabel]="'Controller Temp'"
       [autoUnit]="'°C'"
+      [notice]="'Note: Spare eFuse doesn\'t support current reading.'"
+      [lockMode]="EfuseLockMode.Unlocked"
+    />
+  </grid-layout>
+
+  <div class="zone-title">Caution Zone</div>
+  <div class="zone-subtext">
+    Note: The states of these eFuses shouldn't be messed with unless there's a really good reason to.
+  </div>
+
+  <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
+    <!-- Shutdown eFuse -->
+    <efuse-card
+      efuseName="Shutdown"
+      [efuseTopicKey]="'Shutdown'"
+      commandKey="Shutdown"
+      [maxCurrent]="'1'"
+      [notice]="'Warning: Disabling this eFuse will literally turn the car off.'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
+    />
+
+    <!-- LV eFuse -->
+    <efuse-card
+      efuseName="LV"
+      [efuseTopicKey]="'LV'"
+      commandKey="LV"
+      [maxCurrent]="'3'"
+      [notice]="'Warning: Disabling this eFuse will literally turn off the car\'s entire low-voltage system.'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
     />
 
     <!-- Battbox eFuse -->
-    <efuse-card efuseName="Battbox" [efuseTopicKey]="'Battbox'" commandKey="Battbox" [maxCurrent]="'2'" />
+    <efuse-card
+      efuseName="Battbox"
+      [efuseTopicKey]="'Battbox'"
+      commandKey="Battbox"
+      [maxCurrent]="'2'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
+    />
 
     <!-- MC eFuse -->
-    <efuse-card efuseName="Motor Controller" [efuseTopicKey]="'MC'" commandKey="MC" [maxCurrent]="'2'" />
+    <efuse-card
+      efuseName="Motor Controller"
+      [efuseTopicKey]="'MC'"
+      commandKey="MC"
+      [maxCurrent]="'2'"
+      [lockMode]="EfuseLockMode.UnlockToEdit"
+    />
   </grid-layout>
 
+  <div class="zone-title">RTDS Zone</div>
+  <div class="zone-subtext">
+    Note: You shouldn't need to force an RTDS state during normal operation, since VCU does this automatically.
+  </div>
   <div class="rtds-section">
     <rtds-debug-card />
   </div>

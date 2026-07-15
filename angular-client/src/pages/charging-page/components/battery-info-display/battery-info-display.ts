@@ -31,7 +31,7 @@ export class BatteryInfoDisplayComponent implements OnInit, OnDestroy {
         this.packTemp = floatPipe(value.values[0]);
       }),
       this.storage.get(topics.packVoltage()).subscribe((value) => {
-        this.voltage = floatPipe(value.values[0]);
+        this.voltage = parseFloat(value.values[0]);
       }),
       this.storage.get(topics.stateOfCharge()).subscribe((value) => {
         this.stateOfCharge = floatPipe(value.values[0]);

@@ -1,54 +1,82 @@
-#
 name: Create and publish scylla docker image
 
 on:
   workflow_dispatch:
 
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: northeastern-electric-racing/argos-scylla
 
-# There is a single job in this workflow. It's configured to run on the 22.04 version of Ubuntu (TODO: configure for new latests).
 jobs:
-  build-and-push-image:
-    runs-on: ubuntu-22.04
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04,     platform: linux/amd64, arch: amd64 }
+          - { runner: ubuntu-24.04-arm, platform: linux/arm64, arch: arm64 }
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
-      #
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.12.0
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3.7.0
+      - uses: actions/checkout@v7
+
+      # restore-keys: closest-match cache on key miss
+      # https://github.com/actions/cache/blob/main/caching-strategies.md#using-restore-keys-to-download-the-closest-matching-cache
+      # cargo reuses unchanged compiled artifacts
+      # https://doc.rust-lang.org/cargo/guide/build-cache.html
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            scylla-server/target
+          key: scylla-${{ matrix.arch }}-${{ hashFiles('scylla-server/Cargo.lock') }}
+          restore-keys: scylla-${{ matrix.arch }}-
+
+      - name: Build
+        working-directory: scylla-server
+        run: |
+          sudo apt-get update && sudo apt-get install -y libpq-dev libssl-dev
+          cargo build --release --locked
+          mkdir -p bin
+          cp target/release/scylla-server bin/scylla-server
+
+      - uses: docker/setup-buildx-action@v4.1.0
+
+      - uses: docker/login-action@v4.2.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.10.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-scylla
-      # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
-      # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
-      # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
-      - name: Build and push Docker image for scylla server rust
-        uses: docker/build-push-action@v6.19.2
+
+      # No Docker layer cache (cache-from/cache-to: type=gha) — apt install openssl
+      # is ~3s, and COPY invalidates every run anyway. Real build time is cargo, cached above.
+      - uses: docker/build-push-action@v7.2.0
         with:
           context: ./scylla-server
+          file: ./scylla-server/Dockerfile.prebuilt
           push: true
-          platforms: linux/arm64,linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # for caching
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
-          # https://github.com/docker/build-push-action/issues/820
+          platforms: ${{ matrix.platform }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ matrix.arch }}
           provenance: false
+
+  merge:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/login-action@v4.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch manifest
+        run: |
+          docker buildx imagetools create \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-amd64 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-arm64

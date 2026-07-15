@@ -7,7 +7,8 @@ Our real-time data processing and visualization tool.
 Go through the quickstart sections of client and scylla-server:
 
 [Angular Client](./angular-client/README.md) <br>
-[Scylla Server](./scylla-server/README.md)
+[Scylla Server](./scylla-server/README.md) <br>
+[Flutter Client](./flutter-client/README.md)
 
 Once you've sucessfully setup Scylla and the Client, you can either run them separately, or follow the development guide to run locally, or pull from published docker images for one or the other (client, or scylla).
 

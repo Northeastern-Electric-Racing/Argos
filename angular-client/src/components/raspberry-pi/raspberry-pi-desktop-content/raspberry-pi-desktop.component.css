@@ -6,6 +6,20 @@
   width: 40px;
 }
 
+.wifi-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 110px;
+}
+
+.mcs-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 130px;
+}
+
 .wifi-dbm-unit {
   font-size: 18px;
   color: gray;

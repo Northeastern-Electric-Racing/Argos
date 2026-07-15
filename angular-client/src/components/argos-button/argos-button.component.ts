@@ -1,4 +1,6 @@
-import { Component, input, OnInit } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
+
+export type ButtonSize = 'default' | 'sm';
 
 /**
  * Simple custom button component that does something on click
@@ -11,17 +13,20 @@ import { Component, input, OnInit } from '@angular/core';
   styleUrls: ['./argos-button.component.css'],
   standalone: true
 })
-export class ButtonComponent implements OnInit {
+export class ButtonComponent {
   label = input.required<string>();
-  onClick = input.required<() => void>();
+  // Event is optional so callers can pass either `() => void` or `(event: Event) => void`;
+  // popover/menu triggers need the event for anchoring.
+  onClick = input.required<(event?: Event) => void>();
   additionalStyles = input<string>();
-  style!: string;
-
-  ngOnInit(): void {
-    this.style = 'width: 140px; height: 45px; ';
-
-    if (this.additionalStyles) {
-      this.style += this.additionalStyles();
-    }
-  }
+  disabled = input<boolean>(false);
+  size = input<ButtonSize>('default');
+  cssClass = computed(() => `btn btn--${this.size()}`);
+  style = computed(() => {
+    // The default size keeps the legacy fixed footprint; sm lets CSS drive sizing
+    // so callers don't need to override width/height per-button.
+    const base = this.size() === 'sm' ? '' : 'width: 140px; height: 45px; ';
+    const extra = this.additionalStyles();
+    return extra ? base + extra : base;
+  });
 }

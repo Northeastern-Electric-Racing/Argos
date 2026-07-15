@@ -85,6 +85,12 @@
             <div class="rtds-display-label">Error State</div>
           </div>
         </div>
+        <div class="shutdown-indicator">
+          <indicator-light [label]="'SHUTDOWN CLOSED'" [active]="shutdown" [color]="'red'" [fontSize]="14" />
+          <div class="rtds-button-subtext-2">
+            Shutdown has to be closed for RTDS to sound. This is enforced in the firmware.
+          </div>
+        </div>
       </vstack>
     </div>
   </info-background>

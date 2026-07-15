@@ -1,0 +1,41 @@
+name: Frontend Unit Tests
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "angular-client/**"
+      - ".github/workflows/test-check.yml"
+  pull_request:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+    paths:
+      - "angular-client/**"
+      - ".github/workflows/test-check.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-frontend-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.17.0
+          cache: "npm"
+          cache-dependency-path: ./angular-client/package-lock.json
+      - name: Install modules
+        working-directory: ./angular-client
+        run: npm ci
+      - name: Run unit tests
+        working-directory: ./angular-client
+        run: npm run test:ci

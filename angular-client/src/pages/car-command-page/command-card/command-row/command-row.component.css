@@ -1,0 +1,28 @@
+:host {
+  display: contents;
+}
+
+.value-row {
+  display: contents;
+}
+
+.row-label {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  align-self: center;
+}
+
+.value-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  align-self: center;
+}
+
+.value-row ::ng-deep p-inputnumber,
+.value-row ::ng-deep .p-inputnumber,
+.value-row ::ng-deep .p-inputtext {
+  width: 100%;
+}
