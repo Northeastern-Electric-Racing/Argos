@@ -6,7 +6,7 @@ describe('TopicSelectionService', () => {
   let service: TopicSelectionService;
 
   // Sample data types for testing
-  const mockDataType1: DataType = { name: 'BMS/Pack/SOC', unit: '%' };
+  const mockDataType1: DataType = { name: 'BMS/Pack/SoC', unit: '%' };
   const mockDataType2: DataType = { name: 'MPU/State/Speed', unit: 'mph' };
   const mockDataType3: DataType = { name: 'BMS/Pack/Voltage', unit: 'V' };
 

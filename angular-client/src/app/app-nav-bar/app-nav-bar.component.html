@@ -50,6 +50,22 @@
         additionalStyles="fontSize: 36px"
       />
       <messages-per-second />
+      <button
+        type="button"
+        class="navbar-notification"
+        aria-label="Notifications"
+        (click)="notificationPanel.toggle($event)"
+      >
+        <mat-icon [svgIcon]="'notifications'" />
+        @if (notificationLogService.unreadCount() > 0) {
+          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
+        }
+      </button>
+      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
+        <ng-template #content>
+          <notification-list variant="popover" />
+        </ng-template>
+      </p-popover>
       <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
         <mat-icon [svgIcon]="'apps'" />
       </div>

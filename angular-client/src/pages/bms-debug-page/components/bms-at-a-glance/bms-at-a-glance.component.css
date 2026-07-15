@@ -1,3 +1,11 @@
 :host {
   display: block;
 }
+
+.stat-divider {
+  width: 2px;
+  height: 70px;
+  align-self: center;
+  background-color: var(--color-divider);
+  flex-shrink: 0;
+}

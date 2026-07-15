@@ -1,0 +1,4 @@
+<div class="gauge-stat">
+  <span class="gauge-value" [style.color]="color()">{{ value() | number: digitsInfo() }}</span>
+  <span class="gauge-unit">{{ unit() }}</span>
+</div>

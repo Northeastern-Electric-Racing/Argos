@@ -1,3 +1,61 @@
 <info-panel title="At A Glance" svgIcon="battery_charging_2" padding="6px 20px 14px">
-  <stat-display-list [configs]="this.statDisplayConfigs" [enableWidgets]="this.enableWidgets"></stat-display-list>
+  <stat-display-list>
+    <stat-display
+      [value]="packVoltage()"
+      unit="V"
+      subtitle="Pack Voltage"
+      [connectionDotStatusColor]="enableWidgets() ? getPackVoltageStatusColor : undefined"
+    />
+    <div class="stat-divider"></div>
+
+    <stat-display [value]="packTemp()" unit="C" subtitle="Average Temp." [unitBelow]="true">
+      @if (enableWidgets()) {
+        <glance-thermometer [temperature]="packTemp() ?? 0" [min]="-15" [max]="30" />
+      }
+    </stat-display>
+    <div class="stat-divider"></div>
+
+    <stat-display [value]="chargeStatePercent()" unit="%" subtitle="Charge State" [unitBelow]="true">
+      @if (enableWidgets()) {
+        <battery-level-indicator [percentage]="chargeStatePercent()" />
+      }
+    </stat-display>
+    <div class="stat-divider"></div>
+
+    <stat-display [value]="ccl()" unit="A" subtitle="CCL" />
+    <div class="stat-divider"></div>
+
+    <stat-display [value]="dcl()" unit="A" subtitle="DCL" />
+    <div class="stat-divider"></div>
+
+    <stat-display
+      [value]="highVoltsValue()"
+      unit="V"
+      [precision]="3"
+      subtitle="High Voltage"
+      headerIcon="battery"
+      [headerLabel]="highVoltsLabel()"
+    />
+    <div class="stat-divider"></div>
+
+    <stat-display
+      [value]="lowVoltsValue()"
+      unit="V"
+      [precision]="3"
+      subtitle="Low Voltage"
+      headerIcon="battery"
+      [headerLabel]="lowVoltsLabel()"
+    />
+    <div class="stat-divider"></div>
+
+    <stat-display
+      [value]="highTempValue()"
+      unit="C"
+      [precision]="2"
+      subtitle="High Temp."
+      [unitBelow]="true"
+      headerIcon="battery"
+      [headerLabel]="highTempLabel()"
+    />
+  </stat-display-list>
 </info-panel>

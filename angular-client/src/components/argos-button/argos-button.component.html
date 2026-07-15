@@ -1,3 +1,5 @@
 <div id="button">
-  <button type="button" class="btn" (click)="onClick()()" [style]="style">{{ label() }}</button>
+  <button type="button" [class]="cssClass()" (click)="onClick()($event)" [style]="style()" [disabled]="disabled()">
+    {{ label() }}
+  </button>
 </div>

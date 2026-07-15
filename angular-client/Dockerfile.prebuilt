@@ -1,0 +1,18 @@
+# Used by .github/workflows/client-build.yml — expects the Angular production
+# bundle to already be built on the runner and staged at browser/.
+# For local/compose builds that build from source, use Dockerfile.
+FROM nginx:alpine
+
+RUN apk add --no-cache gettext
+
+WORKDIR /usr/share/nginx/html
+
+COPY browser/ .
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY env.prod.js ./assets/env.prod.js
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
+
+EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

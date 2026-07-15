@@ -100,7 +100,7 @@ pub async fn get_videos(
         let file_name_str = file_name.to_string_lossy();
 
         if file_name_str.ends_with(video_suffix.0.as_str()) {
-            file_paths.push(file_name_str.to_string())
+            file_paths.push(file_name_str.to_string());
         }
     }
 

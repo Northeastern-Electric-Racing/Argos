@@ -15,7 +15,6 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
   selector: 'app-bms-debug-page',
   templateUrl: './bms-debug-page.component.html',
   styleUrl: './bms-debug-page.component.css',
-  standalone: true,
   imports: [
     MatGridList,
     MatGridTile,
@@ -46,12 +45,20 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
       function: () => this.heatMapService.setAllSegViews(HeatMapView.Voltage)
     },
     {
+      name: formatAllSelectorName(HeatMapView.SVolts.toString()),
+      function: () => this.heatMapService.setAllSegViews(HeatMapView.SVolts)
+    },
+    {
       name: formatAllSelectorName(HeatMapView.Balancing.toString()),
       function: () => this.heatMapService.setAllSegViews(HeatMapView.Balancing)
     },
     {
       name: formatAllSelectorName(HeatMapView.Temperature.toString()),
       function: () => this.heatMapService.setAllSegViews(HeatMapView.Temperature)
+    },
+    {
+      name: formatAllSelectorName(HeatMapView.CvsFailure.toString()),
+      function: () => this.heatMapService.setAllSegViews(HeatMapView.CvsFailure)
     }
   ];
   allSegSelectorConfig: SelectorConfig = {

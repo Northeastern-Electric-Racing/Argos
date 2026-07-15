@@ -9,7 +9,8 @@ import {
   ApexTooltip,
   ApexFill,
   ApexLegend,
-  ApexYAxis
+  ApexYAxis,
+  ApexAnnotations
 } from 'ng-apexcharts';
 import { Subscription } from 'rxjs';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
@@ -26,7 +27,10 @@ type ChartOptions = {
   fill: ApexFill;
   stroke: ApexStroke;
   legend?: ApexLegend; // Add legend property to match the options object
+  annotations?: ApexAnnotations;
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Component({
   selector: 'graph',
@@ -179,8 +183,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       yaxis: index
     }));
 
-    // Use time-based range if in time mode, otherwise use calculated timeRangeMs from point-based logic
-    const effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
+    // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
+    let effectiveRange: number | undefined = undefined;
+    if (this.realTime()) {
+      effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
+    }
+
+    // Multi-day historical ranges get date-aware labels and per-day boundary annotations.
+    // Skip the O(N) span scan in real-time mode — realtime ranges are bounded and never multi-day.
+    const span = this.realTime() ? null : this.computeDataSpan();
+    const isMultiDay = !!span && span.spanMs > DAY_MS;
 
     // Single updateOptions call with series included — avoids two separate re-renders
     // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
@@ -190,13 +202,65 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         series,
         xaxis: {
           ...this.options.xaxis,
-          range: effectiveRange
-        }
+          range: effectiveRange,
+          labels: {
+            ...this.options.xaxis.labels,
+            formatter: isMultiDay ? this.multiDayLabelFormatter : this.singleDayLabelFormatter
+          }
+        },
+        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span!) : [] }
       },
       false, // redraw (default is false)
       false // animate (default is true)
     );
   };
+
+  private computeDataSpan(): { minX: number; maxX: number; spanMs: number } | null {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    for (const points of this.data.values()) {
+      if (points.length === 0) continue;
+      // Series data is kept sorted by x (see graphInfoCallback), so endpoints are the extrema.
+      if (points[0].x < minX) minX = points[0].x;
+      if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
+    }
+    if (!isFinite(minX) || !isFinite(maxX)) return null;
+    return { minX, maxX, spanMs: maxX - minX };
+  }
+
+  private singleDayLabelFormatter = (val: string | number): string =>
+    new Date(+val).toLocaleTimeString('en-US', { hour12: false });
+
+  private multiDayLabelFormatter = (val: string | number): string => {
+    const d = new Date(+val);
+    const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+    const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    return `${date} ${time}`;
+  };
+
+  private buildDayBoundaryAnnotations(span: { minX: number; maxX: number }) {
+    const annotations: { x: number; strokeDashArray: number; borderColor: string; label: object }[] = [];
+    // First local-midnight strictly after minX.
+    const cursor = new Date(span.minX);
+    cursor.setHours(24, 0, 0, 0);
+    for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
+      const date = new Date(t);
+      annotations.push({
+        x: t,
+        strokeDashArray: 4,
+        borderColor: '#8fcadd',
+        label: {
+          borderColor: '#8fcadd',
+          style: { color: '#fff', background: '#0c2026', fontSize: '11px' },
+          orientation: 'horizontal',
+          position: 'top',
+          offsetY: -4,
+          text: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+        }
+      });
+    }
+    return annotations;
+  }
 
   graphInfoCallback = (info: GraphInfo) => {
     // Skip processing if paused

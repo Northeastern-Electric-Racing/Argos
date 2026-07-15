@@ -18,6 +18,11 @@ const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
     label: 'Balancing',
     getValue: (c) => (c.reading.balancing === undefined ? '-' : c.reading.balancing ? 'Yes' : 'No'),
     getClass: (c) => (c.reading.balancing === true ? 'bal-yes' : c.reading.balancing === false ? 'bal-no' : '')
+  },
+  {
+    label: 'CvS Failure',
+    getValue: (c) => (c.reading.cvs === undefined ? '-' : c.reading.cvs ? 'True' : 'False'),
+    getClass: (c) => (c.reading.cvs === true ? 'cvs-true' : c.reading.cvs === false ? 'cvs-false' : '')
   }
 ];
 
@@ -30,7 +35,6 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
-  standalone: true,
   imports: [ConfigTableComponent]
 })
 export class CellViewComponent implements OnDestroy {

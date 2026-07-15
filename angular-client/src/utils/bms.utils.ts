@@ -37,19 +37,30 @@ export type SegmentInfo = {
   totalVoltageKey: string;
 };
 
-/** Dynamically generated map of segment index → SegmentInfo topic keys. */
-export const segmentInfoMap: Record<Segment, SegmentInfo> = Object.fromEntries(
-  allSegments.map((seg) => [
-    seg,
-    {
+const segmentInfoCache = new Map<Segment, SegmentInfo>();
+
+/**
+ * SegmentInfo topic keys for a segment, computed lazily and memoised.
+ *
+ * Computed on first access rather than at module load so that bms.utils does not read `topics`
+ * from topic.utils while its module body evaluates. That eager access created a bms.utils <->
+ * topic.utils import cycle that threw a TDZ error ("Cannot access 'topics' before
+ * initialization") when the two modules loaded in the wrong order.
+ */
+export const segmentInfo = (seg: Segment): SegmentInfo => {
+  let info = segmentInfoCache.get(seg);
+  if (!info) {
+    info = {
       segmentTempKey: topics.segmentTemp(seg),
       alphaChipTempKey: topics.dieTemp(seg, Chip.Alpha),
       betaChipTempKey: topics.dieTemp(seg, Chip.Beta),
       voltageKey: topics.segmentVoltage(seg),
       totalVoltageKey: topics.segmentTotalVoltage(seg)
-    }
-  ])
-);
+    };
+    segmentInfoCache.set(seg, info);
+  }
+  return info;
+};
 
 export const getConnectionDotStatusColor = (voltage: number): string => {
   if (voltage <= 375) {
@@ -62,4 +73,20 @@ export const getConnectionDotStatusColor = (voltage: number): string => {
   }
   // anything above 3.5 * 125 cells for scaling, is good
   return '#19ff30';
+};
+
+export const getCellVoltageStatusColor = (avgCellVoltage: number): string => {
+  if (avgCellVoltage <= 3.0) return 'red';
+  if (avgCellVoltage <= 3.5) return 'yellow';
+  return '#19ff30';
+};
+
+export const getChipFromTopicValue = (chipValue: number): Chip => {
+  return chipValue % 2 === 0 ? Chip.Alpha : Chip.Beta;
+};
+
+export const getCellChipLabel = (cell: number | undefined, chip: Chip | undefined): string => {
+  const cellLabel = cell !== undefined ? `Cell: ${cell}` : 'No Cell';
+  const chipLabel = chip !== undefined ? `Chip: ${chipToString(chip, true)}` : 'No Chip';
+  return `${cellLabel} | ${chipLabel}`;
 };

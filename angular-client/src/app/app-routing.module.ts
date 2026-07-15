@@ -1,31 +1,5 @@
 import { Routes } from '@angular/router';
-import { Segment } from 'src/utils/bms.utils';
-
-const landingRoute = () => `/landing`;
-const graphRoute = () => `/graph`;
-const mapRoute = () => `/map`;
-const chargingRoute = () => `/charging`;
-const bmsRoute = () => `/bms`;
-const bmsSegmentViewRoute = (id: Segment) => `/bms/segment/${id + 1}`;
-const cameraRoute = () => `/camera`;
-const faultsRoute = () => `/faults`;
-const faultsGraphRoute = () => `/faults/fault-graph`;
-const commandsRoute = () => `/commands`;
-const efusesRoute = () => `/efuses`;
-
-export const appRoutes = {
-  landingRoute,
-  graphRoute,
-  mapRoute,
-  chargingRoute,
-  bmsRoute,
-  bmsSegmentViewRoute,
-  cameraRoute,
-  faultsRoute,
-  faultsGraphRoute,
-  commandsRoute,
-  efusesRoute
-};
+import { appRoutes } from './app-routes';
 
 // Lazy-loaded routes: each page is split into its own chunk to reduce initial bundle size (#199).
 export const routes: Routes = [
@@ -72,7 +46,19 @@ export const routes: Routes = [
     loadComponent: () => import('src/pages/car-command-page/car-command.component')
   },
   {
+    path: 'rules',
+    loadComponent: () => import('src/pages/notification-rules-page/notification-rules-page.component')
+  },
+  {
     path: 'efuses',
     loadComponent: () => import('src/pages/efuses-page/efuses-page.component')
+  },
+  {
+    path: 'notification-log',
+    loadComponent: () => import('src/pages/notification-log-page/notification-log-page.component')
+  },
+  {
+    path: 'lap-timer',
+    loadComponent: () => import('src/pages/lap-timer-page/lap-timer-page.component')
   }
 ];

@@ -4,7 +4,8 @@
     <info-value-display
       [value]="this.voltage"
       unit="V"
-      subtitle="Average Voltage"
+      [precision]="2"
+      subtitle="Avg Voltage"
       [widget]="this.connectionDotConfig"
       [enableWidget]="this.enableWidgets"
     />

@@ -6,9 +6,11 @@ import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 
 export enum HeatMapView {
-  Voltage = 'Voltage',
+  Voltage = 'C Volts',
+  SVolts = 'S Volts',
   Temperature = 'Temperature',
-  Balancing = 'Balancing'
+  Balancing = 'Balancing',
+  CvsFailure = 'CvS Failure'
 }
 
 export interface SelectedCellInfo {

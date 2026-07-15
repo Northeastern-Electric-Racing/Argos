@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.setting-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setting-label {
+  color: var(--color-text-subtitle);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+}
+
+.setting-input-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+}

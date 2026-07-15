@@ -1,12 +1,12 @@
 import { Component, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { Segment, segmentInfoMap, SegmentInfo } from 'src/utils/bms.utils';
+import { Segment, segmentInfo, SegmentInfo } from 'src/utils/bms.utils';
 import { StatConfig, StatSummaryComponent } from 'src/components/stat-summary/stat-summary.component';
 
 const DEFAULT_SEGMENT_STATS: StatConfig[] = [
   { label: 'Avg Temp', unit: '°C', value: undefined, formatFn: (v) => v.toFixed(0) },
-  { label: 'Avg Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(1) },
+  { label: 'Avg Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(2) },
   { label: 'Total Voltage', unit: 'V', value: undefined, formatFn: (v) => v.toFixed(1) }
 ];
 
@@ -24,13 +24,12 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
-  segmentStats = input<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
-  statConfigs = signal<StatConfig[]>([]);
+  statConfigs = signal<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
   ngOnInit(): void {
-    const info = segmentInfoMap[this.segment()];
-    const configs = [...this.segmentStats()];
+    const info = segmentInfo(this.segment());
+    const configs = [...DEFAULT_SEGMENT_STATS];
 
     SEGMENT_TOPIC_KEYS.forEach((key, i) => {
       this.subscriptions.push(

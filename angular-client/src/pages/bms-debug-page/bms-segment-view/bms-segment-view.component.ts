@@ -20,7 +20,6 @@ const formatAllSelectorName = (name: string) => {
   selector: 'bms-segment-view',
   templateUrl: './bms-segment-view.component.html',
   styleUrl: './bms-segment-view.component.css',
-  standalone: true,
   host: {
     '(window:resize)': 'onResize()'
   },
@@ -64,9 +63,21 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
       }
     },
     {
+      name: HeatMapView.SVolts.toString(),
+      function: () => {
+        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.SVolts);
+      }
+    },
+    {
       name: HeatMapView.Balancing.toString(),
       function: () => {
         this.heatMapService.setCurrentView(this.segmentId, HeatMapView.Balancing);
+      }
+    },
+    {
+      name: HeatMapView.CvsFailure.toString(),
+      function: () => {
+        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.CvsFailure);
       }
     }
   ];

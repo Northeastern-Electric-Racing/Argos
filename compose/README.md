@@ -24,11 +24,38 @@ Profiles:
 
 
 The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
-- It persists the database between `down` commands via a volume called `argos_db-data`.  Delete it with `docker volume rm argos_db-data` to start with a new database next `up`.
+- It persists the database between `down` commands via a volume named `<project>_db-data` (e.g. `odyssey_client-dev_db-data` for the default `client-dev` stack).  Wipe it with `./argos.sh <profile> down -v` or `docker volume rm <project>_db-data` to start with a new database next `up`.
 - It weighs the CPU usage of siren higher, so it is prioritized in CPU starvation scenarios.
 
 
 *These profiles are non-exhuastive, there are plently of use cases these profiles do not cover.  In that case, you can write your own profile to cover it.*
+
+#### Running multiple dev stacks side-by-side
+
+Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3002). With no env vars set, behavior is byte-identical to before.
+
+To run a second dev stack alongside the first, set those vars (shifted to free values) plus `STACK_OFFSET=N`, which `argos.sh` appends to the project name as `_N` so `down`, `logs`, and `exec` target the right stack:
+
+```
+# stack 1 at defaults
+./argos.sh client-dev up -d
+
+# stack 2, shifted by 10 — each profile only consumes the vars its services need.
+# Use 'env' so the vars don't leak into stack 1's teardown.
+N=10
+env STACK_OFFSET=$N \
+    ODYSSEY_DB_PORT=$((5432+N))   SCYLLA_HOST_PORT=$((8000+N)) \
+    CLIENT_HOST_PORT=$((80+N))    SIREN_MQTT_PORT=$((1883+N)) \
+    SIREN_WS_PORT=$((9002+N))     GRAFANA_HOST_PORT=$((3002+N)) \
+    ./argos.sh fake-data up -d
+
+# Teardown: stack 1 needs nothing; stack 2 only needs STACK_OFFSET since
+# 'compose down' targets containers by project name, not by port.
+./argos.sh client-dev down
+STACK_OFFSET=$N ./argos.sh fake-data down
+```
+
+`STACK_OFFSET` is purely a project-name suffix: any non-empty value (including `0`) creates a separate compose project, so don't set it when running production profiles. Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
 
 #### Examples with and without profiles
 

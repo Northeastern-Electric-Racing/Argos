@@ -1,6 +1,5 @@
 services:
   calypso:
-    container_name: calypso
     image: ghcr.io/northeastern-electric-racing/calypso:Develop
     restart: unless-stopped
     environment:

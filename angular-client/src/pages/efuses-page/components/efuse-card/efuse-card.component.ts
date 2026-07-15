@@ -13,6 +13,12 @@ import EfuseSwitchComponent, { EfuseSwitchState } from '../efuse-switch/efuse-sw
 import { LockButtonComponent } from '../lock-button/lock-button.component';
 import { inject } from '@angular/core';
 
+export enum EfuseLockMode {
+  Unlocked,
+  UnlockToEdit,
+  ReadOnly
+}
+
 /**
  * Component to display individual eFuse status.
  *
@@ -68,6 +74,8 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
   autoUnit = input<string>('°C');
   autoDigits = input<number>(3);
   autoDecimals = input<number>(1);
+  notice = input<string>(''); // Component param allowing you to put a note/warning/etc, in the top-right corner of the card.
+  lockMode = input<EfuseLockMode>(EfuseLockMode.UnlockToEdit);
 
   // ── Shared seven-segment display inputs ──
   readonly largeDisplayFontSize: number = 80;
@@ -88,6 +96,14 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   // ── Locking state ──
   isLocked = signal<boolean>(true);
+
+  showsLockButton = computed(() => this.lockMode() === EfuseLockMode.UnlockToEdit);
+  private isForceLocked = computed(() => this.lockMode() === EfuseLockMode.ReadOnly);
+  private relockAfterCommand = computed(() => this.lockMode() === EfuseLockMode.UnlockToEdit);
+
+  effectivelyLocked = computed(() =>
+    this.isForceLocked() ? true : this.lockMode() === EfuseLockMode.Unlocked ? false : this.isLocked()
+  );
 
   /** Whether this card supports AUTO mode (Type 2) */
   hasAutoMode = computed(() => this.autoDataType() !== undefined);
@@ -218,12 +234,14 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   /** Handle switch state change — sends the appropriate CAN message */
   onSwitchStateChange(state: EfuseSwitchState): void {
-    if (this.isLocked()) return;
+    if (this.effectivelyLocked()) return;
     const payload = state === 'ON' ? 0 : state === 'AUTO' ? 1 : 2;
     sendConfig(this.resolvedCommandKey(), [payload]).catch((error) => {
       console.error(`Failed to send ${this.efuseName()} command`, error);
     });
-    this.lockEfuse();
+    if (this.relockAfterCommand()) {
+      this.lockEfuse();
+    }
   }
 
   onLockButtonClick(): void {

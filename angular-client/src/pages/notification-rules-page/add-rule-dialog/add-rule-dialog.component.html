@@ -1,0 +1,49 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="field">
+    <label for="rule-id">Rule ID</label>
+    <input id="rule-id" pInputText formControlName="id" placeholder="e.g. high-voltage-alert" />
+    @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
+      <small class="error" role="alert">Rule ID is required</small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="rule-topic">Topic</label>
+    <p-autoComplete
+      id="rule-topic"
+      formControlName="topic"
+      [suggestions]="filteredTopics()"
+      (completeMethod)="filterTopics($event)"
+      [forceSelection]="true"
+      placeholder="e.g. BMS/Pack/Voltage"
+      [fluid]="true"
+    />
+    @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
+      <small class="error" role="alert">Topic is required</small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="rule-expr">Expression</label>
+    <input id="rule-expr" pInputText formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
+    @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
+      <small class="error" role="alert">Expression is required</small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="rule-debounce">Debounce Time (seconds)</label>
+    <input id="rule-debounce" pInputText formControlName="debounce_time" type="number" placeholder="e.g. 60" />
+    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
+      <small class="error" role="alert">Debounce time is required</small>
+    }
+    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
+      <small class="error" role="alert">Must be 0 or greater</small>
+    }
+  </div>
+
+  <div class="button-row">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
+    <button pButton type="submit" label="Add Rule"></button>
+  </div>
+</form>

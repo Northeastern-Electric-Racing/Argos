@@ -17,6 +17,6 @@ export class StatSummaryComponent {
   configs = input.required<StatConfig[]>();
 
   formatStat(config: StatConfig): string {
-    return config.value !== undefined ? config.formatFn(config.value) : '-';
+    return Number.isFinite(config.value) ? config.formatFn(config.value!) : '-';
   }
 }
