@@ -1,34 +1,49 @@
 name: Client CI
 
+# Always triggers so the required "client-ci-gate" check is never left pending on PRs that
+# don't touch the client (path filters on the trigger would block required-check merges).
+# The changes job decides whether the real work runs; the gate reflects its result.
 on:
   push:
     branches:
       - main
       - develop
-    paths:
-      - "angular-client/**"
-      - ".github/workflows/client-ci.yml"
   pull_request:
     branches:
       - main
       - develop
       - "feature/**"
-    paths:
-      - "angular-client/**"
-      - ".github/workflows/client-ci.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: angular-client
-
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Detect client changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            client:
+              - "angular-client/**"
+              - ".github/workflows/client-ci.yml"
+
   lint-and-format:
+    needs: changes
+    if: ${{ needs.changes.outputs.client == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: angular-client
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -44,3 +59,20 @@ jobs:
         run: npm run lint -- --max-warnings=0
       - name: Run prettier check
         run: npm run prettier-check
+
+  client-ci-gate:
+    # Required status check. Always runs; passes when the client job is skipped or succeeds,
+    # fails only when it actually fails, so path-filtered work never deadlocks a required check.
+    needs: [changes, lint-and-format]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Gate
+        run: |
+          result="${{ needs.lint-and-format.result }}"
+          if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+            echo "Client CI failed (result: $result)"
+            exit 1
+          fi
+          echo "Client CI gate passed (result: $result)"

@@ -1,32 +1,66 @@
 name: Build
+
+# Always triggers so the required "build-gate" check is never left pending on unrelated PRs.
+# The changes job decides whether the compose build runs; the gate reflects the result.
 on:
   push:
     branches:
       - main
       - develop
-    paths:
-      - "angular-client/**"
-      - "scylla-server/**"
-      - "compose/**"
-      - ".github/workflows/build-check.yml"
   pull_request:
     branches:
       - main
       - develop
-      - 'feature/**'
-    paths:
-      - "angular-client/**"
-      - "scylla-server/**"
-      - "compose/**"
-      - ".github/workflows/build-check.yml"
+      - "feature/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.filter.outputs.build }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Detect build-relevant changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            build:
+              - "angular-client/**"
+              - "scylla-server/**"
+              - "compose/**"
+              - ".github/workflows/build-check.yml"
+
   run-build:
+    needs: changes
+    if: ${{ needs.changes.outputs.build == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-
       - name: Build Docker Compose
         working-directory: compose
         run: docker compose build
+
+  build-gate:
+    # Required status check. Always runs; green when the build is skipped or passes, red on failure.
+    needs: [changes, run-build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Gate
+        run: |
+          result="${{ needs.run-build.result }}"
+          if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+            echo "Build failed (result: $result)"
+            exit 1
+          fi
+          echo "Build gate passed (result: $result)"

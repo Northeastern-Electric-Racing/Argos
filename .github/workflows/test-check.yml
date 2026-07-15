@@ -1,27 +1,43 @@
 name: Frontend Unit Tests
+
+# Always triggers so the required "test-gate" check is never left pending on PRs that don't
+# touch the client. The changes job decides whether the tests run; the gate reflects the result.
 on:
   push:
     branches:
       - main
       - develop
-    paths:
-      - "angular-client/**"
-      - ".github/workflows/test-check.yml"
   pull_request:
     branches:
       - main
       - develop
       - "feature/**"
-    paths:
-      - "angular-client/**"
-      - ".github/workflows/test-check.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Detect client changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            client:
+              - "angular-client/**"
+              - ".github/workflows/test-check.yml"
+
   run-frontend-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.client == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -39,3 +55,19 @@ jobs:
       - name: Run unit tests
         working-directory: ./angular-client
         run: npm run test:ci
+
+  test-gate:
+    # Required status check. Always runs; green when tests are skipped or pass, red only on failure.
+    needs: [changes, run-frontend-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Gate
+        run: |
+          result="${{ needs.run-frontend-tests.result }}"
+          if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+            echo "Frontend unit tests failed (result: $result)"
+            exit 1
+          fi
+          echo "Test gate passed (result: $result)"
