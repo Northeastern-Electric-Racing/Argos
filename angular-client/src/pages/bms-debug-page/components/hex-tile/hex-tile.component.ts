@@ -7,8 +7,8 @@ const VIEW_CLASS_MAP: Record<HeatMapView, string> = {
   [HeatMapView.SVolts]: 'view-voltage',
   [HeatMapView.Balancing]: 'view-balancing',
   [HeatMapView.Temperature]: 'view-temperature',
-  [HeatMapView.CvsFailure]: 'view-cvs-failure',
-  [HeatMapView.OpenWire]: 'view-cvs-failure'
+  [HeatMapView.CvsFailure]: 'view-flag',
+  [HeatMapView.OpenWire]: 'view-flag'
 };
 
 /** Maps each HeatMapView to the unit label shown inside the hex */
