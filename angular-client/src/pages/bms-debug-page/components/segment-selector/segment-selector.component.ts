@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { appRoutes } from 'src/app/app-routing.module';
+import { appRoutes } from 'src/app/app-routes';
 import { DropdownOption } from 'src/components/select-dropdown/select-dropdown.component';
 import { allSegments } from 'src/utils/bms.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';

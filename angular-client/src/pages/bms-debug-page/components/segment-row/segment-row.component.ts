@@ -8,7 +8,7 @@ import {
   SelectorConfig,
   SelectDropdownComponent
 } from 'src/components/select-dropdown/select-dropdown.component';
-import { appRoutes } from 'src/app/app-routing.module';
+import { appRoutes } from 'src/app/app-routes';
 import { SegmentHeatmapComponent } from '../segment-heatmap/segment-heatmap.component';
 import { SegmentOverviewComponent } from '../segment-overview/segment-overview.component';
 
