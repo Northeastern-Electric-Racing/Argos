@@ -54,7 +54,7 @@
     /// See https://docs.rs/zenoh/latest/zenoh/config/struct.EndPoint.html
     endpoints: [
       // "<proto>/<address>"
-         "tcp/localhost:7447"
+         "tcp/host.docker.internal:7447"
     ],
 
     /// Global connect configuration,
