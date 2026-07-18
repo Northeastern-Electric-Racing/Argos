@@ -26,12 +26,18 @@ services:
     restart: unless-stopped
     ports:
       - ${SCYLLA_HOST_PORT:-8000}:${SCYLLA_HOST_PORT:-8000}
+      - 7447:7447/tcp # zenoh
     depends_on:
       - odyssey-db
     environment:
       - DATABASE_URL=postgresql://postgres:password@odyssey-db:5432/postgres
       - RUST_LOG=warn,scylla_server=debug
       - SCYLLA_PORT=${SCYLLA_HOST_PORT:-8000}
+      - SCYLLA_ZENOH_CONF=/zenoh.json5
+    volumes:
+      - ../siren-base/zenoh.json5:/zenoh.json5:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     cpu_shares: 1024
     stop_grace_period: 2m
     stop_signal: SIGINT

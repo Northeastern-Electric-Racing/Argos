@@ -5,9 +5,6 @@ services:
     environment:
       - SCYLLA_BATCH_UPSERT_TIME=20
       - SCYLLA_ZENOH=true
-      - SCYLLA_ZENOH_CONF=/zenoh.json5
-    volumes:
-      - ../siren-base/zenoh.json5:/zenoh.json5:ro
     init: false
 
   client:
