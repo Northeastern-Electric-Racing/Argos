@@ -3,8 +3,11 @@ services:
     depends_on:
       - siren
     environment:
-      - SCYLLA_SIREN_HOST_URL=siren:1883
       - SCYLLA_BATCH_UPSERT_TIME=20
+      - SCYLLA_ZENOH=true
+      - SCYLLA_ZENOH_CONF=/zenoh.json5
+    volumes:
+      - ../siren-base/zenoh.json5:/zenoh.json5:ro
     init: false
 
   client:
@@ -19,10 +22,10 @@ services:
     depends_on:
       - siren
 
-  siren:
-    extends:
-      file: ../siren-base/compose.siren.yml
-      service: siren
+  # siren:
+  #   extends:
+  #     file: ../siren-base/compose.siren.yml
+  #     service: siren
 
   siren-av:
     network_mode: host
