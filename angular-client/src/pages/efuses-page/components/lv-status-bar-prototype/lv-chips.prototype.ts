@@ -10,7 +10,7 @@ import { StatusBarItemComponent } from './status-bar.prototype';
 
 const RED = 'var(--color-battery-low)';
 const GREEN = 'var(--color-battery-high)';
-const fmt = (v?: number): string => (v != null && isFinite(v) ? v.toFixed(2) : '–');
+const fmt = (v?: number): string => (v !== undefined && isFinite(v) ? v.toFixed(2) : '–');
 
 /** Variant A — reuses the status-bar-item shell: icon + "LV Battery" label + value + unit + status dot. */
 @Component({
