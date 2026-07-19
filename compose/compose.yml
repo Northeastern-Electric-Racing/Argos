@@ -26,7 +26,6 @@ services:
     restart: unless-stopped
     ports:
       - ${SCYLLA_HOST_PORT:-8000}:${SCYLLA_HOST_PORT:-8000}
-      - 7447:7447/tcp # zenoh
     depends_on:
       - odyssey-db
     environment:
