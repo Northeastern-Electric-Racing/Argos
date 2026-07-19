@@ -1,7 +1,7 @@
 <!-- #705 LV Battery status bar (Quick view pop-out; foundation for #709). -->
-<proto-status-bar>
-  <proto-lv-chip-c [voltage]="voltage()" [faulted]="faulted()" />
-</proto-status-bar>
+<status-bar>
+  <lv-battery-chip [voltage]="voltage()" [faulted]="faulted()" />
+</status-bar>
 
 <div style="padding: 20px">
   <div class="zone-title" style="padding-top: 0px">Normal eFuses</div>

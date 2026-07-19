@@ -1,0 +1,15 @@
+@if (collapsed()) {
+  <button type="button" class="side-handle" (click)="toggle()" aria-expanded="false" aria-label="Show status bar">
+    <mat-icon aria-hidden="true">chevron_left</mat-icon>
+  </button>
+} @else {
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">{{ title() }}</span>
+      <button type="button" class="panel-collapse" (click)="toggle()" aria-expanded="true" aria-label="Hide status bar">
+        <mat-icon aria-hidden="true">chevron_right</mat-icon>
+      </button>
+    </div>
+    <ng-content />
+  </div>
+}

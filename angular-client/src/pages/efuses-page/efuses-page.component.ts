@@ -7,9 +7,8 @@ import EfuseCardComponent, { EfuseLockMode } from './components/efuse-card/efuse
 import RtdsDebugCardComponent from './components/rtds-debug-card/rtds-debug-card.component';
 import GridLayoutComponent from 'src/components/grid-layout/grid-layout.component';
 import Storage from 'src/services/storage.service';
-// #705 LV Battery status bar (prototype, foundation for #709) — lives in ./components/lv-status-bar-prototype.
-import { StatusBarComponent } from './components/lv-status-bar-prototype/status-bar.prototype';
-import { LvChipCComponent } from './components/lv-status-bar-prototype/lv-chips.prototype';
+import StatusBarComponent from 'src/components/status-bar/status-bar.component';
+import LvBatteryChipComponent from './components/lv-battery-chip/lv-battery-chip.component';
 
 /**
  * Container for the eFuses page, displays eFuse status and controls.
@@ -19,7 +18,7 @@ import { LvChipCComponent } from './components/lv-status-bar-prototype/lv-chips.
   styleUrls: ['./efuses-page.component.css'],
   templateUrl: './efuses-page.component.html',
   standalone: true,
-  imports: [GridLayoutComponent, EfuseCardComponent, RtdsDebugCardComponent, StatusBarComponent, LvChipCComponent]
+  imports: [GridLayoutComponent, EfuseCardComponent, RtdsDebugCardComponent, StatusBarComponent, LvBatteryChipComponent]
 })
 export default class EfusesPageComponent {
   private storage = inject(Storage);
