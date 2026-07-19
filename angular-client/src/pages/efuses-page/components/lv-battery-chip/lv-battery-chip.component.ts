@@ -33,4 +33,7 @@ export default class LvBatteryChipComponent {
   });
 
   protected readonly dotColor = computed(() => (this.faulted() ? LV_FAULT_COLOR : LV_NORMAL_COLOR));
+
+  /** Accessible label so the fault state is not conveyed by color alone (WCAG 1.4.1). */
+  protected readonly dotLabel = computed(() => (this.faulted() ? 'LV battery fault' : 'LV battery nominal'));
 }

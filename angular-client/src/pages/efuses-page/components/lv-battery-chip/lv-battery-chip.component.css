@@ -12,7 +12,7 @@
   width: 26px;
   height: 26px;
   flex: 0 0 auto;
-  color: #cfcfcf;
+  color: var(--color-text-subtitle);
 }
 .col {
   display: flex;
@@ -27,15 +27,15 @@
 .value {
   font-size: var(--font-size-lg, 20px);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 .unit {
   font-size: var(--font-size-sm, 12px);
-  color: #9a9a9a;
+  color: var(--color-text-subtitle);
 }
 .subtitle {
-  font-size: var(--font-size-sm, 11px);
-  color: #8f8f8f;
+  font-size: var(--font-size-sm, 12px);
+  color: var(--color-text-subtitle);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

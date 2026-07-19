@@ -29,7 +29,7 @@
   border-right: none;
   border-radius: 10px 0 0 10px;
   background: var(--color-background-info);
-  color: #ffffff;
+  color: var(--color-text-primary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -37,6 +37,10 @@
 }
 .side-handle:hover {
   background: #383838;
+}
+.side-handle:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: -2px;
 }
 .side-handle mat-icon {
   width: 26px;
@@ -60,7 +64,13 @@
   border-right: none;
   border-radius: 12px 0 0 12px;
   box-shadow: -6px 6px 18px rgba(0, 0, 0, 0.45);
-  animation: sidebar-in 0.2s ease;
+}
+
+/* Respect reduced-motion: only slide the panel in when motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: sidebar-in 0.2s ease;
+  }
 }
 
 /* Header: small title on the left, close chevron on the right. */
@@ -76,7 +86,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #9a9a9a;
+  color: var(--color-text-subtitle);
   padding-left: 2px;
 }
 
@@ -88,7 +98,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #cfcfcf;
+  color: var(--color-text-subtitle);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -96,6 +106,10 @@
 }
 .panel-collapse:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+.panel-collapse:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
 }
 .panel-collapse mat-icon {
   width: 22px;
