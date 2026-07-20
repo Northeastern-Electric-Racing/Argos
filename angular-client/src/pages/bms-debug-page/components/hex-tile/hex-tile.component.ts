@@ -16,7 +16,7 @@ const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'V',
   [HeatMapView.SVolts]: 'V',
   [HeatMapView.Temperature]: '°C',
-  [HeatMapView.Balancing]: '',
+  [HeatMapView.Balancing]: 'V',
   [HeatMapView.CvsFailure]: '',
   [HeatMapView.OpenWire]: ''
 };
@@ -47,19 +47,18 @@ export class HexTileComponent {
   });
 
   displayValue = computed(() => {
-    const boolValue = this.booleanValue();
-    if (boolValue !== undefined) {
-      const view = this.currentView();
-      if (view === HeatMapView.CvsFailure || view === HeatMapView.OpenWire) return boolValue ? 'TRUE' : 'FALSE';
-      return boolValue ? 'YES' : 'NO';
+    const view = this.currentView();
+    if (view === HeatMapView.CvsFailure || view === HeatMapView.OpenWire) {
+      const boolValue = this.booleanValue();
+      return boolValue === undefined ? '-' : boolValue ? 'TRUE' : 'FALSE';
     }
     const value = this.value();
     return value === undefined ? '-' : value.toFixed(2);
   });
 
   unitLabel = computed(() => {
-    if (this.booleanValue() !== undefined) return '';
     const view = this.currentView();
+    if (view === HeatMapView.CvsFailure || view === HeatMapView.OpenWire) return '';
     return view ? VIEW_UNIT_MAP[view] : '';
   });
 }

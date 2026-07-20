@@ -22,10 +22,7 @@
     </stat-display>
     <div class="stat-divider"></div>
 
-    <stat-display [value]="ccl()" unit="A" subtitle="CCL" />
-    <div class="stat-divider"></div>
-
-    <stat-display [value]="dcl()" unit="A" subtitle="DCL" />
+    <stat-display [value]="deltaVoltage()" unit="V" [precision]="3" subtitle="Delta Voltage" />
     <div class="stat-divider"></div>
 
     <stat-display

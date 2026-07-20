@@ -41,8 +41,6 @@ export class BmsAtAGlanceComponent {
   // SoC is published as a 0–1 fraction, the battery indicator wants a 0–100 percent.
   protected chargeState = toSignal(this.storage.get(topics.stateOfCharge()).pipe(map((v) => parseFloat(v.values[0]))));
   protected chargeStatePercent = computed(() => (this.chargeState() ?? 0) * 100);
-  protected ccl = toSignal(this.storage.get(topics.accCCL()).pipe(map((v) => parseInt(v.values[0]))));
-  protected dcl = toSignal(this.storage.get(topics.accDCL()).pipe(map((v) => parseInt(v.values[0]))));
 
   protected highVoltsValue = toSignal(this.storage.get(topics.highVoltsValue()).pipe(map((v) => parseFloat(v.values[0]))));
   private highVoltsChip = toSignal(
@@ -57,6 +55,14 @@ export class BmsAtAGlanceComponent {
   );
   private lowVoltsCell = toSignal(this.storage.get(topics.lowVoltsCell()).pipe(map((v) => parseInt(v.values[0]))));
   protected lowVoltsLabel = computed(() => getCellChipLabel(this.lowVoltsCell(), this.lowVoltsChip()));
+
+  /** Cell voltage spread: highest cell voltage minus lowest cell voltage. */
+  protected deltaVoltage = computed(() => {
+    const high = this.highVoltsValue();
+    const low = this.lowVoltsValue();
+    if (high === undefined || low === undefined || isNaN(high) || isNaN(low)) return undefined;
+    return high - low;
+  });
 
   protected highTempValue = toSignal(this.storage.get(topics.highTempValue()).pipe(map((v) => parseFloat(v.values[0]))));
   private highTempChip = toSignal(

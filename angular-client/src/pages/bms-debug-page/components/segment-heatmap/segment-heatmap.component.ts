@@ -111,7 +111,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
 
   private getCellValue(cell: CellReading): number | undefined {
     if (this.view === HeatMapView.Temperature) return cell.temp;
-    if (this.view === HeatMapView.Voltage) return cell.voltage;
+    if (this.view === HeatMapView.Voltage || this.view === HeatMapView.Balancing) return cell.voltage;
     if (this.view === HeatMapView.SVolts) return cell.svolts;
     return undefined;
   }
