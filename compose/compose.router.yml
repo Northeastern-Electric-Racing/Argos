@@ -1,10 +1,8 @@
 services:
   scylla-server:
-    depends_on:
-      - siren
     environment:
-      - SCYLLA_SIREN_HOST_URL=siren:1883
       - SCYLLA_BATCH_UPSERT_TIME=20
+      - SCYLLA_ZENOH=true
     init: false
 
   client:
@@ -12,17 +10,17 @@ services:
       file: ../angular-client/compose.client.yml
       service: client
 
-  grafana:
-    extends:
-      file: ../siren-base/compose.grafana.yml
-      service: grafana
-    depends_on:
-      - siren
+  # grafana:
+  #   extends:
+  #     file: ../siren-base/compose.grafana.yml
+  #     service: grafana
+  #   depends_on:
+  #     - siren
 
-  siren:
-    extends:
-      file: ../siren-base/compose.siren.yml
-      service: siren
+  # siren:
+  #   extends:
+  #     file: ../siren-base/compose.siren.yml
+  #     service: siren
 
   siren-av:
     network_mode: host

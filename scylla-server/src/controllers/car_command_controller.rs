@@ -1,17 +1,14 @@
-use std::sync::Arc;
-
 use axum::{
     Extension,
     extract::{Json, Path},
     http::StatusCode,
 };
 use axum_extra::extract::Query;
-use protobuf::Message;
-use rumqttc::v5::AsyncClient;
 use serde::Deserialize;
-use tracing::{info, warn};
+use tokio::sync::mpsc;
+use tracing::info;
 
-use crate::{error::ScyllaError, proto::command_data};
+use crate::{SirenSendable, error::ScyllaError, proto::command_data};
 
 /// the prefix for the calypso topic, so topic of cmd is this plus the key appended on
 pub const CALYPSO_BIDIR_CMD_PREFIX: &str = "Calypso/Bidir/Command/";
@@ -30,7 +27,7 @@ pub struct ConfigRequest {
 pub async fn send_config_command(
     Path(key): Path<String>,
     Query(data_query): Query<ConfigRequest>,
-    Extension(client): Extension<Arc<AsyncClient>>,
+    Extension(send_mqtt): Extension<mpsc::Sender<SirenSendable>>,
 ) -> Result<Json<String>, ScyllaError> {
     info!(
         "Sending car config with key: {}, and values: {:?}",
@@ -43,29 +40,23 @@ pub async fn send_config_command(
     if let Some(data) = data_query.data {
         payload.data = data;
     }
-    let Ok(bytes) = payload.write_to_bytes() else {
-        return Err(ScyllaError::InvalidEncoding(
-            "Payload could not be written!".to_string(),
-        ));
-    };
 
-    // publish the message to the topic that calypso's encoder is susbcribed to
-    if let Err(err) = client
-        .publish(
-            format!("{CALYPSO_BIDIR_CMD_PREFIX}{key}"),
-            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
-            false,
-            bytes,
-        )
+    if send_mqtt
+        .send(SirenSendable {
+            command_data: payload,
+            topic: format!("{CALYPSO_BIDIR_CMD_PREFIX}{key}"),
+        })
         .await
+        .is_err()
     {
-        warn!("Could not publish instruction: {}", err);
-        return Err(ScyllaError::CommFailure(
-            "Siren publish for instruction failed!".to_string(),
+        return Err(ScyllaError::MqttError(
+            "Message could not be transferred!".to_string(),
         ));
     }
 
-    Ok(Json::from("Successfully Published Message".to_string()))
+    Ok(Json::from(
+        "Successfully sent message to publish queue".to_string(),
+    ))
 }
 
 #[derive(Deserialize, Debug)]
