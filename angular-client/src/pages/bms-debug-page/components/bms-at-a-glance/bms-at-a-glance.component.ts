@@ -42,6 +42,10 @@ export class BmsAtAGlanceComponent {
   protected chargeState = toSignal(this.storage.get(topics.stateOfCharge()).pipe(map((v) => parseFloat(v.values[0]))));
   protected chargeStatePercent = computed(() => (this.chargeState() ?? 0) * 100);
 
+  protected balancingDutyCycle = toSignal(
+    this.storage.get(topics.balancingDutyCycle()).pipe(map((v) => parseFloat(v.values[0])))
+  );
+
   protected highVoltsValue = toSignal(this.storage.get(topics.highVoltsValue()).pipe(map((v) => parseFloat(v.values[0]))));
   private highVoltsChip = toSignal(
     this.storage.get(topics.highVoltsChip()).pipe(map((v) => getChipFromTopicValue(parseInt(v.values[0]))))

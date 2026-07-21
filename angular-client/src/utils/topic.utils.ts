@@ -118,6 +118,7 @@ export const current = () => `BMS/Charging/Current`;
 export const chargeCurrentLimit = () => `BMS/Commands/Max_DC_Brake_Current_Target`; // was BMS/Pack/CCL
 export const dischargeCurrentLimit = () => `BMS/Commands/Max_DC_Current_Target`; // was BMS/Pack/DCL
 export const statusBalancing = () => `BMS/Status/Balancing`;
+export const balancingDutyCycle = () => `BMS/Control/CellBalancing/PWMDutyCycle`;
 export const bmsMode = () => `BMS/Status/State`;
 export const charging = () => `BMS/Charging/Control`;
 export const packVoltage = () => `BMS/Pack/Voltage`;
@@ -238,6 +239,7 @@ export const topics = {
   chargeCurrentLimit,
   dischargeCurrentLimit,
   statusBalancing,
+  balancingDutyCycle,
   bmsMode,
   charging,
   packVoltage,

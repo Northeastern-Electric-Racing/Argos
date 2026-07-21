@@ -54,5 +54,8 @@
       headerIcon="battery"
       [headerLabel]="highTempLabel()"
     />
+    <div class="stat-divider"></div>
+
+    <stat-display [value]="balancingDutyCycle()" unit="%" subtitle="Balancing Duty Cycle" [unitBelow]="true" />
   </stat-display-list>
 </info-panel>
