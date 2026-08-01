@@ -48,7 +48,7 @@ jobs:
 
       # Multi-arch in one buildx push — apk add gettext is the only RUN, fine under QEMU.
       # All real CPU work (ng build) ran natively above; arch-sensitive part is just the nginx base layer.
-      - uses: docker/build-push-action@v7.2.0
+      - uses: docker/build-push-action@v7.3.0
         with:
           context: ./angular-client
           file: ./angular-client/Dockerfile.prebuilt

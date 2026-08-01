@@ -52,7 +52,7 @@ jobs:
 
       # No Docker layer cache (cache-from/cache-to: type=gha) — apt install openssl
       # is ~3s, and COPY invalidates every run anyway. Real build time is cargo, cached above.
-      - uses: docker/build-push-action@v7.2.0
+      - uses: docker/build-push-action@v7.3.0
         with:
           context: ./scylla-server
           file: ./scylla-server/Dockerfile.prebuilt
