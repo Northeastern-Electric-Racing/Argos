@@ -1,4 +1,4 @@
-import { Component, input, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import { MatIcon } from '@angular/material/icon';
@@ -28,7 +28,7 @@ export class InfoBackgroundComponent {
   backgroundColor = input<Theme>(Theme.infoBackground);
   title = input<string>();
   onClick = input<(() => void) | undefined>(undefined);
-  @Input() button?: ButtonInputs;
+  button = input<ButtonInputs | undefined>(undefined);
   selectorConfigs = input<SelectorConfig[]>([]);
   topRightInfo = input<string | undefined>(undefined);
   topRightInfoSize = input<string>('19px');

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import TypographyComponent from '../typography/typography.component';
 
 /**
@@ -13,5 +13,5 @@ import TypographyComponent from '../typography/typography.component';
   standalone: true
 })
 export default class ErrorPageComponent {
-  @Input() errorMessage!: string;
+  errorMessage = input.required<string>();
 }

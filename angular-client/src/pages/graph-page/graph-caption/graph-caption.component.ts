@@ -1,4 +1,4 @@
-import { Component, ContentChild, input, OnInit, TemplateRef } from '@angular/core';
+import { Component, OnInit, TemplateRef, contentChild, input } from '@angular/core';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType } from 'src/utils/types.utils';
@@ -16,8 +16,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
 export default class GraphInfoComponent implements OnInit {
   dataType = input.required<Subject<DataType[] | undefined>>();
   currentValue = input<DataValue[]>();
-  @ContentChild('rightInfo', { static: true }) rightInfo!: TemplateRef<void>;
-  @ContentChild('buttons', { static: true }) buttons!: TemplateRef<void>;
+  rightInfo = contentChild.required<TemplateRef<void>>('rightInfo');
+  buttons = contentChild.required<TemplateRef<void>>('buttons');
 
   dataTypeName?: string;
   dataTypeUnit?: string;

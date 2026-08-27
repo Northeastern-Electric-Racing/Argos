@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from '../typography/typography.component';
 
@@ -10,8 +10,8 @@ import TypographyComponent from '../typography/typography.component';
   imports: [MatIcon, TypographyComponent]
 })
 export default class SidebarChipComponent {
-  @Input() icon: string = '';
-  @Input() value: string = '';
-  @Input() active: boolean = false; // New input to control active state
-  @Input() small: boolean = false;
+  icon = input<string>('');
+  value = input<string>('');
+  active = input<boolean>(false); // New input to control active state
+  small = input<boolean>(false);
 }

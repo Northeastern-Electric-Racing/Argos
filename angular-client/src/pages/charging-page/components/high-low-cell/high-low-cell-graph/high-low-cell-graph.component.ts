@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { GraphData } from 'src/utils/types.utils';
 import { DoubleLineGraphComponent } from '../../../../../components/double-line-graph/double-line-graph.component';
@@ -12,6 +12,6 @@ import { DoubleLineGraphComponent } from '../../../../../components/double-line-
 })
 export default class HighLowCellGraphComponent {
   private storage = inject(Storage);
-  @Input() highVoltsData: GraphData[] = [];
-  @Input() lowVoltsData: GraphData[] = [];
+  highVoltsData = input<GraphData[]>([]);
+  lowVoltsData = input<GraphData[]>([]);
 }

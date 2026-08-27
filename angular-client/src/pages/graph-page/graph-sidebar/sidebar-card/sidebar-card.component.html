@@ -1,6 +1,10 @@
-<div class="card" [id]="title" [style]="'marginBottom: 0px; width: 100%'" (click)="selectCard()">
-  @if (dropDown) {
-    <mat-icon [id]="iconId" class="icon" [ngStyle]="{ transform: open ? 'rotate(90deg)' : undefined }" svgIcon="arrow_right"
+<div class="card" [id]="title()" [style]="'marginBottom: 0px; width: 100%'" (click)="selectCard()">
+  @if (dropDown()) {
+    <mat-icon
+      [id]="iconId"
+      class="icon"
+      [ngStyle]="{ transform: open() ? 'rotate(90deg)' : undefined }"
+      svgIcon="arrow_right"
       >arrow_right</mat-icon
     >
   }
@@ -8,12 +12,12 @@
     <typography
       variant="subheader"
       [additionalStyles]="
-        dropDown
+        dropDown()
           ? 'marginLeft: 35px; marginBottom: 5px; marginTop: 5px;'
           : 'textAlign: center; marginRight: 5px; marginLeft: 5px;'
       "
-      [content]="title"
+      [content]="title()"
     />
-    <typography variant="secondary-header" additionalStyles="marginRight: 5px" [content]="dataValue" />
+    <typography variant="secondary-header" additionalStyles="marginRight: 5px" [content]="dataValue()" />
   </div>
 </div>
