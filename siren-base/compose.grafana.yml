@@ -11,3 +11,5 @@ services:
       - "${GRAFANA_HOST_PORT:-3000}:3000"
     volumes:
       - "grafana_storage:/var/lib/grafana"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
