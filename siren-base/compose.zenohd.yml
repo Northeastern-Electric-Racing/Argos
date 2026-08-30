@@ -1,0 +1,16 @@
+services:
+  siren:
+    image: eclipse/zenoh
+    restart: unless-stopped
+    init: true
+    ports:
+      - 7447:7447/tcp
+      - 7446:7446/udp
+      #- 8000:8000/tcp
+    expose:
+      - 7446
+      - 7447
+      - 8000
+    volumes:
+      - ./zenoh-router-docker.json5:/etc/zenoh/zenohd.json5:ro
+    command: ["-c", "/etc/zenoh/zenohd.json5"]

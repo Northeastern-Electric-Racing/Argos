@@ -10,16 +10,15 @@ services:
       file: ../angular-client/compose.client.yml
       service: client
 
-  # grafana:
-  #   extends:
-  #     file: ../siren-base/compose.grafana.yml
-  #     service: grafana
-  #   depends_on:
-  #     - siren
+  grafana:
+    extends:
+      file: ../siren-base/compose.grafana.yml
+      service: grafana
 
+  # run on host on AP!
   # siren:
   #   extends:
-  #     file: ../siren-base/compose.siren.yml
+  #     file: ../siren-base/compose.zenohd.yml
   #     service: siren
 
   siren-av:
