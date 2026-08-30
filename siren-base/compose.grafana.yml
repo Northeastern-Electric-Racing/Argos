@@ -1,13 +1,13 @@
 services:
   grafana:
-    image: grafana/grafana-oss
+    image: grafana/grafana:latest-ubuntu
     restart: unless-stopped
     environment:
       # increases the log level from info to debug
-      - GF_LOG_LEVEL=debug
-      - GF_PLUGINS_PREINSTALL=grafana-mqtt-datasource@@https://github.com/Northeastern-Electric-Racing/mqtt-datasource/releases/download/v1.2.0/grafana-mqtt-datasource-1.2.0.zip
-      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-mqtt-datasource
+      #- GF_LOG_LEVEL=debug
+      - GF_PLUGINS_PREINSTALL=grafana-zenoh-datasource@@https://github.com/Northeastern-Electric-Racing/zenoh-datasource/releases/download/v1.99.9/grafana-zenoh-datasource-1.99.9.zip
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-zenoh-datasource
     ports:
-      - "${GRAFANA_HOST_PORT:-3002}:3000"
+      - "${GRAFANA_HOST_PORT:-3000}:3000"
     volumes:
       - "grafana_storage:/var/lib/grafana"
