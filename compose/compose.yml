@@ -34,7 +34,7 @@ services:
       - SCYLLA_PORT=${SCYLLA_HOST_PORT:-8000}
       - SCYLLA_ZENOH_CONF=/zenoh.json5
     volumes:
-      - ../siren-base/zenoh.json5:/zenoh.json5:ro
+      - ../siren-base/zenoh-scylla.json5:/zenoh.json5:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     cpu_shares: 1024
