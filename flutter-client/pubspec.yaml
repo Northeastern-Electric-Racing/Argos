@@ -41,7 +41,7 @@ dependencies:
   riverpod_annotation: ^4.0.0
   mqtt5_client: ^5.0.0
   protobuf: ^6.0.0
-  go_router: ^17.0.0
+  go_router: ^18.0.0
   syncfusion_flutter_charts: ^34.1.33 # 28.1.39 wont scale y axis
   intl: ^0.20.2
   multi_dropdown: ^3.2.1
