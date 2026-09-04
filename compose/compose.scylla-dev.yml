@@ -21,5 +21,9 @@ services:
     extends:
       file: ../siren-base/compose.calypso.yml
       service: calypso
+    # this profile runs Mosquitto, so drive Calypso over MQTT not Zenoh
+    environment:
+      - CALYPSO_ZENOH=false
+      - CALYPSO_SIREN_HOST_URL=siren:1883
     depends_on:
       - siren
