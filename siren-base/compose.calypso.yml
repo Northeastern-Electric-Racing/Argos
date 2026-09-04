@@ -7,7 +7,10 @@ services:
       #- CALYPSO_CAN_ENCODE=false
       #- CALYPSO_SOCKETCAN_IFACE=vcan0
       # in sim or prod mode
-      - CALYPSO_ZENOH=true
+      # defaults to Zenoh; set CALYPSO_ZENOH=false (and CALYPSO_SIREN_HOST_URL)
+      # to drive this same image over MQTT for profiles still running Mosquitto
+      - CALYPSO_ZENOH=${CALYPSO_ZENOH:-true}
       - CALYPSO_ZENOH_CONF=/etc/zenoh/zenoh.json5
+      - CALYPSO_SIREN_HOST_URL=${CALYPSO_SIREN_HOST_URL:-siren:1883}
     volumes:
       - ./zenoh-calypso-docker.json5:/etc/zenoh/zenoh.json5:ro

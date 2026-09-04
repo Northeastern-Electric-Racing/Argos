@@ -1,7 +1,7 @@
 services:
     scylla-server:
         environment:
-            - SCYLLA_SIREN_HOST_URL=siren:1883
+            - SCYLLA_ZENOH=true
 
     siren:
         extends:
