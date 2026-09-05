@@ -10,7 +10,8 @@ export enum HeatMapView {
   SVolts = 'S Volts',
   Temperature = 'Temperature',
   Balancing = 'Balancing',
-  CvsFailure = 'CvS Failure'
+  CvsFailure = 'CvS Failure',
+  OpenWire = 'Open Wire'
 }
 
 export interface SelectedCellInfo {

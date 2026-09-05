@@ -79,6 +79,12 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
       function: () => {
         this.heatMapService.setCurrentView(this.segmentId, HeatMapView.CvsFailure);
       }
+    },
+    {
+      name: HeatMapView.OpenWire.toString(),
+      function: () => {
+        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.OpenWire);
+      }
     }
   ];
 

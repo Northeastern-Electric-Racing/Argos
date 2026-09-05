@@ -20,12 +20,12 @@ part 'rule_service.g.dart';
 @freezed
 abstract class RuleBackup with _$RuleBackup {
   const factory RuleBackup({
-    required final int version,
-    required final String clientId,
-    required final List<Rule> rules,
+    required int version,
+    required String clientId,
+    required List<Rule> rules,
   }) = _RuleBackup;
 
-  factory RuleBackup.fromJson(final Map<String, Object?> json) =>
+  factory RuleBackup.fromJson(Map<String, Object?> json) =>
       _$RuleBackupFromJson(json);
 }
 
@@ -33,28 +33,27 @@ abstract class RuleBackup with _$RuleBackup {
 @freezed
 abstract class Rule with _$Rule {
   const factory Rule({
-    required final String id,
-    required final String topic,
+    required String id,
+    required String topic,
     // ignore: non_constant_identifier_names
-    required final int debounce_time,
-    required final String expr,
+    required int debounce_time,
+    required String expr,
   }) = _Rule;
 
-  factory Rule.fromJson(final Map<String, Object?> json) =>
-      _$RuleFromJson(json);
+  factory Rule.fromJson(Map<String, Object?> json) => _$RuleFromJson(json);
 }
 
 /// A rule notification
 @freezed
 abstract class RuleNotification with _$RuleNotification {
   const factory RuleNotification({
-    required final String id,
-    required final String topic,
-    required final List<double> values,
-    required final DateTime time,
+    required String id,
+    required String topic,
+    required List<double> values,
+    required DateTime time,
   }) = _RuleNotification;
 
-  factory RuleNotification.fromJson(final Map<String, Object?> json) =>
+  factory RuleNotification.fromJson(Map<String, Object?> json) =>
       _$RuleNotificationFromJson(json);
 }
 
@@ -65,12 +64,10 @@ class RuleNotificationsManager extends _$RuleNotificationsManager {
   @override
   List<RuleNotification> build() => _ruleNotifications;
 
-  void addNotification(final RuleNotification ruleNotification) {
+  void addNotification(RuleNotification ruleNotification) {
     // remove previous notification of same id
     _ruleNotifications
-      ..removeWhere(
-        (final RuleNotification notif) => notif.id == ruleNotification.id,
-      )
+      ..removeWhere((RuleNotification notif) => notif.id == ruleNotification.id)
       ..add(ruleNotification);
     ref.notifyListeners();
   }
@@ -83,7 +80,7 @@ class RuleNotificationsManager extends _$RuleNotificationsManager {
 
 @riverpod
 /// Get the unique one-time generated client ID for the user
-Future<String> ruleClientId(final Ref ref) async {
+Future<String> ruleClientId(Ref ref) async {
   final SharedPreferences prefs = await ref.watch(
     sharedPrefsInstanceProvider.future,
   );
@@ -111,7 +108,7 @@ class RuleManager extends _$RuleManager {
         .value;
     if (prefs == null) return HashSet<Rule>();
     for (final String key in prefs.getKeys().where(
-      (final String s) => s.startsWith(RULE_DATA_KEY_PREFIX),
+      (String s) => s.startsWith(RULE_DATA_KEY_PREFIX),
     )) {
       _rules.add(Rule.fromJson(jsonDecode(prefs.getString(key) ?? '')));
     }
@@ -124,7 +121,7 @@ class RuleManager extends _$RuleManager {
     return _rules;
   }
 
-  Future<void> _sendRule(final Rule rule) async {
+  Future<void> _sendRule(Rule rule) async {
     final Uri conn = ref.read(connectionControlProvider).socketUri;
     final String clientId = ref.read(ruleClientIdProvider).value ?? 'test';
     final http.Response response = await http.put(
@@ -139,7 +136,7 @@ class RuleManager extends _$RuleManager {
     print(response.body);
   }
 
-  Future<void> _sendDeleteRule(final String ruleId) async {
+  Future<void> _sendDeleteRule(String ruleId) async {
     final Uri conn = ref.read(connectionControlProvider).socketUri;
     final String clientId = ref.read(ruleClientIdProvider).value ?? 'test';
     await http.post(
@@ -152,7 +149,7 @@ class RuleManager extends _$RuleManager {
     );
   }
 
-  Future<void> _writeRule(final Rule rule) async {
+  Future<void> _writeRule(Rule rule) async {
     final SharedPreferences? prefs = ref
         .read(sharedPrefsInstanceProvider)
         .value;
@@ -162,14 +159,14 @@ class RuleManager extends _$RuleManager {
     );
   }
 
-  Future<void> _writeDeleteRule(final String ruleId) async {
+  Future<void> _writeDeleteRule(String ruleId) async {
     final SharedPreferences? prefs = ref
         .read(sharedPrefsInstanceProvider)
         .value;
     await prefs?.remove('$RULE_DATA_KEY_PREFIX-$ruleId');
   }
 
-  Future<void> registerRule(final Rule rule) async {
+  Future<void> registerRule(Rule rule) async {
     _rules.add(rule);
     await _sendRule(rule);
     await _writeRule(rule);
@@ -177,8 +174,8 @@ class RuleManager extends _$RuleManager {
     state = AsyncData<HashSet<Rule>>(_rules);
   }
 
-  Future<void> deleteRule(final String ruleId) async {
-    _rules.removeWhere((final Rule rule) => rule.id == ruleId);
+  Future<void> deleteRule(String ruleId) async {
+    _rules.removeWhere((Rule rule) => rule.id == ruleId);
     await _sendDeleteRule(ruleId);
     await _writeDeleteRule(ruleId);
 

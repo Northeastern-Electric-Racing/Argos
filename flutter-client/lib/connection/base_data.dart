@@ -48,7 +48,7 @@ class NetFieldCapture<T> {
   }
 
   /// adds a value to the stream
-  void addValue(final T value) {
+  void addValue(T value) {
     _stream.add(value);
     last = value;
     stale = false;
@@ -69,13 +69,13 @@ class NetFieldCapture<T> {
 
 @riverpod
 Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
-  final Ref ref,
+  Ref ref,
 ) async* {
   final Uri conUri = ref.watch(
-    connectionControlProvider.select((final ConnectionProps it) => it.uri),
+    connectionControlProvider.select((ConnectionProps it) => it.uri),
   );
   final bool useMqtt = ref.watch(
-    connectionControlProvider.select((final ConnectionProps it) => it.useMqtt),
+    connectionControlProvider.select((ConnectionProps it) => it.useMqtt),
   );
 
   final String rulesClientId = await ref.watch(ruleClientIdProvider.future);
@@ -130,8 +130,8 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
     }
 
     ref.listen(getDataTypesProvider, (
-      final AsyncValue<List<PublicDataType>>? prev,
-      final AsyncValue<List<PublicDataType>> newDataTypes,
+      AsyncValue<List<PublicDataType>>? prev,
+      AsyncValue<List<PublicDataType>> newDataTypes,
     ) {
       if (newDataTypes.value != null) {
         for (final PublicDataType type in newDataTypes.value!) {
@@ -167,7 +167,7 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
     await client!.connect();
 
     client!.subscribe('#', MqttQos.atMostOnce);
-    client!.updates.listen((final List<MqttReceivedMessage<MqttMessage>> c) {
+    client!.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
       final ServerData payload = ServerData.fromBuffer(
         recMess.payload.message!,
@@ -207,11 +207,11 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
     });
     print('Connecting to $conUri');
     socket
-      ..onConnect((final _) {
+      ..onConnect((_) {
         print('Connected to socket!');
       })
       //When an event received from server, data is added to the stream
-      ..on('data', (final dynamic data) {
+      ..on('data', (dynamic data) {
         final ClientData decodedVal = ClientData.fromJson(jsonDecode(data));
         // do special case if its the first time this value has been seen
         if (!cap.containsKey(decodedVal.name)) {
@@ -232,7 +232,7 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
           ));
         }
       })
-      ..on('metadata', (final dynamic data) {
+      ..on('metadata', (dynamic data) {
         final ClientData decodedVal = ClientData.fromJson(jsonDecode(data));
         // do special case if its the first time this value has been seen
         if (!cap.containsKey(decodedVal.name)) {
@@ -253,12 +253,12 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
           ));
         }
       })
-      ..on('rule_notify', (final dynamic data) {
+      ..on('rule_notify', (dynamic data) {
         ref
             .read(ruleNotificationsManagerProvider.notifier)
             .addNotification(RuleNotification.fromJson(data));
       })
-      ..onDisconnect((final _) => print('disconnect'));
+      ..onDisconnect((_) => print('disconnect'));
 
     yield* streamController.stream;
   }
@@ -268,13 +268,13 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
 @freezed
 abstract class ClientData with _$ClientData {
   const factory ClientData({
-    required final int runId,
-    required final String name,
-    required final String unit,
-    required final List<double> values,
-    required final int timestamp,
+    required int runId,
+    required String name,
+    required String unit,
+    required List<double> values,
+    required int timestamp,
   }) = _ClientData;
 
-  factory ClientData.fromJson(final Map<String, Object?> json) =>
+  factory ClientData.fromJson(Map<String, Object?> json) =>
       _$ClientDataFromJson(json);
 }

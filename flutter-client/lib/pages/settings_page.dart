@@ -9,14 +9,14 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(final BuildContext context) => const Center(child: Settings());
+  Widget build(BuildContext context) => const Center(child: Settings());
 }
 
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
   @override
-  Widget build(final BuildContext context) => ListView(
+  Widget build(BuildContext context) => ListView(
     children: const <Widget>[
       MqttToggleSwitch(),
       UriForm(
@@ -50,7 +50,7 @@ class _SettingRow extends StatelessWidget {
   });
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     final Widget titleRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -64,22 +64,21 @@ class _SettingRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: LayoutBuilder(
-        builder:
-            (final BuildContext context, final BoxConstraints constraints) {
-              // Stack on narrow (mobile) widths so wide controls do not
-              // overflow; keep inline centered layout on larger screens.
-              if (constraints.maxWidth < 450) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    titleRow,
-                    const SizedBox(height: 8.0),
-                    Align(alignment: Alignment.centerRight, child: control),
-                  ],
-                );
-              }
-              return Row(children: <Widget>[titleRow, const Spacer(), control]);
-            },
+        builder: (BuildContext context, BoxConstraints constraints) {
+          // Stack on narrow (mobile) widths so wide controls do not
+          // overflow; keep inline centered layout on larger screens.
+          if (constraints.maxWidth < 450) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                titleRow,
+                const SizedBox(height: 8.0),
+                Align(alignment: Alignment.centerRight, child: control),
+              ],
+            );
+          }
+          return Row(children: <Widget>[titleRow, const Spacer(), control]);
+        },
       ),
     );
   }
@@ -90,9 +89,9 @@ class ThemeModeSelector extends ConsumerWidget {
   const ThemeModeSelector({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeMode mode = ref.watch(
-      themeSettingsManagerProvider.select((final ThemeSettings it) => it.mode),
+      themeSettingsManagerProvider.select((ThemeSettings it) => it.mode),
     );
     return _SettingRow(
       icon: Icons.brightness_6,
@@ -120,7 +119,7 @@ class ThemeModeSelector extends ConsumerWidget {
           ),
         ],
         selected: <ThemeMode>{mode},
-        onSelectionChanged: (final Set<ThemeMode> selected) async {
+        onSelectionChanged: (Set<ThemeMode> selected) async {
           await ref
               .read(themeSettingsManagerProvider.notifier)
               .setMode(selected.first);
@@ -135,12 +134,10 @@ class ThemeSeedSelector extends ConsumerWidget {
   const ThemeSeedSelector({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final int seed = ref
         .watch(
-          themeSettingsManagerProvider.select(
-            (final ThemeSettings it) => it.seed,
-          ),
+          themeSettingsManagerProvider.select((ThemeSettings it) => it.seed),
         )
         .toARGB32();
     return _SettingRow(
@@ -150,7 +147,7 @@ class ThemeSeedSelector extends ConsumerWidget {
         alignment: WrapAlignment.end,
         spacing: 12.0,
         runSpacing: 12.0,
-        children: THEME_SEED_PRESETS.map((final int preset) {
+        children: THEME_SEED_PRESETS.map((int preset) {
           final bool isSelected = preset == seed;
           return InkWell(
             customBorder: const CircleBorder(),
@@ -182,11 +179,9 @@ class MqttToggleSwitch extends ConsumerStatefulWidget {
 
 class _MqttToggleSwitchState extends ConsumerState<MqttToggleSwitch> {
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     final bool isMqtt = ref.watch(
-      connectionControlProvider.select(
-        (final ConnectionProps it) => it.useMqtt,
-      ),
+      connectionControlProvider.select((ConnectionProps it) => it.useMqtt),
     );
     return SwitchListTile(
       title: const Text('Enable MQTT viewing mode'),
@@ -197,7 +192,7 @@ class _MqttToggleSwitchState extends ConsumerState<MqttToggleSwitch> {
       value: isMqtt,
       onChanged: kIsWeb
           ? null
-          : (final bool val) async {
+          : (bool val) async {
               if (val) {
                 await ref
                     .read(connectionControlProvider.notifier)
@@ -240,19 +235,15 @@ class _UriFormState extends ConsumerState<UriForm> {
   }
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     late Uri oldVal;
     if (widget.mqttUri) {
       oldVal = ref.watch(
-        connectionControlProvider.select(
-          (final ConnectionProps it) => it.mqttUri,
-        ),
+        connectionControlProvider.select((ConnectionProps it) => it.mqttUri),
       );
     } else {
       oldVal = ref.watch(
-        connectionControlProvider.select(
-          (final ConnectionProps it) => it.socketUri,
-        ),
+        connectionControlProvider.select((ConnectionProps it) => it.socketUri),
       );
     }
     if (_uriFormText.text.isEmpty) {
@@ -270,30 +261,28 @@ class _UriFormState extends ConsumerState<UriForm> {
                 labelText: widget.labelText,
                 helperText: 'Right click to use default',
               ),
-              onTapOutside: (final PointerDownEvent event) {
+              onTapOutside: (PointerDownEvent event) {
                 FocusScope.of(context).unfocus();
               },
               contextMenuBuilder:
-                  (
-                    final BuildContext context,
-                    final EditableTextState editableTextState,
-                  ) => AdaptiveTextSelectionToolbar.buttonItems(
-                    buttonItems: editableTextState.contextMenuButtonItems
-                      ..add(
-                        ContextMenuButtonItem(
-                          onPressed: () {
-                            if (widget.mqttUri) {
-                              _uriFormText.text = MQTT_URI_DEFAULT;
-                            } else {
-                              _uriFormText.text = BACKEND_URI_DEFAULT;
-                            }
-                          },
-                          label: 'Use Default',
-                        ),
+                  (BuildContext context, EditableTextState editableTextState) =>
+                      AdaptiveTextSelectionToolbar.buttonItems(
+                        buttonItems: editableTextState.contextMenuButtonItems
+                          ..add(
+                            ContextMenuButtonItem(
+                              onPressed: () {
+                                if (widget.mqttUri) {
+                                  _uriFormText.text = MQTT_URI_DEFAULT;
+                                } else {
+                                  _uriFormText.text = BACKEND_URI_DEFAULT;
+                                }
+                              },
+                              label: 'Use Default',
+                            ),
+                          ),
+                        anchors: editableTextState.contextMenuAnchors,
                       ),
-                    anchors: editableTextState.contextMenuAnchors,
-                  ),
-              validator: (final String? value) {
+              validator: (String? value) {
                 if (value == null ||
                     value.isEmpty ||
                     Uri.tryParse(value) == null) {
@@ -350,7 +339,7 @@ class _LiveGraphDisplayDurationState
   }
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     final Duration currentVal = ref.watch(liveGraphSettingsManagerProvider);
     if (_uriFormText.text.isEmpty) {
       _uriFormText.text = currentVal.inSeconds.toString();
@@ -368,27 +357,25 @@ class _LiveGraphDisplayDurationState
                 helperText: 'Right click to use default',
                 suffixText: 'seconds',
               ),
-              onTapOutside: (final PointerDownEvent event) {
+              onTapOutside: (PointerDownEvent event) {
                 FocusScope.of(context).unfocus();
               },
               contextMenuBuilder:
-                  (
-                    final BuildContext context,
-                    final EditableTextState editableTextState,
-                  ) => AdaptiveTextSelectionToolbar.buttonItems(
-                    buttonItems: editableTextState.contextMenuButtonItems
-                      ..add(
-                        ContextMenuButtonItem(
-                          onPressed: () {
-                            _uriFormText.text = LIVE_GRAPH_DURATION_DEFAULT
-                                .toString();
-                          },
-                          label: 'Use Default',
-                        ),
+                  (BuildContext context, EditableTextState editableTextState) =>
+                      AdaptiveTextSelectionToolbar.buttonItems(
+                        buttonItems: editableTextState.contextMenuButtonItems
+                          ..add(
+                            ContextMenuButtonItem(
+                              onPressed: () {
+                                _uriFormText.text = LIVE_GRAPH_DURATION_DEFAULT
+                                    .toString();
+                              },
+                              label: 'Use Default',
+                            ),
+                          ),
+                        anchors: editableTextState.contextMenuAnchors,
                       ),
-                    anchors: editableTextState.contextMenuAnchors,
-                  ),
-              validator: (final String? value) {
+              validator: (String? value) {
                 if (value == null ||
                     value.isEmpty ||
                     int.tryParse(value) == null) {

@@ -12,7 +12,7 @@ class RuleManagerPage extends ConsumerWidget {
   const RuleManagerPage({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final HashSet<Rule> rules =
         ref.watch(ruleManagerProvider).value ?? HashSet<Rule>();
     return ListView(
@@ -24,7 +24,7 @@ class RuleManagerPage extends ConsumerWidget {
               onPressed: () async {
                 await showDialog(
                   context: context,
-                  builder: (final BuildContext context) => SimpleDialog(
+                  builder: (BuildContext context) => SimpleDialog(
                     title: const Text('Add Rules'),
                     children: <Widget>[
                       const NewRuleForm(),
@@ -160,7 +160,7 @@ class _NewRuleFormState extends ConsumerState<NewRuleForm> {
   }
 
   @override
-  Widget build(final BuildContext context) => Column(
+  Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: <Widget>[
       Flexible(
@@ -172,10 +172,10 @@ class _NewRuleFormState extends ConsumerState<NewRuleForm> {
               icon: Icon(Icons.insert_drive_file),
               labelText: 'Rule name',
             ),
-            onTapOutside: (final PointerDownEvent event) {
+            onTapOutside: (PointerDownEvent event) {
               FocusScope.of(context).unfocus();
             },
-            validator: (final String? value) {
+            validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a valid name';
               }
@@ -193,10 +193,10 @@ class _NewRuleFormState extends ConsumerState<NewRuleForm> {
               icon: Icon(Icons.line_axis_sharp),
               labelText: 'Topic',
             ),
-            onTapOutside: (final PointerDownEvent event) {
+            onTapOutside: (PointerDownEvent event) {
               FocusScope.of(context).unfocus();
             },
-            validator: (final String? value) {
+            validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a valid name';
               }
@@ -214,10 +214,10 @@ class _NewRuleFormState extends ConsumerState<NewRuleForm> {
               icon: Icon(Icons.timer),
               labelText: 'Debounce Time',
             ),
-            onTapOutside: (final PointerDownEvent event) {
+            onTapOutside: (PointerDownEvent event) {
               FocusScope.of(context).unfocus();
             },
-            validator: (final String? value) {
+            validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a valid name';
               }
@@ -235,10 +235,10 @@ class _NewRuleFormState extends ConsumerState<NewRuleForm> {
               icon: Icon(Icons.timer),
               labelText: 'Expression',
             ),
-            onTapOutside: (final PointerDownEvent event) {
+            onTapOutside: (PointerDownEvent event) {
               FocusScope.of(context).unfocus();
             },
-            validator: (final String? value) {
+            validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a valid name';
               }
@@ -265,9 +265,8 @@ class _NewRuleFormState extends ConsumerState<NewRuleForm> {
                 );
 
             if (!context.mounted) return;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Added rule!')));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(const SnackBar(content: Text('Added rule!')));
 
             context.pop();
           }
