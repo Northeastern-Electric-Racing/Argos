@@ -167,7 +167,7 @@ Stream<Map<String, NetFieldCapture<(List<double>, DateTime)>>> capModelHolder(
     await client!.connect();
 
     client!.subscribe('#', MqttQos.atMostOnce);
-    client!.updates.listen((final List<MqttReceivedMessage<MqttMessage>> c) {
+    client!.updates!.listen((final List<MqttReceivedMessage<MqttMessage>> c) {
       final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
       final ServerData payload = ServerData.fromBuffer(
         recMess.payload.message!,
