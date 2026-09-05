@@ -33,7 +33,7 @@ A cell's voltage from the ADBMS chip's primary C-ADC. Published per cell at `BMS
 _Avoid_: "the voltage" — ambiguous now that the S-ADC reading also exists.
 
 **S-ADC voltage** (**S Volts**):
-The same cell measured independently by the ADBMS chip's redundant S-ADC. Expected per-cell topic `BMS/PerCell/{Alpha|Beta}/{segment}/S_Volts/{cell}` in `V`, mirroring the C-ADC's `Volts`; rendered as the **S Volts** BMS-heatmap view.
+The same cell measured independently by the ADBMS chip's redundant S-ADC. Per-cell topic `BMS/PerCell/{Alpha|Beta}/{segment}/S_Volts/{cell}` in `V`, mirroring the C-ADC's `Volts`; rendered as the **S Volts** BMS-heatmap view.
 _Avoid_: sense voltage.
 
 **CvS**:
