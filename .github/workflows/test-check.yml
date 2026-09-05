@@ -65,6 +65,11 @@ jobs:
     steps:
       - name: Gate
         run: |
+          changes_result="${{ needs.changes.result }}"
+          if [ "$changes_result" != "success" ]; then
+            echo "Change detection did not succeed (result: $changes_result) - refusing to pass the gate"
+            exit 1
+          fi
           result="${{ needs.run-frontend-tests.result }}"
           if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
             echo "Frontend unit tests failed (result: $result)"

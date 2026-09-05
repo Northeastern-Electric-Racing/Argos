@@ -32,7 +32,6 @@ jobs:
         with:
           filters: |
             build:
-              - "angular-client/**"
               - "scylla-server/**"
               - "compose/**"
               - ".github/workflows/build-check.yml"
@@ -58,6 +57,11 @@ jobs:
     steps:
       - name: Gate
         run: |
+          changes_result="${{ needs.changes.result }}"
+          if [ "$changes_result" != "success" ]; then
+            echo "Change detection did not succeed (result: $changes_result) - refusing to pass the gate"
+            exit 1
+          fi
           result="${{ needs.run-build.result }}"
           if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
             echo "Build failed (result: $result)"
