@@ -39,10 +39,13 @@ export default class StatusBarComponent {
     this.collapsed.update((collapsed) => !collapsed);
     // The @if/@else swaps which control is on screen, so move keyboard focus to the
     // successor — otherwise focus falls back to <body> and the focus-visible ring is lost.
+    // preventScroll is required: this runs on the first frame of `sidebar-in`, while the panel
+    // is still translated fully off the right edge, so a scrolling focus() would drag the whole
+    // page sideways and let it ease back as the animation lands.
     afterNextRender(
       () => {
         const target = this.collapsed() ? this.handle() : this.collapseButton();
-        target?.nativeElement.focus();
+        target?.nativeElement.focus({ preventScroll: true });
       },
       { injector: this.injector }
     );

@@ -28,6 +28,9 @@
   font-size: var(--font-size-lg, 20px);
   font-weight: 700;
   color: var(--color-text-primary);
+  /* Fixed-width digits: the panel is shrink-to-fit and right-anchored, so proportional figures
+     would re-flow it on every telemetry update. */
+  font-variant-numeric: tabular-nums;
 }
 .unit {
   font-size: var(--font-size-sm, 12px);

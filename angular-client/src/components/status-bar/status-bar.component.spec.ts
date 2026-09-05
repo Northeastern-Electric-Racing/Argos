@@ -56,6 +56,28 @@ describe('StatusBarComponent', () => {
     expect(q('.side-handle')).toBeFalsy();
   });
 
+  // Regression: the panel starts `sidebar-in` translated fully off the right edge, so a
+  // scrolling focus() drags the whole page sideways and eases it back over the animation.
+  it('focuses the successor without scrolling the page into the animation overflow', async () => {
+    // The successor element does not exist until after the toggle renders it, so spy on the
+    // prototype and assert against the call that actually landed.
+    const focusSpy = spyOn(HTMLElement.prototype, 'focus').and.callThrough();
+
+    (q('.panel-collapse') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(focusSpy.calls.mostRecent().object).toBe(q('.side-handle')!);
+    expect(focusSpy.calls.mostRecent().args).toEqual([{ preventScroll: true }]);
+
+    (q('.side-handle') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(focusSpy.calls.mostRecent().object).toBe(q('.panel-collapse')!);
+    expect(focusSpy.calls.mostRecent().args).toEqual([{ preventScroll: true }]);
+  });
+
   it('moves keyboard focus to the successor control on toggle', async () => {
     (q('.panel-collapse') as HTMLButtonElement).click();
     fixture.detectChanges();

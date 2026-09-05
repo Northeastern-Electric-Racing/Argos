@@ -4,6 +4,11 @@
   position: sticky;
   top: 0;
   z-index: 20;
+  /* `sidebar-in` starts the panel at translateX(100%), i.e. past the right edge, and transformed
+     boxes contribute scrollable overflow — which briefly makes the page horizontally scrollable.
+     `clip` (not `hidden`) removes that scroll area without creating a scroll container, so the
+     sticky positioning above still works, and the panel wipes in from the edge as intended. */
+  overflow-x: clip;
 }
 
 @keyframes sidebar-in {
