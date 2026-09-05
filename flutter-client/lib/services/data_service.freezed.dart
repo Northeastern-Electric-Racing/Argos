@@ -216,7 +216,7 @@ return $default(_that.values,_that.time);case _:
 @JsonSerializable()
 
 class _PublicData with DiagnosticableTreeMixin implements PublicData {
-  const _PublicData({required final  List<double> values, required this.time}): _values = values;
+  const _PublicData({required  List<double> values, required this.time}): _values = values;
   factory _PublicData.fromJson(Map<String, dynamic> json) => _$PublicDataFromJson(json);
 
  final  List<double> _values;

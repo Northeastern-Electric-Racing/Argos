@@ -10,7 +10,7 @@ class RuleNotificationsPage extends ConsumerWidget {
   const RuleNotificationsPage({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final List<RuleNotification> notifications = ref.watch(
       ruleNotificationsManagerProvider,
     );
@@ -46,7 +46,7 @@ class RuleNotificationsPage extends ConsumerWidget {
                   .read(getDataTypesProvider)
                   .value
                   ?.firstWhere(
-                    (final PublicDataType d) => d.name == notification.topic,
+                    (PublicDataType d) => d.name == notification.topic,
                   );
               if (dataType != null) {
                 ref.read(graphTopicsManagerProvider.notifier).setTopics(

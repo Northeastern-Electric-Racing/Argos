@@ -14,11 +14,11 @@ part 'dashboard_service.freezed.dart';
 @freezed
 abstract class DashboardConfig with _$DashboardConfig {
   const factory DashboardConfig({
-    required final List<String> topics,
-    required final int crossAxisCount,
+    required List<String> topics,
+    required int crossAxisCount,
   }) = _DashboardConfig;
 
-  factory DashboardConfig.fromJson(final Map<String, Object?> json) =>
+  factory DashboardConfig.fromJson(Map<String, Object?> json) =>
       _$DashboardConfigFromJson(json);
 }
 
@@ -44,13 +44,13 @@ class AvailableDashboardsManager extends _$AvailableDashboardsManager {
         ?.setStringList(DASHBOARD_LIST_KEY, _dashes.toList());
   }
 
-  Future<void> addDash(final String dashName) async {
+  Future<void> addDash(String dashName) async {
     _dashes.add(dashName);
     await _updateDashes();
     ref.invalidateSelf();
   }
 
-  Future<void> removeDash(final String dashName) async {
+  Future<void> removeDash(String dashName) async {
     _dashes.remove(dashName);
     await ref
         .read(sharedPrefsInstanceProvider)
@@ -73,7 +73,7 @@ class DashboardConf extends _$DashboardConf {
   );
 
   @override
-  DashboardConfig build({required final String dashName}) {
+  DashboardConfig build({required String dashName}) {
     final AsyncValue<SharedPreferences> prefs = ref.watch(
       sharedPrefsInstanceProvider,
     );
@@ -104,13 +104,13 @@ class DashboardConf extends _$DashboardConf {
     );
   }
 
-  Future<void> setTopics(final List<String> topics) async {
+  Future<void> setTopics(List<String> topics) async {
     _conf = _conf.copyWith(topics: topics);
     await _updateConf();
     ref.invalidateSelf();
   }
 
-  Future<void> setCrossAxisCnt(final int cnt) async {
+  Future<void> setCrossAxisCnt(int cnt) async {
     _conf = _conf.copyWith(crossAxisCount: cnt);
     await _updateConf();
     ref.invalidateSelf();
