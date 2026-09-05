@@ -2,9 +2,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  max-width: 25vw;
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-panel);
   background: var(--color-background-page);
   border: 1px solid var(--color-divider);
 }
@@ -19,10 +18,10 @@
   flex-direction: column;
   line-height: 1.1;
 }
-.top {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
+.unit,
+.subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtitle);
 }
 .value {
   font-size: var(--font-size-lg);
@@ -33,19 +32,15 @@
   font-variant-numeric: tabular-nums;
 }
 .unit {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-subtitle);
+  margin-left: 3px;
 }
 .subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-subtitle);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
   flex: 0 0 auto;
-  margin-left: 4px;
+  border-radius: 50%;
 }
