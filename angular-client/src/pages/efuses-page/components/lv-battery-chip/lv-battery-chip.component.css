@@ -25,7 +25,7 @@
   gap: 3px;
 }
 .value {
-  font-size: var(--font-size-lg, 20px);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--color-text-primary);
   /* Fixed-width digits: the panel is shrink-to-fit and right-anchored, so proportional figures
@@ -33,11 +33,11 @@
   font-variant-numeric: tabular-nums;
 }
 .unit {
-  font-size: var(--font-size-sm, 12px);
+  font-size: var(--font-size-sm);
   color: var(--color-text-subtitle);
 }
 .subtitle {
-  font-size: var(--font-size-sm, 12px);
+  font-size: var(--font-size-sm);
   color: var(--color-text-subtitle);
   text-transform: uppercase;
   letter-spacing: 0.04em;

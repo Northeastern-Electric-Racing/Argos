@@ -56,8 +56,8 @@ describe('StatusBarComponent', () => {
     expect(q('.side-handle')).toBeFalsy();
   });
 
-  // Regression: the panel starts `sidebar-in` translated fully off the right edge, so a
-  // scrolling focus() drags the whole page sideways and eases it back over the animation.
+  // Regression: a scrolling focus() on the freshly-swapped control drags the whole page
+  // sideways for the length of `sidebar-in`. Moving focus must never move the page.
   it('focuses the successor without scrolling the page into the animation overflow', async () => {
     // The successor element does not exist until after the toggle renders it, so spy on the
     // prototype and assert against the call that actually landed.

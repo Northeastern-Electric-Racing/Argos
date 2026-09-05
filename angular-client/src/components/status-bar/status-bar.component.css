@@ -4,20 +4,18 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  /* `sidebar-in` starts the panel at translateX(100%), i.e. past the right edge, and transformed
-     boxes contribute scrollable overflow — which briefly makes the page horizontally scrollable.
-     `clip` (not `hidden`) removes that scroll area without creating a scroll container, so the
-     sticky positioning above still works, and the panel wipes in from the edge as intended. */
-  overflow-x: clip;
 }
 
+/* Wipe in from the right edge with clip-path rather than translating the box off-screen: a
+   transform past the edge would add scrollable overflow to the page and give focus() somewhere
+   to scroll to, which shifted the whole page sideways for the length of the animation. */
 @keyframes sidebar-in {
   from {
-    transform: translateX(100%);
+    clip-path: inset(0 0 0 100%);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
     opacity: 1;
   }
 }
@@ -41,7 +39,7 @@
   justify-content: center;
 }
 .side-handle:hover {
-  background: #383838;
+  background: color-mix(in srgb, var(--color-widget-glass) 6%, var(--color-background-info));
 }
 .side-handle:focus-visible {
   outline: 2px solid var(--color-text-primary);
@@ -87,7 +85,7 @@
   gap: 10px;
 }
 .panel-title {
-  font-size: var(--font-size-sm, 12px);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -110,7 +108,7 @@
   justify-content: center;
 }
 .panel-collapse:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--color-widget-glass) 8%, transparent);
 }
 .panel-collapse:focus-visible {
   outline: 2px solid var(--color-text-primary);
