@@ -211,7 +211,7 @@ return $default(_that.version,_that.clientId,_that.rules);case _:
 @JsonSerializable()
 
 class _RuleBackup implements RuleBackup {
-  const _RuleBackup({required this.version, required this.clientId, required final  List<Rule> rules}): _rules = rules;
+  const _RuleBackup({required this.version, required this.clientId, required  List<Rule> rules}): _rules = rules;
   factory _RuleBackup.fromJson(Map<String, dynamic> json) => _$RuleBackupFromJson(json);
 
 @override final  int version;
@@ -759,7 +759,7 @@ return $default(_that.id,_that.topic,_that.values,_that.time);case _:
 @JsonSerializable()
 
 class _RuleNotification implements RuleNotification {
-  const _RuleNotification({required this.id, required this.topic, required final  List<double> values, required this.time}): _values = values;
+  const _RuleNotification({required this.id, required this.topic, required  List<double> values, required this.time}): _values = values;
   factory _RuleNotification.fromJson(Map<String, dynamic> json) => _$RuleNotificationFromJson(json);
 
 @override final  String id;
