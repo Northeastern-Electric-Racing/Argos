@@ -104,5 +104,10 @@ linter:
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
 analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - web/**
+    - linux/**
   plugins:
     - riverpod_lint
