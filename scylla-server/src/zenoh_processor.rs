@@ -9,7 +9,7 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 use tracing::{Level, debug, instrument, trace, warn};
-use zenoh::{bytes::ZBytes, sample::Sample};
+use zenoh::{bytes::ZBytes, qos::CongestionControl, sample::Sample};
 
 use crate::{
     RATE_LIMIT_MODE, RateLimitMode, STATIC_RATE_LIMIT_VALUE, SirenSendable,
@@ -106,7 +106,12 @@ impl ZenohProcessor {
                 Some(res) = self.send_channel.recv() => {
                     let (data, ref mut topic) = Self::convert_to_zenoh(res);
                     trace!("Sending zenoh message {}", topic);
-                    if let Err(err)= self.session.put(topic, data).encoding(zenoh::bytes::Encoding::APPLICATION_PROTOBUF).await {
+                    if let Err(err)= self.session.put(topic, data)
+                        .encoding(zenoh::bytes::Encoding::APPLICATION_PROTOBUF)
+                        // commands must not be silently dropped under congestion;
+                        // zenoh defaults pushes to CongestionControl::Drop
+                        .congestion_control(CongestionControl::Block)
+                        .await {
                         warn!("Error sending zenoh message: {}", err);
                     }
                 }
