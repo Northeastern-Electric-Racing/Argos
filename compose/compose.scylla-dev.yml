@@ -19,7 +19,7 @@ services:
 
   calypso:
     extends:
-      file: ./compose.calypso.yml
+      file: ../siren-base/compose.calypso.yml
       service: calypso
     depends_on:
       - siren

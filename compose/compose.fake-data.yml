@@ -4,7 +4,7 @@ services:
     restart: "no"
   siren:
     extends:
-      file: ../siren-base/compose.siren.yml
+      file: ../siren-base/compose.zenohd.yml
       service: siren
 
   grafana:
@@ -16,7 +16,7 @@ services:
 
   calypso:
     extends:
-      file: ./compose.calypso.yml
+      file: ../siren-base/compose.calypso.yml
       service: calypso
     depends_on:
       - siren

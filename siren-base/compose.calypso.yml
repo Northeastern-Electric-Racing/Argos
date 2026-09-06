@@ -1,0 +1,13 @@
+services:
+  calypso:
+    image: ghcr.io/northeastern-electric-racing/calypso:zenoh-sim
+    restart: unless-stopped
+    environment:
+      # in prod mode
+      #- CALYPSO_CAN_ENCODE=false
+      #- CALYPSO_SOCKETCAN_IFACE=vcan0
+      # in sim or prod mode
+      - CALYPSO_ZENOH=true
+      - CALYPSO_ZENOH_CONF=/etc/zenoh/zenoh.json5
+    volumes:
+      - ./zenoh-calypso-docker.json5:/etc/zenoh/zenoh.json5:ro
