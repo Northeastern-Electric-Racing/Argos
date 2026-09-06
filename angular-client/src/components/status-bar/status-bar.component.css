@@ -50,20 +50,14 @@
 }
 .side-handle mat-icon,
 .panel-collapse mat-icon {
+  font-size: var(--icon-size);
+  width: var(--icon-size);
+  height: var(--icon-size);
   line-height: 1;
-}
-.side-handle mat-icon {
-  font-size: 26px;
-  width: 26px;
-  height: 26px;
-}
-.panel-collapse mat-icon {
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
 }
 
 .side-handle {
+  --icon-size: 26px;
   width: 30px;
   height: 56px;
   border-radius: 10px 0 0 10px;
@@ -102,6 +96,7 @@
 }
 
 .panel-collapse {
+  --icon-size: 22px;
   width: 28px;
   height: 28px;
   border: none;
