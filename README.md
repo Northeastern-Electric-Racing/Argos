@@ -57,3 +57,20 @@ Server protobuf generation is automatic. See below for client protobuf generatio
 
 The configuration for the Mosquitto MQTT server on the router is in the siren-base folder.
 Note that the configuration is used in the docker compose file, but the configuration on the TPU is stored in [Odysseus.](https://github.com/Northeastern-Electric-Racing/Odysseus/tree/cb12fb3240d5fd58adfeae26262e158ad6dd889b/odysseus_tree/overlays/rootfs_overlay_tpu/etc/mosquitto)
+
+## CI
+
+Four workflows gate every PR. Each one always triggers, a `changes` job
+([`dorny/paths-filter`](https://github.com/dorny/paths-filter)) decides whether the real work runs,
+and an always-run `*-gate` job reports the outcome. Use the gate jobs as the required status
+checks: they pass when the work is legitimately skipped and fail when it breaks, so a
+path-filtered PR never deadlocks a merge.
+
+| Workflow          | Work runs when                   | Gate job         |
+| ----------------- | -------------------------------- | ---------------- |
+| `client-ci.yml`   | `angular-client/**`              | `client-ci-gate` |
+| `test-check.yml`  | `angular-client/**`              | `test-gate`      |
+| `scylla-ci.yml`   | `scylla-server/**`               | `scylla-gate`    |
+| `build-check.yml` | `scylla-server/**`, `compose/**` | `build-gate`     |
+
+`client-flutter-ci.yml` is the exception: it still filters at the trigger and has no gate job.

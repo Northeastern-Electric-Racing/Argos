@@ -10,7 +10,7 @@ class DataPage extends ConsumerWidget {
   const DataPage({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<Map<String, NetFieldCapture<(List<double>, DateTime)>>>
     caps = ref.watch(capModelHolderProvider);
     return switch (caps) {
@@ -29,7 +29,7 @@ class ErrorViewer extends ConsumerWidget {
   const ErrorViewer({required this.error, super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) => Column(
+  Widget build(BuildContext context, WidgetRef ref) => Column(
     mainAxisAlignment: MainAxisAlignment.center,
     children: <Widget>[
       Text('Error: $error'),
@@ -58,7 +58,7 @@ class _DataExpanderState extends ConsumerState<DataExpander> {
   }
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     // Build a tree structure from the topics
     final Map<String, dynamic> tree = _buildTree(widget.items);
 
@@ -67,7 +67,7 @@ class _DataExpanderState extends ConsumerState<DataExpander> {
 
   // Build a hierarchical tree from the list of items
   Map<String, dynamic> _buildTree(
-    final List<NetFieldCapture<(List<double>, DateTime)>> items,
+    List<NetFieldCapture<(List<double>, DateTime)>> items,
   ) {
     final Map<String, dynamic> root = <String, dynamic>{};
 
@@ -98,32 +98,30 @@ class _DataExpanderState extends ConsumerState<DataExpander> {
   }
 
   // Build the ExpansionTiles recursively
-  List<Widget> _buildExpansionTiles(
-    final Map<String, dynamic> tree,
-    final int level,
-  ) => tree.entries
-      .where((final MapEntry<String, dynamic> entry) => entry.key != 'items')
-      .map(
-        (final MapEntry<String, dynamic> entry) => Padding(
-          padding: EdgeInsets.only(left: level * 8.0),
-          child: ExpansionTile(
-            title: Text(entry.key),
-            children: <Widget>[
-              ..._buildExpansionTiles(entry.value, level + 1),
-              if (entry.value.containsKey('items'))
-                ..._buildListItems(
-                  entry.value['items'] as List<dynamic>,
-                  level,
-                ),
-            ],
-          ),
-        ),
-      )
-      .toList();
+  List<Widget> _buildExpansionTiles(Map<String, dynamic> tree, int level) =>
+      tree.entries
+          .where((MapEntry<String, dynamic> entry) => entry.key != 'items')
+          .map(
+            (MapEntry<String, dynamic> entry) => Padding(
+              padding: EdgeInsets.only(left: level * 8.0),
+              child: ExpansionTile(
+                title: Text(entry.key),
+                children: <Widget>[
+                  ..._buildExpansionTiles(entry.value, level + 1),
+                  if (entry.value.containsKey('items'))
+                    ..._buildListItems(
+                      entry.value['items'] as List<dynamic>,
+                      level,
+                    ),
+                ],
+              ),
+            ),
+          )
+          .toList();
 
   // Build the final list items
-  List<dynamic> _buildListItems(final List<dynamic> items, final int level) =>
-      items.map((final dynamic item) {
+  List<dynamic> _buildListItems(List<dynamic> items, int level) =>
+      items.map((dynamic item) {
         assert(
           item.runtimeType == NetFieldCapture<(List<double>, DateTime)>,
           'Failure to ensure NetField existence',
@@ -142,7 +140,7 @@ class DataPoint extends ConsumerWidget {
   const DataPoint({required this.item, required this.level, super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bool isFav = ref
         .watch(favoriteTopicsManagerProvider)
         .contains(item.publicDataType);
@@ -150,13 +148,13 @@ class DataPoint extends ConsumerWidget {
       stream: item.getStream(),
       builder:
           (
-            final BuildContext context,
-            final AsyncSnapshot<(List<double>, DateTime)> snapshot,
+            BuildContext context,
+            AsyncSnapshot<(List<double>, DateTime)> snapshot,
           ) {
             final Color? textColor = item.stale ? Colors.red : null;
             final IconData isFavIcon = isFav ? Icons.star : Icons.star_border;
             final Iterable<String>? data = snapshot.data?.$1.map(
-              (final double e) => e.toStringAsFixed(4),
+              (double e) => e.toStringAsFixed(4),
             );
             return Padding(
               padding: EdgeInsets.only(left: level * 4.0, right: 4.0),
@@ -201,17 +199,15 @@ class DataPoint extends ConsumerWidget {
                       if (data != null)
                         Text(
                           softWrap: true,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(color: textColor),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: textColor),
                           data.join('\n'),
                         )
                       else
                         Text(
                           'No Live Data',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(color: textColor),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: textColor),
                         ),
                       const SizedBox(width: 4.0),
                       Text(item.unit),

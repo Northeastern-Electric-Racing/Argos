@@ -8,7 +8,7 @@ class CameraPage extends StatelessWidget {
   const CameraPage({super.key});
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     if (Platform.isAndroid) {
       return const Center(child: CamVideoPlayer());
     } else {
@@ -35,7 +35,7 @@ class _CamVideoPlayerState extends State<CamVideoPlayer> {
             Uri.parse('rtsp://192.168.100.11:8554/frontcam'),
           )
           //Uri.parse('http://192.168.100.11:8888/frontcam/index.m3u8')) // freezes up
-          ..initialize().then((final _) {
+          ..initialize().then((_) {
             // Ensure the first frame is shown after the video is initialized,
             // even before the play button has been pressed.
             setState(() {});
@@ -49,7 +49,7 @@ class _CamVideoPlayerState extends State<CamVideoPlayer> {
   }
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     if (_controller.value.isInitialized) {
       if (_controller.value.hasError) {
         return HowToCam(errorDescription: _controller.value.errorDescription);
@@ -69,7 +69,7 @@ class HowToCam extends StatelessWidget {
   const HowToCam({super.key, this.errorDescription});
 
   @override
-  Widget build(final BuildContext context) => Column(
+  Widget build(BuildContext context) => Column(
     children: <Widget>[
       if (errorDescription != null)
         const Text(

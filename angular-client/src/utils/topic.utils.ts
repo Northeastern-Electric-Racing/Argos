@@ -29,6 +29,9 @@ export const alphaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Alp
 export const betaBurning = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/Burning/${cell}`;
 export const alphaCvs = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/CvS/${cell}`;
 export const betaCvs = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/CvS/${cell}`;
+// Open-wire detect flag — mirrors the CvS topics above with OW in place of CvS.
+export const alphaOw = (segment: Segment, cell: number) => `BMS/PerCell/Alpha/${segment}/OW/${cell}`;
+export const betaOw = (segment: Segment, cell: number) => `BMS/PerCell/Beta/${segment}/OW/${cell}`;
 export const segmentTemp = (segment: Segment) => `BMS/Segment_Temp/${segment}`;
 export const segmentVoltage = (segment: Segment) => `BMS/Segment_Volt/${segment}`;
 export const segmentTotalVoltage = (segment: Segment) => `BMS/Segment_Total_Volt/${segment}`;
@@ -182,6 +185,8 @@ export const topics = {
   betaBurning,
   alphaCvs,
   betaCvs,
+  alphaOw,
+  betaOw,
   segmentTemp,
   segmentVoltage,
   segmentTotalVoltage,
@@ -282,6 +287,9 @@ export const allAlphaBurnValues: number[] = Array.from({ length: BMS_CONFIG.ALPH
 export const allBetaBurnValues: number[] = Array.from({ length: BMS_CONFIG.BETA_BURN_COUNT }, (_, i) => i);
 export const allAlphaCvsValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_CVS_COUNT }, (_, i) => i);
 export const allBetaCvsValues: number[] = Array.from({ length: BMS_CONFIG.BETA_CVS_COUNT }, (_, i) => i);
+// Open Wire covers the same per-cell set as CvS, so reuse the CvS cell counts.
+export const allAlphaOwValues: number[] = Array.from({ length: BMS_CONFIG.ALPHA_CVS_COUNT }, (_, i) => i);
+export const allBetaOwValues: number[] = Array.from({ length: BMS_CONFIG.BETA_CVS_COUNT }, (_, i) => i);
 
 export enum ChipFault {
   VA_OV = 'VA_OV',

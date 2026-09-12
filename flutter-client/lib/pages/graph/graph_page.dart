@@ -25,12 +25,10 @@ class _GraphPageState extends ConsumerState<GraphPage> {
   int resetKey = 0;
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     // check whether we are in MQTT mode, as no historical view in MQTT mode
     final bool isMqtt = ref.watch(
-      connectionControlProvider.select(
-        (final ConnectionProps it) => it.useMqtt,
-      ),
+      connectionControlProvider.select((ConnectionProps it) => it.useMqtt),
     );
 
     // get some runs
@@ -53,7 +51,7 @@ class _GraphPageState extends ConsumerState<GraphPage> {
             enabled: !isLive,
             label: const Text('Select Run'),
             initialSelection: currentRun,
-            onSelected: (final int? id) {
+            onSelected: (int? id) {
               setState(() {
                 ref
                     .read(historicalGraphRunManagerProvider.notifier)
@@ -62,7 +60,7 @@ class _GraphPageState extends ConsumerState<GraphPage> {
             },
             dropdownMenuEntries: runs
                 .map(
-                  (final PublicRun run) => DropdownMenuEntry<int>(
+                  (PublicRun run) => DropdownMenuEntry<int>(
                     value: run.id,
                     label: run.id.toString(),
                   ),
@@ -94,7 +92,7 @@ class _GraphPageState extends ConsumerState<GraphPage> {
           value: isLive,
           onChanged: isMqtt
               ? null
-              : (final bool newLive) {
+              : (bool newLive) {
                   setState(() {
                     isLive = newLive;
                   });
@@ -114,7 +112,7 @@ class TopicsSelector extends ConsumerStatefulWidget {
 
 class _TopicsSelectorState extends ConsumerState<TopicsSelector> {
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     // Read (not watch) the current selection: multi_dropdown owns the live
     // selection state internally and reports it via onSelectionChange. Watching
     // would rebuild this widget on every tap, and since the dropdown only reads
@@ -129,8 +127,7 @@ class _TopicsSelectorState extends ConsumerState<TopicsSelector> {
             .value
             ?.values
             .map(
-              (final NetFieldCapture<(List<double>, DateTime)> e) =>
-                  e.publicDataType,
+              (NetFieldCapture<(List<double>, DateTime)> e) => e.publicDataType,
             )
             .toList() ??
         <PublicDataType>[];
@@ -146,22 +143,17 @@ class _TopicsSelectorState extends ConsumerState<TopicsSelector> {
             key: ValueKey<int>(availTopics.length),
             autovalidateMode: AutovalidateMode.onUnfocus,
             searchEnabled: true,
-            itemBuilder:
-                (
-                  final DropdownItem<PublicDataType> item,
-                  final int index,
-                  final VoidCallback onTap,
-                ) => multiDropdownItemBuilder<PublicDataType>(
-                  context,
-                  item,
-                  onTap,
-                ),
-            onSelectionChange: (final List<PublicDataType> items) {
+            itemBuilder: (
+              DropdownItem<PublicDataType> item,
+              int index,
+              VoidCallback onTap,
+            ) => multiDropdownItemBuilder<PublicDataType>(context, item, onTap),
+            onSelectionChange: (List<PublicDataType> items) {
               ref.read(graphTopicsManagerProvider.notifier).setTopics(items);
             },
             items: availTopics
                 .map(
-                  (final PublicDataType e) => DropdownItem<PublicDataType>(
+                  (PublicDataType e) => DropdownItem<PublicDataType>(
                     selected: selectedTopics.contains(e),
                     label: e.name,
                     value: e,
@@ -183,7 +175,7 @@ class _TopicsSelectorState extends ConsumerState<TopicsSelector> {
                 ),
               ),
             ),
-            validator: (final List<DropdownItem<PublicDataType>>? value) {
+            validator: (List<DropdownItem<PublicDataType>>? value) {
               if (value == null || value.isEmpty) {
                 return 'Please select one or more topics';
               }

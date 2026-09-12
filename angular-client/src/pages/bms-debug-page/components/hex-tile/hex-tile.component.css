@@ -97,9 +97,9 @@
   padding-bottom: 16%;
 }
 
-/* Temperature & CvS Failure: top-left number anchored away from the value */
+/* Temperature & flag views (CvS Failure, Open Wire): top-left number anchored away from the value */
 .hex-tile.view-temperature .cell-number,
-.hex-tile.view-cvs-failure .cell-number {
+.hex-tile.view-flag .cell-number {
   top: 22%;
   left: 20%;
   transform: none;
@@ -113,13 +113,13 @@
   padding-bottom: 16%;
 }
 
-.hex-tile.view-cvs-failure {
+.hex-tile.view-flag {
   justify-content: center;
   align-items: center;
   padding-bottom: 0;
 }
 
-.hex-tile.view-cvs-failure .cell-value {
+.hex-tile.view-flag .cell-value {
   font-size: calc(var(--hex-w, 42px) * 0.19);
 }
 
@@ -161,20 +161,20 @@
   color: #1a1a1a;
 }
 
-/* CvS Failure (heatmap variant): center TRUE/FALSE; keep cell number anchored top-left */
-:host(.heatmap-cell) .hex-tile.view-cvs-failure {
+/* Flag views (heatmap variant): center TRUE/FALSE; keep cell number anchored top-left */
+:host(.heatmap-cell) .hex-tile.view-flag {
   padding-left: 0;
 }
 
-:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-number {
+:host(.heatmap-cell) .hex-tile.view-flag .cell-number {
   padding-left: 8%;
 }
 
-:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-value-container {
+:host(.heatmap-cell) .hex-tile.view-flag .cell-value-container {
   align-self: center;
 }
 
-:host(.heatmap-cell) .hex-tile.view-cvs-failure .cell-value {
+:host(.heatmap-cell) .hex-tile.view-flag .cell-value {
   font-size: calc(var(--hex-w, 48px) * 0.24);
 }
 

@@ -119,11 +119,13 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   private getCellBoolValue(cell: CellReading): boolean | undefined {
     if (this.view === HeatMapView.Balancing) return cell.balancing;
     if (this.view === HeatMapView.CvsFailure) return cell.cvs;
+    if (this.view === HeatMapView.OpenWire) return cell.ow;
     return undefined;
   }
 
   getColor(cell: DisplayCell): string {
-    if (this.view === HeatMapView.CvsFailure) return this.getCvsFailureColor(cell.boolValue);
+    if (this.view === HeatMapView.CvsFailure || this.view === HeatMapView.OpenWire)
+      return this.getCvsFailureColor(cell.boolValue);
     if (this.view === HeatMapView.Balancing) return this.getBalancingColor(cell.boolValue);
     if (this.view === HeatMapView.Temperature) return this.getTempColor(cell.value);
     return this.getVoltColor(cell.value);

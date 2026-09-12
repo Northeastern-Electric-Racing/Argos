@@ -11,9 +11,9 @@ import 'package:multi_dropdown/multi_dropdown.dart';
 /// [Material] ancestor fixes that while keeping the selected highlight and a
 /// check indicator.
 Widget multiDropdownItemBuilder<T>(
-  final BuildContext context,
-  final DropdownItem<T> item,
-  final VoidCallback onTap,
+  BuildContext context,
+  DropdownItem<T> item,
+  VoidCallback onTap,
 ) => Material(
   color: item.selected ? Theme.of(context).highlightColor : Colors.transparent,
   child: ListTile(
@@ -23,9 +23,8 @@ Widget multiDropdownItemBuilder<T>(
     trailing: item.selected
         ? Icon(
             Icons.check_box,
-            color: Theme.of(context).checkboxTheme.fillColor?.resolve(
-              <WidgetState>{WidgetState.selected},
-            ),
+            color: Theme.of(context).checkboxTheme.fillColor
+                ?.resolve(<WidgetState>{WidgetState.selected}),
           )
         : null,
     onTap: onTap,

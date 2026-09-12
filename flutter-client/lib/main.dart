@@ -29,7 +29,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: <Override>[
-        sharedPrefsInstanceProvider.overrideWith((final Ref ref) => prefs),
+        sharedPrefsInstanceProvider.overrideWith((Ref ref) => prefs),
       ],
       child: MyApp(),
     ),
@@ -41,7 +41,7 @@ class _EagerInitialization extends ConsumerWidget {
   final Widget child;
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // force rules to be init-ed, and their notifications
     ref
       ..watch(ruleNotificationsManagerProvider)
@@ -64,20 +64,18 @@ class MyApp extends ConsumerWidget {
     initialLocation: '/',
     routes: <RouteBase>[
       StatefulShellRoute.indexedStack(
-        builder:
-            (
-              final BuildContext context,
-              final GoRouterState state,
-              final StatefulNavigationShell navigationShell,
-            ) => MainScreens(navShell: navigationShell),
+        builder: (
+          BuildContext context,
+          GoRouterState state,
+          StatefulNavigationShell navigationShell,
+        ) => MainScreens(navShell: navigationShell),
         branches: <StatefulShellBranch>[
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
                 path: '/',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const DataPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const DataPage(),
               ),
             ],
           ),
@@ -95,9 +93,8 @@ class MyApp extends ConsumerWidget {
             routes: <RouteBase>[
               GoRoute(
                 path: '/favorites',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const FavoritesPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const FavoritesPage(),
               ),
             ],
           ),
@@ -105,9 +102,8 @@ class MyApp extends ConsumerWidget {
             routes: <RouteBase>[
               GoRoute(
                 path: '/notifications',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const RuleNotificationsPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const RuleNotificationsPage(),
               ),
             ],
           ),
@@ -115,9 +111,8 @@ class MyApp extends ConsumerWidget {
             routes: <RouteBase>[
               GoRoute(
                 path: '/settings',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const SettingsPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const SettingsPage(),
               ),
             ],
           ),
@@ -125,9 +120,8 @@ class MyApp extends ConsumerWidget {
             routes: <RouteBase>[
               GoRoute(
                 path: '/argos_settings',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const ArgosSettingsPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const ArgosSettingsPage(),
               ),
             ],
           ),
@@ -135,9 +129,8 @@ class MyApp extends ConsumerWidget {
             routes: <RouteBase>[
               GoRoute(
                 path: '/command',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const CarCommandPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const CarCommandPage(),
               ),
             ],
           ),
@@ -145,9 +138,8 @@ class MyApp extends ConsumerWidget {
             routes: <RouteBase>[
               GoRoute(
                 path: '/rule_manager',
-                builder:
-                    (final BuildContext context, final GoRouterState state) =>
-                        const RuleManagerPage(),
+                builder: (BuildContext context, GoRouterState state) =>
+                    const RuleManagerPage(),
               ),
             ],
           ),
@@ -155,22 +147,22 @@ class MyApp extends ConsumerWidget {
       ),
       GoRoute(
         path: '/graph',
-        builder: (final BuildContext context, final GoRouterState state) =>
+        builder: (BuildContext context, GoRouterState state) =>
             const GraphPage(),
       ),
       GoRoute(
         path: '/topicsSelector',
-        builder: (final BuildContext context, final GoRouterState state) =>
+        builder: (BuildContext context, GoRouterState state) =>
             const TopicsSelector(),
       ),
       GoRoute(
         path: '/dashboard/:dashName/view',
-        builder: (final BuildContext context, final GoRouterState state) =>
+        builder: (BuildContext context, GoRouterState state) =>
             DashboardPage(dashName: state.pathParameters['dashName'] ?? ''),
       ),
       GoRoute(
         path: '/dashboard/:dashName/edit',
-        builder: (final BuildContext context, final GoRouterState state) =>
+        builder: (BuildContext context, GoRouterState state) =>
             DashEditorPage(dashName: state.pathParameters['dashName'] ?? ''),
       ),
     ],
@@ -178,7 +170,7 @@ class MyApp extends ConsumerWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeSettings theme = ref.watch(themeSettingsManagerProvider);
     return _EagerInitialization(
       child: MaterialApp.router(
@@ -259,11 +251,9 @@ class MainScreens extends ConsumerWidget {
   const MainScreens({required this.navShell, super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bool useMqtt = ref.watch(
-      connectionControlProvider.select(
-        (final ConnectionProps it) => it.useMqtt,
-      ),
+      connectionControlProvider.select((ConnectionProps it) => it.useMqtt),
     );
     final List<String> dashes = ref.watch(availableDashboardsManagerProvider);
 
@@ -276,7 +266,7 @@ class MainScreens extends ConsumerWidget {
           const GraphFavoritesButton(),
           if (!useMqtt) const RunIncrementButton(),
           Builder(
-            builder: (final BuildContext context) => IconButton(
+            builder: (BuildContext context) => IconButton(
               onPressed: () {
                 Scaffold.of(context).openEndDrawer();
               },
@@ -289,7 +279,7 @@ class MainScreens extends ConsumerWidget {
         onPressed: () async {
           await showDialog(
             context: context,
-            builder: (final BuildContext context) => SimpleDialog(
+            builder: (BuildContext context) => SimpleDialog(
               title: const Text('Add/Remove Dashboards'),
               children: <Widget>[
                 const DashList(),
@@ -308,42 +298,40 @@ class MainScreens extends ConsumerWidget {
       body: navShell,
       drawer: NavigationDrawer(
         selectedIndex: navShell.currentIndex,
-        onDestinationSelected: (final int index) {
+        onDestinationSelected: (int index) {
           navShell.goBranch(index);
           // for some reason go_router cant handle this
           Navigator.pop(context);
         },
         children: tabs
             .map(
-              (final AdaptiveScaffoldDestination d) =>
-                  NavigationDrawerDestination(
-                    icon: d.icon,
-                    label: Text(d.label),
-                  ),
+              (AdaptiveScaffoldDestination d) => NavigationDrawerDestination(
+                icon: d.icon,
+                label: Text(d.label),
+              ),
             )
             .toList(),
       ),
       endDrawer: NavigationDrawer(
         // if the current index is greater than the og tabs, show it
         selectedIndex: navShell.currentIndex - tabs.length,
-        onDestinationSelected: (final int index) {
+        onDestinationSelected: (int index) {
           navShell.goBranch(index + tabs.length);
           // for some reason go_router cant handle this
           Navigator.pop(context);
         },
         children: end_tabs
             .map(
-              (final AdaptiveScaffoldDestination d) =>
-                  NavigationDrawerDestination(
-                    icon: d.icon,
-                    label: Text(d.label),
-                  ),
+              (AdaptiveScaffoldDestination d) => NavigationDrawerDestination(
+                icon: d.icon,
+                label: Text(d.label),
+              ),
             )
             .toList(),
       ),
       persistentFooterButtons: dashes
           .map(
-            (final String dash) => TextButton(
+            (String dash) => TextButton(
               onPressed: () async {
                 await context.push('/dashboard/$dash/view');
               },
@@ -360,13 +348,13 @@ class DashList extends ConsumerWidget {
   const DashList({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final List<String> dashes = ref.watch(availableDashboardsManagerProvider);
 
     return Column(
       children: dashes
           .map(
-            (final String d) => Row(
+            (String d) => Row(
               children: <Widget>[
                 Text(d),
                 IconButton(
@@ -403,7 +391,7 @@ class _NewDashFormState extends ConsumerState<NewDashForm> {
   }
 
   @override
-  Widget build(final BuildContext context) => Row(
+  Widget build(BuildContext context) => Row(
     children: <Widget>[
       Flexible(
         child: Form(
@@ -414,10 +402,10 @@ class _NewDashFormState extends ConsumerState<NewDashForm> {
               icon: Icon(Icons.line_axis_sharp),
               labelText: 'Dashboard name',
             ),
-            onTapOutside: (final PointerDownEvent event) {
+            onTapOutside: (PointerDownEvent event) {
               FocusScope.of(context).unfocus();
             },
-            validator: (final String? value) {
+            validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a valid name';
               }

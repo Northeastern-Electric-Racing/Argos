@@ -15,9 +15,9 @@ part 'data_service.g.dart';
 
 @riverpod
 Future<List<PublicData>> getDataWithRunId(
-  final Ref ref, {
-  required final String topic,
-  required final int runId,
+  Ref ref, {
+  required String topic,
+  required int runId,
 }) async {
   final Uri conn = ref.watch(connectionControlProvider).socketUri;
   final http.Response response = await http.get(
@@ -25,15 +25,15 @@ Future<List<PublicData>> getDataWithRunId(
   );
   final Iterable<dynamic> json = jsonDecode(response.body);
   return List<PublicData>.from(
-    json.map((final dynamic item) => PublicData.fromJson(item)),
+    json.map((dynamic item) => PublicData.fromJson(item)),
   );
 }
 
 @riverpod
 Future<Map<String, List<PublicData>>> getMultiDataWithRunId(
-  final Ref ref, {
-  required final HashSet<PublicDataType> topics,
-  required final int runId,
+  Ref ref, {
+  required HashSet<PublicDataType> topics,
+  required int runId,
 }) async {
   final Uri conn = ref.watch(connectionControlProvider).socketUri;
   final Map<String, List<PublicData>> data = <String, List<PublicData>>{};
@@ -43,7 +43,7 @@ Future<Map<String, List<PublicData>>> getMultiDataWithRunId(
     );
     final Iterable<dynamic> json = jsonDecode(response.body);
     data[topic.name] = List<PublicData>.from(
-      json.map((final dynamic item) => PublicData.fromJson(item)),
+      json.map((dynamic item) => PublicData.fromJson(item)),
     );
   }
   return data;
@@ -52,11 +52,9 @@ Future<Map<String, List<PublicData>>> getMultiDataWithRunId(
 /// A run, as given from Scylla
 @freezed
 abstract class PublicData with _$PublicData {
-  const factory PublicData({
-    required final List<double> values,
-    required final int time,
-  }) = _PublicData;
+  const factory PublicData({required List<double> values, required int time}) =
+      _PublicData;
 
-  factory PublicData.fromJson(final Map<String, Object?> json) =>
+  factory PublicData.fromJson(Map<String, Object?> json) =>
       _$PublicDataFromJson(json);
 }

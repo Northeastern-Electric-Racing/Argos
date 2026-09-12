@@ -19,7 +19,7 @@ class RunHandler extends _$RunHandler {
     final http.Response response = await http.get(Uri.parse('$conn/runs'));
     final Iterable<dynamic> json = jsonDecode(response.body);
     return List<PublicRun>.from(
-      json.map((final dynamic item) => PublicRun.fromJson(item)),
+      json.map((dynamic item) => PublicRun.fromJson(item)),
     );
   }
 
@@ -38,13 +38,13 @@ class RunHandler extends _$RunHandler {
 @freezed
 abstract class PublicRun with _$PublicRun {
   const factory PublicRun({
-    required final int id,
-    required final String locationName,
-    required final String driverName,
-    required final int time,
-    required final String notes,
+    required int id,
+    required String locationName,
+    required String driverName,
+    required int time,
+    required String notes,
   }) = _PublicRun;
 
-  factory PublicRun.fromJson(final Map<String, Object?> json) =>
+  factory PublicRun.fromJson(Map<String, Object?> json) =>
       _$PublicRunFromJson(json);
 }

@@ -14,7 +14,7 @@ class GraphLiveMgr extends ConsumerWidget {
   const GraphLiveMgr({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final Duration liveGraphDur = ref.watch(liveGraphSettingsManagerProvider);
     final HashSet<PublicDataType> selectedItems = ref.watch(
       graphTopicsManagerProvider,
@@ -26,7 +26,7 @@ class GraphLiveMgr extends ConsumerWidget {
     final List<NetFieldCapture<(List<double>, DateTime)>> itemsToDisplay =
         allItems?.values
             .where(
-              (final NetFieldCapture<(List<double>, DateTime)> e) =>
+              (NetFieldCapture<(List<double>, DateTime)> e) =>
                   selectedItems.contains(e.publicDataType),
             )
             .toList() ??
@@ -38,7 +38,7 @@ class GraphLiveMgr extends ConsumerWidget {
     // on each new topic). Selected topics that only just appeared in cap are
     // picked up reactively via GraphLive.didUpdateWidget instead.
     final List<String> selectedNames =
-        selectedItems.map((final PublicDataType e) => e.name).toList()..sort();
+        selectedItems.map((PublicDataType e) => e.name).toList()..sort();
     final String stateKey =
         '${selectedNames.join(',')}|${liveGraphDur.inSeconds}';
 
@@ -79,7 +79,7 @@ class _GraphLiveState extends ConsumerState<GraphLive> {
   }
 
   @override
-  void didUpdateWidget(covariant final GraphLive oldWidget) {
+  void didUpdateWidget(covariant GraphLive oldWidget) {
     super.didUpdateWidget(oldWidget);
     // A selected topic may only just have appeared in cap (cap is populated
     // incrementally). Subscribe to any new ones without disturbing series that
@@ -112,7 +112,7 @@ class _GraphLiveState extends ConsumerState<GraphLive> {
   /// length, which is unknown until the first point is received -- so we must
   /// NOT decide it up front from `item.last` (null for topics that have not
   /// sent data yet, the cause of topics silently never rendering).
-  void _subscribe(final NetFieldCapture<(List<double>, DateTime)> item) {
+  void _subscribe(NetFieldCapture<(List<double>, DateTime)> item) {
     // Seed a placeholder index-0 series so the topic shows in the legend even
     // before any data arrives. The listener below reuses this entry for the
     // first value and only the data path knows the true value-list arity.
@@ -121,7 +121,7 @@ class _GraphLiveState extends ConsumerState<GraphLive> {
       () => LiveGraphRenderInfo(item, 0, widget.liveGraphDur),
     );
     _subs[item.topic] = item.getStream().listen((
-      final (List<double>, DateTime) point,
+      (List<double>, DateTime) point,
     ) {
       bool needsRelayout = false;
       for (int i = 0; i < point.$1.length; i++) {
@@ -166,16 +166,14 @@ class _GraphLiveState extends ConsumerState<GraphLive> {
 
   /// gets all series
   List<LineSeries<ChartData, DateTime>> _fetchSeries() =>
-      info.values.map((final LiveGraphRenderInfo e) => e.getSeries()).toList();
+      info.values.map((LiveGraphRenderInfo e) => e.getSeries()).toList();
 
   /// gets all axes.  matches to above via topic name as the axis key
-  List<ChartAxis> _fetchAxes() => info.values
-      .map((final LiveGraphRenderInfo e) => e.getAxis())
-      .nonNulls
-      .toList();
+  List<ChartAxis> _fetchAxes() =>
+      info.values.map((LiveGraphRenderInfo e) => e.getAxis()).nonNulls.toList();
 
   @override
-  Widget build(final BuildContext context) => SfCartesianChart(
+  Widget build(BuildContext context) => SfCartesianChart(
     primaryXAxis: DateTimeAxis(dateFormat: DateFormat.jms()),
     primaryYAxis: const NumericAxis(isVisible: false),
     legend: const Legend(isVisible: true, position: LegendPosition.bottom),
@@ -213,18 +211,18 @@ class LiveGraphRenderInfo {
   LineSeries<ChartData, DateTime> getSeries() =>
       LineSeries<ChartData, DateTime>(
         onRendererCreated:
-            (final ChartSeriesController<ChartData, DateTime> controller) {
+            (ChartSeriesController<ChartData, DateTime> controller) {
               ctrlr = controller;
             },
         dataSource: data,
         name: '${item.topic} $index',
         yAxisName: item.topic,
-        xValueMapper: (final ChartData data, final int index) => data.x,
-        yValueMapper: (final ChartData data, final int index) => data.y,
+        xValueMapper: (ChartData data, int index) => data.x,
+        yValueMapper: (ChartData data, int index) => data.y,
       );
 
   /// add a point to the graph.  Only useful if ctrlr != null
-  void addPoint(final ChartData point, final Duration windowLength) {
+  void addPoint(ChartData point, Duration windowLength) {
     data.add(point);
     if ((data.last.x.difference(data.first.x)) > windowLength) {
       data.removeAt(0);

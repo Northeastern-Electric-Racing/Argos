@@ -14,7 +14,7 @@ class _ArgosSettingsPageState extends ConsumerState<ArgosSettingsPage> {
   int refreshValue = 1;
 
   @override
-  Widget build(final BuildContext context) => RefreshIndicator(
+  Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: () async {
       // kill all the children
       setState(() {
@@ -65,13 +65,13 @@ class DataUploadDisableSwitch extends ConsumerWidget {
   const DataUploadDisableSwitch({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<bool> value = ref.watch(dataUploadDisableProvider);
     return SwitchListTile(
       title: const Text('DISABLE Data Storage'),
       secondary: const Icon(Icons.no_sim),
       value: value.value ?? false,
-      onChanged: (final bool val) async {
+      onChanged: (bool val) async {
         if (val) {
           await ref
               .read(dataUploadDisableProvider.notifier)
@@ -90,7 +90,7 @@ class RateLimitModeSelect extends ConsumerWidget {
   const RateLimitModeSelect({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final RateLimitMode? val = ref.watch(rateLimitModeSelectProvider).value;
     return SegmentedButton<RateLimitMode>(
       segments: const <ButtonSegment<RateLimitMode>>[
@@ -109,7 +109,7 @@ class RateLimitModeSelect extends ConsumerWidget {
         ),
       ],
       selected: <RateLimitMode>{val ?? RateLimitMode.None},
-      onSelectionChanged: (final Set<RateLimitMode> newVal) async {
+      onSelectionChanged: (Set<RateLimitMode> newVal) async {
         await ref
             .read(rateLimitModeSelectProvider.notifier)
             .setRatelimitMode(newVal.first);
@@ -150,32 +150,23 @@ class _IntegerSettingWidgetState extends ConsumerState<IntegerSettingWidget> {
   }
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     int currentVal;
     switch (widget.provider) {
       case ProviderType.Batch:
         currentVal = ref.watch(batchUpsertTimeProvider).value ?? -1;
         // also listen so pull to refresh shows new values if they exist
-        ref.listen(batchUpsertTimeProvider, (
-          final _,
-          final AsyncValue<int> next,
-        ) {
+        ref.listen(batchUpsertTimeProvider, (_, AsyncValue<int> next) {
           if (next.hasValue) _uriFormText.text = next.value!.toString();
         });
       case ProviderType.Static:
         currentVal = ref.watch(staticRatelimitTimeProvider).value ?? -1;
-        ref.listen(staticRatelimitTimeProvider, (
-          final _,
-          final AsyncValue<int> next,
-        ) {
+        ref.listen(staticRatelimitTimeProvider, (_, AsyncValue<int> next) {
           if (next.hasValue) _uriFormText.text = next.value!.toString();
         });
       case ProviderType.Socket:
         currentVal = ref.watch(socketDiscardPercentProvider).value ?? -1;
-        ref.listen(socketDiscardPercentProvider, (
-          final _,
-          final AsyncValue<int> next,
-        ) {
+        ref.listen(socketDiscardPercentProvider, (_, AsyncValue<int> next) {
           if (next.hasValue) _uriFormText.text = next.value!.toString();
         });
     }
@@ -196,10 +187,10 @@ class _IntegerSettingWidgetState extends ConsumerState<IntegerSettingWidget> {
                 labelText: widget.title,
                 suffixText: widget.unit,
               ),
-              onTapOutside: (final PointerDownEvent event) {
+              onTapOutside: (PointerDownEvent event) {
                 FocusScope.of(context).unfocus();
               },
-              validator: (final String? value) {
+              validator: (String? value) {
                 if (value == null ||
                     value.isEmpty ||
                     int.tryParse(value) == null) {
