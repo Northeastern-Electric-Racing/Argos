@@ -1,4 +1,4 @@
-import { Component, effect, input, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, effect, input, OnDestroy, OnInit, ChangeDetectionStrategy, untracked } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexXAxis,
@@ -102,29 +102,10 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     });
 
     effect(() => {
+      // Re-run whenever the toggle flips. Per-topic axes are also rebuilt in updateChart
+      // (see applyMultiYAxisConfigs) so they stay in sync as topics are selected/deselected.
       if (this.showMultipleYAxes()) {
-        const yaxisConfigs: Partial<ApexYAxis>[] = Array.from(this.data.keys()).map((key, index) => ({
-          title: {
-            text: key.replace('0', ''),
-            style: {
-              color: 'grey',
-              fontSize: '20px',
-              fontWeight: 'bold'
-            }
-          },
-          labels: {
-            style: {
-              colors: '#fff'
-            }
-          },
-          opposite: index % 2 !== 0 // Alternate sides for each y-axis
-        }));
-
-        // Update y-axis configurations
-        if (this.chart) {
-          this.options.yaxis = yaxisConfigs;
-          this.chart.updateOptions(this.options);
-        }
+        this.applyMultiYAxisConfigs();
       } else {
         this.options.yaxis = [
           {
@@ -135,6 +116,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
             }
           }
         ];
+      }
+      if (this.chart) {
         this.chart.updateOptions(this.options);
       }
     });
@@ -183,6 +166,13 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       yaxis: index
     }));
 
+    // Keep the per-topic y-axes matched to the current series set: deselecting a topic
+    // drops its series here, so its y-axis must be pruned too (#630). untracked() so calling
+    // updateChart from an effect doesn't add showMultipleYAxes as a dependency.
+    if (untracked(this.showMultipleYAxes)) {
+      this.applyMultiYAxisConfigs();
+    }
+
     // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
     let effectiveRange: number | undefined = undefined;
     if (this.realTime()) {
@@ -214,6 +204,26 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       false // animate (default is true)
     );
   };
+
+  // Build one y-axis per current topic (order matches the series' `yaxis: index`).
+  private applyMultiYAxisConfigs(): void {
+    this.options.yaxis = Array.from(this.data.keys()).map((key, index) => ({
+      title: {
+        text: key.replace('0', ''),
+        style: {
+          color: 'grey',
+          fontSize: '20px',
+          fontWeight: 'bold'
+        }
+      },
+      labels: {
+        style: {
+          colors: '#fff'
+        }
+      },
+      opposite: index % 2 !== 0 // Alternate sides for each y-axis
+    }));
+  }
 
   private computeDataSpan(): { minX: number; maxX: number; spanMs: number } | null {
     let minX = Infinity;
