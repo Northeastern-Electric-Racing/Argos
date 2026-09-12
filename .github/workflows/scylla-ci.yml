@@ -1,49 +1,91 @@
 name: Scylla CI
 
+# Always triggers so the required "scylla-gate" check is never left pending on non-scylla PRs.
+# The changes job decides whether the Rust build/test runs; the gate reflects the result.
 on:
-   push:
-      branches:
-         - main
-         - develop
-   pull_request:
-      branches:
-         - main
-         - develop
-         - 'feature/**'
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+      - "feature/**"
 
-
-defaults:
-    run:
-        working-directory: scylla-server
-
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-   build:
-      runs-on: ubuntu-latest
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      scylla: ${{ steps.filter.outputs.scylla }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Detect scylla changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            scylla:
+              - "scylla-server/**"
+              - ".github/workflows/scylla-ci.yml"
 
-      steps:
-         - name: Setup Rust
-           uses: actions/checkout@v7
-           with:
-            submodules: recursive
-         - name: Clippy
-           run: cargo clippy --all-targets --locked
-         - name: Fmt
-           run: cargo fmt --check
-         - name: Start DB
-           working-directory: compose
-           run: docker compose up -d odyssey-db
-         - name: Build
-           run: cargo build --verbose --locked
-         - name: Run # so we can migrate the database, run for a little than bail
-           env:
-             DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
-           run: |
-                cargo run --locked & ID=$!; sleep 10s; kill $ID
-         - name: Test
-           env:
-             DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
-           run: cargo test --locked -- --test-threads=1
-         - name: Cleanup
-           working-directory: compose
-           run: docker compose down
+  build:
+    needs: changes
+    if: ${{ needs.changes.outputs.scylla == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scylla-server
+    steps:
+      - name: Setup Rust
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Clippy
+        run: cargo clippy --all-targets --locked
+      - name: Fmt
+        run: cargo fmt --check
+      - name: Start DB
+        working-directory: compose
+        run: docker compose up -d odyssey-db
+      - name: Build
+        run: cargo build --verbose --locked
+      - name: Run # so we can migrate the database, run for a little than bail
+        env:
+          DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
+        run: |
+          cargo run --locked & ID=$!; sleep 10s; kill $ID
+      - name: Test
+        env:
+          DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
+        run: cargo test --locked -- --test-threads=1
+      - name: Cleanup
+        working-directory: compose
+        run: docker compose down
+
+  scylla-gate:
+    # Required status check. Always runs; green when the build is skipped or passes, red on failure.
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Gate
+        run: |
+          changes_result="${{ needs.changes.result }}"
+          if [ "$changes_result" != "success" ]; then
+            echo "Change detection did not succeed (result: $changes_result) - refusing to pass the gate"
+            exit 1
+          fi
+          result="${{ needs.build.result }}"
+          if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+            echo "Scylla CI failed (result: $result)"
+            exit 1
+          fi
+          echo "Scylla gate passed (result: $result)"

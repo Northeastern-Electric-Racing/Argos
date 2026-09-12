@@ -1,7 +1,8 @@
-name: Frontend Unit Tests
+name: Client CI
 
-# Always triggers so the required "test-gate" check is never left pending on PRs that don't
-# touch the client. The changes job decides whether the tests run; the gate reflects the result.
+# Always triggers so the required "client-ci-gate" check is never left pending on PRs that
+# don't touch the client (path filters on the trigger would block required-check merges).
+# The changes job decides whether the real work runs; the gate reflects its result.
 on:
   push:
     branches:
@@ -33,13 +34,16 @@ jobs:
           filters: |
             client:
               - "angular-client/**"
-              - ".github/workflows/test-check.yml"
+              - ".github/workflows/client-ci.yml"
 
-  run-frontend-tests:
+  lint-and-format:
     needs: changes
     if: ${{ needs.changes.outputs.client == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: angular-client
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -48,17 +52,18 @@ jobs:
         with:
           node-version: 20.17.0
           cache: "npm"
-          cache-dependency-path: ./angular-client/package-lock.json
+          cache-dependency-path: angular-client/package-lock.json
       - name: Install modules
-        working-directory: ./angular-client
         run: npm ci
-      - name: Run unit tests
-        working-directory: ./angular-client
-        run: npm run test:ci
+      - name: Run linting check
+        run: npm run lint -- --max-warnings=0
+      - name: Run prettier check
+        run: npm run prettier-check
 
-  test-gate:
-    # Required status check. Always runs; green when tests are skipped or pass, red only on failure.
-    needs: [changes, run-frontend-tests]
+  client-ci-gate:
+    # Required status check. Always runs; passes when the client job is skipped or succeeds,
+    # fails only when it actually fails, so path-filtered work never deadlocks a required check.
+    needs: [changes, lint-and-format]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -70,9 +75,9 @@ jobs:
             echo "Change detection did not succeed (result: $changes_result) - refusing to pass the gate"
             exit 1
           fi
-          result="${{ needs.run-frontend-tests.result }}"
+          result="${{ needs.lint-and-format.result }}"
           if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
-            echo "Frontend unit tests failed (result: $result)"
+            echo "Client CI failed (result: $result)"
             exit 1
           fi
-          echo "Test gate passed (result: $result)"
+          echo "Client CI gate passed (result: $result)"
