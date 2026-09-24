@@ -3,8 +3,18 @@ name: Flutter Format Check
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - "flutter-client/**"
+      - ".github/workflows/client-flutter-ci.yml"
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - "flutter-client/**"
+      - ".github/workflows/client-flutter-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   format-verify:
