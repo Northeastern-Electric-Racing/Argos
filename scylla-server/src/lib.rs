@@ -7,6 +7,7 @@ pub mod services;
 pub mod argos_inserter;
 pub mod db_handler;
 pub mod mqtt_processor;
+pub mod zenoh_processor;
 
 pub mod metadata_structs;
 pub mod rule_structs;
@@ -101,4 +102,10 @@ impl From<ClientData> for models::DataInsert {
             runId: val.run_id,
         }
     }
+}
+
+/// A sendable, for now command data only
+pub struct SirenSendable {
+    pub command_data: proto::command_data::CommandData,
+    pub topic: String,
 }

@@ -1,0 +1,48 @@
+.card {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-panel);
+  background: var(--color-background-page);
+  border: 1px solid var(--color-divider);
+}
+.icon,
+.dot {
+  flex: 0 0 auto;
+}
+.icon {
+  width: 26px;
+  height: 26px;
+  color: var(--color-text-subtitle);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.unit,
+.subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtitle);
+}
+.value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  /* Fixed-width digits: the panel is shrink-to-fit and right-anchored, so proportional figures
+     would re-flow it on every telemetry update. */
+  font-variant-numeric: tabular-nums;
+}
+.unit {
+  margin-left: 3px;
+}
+.subtitle {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}

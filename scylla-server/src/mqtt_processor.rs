@@ -1,5 +1,5 @@
 use std::{
-    sync::{Arc, atomic::Ordering},
+    sync::atomic::Ordering,
     time::{Duration, SystemTime},
 };
 
@@ -7,17 +7,21 @@ use chrono::TimeDelta;
 use diesel_async::{AsyncPgConnection, pooled_connection::bb8::Pool};
 use protobuf::Message;
 use ringbuffer::RingBuffer;
+use rumqttc::v5::mqttbytes::QoS;
 use rumqttc::v5::{
     AsyncClient, Event, EventLoop, MqttOptions,
     mqttbytes::v5::{Packet, Publish},
 };
 use rustc_hash::FxHashMap;
-use tokio::{sync::broadcast, time::Instant};
+use tokio::{
+    sync::{broadcast, mpsc},
+    time::Instant,
+};
 use tokio_util::sync::CancellationToken;
 use tracing::{Level, debug, info, instrument, trace, warn};
 
 use crate::{
-    RATE_LIMIT_MODE, RateLimitMode, STATIC_RATE_LIMIT_VALUE,
+    RATE_LIMIT_MODE, RateLimitMode, STATIC_RATE_LIMIT_VALUE, SirenSendable,
     controllers::car_command_controller::CALYPSO_BIDIR_CMD_PREFIX, proto::serverdata,
     services::run_service,
 };
@@ -28,7 +32,7 @@ const YEAR_2000: chrono::DateTime<chrono::Utc> =
     chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap();
 
 /// The chief processor of incoming mqtt data, this handles
-/// - mqtt state
+/// - zenoh state
 /// - reception via mqtt and subsequent parsing
 /// - labeling of data with runs
 /// - sending data over the channel to a db handler and socket
@@ -105,12 +109,7 @@ impl MqttProcessor {
     /// * `client` - The async mqttt v5 client to use for subscriptions
     /// # Panics
     /// Panics if subscription call fails
-    pub async fn process_mqtt(
-        mut self,
-        client: Arc<AsyncClient>,
-        mut eventloop: EventLoop,
-        pool: Pool<AsyncPgConnection>,
-    ) {
+    pub async fn process_mqtt(mut self, mut eventloop: EventLoop, pool: Pool<AsyncPgConnection>) {
         info!(task = "mqtt_processor", "starting");
         // let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
@@ -123,12 +122,6 @@ impl MqttProcessor {
         let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
         let mut iter_count: u64 = 0;
         let mut msgs_since_hb: u64 = 0;
-
-        debug!("Subscribing to siren");
-        client
-            .subscribe("#", rumqttc::v5::mqttbytes::QoS::AtMostOnce)
-            .await
-            .expect("Could not subscribe to Siren");
 
         loop {
             iter_count = iter_count.wrapping_add(1);
@@ -168,9 +161,9 @@ impl MqttProcessor {
                         task = "mqtt_processor",
                         iter = iter_count,
                         db_channel_len = self.db_channel.len(),
-                        socket_channel_len = self.socket_channel.len(),
-                        msgs_in_window = msgs_since_hb,
-                        "heartbeat"
+                          socket_channel_len = self.socket_channel.len(),
+                          msgs_in_window = msgs_since_hb,
+                          "heartbeat"
                     );
                     msgs_since_hb = 0;
                 },
@@ -192,7 +185,7 @@ impl MqttProcessor {
                 //     };
                 //     trace!("Latency update sending: {}", client_data.values.first().unwrap_or(&0.0f32));
                 //     self.send_socket_msg(client_data, &mut upload_counter);
-                }
+            }
         }
     }
 
@@ -328,6 +321,44 @@ impl MqttProcessor {
     fn send_channel_msg(&self, client_data: ClientData) {
         if let Err(err) = self.socket_channel.send(client_data) {
             warn!("Error sending through channel: {:?}", err);
+        }
+    }
+}
+
+///
+/// # Panics
+/// When you cannot subscribe to data
+pub async fn pub_handle(
+    cancel_token: CancellationToken,
+    mut mqtt_out_rx: mpsc::Receiver<SirenSendable>,
+    client: AsyncClient,
+) {
+    debug!("Subscribing to siren");
+    client
+        .subscribe("#", rumqttc::v5::mqttbytes::QoS::AtMostOnce)
+        .await
+        .expect("Could not subscribe to Siren");
+
+    loop {
+        tokio::select! {
+        () = cancel_token.cancelled() => {
+            debug!("Shutting down MQTT publisher!");
+            break;
+        },
+
+        Some(sendable) = mqtt_out_rx.recv() => {
+
+                    trace!("Sending {:?}", sendable.topic);
+                    let Ok(bytes) = protobuf::Message::write_to_bytes(&sendable.command_data) else {
+                        warn!("Failed to serialize protobuf message!");
+                        continue;
+                    };
+                    let Ok(()) = client.publish(sendable.topic, QoS::ExactlyOnce, false, bytes).await else {
+                        warn!("Failed to send MQTT message!");
+                        continue;
+                    };
+
+            }
         }
     }
 }

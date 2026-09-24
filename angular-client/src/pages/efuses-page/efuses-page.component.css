@@ -1,5 +1,12 @@
 /* eFuses Page Styles */
 
+/* The page host must be a block so the sticky status bar's containing block spans the full
+   page; the default (inline) collapses it to one viewport, making the pinned bar drop off
+   partway down the scroll. */
+:host {
+  display: block;
+}
+
 .efuse-card {
   background: var(--background-color);
   border-radius: 8px;

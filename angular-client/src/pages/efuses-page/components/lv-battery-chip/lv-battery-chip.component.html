@@ -1,0 +1,11 @@
+<div class="card">
+  <mat-icon class="icon" svgIcon="battery_charging_2" aria-hidden="true" />
+  <div class="col">
+    <div>
+      <span class="value">{{ value() }}</span
+      ><span class="unit">V</span>
+    </div>
+    <div class="subtitle">LV Battery</div>
+  </div>
+  <span class="dot" role="img" [style.background]="dotColor()" [attr.aria-label]="dotLabel()"></span>
+</div>
