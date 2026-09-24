@@ -1,8 +1,8 @@
 <hstack style="width: 100%; height: 100%">
   <vstack style="width: 20%">
     <hstack>
-      <typography variant="info-value" [content]="stateOfCharge.toString() + '%'" />
-      <battery-percentage [percentage]="stateOfCharge" [height]="60" [width]="30" />
+      <typography variant="info-value" [content]="stateOfCharge().toString() + '%'" />
+      <battery-percentage [percentage]="stateOfCharge()" [height]="60" [width]="30" />
     </hstack>
     <typography variant="info-subtitle" content="Charge State" />
   </vstack>
@@ -10,9 +10,9 @@
   <divider />
   <vstack style="width: 20%">
     <hstack>
-      <typography variant="info-value" [content]="packTemp.toString() + '°'" />
+      <typography variant="info-value" [content]="packTemp().toString() + '°'" />
       <div class="thermometer-container">
-        <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />
+        <thermometer [temperature]="packTemp()" [min]="-15" [max]="30" />
       </div>
     </hstack>
     <typography variant="info-subtitle" content="Pack Temperature" />
@@ -21,7 +21,7 @@
   <divider />
   <vstack style="width: 20%">
     <hstack>
-      <typography variant="info-value" [content]="voltage.toFixed(1) + 'V'" />
+      <typography variant="info-value" [content]="voltage().toFixed(1) + 'V'" />
     </hstack>
     <typography variant="info-subtitle" content="Pack Voltage" />
   </vstack>
@@ -29,7 +29,7 @@
   <divider />
   <vstack style="width: 20%">
     <hstack>
-      <typography variant="info-value" [content]="chargeCurrentLimit.toString() + 'A'" />
+      <typography variant="info-value" [content]="chargeCurrentLimit().toString() + 'A'" />
     </hstack>
     <typography variant="info-subtitle" content="CCL" />
   </vstack>
@@ -37,7 +37,7 @@
   <divider />
   <vstack style="width: 20%">
     <hstack>
-      <typography variant="info-value" [content]="dischargeCurrentLimit.toString() + 'A'" />
+      <typography variant="info-value" [content]="dischargeCurrentLimit().toString() + 'A'" />
     </hstack>
     <typography variant="info-subtitle" content="DCL" />
   </vstack>

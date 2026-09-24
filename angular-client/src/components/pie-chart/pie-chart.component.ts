@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, Renderer2, OnInit, inject, input } from '@angular/core';
+import { Component, ElementRef, OnInit, Renderer2, inject, input } from '@angular/core';
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
 import Theme from 'src/services/theme.service';
 
@@ -24,7 +24,7 @@ export default class PieChartComponent implements OnInit {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public chartOptions!: Partial<ChartOptions> | any;
   data = input.required<{ value: number; name: string }[]>();
-  @Input() backgroundColor: string = Theme.infoBackground;
+  backgroundColor = input<string>(Theme.infoBackground);
   title = input<string>('Pie Chart');
   currentWidth: number = 0;
 
@@ -61,7 +61,7 @@ export default class PieChartComponent implements OnInit {
       chart: {
         width: '100%',
         type: 'pie',
-        background: this.backgroundColor,
+        background: this.backgroundColor(),
         redrawOnParentResize: true,
         foreColor: '#ffffff',
         animations: {

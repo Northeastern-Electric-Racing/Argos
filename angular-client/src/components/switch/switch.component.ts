@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, OnInit, computed, input, output, signal } from '@angular/core';
 import TypographyComponent from '../typography/typography.component';
 
 @Component({
@@ -9,24 +9,19 @@ import TypographyComponent from '../typography/typography.component';
   imports: [TypographyComponent]
 })
 export class SwitchComponent implements OnInit {
-  @Input() isOn: boolean = false;
-  @Input() offString: string = 'PAUSED';
-  @Input() onString: string = 'ALLOWED';
-  chargingString: string = this.offString;
-  @Output() toggleEmitter = new EventEmitter<boolean>();
+  isOn = input<boolean>(false);
+  offString = input<string>('PAUSED');
+  onString = input<string>('ALLOWED');
+  currentState = signal(false);
+  chargingString = computed(() => (this.currentState() ? this.onString() : this.offString()));
+  toggleEmitter = output<boolean>();
 
   ngOnInit(): void {
-    // Set the initial value of chargingString based on isOn
-    this.chargingString = this.isOn ? this.onString : this.offString;
+    this.currentState.set(this.isOn());
   }
 
   onToggle() {
-    this.isOn = !this.isOn;
-    if (this.isOn) {
-      this.chargingString = this.onString;
-    } else {
-      this.chargingString = this.offString;
-    }
-    this.toggleEmitter.emit(this.isOn); // Emit the new state
+    this.currentState.update((v) => !v);
+    this.toggleEmitter.emit(this.currentState());
   }
 }

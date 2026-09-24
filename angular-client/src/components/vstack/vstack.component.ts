@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { NgStyle } from '@angular/common';
 
 @Component({
@@ -9,6 +9,6 @@ import { NgStyle } from '@angular/common';
   imports: [NgStyle]
 })
 export default class VStackComponent {
-  @Input() spacing: string = '5px';
-  @Input() align: string = 'center';
+  spacing = input<string>('5px');
+  align = input<string>('center');
 }

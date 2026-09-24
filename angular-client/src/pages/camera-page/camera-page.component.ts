@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { urls } from 'src/api/urls';
@@ -28,8 +28,8 @@ export class CameraPageComponent implements OnInit {
   videoUrls: string[] = ['Live Stream'];
   videoUrlsIsLoading: boolean = true;
 
-  @ViewChild('remoteVideo') remoteVideo?: ElementRef<HTMLVideoElement>;
-  @ViewChild('playbackVideo', { static: false }) playbackVideoRef!: ElementRef<HTMLVideoElement>;
+  remoteVideo = viewChild<ElementRef<HTMLVideoElement>>('remoteVideo');
+  playbackVideoRef = viewChild.required<ElementRef<HTMLVideoElement>>('playbackVideo');
 
   async ngOnInit(): Promise<void> {
     this.urlAvailable = await this.checkConnection();
@@ -37,8 +37,9 @@ export class CameraPageComponent implements OnInit {
       url: new URL('whep', this.url),
       onError: console.log,
       onTrack: (e) => {
-        if (this.remoteVideo) {
-          [this.remoteVideo.nativeElement.srcObject] = e.streams;
+        const video = this.remoteVideo();
+        if (video) {
+          [video.nativeElement.srcObject] = e.streams;
         }
       }
     });
@@ -66,7 +67,7 @@ export class CameraPageComponent implements OnInit {
     this.liveStream = false;
     // Wait for Angular to update the DOM
     setTimeout(() => {
-      const videoEl = this.playbackVideoRef.nativeElement;
+      const videoEl = this.playbackVideoRef().nativeElement;
       videoEl.load(); // This reloads the new <source> inside the <video>
       videoEl.play();
     });
