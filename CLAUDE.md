@@ -50,7 +50,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`.
+Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The planning skills (`grill-with-docs`, `grilling`, `domain-modeling`, `wayfinder`, `research`, `prototype`) moved to the Delphi `argos-dev` workspace; use them from there.
 
 The **main flow** (idea → ship): `grill-with-docs` sharpen the idea → `to-spec` write the spec → `to-tickets` slice it into tracer-bullet implementation tickets → `implement` per ticket (drives `tdd`, then `code-review`, then `commit`). A well-understood single feature can skip straight from grill to `to-spec`; a trivial one-liner goes straight to `implement`. `grill-with-docs` orchestrates the `grilling` and `domain-modeling` primitives.
 
