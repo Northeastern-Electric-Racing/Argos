@@ -3,7 +3,8 @@ import { Subscription } from 'rxjs';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
-import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
+import { BmsStateService } from 'src/services/bms-state.service';
+import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP, VOLT_COLOR_SCALE } from 'src/utils/bms.config';
 import { HexTileComponent } from '../hex-tile/hex-tile.component';
 
 export interface DisplayCell {
@@ -29,6 +30,7 @@ export interface DisplayCell {
 export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   private cellService = inject(CellService);
   private heatMapService = inject(HeatMapService);
+  private bmsState = inject(BmsStateService);
   private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
@@ -137,9 +139,19 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
     return `hsl(${hsl}, 100%, 50%)`;
   }
 
+  /**
+   * Red below MIN, green from GOOD up. While charging, fades back to red from
+   * CHARGE_WARN to CHARGE_MAX so over-voltage stands out. An unknown BMS state
+   * is treated as charging (fail-safe: never hide an over-voltage cell).
+   */
   private getVoltColor(value: number | undefined): string {
     if (value === undefined) return 'grey';
-    const hsl = Math.min(Math.max((value - 3.0) * 200, 0), 120);
+    const { MIN, GOOD, CHARGE_WARN, CHARGE_MAX } = VOLT_COLOR_SCALE;
+    const rise = ((value - MIN) * 120) / (GOOD - MIN);
+    const maybeCharging = this.bmsState.mode() === undefined || this.bmsState.isCharging();
+    const hue = maybeCharging ? Math.min(rise, ((CHARGE_MAX - value) * 120) / (CHARGE_MAX - CHARGE_WARN)) : rise;
+    // Round so float noise in the volt math doesn't leak into the hue.
+    const hsl = Math.round(Math.min(Math.max(hue, 0), 120));
     return `hsl(${hsl}, 100%, 50%)`;
   }
 

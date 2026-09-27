@@ -18,6 +18,18 @@ export const BMS_CONFIG = {
 } as const;
 
 /**
+ * Cell voltage heatmap color scale (volts). Hue ramps red -> green from MIN to GOOD.
+ * While charging, stays green up to CHARGE_WARN, then ramps rapidly back to red by
+ * CHARGE_MAX (over-voltage).
+ */
+export const VOLT_COLOR_SCALE = {
+  MIN: 3.0,
+  GOOD: 3.6,
+  CHARGE_WARN: 4.05,
+  CHARGE_MAX: 4.15
+} as const;
+
+/**
  * Thermistor-to-cell mapping masks.
  *
  * Each entry maps one thermistor reading to the cell indices it covers.

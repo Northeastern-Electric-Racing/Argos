@@ -3,6 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DialogService } from 'primeng/dynamicdialog';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
+import { BmsStateService } from 'src/services/bms-state.service';
+import { BmsMode } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
@@ -41,6 +43,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
         Storage,
         CellService,
         HeatMapService,
+        BmsStateService,
         { provide: DialogService, useValue: {} }
       ]
     }).compileComponents();
@@ -76,6 +79,60 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
 
     expect(alphaCell(CELL)?.value).toBeCloseTo(3.5);
     expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(100, 100%, 50%)'); // (3.5 - 3.0) * 200 = 100
+  });
+
+  // BmsStateService subscribes when the component is created in beforeEach, so state pushes here are seen.
+  const setBmsMode = (mode: BmsMode) => push(storage, topics.bmsMode(), mode.toString());
+
+  it('fades an over-voltage cell rapidly to red above 4.05 V while charging', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.Voltage);
+    setBmsMode(BmsMode.CHARGING);
+
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.10');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(60, 100%, 50%)'); // halfway from 4.05 to 4.15
+
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.15');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(0, 100%, 50%)');
+
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.20');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(0, 100%, 50%)'); // clamped above max
+  });
+
+  it('keeps cells green up to 4.05 V while charging', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.Voltage);
+    setBmsMode(BmsMode.CHARGING);
+
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '3.60');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(120, 100%, 50%)');
+
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.05');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(120, 100%, 50%)');
+  });
+
+  it('keeps a high-voltage cell green when not charging', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.Voltage);
+    setBmsMode(BmsMode.READY);
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.15');
+
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(120, 100%, 50%)');
+  });
+
+  it('treats a missing BMS state as charging (fail-safe red for over-voltage)', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.Voltage);
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.15');
+
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(0, 100%, 50%)');
+  });
+
+  it('recolors when charging stops', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.Voltage);
+    push(storage, topics.alphaVolt(SEGMENT, CELL), '4.15');
+
+    setBmsMode(BmsMode.CHARGING);
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(0, 100%, 50%)');
+
+    setBmsMode(BmsMode.READY);
+    expect(component.getColor(alphaCell(CELL)!)).toBe('hsl(120, 100%, 50%)');
   });
 
   it('shows the no-data grey for an S Volts cell with no value', () => {

@@ -17,6 +17,14 @@ export const chipToString = (chip: Chip, singleLetter = false): string => {
   }
 };
 
+/** BMS state machine values published on BMS/Status/State. Member names are shown as-is in the UI. */
+export enum BmsMode {
+  DEFAULT = 0,
+  READY = 1,
+  CHARGING = 2,
+  FAULTED = 3
+}
+
 /** Segment is a plain numeric index (0-based). */
 export type Segment = number;
 
