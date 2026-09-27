@@ -1,13 +1,13 @@
 ---
 name: log-future-addition
-description: File a single out-of-scope idea, feature, or improvement as one un-triaged GitHub issue. Use whenever the user raises something that would be a good future addition to the app but is out of scope for the current work ("we could also…", "would be nice to…", "let's do that later") — offer to log it. For a fleshed-out feature use to-spec; to break an existing plan into tickets use to-tickets.
+description: File a single out-of-scope idea, feature, or improvement as one un-triaged GitHub issue. Use whenever the user raises something that would be a good future addition to the app but is out of scope for the current work ("we could also…", "would be nice to…", "let's do that later") — offer to log it.
 ---
 
 # Log Future Addition
 
 Capture one rough, out-of-scope idea as a single un-triaged GitHub issue, so a good thought is not lost when it surfaces mid-work.
 
-This is the lightweight counterpart to `to-spec`. Use it for a **brief, quick idea** — anything already thought through belongs in `to-spec` (a spec) or a `grill-with-docs` session. It is NOT for breaking down plans; that is `to-tickets`.
+Use it for a **brief, quick idea**. It is NOT for fleshed-out specs or breaking down plans.
 
 Issue tracker conventions (title, labels, backticks, assignment) live in `docs/agents/issue-tracker.md`. The `Idea` term is defined in `docs/agents/glossary.md`. Do not duplicate those here — link and follow.
 
@@ -16,7 +16,7 @@ Issue tracker conventions (title, labels, backticks, assignment) live in `docs/a
 - An out-of-scope idea comes up in conversation and you want to keep it without derailing the current work.
 - You have a one-line feature/bug/improvement scrap and just want it on the tracker.
 
-If the input is really a plan or spec — multiple features, acceptance criteria, phased work, or simply long and detailed — say so and point the user to `to-spec` (one spec issue) or `to-tickets` (many tracer-bullet issues). Suggest, do not hard-refuse; the user can override.
+If the input is really a plan or spec — multiple features, acceptance criteria, phased work, or simply long and detailed — say so and suggest writing it up as a full issue instead. Suggest, do not hard-refuse; the user can override.
 
 ## Two-stage consent
 
@@ -63,12 +63,12 @@ Keep to at most three backtick usages in the whole body (per `issue-tracker.md`)
 
 ### 4. Choose labels
 
-- **`needs-triage`** — always. Files the idea straight into the triage queue as intake. This is the one place a triage role is applied at creation instead of by `/triage` (see `issue-tracker.md`).
-- **Type** (`bug` / `new feature` / `feature enhancement`) — apply when the idea clearly is one; otherwise leave it for `/triage`.
+- **`needs-triage`** — always. Files the idea straight into the triage queue as intake. This is the one place a triage role is applied at creation instead of during triage (see `issue-tracker.md`).
+- **Type** (`bug` / `new feature` / `feature enhancement`) — apply when the idea clearly is one; otherwise leave it for triage.
 - **Area** (`angular-client` / `scylla-server` / `DevOps`) — apply only when obvious; otherwise omit. A raw idea often is not scoped to an area yet, so area is not required.
-- **Difficulty** — never. That is `/triage`'s call.
+- **Difficulty** — never. That is decided in triage.
 
-`/triage` then classifies it (category, area, difficulty) like any other needs-triage issue.
+Triage then classifies it (category, area, difficulty) like any other needs-triage issue.
 
 ### 5. Confirm, then file
 
