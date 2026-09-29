@@ -13,7 +13,7 @@ Respond in `caveman` terse mode by default — a repo-wide pilot. Drop articles,
   - Frontend-only changes: `./argos.sh client-dev up` runs everything in Docker, including scylla-server.
   - Changes to `scylla-server/`: `./argos.sh scylla-dev up` (everything except scylla-server) plus `cd scylla-server && cargo run` in a separate terminal, so you are not testing a stale binary.
 - Frontend client: prefer the `run-local` skill (starts it on the next free port and checks the backend). Direct: `cd angular-client && npm run start` (default port 4200); first compile takes ~10-60s.
-- The shell workflow (`argos.sh`, the `run-local`/`verify-*` skills, and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
+- The shell workflow (`argos.sh`, the `run-local` skill, and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
 
 ## Testing
 
@@ -50,7 +50,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`.
+Workflow skills (commit, open-pr, update-pr, run-local) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. `address-pr-comments`, `verify-telemetry`, and `verify-graph` moved to the Delphi `argos-dev` workspace.
 
 The **main flow** (idea → ship): `grill-with-docs` sharpen the idea → `to-spec` write the spec → `to-tickets` slice it into tracer-bullet implementation tickets → `implement` per ticket (drives `tdd`, then `code-review`, then `commit`). A well-understood single feature can skip straight from grill to `to-spec`; a trivial one-liner goes straight to `implement`. `grill-with-docs` orchestrates the `grilling` and `domain-modeling` primitives.
 
