@@ -13,7 +13,7 @@ Respond in `caveman` terse mode by default — a repo-wide pilot. Drop articles,
   - Frontend-only changes: `./argos.sh client-dev up` runs everything in Docker, including scylla-server.
   - Changes to `scylla-server/`: `./argos.sh scylla-dev up` (everything except scylla-server) plus `cd scylla-server && cargo run` in a separate terminal, so you are not testing a stale binary.
 - Frontend client: prefer the `run-local` skill (starts it on the next free port and checks the backend). Direct: `cd angular-client && npm run start` (default port 4200); first compile takes ~10-60s.
-- The shell workflow (`argos.sh`, the `run-local`/`verify-*` skills, and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
+- The shell workflow (`argos.sh`, the `run-local` skill, and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
 
 ## Testing
 
@@ -50,13 +50,13 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills live in `.claude/skills/`: commit, open-pr, update-pr, address-pr-comments, run-local, verify-telemetry, verify-graph, journal, log-future-addition, and caveman (on by default as a pilot, see Communication above). Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
+Agent skills live in the Delphi `argos-dev` workspace (`commit`, `open-pr`, `update-pr`, `run-local`, `address-pr-comments`, `verify-telemetry`, `verify-graph`, `journal`, `log-future-addition`). Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
 
 ### Issue tracker
 
 Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label (including triage labels), and assignment conventions.
 
-When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue with the `log-future-addition` skill instead of letting it slip.
+When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
 
 ### Domain docs
 
