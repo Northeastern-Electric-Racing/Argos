@@ -46,7 +46,7 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (address-pr-comments, verify-telemetry, verify-graph) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. `commit`, `open-pr`, `update-pr`, and `run-local` live in the Delphi `argos-dev` workspace.
+Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. The workflow skills (`commit`, `open-pr`, `update-pr`, `run-local`, `address-pr-comments`, `verify-telemetry`, `verify-graph`) live in the Delphi `argos-dev` workspace.
 
 The **main flow** (idea → ship): `grill-with-docs` sharpen the idea → `to-spec` write the spec → `to-tickets` slice it into tracer-bullet implementation tickets → `implement` per ticket (drives `tdd`, then `code-review`, then `commit`). A well-understood single feature can skip straight from grill to `to-spec`; a trivial one-liner goes straight to `implement`. `grill-with-docs` orchestrates the `grilling` and `domain-modeling` primitives.
 
@@ -60,7 +60,7 @@ See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`, `docs/adr/0003-misc-rename
 
 Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label, and assignment conventions.
 
-When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue with the `log-future-addition` skill instead of letting it slip.
+When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
 
 ### Triage labels
 
