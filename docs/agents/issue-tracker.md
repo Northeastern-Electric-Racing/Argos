@@ -30,7 +30,7 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 
 Wayfinder uses its own label namespace, created with `gh label create`: `wayfinder:map` for the map issue and `wayfinder:research` / `wayfinder:prototype` / `wayfinder:grilling` / `wayfinder:task` for its child tickets (see the Wayfinding operations section).
 
-The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time (see triage-labels.md) — with one exception: the `log-future-addition` skill files a raw idea directly with `needs-triage`, placing it straight in the triage queue (a type or area is added only where clear, area not required; see glossary.md).
+The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time (see triage-labels.md) — with one exception: the `log-future-addition` skill (Delphi `argos-dev` workspace) files a raw idea directly with `needs-triage`, placing it straight in the triage queue (a type or area is added only where clear, area not required; see glossary.md).
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 
