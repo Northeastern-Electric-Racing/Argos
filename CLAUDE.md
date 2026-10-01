@@ -50,25 +50,13 @@ Frontend and backend conventions live alongside their code and auto-load when ed
 
 ## Agent skills
 
-Workflow skills (commit, open-pr, update-pr, run-local) and Matt Pocock's engineering and issue-authoring skills live in `.claude/skills/`. `address-pr-comments`, `verify-telemetry`, and `verify-graph` moved to the Delphi `argos-dev` workspace.
-
-The **main flow** (idea → ship): `grill-with-docs` sharpen the idea → `to-spec` write the spec → `to-tickets` slice it into tracer-bullet implementation tickets → `implement` per ticket (drives `tdd`, then `code-review`, then `commit`). A well-understood single feature can skip straight from grill to `to-spec`; a trivial one-liner goes straight to `implement`. `grill-with-docs` orchestrates the `grilling` and `domain-modeling` primitives.
-
-**On-ramps** merge onto that flow: a huge, foggy effort too big for one session → `wayfinder`, which charts a map of investigation tickets on the tracker, then merges at `to-spec` (one map can feed several specs); raw incoming issues → `triage`.
-
-**Spec review:** a spec (`to-spec`) is staged as a file and reviewed as a PR before it publishes to the tracker — see `docs/agents/spec-review.md`. Implementation tickets (`to-tickets`) and wayfinder investigation tickets are created directly on the tracker and reviewed there instead — they don't pass through this gate.
-
-See `docs/adr/0002-misc-adopt-matt-pocock-skills.md`, `docs/adr/0003-misc-rename-to-spec-to-tickets.md`, `docs/adr/0004-misc-split-grill-with-docs.md`, `docs/adr/0005-misc-wayfinder-and-spec-review.md`, and `docs/adr/0006-misc-spec-review-gate-specs-only.md`. The `caveman` terse mode is on by default in this repo as a pilot — see the Communication section above.
+Agent skills live in the Delphi `argos-dev` workspace (`commit`, `open-pr`, `update-pr`, `run-local`, `address-pr-comments`, `verify-telemetry`, `verify-graph`, `journal`, `log-future-addition`). Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label, and assignment conventions.
+Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label (including triage labels), and assignment conventions.
 
 When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
-
-### Triage labels
-
-Five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), created via `gh label create` and applied by `/triage`. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
