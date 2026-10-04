@@ -499,7 +499,8 @@ async fn send_data_socket_msg(
     io: &SocketIo,
     subscriptions: &Arc<RwLock<SubscriptionState>>,
 ) {
-    *upload_counter = upload_counter.wrapping_add(1);
+    // same 0..100 cycle as send_socket_msg: drop positions below the discard percent
+    *upload_counter = upload_counter.wrapping_add(1) % 100;
     if *upload_counter < SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
         trace!("Discarding message!");
         return;
