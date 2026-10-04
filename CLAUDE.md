@@ -54,9 +54,9 @@ Agent skills live in the Delphi `argos-dev` workspace (`commit`, `open-pr`, `upd
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label (including triage labels), and assignment conventions.
+Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for ticket types, labels, and conventions.
 
-When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
+When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as an idea or spike instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
 
 ### Domain docs
 
