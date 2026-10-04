@@ -12,6 +12,7 @@ pub mod zenoh_processor;
 pub mod metadata_structs;
 pub mod rule_structs;
 pub mod socket_handler;
+pub mod socket_subscriptions;
 
 #[allow(non_snake_case)]
 pub mod models;

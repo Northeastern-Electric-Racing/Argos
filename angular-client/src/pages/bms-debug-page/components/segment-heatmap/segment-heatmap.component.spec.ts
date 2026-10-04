@@ -30,7 +30,6 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
   let fixture: ComponentFixture<SegmentHeatmapComponent>;
   let component: SegmentHeatmapComponent;
   let storage: Storage;
-  let cellService: CellService;
   let heatMap: HeatMapService;
 
   beforeEach(async () => {
@@ -46,14 +45,12 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     }).compileComponents();
 
     storage = TestBed.inject(Storage);
-    cellService = TestBed.inject(CellService);
     heatMap = TestBed.inject(HeatMapService);
-    cellService.updateCellInfo(); // wire the per-cell storage subscriptions
 
     fixture = TestBed.createComponent(SegmentHeatmapComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('segment', SEGMENT);
-    fixture.detectChanges(); // runs the effect (loads cells) + ngOnInit (view subscription)
+    fixture.detectChanges(); // runs the effect (loads cells) + ngOnInit (retains CellService, view subscription)
   });
 
   const alphaCell = (cellNumber: number) => component.alphaDisplayCells.find((c) => c.cellLabel === cellNumber.toString());
