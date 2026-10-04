@@ -5,7 +5,7 @@ use rustc_hash::FxHashMap;
 use serde::Serialize;
 use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
-use socketioxide::extract::SocketRef;
+use socketioxide::extract::{AckSender, Data, SocketRef};
 use socketioxide::handler::{FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
 use std::convert::Infallible;
@@ -22,6 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::socket_subscriptions::{SubscriptionAck, SubscriptionState};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -143,13 +144,44 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
+    // per-socket selective delivery state for the `data` event; sockets start on
+    // the firehose and become selective via the `set_subscriptions` event
+    let subscriptions: Arc<RwLock<SubscriptionState>> =
+        Arc::new(RwLock::new(SubscriptionState::default()));
+    let conn_subscriptions = subscriptions.clone();
     io.ns(
         "/",
         |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
+            conn_subscriptions.write().await.connect(socket.id);
+
+            let event_subscriptions = conn_subscriptions.clone();
+            socket.on(
+                "set_subscriptions",
+                |socket: SocketRef, Data(filters): Data<Vec<String>>, ack: AckSender| async move {
+                    let count = event_subscriptions
+                        .write()
+                        .await
+                        .set_filters(socket.id, filters);
+                    debug!(
+                        "Socket {} now selective with {} data filters",
+                        socket.id, count
+                    );
+                    if let Err(err) = ack.send(&SubscriptionAck { count }) {
+                        trace!("Could not ack set_subscriptions: {}", err);
+                    }
+                },
+            );
+
+            let disconnect_subscriptions = conn_subscriptions.clone();
+            let sid = socket.id;
+
             // unfortunate locking and ref counting due to the async closures
             let mut owned = writable_socket_map.write().await;
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
+                socket.on_disconnect(async move || {
+                    disconnect_subscriptions.write().await.disconnect(sid);
+                });
                 return;
             }
 
@@ -162,6 +194,7 @@ pub async fn socket_handler_with_metadata(
 
             socket.on_disconnect(async move || {
                 writable_socket_map.write().await.remove(&client_id);
+                disconnect_subscriptions.write().await.disconnect(sid);
             });
         },
     );
@@ -183,11 +216,11 @@ pub async fn socket_handler_with_metadata(
             Ok(data) = data_channel.recv() => {
                 msg_cnt += 1;
                 msgs_since_hb = msgs_since_hb.wrapping_add(1);
-                send_socket_msg(
+                send_data_socket_msg(
                     &data,
                     &mut upload_counter,
                     &io,
-                    DATA_SOCKET_KEY,
+                    &subscriptions,
                 ).await;
                 handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
                 handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
@@ -414,6 +447,79 @@ fn handle_socket_msg(
             last_seen: data.timestamp,
             expired: false,
         });
+    }
+}
+
+/// Sends a `data` message selectively, printing and IGNORING any error that may occur.
+/// Sockets that never sent `set_subscriptions` receive everything (firehose,
+/// pre-spike behavior); selective sockets receive only topics matching their
+/// filter set. Load invariants: with no selective socket this is the identical
+/// broadcast behind one uncontended read-lock; on the selective path routing is
+/// a memoized index lookup, the JSON is serialized at most once, and not at all
+/// when no socket wants the topic.
+async fn send_data_socket_msg(
+    client_data: &ClientData,
+    upload_counter: &mut u8,
+    io: &SocketIo,
+    subscriptions: &Arc<RwLock<SubscriptionState>>,
+) {
+    *upload_counter = upload_counter.wrapping_add(1);
+    if *upload_counter < SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
+        trace!("Discarding message!");
+        return;
+    }
+
+    // fast path: nobody is selective, broadcast exactly as before
+    {
+        let state = subscriptions.read().await;
+        if state.all_firehose() {
+            drop(state);
+            broadcast_data_msg(client_data, io).await;
+            return;
+        }
+    }
+
+    let recipients = {
+        let mut state = subscriptions.write().await;
+        state.recipients(&client_data.name)
+    };
+    if recipients.is_empty() {
+        trace!("No socket subscribed to {}, skipping", client_data.name);
+        return;
+    }
+
+    let payload = serde_json::to_string(client_data).expect("Could not serialize ClientData");
+    for sid in recipients {
+        let Some(socket) = io.get_socket(sid) else {
+            continue;
+        };
+        if let Err(err) = socket.emit(DATA_SOCKET_KEY, &payload) {
+            trace!("Socket: Transmit error: {:?}", err);
+        }
+    }
+}
+
+/// The bulk `data` broadcast (pre-spike wire behavior), JSON-serialized once.
+async fn broadcast_data_msg(client_data: &ClientData, io: &SocketIo) {
+    match io
+        .emit(
+            DATA_SOCKET_KEY,
+            &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
+        )
+        .await
+    {
+        Ok(_) => (),
+        Err(err) => match err {
+            socketioxide::BroadcastError::Socket(e) => {
+                trace!("Socket: Transmit error: {:?}", e);
+            }
+            socketioxide::BroadcastError::Serialize(_) => {
+                warn!("Socket: Serialize error: {}", err)
+            }
+            socketioxide::BroadcastError::Adapter(_) => {
+                warn!("Socket: Adapter error: {}", err)
+            }
+        },
     }
 }
 
