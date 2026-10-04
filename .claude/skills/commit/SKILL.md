@@ -25,7 +25,7 @@ Recent commits:
 2. Review the diff and stage all relevant changed files (avoid staging unrelated or generated files)
 3. Write a commit message in the format: `#{ticket_number} - {concise description of changes}` — example: `#501 - fmt`
 
-   Keep the {concise description} caveman-terse (borrowed from the caveman skill): imperative, drop articles and filler, fragments fine, abbreviate common terms (fmt, refactor, deps, config), aim for 2-8 words. Prefer `#533 - add CSV upload endpoint` over `#533 - this commit adds a new endpoint for uploading CSV files`.
+   Keep the {concise description} terse: imperative, drop articles and filler, fragments fine, abbreviate common terms (fmt, refactor, deps, config), aim for 2-8 words. Prefer `#533 - add CSV upload endpoint` over `#533 - this commit adds a new endpoint for uploading CSV files`.
 4. Commit in a single operation using a HEREDOC for the message:
    ```bash
    git commit -m "$(cat <<'EOF'

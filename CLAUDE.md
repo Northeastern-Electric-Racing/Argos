@@ -2,10 +2,6 @@
 
 Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). Angular 19 frontend (`angular-client/`) and Rust backend (`scylla-server/`), with schema tooling in `charybdis/` and MQTT broker config in `siren-base/`.
 
-## Communication
-
-Respond in `caveman` terse mode by default — a repo-wide pilot. Drop articles, filler, and pleasantries; keep full technical accuracy, exact code, and exact error text. See the `caveman` skill in `.claude/skills/caveman/` for the ruleset and the auto-clarity exceptions — security warnings, irreversible-action confirmations, and order-sensitive multi-step sequences stay in plain prose. Turn it off for a session with "stop caveman" or "normal mode".
-
 ## Local Development
 
 - The backend stack (Postgres, MQTT, Scylla server, Calypso simulator) runs in Docker via the compose files in `compose/`, driven by `argos.sh`.
