@@ -121,9 +121,11 @@ export class CellService {
 
       // S Volts: one per cell (S-ADC voltage, mirrors Volts)
       allAlphaSVoltValues.forEach((sVolt, sVoltIndex) => {
-        this.storageService.get(topics.alphaSVolt(segmentNumber, sVolt)).subscribe((data) => {
-          segmentAlphaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
-        });
+        this.subscriptions.push(
+          this.storageService.get(topics.alphaSVolt(segmentNumber, sVolt)).subscribe((data) => {
+            segmentAlphaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
+          })
+        );
       });
 
       // Burns: one per cell
@@ -146,9 +148,11 @@ export class CellService {
 
       // Open Wire: one per cell (mirrors CvS)
       allAlphaOwValues.forEach((ow, owIndex) => {
-        this.storageService.get(topics.alphaOw(segmentNumber, ow)).subscribe((data) => {
-          segmentAlphaCells[owIndex].ow = parseInt(data.values[0]) === 1;
-        });
+        this.subscriptions.push(
+          this.storageService.get(topics.alphaOw(segmentNumber, ow)).subscribe((data) => {
+            segmentAlphaCells[owIndex].ow = parseInt(data.values[0]) === 1;
+          })
+        );
       });
     });
   };
@@ -183,9 +187,11 @@ export class CellService {
 
       // S Volts: one per cell (S-ADC voltage, mirrors Volts)
       allBetaSVoltValues.map((sVolt, sVoltIndex) => {
-        this.storageService.get(topics.betaSVolt(segmentNumber, sVolt)).subscribe((data) => {
-          segmentBetaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
-        });
+        this.subscriptions.push(
+          this.storageService.get(topics.betaSVolt(segmentNumber, sVolt)).subscribe((data) => {
+            segmentBetaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
+          })
+        );
       });
 
       // Burns: one per cell
@@ -208,9 +214,11 @@ export class CellService {
 
       // Open Wire: one per cell (mirrors CvS)
       allBetaOwValues.forEach((ow, owIndex) => {
-        this.storageService.get(topics.betaOw(segmentNumber, ow)).subscribe((data) => {
-          segmentBetaCells[owIndex].ow = parseInt(data.values[0]) === 1;
-        });
+        this.subscriptions.push(
+          this.storageService.get(topics.betaOw(segmentNumber, ow)).subscribe((data) => {
+            segmentBetaCells[owIndex].ow = parseInt(data.values[0]) === 1;
+          })
+        );
       });
     });
   };

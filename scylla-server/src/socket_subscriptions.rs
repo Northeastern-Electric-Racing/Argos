@@ -65,6 +65,7 @@ impl SubscriptionState {
 
     /// True when no socket is selective — the caller can take the broadcast
     /// fast path, identical to the pre-spike firehose.
+    #[must_use]
     pub fn all_firehose(&self) -> bool {
         self.filters.is_empty()
     }
@@ -74,7 +75,7 @@ impl SubscriptionState {
     /// (the index entry is built on first sight of a topic after invalidation).
     pub fn recipients(&mut self, topic: &str) -> Vec<Sid> {
         self.ensure_index(topic);
-        let selective = self.index.get(topic).map(Vec::as_slice).unwrap_or(&[]);
+        let selective = self.index.get(topic).map_or(&[][..], Vec::as_slice);
         let mut out = Vec::with_capacity(self.firehose.len() + selective.len());
         out.extend(self.firehose.iter().copied());
         out.extend_from_slice(selective);
@@ -140,8 +141,14 @@ mod tests {
         state.connect(b);
         state.set_filters(a, vec![]);
         let recipients = state.recipients("GPS/Speed");
-        assert!(!recipients.contains(&a), "selective socket with [] must get nothing");
-        assert!(recipients.contains(&b), "firehose socket must still get everything");
+        assert!(
+            !recipients.contains(&a),
+            "selective socket with [] must get nothing"
+        );
+        assert!(
+            recipients.contains(&b),
+            "firehose socket must still get everything"
+        );
         assert!(!state.all_firehose());
     }
 
@@ -196,7 +203,11 @@ mod tests {
         state.recipients("BMS/Pack/Voltage");
 
         state.disconnect(selective);
-        assert_eq!(state.index_len(), 0, "selective disconnect clears the index");
+        assert_eq!(
+            state.index_len(),
+            0,
+            "selective disconnect clears the index"
+        );
         assert!(!state.recipients("BMS/Pack/Voltage").contains(&selective));
         assert!(state.all_firehose(), "last selective socket left");
 
@@ -209,10 +220,7 @@ mod tests {
         let mut state = SubscriptionState::default();
         let [a] = sids();
         state.connect(a);
-        let count = state.set_filters(
-            a,
-            vec!["BMS/#".to_string(), "bad/#/middle".to_string()],
-        );
+        let count = state.set_filters(a, vec!["BMS/#".to_string(), "bad/#/middle".to_string()]);
         assert_eq!(count, 1, "invalid `#`-in-the-middle filter must be dropped");
         assert!(state.recipients("BMS/Pack").contains(&a));
         assert!(!state.recipients("bad/x/middle").contains(&a));

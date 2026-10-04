@@ -1,4 +1,3 @@
-import { fakeAsync, tick } from '@angular/core/testing';
 import Storage from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 
@@ -8,19 +7,26 @@ describe('Storage (selective subscription)', () => {
   let storage: Storage;
   let sets: (string[] | null)[];
 
+  // jasmine.clock instead of fakeAsync: the test env is zoneless (src/test-setup.ts)
+  const tick = (ms: number) => jasmine.clock().tick(ms);
+
   beforeEach(() => {
+    jasmine.clock().install();
+    jasmine.clock().mockDate();
     storage = new Storage();
     sets = [];
     storage.getDesiredSet().subscribe((set) => sets.push(set));
   });
 
-  it('stays on the firehose (null) until a first reader appears', fakeAsync(() => {
+  afterEach(() => jasmine.clock().uninstall());
+
+  it('stays on the firehose (null) until a first reader appears', () => {
     expect(sets).toEqual([null]);
     tick(50);
     expect(sets).toEqual([null]);
-  }));
+  });
 
-  it('adds a topic on the first get() subscriber and dedupes further readers', fakeAsync(() => {
+  it('adds a topic on the first get() subscriber and dedupes further readers', () => {
     const first = storage.get('A/B').subscribe();
     tick(20);
     const second = storage.get('A/B').subscribe();
@@ -29,9 +35,9 @@ describe('Storage (selective subscription)', () => {
     first.unsubscribe();
     second.unsubscribe();
     tick(6000);
-  }));
+  });
 
-  it('drops a topic only after the linger elapses', fakeAsync(() => {
+  it('drops a topic only after the linger elapses', () => {
     const sub = storage.get('A/B').subscribe();
     tick(20);
     sub.unsubscribe();
@@ -39,9 +45,9 @@ describe('Storage (selective subscription)', () => {
     expect(sets).toEqual([null, ['A/B']]);
     tick(1100);
     expect(sets).toEqual([null, ['A/B'], []]);
-  }));
+  });
 
-  it('keeps a topic when a reader returns within the linger', fakeAsync(() => {
+  it('keeps a topic when a reader returns within the linger', () => {
     const first = storage.get('A/B').subscribe();
     tick(20);
     first.unsubscribe();
@@ -51,9 +57,9 @@ describe('Storage (selective subscription)', () => {
     expect(sets).toEqual([null, ['A/B']]);
     second.unsubscribe();
     tick(6000);
-  }));
+  });
 
-  it('replays the latest value to late subscribers while the entry is alive', fakeAsync(() => {
+  it('replays the latest value to late subscribers while the entry is alive', () => {
     const first = storage.get('A/B').subscribe();
     storage.addValue('A/B', value('1'));
     storage.addValue('A/B', value('2'));
@@ -63,9 +69,9 @@ describe('Storage (selective subscription)', () => {
     first.unsubscribe();
     second.unsubscribe();
     tick(6000);
-  }));
+  });
 
-  it('includes wildcard filters and routes matching messages with their topic', fakeAsync(() => {
+  it('includes wildcard filters and routes matching messages with their topic', () => {
     const seen: string[] = [];
     const sub = storage.subscribe('BMS/PerCell/#').subscribe((message) => seen.push(message.topic));
     tick(20);
@@ -76,5 +82,5 @@ describe('Storage (selective subscription)', () => {
     sub.unsubscribe();
     tick(6000);
     expect(sets).toEqual([null, ['BMS/PerCell/#'], []]);
-  }));
+  });
 });
