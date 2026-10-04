@@ -1,37 +1,119 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { DataValue, StorageMap, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
+import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
+import { DataValue, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
+
+type TopicEntry = {
+  stream: ReplaySubject<DataValue>;
+  readers: number;
+  linger?: ReturnType<typeof setTimeout>;
+};
+
+/** How long a topic stays in the desired set after its last reader leaves. */
+const LINGER_MS = 5000;
 
 /**
  * Service for interacting with the storage
  */
 @Injectable({ providedIn: 'root' })
 export default class Storage {
-  private storage: StorageMap;
-  private timerStorage: TimerStorageMap;
+  private entries = new Map<string, TopicEntry>();
+
+  /**
+   * The full topic list this client wants the server to deliver.
+   * Stays null (never emitted -> server firehoses) until the first non-empty
+   * set exists, so a client with no readers behaves exactly like today.
+   */
+  private desiredSet = new BehaviorSubject<string[] | null>(null);
+  private syncScheduled = false;
+
+  private timerStorage: TimerStorageMap = new Map<string, Subject<TimerData>>();
 
   private currentRunId = new BehaviorSubject<number | undefined>(undefined);
 
   private resolution: number = 100;
 
-  constructor() {
-    this.storage = new Map<string, Subject<DataValue>>();
-    this.timerStorage = new Map<string, Subject<TimerData>>();
-  }
-
-  public get = (key: string): Subject<DataValue> => {
-    const subject = this.storage.get(key);
-    if (!subject) {
-      const subject = new Subject<DataValue>();
-      this.storage.set(key, subject);
-      return subject;
-    }
-    return subject;
+  /**
+   * Live stream for one exact topic. Ref-counted: while any subscriber is
+   * attached (plus a short linger after the last one leaves) the topic is part
+   * of the desired set sent to the server. Replays the latest value to late
+   * subscribers.
+   */
+  public get = (key: string): Observable<DataValue> => {
+    return new Observable<DataValue>((subscriber) => {
+      const entry = this.retainTopic(key);
+      const sub = entry.stream.subscribe(subscriber);
+      return () => {
+        sub.unsubscribe();
+        this.releaseTopic(key);
+      };
+    });
   };
 
   public addValue = (key: string, value: DataValue): void => {
-    const subject = this.get(key);
-    subject.next(value);
+    this.entries.get(key)?.stream.next(value);
+  };
+
+  /**
+   * The desired topic list as it changes (batched per task, deduplicated).
+   * null = never had a non-empty set; the client should stay on the firehose.
+   */
+  public getDesiredSet = (): Observable<string[] | null> => {
+    return this.desiredSet.asObservable();
+  };
+
+  public getCurrentDesiredSet = (): string[] | null => {
+    return this.desiredSet.value;
+  };
+
+  private retainTopic = (key: string): TopicEntry => {
+    let entry = this.entries.get(key);
+    if (!entry) {
+      entry = { stream: new ReplaySubject<DataValue>(1), readers: 0 };
+      this.entries.set(key, entry);
+    }
+    if (entry.linger !== undefined) {
+      clearTimeout(entry.linger);
+      entry.linger = undefined;
+    }
+    entry.readers++;
+    this.scheduleSync();
+    return entry;
+  };
+
+  private releaseTopic = (key: string): void => {
+    const entry = this.entries.get(key);
+    if (!entry) return;
+    entry.readers--;
+    if (entry.readers > 0) return;
+    entry.linger = setTimeout(() => {
+      this.entries.delete(key);
+      this.scheduleSync();
+    }, LINGER_MS);
+  };
+
+  /**
+   * Batches every retain/release in the current task (e.g. a page mount's
+   * hundreds of get() calls) into one sync. A microtask runs right after the
+   * current task with no added delay, and unlike a timer is not throttled in
+   * background tabs.
+   */
+  private scheduleSync = (): void => {
+    if (this.syncScheduled) return;
+    this.syncScheduled = true;
+    queueMicrotask(() => {
+      this.syncScheduled = false;
+      this.pushDesiredSet();
+    });
+  };
+
+  private pushDesiredSet = (): void => {
+    const set = [...this.entries.keys()].sort();
+    const previous = this.desiredSet.value;
+    if (previous === null && set.length === 0) return;
+    if (previous !== null && previous.length === set.length && previous.every((topic, i) => topic === set[i])) {
+      return;
+    }
+    this.desiredSet.next(set);
   };
 
   public getCurrentRunId = () => {

@@ -93,6 +93,32 @@ export default class SocketService {
   };
 
   /**
+   * Replaces the set of topics the server delivers to this client (selective delivery).
+   * Carries the FULL list each time; the server moves the socket to exactly those
+   * topic rooms. A client that never emits this receives the full firehose.
+   */
+  setSubscriptions = (topics: string[]) => {
+    this.socket.emit('set_subscriptions', topics, (ack: { count: number }) => {
+      console.debug(`[selective] subscribed to ${ack?.count ?? '?'} topics`, topics);
+    });
+  };
+
+  /**
+   * Drives selective delivery from the storage service's desired set and
+   * re-asserts it after every (re)connect, since the server keeps no
+   * subscription state across connections.
+   */
+  enableSelectiveDelivery = (storage: Storage) => {
+    storage.getDesiredSet().subscribe((topics) => {
+      if (topics !== null) this.setSubscriptions(topics);
+    });
+    this.socket.on('connect', () => {
+      const topics = storage.getCurrentDesiredSet();
+      if (topics !== null) this.setSubscriptions(topics);
+    });
+  };
+
+  /**
    * Sends an error message to the server
    * @param message The error message to send to the server
    */

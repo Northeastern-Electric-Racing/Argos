@@ -52,6 +52,11 @@ tikv-jemallocator = "0.7"
 [features]
 top = ["dep:console-subscriber"]
 
+[dev-dependencies]
+# __test_harness: dummy sockets for testing room delivery without a network
+socketioxide = { version = "0.18.3", features = ["tracing", "__test_harness"] }
+engineioxide = "0.17"
+
 [build-dependencies]
 protobuf-codegen = "3.7.1"
 
