@@ -6,13 +6,7 @@ import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
-
-enum BMSMODE {
-  DEFAULT = 0,
-  READY = 1,
-  CHARGING = 2,
-  FAULTED = 3
-}
+import { BmsMode } from 'src/utils/bms.utils';
 
 @Component({
   selector: 'BMS-mode-display',
@@ -24,19 +18,19 @@ enum BMSMODE {
 export default class BMSModeDisplayComponent implements OnInit, OnDestroy {
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
-  bmsMode: BMSMODE = 1;
+  bmsMode: BmsMode = 1;
 
-  private colorMap: { [key in BMSMODE]: string } = {
-    [BMSMODE.DEFAULT]: 'grey',
-    [BMSMODE.READY]: 'blue',
-    [BMSMODE.CHARGING]: 'green',
-    [BMSMODE.FAULTED]: 'red'
+  private colorMap: { [key in BmsMode]: string } = {
+    [BmsMode.DEFAULT]: 'grey',
+    [BmsMode.READY]: 'blue',
+    [BmsMode.CHARGING]: 'green',
+    [BmsMode.FAULTED]: 'red'
   };
 
   ngOnInit() {
     this.subscriptions.push(
       this.storage.get(topics.bmsMode()).subscribe((value) => {
-        this.bmsMode = floatPipe(value.values[0]) as BMSMODE;
+        this.bmsMode = floatPipe(value.values[0]) as BmsMode;
       })
     );
   }
@@ -46,7 +40,7 @@ export default class BMSModeDisplayComponent implements OnInit, OnDestroy {
   }
 
   getBMSModeString(): string {
-    return BMSMODE[this.bmsMode];
+    return BmsMode[this.bmsMode];
   }
 
   getStatusColor(): string {
