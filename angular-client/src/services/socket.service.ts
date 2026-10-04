@@ -93,13 +93,13 @@ export default class SocketService {
   };
 
   /**
-   * Replaces this client's server-side delivery filter (selective delivery).
-   * Carries the FULL desired set each time; the server swaps its previous set
-   * wholesale. A client that never emits this receives the full firehose.
+   * Replaces the set of topics the server delivers to this client (selective delivery).
+   * Carries the FULL list each time; the server moves the socket to exactly those
+   * topic rooms. A client that never emits this receives the full firehose.
    */
-  setSubscriptions = (filters: string[]) => {
-    this.socket.emit('set_subscriptions', filters, (ack: { count: number }) => {
-      console.debug(`[selective] filter live (${ack?.count ?? '?'} filters)`, filters);
+  setSubscriptions = (topics: string[]) => {
+    this.socket.emit('set_subscriptions', topics, (ack: { count: number }) => {
+      console.debug(`[selective] subscribed to ${ack?.count ?? '?'} topics`, topics);
     });
   };
 
@@ -109,12 +109,12 @@ export default class SocketService {
    * subscription state across connections.
    */
   enableSelectiveDelivery = (storage: Storage) => {
-    storage.getDesiredSet().subscribe((filters) => {
-      if (filters !== null) this.setSubscriptions(filters);
+    storage.getDesiredSet().subscribe((topics) => {
+      if (topics !== null) this.setSubscriptions(topics);
     });
     this.socket.on('connect', () => {
-      const filters = storage.getCurrentDesiredSet();
-      if (filters !== null) this.setSubscriptions(filters);
+      const topics = storage.getCurrentDesiredSet();
+      if (topics !== null) this.setSubscriptions(topics);
     });
   };
 
