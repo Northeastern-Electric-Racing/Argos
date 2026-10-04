@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { io } from 'socket.io-client';
-import { CellService } from 'src/services/cell.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
@@ -36,7 +35,6 @@ function getOrCreateClientId(): string {
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
-  private cellService = new CellService(this.storage);
   private faultService = inject(FaultService);
   private notificationLogService = inject(NotificationLogService);
   private envService = inject(EnvService);
@@ -113,7 +111,7 @@ export default class AppContextComponent implements OnInit {
 
   ngOnInit(): void {
     document.documentElement.classList.add('dark-mode-always');
-    this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
+    this.socketService.enableSelectiveDelivery(this.storage);
   }
 }

@@ -93,6 +93,32 @@ export default class SocketService {
   };
 
   /**
+   * Replaces this client's server-side delivery filter (selective delivery).
+   * Carries the FULL desired set each time; the server swaps its previous set
+   * wholesale. A client that never emits this receives the full firehose.
+   */
+  setSubscriptions = (filters: string[]) => {
+    this.socket.emit('set_subscriptions', filters, (ack: { count: number }) => {
+      console.debug(`[selective] filter live (${ack?.count ?? '?'} filters)`, filters);
+    });
+  };
+
+  /**
+   * Drives selective delivery from the storage service's desired set and
+   * re-asserts it after every (re)connect, since the server keeps no
+   * subscription state across connections.
+   */
+  enableSelectiveDelivery = (storage: Storage) => {
+    storage.getDesiredSet().subscribe((filters) => {
+      if (filters !== null) this.setSubscriptions(filters);
+    });
+    this.socket.on('connect', () => {
+      const filters = storage.getCurrentDesiredSet();
+      if (filters !== null) this.setSubscriptions(filters);
+    });
+  };
+
+  /**
    * Sends an error message to the server
    * @param message The error message to send to the server
    */

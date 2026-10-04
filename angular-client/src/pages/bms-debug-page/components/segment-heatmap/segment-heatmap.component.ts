@@ -51,6 +51,7 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.cellService.retain();
     const viewSub = this.heatMapService.getCurrentView(this.segment());
     if (viewSub) {
       this.subscriptions.push(
@@ -160,5 +161,6 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach((s) => s.unsubscribe());
+    this.cellService.release();
   }
 }
