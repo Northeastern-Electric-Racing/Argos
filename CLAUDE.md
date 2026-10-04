@@ -42,12 +42,6 @@ Save all Playwright screenshots under `pictures/<branch-name>/` at the repo root
 - Never delete files without explicit confirmation.
 - Explain reasoning before making architectural changes.
 
-## Code Conventions
-
-Frontend and backend conventions live in each component's README ("Code conventions"):
-- Angular / TypeScript: `angular-client/README.md`.
-- Rust / Axum: `scylla-server/README.md`.
-
 ## Agent skills
 
 Agent skills live in the Delphi `argos-dev` workspace (`commit`, `open-pr`, `update-pr`, `run-local`, `address-pr-comments`, `verify-telemetry`, `verify-graph`, `journal`, `log-future-addition`). Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
@@ -60,4 +54,4 @@ When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to
 
 ### ADRs
 
-Architecture decisions live in `docs/adr/`; see `docs/adr/README.md` for naming.
+Architecture decisions live in `docs/adr/`.

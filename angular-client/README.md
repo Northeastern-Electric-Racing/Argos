@@ -40,36 +40,6 @@ This section should be your first refrence when developing or running into devel
 
 ---
 
-### Code conventions
-
-**TypeScript**
-- Use strict type checking. Prefer inference when obvious; avoid `any` (use `unknown`).
-
-**Angular**
-- Standalone components (the default; don't set `standalone: true`), lazy-loaded feature routes.
-- `input()` / `output()` functions, not decorators; `inject()`, not constructor injection.
-- Signals for local state, `computed()` for derived state; `set`/`update`, never `mutate`.
-- `changeDetection: ChangeDetectionStrategy.OnPush`.
-- External `templateUrl` and `styleUrls` with relative paths, never inline templates or styles.
-- `host` object in decorators instead of `@HostBinding`/`@HostListener`.
-- Reactive forms over template-driven forms.
-- `NgOptimizedImage` for static images (not inline base64).
-- Services: single responsibility, `providedIn: 'root'` for singletons.
-
-**Templates**
-- `@if`, `@for`, `@switch` (not `*ngIf`, `*ngFor`, `*ngSwitch`); async pipe for observables.
-- `class` and `style` bindings (not `ngClass` / `ngStyle`).
-- No globals (`new Date()`) or arrow functions in templates; keep logic out of them.
-
-**Icons**
-- Never use emojis in the UI.
-- App-level UI (nav, pages): Material Icons via `<mat-icon [svgIcon]="'name'" />`.
-- PrimeNG contexts (table row actions, dialog buttons): PrimeIcons via `icon="pi pi-*"`.
-- Custom SVGs go in `src/assets/icons/` and are registered with `MatIconRegistry`.
-
-**Accessibility**
-- Must pass all AXE checks; WCAG AA minimum (focus management, color contrast, ARIA).
-
 ### Creating new files (compoents, etc)
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
