@@ -15,7 +15,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
   let topicService: TopicSelectionService;
   let routerNavigate: jasmine.Spy;
 
-  const dataTypeA: DataType = { name: 'BMS/Pack/SOC', unit: '%' };
+  const dataTypeA: DataType = { name: 'BMS/Pack/SoC', unit: '%' };
   const dataTypeB: DataType = { name: 'MPU/State/Speed', unit: 'mph' };
   const dataTypeC: DataType = { name: 'BMS/Pack/Voltage', unit: 'V' };
   const allDataTypes: DataType[] = [dataTypeA, dataTypeB, dataTypeC];

@@ -1,5 +1,7 @@
 # Adopt Matt Pocock's agent skills for AI-driven issue authoring
 
+> **Amended by [ADR-0003](0003-misc-rename-to-spec-to-tickets.md).** The `to-prd` and `to-issues` skills named throughout this ADR were later renamed to `to-spec` and `to-tickets` (tracking Matt Pocock's upstream renames) and refreshed with upstream content. Read the old skill names below as their current equivalents; the two-path rationale is unchanged.
+
 Argos adopts Matt Pocock's `grill-with-docs → to-prd → to-issues → triage` skill flow as the AI-driven path for issue authoring and triage. The legacy `create-ticket` and `brainstorm-ticket` skills retire. Humans continue to author issues via Argos's GitHub form templates (`task.yml`, `bug-form.yml`, `feature-request.yml`, `epic.yml`); AI authors via Matt's baked-in body shapes filed through `gh issue create --body`. The `ready-for-agent` triage label distinguishes AI-filed issues.
 
 ## Considered Options

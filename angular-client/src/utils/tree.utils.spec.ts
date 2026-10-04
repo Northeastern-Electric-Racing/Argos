@@ -63,7 +63,7 @@ describe('compactTopicLabel', () => {
 
 describe('flattenTreeNodes', () => {
   it('returns only leaves, excluding branches', () => {
-    const tree = [branch('BMS', [leaf('BMS/Pack/Voltage'), leaf('BMS/Pack/SOC')]), branch('MPU', [leaf('MPU/State/Speed')])];
+    const tree = [branch('BMS', [leaf('BMS/Pack/Voltage'), leaf('BMS/Pack/SoC')]), branch('MPU', [leaf('MPU/State/Speed')])];
     const flat = flattenTreeNodes(tree);
     expect(flat.length).toBe(3);
     flat.forEach((n) => expect(n.children?.length).toBe(0));
@@ -94,12 +94,12 @@ describe('flattenTreeNodes', () => {
   it('sorts results alphabetically by label', () => {
     const tree = [
       branch('MPU', [leaf('MPU/State/Speed')]),
-      branch('BMS', [leaf('BMS/Pack/Voltage'), leaf('BMS/Pack/SOC')]),
+      branch('BMS', [leaf('BMS/Pack/Voltage'), leaf('BMS/Pack/SoC')]),
       leaf('Aux/Sensor/Zeta')
     ];
     const flat = flattenTreeNodes(tree);
     const labels = flat.map((n) => n.label);
-    expect(labels).toEqual(['Aux/Sensor/Zeta', 'BMS/Pack/SOC', 'BMS/Pack/Voltage', 'MPU/State/Speed']);
+    expect(labels).toEqual(['Aux/Sensor/Zeta', 'BMS/Pack/SoC', 'BMS/Pack/Voltage', 'MPU/State/Speed']);
   });
 
   it('returns an empty list when the tree has no leaves', () => {
@@ -110,7 +110,7 @@ describe('flattenTreeNodes', () => {
 
 describe('filterSelectedNodes', () => {
   const voltage = leaf('BMS/Pack/Voltage', 'V');
-  const soc = leaf('BMS/Pack/SOC', '%');
+  const soc = leaf('BMS/Pack/SoC', '%');
   const speed = leaf('MPU/State/Speed', 'mph');
   const flat = [voltage, soc, speed];
 

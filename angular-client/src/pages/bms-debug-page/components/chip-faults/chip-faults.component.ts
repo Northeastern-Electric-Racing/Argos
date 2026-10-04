@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { appRoutes } from 'src/app/app-routing.module';
+import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { Chip, chipToString } from 'src/utils/bms.utils';

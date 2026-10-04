@@ -15,9 +15,9 @@
     </stat-display>
     <div class="stat-divider"></div>
 
-    <stat-display [value]="chargeState()" unit="%" subtitle="Charge State" [unitBelow]="true">
+    <stat-display [value]="chargeStatePercent()" unit="%" subtitle="Charge State" [unitBelow]="true">
       @if (enableWidgets()) {
-        <battery-level-indicator [percentage]="chargeState() ?? 0" />
+        <battery-level-indicator [percentage]="chargeStatePercent()" />
       }
     </stat-display>
     <div class="stat-divider"></div>

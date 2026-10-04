@@ -33,8 +33,8 @@ pub async fn get_data_by_timing(
     data_type_name: String,
     timing: Timing,
 ) -> Result<Vec<Data>, diesel::result::Error> {
-    let higher_end: i64 = (timing.time * 1000) + (timing.after * 60 * 1000000); // minutes to microsseconds
-    let lower_end: i64 = (timing.time * 1000) - (timing.before * 60 * 1000000); // minutes to microsseconds
+    let higher_end: i64 = (timing.time * 1000) + (timing.after * 60 * 1_000_000); // minutes to microsseconds
+    let lower_end: i64 = (timing.time * 1000) - (timing.before * 60 * 1_000_000); // minutes to microsseconds
 
     data.filter(
         dataTypeName
@@ -52,7 +52,7 @@ pub async fn get_data_by_timing(
 /// * `unix_time` - The time im miliseconds since unix epoch of the message
 /// * `data_type_name` - The name of the data type, note this data type must already exist!
 /// * `rin_id` - The run id to assign the data point to, note this run must already exist!
-///   returns: A result containing the data or the QueryError propogated by the db
+///   returns: A result containing the data or the `QueryError` propogated by the db
 pub async fn add_data(
     db: &mut Database<'_>,
     client_data: ClientData,
@@ -88,7 +88,7 @@ pub const MAX_POINTS_TO_RETURN: u32 = 5000; // Max points to return
 /// * `data_type_name` - The name of the data type to query
 /// * `run_id` - The run ID to get data for
 /// * `sampling_rate` - The sampling rate to use for downsampling
-///   returns: A result containing the downsampled data or the QueryError propagated by the db
+///   returns: A result containing the downsampled data or the `QueryError` propagated by the db
 #[instrument(level = Level::DEBUG, skip(db))]
 pub async fn get_mean_downsampled_data_by_run_id(
     db: &mut Database<'_>,
@@ -109,7 +109,7 @@ pub async fn get_mean_downsampled_data_by_run_id(
             continue;
         }
 
-        let sum_time: i128 = chunk.iter().map(|d| d.time as i128).sum();
+        let sum_time: i128 = chunk.iter().map(|d| i128::from(d.time)).sum();
         let mean_time: i64 = (sum_time / chunk.len() as i128) as i64;
 
         let min_values_len = chunk.iter().map(|d| d.values.len()).min().unwrap_or(0);
@@ -143,7 +143,7 @@ pub async fn get_mean_downsampled_data_by_run_id(
 /// * `db` - The database connection to use
 /// * `data_type_name` - The name of the data type to count
 /// * `run_id` - The run ID to count data for
-///   returns: A result containing the count or the QueryError propagated by the db
+///   returns: A result containing the count or the `QueryError` propagated by the db
 pub async fn get_data_point_count(
     db: &mut Database<'_>,
     data_type_name: &str,
@@ -161,13 +161,14 @@ pub async fn get_data_point_count(
 /// Calculate optimal sampling rate based on data point count
 /// * `total_count` - The total number of data points in the dataset
 ///   returns: The sampling rate to use (1 for no downsampling, >1 for downsampling)
+#[must_use]
 pub fn calculate_auto_sampling_rate(total_count: i64) -> u32 {
     if total_count <= LARGE_DATASET_THRESHOLD {
         return 1; // No downsampling needed
     }
 
     // Calculate sampling rate to get close to MAX_POINTS_TO_RETURN
-    let sampling_rate = (total_count as f64 / MAX_POINTS_TO_RETURN as f64).ceil() as u32;
+    let sampling_rate = (total_count as f64 / f64::from(MAX_POINTS_TO_RETURN)).ceil() as u32;
 
     // Ensure we don't sample more aggressively than necessary
     sampling_rate.max(1)
@@ -178,7 +179,7 @@ pub fn calculate_auto_sampling_rate(total_count: i64) -> u32 {
 /// * `db` - The database connection to use
 /// * `data_type_name` - The name of the data type to query
 /// * `run_id` - The run ID to get data for
-///   returns: A result containing the data (downsampled if large) or the QueryError propagated by the db
+///   returns: A result containing the data (downsampled if large) or the `QueryError` propagated by the db
 #[instrument(level = Level::TRACE, skip(db))]
 pub async fn get_data_by_run_id_with_auto_downsampling(
     db: &mut Database<'_>,

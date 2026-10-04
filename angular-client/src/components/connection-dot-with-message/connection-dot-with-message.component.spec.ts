@@ -13,6 +13,8 @@ describe('ConnectionDotWithMessageComponent', () => {
 
     fixture = TestBed.createComponent(ConnectionDotWithMessageComponent);
     component = fixture.componentInstance;
+    // getStatusColor is a required input read by the template.
+    fixture.componentRef.setInput('getStatusColor', () => 'green');
     fixture.detectChanges();
   });
 

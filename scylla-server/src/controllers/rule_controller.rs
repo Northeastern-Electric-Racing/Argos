@@ -50,7 +50,7 @@ pub async fn add_rule(
 ) -> Result<Json<String>, ScyllaError> {
     info!("Incoming rules reg: {}, from {}", rule.topic, client_id);
     match rules_manager.add_rule(client_id, rule).await {
-        Ok(_) => Ok(Json::from("Rule added!".to_owned())),
+        Ok(()) => Ok(Json::from("Rule added!".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
 }
@@ -63,7 +63,7 @@ pub async fn delete_rule(
 ) -> Result<(), ScyllaError> {
     info!("Incoming rules del: {}, from {}", rule_id, client_id);
     match rules_manager.delete_rule(client_id, RuleId(rule_id)).await {
-        Ok(_) => Ok(()),
+        Ok(()) => Ok(()),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
 }
@@ -145,7 +145,7 @@ pub async fn unsubscribe_rules(
     let rule_ids: Vec<RuleId> = rule_ids.into_iter().map(RuleId).collect();
 
     match rules_manager.unsubscribe_rules(client_id, rule_ids).await {
-        Ok(_) => Ok(Json::from(
+        Ok(()) => Ok(Json::from(
             "Successfully unsubscribed from rules".to_owned(),
         )),
         Err(err) => Err(ScyllaError::RuleError(err)),
@@ -167,7 +167,7 @@ pub async fn subscribe_rules(
     let rule_ids: Vec<RuleId> = rule_ids.into_iter().map(RuleId).collect();
 
     match rules_manager.subscribe_rules(client_id, rule_ids).await {
-        Ok(_) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
+        Ok(()) => Ok(Json::from("Successfully subscribed to rules".to_owned())),
         Err(err) => Err(ScyllaError::RuleError(err)),
     }
 }

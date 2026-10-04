@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and PRDs for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`. Use the `gh` CLI for all operations.
+Issues for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`. Use the `gh` CLI for all operations.
 
 ## Conventions
 
@@ -15,7 +15,7 @@ Infer the repo from `git remote -v` — `gh` does this automatically when run in
 
 ## Argos ticket conventions
 
-These apply when an AI skill files an issue with `gh issue create`. They govern the title, labels, body length, and assignment only. The body *shape* (which sections exist and how they are structured) is owned by the authoring skill (`to-issues`, `to-prd`), not by this file. See glossary.md for ADR, triage, AFK, and the other workflow terms.
+These apply when an AI skill files an issue with `gh issue create`. They govern the title, labels, body length, and assignment only.
 
 **Title:** concise, imperative mood (e.g. "Add pagination to the run list", "Fix redirect loop on login"). Do not prefix with `[Area] -`, even though the YAML form templates suggest it; real issues in this repo do not use that prefix.
 
@@ -26,8 +26,9 @@ These apply when an AI skill files an issue with `gh issue create`. They govern 
 | Area | `angular-client`, `scylla-server`, `DevOps` |
 | Type | `bug`, `new feature`, `feature enhancement`, `good first issue`, `epic` |
 | Difficulty | `straightforward`, `medium`, `difficult` |
+| Workflow | `ai-workflow` (the subject is the AI dev workflow itself, orthogonal to area) |
 
-The triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) are applied by `/triage`, not at creation time. See triage-labels.md.
+**Triage labels:** `needs-triage` (not yet evaluated), `needs-info` (waiting on the reporter), `ready-for-agent` (fully specified, AFK-ready), `ready-for-human` (needs human judgment), `wontfix`. Applied by hand during triage, not at creation — except `log-future-addition`, which files a raw idea with `needs-triage` (type or area only where clear).
 
 **Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
 

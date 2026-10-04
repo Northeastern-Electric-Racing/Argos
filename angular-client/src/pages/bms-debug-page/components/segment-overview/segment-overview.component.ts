@@ -1,7 +1,7 @@
 import { Component, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { Segment, segmentInfoMap, SegmentInfo } from 'src/utils/bms.utils';
+import { Segment, segmentInfo, SegmentInfo } from 'src/utils/bms.utils';
 import { StatConfig, StatSummaryComponent } from 'src/components/stat-summary/stat-summary.component';
 
 const DEFAULT_SEGMENT_STATS: StatConfig[] = [
@@ -28,7 +28,7 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
   statConfigs = signal<StatConfig[]>(DEFAULT_SEGMENT_STATS);
 
   ngOnInit(): void {
-    const info = segmentInfoMap[this.segment()];
+    const info = segmentInfo(this.segment());
     const configs = [...DEFAULT_SEGMENT_STATS];
 
     SEGMENT_TOPIC_KEYS.forEach((key, i) => {

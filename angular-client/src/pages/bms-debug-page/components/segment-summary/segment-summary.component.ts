@@ -1,9 +1,9 @@
 import { Component, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
-import { appRoutes } from 'src/app/app-routing.module';
+import { appRoutes } from 'src/app/app-routes';
 import Storage from 'src/services/storage.service';
-import { SegmentInfo, Segment, segmentInfoMap } from 'src/utils/bms.utils';
+import { SegmentInfo, Segment, segmentInfo } from 'src/utils/bms.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
@@ -59,7 +59,7 @@ export class SegmentSummaryComponent implements OnInit, OnDestroy {
   };
 
   getRelevantKeys = (): SegmentInfo => {
-    return segmentInfoMap[this.segmentNumber()];
+    return segmentInfo(this.segmentNumber());
   };
 
   ngOnDestroy(): void {

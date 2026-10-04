@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { appRoutes } from 'src/app/app-routing.module';
+import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 

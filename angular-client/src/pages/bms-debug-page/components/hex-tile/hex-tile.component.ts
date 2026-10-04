@@ -4,17 +4,21 @@ import { HeatMapView } from 'src/services/heat-map.service';
 /** Maps each HeatMapView to its CSS modifier class suffix */
 const VIEW_CLASS_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'view-voltage',
+  [HeatMapView.SVolts]: 'view-voltage',
   [HeatMapView.Balancing]: 'view-balancing',
   [HeatMapView.Temperature]: 'view-temperature',
-  [HeatMapView.CvsFailure]: 'view-cvs-failure'
+  [HeatMapView.CvsFailure]: 'view-flag',
+  [HeatMapView.OpenWire]: 'view-flag'
 };
 
 /** Maps each HeatMapView to the unit label shown inside the hex */
 const VIEW_UNIT_MAP: Record<HeatMapView, string> = {
   [HeatMapView.Voltage]: 'V',
+  [HeatMapView.SVolts]: 'V',
   [HeatMapView.Temperature]: '°C',
   [HeatMapView.Balancing]: '',
-  [HeatMapView.CvsFailure]: ''
+  [HeatMapView.CvsFailure]: '',
+  [HeatMapView.OpenWire]: ''
 };
 
 @Component({
@@ -45,7 +49,8 @@ export class HexTileComponent {
   displayValue = computed(() => {
     const boolValue = this.booleanValue();
     if (boolValue !== undefined) {
-      if (this.currentView() === HeatMapView.CvsFailure) return boolValue ? 'TRUE' : 'FALSE';
+      const view = this.currentView();
+      if (view === HeatMapView.CvsFailure || view === HeatMapView.OpenWire) return boolValue ? 'TRUE' : 'FALSE';
       return boolValue ? 'YES' : 'NO';
     }
     const value = this.value();

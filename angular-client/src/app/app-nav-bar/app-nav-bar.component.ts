@@ -6,7 +6,7 @@ import { interval, map, Observable, startWith, Subscription } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
-import { appRoutes } from '../app-routing.module';
+import { appRoutes } from '../app-routes';
 import { Sidebar } from 'primeng/sidebar';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';

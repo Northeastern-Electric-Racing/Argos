@@ -5,7 +5,7 @@ import { BehaviorSubject, Subscription } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
-import { appRoutes } from 'src/app/app-routing.module';
+import { appRoutes } from 'src/app/app-routes';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';

@@ -45,6 +45,10 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
       function: () => this.heatMapService.setAllSegViews(HeatMapView.Voltage)
     },
     {
+      name: formatAllSelectorName(HeatMapView.SVolts.toString()),
+      function: () => this.heatMapService.setAllSegViews(HeatMapView.SVolts)
+    },
+    {
       name: formatAllSelectorName(HeatMapView.Balancing.toString()),
       function: () => this.heatMapService.setAllSegViews(HeatMapView.Balancing)
     },
@@ -55,6 +59,10 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
     {
       name: formatAllSelectorName(HeatMapView.CvsFailure.toString()),
       function: () => this.heatMapService.setAllSegViews(HeatMapView.CvsFailure)
+    },
+    {
+      name: formatAllSelectorName(HeatMapView.OpenWire.toString()),
+      function: () => this.heatMapService.setAllSegViews(HeatMapView.OpenWire)
     }
   ];
   allSegSelectorConfig: SelectorConfig = {

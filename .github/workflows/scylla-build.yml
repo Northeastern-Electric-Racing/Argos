@@ -20,13 +20,13 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # restore-keys: closest-match cache on key miss
       # https://github.com/actions/cache/blob/main/caching-strategies.md#using-restore-keys-to-download-the-closest-matching-cache
       # cargo reuses unchanged compiled artifacts
       # https://doc.rust-lang.org/cargo/guide/build-cache.html
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -42,9 +42,9 @@ jobs:
           mkdir -p bin
           cp target/release/scylla-server bin/scylla-server
 
-      - uses: docker/setup-buildx-action@v4.1.0
+      - uses: docker/setup-buildx-action@v4.3.0
 
-      - uses: docker/login-action@v4.2.0
+      - uses: docker/login-action@v4.6.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -52,7 +52,7 @@ jobs:
 
       # No Docker layer cache (cache-from/cache-to: type=gha) — apt install openssl
       # is ~3s, and COPY invalidates every run anyway. Real build time is cargo, cached above.
-      - uses: docker/build-push-action@v7.2.0
+      - uses: docker/build-push-action@v7.3.0
         with:
           context: ./scylla-server
           file: ./scylla-server/Dockerfile.prebuilt
@@ -68,7 +68,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: docker/login-action@v4.2.0
+      - uses: docker/login-action@v4.6.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}

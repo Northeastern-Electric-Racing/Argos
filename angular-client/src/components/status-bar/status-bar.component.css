@@ -1,0 +1,106 @@
+/* Block host so the sticky container's containing block spans the whole page. */
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+/* Wipe in from the right edge with clip-path rather than translating the box off-screen: a
+   transform past the edge would add scrollable overflow to the page and give focus() somewhere
+   to scroll to, which shifted the whole page sideways for the length of the animation. */
+@keyframes sidebar-in {
+  from {
+    clip-path: inset(0 0 0 100%);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+/* Both surfaces dock flush to the top-right edge. */
+.side-handle,
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--color-background-info);
+  border: 1px solid var(--color-divider);
+  border-right: none;
+}
+
+.side-handle,
+.panel-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-subtitle);
+}
+.side-handle:hover,
+.panel-collapse:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.side-handle:focus-visible,
+.panel-collapse:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+}
+.side-handle mat-icon,
+.panel-collapse mat-icon {
+  font-size: var(--icon-size);
+  width: var(--icon-size);
+  height: var(--icon-size);
+  line-height: 1;
+}
+
+.side-handle {
+  --icon-size: 26px;
+  width: 30px;
+  height: 56px;
+  border-radius: 10px 0 0 10px;
+  color: var(--color-text-primary);
+  outline-offset: -2px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px 0 0 12px;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px 14px;
+  box-shadow: -6px 6px 18px rgba(0, 0, 0, 0.45);
+  animation: sidebar-in 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+
+.panel-header {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-subtitle);
+}
+
+.panel-collapse {
+  --icon-size: 22px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  outline-offset: 2px;
+}

@@ -7,6 +7,7 @@ pub mod services;
 pub mod argos_inserter;
 pub mod db_handler;
 pub mod mqtt_processor;
+pub mod zenoh_processor;
 
 pub mod metadata_structs;
 pub mod rule_structs;
@@ -18,6 +19,7 @@ pub mod models;
 #[allow(non_snake_case)]
 pub mod schema;
 
+#[allow(clippy::pedantic)]
 pub mod proto;
 
 pub mod transformers;
@@ -101,4 +103,10 @@ impl From<ClientData> for models::DataInsert {
             runId: val.run_id,
         }
     }
+}
+
+/// A sendable, for now command data only
+pub struct SirenSendable {
+    pub command_data: proto::command_data::CommandData,
+    pub topic: String,
 }

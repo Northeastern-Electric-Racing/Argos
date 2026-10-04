@@ -19,7 +19,7 @@ use tracing::trace;
 use tracing::warn;
 
 use crate::ClientData;
-use crate::rule_structs::BiMapRemoveResult::*;
+use crate::rule_structs::BiMapRemoveResult::{NothingToRemove, RemovedOnly, RemovedWithCleanUp};
 
 static ASCII_LOWER: [char; 26] = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
@@ -48,6 +48,7 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> Default for BiMultiMap<L, R> {
 }
 
 impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             left_to_right: FxHashMap::default(),
@@ -55,10 +56,12 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
         }
     }
 
+    #[must_use]
     pub fn lefts(&self) -> Vec<L> {
         self.left_to_right.keys().cloned().collect()
     }
 
+    #[must_use]
     pub fn rights(&self) -> Vec<R> {
         self.right_to_left.keys().cloned().collect()
     }
@@ -83,19 +86,19 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
     }
 
     /// Remove all mappings for a given left key, if none left keys remain for a right key, remove that right key as well. \
-    /// Returns: BiMapRemoveResult with optional set of empty rights that were cleaned from map.
+    /// Returns: `BiMapRemoveResult` with optional set of empty rights that were cleaned from map.
     pub fn remove_left(&mut self, left: &L) -> BiMapRemoveResult<FxHashSet<R>> {
         Self::remove_key(&mut self.left_to_right, &mut self.right_to_left, left)
     }
 
     /// Remove all mappings for a given right key, if none right keys remain for a left key, remove that left key as well. \
-    /// Returns: BiMapRemoveResult with optional set of empty lefts that were cleaned from map.
+    /// Returns: `BiMapRemoveResult` with optional set of empty lefts that were cleaned from map.
     pub fn remove_right(&mut self, right: &R) -> BiMapRemoveResult<FxHashSet<L>> {
         Self::remove_key(&mut self.right_to_left, &mut self.left_to_right, right)
     }
 
     /// Remove a specific mapping from left to right, cleaning up empty entries as needed.\
-    /// Returns: BiMapRemoveresult with optional right that was cleaned from map.
+    /// Returns: `BiMapRemoveresult` with optional right that was cleaned from map.
     pub fn remove_right_from_left(&mut self, left: &L, right: &R) -> BiMapRemoveResult<R> {
         Self::remove_mapping(
             &mut self.left_to_right,
@@ -106,7 +109,7 @@ impl<L: Hash + Eq + Clone, R: Hash + Eq + Clone> BiMultiMap<L, R> {
     }
 
     /// Remove a specific mapping from right to left, cleaning up empty entries as needed. \
-    /// Returns: BiMapRemoveresult with optional left that was cleaned from map.
+    /// Returns: `BiMapRemoveresult` with optional left that was cleaned from map.
     pub fn remove_left_from_right(&mut self, right: &R, left: &L) -> BiMapRemoveResult<L> {
         Self::remove_mapping(
             &mut self.right_to_left,
@@ -191,7 +194,7 @@ pub const RULE_SOCKET_KEY: &str = "rule_notify";
 
 // since client IDs, rule IDs, and topics are scattered about, wrap them here
 
-/// a client_id, add to derives to get more string features
+/// a `client_id`, add to derives to get more string features
 #[derive(PartialEq, Eq, Hash, Display, Clone, AsRef, Serialize)]
 pub struct ClientId(pub String);
 
@@ -242,6 +245,7 @@ pub struct Rule {
 
 impl Rule {
     /// create a new rule
+    #[must_use]
     pub fn new(id: RuleId, topic: Topic, debounce_time: std::time::Duration, expr: String) -> Self {
         Self {
             id,
@@ -264,11 +268,11 @@ impl Rule {
                     .get(i)
                     .expect("out of bounds alphabet")
                     .to_string(),
-                evalexpr::Value::from_float(*values.get(i).unwrap() as f64),
+                evalexpr::Value::from_float(f64::from(*values.get(i).unwrap())),
             ) {
                 warn!("Could not eval: {}", err);
                 return None;
-            };
+            }
         }
         match eval_boolean_with_context(&self.expr, &context) {
             Ok(res) => Some(res),
@@ -290,12 +294,11 @@ impl Rule {
             };
             if tokio::time::Instant::now().saturating_duration_since(last_seen) < COOLDOWN_TIME {
                 return Some(false);
-            } else {
-                // end cooldown, restart counting
-                self.during_cooldown = false;
-                self.first_seen = None;
-                self.last_seen = None;
             }
+            // end cooldown, restart counting
+            self.during_cooldown = false;
+            self.first_seen = None;
+            self.last_seen = None;
         }
         // process whether we have seen it, abort if error
         let res = self.process_seen(values)?;
@@ -346,11 +349,11 @@ pub enum RuleManagerError {
 
 /// the rule manager
 pub struct RuleManager {
-    /// <rule_id, rule>
+    /// <`rule_id`, rule>
     rules: RwLock<FxHashMap<RuleId, Rule>>,
-    /// <topic, Vec<rule_id>>
+    /// <topic, Vec<`rule_id`>>
     topic_index: RwLock<FxHashMap<Topic, FxHashSet<RuleId>>>,
-    /// bimap<client_id, rule_id>
+    /// bimap<`client_id`, `rule_id`>
     subscriptions: RwLock<BiMultiMap<ClientId, RuleId>>,
 }
 impl Default for RuleManager {
@@ -360,6 +363,7 @@ impl Default for RuleManager {
 }
 
 impl RuleManager {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             rules: RwLock::new(FxHashMap::default()),
@@ -368,7 +372,9 @@ impl RuleManager {
         }
     }
 
-    /// Handles a new socket message, returning a RuleNotification for one to many clients if action should be taken
+    /// Handles a new socket message, returning a `RuleNotification` for one to many clients if action should be taken
+    /// # Panics
+    /// Panics if
     pub async fn handle_msg(
         &self,
         data: &ClientData,
@@ -390,10 +396,9 @@ impl RuleManager {
         for rule_id in rule_ids {
             let clients_op = self.subscriptions.read().await.get_left(&rule_id).cloned();
 
-            if clients_op.is_none() {
+            let Some(clients) = clients_op else {
                 continue;
-            }
-            let clients = clients_op.unwrap();
+            };
 
             let triggered = match self
                 .rules
@@ -513,12 +518,12 @@ impl RuleManager {
                 let mut rules = self.rules.write().await;
                 let mut topic_index = self.topic_index.write().await;
                 for orphaned_rule_id in orphaned_rule_ids {
-                    if let Some(removed_rule) = rules.remove(&orphaned_rule_id) {
-                        if let Some(rule_ids) = topic_index.get_mut(&removed_rule.topic) {
-                            rule_ids.remove(&orphaned_rule_id);
-                            if rule_ids.is_empty() {
-                                topic_index.remove(&removed_rule.topic);
-                            }
+                    if let Some(removed_rule) = rules.remove(&orphaned_rule_id)
+                        && let Some(rule_ids) = topic_index.get_mut(&removed_rule.topic)
+                    {
+                        rule_ids.remove(&orphaned_rule_id);
+                        if rule_ids.is_empty() {
+                            topic_index.remove(&removed_rule.topic);
                         }
                     }
                 }

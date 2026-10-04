@@ -13,11 +13,12 @@ pub struct ArgosInserter {
 }
 
 impl ArgosInserter {
+    #[must_use]
     pub fn new(sender: broadcast::Sender<ClientData>) -> Self {
         Self { sender }
     }
 
-    /// Push a synthetic ClientData into the db-bound broadcast. Warn-logs and
+    /// Push a synthetic `ClientData` into the db-bound broadcast. Warn-logs and
     /// returns silently if the channel has no active receivers, never panics.
     pub fn insert(&self, data: ClientData) {
         if let Err(err) = self.sender.send(data) {

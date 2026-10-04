@@ -13,6 +13,7 @@ describe('BmsHeaderComponent', () => {
 
     fixture = TestBed.createComponent(BmsHeaderComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('pageTitle', 'Test');
     fixture.detectChanges();
   });
 
