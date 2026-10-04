@@ -44,9 +44,9 @@ Save all Playwright screenshots under `pictures/<branch-name>/` at the repo root
 
 ## Code Conventions
 
-Frontend and backend conventions live alongside their code and auto-load when editing there:
-- Angular / TypeScript: see `angular-client/CLAUDE.md`.
-- Rust / Axum: see `scylla-server/CLAUDE.md`.
+Frontend and backend conventions live in each component's README ("Code conventions"):
+- Angular / TypeScript: `angular-client/README.md`.
+- Rust / Axum: `scylla-server/README.md`.
 
 ## Agent skills
 
@@ -58,6 +58,6 @@ Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh
 
 When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
 
-### Domain docs
+### ADRs
 
-Single-context: one `CONTEXT.md` and one `docs/adr/` at the repo root. Component-scoped decisions live in the same root `docs/adr/`, distinguished by descriptive titles. See `docs/agents/domain.md`, and `docs/agents/glossary.md` for workflow terminology.
+Architecture decisions live in `docs/adr/`; see `docs/adr/README.md` for naming.

@@ -114,7 +114,7 @@ compose.override.yml
 # AI tooling
 .playwright-mcp/
 .wolf/
-# .context/ — local agent context scratch (ironically, not the context we track in CONTEXT.md/docs)
+# .context/ — local agent context scratch
 .context/
 # Playwright verification screenshots (see CLAUDE.md "Screenshots")
 pictures/

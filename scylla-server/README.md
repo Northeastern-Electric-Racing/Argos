@@ -50,6 +50,18 @@ This section should be your first refrence when developing or running into devel
 
 ---
 
+### Code conventions
+
+**Stack:** Axum (HTTP), Diesel (PostgreSQL ORM), Tokio, SocketIOxide (WebSocket), rumqttc (MQTT), Protobuf (definitions in `src/proto/`).
+
+- Controller → Service → DB layers: controllers validate input and call a service; services hold business logic; DB access uses Diesel, with batch upserts where applicable.
+- Core modules: `mqtt_processor`, `socket_handler`, `db_handler`, `rule_structs`.
+- Log with `tracing`, not `println!`; parse CLI args with `clap`.
+- Propagate errors with `?` and prefer typed errors over strings.
+- Use `tokio::spawn` for concurrent tasks, not threads.
+- Schema changes go through Diesel migrations.
+- Unit tests live alongside source in `#[cfg(test)]` modules.
+
 ### Test this app
 
 #### Get started with DB:
