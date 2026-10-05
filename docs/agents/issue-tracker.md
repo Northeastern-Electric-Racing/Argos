@@ -1,43 +1,37 @@
-# Issue tracker: GitHub
+# Issue tracker
 
-Issues for this repo live as GitHub issues in `Northeastern-Electric-Racing/Argos`. Use the `gh` CLI for all operations.
+Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos`. File them from the templates in .github/ISSUE_TEMPLATE; each field's description says what goes in it.
 
-## Conventions
+## Pipeline
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
+idea → spikes → epic → dev work
 
-Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
+| Ticket | What it is | Issue type | Parent |
+|---|---|---|---|
+| Idea | A feature or direction worth exploring. Short: the idea, its rationale, and the approaches to explore. | Feature | none |
+| Spike | One approach to an idea, usually a separate implementation of it, or a small standalone improvement. States what is explored and the hypothesis; findings go in comments and draft PRs, not the ticket. | Task | the idea, if any |
+| Epic | A settled idea: the approach is decided. Includes a diagram of the change. | Feature | none; links the idea in "From idea" |
+| Dev work | Any implementation work: features, bugs, and tasks share one template. | Feature, Bug, or Task | the epic, if any |
 
-## Argos ticket conventions
+When an idea is settled, open an epic that links back to it and close the idea as completed.
 
-These apply when an AI skill files an issue with `gh issue create`. They govern the title, labels, body length, and assignment only.
+Link children with GitHub sub-issues: spikes under their idea, dev work under its epic.
 
-**Title:** concise, imperative mood (e.g. "Add pagination to the run list", "Fix redirect loop on login"). Do not prefix with `[Area] -`, even though the YAML form templates suggest it; real issues in this repo do not use that prefix.
+## Labels
 
-**Labels:** apply at least one area label, plus a type and difficulty label where they fit. Choose from the existing palette:
+Every issue gets one label from each of the first two groups and at least one area label.
 
 | Group | Labels |
-| --- | --- |
-| Area | `angular-client`, `scylla-server`, `DevOps` |
-| Type | `bug`, `new feature`, `feature enhancement`, `good first issue`, `epic` |
-| Difficulty | `straightforward`, `medium`, `difficult` |
-| Workflow | `ai-workflow` (the subject is the AI dev workflow itself, orthogonal to area) |
+|---|---|
+| Written by | `by: human`, `by: ai`, `by: ai-assisted` |
+| Category | `idea`, `spike`, `epic`, `dev work` (the template applies it) |
+| Area | `frontend`, `backend`, `devops` (any combination) |
 
-**Triage labels:** `needs-triage` (not yet evaluated), `needs-info` (waiting on the reporter), `ready-for-agent` (fully specified, AFK-ready), `ready-for-human` (needs human judgment), `wontfix`. Applied by hand during triage, not at creation — except `log-future-addition`, which files a raw idea with `needs-triage` (type or area only where clear).
+Bug, feature, and task are GitHub issue types, not labels.
 
-**Backticks:** at most three backtick usages in the entire issue body. Reference files, functions, and identifiers in plain text; reserve backticks for commands worth copy-pasting or short snippets.
+## Writing tickets
 
-**Assignment:** pass `--assignee @me` by default. This repo self-assigns issues.
-
-## When a skill says "publish to the issue tracker"
-
-Create a GitHub issue.
-
-## When a skill says "fetch the relevant ticket"
-
-Run `gh issue view <number> --comments`.
+- **Title:** concise and imperative ("Add pagination to the run list"), no prefixes.
+- **Backticks:** at most three inline backtick usages per body. Reference files and identifiers in plain text. Diagram and context-transfer code blocks don't count.
+- **Context transfer:** an optional code block on spikes, epics, and dev work for handing off to a person or agent. Start it with a short summary, then the raw context.
+- **Assignment:** assign yourself when you file.
