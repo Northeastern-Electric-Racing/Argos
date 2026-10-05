@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, input, computed, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit, input, computed, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { sendConfig } from 'src/api/car-command.api';
@@ -44,9 +44,9 @@ export enum EfuseLockMode {
     LockButtonComponent
   ]
 })
-export default class EfuseCardComponent implements OnInit, OnDestroy {
+export default class EfuseCardComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
 
   private static readonly FIGURE_SPACE = '\u2007';
 
@@ -151,73 +151,77 @@ export default class EfuseCardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Subscribe to ADC raw data
-    this.subscriptions.push(
-      this.storage.get(this.resolvedAdcDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedAdcDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.adcRaw = parseInt(value.values[0]);
-      })
-    );
+      });
 
     // Subscribe to voltage data
-    this.subscriptions.push(
-      this.storage.get(this.resolvedVoltageDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedVoltageDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.voltage = decimalPipe(value.values[0], 2);
-      })
-    );
+      });
 
     // Subscribe to current data
-    this.subscriptions.push(
-      this.storage.get(this.resolvedCurrentDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedCurrentDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.current = decimalPipe(value.values[0], 2);
-      })
-    );
+      });
 
     // Subscribe to faulted status
-    this.subscriptions.push(
-      this.storage.get(this.resolvedFaultedDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedFaultedDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.isFaulted = Number(value.values[0]) === 1;
-      })
-    );
+      });
 
     // Subscribe to enabled status
-    this.subscriptions.push(
-      this.storage.get(this.resolvedEnabledDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedEnabledDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.isEnabled = Number(value.values[0]) === 1;
-      })
-    );
+      });
 
     // Subscribe to VCU control state (0=ON, 1=AUTO, 2=OFF)
-    this.subscriptions.push(
-      this.storage.get(this.resolvedControlStateDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedControlStateDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         const raw = Number(value.values[0]);
         if (Number.isNaN(raw)) return;
         this.controlStateDisplay.set(this.formatControlState(raw));
-      })
-    );
+      });
 
     // Subscribe to Calypso eFuse state (0=ON, 1=AUTO, 2=OFF)
-    this.subscriptions.push(
-      this.storage.get(this.resolvedStateDataType()).subscribe((value) => {
+    this.storage
+      .get(this.resolvedStateDataType())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         const raw = Number(value.values[0]);
         if (Number.isNaN(raw)) return;
         if (raw === 0) this.switchState.set('ON');
         if (raw === 1) this.switchState.set('AUTO');
         if (raw === 2) this.switchState.set('OFF');
-      })
-    );
+      });
 
     // Subscribe to the AUTO-mode telemetry value (Type 2 cards only)
     const autoDT = this.autoDataType();
     if (autoDT !== undefined) {
-      this.subscriptions.push(
-        this.storage.get(autoDT).subscribe((value) => {
+      this.storage
+        .get(autoDT)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((value) => {
           this.autoValue = decimalPipe(value.values[0], this.autoDecimals());
-        })
-      );
+        });
     }
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   getStatusColor(): string {

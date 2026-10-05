@@ -1,4 +1,5 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { topics } from 'src/utils/topic.utils';
@@ -14,6 +15,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class ChargingStatusComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   @Input() displayLight: boolean = true;
   private storage = inject(Storage);
   isCharging: boolean = false;
@@ -22,25 +24,29 @@ export default class ChargingStatusComponent implements OnInit {
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.storage.getTimerData(topics.charging()).subscribe((value) => {
-      const chargingControlValue = value.last_value;
-      if (this.isCharging) {
-        if (chargingControlValue === 1) {
-          this.isCharging = false;
-          this.currentSeconds = 0;
+    this.storage
+      .getTimerData(topics.charging())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const chargingControlValue = value.last_value;
+        if (this.isCharging) {
+          if (chargingControlValue === 1) {
+            this.isCharging = false;
+            this.currentSeconds = 0;
+          }
+        } else if (chargingControlValue === 0) {
+          this.isCharging = true;
         }
-      } else if (chargingControlValue === 0) {
-        this.isCharging = true;
-      }
 
-      if (chargingControlValue === 0) {
-        this.currentSeconds = (Date.now() - value.last_change) / 1000;
-      }
-      this.totalSeconds = Math.round(
-        value.total_time_per_value_map[0].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) / 1000 +
-          this.currentSeconds
-      );
-    });
+        if (chargingControlValue === 0) {
+          this.currentSeconds = (Date.now() - value.last_change) / 1000;
+        }
+        this.totalSeconds = Math.round(
+          value.total_time_per_value_map[0].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) /
+            1000 +
+            this.currentSeconds
+        );
+      });
   }
 
   getChargingState(connected: boolean) {

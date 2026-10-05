@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, input } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -13,16 +14,20 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent]
 })
 export class CurrentRunDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   currentRun: number = 0;
   navBarStyle = input<boolean>(false);
   small = input<boolean>(false);
 
   ngOnInit() {
-    this.storage.getCurrentRunId().subscribe((runId) => {
-      if (runId) {
-        this.currentRun = runId;
-      }
-    });
+    this.storage
+      .getCurrentRunId()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((runId) => {
+        if (runId) {
+          this.currentRun = runId;
+        }
+      });
   }
 }

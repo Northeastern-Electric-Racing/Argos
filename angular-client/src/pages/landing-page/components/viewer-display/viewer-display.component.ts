@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -12,12 +13,16 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class ViewerDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   numViewers: number = 0;
 
   ngOnInit() {
-    this.storage.get(topics.viewers()).subscribe((value) => {
-      this.numViewers = parseInt(value.values[0]);
-    });
+    this.storage
+      .get(topics.viewers())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.numViewers = parseInt(value.values[0]);
+      });
   }
 }

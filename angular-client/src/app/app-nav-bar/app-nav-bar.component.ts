@@ -1,8 +1,9 @@
-import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { MessageService, PrimeTemplate } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { interval, map, Observable, startWith, Subscription } from 'rxjs';
+import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
@@ -54,13 +55,13 @@ export interface NavItem {
   ]
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private dialogService = inject(DialogService);
   protected notificationLogService = inject(NotificationLogService);
-  private subscribtions: Subscription[] = [];
 
   ref: DynamicDialogRef | undefined;
   menuRef: DynamicDialogRef | undefined;
@@ -73,21 +74,21 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
 
   ngOnInit(): void {
-    this.subscribtions.push(
-      this.sidebarService.isOpen.subscribe((isOpen) => {
-        this.sidebarVisible = isOpen;
-      })
-    );
-    this.isMobile = window.innerWidth <= 768;
-    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
-      this.selectedRoute = event.url;
+    this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
+      this.sidebarVisible = isOpen;
     });
+    this.isMobile = window.innerWidth <= 768;
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((event: NavigationEnd) => {
+        this.selectedRoute = event.url;
+      });
   }
 
   ngOnDestroy(): void {
-    this.subscribtions.forEach((sub) => {
-      sub.unsubscribe();
-    });
     if (this.menuRef) {
       this.menuRef.close();
     }
@@ -108,16 +109,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
-    this.subscribtions.push(
-      runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-        this.newRunIsLoading = isLoading;
-      })
-    );
-    this.subscribtions.push(
-      runsQueryResponse.error.subscribe((error) => {
-        error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
-      })
-    );
+    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
+      this.newRunIsLoading = isLoading;
+    });
+    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
   };
 
   openRunForm = () => {
@@ -231,7 +228,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.menuRef.onClose.subscribe(() => {
+    this.menuRef.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.menuRef = undefined;
     });
   }

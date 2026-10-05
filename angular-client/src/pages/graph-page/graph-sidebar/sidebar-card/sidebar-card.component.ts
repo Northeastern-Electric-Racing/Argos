@@ -1,4 +1,5 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { MatIcon } from '@angular/material/icon';
@@ -18,6 +19,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [MatIcon, NgStyle, TypographyComponent]
 })
 export default class SidebarCardComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
 
   @Input() title!: string;
@@ -31,10 +33,13 @@ export default class SidebarCardComponent implements OnInit {
   ngOnInit(): void {
     this.iconId = `${this.title}-icon`;
 
-    this.storage.get(this.topicName.slice(0, -1)).subscribe((value) => {
-      const displayValue = decimalPipe(value.values[0], 3).toFixed(3) + value.unit;
-      this.dataValue = displayValue;
-    });
+    this.storage
+      .get(this.topicName.slice(0, -1))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const displayValue = decimalPipe(value.values[0], 3).toFixed(3) + value.unit;
+        this.dataValue = displayValue;
+      });
   }
 
   /**

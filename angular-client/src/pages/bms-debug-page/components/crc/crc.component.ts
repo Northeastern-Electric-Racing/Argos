@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -14,17 +15,21 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })
 export class CRCComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   storage = inject(Storage);
   pecErrorChip: number | undefined = undefined;
 
   ngOnInit(): void {
-    this.storage.get(topics.pecErrorChip()).subscribe((value) => {
-      if (parseFloat(value.time) > Date.now() - 4000) {
-        this.pecErrorChip = parseInt(value.values[0]);
-      } else {
-        this.pecErrorChip = undefined;
-      }
-    });
+    this.storage
+      .get(topics.pecErrorChip())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        if (parseFloat(value.time) > Date.now() - 4000) {
+          this.pecErrorChip = parseInt(value.values[0]);
+        } else {
+          this.pecErrorChip = undefined;
+        }
+      });
   }
 
   getStatusColor = (): string => {

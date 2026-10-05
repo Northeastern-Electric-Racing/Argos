@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -18,12 +19,16 @@ import TypographyComponent from '../typography/typography.component';
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class SteeringAngleDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   steeringAngle: number = 0;
 
   ngOnInit() {
-    this.storage.get(topics.steeringAngle()).subscribe((value) => {
-      this.steeringAngle = floatPipe(value.values[0]);
-    });
+    this.storage
+      .get(topics.steeringAngle())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.steeringAngle = floatPipe(value.values[0]);
+      });
   }
 }

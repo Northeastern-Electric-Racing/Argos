@@ -1,5 +1,5 @@
-import { Component, effect, inject, input, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
@@ -26,10 +26,10 @@ export interface DisplayCell {
   styleUrl: './segment-heatmap.component.css',
   imports: [HexTileComponent]
 })
-export class SegmentHeatmapComponent implements OnInit, OnDestroy {
+export class SegmentHeatmapComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private cellService = inject(CellService);
   private heatMapService = inject(HeatMapService);
-  private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
 
@@ -53,11 +53,9 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const viewSub = this.heatMapService.getCurrentView(this.segment());
     if (viewSub) {
-      this.subscriptions.push(
-        viewSub.subscribe((view) => {
-          this.view = view;
-        })
-      );
+      viewSub.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
+        this.view = view;
+      });
     }
   }
 
@@ -159,9 +157,5 @@ export class SegmentHeatmapComponent implements OnInit, OnDestroy {
 
   isSelected(cell: DisplayCell): boolean {
     return this.heatMapService.anySelected(cell.readings);
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
   }
 }

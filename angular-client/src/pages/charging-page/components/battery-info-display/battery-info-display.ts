@@ -1,5 +1,5 @@
-import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
 import Storage from 'src/services/storage.service';
@@ -14,9 +14,9 @@ import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobil
   standalone: true,
   imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent]
 })
-export class BatteryInfoDisplayComponent implements OnInit, OnDestroy {
+export class BatteryInfoDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   voltage: number = 0;
   packTemp: number = 0;
   stateOfCharge: number = 0;
@@ -26,27 +26,36 @@ export class BatteryInfoDisplayComponent implements OnInit, OnDestroy {
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
-    this.subscriptions.push(
-      this.storage.get(topics.packTemp()).subscribe((value) => {
+    this.storage
+      .get(topics.packTemp())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.packTemp = floatPipe(value.values[0]);
-      }),
-      this.storage.get(topics.packVoltage()).subscribe((value) => {
+      });
+    this.storage
+      .get(topics.packVoltage())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.voltage = parseFloat(value.values[0]);
-      }),
-      this.storage.get(topics.stateOfCharge()).subscribe((value) => {
+      });
+    this.storage
+      .get(topics.stateOfCharge())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.stateOfCharge = floatPipe(value.values[0]);
-      }),
-      this.storage.get(topics.chargeCurrentLimit()).subscribe((value) => {
+      });
+    this.storage
+      .get(topics.chargeCurrentLimit())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.chargeCurrentLimit = floatPipe(value.values[0]);
-      }),
-      this.storage.get(topics.dischargeCurrentLimit()).subscribe((value) => {
+      });
+    this.storage
+      .get(topics.dischargeCurrentLimit())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.dischargeCurrentLimit = floatPipe(value.values[0]);
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 
   @HostListener('window:resize')

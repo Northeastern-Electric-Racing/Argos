@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -14,12 +15,13 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export default class StartingSocTimerComponent {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   startingSoc: number = 0;
   constructor() {
     this.storage
       .get(topics.stateOfCharge())
-      .pipe(take(1))
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
         this.startingSoc = floatPipe(value.values[0]);
       });

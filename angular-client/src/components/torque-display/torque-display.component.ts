@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
@@ -13,12 +14,16 @@ import HStackComponent from '../hstack/hstack.component';
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent]
 })
 export default class TorqueDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   torque: number = 0;
 
   ngOnInit() {
-    this.storage.get(topics.torque()).subscribe((value) => {
-      this.torque = parseInt(value.values[0]);
-    });
+    this.storage
+      .get(topics.torque())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.torque = parseInt(value.values[0]);
+      });
   }
 }
