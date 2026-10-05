@@ -32,6 +32,7 @@ Bug, feature, and task are GitHub issue types, not labels.
 ## Writing tickets
 
 - **Title:** concise and imperative ("Add pagination to the run list"), no prefixes.
+- **Requirements:** clear, broad checkboxes, each an outcome rather than an implementation step. Aim for 3-5; never more than 7. If it needs more, split the ticket.
 - **Backticks:** at most three inline backtick usages per body. Reference files and identifiers in plain text. Diagram and context-transfer code blocks don't count.
 - **Context transfer:** an optional code block on spikes, epics, and dev work for handing off to a person or agent. Start it with a short summary, then the raw context.
 - **Assignment:** assign yourself when you file.

@@ -46,7 +46,7 @@ body:
     id: requirements
     attributes:
       label: Requirements
-      description: What must be true for the epic to be done. Checkboxes.
+      description: What must be true for the epic to be done. Clear, broad checkboxes. Aim for 3-5; never more than 7.
       value: "- [ ] "
     validations:
       required: true
