@@ -13,7 +13,7 @@ After opening, add a written-by label (by: human, by: ai, by: ai-assisted) and a
 
 ## Testing
 
-<!-- How you know it works: tests added or run, manual checks, edge cases. -->
+<!-- How you know it works: tests added, manual checks, edge cases. Leave out the obvious (lint, build, existing tests passing); the checklist covers those. -->
 
 ## Screenshots
 
