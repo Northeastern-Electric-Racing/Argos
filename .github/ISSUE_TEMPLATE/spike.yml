@@ -7,13 +7,14 @@ body:
     attributes:
       value: |
         A spike lays out what to explore and what we expect. It does **not** hold answers: post findings as comments and link draft PRs.
+        Don't prescribe a solution. Describe what to learn and leave the how to whoever picks it up.
         Under an idea, each spike is usually a separate implementation of it; add it as a sub-issue of the idea. A small improvement can be a standalone spike.
         After filing, add a written-by label (`by: human`, `by: ai`, `by: ai-assisted`) and area labels (`frontend`, `backend`, `devops`).
   - type: textarea
     id: exploring
     attributes:
       label: Exploring
-      description: The approach or implementation being explored, broadly. Say what it is, not how the exploration will be run.
+      description: The approach or implementation being explored, broadly. Say what it is, not how to build it or how to run the exploration.
     validations:
       required: true
   - type: textarea
@@ -27,7 +28,7 @@ body:
     id: context-transfer
     attributes:
       label: Context transfer
-      description: Optional. A dump of context for whoever picks this up (person or agent). Start with a short summary, then the raw context.
+      description: Optional. A dump of context for whoever picks this up (person or agent). Start with a short summary, then the raw context. Facts only (where code lives, current behavior, constraints, links), not instructions or a proposed solution.
       value: |
         SUMMARY
 

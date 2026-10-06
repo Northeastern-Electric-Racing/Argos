@@ -33,5 +33,6 @@ Bug, feature, and task are GitHub issue types, not labels.
 
 - **Title:** concise and imperative ("Add pagination to the run list"), no prefixes.
 - **Backticks:** at most three inline backtick usages per body. Reference files and identifiers in plain text. Diagram and context-transfer code blocks don't count.
+- **No prescriptions on ideas and spikes:** say what to explore and why, never how to build it. Ideas list open options; spikes state what to learn. Context transfer holds facts, not instructions or a proposed solution.
 - **Context transfer:** an optional code block on spikes, epics, and dev work for handing off to a person or agent. Start it with a short summary, then the raw context.
 - **Assignment:** assign yourself when you file.
