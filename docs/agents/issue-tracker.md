@@ -29,6 +29,8 @@ Every issue gets one label from each of the first two groups and at least one ar
 
 Bug, feature, and task are GitHub issue types, not labels.
 
+Pull requests get a written-by label and at least one area label too, but no category label.
+
 ## Writing tickets
 
 - **Title:** concise and imperative ("Add pagination to the run list"), no prefixes.

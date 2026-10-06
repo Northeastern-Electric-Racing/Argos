@@ -1,48 +1,33 @@
+<!--
+Title: concise and imperative, no ticket number.
+After opening, add a written-by label (by: human, by: ai, by: ai-assisted) and area labels (frontend, backend, devops).
+-->
+
 ## Changes
 
-_Explanation of changes goes here_
+<!-- What landed and the key design choice, in about 50 words. Not a file-by-file list. -->
 
-## Notes
+## Diagram
 
-_Any other notes go here_
+<!-- Optional. Illustrate the change, ideally before and after. Mermaid, ASCII, or an image. Delete if unused. -->
 
-## Test Cases
+## Testing
 
-- Case A
-- Edge case
-- ...
+<!-- How you know it works: tests added or run, manual checks, edge cases. -->
 
 ## Screenshots
 
-_If you made UI changes you must post a screenshot of the whole page for each change in 1) a normal sized window and 2) the smallest possible window_
+<!-- UI changes only: the whole page at normal width and at the smallest width. Drag-drop images here; never commit them. Delete for non-UI changes. -->
 
-_If you did any manual testing (e.g., with Postman), put screenshots of the http request and before and after of the db_
+## Notes
 
-_If none of this applies, you can delete this section_
-
-## To Do
-
-_Any remaining things that need to get done_
-
-- [ ] item 1
-- [ ] ...
+<!-- Optional. Tradeoffs, follow-ups, or what was left out and why. -->
 
 ## Checklist
 
-It can be helpful to check the `Checks` and `Files changed` tabs.
-Please review the [contributor guide](https://nerdocs.atlassian.net/wiki/spaces/NER/pages/8060929/Software+Contributor+Guide) and reach out to your Tech Lead if anything is unclear.
-Please request reviewers and ping on slack only after you've gone through this whole checklist.
-
-- [ ] All commits are tagged with the ticket number
-- [ ] No linting errors / newline at end of file warnings
-- [ ] All code follows repository-configured prettier formatting
+- [ ] Commits are tagged with the ticket number
+- [ ] Lint, format and tests pass
 - [ ] No merge conflicts
-- [ ] All checks passing
-- [ ] Screenshots of UI changes (see Screenshots section)
-- [ ] Remove any non-applicable sections of this template
-- [ ] Assign the PR to yourself
-- [ ] No `package-lock.json` changes (unless dependencies have changed)
-- [ ] Request reviewers & ping on Slack
-- [ ] PR is linked to the ticket (fill in the closes line below)
+- [ ] No package-lock.json changes unless dependencies changed
 
-Closes # (issue #)
+Closes #
