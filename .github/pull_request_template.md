@@ -28,6 +28,8 @@ After opening, add a written-by label (by: human, by: ai, by: ai-assisted) and a
 - [ ] Commits are tagged with the ticket number
 - [ ] Lint, format and tests pass
 - [ ] No merge conflicts
+- [ ] All checks passing
+- [ ] Screenshots of UI changes (see Screenshots)
 - [ ] No package-lock.json changes unless dependencies changed
 
 Closes #
