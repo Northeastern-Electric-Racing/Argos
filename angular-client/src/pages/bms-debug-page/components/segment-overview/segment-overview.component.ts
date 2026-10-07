@@ -1,5 +1,5 @@
-import { Component, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, inject, input, OnInit, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { Segment, segmentInfo, SegmentInfo } from 'src/utils/bms.utils';
 import { StatConfig, StatSummaryComponent } from 'src/components/stat-summary/stat-summary.component';
@@ -19,9 +19,9 @@ const SEGMENT_TOPIC_KEYS: (keyof SegmentInfo)[] = ['segmentTempKey', 'voltageKey
   standalone: true,
   imports: [StatSummaryComponent]
 })
-export class SegmentOverviewComponent implements OnInit, OnDestroy {
+export class SegmentOverviewComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
 
@@ -32,16 +32,13 @@ export class SegmentOverviewComponent implements OnInit, OnDestroy {
     const configs = [...DEFAULT_SEGMENT_STATS];
 
     SEGMENT_TOPIC_KEYS.forEach((key, i) => {
-      this.subscriptions.push(
-        this.storage.get(info[key]).subscribe((v) => {
+      this.storage
+        .get(info[key])
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((v) => {
           configs[i] = { ...configs[i], value: parseFloat(v.values[0]) };
           this.statConfigs.set([...configs]);
-        })
-      );
+        });
     });
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
   }
 }

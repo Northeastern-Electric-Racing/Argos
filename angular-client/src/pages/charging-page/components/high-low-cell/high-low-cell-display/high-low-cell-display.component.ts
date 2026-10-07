@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
@@ -28,6 +29,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   ]
 })
 export default class HighLowCellDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   delta: number = 0;
   lowCellVoltage: number = 0;
@@ -50,15 +52,21 @@ export default class HighLowCellDisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storage.get(topics.lowVoltsValue()).subscribe((value) => {
-      this.lowCellVoltage = decimalPipe(value.values[0], 3);
-      this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
-      this.lowVoltsData.push({ x: +value.time, y: this.lowCellVoltage });
-    });
-    this.storage.get(topics.highVoltsValue()).subscribe((value) => {
-      this.highCellVoltage = decimalPipe(value.values[0], 3);
-      this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
-      this.highVoltsData.push({ x: +value.time, y: this.highCellVoltage });
-    });
+    this.storage
+      .get(topics.lowVoltsValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.lowCellVoltage = decimalPipe(value.values[0], 3);
+        this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
+        this.lowVoltsData.push({ x: +value.time, y: this.lowCellVoltage });
+      });
+    this.storage
+      .get(topics.highVoltsValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.highCellVoltage = decimalPipe(value.values[0], 3);
+        this.delta = decimalPipe((this.highCellVoltage - this.lowCellVoltage).toFixed(3), 3);
+        this.highVoltsData.push({ x: +value.time, y: this.highCellVoltage });
+      });
   }
 }

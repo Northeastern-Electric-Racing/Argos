@@ -1,6 +1,6 @@
-import { Component, inject, input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import {
@@ -18,10 +18,10 @@ import { SegmentOverviewComponent } from '../segment-overview/segment-overview.c
   styleUrl: './segment-row.component.css',
   imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
 })
-export class SegmentRowComponent implements OnInit, OnDestroy {
+export class SegmentRowComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private heatMapService = inject(HeatMapService);
   private router = inject(Router);
-  private subscriptions: Subscription[] = [];
 
   segment = input.required<Segment>();
 
@@ -59,22 +59,16 @@ export class SegmentRowComponent implements OnInit, OnDestroy {
     this.viewSelectorConfig = { options: this.viewOptions, placeholder: HeatMapView.Voltage.toString() };
     const viewSub = this.heatMapService.getCurrentView(this.segment());
     if (viewSub) {
-      this.subscriptions.push(
-        viewSub.subscribe((view) => {
-          this.viewSelectorConfig = {
-            ...this.viewSelectorConfig,
-            defaultValue: view !== undefined ? view : HeatMapView.Voltage.toString()
-          };
-        })
-      );
+      viewSub.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
+        this.viewSelectorConfig = {
+          ...this.viewSelectorConfig,
+          defaultValue: view !== undefined ? view : HeatMapView.Voltage.toString()
+        };
+      });
     }
   }
 
   openSegmentPage = (): void => {
     this.router.navigate([appRoutes.bmsSegmentViewRoute(this.segment())]);
   };
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-  }
 }

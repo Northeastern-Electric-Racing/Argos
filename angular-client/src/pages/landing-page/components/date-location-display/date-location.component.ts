@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { getLatestRun } from 'src/api/run.api';
 import { Run } from 'src/utils/types.utils';
@@ -19,6 +20,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent]
 })
 export class DateLocationComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
@@ -35,15 +37,15 @@ export class DateLocationComponent implements OnInit {
 
     // query for the most recent run to get the location name
     const runsQueryResponse = this.serverService.query<Run>(() => getLatestRun());
-    runsQueryResponse.isLoading.subscribe(() => {
+    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       // TODO: possible loading spinner... but we already have a no location set message
     });
-    runsQueryResponse.error.subscribe((error) => {
+    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       }
     });
-    runsQueryResponse.data.subscribe((data) => {
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       const run = data;
       this.location = run?.locationName || 'No Location Set';
     });

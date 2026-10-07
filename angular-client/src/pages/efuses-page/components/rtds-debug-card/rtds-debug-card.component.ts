@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { EFUSE_TOPICS } from '../../efuses-page.topics';
 import { sendConfig } from 'src/api/car-command.api';
@@ -22,9 +22,9 @@ import IndicatorLightComponent from '../indicator-light/indicator-light.componen
     IndicatorLightComponent
   ]
 })
-export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
+export default class RtdsDebugCardComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
 
   readonly rtdsTopics = EFUSE_TOPICS.VCU.RTDS;
   readonly echo = EFUSE_TOPICS.VCU.Echo;
@@ -43,10 +43,6 @@ export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
     this.subscribeState(this.rtdsTopics.Reverse_State, (value) => (this.reverseState = value));
     this.subscribeState(this.rtdsTopics.Error_State, (value) => (this.errorState = value));
     this.subscribeState(this.echo.BMS_Shutdown, (value) => (this.shutdown = value !== 0));
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   onLockButtonClick(): void {
@@ -76,12 +72,13 @@ export default class RtdsDebugCardComponent implements OnInit, OnDestroy {
   }
 
   private subscribeState(dataType: string, setter: (value: number) => void): void {
-    this.subscriptions.push(
-      this.storage.get(dataType).subscribe((value) => {
+    this.storage
+      .get(dataType)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         const raw = Number(value.values[0]);
         if (Number.isNaN(raw)) return;
         setter(raw);
-      })
-    );
+      });
   }
 }

@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MapService } from '../../services/map.service';
 import { DataValue } from 'src/utils/socket.utils';
 import APIService from 'src/services/api.service';
@@ -20,6 +21,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent]
 })
 export default class MapComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private map = inject(MapService);
   private storage = inject(Storage);
   private apiService = inject(APIService);
@@ -45,15 +47,18 @@ export default class MapComponent implements OnInit {
       setTimeout(() => {
         this.map.buildMap('map');
         this.map.addPolyline([]);
-        this.storage.get(topics.gpsLocation()).subscribe((value) => {
-          this.map.addCoordinateToPolyline(this.map.transformDataToCoordinate(value));
-        });
+        this.storage
+          .get(topics.gpsLocation())
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((value) => {
+            this.map.addCoordinateToPolyline(this.map.transformDataToCoordinate(value));
+          });
       }, 100);
     } else {
       const queryResponse = this.apiService.query<DataValue[]>(() =>
         getDataByDataTypeNameAndRunId(topics.gpsLocation(), run.id)
       );
-      queryResponse.data.subscribe((points) => {
+      queryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((points) => {
         if (points) {
           setTimeout(() => {
             this.map.buildMap('map');
@@ -61,9 +66,11 @@ export default class MapComponent implements OnInit {
           }, 100);
         }
       });
-      queryResponse.isLoading.subscribe((isLoading) => (this.isLoading = isLoading));
-      queryResponse.isError.subscribe((isError) => (this.isError = isError));
-      queryResponse.error.subscribe((error) => {
+      queryResponse.isLoading
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((isLoading) => (this.isLoading = isLoading));
+      queryResponse.isError.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isError) => (this.isError = isError));
+      queryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
         if (error) {
           this.error = error;
         }

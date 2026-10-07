@@ -103,6 +103,7 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
         dataTypes: this.dataTypes()
       }
     });
+    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
     this.presetDialogRef.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
       if (matched) {
         this.applyMatched(matched);

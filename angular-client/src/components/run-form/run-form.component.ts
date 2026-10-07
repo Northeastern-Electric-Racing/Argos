@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
@@ -19,6 +20,7 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
   imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
 })
 export class RunFormComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
   private messageService = inject(MessageService);
   private ref = inject(DynamicDialogRef);
@@ -66,7 +68,7 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.subscribe((form: FormGroup) => {
+    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
       if (this.selectedRun === undefined) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
         return;
@@ -91,18 +93,18 @@ export class RunFormComponent implements OnInit {
     this.templateReady = false;
     const runsQueryResponse = this.apiService.query<Run[]>(() => getAllRuns());
 
-    runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
       this.templateReady = !isLoading;
     });
 
-    runsQueryResponse.error.subscribe((error) => {
+    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       if (error) {
         console.log('loading error: ', error);
       }
     });
 
-    runsQueryResponse.data.subscribe((data) => {
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) {
         this.allRuns = data;
         this.runsLoaded = true;
@@ -165,18 +167,18 @@ export class RunFormComponent implements OnInit {
     this.templateReady = false;
     const runQueryResponse = this.apiService.query<Run>(() => getRunById(runId));
 
-    runQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+    runQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
       this.templateReady = !isLoading;
     });
 
-    runQueryResponse.error.subscribe((error) => {
+    runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       if (error) {
         console.log('loading error: ', error);
       }
     });
 
-    runQueryResponse.data.subscribe((run) => {
+    runQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((run) => {
       if (run) {
         this.updateFormFields(run);
         this.selectedRun = run;

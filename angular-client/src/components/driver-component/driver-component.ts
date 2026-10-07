@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { getLatestRun } from 'src/api/run.api';
 import { topics } from 'src/utils/topic.utils';
 import APIService from 'src/services/api.service';
@@ -16,29 +17,33 @@ import VStackComponent from '../vstack/vstack.component';
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export class DriverComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   driver: string = 'No Driver';
   apiService = inject(APIService);
 
   ngOnInit() {
-    this.storage.get(topics.driver()).subscribe((value) => {
-      [this.driver] = value.values || ['No Driver'];
-    });
+    this.storage
+      .get(topics.driver())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        [this.driver] = value.values || ['No Driver'];
+      });
   }
 
   updateDriverName() {
     const latestRunQuery = this.apiService.query<Run>(() => getLatestRun());
-    latestRunQuery.isLoading.subscribe((loading: boolean) => {
+    latestRunQuery.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((loading: boolean) => {
       if (loading) {
         // TODO
       }
     });
-    latestRunQuery.error.subscribe((error) => {
+    latestRunQuery.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) {
         // TODO
       }
     });
-    latestRunQuery.data.subscribe((data) => {
+    latestRunQuery.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       const latestRun = data;
       this.driver = latestRun?.driverName === undefined || latestRun?.driverName === '' ? 'No Driver' : latestRun.driverName;
     });

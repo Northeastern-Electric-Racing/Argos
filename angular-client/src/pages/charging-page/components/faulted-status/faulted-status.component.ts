@@ -1,4 +1,5 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { topics } from 'src/utils/topic.utils';
@@ -14,6 +15,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class FaultedStatusComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   @Input() displayLight: boolean = true;
   private storage = inject(Storage);
   isFaulted: boolean = false;
@@ -22,26 +24,30 @@ export default class FaultedStatusComponent implements OnInit {
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.storage.getTimerData(topics.bmsMode()).subscribe((value) => {
-      const statusStateValue = value.last_value;
-      if (this.isFaulted) {
-        if (!(statusStateValue === 3)) {
-          this.isFaulted = false;
-          this.currentSeconds = 0;
+    this.storage
+      .getTimerData(topics.bmsMode())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const statusStateValue = value.last_value;
+        if (this.isFaulted) {
+          if (!(statusStateValue === 3)) {
+            this.isFaulted = false;
+            this.currentSeconds = 0;
+          }
+        } else if (statusStateValue === 3) {
+          this.isFaulted = true;
         }
-      } else if (statusStateValue === 3) {
-        this.isFaulted = true;
-      }
 
-      if (statusStateValue === 3) {
-        this.currentSeconds = (Date.now() - value.last_change) / 1000;
-      }
+        if (statusStateValue === 3) {
+          this.currentSeconds = (Date.now() - value.last_change) / 1000;
+        }
 
-      this.totalSeconds = Math.round(
-        value.total_time_per_value_map[3].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) / 1000 +
-          this.currentSeconds
-      );
-    });
+        this.totalSeconds = Math.round(
+          value.total_time_per_value_map[3].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) /
+            1000 +
+            this.currentSeconds
+        );
+      });
   }
 
   getStatusColor(isFaulted: boolean) {

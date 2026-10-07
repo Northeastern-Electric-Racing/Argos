@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -18,6 +19,7 @@ import { filter, take } from 'rxjs';
   styleUrls: ['./add-rule-dialog.component.css']
 })
 export class AddRuleDialogComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private ref = inject(DynamicDialogRef);
   private fb = inject(FormBuilder);
   private serverService = inject(APIService);
@@ -37,7 +39,8 @@ export class AddRuleDialogComponent implements OnInit {
     query.data
       .pipe(
         filter((d): d is DataType[] => d !== null && d !== undefined),
-        take(1)
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((dataTypes) => {
         this.allTopics = dataTypes.map((dt) => dt.name);

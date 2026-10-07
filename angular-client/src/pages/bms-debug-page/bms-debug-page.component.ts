@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { allSegments } from 'src/utils/bms.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from './components/bms-header/bms-header.component';
@@ -27,9 +27,9 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
     '(window:resize)': 'onResize()'
   }
 })
-export class BmsDebugPageComponent implements OnInit, OnDestroy {
+export class BmsDebugPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private heatMapService = inject(HeatMapService);
-  private subscription?: Subscription;
 
   time = new Date();
   newRunIsLoading = false;
@@ -73,16 +73,12 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
   constructor() {}
 
   ngOnInit(): void {
-    this.subscription = this.heatMapService.globalView$.subscribe((view) => {
+    this.heatMapService.globalView$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
       this.allSegSelectorConfig = {
         ...this.allSegSelectorConfig,
         defaultValue: formatAllSelectorName(view)
       };
     });
-  }
-
-  ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
   }
 
   onResize() {

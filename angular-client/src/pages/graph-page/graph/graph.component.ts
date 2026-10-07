@@ -1,4 +1,16 @@
-import { Component, effect, input, OnDestroy, OnInit, ChangeDetectionStrategy, untracked } from '@angular/core';
+import {
+  Component,
+  effect,
+  input,
+  OnDestroy,
+  OnInit,
+  ChangeDetectionStrategy,
+  untracked,
+  inject,
+  DestroyRef
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, takeUntil } from 'rxjs';
 import ApexCharts from 'apexcharts';
 import {
   ApexXAxis,
@@ -12,7 +24,6 @@ import {
   ApexYAxis,
   ApexAnnotations
 } from 'ng-apexcharts';
-import { Subscription } from 'rxjs';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 
@@ -40,6 +51,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class CustomGraphComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
+  /** Emits when the topics change, ending the subscriptions made for the previous ones. */
+  private valuesChange$ = new Subject<void>();
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<ObservableGraphInfo[]>();
   limitRange = input(true);
@@ -61,7 +75,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     timeRangeMs: number;
   }>();
   range = input<number | undefined>(undefined);
-  subscriptions: Subscription[] = [];
 
   constructor() {
     effect(() => {
@@ -122,16 +135,17 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
-      // Clean up existing subscriptions
-      this.subscriptions.forEach((sub) => sub.unsubscribe());
-      this.subscriptions = [];
+      // End the subscriptions made for the previous topics
+      this.valuesChange$.next();
 
       // Clean up existing timeouts
       this.timeOuts.forEach((timeout) => clearTimeout(timeout));
       this.timeOuts = [];
 
       this.valuesSubject().forEach(({ label, updates }) => {
-        this.subscriptions.push(updates.subscribe((data) => this.graphInfoCallback({ label, data })));
+        updates
+          .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
+          .subscribe((data) => this.graphInfoCallback({ label, data }));
       });
 
       this.updateChart();
@@ -139,10 +153,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up subscriptions
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
-    this.subscriptions = [];
-
     // Clean up timeouts
     this.timeOuts.forEach((timeout) => clearTimeout(timeout));
     this.timeOuts = [];

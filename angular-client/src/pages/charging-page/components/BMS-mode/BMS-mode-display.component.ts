@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -21,9 +21,9 @@ enum BMSMODE {
   standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
-export default class BMSModeDisplayComponent implements OnInit, OnDestroy {
+export default class BMSModeDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   bmsMode: BMSMODE = 1;
 
   private colorMap: { [key in BMSMODE]: string } = {
@@ -34,15 +34,12 @@ export default class BMSModeDisplayComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit() {
-    this.subscriptions.push(
-      this.storage.get(topics.bmsMode()).subscribe((value) => {
+    this.storage
+      .get(topics.bmsMode())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.bmsMode = floatPipe(value.values[0]) as BMSMODE;
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 
   getBMSModeString(): string {
