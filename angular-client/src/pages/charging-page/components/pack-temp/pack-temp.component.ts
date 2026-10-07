@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -15,12 +16,16 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   imports: [InfoBackgroundComponent, TypographyComponent, ThermometerComponent, HStackComponent]
 })
 export default class PackTempComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   packTemp: number = 0;
 
   ngOnInit() {
-    this.storage.get(topics.packTemp()).subscribe((value) => {
-      this.packTemp = floatPipe(value.values[0]);
-    });
+    this.storage
+      .get(topics.packTemp())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.packTemp = floatPipe(value.values[0]);
+      });
   }
 }

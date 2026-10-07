@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
@@ -48,6 +49,7 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
   ]
 })
 export default class LandingPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
@@ -59,10 +61,10 @@ export default class LandingPageComponent implements OnInit {
   ngOnInit() {
     this.onStartNewRun = () => {
       const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
-      runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+      runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
         this.newRunIsLoading = isLoading;
       });
-      runsQueryResponse.error.subscribe((error) => {
+      runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
         if (error) {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
         }

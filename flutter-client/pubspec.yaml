@@ -40,7 +40,7 @@ dependencies:
   flutter_riverpod: ^3.4.2
   riverpod_annotation: ^4.0.6
   mqtt5_client: ^5.0.0
-  protobuf: ^6.0.0
+  protobuf: ^6.1.0
   go_router: ^18.0.0
   syncfusion_flutter_charts: ^34.1.33 # 28.1.39 wont scale y axis
   intl: ^0.20.2
@@ -64,8 +64,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   riverpod_generator: ^4.0.8
-  build_runner: ^2.15.1
-  freezed: ^4.0.1
+  build_runner: ^2.16.1
+  freezed: ^4.0.2
   json_serializable: ^6.9.0
 
 # For information on the generic Dart part of this file, see the

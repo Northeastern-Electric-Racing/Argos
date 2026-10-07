@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -14,6 +15,7 @@ import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-
   imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent]
 })
 export default class RasberryPiComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   cpuUsage: number = 0;
   cpuTemp: number = 0;
@@ -25,21 +27,36 @@ export default class RasberryPiComponent implements OnInit {
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
-    this.storage.get(topics.cpuUsage()).subscribe((value) => {
-      this.cpuUsage = floatPipe(value.values[0]);
-    });
-    this.storage.get(topics.cpuTemp()).subscribe((value) => {
-      this.cpuTemp = floatPipe(value.values[0]);
-    });
-    this.storage.get(topics.ramUsage()).subscribe((value) => {
-      this.ramUsage = Math.round((1 - floatPipe(value.values[0]) / 8000) * 100);
-    });
-    this.storage.get(topics.wifiRSSI()).subscribe((value) => {
-      this.wifiRSSI = floatPipe(value.values[0]);
-    });
-    this.storage.get(topics.mcs()).subscribe((value) => {
-      this.mcs = floatPipe(value.values[0]);
-    });
+    this.storage
+      .get(topics.cpuUsage())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.cpuUsage = floatPipe(value.values[0]);
+      });
+    this.storage
+      .get(topics.cpuTemp())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.cpuTemp = floatPipe(value.values[0]);
+      });
+    this.storage
+      .get(topics.ramUsage())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.ramUsage = Math.round((1 - floatPipe(value.values[0]) / 8000) * 100);
+      });
+    this.storage
+      .get(topics.wifiRSSI())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.wifiRSSI = floatPipe(value.values[0]);
+      });
+    this.storage
+      .get(topics.mcs())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.mcs = floatPipe(value.values[0]);
+      });
   }
 
   @HostListener('window:resize')

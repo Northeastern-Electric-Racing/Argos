@@ -1,5 +1,6 @@
-import { Component, effect, inject, input, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, takeUntil } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Chip } from 'src/utils/bms.utils';
 import { topics } from 'src/utils/topic.utils';
@@ -16,7 +17,10 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
 })
-export class ChipDiagnosticsComponent implements OnInit, OnDestroy {
+export class ChipDiagnosticsComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  /** Emits when the inputs change, ending the subscriptions made for the previous ones. */
+  private dataChange$ = new Subject<void>();
   private storage = inject(Storage);
   chip = input.required<Chip>();
   segment = input.required<number>();
@@ -26,10 +30,9 @@ export class ChipDiagnosticsComponent implements OnInit, OnDestroy {
   vAnalog: number | undefined;
   vDigital: number | undefined;
   boardTemp: number | undefined;
-  valueSubscriptions: Subscription[] = [];
   constructor() {
     effect(() => {
-      this.valueSubscriptions.forEach((sub) => sub.unsubscribe());
+      this.dataChange$.next();
       this.resetValues();
       this.subscribeToData(this.segment());
     });
@@ -49,26 +52,35 @@ export class ChipDiagnosticsComponent implements OnInit, OnDestroy {
   }
 
   subscribeToData(segment: number) {
-    this.valueSubscriptions.push(
-      this.storage.get(topics.vref(segment, this.chip())).subscribe((data) => {
+    this.storage
+      .get(topics.vref(segment, this.chip()))
+      .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
         this.vRef = parseFloat(data.values[0]);
-      }),
-      this.storage.get(topics.vres(segment, this.chip())).subscribe((data) => {
+      });
+    this.storage
+      .get(topics.vres(segment, this.chip()))
+      .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
         this.vRes = parseFloat(data.values[0]);
-      }),
-      this.storage.get(topics.vAnalog(segment, this.chip())).subscribe((data) => {
+      });
+    this.storage
+      .get(topics.vAnalog(segment, this.chip()))
+      .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
         this.vAnalog = parseFloat(data.values[0]);
-      }),
-      this.storage.get(topics.vDigital(segment, this.chip())).subscribe((data) => {
+      });
+    this.storage
+      .get(topics.vDigital(segment, this.chip()))
+      .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
         this.vDigital = parseFloat(data.values[0]);
-      }),
-      this.storage.get(topics.boardTemp(segment, this.chip())).subscribe((data) => {
+      });
+    this.storage
+      .get(topics.boardTemp(segment, this.chip()))
+      .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
         this.boardTemp = parseFloat(data.values[0]);
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.valueSubscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 }

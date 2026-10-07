@@ -1,5 +1,5 @@
-import { Component, HostListener, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, HostListener, Input, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 
@@ -43,8 +43,8 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   ]
 })
 export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   private timeInterval!: NodeJS.Timeout;
   @Input() time = new Date();
   location: string = 'No Location Set';
@@ -56,15 +56,15 @@ export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
       this.time = new Date();
     }, 1000);
 
-    this.subscriptions.push(
-      this.storage.get(topics.location()).subscribe((value) => {
+    this.storage
+      .get(topics.location())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         [this.location] = value.values || ['No Location Set'];
-      })
-    );
+      });
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
     if (this.timeInterval) {
       clearInterval(this.timeInterval);
     }

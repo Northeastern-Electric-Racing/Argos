@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -18,9 +18,9 @@ enum FaultType {
   standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
-export default class FaultDisplayComponent implements OnInit, OnDestroy {
+export default class FaultDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   faults: { type: string; name: string; time: string }[] = [];
   faultsShifted: boolean = false;
   resetButton = {
@@ -143,13 +143,14 @@ export default class FaultDisplayComponent implements OnInit, OnDestroy {
    */
   private faultSubcribe(displayName: string, faultIdentifier: string, faultType: FaultType) {
     let lastFaultValue = 0;
-    this.subscriptions.push(
-      this.storage.get(faultIdentifier).subscribe((value) => {
+    this.storage
+      .get(faultIdentifier)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         const newValue = parseInt(value.values[0]);
         this.addFault(newValue, displayName, faultType, lastFaultValue);
         lastFaultValue = newValue;
-      })
-    );
+      });
   }
 
   /**
@@ -173,9 +174,5 @@ export default class FaultDisplayComponent implements OnInit, OnDestroy {
         time: new Date().toLocaleTimeString()
       });
     }
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 }

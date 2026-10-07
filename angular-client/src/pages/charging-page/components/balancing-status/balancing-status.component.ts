@@ -1,5 +1,5 @@
-import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, Input, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
 import { topics } from 'src/utils/topic.utils';
@@ -14,18 +14,20 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
-export default class BalancingStatusComponent implements OnInit, OnDestroy {
+export default class BalancingStatusComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   @Input() displayLight: boolean = true;
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   isBalancing: boolean = false;
   currentSeconds: number = 0;
   totalSeconds: number = Number(sessionStorage.getItem('balancing-total-seconds')) || 0;
   intervalId!: NodeJS.Timeout;
 
   ngOnInit() {
-    this.subscriptions.push(
-      this.storage.getTimerData(topics.statusBalancing()).subscribe((value) => {
+    this.storage
+      .getTimerData(topics.statusBalancing())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         const statusBalancingValue = value.last_value;
         if (this.isBalancing) {
           if (!(statusBalancingValue === 1)) {
@@ -44,12 +46,7 @@ export default class BalancingStatusComponent implements OnInit, OnDestroy {
             1000 +
             this.currentSeconds
         );
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 
   getBatteryStatus(connected: boolean) {

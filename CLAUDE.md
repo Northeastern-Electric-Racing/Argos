@@ -38,26 +38,16 @@ Save all Playwright screenshots under `pictures/<branch-name>/` at the repo root
 - Never delete files without explicit confirmation.
 - Explain reasoning before making architectural changes.
 
-## Code Conventions
-
-Frontend and backend conventions live alongside their code and auto-load when editing there:
-- Angular / TypeScript: see `angular-client/CLAUDE.md`.
-- Rust / Axum: see `scylla-server/CLAUDE.md`.
-
 ## Agent skills
 
 Agent skills live in the Delphi `argos-dev` workspace (`commit`, `open-pr`, `update-pr`, `run-local`, `address-pr-comments`, `verify-telemetry`, `verify-graph`, `journal`, `log-future-addition`). Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for title, label, and assignment conventions.
+Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for ticket types, labels, and conventions.
 
-When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as a needs-triage issue instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
+When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as an idea or spike instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
 
-### Triage labels
+### ADRs
 
-Five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), created via `gh label create` and applied by `/triage`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: one `CONTEXT.md` and one `docs/adr/` at the repo root. Component-scoped decisions live in the same root `docs/adr/`, distinguished by descriptive titles. See `docs/agents/domain.md`, and `docs/agents/glossary.md` for workflow terminology.
+Architecture decisions live in `docs/adr/`.

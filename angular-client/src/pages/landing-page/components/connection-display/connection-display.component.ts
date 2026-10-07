@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
@@ -13,13 +14,17 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent]
 })
 export default class ConnectionDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   connected: boolean = false;
 
   ngOnInit() {
-    this.storage.getCurrentRunId().subscribe((runId) => {
-      this.connected = runId !== undefined;
-    });
+    this.storage
+      .getCurrentRunId()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((runId) => {
+        this.connected = runId !== undefined;
+      });
   }
 
   getConnectedStatus = (): string => {
