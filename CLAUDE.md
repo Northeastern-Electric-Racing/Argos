@@ -8,8 +8,8 @@ Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). 
 - Pick the compose profile by what changed:
   - Frontend-only changes: `./argos.sh client-dev up` runs everything in Docker, including scylla-server.
   - Changes to `scylla-server/`: `./argos.sh scylla-dev up` (everything except scylla-server) plus `cd scylla-server && cargo run` in a separate terminal, so you are not testing a stale binary.
-- Frontend client: prefer the `run-local` skill (starts it on the next free port and checks the backend). Direct: `cd angular-client && npm run start` (default port 4200); first compile takes ~10-60s.
-- The shell workflow (`argos.sh`, the `run-local` skill, and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
+- Frontend client: `cd angular-client && npm run start` (default port 4200); first compile takes ~10-60s.
+- The shell workflow (`argos.sh` and helpers like `lsof`/`pkill`) assumes a Unix shell. On Windows, run everything from WSL or Git Bash, not `cmd`/PowerShell.
 
 ## Testing
 
@@ -21,11 +21,11 @@ Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). 
 ## Branch & Commit Conventions
 
 - Branch from `develop` (not `main`) unless told otherwise. Branch name format: `{issue-number}-{kebab-case-title}` (e.g. `533-csv-upload-download-rules`).
-- Commit message format: `#{ticket-number} - {concise description}` (e.g. `#533 - add CSV upload endpoint`). The `/commit` skill applies this.
+- Commit message format: `#{ticket-number} - {concise description}` (e.g. `#533 - add CSV upload endpoint`).
 
 ## PR Convention
 
-- Open PRs against `develop` as drafts. The `/open-pr` skill runs the pre-PR checks (lint, conflict check), pushes, and opens the draft; `/update-pr` refreshes the description.
+- Open PRs against `develop` as drafts.
 - Keep PR descriptions tight: at most three backtick usages in the body, and never commit screenshots (drag-drop them into the PR via the GitHub web UI).
 
 ## Screenshots
