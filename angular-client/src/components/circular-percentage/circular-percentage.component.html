@@ -4,16 +4,16 @@
     [style]="{
       background:
         'conic-gradient(from 180deg, ' +
-        ringColor +
+        ringColor() +
         ' ' +
-        getFilledAngle(percentage) +
+        getFilledAngle(percentage()) +
         'deg, black ' +
-        getFilledAngle(percentage) +
+        getFilledAngle(percentage()) +
         'deg ' +
         emptyAngle +
         'deg)',
-      height: dimension + 'px',
-      width: dimension + 'px'
+      height: dimension() + 'px',
+      width: dimension() + 'px'
     }"
   >
     <div
@@ -27,7 +27,7 @@
       <div class="content">
         <typography
           variant="header"
-          content="{{ percentage }}"
+          content="{{ percentage() }}"
           additionalStyles="fontSize: {{ percentageFontSize }}px; margin: 0;"
         />
         <typography

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit, input } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
@@ -32,9 +32,9 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
   standalone: true
 })
 export class BatteryPercentageComponent implements OnInit {
-  @Input() percentage!: number;
-  @Input() height!: number;
-  @Input() width!: number;
+  percentage = input.required<number>();
+  height = input.required<number>();
+  width = input.required<number>();
 
   // Background Styles
   heightpx!: string;
@@ -60,21 +60,21 @@ export class BatteryPercentageComponent implements OnInit {
 
   // fills battery bar based on current percentage
   renderBattery() {
-    const minDim = Math.min(this.width, this.height);
-    this.heightpx = this.height + 'px';
-    this.widthpx = this.width + 'px';
+    const minDim = Math.min(this.width(), this.height());
+    this.heightpx = this.height() + 'px';
+    this.widthpx = this.width() + 'px';
 
-    this.fillWidth = this.width * 0.9 + 'px';
-    this.fillMarginBottom = this.height * 0.05 + 'px';
+    this.fillWidth = this.width() * 0.9 + 'px';
+    this.fillMarginBottom = this.height() * 0.05 + 'px';
 
-    this.nubHeight = this.height / 10 + 'px';
-    this.nubWidth = this.width / 2 + 'px';
+    this.nubHeight = this.height() / 10 + 'px';
+    this.nubWidth = this.width() / 2 + 'px';
 
     this.roundCorner = minDim * 0.05 + 'px';
   }
 
   getFillHeight = (percentage: number) => {
-    return (percentage / 100) * (this.height * 0.9) + 'px';
+    return (percentage / 100) * (this.height() * 0.9) + 'px';
   };
 
   getFillColor = (percentage: number) => {

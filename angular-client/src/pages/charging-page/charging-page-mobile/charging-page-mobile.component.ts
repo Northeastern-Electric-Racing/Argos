@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -46,14 +46,14 @@ export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   private timeInterval!: NodeJS.Timeout;
-  @Input() time = new Date();
+  time = signal(new Date());
   location: string = 'No Location Set';
   mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
     this.timeInterval = setInterval(() => {
-      this.time = new Date();
+      this.time.set(new Date());
     }, 1000);
 
     this.storage

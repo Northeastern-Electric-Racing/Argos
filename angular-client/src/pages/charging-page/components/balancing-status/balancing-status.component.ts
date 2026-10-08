@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
@@ -16,7 +16,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 })
 export default class BalancingStatusComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  @Input() displayLight: boolean = true;
+  displayLight = input<boolean>(true);
   private storage = inject(Storage);
   isBalancing: boolean = false;
   currentSeconds: number = 0;

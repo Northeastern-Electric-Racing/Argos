@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../../../../../components/graph/graph.component';
@@ -12,5 +12,5 @@ import { GraphComponent } from '../../../../../components/graph/graph.component'
 })
 export default class PackVoltageGraphComponent {
   private storage = inject(Storage);
-  @Input() packVoltData: GraphData[] = [];
+  packVoltData = input<GraphData[]>([]);
 }

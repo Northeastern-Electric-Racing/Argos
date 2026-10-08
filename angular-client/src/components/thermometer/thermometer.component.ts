@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'thermometer',
@@ -7,9 +7,9 @@ import { Component, Input } from '@angular/core';
   standalone: true
 })
 export default class ThermometerComponent {
-  @Input() temperature: number = 0;
-  @Input() min: number = 0;
-  @Input() max: number = 100;
+  temperature = input<number>(0);
+  min = input<number>(0);
+  max = input<number>(100);
 
   mapColor = (value: number, min: number, max: number) => {
     const range = max - min;

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { NgStyle } from '@angular/common';
 
 type JusitfyContent = 'space-between' | 'space-around' | 'space-evenly' | 'center' | 'start' | 'end';
@@ -12,14 +12,8 @@ type AlignItems = 'center' | 'start' | 'end' | 'stretch';
   standalone: true,
   imports: [NgStyle]
 })
-export default class HStackComponent implements OnInit {
-  @Input() spacing: string = '20px';
-  @Input() justifyContent: JusitfyContent = 'center';
-  @Input() alignItems: AlignItems = 'center';
-
-  alignment!: string;
-
-  ngOnInit() {
-    this.alignment = `${this.justifyContent} ${this.alignItems}`;
-  }
+export default class HStackComponent {
+  spacing = input<string>('20px');
+  justifyContent = input<JusitfyContent>('center');
+  alignItems = input<AlignItems>('center');
 }

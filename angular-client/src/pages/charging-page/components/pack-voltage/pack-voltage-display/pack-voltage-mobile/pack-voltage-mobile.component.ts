@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoBackgroundComponent } from '../../../../../../components/info-background/info-background.component';
@@ -16,12 +16,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 })
 export default class PackVoltageMobileDisplayComponent {
   private storage = inject(Storage);
-  @Input() voltage: number = 0;
-  @Input() packVoltData: GraphData[] = [];
-  resetGraphButton = {
-    onClick: () => {
-      this.packVoltData = [];
-    },
-    icon: 'restart_alt'
-  };
+  voltage = input<number>(0);
+  packVoltData = input<GraphData[]>([]);
+  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
 }

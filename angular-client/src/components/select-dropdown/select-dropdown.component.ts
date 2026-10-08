@@ -1,4 +1,4 @@
-import { Component, effect, input, ViewChild } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -32,9 +32,6 @@ export class SelectDropdownComponent {
   defaultValue = input<string | undefined>(undefined);
 
   selectedOption: DropdownOption | undefined;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  @ViewChild('dropdownRef') dropdownRef: any;
 
   constructor() {
     // The dropdown's selected display tracks `defaultValue`:

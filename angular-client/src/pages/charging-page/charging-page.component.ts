@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -36,32 +36,20 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
     CombinedStatusDisplayComponent
   ]
 })
-export default class ChargingPageComponent implements OnInit, OnDestroy {
+export default class ChargingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private timeInterval!: NodeJS.Timeout;
-  time = new Date();
   location: string = 'No Location Set';
   mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
-    this.timeInterval = setInterval(() => {
-      this.time = new Date();
-    }, 1000);
-
     this.storage
       .get(topics.location())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
         [this.location] = value.values || ['No Location Set'];
       });
-  }
-
-  ngOnDestroy(): void {
-    if (this.timeInterval) {
-      clearInterval(this.timeInterval);
-    }
   }
 
   @HostListener('window:resize')

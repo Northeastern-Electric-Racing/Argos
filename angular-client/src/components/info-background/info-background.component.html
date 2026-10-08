@@ -18,16 +18,14 @@
         }
         <typography variant="info-title" content="{{ title }}" />
       </div>
-      @if (button) {
+      @if (button(); as btn) {
         <div>
-          @if (button) {
-            <mat-icon
-              aria-hidden="false"
-              (click)="button.onClick()"
-              [fontIcon]="button.icon"
-              style="position: relative; z-index: 10"
-            />
-          }
+          <mat-icon
+            aria-hidden="false"
+            (click)="btn.onClick()"
+            [fontIcon]="btn.icon"
+            style="position: relative; z-index: 10"
+          />
         </div>
       }
       @if (this.selectorConfigs().length !== 0) {

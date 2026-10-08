@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CircularPercentageComponent } from '../../circular-percentage/circular-percentage.component';
 import { DividerComponent } from '../../divider/divider';
 import { MatIcon } from '@angular/material/icon';
@@ -23,11 +23,11 @@ import ThermometerComponent from 'src/components/thermometer/thermometer.compone
   ]
 })
 export default class RaspberryPiMobileComponent {
-  @Input() cpuUsage: number = 0;
-  @Input() cpuTemp: number = 0;
-  @Input() ramUsage: number = 0;
-  @Input() wifiRSSI: number = 0;
-  @Input() mcs: number = 0;
+  cpuUsage = input<number>(0);
+  cpuTemp = input<number>(0);
+  ramUsage = input<number>(0);
+  wifiRSSI = input<number>(0);
+  mcs = input<number>(0);
 
   colorRed = '#FF0000';
   colorPurple = '#800080';

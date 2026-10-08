@@ -1,4 +1,4 @@
-import { Component, ContentChild, input, OnInit, TemplateRef, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, TemplateRef, contentChild, input, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
@@ -18,8 +18,8 @@ export default class GraphInfoComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   dataType = input.required<Subject<DataType[] | undefined>>();
   currentValue = input<DataValue[]>();
-  @ContentChild('rightInfo', { static: true }) rightInfo!: TemplateRef<void>;
-  @ContentChild('buttons', { static: true }) buttons!: TemplateRef<void>;
+  rightInfo = contentChild<TemplateRef<void>>('rightInfo');
+  buttons = contentChild<TemplateRef<void>>('buttons');
 
   dataTypeName?: string;
   dataTypeUnit?: string;

@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import Storage from 'src/services/storage.service';
 
 import { GraphData } from 'src/utils/types.utils';
@@ -26,13 +26,8 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 })
 export default class CellTempMobileComponent {
   private storage = inject(Storage);
-  @Input() avgTemp: number = 0;
-  @Input() maxTemp: number = 0;
-  @Input() resetGraphButton = {
-    onClick: () => {
-      this.cellTempData = [];
-    },
-    icon: 'restart_alt'
-  };
-  @Input() cellTempData: GraphData[] = [];
+  avgTemp = input<number>(0);
+  maxTemp = input<number>(0);
+  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
+  cellTempData = input<GraphData[]>([]);
 }

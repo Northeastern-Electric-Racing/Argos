@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
@@ -15,21 +15,21 @@ import { GraphComponent } from '../graph/graph.component';
 })
 export class InfoGraphComponent {
   public dialogService = inject(DialogService);
-  @Input() data!: GraphData[];
-  @Input() icon!: string;
-  @Input() title!: string;
-  @Input() color!: string;
-  @Input() subTitle?: string;
-  @Input() graphContainerId!: string;
+  data = input.required<GraphData[]>();
+  icon = input.required<string>();
+  title = input.required<string>();
+  color = input.required<string>();
+  subTitle = input<string | undefined>(undefined);
+  graphContainerId = input.required<string>();
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
-      header: this.title,
+      header: this.title(),
       data: {
-        data: this.data,
-        color: this.color,
-        title: this.title,
-        subTitle: this.subTitle,
-        graphContainerId: this.graphContainerId + 'big'
+        data: this.data(),
+        color: this.color(),
+        title: this.title(),
+        subTitle: this.subTitle(),
+        graphContainerId: this.graphContainerId() + 'big'
       },
       modal: true, // makes the dialog modal
       dismissableMask: true, // enables auto-close on outside click

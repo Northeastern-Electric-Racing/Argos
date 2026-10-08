@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -19,9 +19,9 @@ import HStackComponent from '../hstack/hstack.component';
 export default class LatencyDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  @Input() lowVal: number = 0;
-  @Input() medVal: number = 50;
-  @Input() highVal: number = 100;
+  lowVal = input<number>(0);
+  medVal = input<number>(50);
+  highVal = input<number>(100);
   latency: number = 0;
   newLatency: number = 0;
 

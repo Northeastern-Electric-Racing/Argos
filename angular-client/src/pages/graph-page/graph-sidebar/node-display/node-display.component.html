@@ -1,24 +1,24 @@
-<div [class]="isDesktop ? '' : 'mobile-subcontainer'">
+<div [class]="isDesktop() ? '' : 'mobile-subcontainer'">
   <sidebar-card
-    [title]="node.name"
-    (click)="onSelect(node)"
-    [dropDown]="node.nodes.value.length > 0"
-    [open]="node.subnodesVisible"
-    [topicName]="node.topicName"
-    [isDesktop]="isDesktop"
+    [title]="node().name"
+    (click)="onSelect(node())"
+    [dropDown]="node().nodes.value.length > 0"
+    [open]="node().subnodesVisible"
+    [topicName]="node().topicName"
+    [isDesktop]="isDesktop()"
   />
-  @if (node.subnodesVisible) {
+  @if (node().subnodesVisible) {
     <div
-      [class]="isDesktop ? '' : 'mobile-subcontainer'"
-      [@toggleExpand]="{ value: (isDesktop ? 'desktop' : 'mobile') + '-' + node.subnodesVisible }"
+      [class]="isDesktop() ? '' : 'mobile-subcontainer'"
+      [@toggleExpand]="{ value: (isDesktop() ? 'desktop' : 'mobile') + '-' + node().subnodesVisible }"
     >
-      @for (node of node.nodes | async | nodeFilter: 'name' : searchFilter; track node) {
-        <div [class]="isDesktop ? 'desktop-subcontainer' : 'mobile-subcontainer'">
+      @for (subNode of node().nodes | async | nodeFilter: 'name' : searchFilter(); track subNode) {
+        <div [class]="isDesktop() ? 'desktop-subcontainer' : 'mobile-subcontainer'">
           <node-display
-            [style]="isDesktop ? 'width: 95%; margin-left: 30px' : ''"
-            [node]="node"
-            [searchFilter]="searchFilter"
-            [isDesktop]="isDesktop"
+            [style]="isDesktop() ? 'width: 95%; margin-left: 30px' : ''"
+            [node]="subNode"
+            [searchFilter]="searchFilter()"
+            [isDesktop]="isDesktop()"
           />
         </div>
       }

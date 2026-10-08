@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Run } from 'src/utils/types.utils';
 import { CarouselComponent } from '../../../../components/carousel/carousel.component';
@@ -24,7 +24,7 @@ export class RunSelectorComponent implements OnInit {
   runs!: Run[];
   runsIsLoading = true;
   ref?: DynamicDialogRef;
-  @Input() selectRun: (run: Run) => void = () => {};
+  selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
@@ -44,7 +44,7 @@ export class RunSelectorComponent implements OnInit {
   openDialog = () => {
     this.ref = this.dialogService.open(CarouselComponent, {
       width: '550px',
-      data: { runs: this.runs, selectRun: this.selectRun },
+      data: { runs: this.runs, selectRun: this.selectRun() },
       header: 'Select a run to view',
       modal: true, // makes the dialog modal
       dismissableMask: true, // enables auto-close on outside click

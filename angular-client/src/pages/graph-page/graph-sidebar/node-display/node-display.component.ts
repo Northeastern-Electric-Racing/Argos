@@ -1,5 +1,5 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
 import { AsyncPipe } from '@angular/common';
@@ -64,9 +64,9 @@ import { TopicSelectionService } from 'src/services/topic-selection.service';
   imports: [AsyncPipe, NodeFilterPipe, SidebarCardComponent]
 })
 export default class NodeDisplayComponent {
-  @Input() node!: NodeWithVisibilityToggle;
-  @Input() isDesktop: boolean = true;
-  @Input() searchFilter: string = '';
+  node = input.required<NodeWithVisibilityToggle>();
+  isDesktop = input<boolean>(true);
+  searchFilter = input<string>('');
 
   private topicSelection = inject(TopicSelectionService);
 

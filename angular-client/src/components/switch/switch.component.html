@@ -1,5 +1,5 @@
-<div class="switch" [class.on]="isOn" (click)="onToggle()">
-  <div class="switch-inner" [class.on]="isOn"></div>
+<div class="switch" [class.on]="currentState()" (click)="onToggle()">
+  <div class="switch-inner" [class.on]="currentState()"></div>
 </div>
 <div style="height: 10%"></div>
-<typography variant="info-subtitle" [content]="chargingString" />
+<typography variant="info-subtitle" [content]="chargingString()" />
