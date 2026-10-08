@@ -9,11 +9,13 @@ import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-
 
 @Component({
   selector: 'raspberry-pi',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './raspberry-pi.component.html',
   styleUrls: ['./raspberry-pi.component.css'],
   standalone: true,
-  imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent]
+  imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class RasberryPiComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

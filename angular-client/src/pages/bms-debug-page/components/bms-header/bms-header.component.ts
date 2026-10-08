@@ -8,11 +8,13 @@ import TypographyComponent from 'src/components/typography/typography.component'
 
 @Component({
   selector: 'bms-header',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './bms-header.component.html',
   styleUrl: './bms-header.component.css',
   standalone: true,
-  imports: [MatGridList, MatGridTile, SegmentSelectorComponent, CRCComponent, BmsOverflowComponent, TypographyComponent]
+  imports: [MatGridList, MatGridTile, SegmentSelectorComponent, CRCComponent, BmsOverflowComponent, TypographyComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class BmsHeaderComponent {
   pageTitle = input.required<string>();

@@ -19,7 +19,6 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
  */
 @Component({
   selector: 'charging-page',
-  host: { '(window:resize)': 'onResize()' },
   styleUrls: ['./charging-page.component.css'],
   templateUrl: './charging-page.component.html',
   standalone: true,
@@ -35,7 +34,10 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
     StateOfChargeDisplayComponent,
     PackTempComponent,
     CombinedStatusDisplayComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class ChargingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

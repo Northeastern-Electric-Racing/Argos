@@ -10,7 +10,6 @@ import ActiveStatusComponent from '../active-status/active-status.component';
 
 @Component({
   selector: 'combined-status-display',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './combined-status-display.component.html',
   styleUrls: ['./combined-status-display.component.css'],
   standalone: true,
@@ -22,7 +21,10 @@ import ActiveStatusComponent from '../active-status/active-status.component';
     VStackComponent,
     FaultedStatusComponent,
     ActiveStatusComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class CombinedStatusDisplayComponent {
   mobileThreshold = 1070;

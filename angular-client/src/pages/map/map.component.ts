@@ -15,11 +15,13 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 
 @Component({
   selector: 'map',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css'],
   standalone: true,
-  imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent]
+  imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class MapComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

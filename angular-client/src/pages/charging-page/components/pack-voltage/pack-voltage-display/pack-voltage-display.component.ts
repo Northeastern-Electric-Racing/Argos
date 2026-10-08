@@ -11,7 +11,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'pack-voltage-display',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './pack-voltage-display.component.html',
   styleUrls: ['./pack-voltage-display.component.css'],
   standalone: true,
@@ -21,7 +20,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     PackVoltageGraphComponent,
     TypographyComponent,
     HStackComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class PackVoltageDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

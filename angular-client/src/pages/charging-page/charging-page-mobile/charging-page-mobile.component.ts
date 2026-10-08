@@ -21,7 +21,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 
 @Component({
   selector: 'charging-page-mobile',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './charging-page-mobile.component.html',
   styleUrls: ['./charging-page-mobile.component.css'],
   standalone: true,
@@ -41,7 +40,10 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
     TypographyComponent,
     HStackComponent,
     SidebarToggleComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);

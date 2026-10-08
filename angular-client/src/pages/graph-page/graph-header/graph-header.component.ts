@@ -8,11 +8,13 @@ import TypographyComponent from 'src/components/typography/typography.component'
  */
 @Component({
   selector: 'graph-header',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './graph-header.component.html',
   styleUrls: ['./graph-header.component.css'],
   standalone: true,
-  imports: [TypographyComponent, SidebarToggleComponent]
+  imports: [TypographyComponent, SidebarToggleComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class GraphHeaderComponent implements OnInit {
   rightHeader = input.required<string>();

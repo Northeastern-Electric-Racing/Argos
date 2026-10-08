@@ -26,7 +26,6 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
  */
 @Component({
   selector: 'landing-page',
-  host: { '(window:resize)': 'onResize()' },
   styleUrls: ['./landing-page.component.css'],
   templateUrl: './landing-page.component.html',
   standalone: true,
@@ -47,7 +46,10 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
     TorqueDisplayComponent,
     LatencyDisplayComponent,
     ConnectionDisplayComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class LandingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

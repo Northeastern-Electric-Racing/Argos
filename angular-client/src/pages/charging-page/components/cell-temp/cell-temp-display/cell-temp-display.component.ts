@@ -15,7 +15,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'cell-temp-display',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './cell-temp-display.component.html',
   styleUrls: ['./cell-temp-display.component.css'],
   standalone: true,
@@ -27,7 +26,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     TypographyComponent,
     VStackComponent,
     HStackComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class CellTempDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

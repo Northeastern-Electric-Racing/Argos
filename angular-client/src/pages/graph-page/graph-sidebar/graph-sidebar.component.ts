@@ -10,11 +10,13 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
  */
 @Component({
   selector: 'graph-sidebar',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './graph-sidebar.component.html',
   styleUrls: ['./graph-sidebar.component.css'],
   standalone: true,
-  imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent]
+  imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class GraphSidebarComponent implements OnInit {
   dataTypes = input.required<DataType[]>();

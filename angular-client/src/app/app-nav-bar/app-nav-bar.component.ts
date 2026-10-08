@@ -34,7 +34,6 @@ export interface NavItem {
 
 @Component({
   selector: 'app-nav-bar',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   standalone: true,
@@ -53,7 +52,10 @@ export interface NavItem {
     NotificationListComponent,
     Popover,
     Badge
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);

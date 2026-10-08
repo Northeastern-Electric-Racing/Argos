@@ -9,11 +9,13 @@ import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobil
 
 @Component({
   selector: 'battery-info-display',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './battery-info-display.html',
   styleUrls: ['./battery-info-display.css'],
   standalone: true,
-  imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent]
+  imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class BatteryInfoDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

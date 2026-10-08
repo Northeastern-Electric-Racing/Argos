@@ -15,7 +15,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'segment-at-a-glance',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './segment-at-a-glance.component.html',
   styleUrl: './segment-at-a-glance.component.css',
   imports: [
@@ -25,7 +24,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     TypographyComponent,
     VStackComponent,
     HStackComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class SegmentAtAGlanceComponent {
   private destroyRef = inject(DestroyRef);

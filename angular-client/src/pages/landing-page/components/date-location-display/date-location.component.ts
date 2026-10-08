@@ -14,11 +14,13 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
   selector: 'date-location',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './date-location.component.html',
   styleUrl: './date-location.component.css',
   standalone: true,
-  imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent]
+  imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class DateLocationComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

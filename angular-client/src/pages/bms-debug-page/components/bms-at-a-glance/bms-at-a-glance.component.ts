@@ -18,7 +18,6 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
 
 @Component({
   selector: 'bms-at-a-glance',
-  host: { '(window:resize)': 'onResize()' },
   templateUrl: './bms-at-a-glance.component.html',
   styleUrl: './bms-at-a-glance.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,7 +27,10 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
     StatDisplayComponent,
     GlanceThermometerComponent,
     BatteryLevelIndicatorComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class BmsAtAGlanceComponent {
   private storage = inject(Storage);
