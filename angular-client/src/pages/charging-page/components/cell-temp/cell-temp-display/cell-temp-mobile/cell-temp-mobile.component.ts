@@ -28,9 +28,6 @@ export default class CellTempMobileComponent {
   private storage = inject(Storage);
   avgTemp = input<number>(0);
   maxTemp = input<number>(0);
-  resetGraphButton = input<{ onClick: () => void; icon: string }>({
-    onClick: () => {},
-    icon: 'restart_alt'
-  });
+  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
   cellTempData = input<GraphData[]>([]);
 }

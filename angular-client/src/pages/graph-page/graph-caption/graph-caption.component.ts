@@ -18,8 +18,8 @@ export default class GraphInfoComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   dataType = input.required<Subject<DataType[] | undefined>>();
   currentValue = input<DataValue[]>();
-  rightInfo = contentChild.required<TemplateRef<void>>('rightInfo');
-  buttons = contentChild.required<TemplateRef<void>>('buttons');
+  rightInfo = contentChild<TemplateRef<void>>('rightInfo');
+  buttons = contentChild<TemplateRef<void>>('buttons');
 
   dataTypeName?: string;
   dataTypeUnit?: string;

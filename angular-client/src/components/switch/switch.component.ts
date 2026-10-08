@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import TypographyComponent from '../typography/typography.component';
 
 @Component({
@@ -8,17 +8,14 @@ import TypographyComponent from '../typography/typography.component';
   standalone: true,
   imports: [TypographyComponent]
 })
-export class SwitchComponent implements OnInit {
+export class SwitchComponent {
   isOn = input<boolean>(false);
   offString = input<string>('PAUSED');
   onString = input<string>('ALLOWED');
-  currentState = signal(false);
+  // Follows the isOn input but can be toggled locally.
+  currentState = linkedSignal(() => this.isOn());
   chargingString = computed(() => (this.currentState() ? this.onString() : this.offString()));
   toggleEmitter = output<boolean>();
-
-  ngOnInit(): void {
-    this.currentState.set(this.isOn());
-  }
 
   onToggle() {
     this.currentState.update((v) => !v);

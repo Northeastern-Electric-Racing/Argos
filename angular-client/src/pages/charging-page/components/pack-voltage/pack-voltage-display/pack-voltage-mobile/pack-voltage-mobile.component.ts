@@ -18,8 +18,5 @@ export default class PackVoltageMobileDisplayComponent {
   private storage = inject(Storage);
   voltage = input<number>(0);
   packVoltData = input<GraphData[]>([]);
-  resetGraphButton = input<{ onClick: () => void; icon: string }>({
-    onClick: () => {},
-    icon: 'restart_alt'
-  });
+  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { DatePicker } from 'primeng/datepicker';
@@ -66,7 +66,7 @@ export class GeneralButtonsComponent {
   onApplyCustomLastX = input.required<(totalMinutes: number) => void>();
   onApplyCustomDateRange = input.required<(startMs: number, endMs: number) => void>();
 
-  @ViewChild('customPopover') customPopover?: Popover;
+  customPopover = viewChild.required<Popover>('customPopover');
 
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);
@@ -94,7 +94,7 @@ export class GeneralButtonsComponent {
   });
 
   toggleCustomPopover = (event?: Event) => {
-    if (event) this.customPopover?.toggle(event);
+    if (event) this.customPopover().toggle(event);
   };
 
   // Refresh the popover contents every time it opens. Without this, the From/To pickers

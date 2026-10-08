@@ -32,8 +32,5 @@ export default class HighLowCellMobileComponent {
   isDesktop = window.innerWidth > this.mobileThreshold;
   highVoltsData = input<GraphData[]>([]);
   lowVoltsData = input<GraphData[]>([]);
-  resetGraphButton = input<{ onClick: () => void; icon: string }>({
-    onClick: () => {},
-    icon: 'restart_alt'
-  });
+  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
 }

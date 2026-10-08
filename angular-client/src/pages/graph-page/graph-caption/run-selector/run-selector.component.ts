@@ -24,7 +24,7 @@ export class RunSelectorComponent implements OnInit {
   runs!: Run[];
   runsIsLoading = true;
   ref?: DynamicDialogRef;
-  selectRun = input<(run: Run) => void>(() => {});
+  selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });

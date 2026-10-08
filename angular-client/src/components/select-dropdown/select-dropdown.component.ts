@@ -33,8 +33,7 @@ export class SelectDropdownComponent {
 
   selectedOption: DropdownOption | undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dropdownRef = viewChild<any>('dropdownRef');
+  dropdownRef = viewChild<Select>('dropdownRef');
 
   constructor() {
     // The dropdown's selected display tracks `defaultValue`:
