@@ -9,7 +9,8 @@ describe('NotificationRulesPageComponent', () => {
   let messageService: MessageService;
 
   beforeEach(async () => {
-    // The real app eagerly creates the client ID in AppContextComponent; the page only reads it.
+    // The real app eagerly creates the client ID in SocketService, which AppContextComponent injects at bootstrap;
+    // the page only reads it.
     localStorage.setItem('notification_rules_client_id', 'test-client-id');
 
     await TestBed.configureTestingModule({

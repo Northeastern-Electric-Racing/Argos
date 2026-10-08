@@ -29,6 +29,7 @@ function getOrCreateClientId(): string {
 })
 export default class SocketService {
   private envService = inject(EnvService);
+  // Opens the connection on construction; specs that inject SocketService (or render AppContext) should provide a mock.
   private socket = io(this.envService.backendUrl, {
     query: {
       clientId: getOrCreateClientId()
