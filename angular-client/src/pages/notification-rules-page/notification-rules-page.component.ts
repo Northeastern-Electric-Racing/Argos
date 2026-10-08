@@ -58,7 +58,7 @@ export default class NotificationRulesPageComponent implements OnInit {
   private addRuleRef: DynamicDialogRef | undefined;
 
   ngOnInit(): void {
-    // clientId is guaranteed to exist — eagerly created in AppContextComponent
+    // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
     this.clientId = localStorage.getItem(CLIENT_ID_KEY)!;
   }
 
