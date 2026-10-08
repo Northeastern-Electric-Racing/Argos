@@ -1,25 +1,40 @@
-import { Socket } from 'socket.io-client';
+import { Injectable, inject } from '@angular/core';
+import { io } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { FaultData, RuleNotification } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
 import { NotificationLogService } from './notification-log.service';
+import { EnvService } from './env.service';
+import { v4 as uuidv4 } from 'uuid';
+
+// crypto.randomUUID is only defined in secure contexts (https or loopback);
+// uuidv4 falls back to crypto.getRandomValues so it works on insecure origins.
+function getOrCreateClientId(): string {
+  const key = 'notification_rules_client_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = uuidv4();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
 
 /**
  * Service for interacting with the socket
  */
+@Injectable({
+  providedIn: 'root'
+})
 export default class SocketService {
-  private socket: Socket;
+  private envService = inject(EnvService);
+  private socket = io(this.envService.backendUrl, {
+    query: {
+      clientId: getOrCreateClientId()
+    }
+  });
   private lastLatencyTimestamp: number = 0;
-
-  /**
-   * Constructor
-   * @param socket The socket to communicate with the server
-   */
-  constructor(socket: Socket) {
-    this.socket = socket;
-  }
 
   /**
    * Subscribe to the 'message' event from the server

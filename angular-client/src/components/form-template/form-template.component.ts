@@ -32,6 +32,7 @@ export interface DynamicFormField {
   imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
 })
 export class FormTemplateComponent {
+  private fb = inject(FormBuilder);
   public config = inject(DynamicDialogConfig);
 
   fields = input.required<DynamicFormField[]>();
@@ -43,7 +44,7 @@ export class FormTemplateComponent {
 
   form: FormGroup = this.fb.group({});
 
-  constructor(private fb: FormBuilder) {
+  constructor() {
     effect(() => {
       const fields = this.fields();
       const formData = this.formData();
