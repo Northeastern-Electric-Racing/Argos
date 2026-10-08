@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, input } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, input } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import {
   ApexAxisChartSeries,
@@ -50,12 +50,103 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   header = input<string | undefined>(undefined);
   graphContainerId = input.required<string>();
   timeRangeSec = input<number | undefined>(undefined);
-  options!: ChartOptions;
+  options = computed<ChartOptions>(() => ({
+    series: [
+      {
+        name: this.title1(),
+        data: this.data1()
+      },
+      {
+        name: this.title2(),
+        data: this.data2()
+      }
+    ],
+    chart: {
+      id: 'graph',
+      type: 'line',
+      height: '100%',
+      zoom: {
+        autoScaleYaxis: true
+      },
+      animations: {
+        enabled: true,
+        dynamicAnimation: {
+          speed: 1000
+        }
+      },
+      toolbar: {
+        show: false
+      }
+      // background: '#5A5A5A'
+    },
+    colors: [this.color1(), this.color2()], // Set series colors here
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'straight',
+      width: 2
+    },
+    markers: {
+      size: 0
+    },
+    xaxis: {
+      type: 'category',
+      tickAmount: 2,
+      labels: {
+        show: true,
+        style: {
+          colors: '#FFFFFF'
+        },
+        formatter: (value) => {
+          return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
+        }
+      },
+      axisBorder: {
+        show: false
+      },
+      axisTicks: {
+        show: false
+      }
+    },
+    yaxis: {
+      tickAmount: 2,
+      labels: {
+        style: {
+          colors: '#FFFFFF'
+        }
+      }
+    },
+    tooltip: {
+      theme: 'dark',
+      x: {
+        // format by hours and minutes and seconds
+        format: 'M/d/yy, h:mm:ss'
+      }
+    },
+    fill: {
+      type: 'linear',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 1,
+        opacityTo: 1,
+        stops: [0, 100, 0, 100]
+      }
+    },
+    grid: {
+      show: false
+    },
+    legend: {
+      labels: {
+        colors: '#fffff4' // Set legend label color to black
+      }
+    }
+  }));
   chart!: ApexCharts;
   series: ApexAxisChartSeries = [];
   timeDiffMs: number = 0;
   isSliding: boolean = false;
-  timeRangeMs: number = 120000; // 2 minutes in ms
+  timeRangeMs = computed(() => (this.timeRangeSec() ?? 120) * 1000); // defaults to 2 minutes
   timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
@@ -90,13 +181,13 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
       this.timeDiffMs = this.data1()[this.data1().length - 1].x - this.data1()[0].x;
     }
 
-    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
+    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs()) {
       this.isSliding = true;
       this.chart.updateOptions({
-        ...this.options,
+        ...this.options(),
         xaxis: {
-          ...this.options.xaxis,
-          range: this.timeRangeMs
+          ...this.options().xaxis,
+          range: this.timeRangeMs()
         }
       });
     }
@@ -110,103 +201,6 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    this.timeRangeMs = (this.timeRangeSec() ?? 120) * 1000;
-
-    this.series = [
-      {
-        name: this.title1(),
-        data: this.data1()
-      },
-      {
-        name: this.title2(),
-        data: this.data2()
-      }
-    ];
-
-    this.options = {
-      series: this.series,
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: true,
-          dynamicAnimation: {
-            speed: 1000
-          }
-        },
-        toolbar: {
-          show: false
-        }
-        // background: '#5A5A5A'
-      },
-      colors: [this.color1(), this.color2()], // Set series colors here
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        width: 2
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 2,
-        labels: {
-          show: true,
-          style: {
-            colors: '#FFFFFF'
-          },
-          formatter: (value) => {
-            return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
-          }
-        },
-        axisBorder: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        }
-      },
-      yaxis: {
-        tickAmount: 2,
-        labels: {
-          style: {
-            colors: '#FFFFFF'
-          }
-        }
-      },
-      tooltip: {
-        theme: 'dark',
-        x: {
-          // format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        }
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 1,
-          opacityTo: 1,
-          stops: [0, 100, 0, 100]
-        }
-      },
-      grid: {
-        show: false
-      },
-      legend: {
-        labels: {
-          colors: '#fffff4' // Set legend label color to black
-        }
-      }
-    };
-
     // Delay rendering to ensure the container is available
     setTimeout(() => {
       const chartContainer = document.getElementById(this.graphContainerId());
@@ -214,7 +208,7 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.chart = new ApexCharts(chartContainer, this.options);
+      this.chart = new ApexCharts(chartContainer, this.options());
       this.chart.render();
       this.updateChart();
     }, 100);
