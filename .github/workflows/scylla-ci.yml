@@ -56,11 +56,19 @@ jobs:
         run: docker compose up -d odyssey-db
       - name: Build
         run: cargo build --verbose --locked
-      - name: Run # so we can migrate the database, run for a little than bail
+      - name: Migrate DB # run the server until it reports the migration, then stop it
         env:
           DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
         run: |
-          cargo run --locked & ID=$!; sleep 10s; kill $ID
+          cargo run --locked > scylla.log 2>&1 & ID=$!
+          for _ in $(seq 300); do
+            if grep -q "Successfully migrated DB!" scylla.log; then kill $ID; exit 0; fi
+            if grep -q "Encountered Error" scylla.log || ! kill -0 $ID 2>/dev/null; then
+              cat scylla.log; echo "::error::Scylla exited or failed before migrating the DB"; kill $ID 2>/dev/null; exit 1
+            fi
+            sleep 1
+          done
+          cat scylla.log; echo "::error::Timed out after 5 minutes waiting for the DB migration"; kill $ID; exit 1
       - name: Test
         env:
           DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
