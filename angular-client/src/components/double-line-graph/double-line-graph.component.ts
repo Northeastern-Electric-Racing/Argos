@@ -18,7 +18,6 @@ import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
 type ChartOptions = {
-  series: ApexAxisChartSeries;
   chart: ApexChart;
   xaxis: ApexXAxis;
   yaxis: ApexYAxis;
@@ -50,17 +49,8 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   header = input<string | undefined>(undefined);
   graphContainerId = input.required<string>();
   timeRangeSec = input<number | undefined>(undefined);
+  // Applied only at chart creation; a later color/title change isn't pushed to the live chart.
   options = computed<ChartOptions>(() => ({
-    series: [
-      {
-        name: this.title1(),
-        data: this.data1()
-      },
-      {
-        name: this.title2(),
-        data: this.data2()
-      }
-    ],
     chart: {
       id: 'graph',
       type: 'line',
@@ -208,7 +198,13 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.chart = new ApexCharts(chartContainer, this.options());
+      this.chart = new ApexCharts(chartContainer, {
+        series: [
+          { name: this.title1(), data: this.data1() },
+          { name: this.title2(), data: this.data2() }
+        ],
+        ...this.options()
+      });
       this.chart.render();
       this.updateChart();
     }, 100);

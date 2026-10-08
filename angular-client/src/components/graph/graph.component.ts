@@ -31,6 +31,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   title = input<string | undefined>(undefined);
   graphContainerId = input.required<string>();
   timeRangeSec = input<number | undefined>(undefined);
+  // Applied only at chart creation; a later color change isn't pushed to the live chart.
   options = computed<ChartOptions>(() => ({
     chart: {
       id: 'graph',

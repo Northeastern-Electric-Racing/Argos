@@ -26,15 +26,11 @@ describe('DoubleLineGraphComponent', () => {
     expect(component.timeRangeMs()).toBe(120000);
   });
 
-  it('derives the time range, colors and series from inputs', () => {
-    const data = [{ x: 1, y: 2 }];
+  it('derives the time range and colors from inputs', () => {
     fixture.componentRef.setInput('timeRangeSec', 60);
     fixture.componentRef.setInput('color2', '#00ff00');
-    fixture.componentRef.setInput('title1', 'High');
-    fixture.componentRef.setInput('data1', data);
 
     expect(component.timeRangeMs()).toBe(60000);
     expect(component.options().colors).toEqual(['#ff0000', '#00ff00']);
-    expect(component.options().series[0]).toEqual({ name: 'High', data });
   });
 });
