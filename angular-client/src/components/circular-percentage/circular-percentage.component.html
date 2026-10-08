@@ -20,20 +20,20 @@
       class="inner"
       [style]="{
         'background-color': backgroundColor,
-        height: innerCircleDimension + 'px',
-        width: innerCircleDimension + 'px'
+        height: innerCircleDimension() + 'px',
+        width: innerCircleDimension() + 'px'
       }"
     >
       <div class="content">
         <typography
           variant="header"
           content="{{ percentage() }}"
-          additionalStyles="fontSize: {{ percentageFontSize }}px; margin: 0;"
+          additionalStyles="fontSize: {{ percentageFontSize() }}px; margin: 0;"
         />
         <typography
           variant="info-subtitle"
           content="%"
-          additionalStyles="fontSize: {{ percentageSignFontSize }}px; margin-bottom: {{ percentageSignOffset }}px"
+          additionalStyles="fontSize: {{ percentageSignFontSize() }}px; margin-bottom: {{ percentageSignOffset() }}px"
         />
       </div>
     </div>
