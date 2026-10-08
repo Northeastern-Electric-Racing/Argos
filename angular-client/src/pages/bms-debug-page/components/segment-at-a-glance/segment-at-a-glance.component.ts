@@ -1,4 +1,4 @@
-import { Component, effect, HostListener, inject, input, DestroyRef } from '@angular/core';
+import { Component, effect, inject, input, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
@@ -24,7 +24,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     TypographyComponent,
     VStackComponent,
     HStackComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class SegmentAtAGlanceComponent {
   private destroyRef = inject(DestroyRef);
@@ -43,7 +46,6 @@ export class SegmentAtAGlanceComponent {
   thermometerConfigSegment: ThermometerConfig = { type: 'thermometer-config', currentValue: 0, min: 0, max: 60 };
 
   enableWidgets = window.innerWidth >= 1000;
-  @HostListener('window:resize')
   onResize() {
     this.enableWidgets = window.innerWidth >= 1000;
   }

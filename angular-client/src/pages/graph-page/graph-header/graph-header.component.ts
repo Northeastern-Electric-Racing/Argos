@@ -1,4 +1,4 @@
-import { Component, HostListener, input, OnInit } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -11,7 +11,10 @@ import TypographyComponent from 'src/components/typography/typography.component'
   templateUrl: './graph-header.component.html',
   styleUrls: ['./graph-header.component.css'],
   standalone: true,
-  imports: [TypographyComponent, SidebarToggleComponent]
+  imports: [TypographyComponent, SidebarToggleComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class GraphHeaderComponent implements OnInit {
   rightHeader = input.required<string>();
@@ -25,7 +28,6 @@ export default class GraphHeaderComponent implements OnInit {
     }, 1000);
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= 768;
   }

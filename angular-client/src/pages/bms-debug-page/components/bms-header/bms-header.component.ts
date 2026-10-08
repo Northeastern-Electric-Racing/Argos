@@ -1,4 +1,4 @@
-import { Component, HostListener, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 
 import { SegmentSelectorComponent } from '../segment-selector/segment-selector.component';
@@ -11,7 +11,10 @@ import TypographyComponent from 'src/components/typography/typography.component'
   templateUrl: './bms-header.component.html',
   styleUrl: './bms-header.component.css',
   standalone: true,
-  imports: [MatGridList, MatGridTile, SegmentSelectorComponent, CRCComponent, BmsOverflowComponent, TypographyComponent]
+  imports: [MatGridList, MatGridTile, SegmentSelectorComponent, CRCComponent, BmsOverflowComponent, TypographyComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class BmsHeaderComponent {
   pageTitle = input.required<string>();
@@ -21,7 +24,6 @@ export class BmsHeaderComponent {
   windowSize: number = window.innerWidth;
   isMobile = window.innerWidth < this.mobileThreshold;
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.windowSize = window.innerWidth;

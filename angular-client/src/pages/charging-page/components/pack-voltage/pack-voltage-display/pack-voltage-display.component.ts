@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -20,7 +20,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     PackVoltageGraphComponent,
     TypographyComponent,
     HStackComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class PackVoltageDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -36,7 +39,6 @@ export default class PackVoltageDisplayComponent implements OnInit {
   mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
-  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -26,7 +26,10 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     TypographyComponent,
     VStackComponent,
     HStackComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class HighLowCellDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -46,7 +49,6 @@ export default class HighLowCellDisplayComponent implements OnInit {
     icon: 'restart_alt'
   };
 
-  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }
