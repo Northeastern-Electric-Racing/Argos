@@ -1,4 +1,5 @@
-import { Component, ElementRef, OnInit, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { urls } from 'src/api/urls';
@@ -16,6 +17,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
 })
 export class CameraPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
 
@@ -45,13 +47,13 @@ export class CameraPageComponent implements OnInit {
     });
 
     const videosQueryResponse = this.serverService.query<string[]>(() => getAllVideos(), { queryKey: ['videos'] });
-    videosQueryResponse.error.subscribe((error) => {
+    videosQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
-    videosQueryResponse.isLoading.subscribe((isLoading) => {
+    videosQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading) => {
       this.videoUrlsIsLoading = isLoading;
     });
-    videosQueryResponse.data.subscribe((data) => {
+    videosQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) this.videoUrls = data.concat('Live Stream');
     });
   }

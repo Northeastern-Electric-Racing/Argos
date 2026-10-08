@@ -19,16 +19,16 @@ part 'global_settings.g.dart';
 abstract class ConnectionProps with _$ConnectionProps {
   const factory ConnectionProps({
     /// current uri, see [useMqtt] if the uri is [mqttUri] or [socketUri]
-    required final Uri uri,
+    required Uri uri,
 
     /// mqtt URI to use
-    required final Uri mqttUri,
+    required Uri mqttUri,
 
     /// socket URI to use
-    required final Uri socketUri,
+    required Uri socketUri,
 
     /// true if app is in MQTT mode
-    required final bool useMqtt,
+    required bool useMqtt,
   }) = _ConnectionProps;
 }
 
@@ -74,7 +74,7 @@ class ConnectionControl extends _$ConnectionControl {
   }
 
   /// Set the MQTT Uri, see [switchToMqtt] to use the uri
-  Future<void> setMqttUri(final Uri uri) async {
+  Future<void> setMqttUri(Uri uri) async {
     _mqttUri = uri;
     await ref
         .read(sharedPrefsInstanceProvider)
@@ -84,7 +84,7 @@ class ConnectionControl extends _$ConnectionControl {
   }
 
   /// Set the Socket Uri, see [switchToSocket] to use the uri
-  Future<void> setSocketUri(final Uri uri) async {
+  Future<void> setSocketUri(Uri uri) async {
     _socketUri = uri;
     await ref
         .read(sharedPrefsInstanceProvider)
@@ -105,9 +105,7 @@ class FavoriteTopicsManager extends _$FavoriteTopicsManager {
     _topics = HashSet<PublicDataType>.from(
       prefs.value
               ?.getStringList(FAVORITE_TOPICS_KEY)
-              ?.map(
-                (final String f) => PublicDataType.fromJson(jsonDecode(f)),
-              ) ??
+              ?.map((String f) => PublicDataType.fromJson(jsonDecode(f))) ??
           FAVORITE_TOPICS_DEFAULT,
     );
     return _topics;
@@ -119,19 +117,17 @@ class FavoriteTopicsManager extends _$FavoriteTopicsManager {
         .value
         ?.setStringList(
           FAVORITE_TOPICS_KEY,
-          _topics
-              .map((final PublicDataType f) => jsonEncode(f.toJson()))
-              .toList(),
+          _topics.map((PublicDataType f) => jsonEncode(f.toJson())).toList(),
         );
   }
 
-  Future<void> addTopic(final PublicDataType topic) async {
+  Future<void> addTopic(PublicDataType topic) async {
     _topics.add(topic);
     await _updateTopics();
     ref.invalidateSelf();
   }
 
-  Future<void> removeTopic(final PublicDataType topic) async {
+  Future<void> removeTopic(PublicDataType topic) async {
     _topics.remove(topic);
     await _updateTopics();
     ref.invalidateSelf();
@@ -154,12 +150,12 @@ class GraphTopicsManager extends _$GraphTopicsManager {
     return _graphTopics;
   }
 
-  void setTopics(final List<PublicDataType> topics) {
+  void setTopics(List<PublicDataType> topics) {
     _graphTopics = HashSet<PublicDataType>.from(topics);
     state = _graphTopics;
   }
 
-  void addTopic(final PublicDataType topic) {
+  void addTopic(PublicDataType topic) {
     if (_graphTopics.add(topic)) {
       state = _graphTopics;
     }
@@ -186,7 +182,7 @@ class HistoricalGraphRunManager extends _$HistoricalGraphRunManager {
     return _runId ?? 0;
   }
 
-  void setRunId(final int runId) {
+  void setRunId(int runId) {
     _runId = runId;
     ref.invalidateSelf();
   }
@@ -194,7 +190,7 @@ class HistoricalGraphRunManager extends _$HistoricalGraphRunManager {
 
 /// Get a shared preferences instance
 @riverpod
-Future<SharedPreferences> sharedPrefsInstance(final Ref ref) {
+Future<SharedPreferences> sharedPrefsInstance(Ref ref) {
   ref.keepAlive();
   return SharedPreferences.getInstance();
 }
@@ -214,7 +210,7 @@ class LiveGraphSettingsManager extends _$LiveGraphSettingsManager {
     return Duration(seconds: res);
   }
 
-  Future<void> setDuration(final Duration graphDir) async {
+  Future<void> setDuration(Duration graphDir) async {
     await ref
         .read(sharedPrefsInstanceProvider)
         .value
@@ -227,10 +223,8 @@ class LiveGraphSettingsManager extends _$LiveGraphSettingsManager {
 /// mode. Not serialized as JSON (each field is persisted separately).
 @freezed
 abstract class ThemeSettings with _$ThemeSettings {
-  const factory ThemeSettings({
-    required final Color seed,
-    required final ThemeMode mode,
-  }) = _ThemeSettings;
+  const factory ThemeSettings({required Color seed, required ThemeMode mode}) =
+      _ThemeSettings;
 }
 
 @riverpod
@@ -250,7 +244,7 @@ class ThemeSettingsManager extends _$ThemeSettingsManager {
     );
   }
 
-  Future<void> setSeed(final Color seed) async {
+  Future<void> setSeed(Color seed) async {
     await ref
         .read(sharedPrefsInstanceProvider)
         .value
@@ -258,7 +252,7 @@ class ThemeSettingsManager extends _$ThemeSettingsManager {
     ref.invalidateSelf();
   }
 
-  Future<void> setMode(final ThemeMode mode) async {
+  Future<void> setMode(ThemeMode mode) async {
     await ref
         .read(sharedPrefsInstanceProvider)
         .value

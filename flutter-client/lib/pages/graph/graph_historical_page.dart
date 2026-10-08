@@ -25,17 +25,16 @@ class _GraphHistoricalState extends ConsumerState<GraphHistorical> {
   /// once after its first paint.
   bool _relaidOut = false;
 
-  List<XyDataSeries<PublicData, DateTime>> _fetchSeries() => info.values
-      .map((final HistoricalGraphRenderInfo e) => e.getSeries())
-      .toList();
+  List<XyDataSeries<PublicData, DateTime>> _fetchSeries() =>
+      info.values.map((HistoricalGraphRenderInfo e) => e.getSeries()).toList();
 
   List<ChartAxis> _fetchAxes() => info.values
-      .map((final HistoricalGraphRenderInfo e) => e.getAxis())
+      .map((HistoricalGraphRenderInfo e) => e.getAxis())
       .nonNulls
       .toList();
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     final int runId = ref.watch(historicalGraphRunManagerProvider);
     final HashSet<PublicDataType> topics = ref.watch(
       graphTopicsManagerProvider,
@@ -55,7 +54,7 @@ class _GraphHistoricalState extends ConsumerState<GraphHistorical> {
                 entry.key,
                 0,
                 topics
-                    .firstWhere((final PublicDataType e) => e.name == entry.key)
+                    .firstWhere((PublicDataType e) => e.name == entry.key)
                     .unit,
                 entry.value,
               );
@@ -65,9 +64,7 @@ class _GraphHistoricalState extends ConsumerState<GraphHistorical> {
                   entry.key,
                   i,
                   topics
-                      .firstWhere(
-                        (final PublicDataType e) => e.name == entry.key,
-                      )
+                      .firstWhere((PublicDataType e) => e.name == entry.key)
                       .unit,
                   entry.value,
                 );
@@ -134,7 +131,7 @@ class ErrorViewer extends ConsumerWidget {
   });
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) => Column(
+  Widget build(BuildContext context, WidgetRef ref) => Column(
     mainAxisAlignment: MainAxisAlignment.center,
     children: <Widget>[
       Text('Error: $error'),
@@ -163,9 +160,9 @@ class HistoricalGraphRenderInfo {
         name: '$topic $index',
         dataSource: data,
         yAxisName: topic,
-        xValueMapper: (final PublicData data, final int index) =>
+        xValueMapper: (PublicData data, int index) =>
             DateTime.fromMillisecondsSinceEpoch(data.time),
-        yValueMapper: (final PublicData data, final int index) =>
+        yValueMapper: (PublicData data, int index) =>
             data.values.elementAt(this.index),
       );
 

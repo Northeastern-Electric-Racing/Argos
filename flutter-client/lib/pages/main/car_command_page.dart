@@ -10,13 +10,13 @@ class CarCommandPage extends ConsumerWidget {
   const CarCommandPage({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final List<NetFieldCapture<(List<double>, DateTime)>>? items = ref
         .watch(capModelHolderProvider)
         .value
         ?.values
         .where(
-          (final NetFieldCapture<(List<double>, DateTime)> val) =>
+          (NetFieldCapture<(List<double>, DateTime)> val) =>
               val.topic.startsWith('Calypso/Bidir/State/'),
         )
         .toList();
@@ -45,7 +45,7 @@ class CarCommandPage extends ConsumerWidget {
 
     return ListView.builder(
       itemCount: vals.length,
-      itemBuilder: (final BuildContext context, final int index) {
+      itemBuilder: (BuildContext context, int index) {
         final MapEntry<String, List<NetFieldCapture<(List<double>, DateTime)>>>
         topics = vals.elementAt(index);
         return CommandPkg(topics: topics);
@@ -70,7 +70,7 @@ class _CommandPkgState extends ConsumerState<CommandPkg> {
   final List<double> dataSend = <double>[];
 
   @override
-  Widget build(final BuildContext context) => Card(
+  Widget build(BuildContext context) => Card(
     child: Column(
       children: <Widget>[
         Center(child: Text(widget.topics.key)),
@@ -79,15 +79,15 @@ class _CommandPkgState extends ConsumerState<CommandPkg> {
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: widget.topics.value.length,
-            itemBuilder: (final BuildContext context, final int index) => Row(
+            itemBuilder: (BuildContext context, int index) => Row(
               children: <Widget>[
                 Flexible(
                   flex: 2,
                   child: TextFormField(
-                    onSaved: (final String? data) {
+                    onSaved: (String? data) {
                       dataSend.add(double.parse(data ?? ''));
                     },
-                    onTapOutside: (final PointerDownEvent event) {
+                    onTapOutside: (PointerDownEvent event) {
                       FocusScope.of(context).unfocus();
                     },
                     decoration: InputDecoration(
@@ -97,7 +97,7 @@ class _CommandPkgState extends ConsumerState<CommandPkg> {
                           'Point '
                           '${widget.topics.value[index].topic.getSubKey()}',
                     ),
-                    validator: (final String? value) {
+                    validator: (String? value) {
                       if (value == null ||
                           value.isEmpty ||
                           double.tryParse(value) == null) {
@@ -113,16 +113,15 @@ class _CommandPkgState extends ConsumerState<CommandPkg> {
                       stream: widget.topics.value[index].getStream(),
                       builder:
                           (
-                            final BuildContext context,
-                            final AsyncSnapshot<(List<double>, DateTime)>
-                            snapshot,
+                            BuildContext context,
+                            AsyncSnapshot<(List<double>, DateTime)> snapshot,
                           ) {
                             final Color? textColor =
                                 widget.topics.value[index].stale
                                 ? Colors.red
                                 : null;
                             final Iterable<String>? data = snapshot.data?.$1
-                                .map((final double e) => e.toStringAsFixed(3));
+                                .map((double e) => e.toStringAsFixed(3));
                             return Padding(
                               padding: const EdgeInsets.only(
                                 left: 16.0,
@@ -196,29 +195,27 @@ class _CommandPkgState extends ConsumerState<CommandPkg> {
   );
 }
 
-Future<bool?> _confirmationDialog(
-  final BuildContext context,
-  final String key,
-) async => showDialog<bool>(
-  context: context,
-  builder: (final BuildContext context) => AlertDialog(
-    icon: const Icon(Icons.warning, size: 48.0),
-    title: const Text('Confirm command to send to car!'),
-    content: Text('Changing setting: $key'),
-    actions: <Widget>[
-      TextButton(
-        onPressed: () {
-          context.pop(true);
-        },
-        child: const Text('Yes, send to car', textAlign: TextAlign.end),
+Future<bool?> _confirmationDialog(BuildContext context, String key) async =>
+    showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        icon: const Icon(Icons.warning, size: 48.0),
+        title: const Text('Confirm command to send to car!'),
+        content: Text('Changing setting: $key'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              context.pop(true);
+            },
+            child: const Text('Yes, send to car', textAlign: TextAlign.end),
+          ),
+          ElevatedButton(
+            onPressed: context.pop,
+            child: const Text('no, go back', textAlign: TextAlign.end),
+          ),
+        ],
       ),
-      ElevatedButton(
-        onPressed: context.pop,
-        child: const Text('no, go back', textAlign: TextAlign.end),
-      ),
-    ],
-  ),
-);
+    );
 
 extension GetKeys on String {
   String getKey() => substring(

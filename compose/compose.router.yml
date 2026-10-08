@@ -1,10 +1,8 @@
 services:
   scylla-server:
-    depends_on:
-      - siren
     environment:
-      - SCYLLA_SIREN_HOST_URL=siren:1883
       - SCYLLA_BATCH_UPSERT_TIME=20
+      - SCYLLA_ZENOH=true
     init: false
 
   client:
@@ -16,13 +14,12 @@ services:
     extends:
       file: ../siren-base/compose.grafana.yml
       service: grafana
-    depends_on:
-      - siren
 
-  siren:
-    extends:
-      file: ../siren-base/compose.siren.yml
-      service: siren
+  # run on host on AP!
+  # siren:
+  #   extends:
+  #     file: ../siren-base/compose.zenohd.yml
+  #     service: siren
 
   siren-av:
     network_mode: host

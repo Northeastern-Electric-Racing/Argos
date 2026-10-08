@@ -74,7 +74,25 @@
         "prefer-exponentiation-operator": "error",
         "prefer-object-spread": "error",
         "prefer-rest-params": "error",
-        "prefer-spread": "error"
+        "prefer-spread": "error",
+        "rxjs-angular/prefer-takeuntil": [
+          "error",
+          {
+            "alias": [
+              "takeUntilDestroyed"
+            ],
+            "checkComplete": false,
+            "checkDestroy": false
+          }
+        ]
+      },
+      "plugins": [
+        "rxjs-angular"
+      ],
+      "parserOptions": {
+        "project": [
+          "tsconfig.eslint.json"
+        ]
       }
     },
     {

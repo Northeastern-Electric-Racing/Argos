@@ -1,5 +1,5 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
@@ -14,25 +14,22 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   standalone: true,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })
-export class BmsOverflowComponent implements OnInit, OnDestroy {
+export class BmsOverflowComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   overflowID: number | undefined = undefined;
 
   ngOnInit(): void {
-    this.subscriptions.push(
-      this.storage.get(topics.perCellOverflowId()).subscribe((value) => {
+    this.storage
+      .get(topics.perCellOverflowId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         if (parseFloat(value.time) > Date.now() - 4000) {
           this.overflowID = parseInt(value.values[0]);
         } else {
           this.overflowID = undefined;
         }
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 
   getStatusColor = (): string => {

@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
@@ -18,23 +19,27 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private faultService = inject(FaultService);
   private router = inject(Router);
   nodeArray: FaultNode[] = [];
   selectedFault: FaultData | undefined = undefined;
 
   ngOnInit() {
-    this.faultService.getFaults().subscribe((faults) => {
-      const nodes = new Map();
-      faults.forEach((fault) => {
-        if (nodes.has(fault.node)) {
-          nodes.get(fault.node)?.data.push(fault);
-        } else {
-          nodes.set(fault.node, { node: fault.node, data: [fault] });
-        }
+    this.faultService
+      .getFaults()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((faults) => {
+        const nodes = new Map();
+        faults.forEach((fault) => {
+          if (nodes.has(fault.node)) {
+            nodes.get(fault.node)?.data.push(fault);
+          } else {
+            nodes.set(fault.node, { node: fault.node, data: [fault] });
+          }
+        });
+        this.nodeArray = Array.from(nodes.values()).sort((a, b) => a.node.localeCompare(b.node));
       });
-      this.nodeArray = Array.from(nodes.values()).sort((a, b) => a.node.localeCompare(b.node));
-    });
   }
 
   onRowSelect = () => {

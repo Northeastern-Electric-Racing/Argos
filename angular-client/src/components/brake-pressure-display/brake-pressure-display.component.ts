@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { DividerComponent } from '../divider/divider';
@@ -15,16 +16,23 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent, VStackComponent, DividerComponent]
 })
 export default class BrakePressureDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   brakePressureFront: number = 0;
   brakePressureBack: number = 0;
 
   ngOnInit() {
-    this.storage.get(topics.brakePressureFront()).subscribe((value) => {
-      this.brakePressureFront = parseInt(value.values[0]);
-    });
-    this.storage.get(topics.brakePressureBack()).subscribe((value) => {
-      this.brakePressureBack = parseInt(value.values[0]);
-    });
+    this.storage
+      .get(topics.brakePressureFront())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.brakePressureFront = parseInt(value.values[0]);
+      });
+    this.storage
+      .get(topics.brakePressureBack())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.brakePressureBack = parseInt(value.values[0]);
+      });
   }
 }

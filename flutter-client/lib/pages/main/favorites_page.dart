@@ -12,7 +12,7 @@ class FavoritesPage extends ConsumerWidget {
   const FavoritesPage({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final HashSet<PublicDataType> favs = ref.watch(
       favoriteTopicsManagerProvider,
     );
@@ -35,7 +35,7 @@ class FavoritesPage extends ConsumerWidget {
     return ListView.builder(
       itemCount: favs.length,
       shrinkWrap: true,
-      itemBuilder: (final BuildContext context, final int index) =>
+      itemBuilder: (BuildContext context, int index) =>
           DataPoint(topic: favs.elementAt(index)),
     );
   }
@@ -46,14 +46,11 @@ class DataPoint extends ConsumerWidget {
   const DataPoint({required this.topic, super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final NetFieldCapture<(List<double>, DateTime)>? item = ref.watch(
       capModelHolderProvider.select(
         (
-          final AsyncValue<
-            Map<String, NetFieldCapture<(List<double>, DateTime)>>
-          >
-          it,
+          AsyncValue<Map<String, NetFieldCapture<(List<double>, DateTime)>>> it,
         ) => it.value?[topic.name],
       ),
     );
@@ -85,12 +82,12 @@ class DataPoint extends ConsumerWidget {
         stream: item.getStream(),
         builder:
             (
-              final BuildContext context,
-              final AsyncSnapshot<(List<double>, DateTime)> snapshot,
+              BuildContext context,
+              AsyncSnapshot<(List<double>, DateTime)> snapshot,
             ) {
               final Color? textColor = item.stale ? Colors.red : null;
               final Iterable<String>? data = snapshot.data?.$1.map(
-                (final double e) => e.toStringAsFixed(4),
+                (double e) => e.toStringAsFixed(4),
               );
               return Padding(
                 padding: const EdgeInsets.only(left: 8.0, right: 4.0),
@@ -138,17 +135,15 @@ class DataPoint extends ConsumerWidget {
                         if (data != null)
                           Text(
                             softWrap: true,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(color: textColor),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: textColor),
                             data.join('\n'),
                           )
                         else
                           Text(
                             'No Live Data',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(color: textColor),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: textColor),
                           ),
                         const SizedBox(width: 4.0),
                         Text(item.unit),

@@ -210,7 +210,7 @@ return $default(_that.topics,_that.crossAxisCount);case _:
 @JsonSerializable()
 
 class _DashboardConfig implements DashboardConfig {
-  const _DashboardConfig({required final  List<String> topics, required this.crossAxisCount}): _topics = topics;
+  const _DashboardConfig({required  List<String> topics, required this.crossAxisCount}): _topics = topics;
   factory _DashboardConfig.fromJson(Map<String, dynamic> json) => _$DashboardConfigFromJson(json);
 
  final  List<String> _topics;

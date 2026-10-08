@@ -1,6 +1,7 @@
-import { Component, effect, inject, input, OnInit } from '@angular/core';
+import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
@@ -21,12 +22,14 @@ import { DatePipe } from '@angular/common';
   imports: [InfoBackgroundComponent, TableModule, PrimeTemplate, DatePipe]
 })
 export class ChipFaultsComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  /** Emits when the inputs change, ending the subscriptions made for the previous ones. */
+  private dataChange$ = new Subject<void>();
   private faultService = inject(FaultService);
   private storage = inject(Storage);
   chip = input.required<Chip>();
   title!: string;
   segment = input.required<number>();
-  subscribtions: Subscription[] = [];
   chipFaults: FaultData[] = [];
   selectedFault: FaultData | undefined = undefined;
   private router = inject(Router);
@@ -34,21 +37,22 @@ export class ChipFaultsComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      this.subscribtions.forEach((sub) => sub.unsubscribe());
+      this.dataChange$.next();
       this.resetFaults();
       this.subscribeToData(this.segment());
     });
   }
 
   resetFaults() {
-    this.subscribtions.forEach((sub) => sub.unsubscribe());
     this.chipFaults = [];
   }
 
   subscribeToData(segment: number, chip: Chip = this.chip()) {
     allChipFaults.forEach((faultName) => {
-      this.subscribtions.push(
-        this.storage.get(topics.chipFault(segment, chip, faultName)).subscribe((data) => {
+      this.storage
+        .get(topics.chipFault(segment, chip, faultName))
+        .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+        .subscribe((data) => {
           if (parseInt(data.values[0]) === 0) return;
           const fault = this.chipFaultPipe.transform(data, chip, segment, faultName);
           if (!fault) return;
@@ -56,8 +60,7 @@ export class ChipFaultsComponent implements OnInit {
             this.chipFaults.pop();
           }
           this.chipFaults.unshift(fault);
-        })
-      );
+        });
     });
   }
 

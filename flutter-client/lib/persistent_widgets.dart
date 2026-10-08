@@ -13,7 +13,7 @@ class GraphFavoritesButton extends ConsumerWidget {
   const GraphFavoritesButton({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) => Tooltip(
+  Widget build(BuildContext context, WidgetRef ref) => Tooltip(
     message: 'Click to graph all favorited topics on one graph',
     child: ElevatedButton(
       onPressed: () async {
@@ -35,7 +35,7 @@ class RunIncrementButton extends ConsumerWidget {
   const RunIncrementButton({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<PublicRun>> runs = ref.watch(runHandlerProvider);
 
     return switch (runs) {
@@ -60,7 +60,7 @@ class RunIncrementButton extends ConsumerWidget {
           onPressed: () async {
             // show a snackbar when the run successfully increments
             await ref.read(runHandlerProvider.notifier).incrementRun().then((
-              final PublicRun value,
+              PublicRun value,
             ) {
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
@@ -92,7 +92,7 @@ class BottomSysInfo extends ConsumerWidget {
   const BottomSysInfo({super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<Map<String, NetFieldCapture<(List<double>, DateTime)>>>
     caps = ref.watch(capModelHolderProvider);
 
@@ -107,8 +107,8 @@ class BottomSysInfo extends ConsumerWidget {
               stream: value['Latency']?.getStream(),
               builder:
                   (
-                    final BuildContext context,
-                    final AsyncSnapshot<(List<double>, DateTime)> snapshot,
+                    BuildContext context,
+                    AsyncSnapshot<(List<double>, DateTime)> snapshot,
                   ) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.none:
@@ -126,8 +126,8 @@ class BottomSysInfo extends ConsumerWidget {
               stream: value['Argos/Viewers']?.getStream(),
               builder:
                   (
-                    final BuildContext context,
-                    final AsyncSnapshot<(List<double>, DateTime)> snapshot,
+                    BuildContext context,
+                    AsyncSnapshot<(List<double>, DateTime)> snapshot,
                   ) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.none:
@@ -147,8 +147,8 @@ class BottomSysInfo extends ConsumerWidget {
               stream: value['Argos/Message_Rate']?.getStream(),
               builder:
                   (
-                    final BuildContext context,
-                    final AsyncSnapshot<(List<double>, DateTime)> snapshot,
+                    BuildContext context,
+                    AsyncSnapshot<(List<double>, DateTime)> snapshot,
                   ) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.none:

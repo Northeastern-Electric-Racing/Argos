@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
@@ -34,7 +34,8 @@ import LapsTableComponent from './laps-table/laps-table.component';
     LapsTableComponent
   ]
 })
-export default class LapTimerPageComponent implements OnInit, OnDestroy {
+export default class LapTimerPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
 
   readonly liveSpeed = signal(0);
@@ -57,21 +58,22 @@ export default class LapTimerPageComponent implements OnInit, OnDestroy {
     return 'var(--color-battery-low)';
   });
 
-  private subs: Subscription[] = [];
-
   ngOnInit(): void {
     const styles = getComputedStyle(document.documentElement);
     const high = styles.getPropertyValue('--color-battery-high').trim();
     if (high) this.speedGaugeColor.set(high);
 
-    this.subs.push(
-      this.storage.get(topics.speed()).subscribe((v) => this.liveSpeed.set(parseFloat(v.values[0]) || 0)),
-      this.storage.get(topics.motorTemp()).subscribe((v) => this.liveMotorTemp.set(parseFloat(v.values[0]) || 0)),
-      this.storage.get(topics.stateOfCharge()).subscribe((v) => this.liveSoc.set(parseFloat(v.values[0]) || 0))
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subs.forEach((s) => s.unsubscribe());
+    this.storage
+      .get(topics.speed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => this.liveSpeed.set(parseFloat(v.values[0]) || 0));
+    this.storage
+      .get(topics.motorTemp())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => this.liveMotorTemp.set(parseFloat(v.values[0]) || 0));
+    this.storage
+      .get(topics.stateOfCharge())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => this.liveSoc.set(parseFloat(v.values[0]) || 0));
   }
 }

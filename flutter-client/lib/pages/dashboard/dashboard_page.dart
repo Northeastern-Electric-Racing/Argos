@@ -22,14 +22,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   final ScrollController _scrollController = ScrollController();
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     final DashboardConfig conf = ref.watch(
       dashboardConfProvider(dashName: widget.dashName),
     );
     final List<DataSquare> squares = conf.topics
         .map(
-          (final String d) =>
-              DataSquare(dataTypeName: d, key: ValueKey<String>(d)),
+          (String d) => DataSquare(dataTypeName: d, key: ValueKey<String>(d)),
         )
         .toList();
     return Scaffold(
@@ -41,21 +40,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         scrollController: _scrollController,
         onReorder:
             (
-              final List<DataSquare> Function(List<DataSquare>)
-              reorderedListFunction,
+              List<DataSquare> Function(List<DataSquare>) reorderedListFunction,
             ) async {
               await ref
                   .read(
                     dashboardConfProvider(dashName: widget.dashName).notifier,
                   )
                   .setTopics(
-                    reorderedListFunction(
-                      squares,
-                    ).map((final DataSquare d) => d.dataTypeName).toList(),
+                    reorderedListFunction(squares)
+                        .map((DataSquare d) => d.dataTypeName)
+                        .toList(),
                   );
             },
         children: squares,
-        builder: (final List<Widget> children) => GridView.count(
+        builder: (List<Widget> children) => GridView.count(
           controller: _scrollController,
           crossAxisCount: conf.crossAxisCount,
           children: children,
@@ -80,7 +78,7 @@ class DataSquare extends ConsumerWidget {
   const DataSquare({required this.dataTypeName, super.key});
 
   @override
-  Widget build(final BuildContext context, final WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final Map<String, NetFieldCapture<(List<double>, DateTime)>>? allItems = ref
         .watch(capModelHolderProvider)
         .value;
@@ -103,8 +101,8 @@ class DataSquare extends ConsumerWidget {
               stream: item.getStream(),
               builder:
                   (
-                    final BuildContext context,
-                    final AsyncSnapshot<(List<double>, DateTime)> snapshot,
+                    BuildContext context,
+                    AsyncSnapshot<(List<double>, DateTime)> snapshot,
                   ) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.none:
@@ -137,7 +135,7 @@ class DashEditorPage extends ConsumerStatefulWidget {
 
 class _TopicsSelectorState extends ConsumerState<DashEditorPage> {
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     // Read (not watch) the current config: multi_dropdown owns the live
     // selection state and reports it via onSelectionChange. Watching would
     // rebuild this widget on every tap, forcing the dropdown (which only reads
@@ -152,8 +150,7 @@ class _TopicsSelectorState extends ConsumerState<DashEditorPage> {
             .value
             ?.values
             .map(
-              (final NetFieldCapture<(List<double>, DateTime)> e) =>
-                  e.publicDataType,
+              (NetFieldCapture<(List<double>, DateTime)> e) => e.publicDataType,
             )
             .toList() ??
         <PublicDataType>[];
@@ -169,13 +166,12 @@ class _TopicsSelectorState extends ConsumerState<DashEditorPage> {
             key: ValueKey<int>(availTopics.length),
             autovalidateMode: AutovalidateMode.onUnfocus,
             searchEnabled: true,
-            itemBuilder:
-                (
-                  final DropdownItem<String> item,
-                  final int index,
-                  final VoidCallback onTap,
-                ) => multiDropdownItemBuilder<String>(context, item, onTap),
-            onSelectionChange: (final List<String> items) async {
+            itemBuilder: (
+              DropdownItem<String> item,
+              int index,
+              VoidCallback onTap,
+            ) => multiDropdownItemBuilder<String>(context, item, onTap),
+            onSelectionChange: (List<String> items) async {
               await ref
                   .read(
                     dashboardConfProvider(dashName: widget.dashName).notifier,
@@ -184,7 +180,7 @@ class _TopicsSelectorState extends ConsumerState<DashEditorPage> {
             },
             items: availTopics
                 .map(
-                  (final PublicDataType e) => DropdownItem<String>(
+                  (PublicDataType e) => DropdownItem<String>(
                     selected: conf.topics.contains(e.name),
                     label: e.name,
                     value: e.name,
@@ -206,7 +202,7 @@ class _TopicsSelectorState extends ConsumerState<DashEditorPage> {
                 ),
               ),
             ),
-            validator: (final List<DropdownItem<String>>? value) {
+            validator: (List<DropdownItem<String>>? value) {
               if (value == null || value.isEmpty) {
                 return 'Please select one or more topics';
               }
@@ -241,11 +237,10 @@ class _CrossAxisCountSelectorState
   }
 
   @override
-  Widget build(final BuildContext context) {
+  Widget build(BuildContext context) {
     final int currentVal = ref.watch(
-      dashboardConfProvider(
-        dashName: widget.dashName,
-      ).select((final DashboardConfig a) => a.crossAxisCount),
+      dashboardConfProvider(dashName: widget.dashName)
+          .select((DashboardConfig a) => a.crossAxisCount),
     );
     if (_uriFormText.text.isEmpty) {
       _uriFormText.text = currentVal.toString();
@@ -262,26 +257,24 @@ class _CrossAxisCountSelectorState
                 labelText: 'Amount of Points to show across a row',
                 helperText: 'Right click to use default',
               ),
-              onTapOutside: (final PointerDownEvent event) {
+              onTapOutside: (PointerDownEvent event) {
                 FocusScope.of(context).unfocus();
               },
               contextMenuBuilder:
-                  (
-                    final BuildContext context,
-                    final EditableTextState editableTextState,
-                  ) => AdaptiveTextSelectionToolbar.buttonItems(
-                    buttonItems: editableTextState.contextMenuButtonItems
-                      ..add(
-                        ContextMenuButtonItem(
-                          onPressed: () {
-                            _uriFormText.text = '5';
-                          },
-                          label: 'Use Default',
-                        ),
+                  (BuildContext context, EditableTextState editableTextState) =>
+                      AdaptiveTextSelectionToolbar.buttonItems(
+                        buttonItems: editableTextState.contextMenuButtonItems
+                          ..add(
+                            ContextMenuButtonItem(
+                              onPressed: () {
+                                _uriFormText.text = '5';
+                              },
+                              label: 'Use Default',
+                            ),
+                          ),
+                        anchors: editableTextState.contextMenuAnchors,
                       ),
-                    anchors: editableTextState.contextMenuAnchors,
-                  ),
-              validator: (final String? value) {
+              validator: (String? value) {
                 if (value == null ||
                     value.isEmpty ||
                     int.tryParse(value) == null) {

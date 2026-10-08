@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, input } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Run } from 'src/utils/types.utils';
 import { CarouselComponent } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
@@ -15,6 +16,7 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
   imports: [ButtonComponent]
 })
 export class RunSelectorComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   public dialogService = inject(DialogService);
   private serverService = inject(APIService);
   private messageService = inject(MessageService);
@@ -26,13 +28,13 @@ export class RunSelectorComponent implements OnInit {
 
   ngOnInit() {
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
-    runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
       this.runsIsLoading = isLoading;
     });
-    runsQueryResponse.error.subscribe((error) => {
+    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
-    runsQueryResponse.data.subscribe((data) => {
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) this.runs = data;
     });
 

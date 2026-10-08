@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -8,7 +9,6 @@ import { GraphComponent } from '../graph/graph.component';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
 import VStackComponent from '../vstack/vstack.component';
-import { Subscription } from 'rxjs';
 
 /**
  * Component that displays acceleration data from the storage service
@@ -22,7 +22,8 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [InfoBackgroundComponent, GraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
-export class AccelerationGraphsComponent implements OnInit, OnDestroy {
+export class AccelerationGraphsComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   xData: GraphData[] = [];
   yData: GraphData[] = [];
@@ -32,11 +33,11 @@ export class AccelerationGraphsComponent implements OnInit, OnDestroy {
 
   maxDataPoints = 400;
 
-  private subscriptions: Subscription[] = [];
-
   ngOnInit() {
-    this.subscriptions.push(
-      this.storage.get(topics.xyzAcceleration()).subscribe((value) => {
+    this.storage
+      .get(topics.xyzAcceleration())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         const x1 = decimalPipe(value.values[0]);
         const y1 = decimalPipe(value.values[1]);
         const time = +value.time;
@@ -53,11 +54,6 @@ export class AccelerationGraphsComponent implements OnInit, OnDestroy {
         //checks if there is a new max
         this.xMax = Math.max(Math.abs(x1), this.xMax);
         this.yMax = Math.max(Math.abs(y1), this.yMax);
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 }

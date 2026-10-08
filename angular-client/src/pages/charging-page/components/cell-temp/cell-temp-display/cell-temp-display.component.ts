@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { floatPipe } from 'src/utils/pipes.utils';
 import { GraphData } from 'src/utils/types.utils';
@@ -28,6 +29,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   ]
 })
 export default class CellTempDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   avgTemp: number = 0;
   maxTemp: number = 0;
@@ -47,12 +49,18 @@ export default class CellTempDisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storage.get(topics.highTempValue()).subscribe((value) => {
-      this.maxTemp = floatPipe(value.values[0]);
-      this.cellTempData.push({ x: +value.time, y: this.maxTemp });
-    });
-    this.storage.get(topics.tempAvgValue()).subscribe((value) => {
-      this.avgTemp = floatPipe(value.values[0]);
-    });
+    this.storage
+      .get(topics.highTempValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.maxTemp = floatPipe(value.values[0]);
+        this.cellTempData.push({ x: +value.time, y: this.maxTemp });
+      });
+    this.storage
+      .get(topics.tempAvgValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.avgTemp = floatPipe(value.values[0]);
+      });
   }
 }

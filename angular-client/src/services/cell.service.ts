@@ -5,11 +5,13 @@ import Storage from './storage.service';
 import {
   allAlphaBurnValues,
   allAlphaCvsValues,
+  allAlphaOwValues,
   allAlphaSVoltValues,
   allAlphaThermValues,
   allAlphaVoltValues,
   allBetaBurnValues,
   allBetaCvsValues,
+  allBetaOwValues,
   allBetaSVoltValues,
   allBetaThermValues,
   allBetaVoltValues,
@@ -24,6 +26,7 @@ export type CellReading = {
   svolts: number | undefined;
   balancing: boolean | undefined;
   cvs: boolean | undefined;
+  ow: boolean | undefined;
   cellNumber: number;
 };
 
@@ -38,6 +41,7 @@ const createSegmentCells = (segment: number, chip: Chip, count: number): CellRea
       svolts: undefined,
       balancing: undefined,
       cvs: undefined,
+      ow: undefined,
       cellNumber: i
     })
   );
@@ -113,6 +117,13 @@ export class CellService {
           segmentAlphaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
         });
       });
+
+      // Open Wire: one per cell (mirrors CvS)
+      allAlphaOwValues.forEach((ow, owIndex) => {
+        this.storageService.get(topics.alphaOw(segmentNumber, ow)).subscribe((data) => {
+          segmentAlphaCells[owIndex].ow = parseInt(data.values[0]) === 1;
+        });
+      });
     });
   };
 
@@ -158,6 +169,13 @@ export class CellService {
       allBetaCvsValues.forEach((cvs, cvsIndex) => {
         this.storageService.get(topics.betaCvs(segmentNumber, cvs)).subscribe((data) => {
           segmentBetaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
+        });
+      });
+
+      // Open Wire: one per cell (mirrors CvS)
+      allBetaOwValues.forEach((ow, owIndex) => {
+        this.storageService.get(topics.betaOw(segmentNumber, ow)).subscribe((data) => {
+          segmentBetaCells[owIndex].ow = parseInt(data.values[0]) === 1;
         });
       });
     });

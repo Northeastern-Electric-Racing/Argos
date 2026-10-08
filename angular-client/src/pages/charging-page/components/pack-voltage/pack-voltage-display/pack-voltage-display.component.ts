@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { GraphData } from 'src/utils/types.utils';
@@ -22,6 +23,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   ]
 })
 export default class PackVoltageDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   voltage: number = 0;
   packVoltData: GraphData[] = [];
@@ -40,9 +42,12 @@ export default class PackVoltageDisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storage.get(topics.packVoltage()).subscribe((value) => {
-      this.voltage = parseFloat(value.values[0]);
-      this.packVoltData.push({ x: +value.time, y: this.voltage });
-    });
+    this.storage
+      .get(topics.packVoltage())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.voltage = parseFloat(value.values[0]);
+        this.packVoltData.push({ x: +value.time, y: this.voltage });
+      });
   }
 }

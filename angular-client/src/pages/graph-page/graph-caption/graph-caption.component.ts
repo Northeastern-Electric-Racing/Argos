@@ -1,4 +1,5 @@
-import { Component, OnInit, TemplateRef, contentChild, input } from '@angular/core';
+import { Component, OnInit, TemplateRef, contentChild, input, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType } from 'src/utils/types.utils';
@@ -14,6 +15,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   imports: [NgTemplateOutlet, TypographyComponent]
 })
 export default class GraphInfoComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   dataType = input.required<Subject<DataType[] | undefined>>();
   currentValue = input<DataValue[]>();
   rightInfo = contentChild.required<TemplateRef<void>>('rightInfo');
@@ -24,10 +26,12 @@ export default class GraphInfoComponent implements OnInit {
   value?: string | number;
 
   ngOnInit(): void {
-    this.dataType().subscribe((dataType: DataType[] | undefined) => {
-      this.dataTypeName = dataType?.at(0)?.name;
-      this.dataTypeUnit = dataType?.at(0)?.unit;
-    });
+    this.dataType()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((dataType: DataType[] | undefined) => {
+        this.dataTypeName = dataType?.at(0)?.name;
+        this.dataTypeUnit = dataType?.at(0)?.unit;
+      });
     const currentValues = this.currentValue();
     this.value = currentValues?.[0]?.values?.[0];
   }

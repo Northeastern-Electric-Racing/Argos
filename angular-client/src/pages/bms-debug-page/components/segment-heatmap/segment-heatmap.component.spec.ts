@@ -19,7 +19,7 @@ const push = (storage: Storage, key: string, value: string): void => {
 /**
  * Drives the heatmap through its real storage seam (Storage -> CellService ->
  * SegmentHeatmapComponent) and asserts the value + color the component binds onto
- * each hex tile, for the C Volts and S Volts views, plus the no-data grey.
+ * each hex tile, for the C Volts, S Volts, and Open Wire views, plus the no-data grey.
  *
  * Assertions read the component's rendered outputs (alphaDisplayCells[].value and
  * getColor) directly rather than re-running change detection per push: CellService
@@ -86,6 +86,42 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     const untouched = cells[cells.length - 1];
     expect(untouched.value).toBeUndefined();
     expect(component.getColor(untouched)).toBe(GREY);
+  });
+
+  it('renders Open Wire true as red TRUE from the OW topic, mirroring CvS Failure', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
+    push(storage, topics.alphaOw(SEGMENT, CELL), '1');
+
+    expect(alphaCell(CELL)?.boolValue).toBeTrue();
+    expect(component.getColor(alphaCell(CELL)!)).toBe('#dc2626');
+  });
+
+  it('renders Open Wire false as green FALSE from the OW topic', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
+    push(storage, topics.alphaOw(SEGMENT, CELL), '0');
+
+    expect(alphaCell(CELL)?.boolValue).toBeFalse();
+    expect(component.getColor(alphaCell(CELL)!)).toBe('#16a34a');
+  });
+
+  it('shows the no-data grey for an Open Wire cell with no value', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
+
+    const cells = component.alphaDisplayCells;
+    const untouched = cells[cells.length - 1];
+    expect(untouched.boolValue).toBeUndefined();
+    expect(component.getColor(untouched)).toBe(GREY);
+  });
+
+  it('keeps Open Wire and CvS as independent readings for the same cell', () => {
+    push(storage, topics.alphaCvs(SEGMENT, CELL), '0');
+    push(storage, topics.alphaOw(SEGMENT, CELL), '1');
+
+    heatMap.setCurrentView(SEGMENT, HeatMapView.CvsFailure);
+    expect(alphaCell(CELL)?.boolValue).toBeFalse();
+
+    heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
+    expect(alphaCell(CELL)?.boolValue).toBeTrue();
   });
 
   it('keeps C Volts and S Volts as independent readings for the same cell', () => {

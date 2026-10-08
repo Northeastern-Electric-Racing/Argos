@@ -1,6 +1,6 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { allSegments, Chip, Segment } from 'src/utils/bms.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from '../components/bms-header/bms-header.component';
@@ -39,11 +39,11 @@ const formatAllSelectorName = (name: string) => {
  * Displays a full-size heatmap, chip diagnostics, and chip faults.
  * Implements OnDestroy for proper RxJS subscription cleanup.
  */
-export class BmsSegmentViewComponent implements OnInit, OnDestroy {
+export class BmsSegmentViewComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private router = inject(Router);
   private heatMapService = inject(HeatMapService);
-  private subscriptions: Subscription[] = [];
   changeTitleSize = window.innerWidth < 1060;
   segmentId!: Segment;
   chipAlpha: Chip = Chip.Alpha;
@@ -79,6 +79,12 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
       function: () => {
         this.heatMapService.setCurrentView(this.segmentId, HeatMapView.CvsFailure);
       }
+    },
+    {
+      name: HeatMapView.OpenWire.toString(),
+      function: () => {
+        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.OpenWire);
+      }
     }
   ];
 
@@ -108,18 +114,16 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
   private subscribeToView(): void {
     const viewSub = this.heatMapService.getCurrentView(this.segmentId);
     if (viewSub) {
-      this.subscriptions.push(
-        viewSub.subscribe((view) => {
-          this.allSegSelectorConfig = {
-            ...this.allSegSelectorConfig,
-            defaultValue: view !== undefined ? formatAllSelectorName(view.toString()) : 'Change ALL Segments'
-          };
-          this.currentSegmentSelectorConfig = {
-            ...this.currentSegmentSelectorConfig,
-            defaultValue: view !== undefined ? view : 'Change View'
-          };
-        })
-      );
+      viewSub.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
+        this.allSegSelectorConfig = {
+          ...this.allSegSelectorConfig,
+          defaultValue: view !== undefined ? formatAllSelectorName(view.toString()) : 'Change ALL Segments'
+        };
+        this.currentSegmentSelectorConfig = {
+          ...this.currentSegmentSelectorConfig,
+          defaultValue: view !== undefined ? view : 'Change View'
+        };
+      });
     }
   }
 
@@ -129,8 +133,10 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
   }
 
   subscribeToSegmentID = () => {
-    if (this.route.url.subscribe((url) => url.toString().includes('bms/segment'))) {
-      this.route.paramMap.subscribe((params) => {
+    if (
+      this.route.url.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((url) => url.toString().includes('bms/segment'))
+    ) {
+      this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         const possibleSegId = Number(params.get('id')) - 1;
         allSegments.indexOf(possibleSegId) !== -1 ? (this.segmentId = possibleSegId) : this.router.navigate(['bms']);
         this.subscribeToView();
@@ -139,8 +145,4 @@ export class BmsSegmentViewComponent implements OnInit, OnDestroy {
       this.router.navigate(['bms']);
     }
   };
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
-  }
 }

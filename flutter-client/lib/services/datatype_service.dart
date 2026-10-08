@@ -12,24 +12,20 @@ part 'datatype_service.freezed.dart';
 part 'datatype_service.g.dart';
 
 @riverpod
-Future<List<PublicDataType>> getDataTypes(final Ref ref) async {
+Future<List<PublicDataType>> getDataTypes(Ref ref) async {
   final Uri conn = ref.watch(connectionControlProvider).socketUri;
   final http.Response response = await http.get(Uri.parse('$conn/datatypes'));
 
   final Iterable<dynamic> json = jsonDecode(response.body);
-  return json
-      .map((final dynamic item) => PublicDataType.fromJson(item))
-      .toList();
+  return json.map((dynamic item) => PublicDataType.fromJson(item)).toList();
 }
 
 /// A run, as given from Scylla
 @freezed
 abstract class PublicDataType with _$PublicDataType {
-  const factory PublicDataType({
-    required final String name,
-    required final String unit,
-  }) = _PublicDataType;
+  const factory PublicDataType({required String name, required String unit}) =
+      _PublicDataType;
 
-  factory PublicDataType.fromJson(final Map<String, Object?> json) =>
+  factory PublicDataType.fromJson(Map<String, Object?> json) =>
       _$PublicDataTypeFromJson(json);
 }

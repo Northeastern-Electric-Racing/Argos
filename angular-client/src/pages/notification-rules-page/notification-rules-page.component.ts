@@ -82,6 +82,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       closeAriaLabel: 'Close'
     });
 
+    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
     this.addRuleRef.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
       if (!rule) return;
 
@@ -212,6 +213,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       data: { rules: result }
     });
 
+    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
     this.confirmRef.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
       if (confirmed) {
         this.batchAddRules(result);

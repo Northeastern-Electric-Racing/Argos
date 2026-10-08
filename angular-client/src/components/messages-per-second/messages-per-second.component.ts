@@ -1,4 +1,5 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import TypographyComponent from '../typography/typography.component';
@@ -12,15 +13,19 @@ import VStackComponent from '../vstack/vstack.component';
   standalone: true
 })
 export class MessagesPerSecondComponent {
+  private destroyRef = inject(DestroyRef);
   small = input<boolean>(false);
   messagesPerSecond: number | undefined = undefined;
   private storageService = inject(Storage);
 
   constructor() {
-    this.storageService.get(topics.msgsPerSecond()).subscribe((data) => {
-      const [firstValue] = data.values;
-      this.messagesPerSecond = parseInt(firstValue);
-    });
+    this.storageService
+      .get(topics.msgsPerSecond())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        const [firstValue] = data.values;
+        this.messagesPerSecond = parseInt(firstValue);
+      });
   }
 
   additionalStyles = computed(() => {

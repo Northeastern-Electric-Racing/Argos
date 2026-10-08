@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { GraphData } from 'src/utils/types.utils';
@@ -12,20 +12,17 @@ import { InfoGraphComponent } from '../info-graph/info-graph.component';
   standalone: true,
   imports: [InfoGraphComponent]
 })
-export default class SpeedOverTimeDisplayComponent implements OnInit, OnDestroy {
+export default class SpeedOverTimeDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   data: GraphData[] = [];
 
   ngOnInit() {
-    this.subscriptions.push(
-      this.storage.get(topics.speed()).subscribe((value) => {
+    this.storage
+      .get(topics.speed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         this.data.push({ x: new Date().getTime(), y: parseInt(value.values[0]) });
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
+      });
   }
 }

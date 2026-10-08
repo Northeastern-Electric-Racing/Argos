@@ -219,7 +219,7 @@ return $default(_that.runId,_that.name,_that.unit,_that.values,_that.timestamp);
 @JsonSerializable()
 
 class _ClientData with DiagnosticableTreeMixin implements ClientData {
-  const _ClientData({required this.runId, required this.name, required this.unit, required final  List<double> values, required this.timestamp}): _values = values;
+  const _ClientData({required this.runId, required this.name, required this.unit, required  List<double> values, required this.timestamp}): _values = values;
   factory _ClientData.fromJson(Map<String, dynamic> json) => _$ClientDataFromJson(json);
 
 @override final  int runId;
