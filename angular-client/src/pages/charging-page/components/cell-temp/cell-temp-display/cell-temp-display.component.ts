@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -15,6 +15,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'cell-temp-display',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './cell-temp-display.component.html',
   styleUrls: ['./cell-temp-display.component.css'],
   standalone: true,
@@ -43,7 +44,6 @@ export default class CellTempDisplayComponent implements OnInit {
   mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
-  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }

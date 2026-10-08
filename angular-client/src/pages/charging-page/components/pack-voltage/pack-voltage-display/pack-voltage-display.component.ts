@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -11,6 +11,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'pack-voltage-display',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './pack-voltage-display.component.html',
   styleUrls: ['./pack-voltage-display.component.css'],
   standalone: true,
@@ -36,7 +37,6 @@ export default class PackVoltageDisplayComponent implements OnInit {
   mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;
 
-  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }

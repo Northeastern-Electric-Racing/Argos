@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -21,6 +21,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 
 @Component({
   selector: 'charging-page-mobile',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './charging-page-mobile.component.html',
   styleUrls: ['./charging-page-mobile.component.css'],
   standalone: true,
@@ -70,7 +71,6 @@ export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

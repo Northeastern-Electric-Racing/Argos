@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
 import { DividerComponent } from '../../../../components/divider/divider';
@@ -10,6 +10,7 @@ import ActiveStatusComponent from '../active-status/active-status.component';
 
 @Component({
   selector: 'combined-status-display',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './combined-status-display.component.html',
   styleUrls: ['./combined-status-display.component.css'],
   standalone: true,
@@ -28,7 +29,6 @@ export default class CombinedStatusDisplayComponent {
   isMobile = window.innerWidth < this.mobileThreshold;
   lightsOn = window.innerWidth >= 1120;
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.lightsOn = window.innerWidth >= 1120;

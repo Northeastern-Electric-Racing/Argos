@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MapService } from '../../services/map.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -15,6 +15,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 
 @Component({
   selector: 'map',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css'],
   standalone: true,
@@ -36,7 +37,6 @@ export default class MapComponent implements OnInit {
     }, 1);
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= 768;
   }

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -15,6 +15,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'high-low-cell-display',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './high-low-cell-display.component.html',
   styleUrls: ['./high-low-cell-display.component.css'],
   standalone: true,
@@ -46,7 +47,6 @@ export default class HighLowCellDisplayComponent implements OnInit {
     icon: 'restart_alt'
   };
 
-  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }

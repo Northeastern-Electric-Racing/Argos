@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { startNewRun } from 'src/api/run.api';
@@ -26,6 +26,7 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
  */
 @Component({
   selector: 'landing-page',
+  host: { '(window:resize)': 'onResize()' },
   styleUrls: ['./landing-page.component.css'],
   templateUrl: './landing-page.component.html',
   standalone: true,
@@ -78,7 +79,6 @@ export default class LandingPageComponent implements OnInit {
 
   onStartNewRun!: () => void;
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

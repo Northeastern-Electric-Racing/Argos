@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -9,6 +9,7 @@ import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-
 
 @Component({
   selector: 'raspberry-pi',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './raspberry-pi.component.html',
   styleUrls: ['./raspberry-pi.component.css'],
   standalone: true,
@@ -59,7 +60,6 @@ export default class RasberryPiComponent implements OnInit {
       });
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

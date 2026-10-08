@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { getLatestRun } from 'src/api/run.api';
@@ -14,6 +14,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
   selector: 'date-location',
+  host: { '(window:resize)': 'onResize()' },
   templateUrl: './date-location.component.html',
   styleUrl: './date-location.component.css',
   standalone: true,
@@ -51,7 +52,6 @@ export class DateLocationComponent implements OnInit {
     });
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
