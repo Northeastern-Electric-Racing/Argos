@@ -16,6 +16,7 @@ type RepeatMode = 'auto-fit' | 'auto-fill';
   selector: 'grid-layout',
   templateUrl: './grid-layout.component.html',
   styleUrls: ['./grid-layout.component.css'],
+  standalone: true,
   imports: [NgStyle]
 })
 export default class GridLayoutComponent {

@@ -7,6 +7,7 @@ import { GraphComponent } from '../graph/graph.component';
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
   providers: [DialogService],
+  standalone: true,
   imports: [GraphComponent]
 })
 export class GraphDialogComponent {

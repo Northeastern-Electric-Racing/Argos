@@ -43,7 +43,8 @@ export class GraphComponent implements OnInit, OnDestroy {
       data: {
         data: this.data(),
         color: this.color(),
-        title: this.title()
+        title: this.title(),
+        graphContainerId: this.graphContainerId() + 'big'
       }
     });
   };

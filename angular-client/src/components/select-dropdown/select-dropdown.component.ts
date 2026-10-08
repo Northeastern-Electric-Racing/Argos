@@ -1,4 +1,4 @@
-import { Component, effect, input, viewChild } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -32,8 +32,6 @@ export class SelectDropdownComponent {
   defaultValue = input<string | undefined>(undefined);
 
   selectedOption: DropdownOption | undefined;
-
-  dropdownRef = viewChild<Select>('dropdownRef');
 
   constructor() {
     // The dropdown's selected display tracks `defaultValue`:
