@@ -69,3 +69,9 @@ strip = false
 [[bin]]
 name = "scylla-server"
 path = "src/main.rs"
+
+# Needs Postgres, so plain `cargo test` skips it: run `cargo test --test integration -- --test-threads=1`
+[[test]]
+name = "integration"
+path = "tests/integration/main.rs"
+test = false

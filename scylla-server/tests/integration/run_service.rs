@@ -1,8 +1,5 @@
+use crate::test_utils::cleanup_and_prepare;
 use scylla_server::{services::run_service, transformers::run_transformer::PublicRun};
-use test_utils::cleanup_and_prepare;
-
-#[path = "test_utils.rs"]
-mod test_utils;
 
 #[tokio::test]
 async fn test_get_all_runs() -> Result<(), diesel::result::Error> {
