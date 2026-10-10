@@ -58,12 +58,11 @@ We use diesel, for our ORM: [diesel docs](https://diesel.rs/guides/getting-start
 
 However, when creating schema changes please use charybis, [Charybdis README](../charybdis/README.md).
 
-#### Integration tests:
+#### Tests:
 
-Since this app uses the database for testing, you must:
-
-1. Install the [diesel CLI](https://diesel.rs/guides/getting-started.html#installing-diesel-cli) globally.
-2. run `./integration_test.sh`:
+- Unit tests need no database and run in parallel: `cargo test`.
+- Integration tests (`tests/integration/`) need Postgres. They wait for it, run the migrations, and share it, so they run one at a time: `cargo test --test integration -- --test-threads=1`. Plain `cargo test` skips them.
+- `./integration_test.sh` starts a throwaway database and runs both.
 
 <!-- #### Test it yourself!
 

@@ -14,7 +14,7 @@ Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). 
 ## Testing
 
 - Frontend: `cd angular-client && ng test` (Karma/Jasmine).
-- Backend: `cd scylla-server && cargo test`.
+- Backend: `cd scylla-server && cargo test` (unit tests); `./integration_test.sh` also runs the database-backed integration tests.
 - Lint and format (frontend): `npx prettier --check "src/**/*.{ts,html,scss}" && npx ng lint`.
 - Build (backend): `cargo build`.
 
