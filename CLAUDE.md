@@ -38,16 +38,10 @@ Save all Playwright screenshots under `pictures/<branch-name>/` at the repo root
 - Never delete files without explicit confirmation.
 - Explain reasoning before making architectural changes.
 
-## Agent skills
+## Agent skills and tickets
 
-Agent skills live in the Delphi `argos-dev` workspace (`commit`, `open-pr`, `update-pr`, `run-local`, `address-pr-comments`, `verify-telemetry`, `verify-graph`, `journal`, `log-future-addition`). Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
+Agent skills and ticket conventions live in Delphi, in the `app` and `argos` Claude Code plugins on Delphi's `main`, which the Argos workspaces enable. Issues are GitHub Issues on `Northeastern-Electric-Racing/Argos`, filed from the templates in `.github/ISSUE_TEMPLATE/`. Matt Pocock's skills were removed for now; ADRs 0002–0006 record their earlier adoption.
 
-### Issue tracker
-
-Issues live in GitHub Issues on `Northeastern-Electric-Racing/Argos` via the `gh` CLI. See `docs/agents/issue-tracker.md` for ticket types, labels, and conventions.
-
-When an out-of-scope but worthwhile idea for the app comes up mid-work, offer to log it as an idea or spike instead of letting it slip (the `log-future-addition` and `journal` skills live in the Delphi `argos-dev` workspace).
-
-### ADRs
+## ADRs
 
 Architecture decisions live in `docs/adr/`.
