@@ -1,6 +1,5 @@
 name: Idea
 description: A feature or direction worth exploring. Ideas are explored through spikes and, once settled, become an epic.
-type: Feature
 labels: [idea]
 body:
   - type: markdown
