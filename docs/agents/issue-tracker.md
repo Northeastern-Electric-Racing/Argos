@@ -8,8 +8,8 @@ idea → spikes → epic → dev work
 
 | Ticket | What it is | Issue type | Parent |
 |---|---|---|---|
-| Idea | A feature or direction worth exploring. Short: the idea, its rationale, and the approaches to explore. | Feature | none |
-| Spike | One approach to an idea, usually a separate implementation of it, or a small standalone improvement. States what is explored and the hypothesis; findings go in comments and draft PRs, not the ticket. | Task | the idea, if any |
+| Idea | A feature or direction worth exploring. Short: the idea, its rationale, and the approaches to explore. | none | none |
+| Spike | One approach to an idea, usually a separate implementation of it, or a small standalone improvement. States what is explored and the hypothesis; findings go in comments and draft PRs, not the ticket. | none | the idea, if any |
 | Epic | A settled idea: the approach is decided. Includes a diagram of the change. | Feature | none; links the idea in "From idea" |
 | Dev work | Any implementation work: features, bugs, and tasks share one template. | Feature, Bug, or Task | the epic, if any |
 
@@ -27,7 +27,7 @@ Every issue gets one label from each of the first two groups and at least one ar
 | Category | `idea`, `spike`, `epic`, `dev work` (the template applies it) |
 | Area | `frontend`, `backend`, `devops` (any combination) |
 
-Bug, feature, and task are GitHub issue types, not labels.
+Bug, feature, and task are GitHub issue types, not labels. Ideas and spikes get no issue type: they explore work rather than being a feature or task themselves.
 
 Pull requests get a written-by label and at least one area label too, but no category label.
 
@@ -38,4 +38,4 @@ Pull requests get a written-by label and at least one area label too, but no cat
 - **Backticks:** at most three inline backtick usages per body. Reference files and identifiers in plain text. Diagram and context-transfer code blocks don't count.
 - **No prescriptions on ideas and spikes:** say what to explore and why, never how to build it. Ideas list open options; spikes state what to learn. Context transfer holds facts, not instructions or a proposed solution.
 - **Context transfer:** an optional code block on spikes, epics, and dev work for handing off to a person or agent. Start it with a short summary, then the raw context.
-- **Assignment:** assign yourself when you file.
+- **Assignment:** assign yourself when you file, except on spikes: leave those unassigned for whoever picks them up.
