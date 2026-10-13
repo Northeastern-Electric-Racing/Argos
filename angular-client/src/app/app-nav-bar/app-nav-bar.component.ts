@@ -176,12 +176,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       icon: 'error'
     },
     {
-      id: appRoutes.mapRoute(),
-      label: 'Map',
-      onClick: () => this.navigateTo(appRoutes.mapRoute()),
-      icon: 'map'
-    },
-    {
       id: appRoutes.cameraRoute(),
       label: 'Camera',
       onClick: () => this.navigateTo(appRoutes.cameraRoute()),

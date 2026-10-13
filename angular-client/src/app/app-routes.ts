@@ -6,7 +6,6 @@ import { Segment } from 'src/utils/bms.utils';
 
 const landingRoute = () => `/landing`;
 const graphRoute = () => `/graph`;
-const mapRoute = () => `/map`;
 const chargingRoute = () => `/charging`;
 const bmsRoute = () => `/bms`;
 const bmsSegmentViewRoute = (id: Segment) => `/bms/segment/${id + 1}`;
@@ -22,7 +21,6 @@ const lapTimerRoute = () => `/lap-timer`;
 export const appRoutes = {
   landingRoute,
   graphRoute,
-  mapRoute,
   chargingRoute,
   bmsRoute,
   bmsSegmentViewRoute,
