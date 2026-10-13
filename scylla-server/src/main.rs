@@ -26,12 +26,12 @@ use scylla_server::{
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
-        data_type_controller, file_insertion_controller,
+        data_type_controller, file_insertion_controller, lap_controller,
         rule_controller::{
             add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info,
             get_client_subscribed_rules, subscribe_rules, unsubscribe_rules,
         },
-        run_controller, scylla_config_controller,
+        run_controller, scylla_config_controller, track_controller,
         video_streamer_controller::{self},
     },
     mqtt_processor::pub_handle,
@@ -379,7 +379,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .route(
                     "/runs/update/{id}/{driver}/{location}/{notes}",
                     post(run_controller::update_run_with_data),
-                ),
+                )
+                // TRACKS AND LAPS
+                .route("/tracks", get(track_controller::get_all_tracks))
+                .route("/tracks/add", put(track_controller::add_track))
+                .route("/tracks/edit/{id}", put(track_controller::edit_track))
+                .route("/tracks/delete/{id}", post(track_controller::delete_track))
+                .route("/laps/{runId}/{trackId}", get(lap_controller::get_laps)),
         )
         .merge(
             Router::new()

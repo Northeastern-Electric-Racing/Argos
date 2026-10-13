@@ -7,7 +7,7 @@ use diesel_async::{
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
-use scylla_server::schema::{data, data_type, run};
+use scylla_server::schema::{data, data_type, run, track};
 use tokio::sync::OnceCell;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -73,6 +73,7 @@ pub async fn cleanup_and_prepare() -> Result<Pool<AsyncPgConnection>, diesel::re
         .execute(&mut client)
         .await?;
     diesel::delete(run::table).execute(&mut client).await?;
+    diesel::delete(track::table).execute(&mut client).await?;
 
     Ok(pool.clone())
 }
