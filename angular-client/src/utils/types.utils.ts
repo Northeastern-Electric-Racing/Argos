@@ -53,7 +53,28 @@ export type Run = {
 
 export type Coordinate = {
   lat: number;
-  lng: number;
+  lon: number;
+};
+
+export type Fix = Coordinate & { timeMs: number };
+
+export type TimingLine = {
+  a: Coordinate;
+  b: Coordinate;
+};
+
+export type Track = {
+  id: number;
+  name: string;
+  startLine: TimingLine | null;
+  finishLine: TimingLine | null;
+};
+
+export type TimedLap = {
+  number: number;
+  startMs: number;
+  endMs: number;
+  durationMs: number;
 };
 
 export type GraphData = {

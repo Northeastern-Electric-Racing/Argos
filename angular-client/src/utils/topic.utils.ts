@@ -99,8 +99,8 @@ export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
 // NOTE: The entire TPU/* namespace is absent from the current /datatypes list;
 // it appears the Raspberry-Pi telemetry feed (CPU/RAM/Wi-Fi/GPS) is no longer
 // wired through. Strings left in place because no replacement topics have been
-// identified — the raspberry-pi, map, and related components will stay blank
-// until a new topic source exists.
+// identified — the raspberry-pi and related components will stay blank until a
+// new topic source exists. /map reads TPU/GPS/Location (gps_mock in dev).
 export const cpuUsage = () => `TPU/OnBoard/CpuUsage`;
 export const cpuTemp = () => `TPU/OnBoard/CpuTemp`;
 export const ramUsage = () => `TPU/OnBoard/MemAvailable`;

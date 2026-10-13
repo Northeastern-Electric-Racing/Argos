@@ -42,3 +42,16 @@ model data_type {
 
   data data[]
 }
+
+model track {
+  id         Int    @id @default(autoincrement())
+  name       String
+  startALat  Float?
+  startALon  Float?
+  startBLat  Float?
+  startBLon  Float?
+  finishALat Float?
+  finishALon Float?
+  finishBLat Float?
+  finishBLon Float?
+}

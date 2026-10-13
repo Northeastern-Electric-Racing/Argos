@@ -1,21 +1,188 @@
-@if (isMobile) {
+@if (isMobile()) {
   <sidebar-toggle style="width: 100%" />
 }
-@if (isError) {
-  <div>
-    <error-page [errorMessage]="error!.message" />
+<p-confirmdialog />
+<div class="map-page">
+  <div class="map-area">
+    <map-canvas class="map-container" [mapStyle]="baseStyle" (loaded)="onMapLoaded($event)" />
+    @if (runId() !== undefined) {
+      <div class="overlay chip status">
+        <span class="dot" [class.live]="isLive()"></span>
+        {{ isLive() ? 'Live' : 'Recorded' }} · Run #{{ runId() }}
+      </div>
+    }
+    @if (placing(); as spec) {
+      <div class="overlay chip banner">
+        Click the map to place the {{ spec.kind }} line's {{ pendingEnd() ? 'second' : 'first' }} end
+        <span class="secondary">Esc to cancel</span>
+      </div>
+    }
+    @if (cursor(); as cursor) {
+      <div class="overlay chip readout">
+        @if (cursor.fix; as fix) {
+          @if (snapTarget()) {
+            Snapped to fix ·
+          }
+          {{ fix.lat | number: '1.6-6' }}, {{ fix.lon | number: '1.6-6' }}
+          <span class="secondary">{{ fix.timeMs | date: 'HH:mm:ss.SSS' }}</span>
+        } @else {
+          {{ cursor.point.lat | number: '1.6-6' }}, {{ cursor.point.lon | number: '1.6-6' }}
+        }
+      </div>
+    }
+    @if (historyError(); as error) {
+      <error-page class="overlay fill" [errorMessage]="error.message" />
+    } @else if (isLoading()) {
+      <loading-page class="overlay fill" />
+    }
   </div>
-} @else {
-  @if (isLoading) {
-    <div>
-      <loading-page />
-    </div>
-  } @else {
-    <div id="map" class="map-container">
-      <run-selector
-        style="position: absolute; margin-bottom: 16px; margin-right: 16px; bottom: 0; right: 0"
-        [selectRun]="onRunSelected"
+
+  <aside class="panel">
+    <h2>Run</h2>
+    <run-selector [selectRun]="onRunSelected" />
+
+    <h2>Track</h2>
+    <p-select
+      [options]="tracks()"
+      [(ngModel)]="selectedTrack"
+      optionLabel="name"
+      placeholder="Select a track"
+      [disabled]="saving()"
+      appendTo="body"
+      [style]="{ width: '100%' }"
+    />
+    <div class="row">
+      <input
+        pInputText
+        class="grow"
+        placeholder="New track name"
+        [formControl]="newTrackName"
+        (keydown.enter)="createTrack()"
+      />
+      <p-button
+        label="New track"
+        size="small"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="!canCreateTrack()"
+        (onClick)="createTrack()"
       />
     </div>
-  }
-}
+    @if (selectedTrack(); as track) {
+      <div class="row">
+        <p-button
+          label="Delete"
+          size="small"
+          severity="danger"
+          [outlined]="true"
+          [disabled]="saving()"
+          (onClick)="confirmDelete(track)"
+        />
+      </div>
+    }
+
+    <h2>Timing lines</h2>
+    @for (row of lineRows(); track row.spec.kind) {
+      <div class="row line-row">
+        <div class="grow">
+          {{ row.spec.label }}
+          <div class="hint">
+            @if (row.line) {
+              Placed · {{ row.lengthMetres | number: '1.1-1' }} m
+            } @else {
+              Not placed
+            }
+          </div>
+        </div>
+        @if (row.line) {
+          <p-button
+            label="Clear"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            [disabled]="saving()"
+            (onClick)="clearLine(row.spec)"
+          />
+        } @else {
+          <p-button
+            label="Place"
+            size="small"
+            severity="secondary"
+            [outlined]="placing() !== row.spec"
+            [disabled]="!selectedTrack() || saving()"
+            (onClick)="togglePlacing(row.spec)"
+          />
+        }
+      </div>
+      @if (row.line; as line) {
+        <details>
+          <summary class="hint">Edit coordinates</summary>
+          @for (end of lineEnds; track end) {
+            <label class="line-end">
+              <span class="secondary">End {{ $index + 1 }}</span>
+              <input
+                #latitude
+                pInputText
+                type="number"
+                step="0.000001"
+                aria-label="Latitude"
+                min="-90"
+                max="90"
+                [value]="line[end].lat.toFixed(6)"
+                [disabled]="saving()"
+                (change)="moveLineEnd(row.spec, end, 'lat', latitude)"
+              />
+              <input
+                #longitude
+                pInputText
+                type="number"
+                step="0.000001"
+                aria-label="Longitude"
+                min="-180"
+                max="180"
+                [value]="line[end].lon.toFixed(6)"
+                [disabled]="saving()"
+                (change)="moveLineEnd(row.spec, end, 'lon', longitude)"
+              />
+            </label>
+          }
+        </details>
+      }
+    }
+    <p class="hint">Start only: every crossing is a lap. Add a finish for accel and autocross.</p>
+
+    <h2>Laps</h2>
+    @if (lapTable(); as table) {
+      <p class="best">
+        Best <span>{{ table.best }}</span>
+      </p>
+      <p-table [value]="table.rows" size="small">
+        <ng-template #header>
+          <tr>
+            <th>#</th>
+            <th>Time</th>
+            <th>Δ best</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-lap>
+          <tr [class.best-lap]="lap.isBest">
+            <td>{{ lap.number }}</td>
+            <td>{{ lap.time }}</td>
+            <td class="delta">{{ lap.deltaToBest }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    } @else if (!selectedTrack()) {
+      <p class="hint">Select or create a track.</p>
+    } @else if (!selectedTrack()?.startLine) {
+      <p class="hint">Place the start line to time laps.</p>
+    } @else {
+      <p class="hint">No laps yet.</p>
+    }
+    @if (showOsmCredit) {
+      <a class="hint osm-credit" href="https://www.openstreetmap.org/copyright" target="_blank"
+        >© OpenStreetMap contributors</a
+      >
+    }
+  </aside>
+</div>

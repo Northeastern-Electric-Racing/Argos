@@ -6,3 +6,4 @@ ALTER TABLE "data" DROP CONSTRAINT "data_dataTypeName_fkey";
 DROP TABLE "data";
 DROP TABLE "dataType";
 DROP TABLE "run";
+DROP TABLE "track";

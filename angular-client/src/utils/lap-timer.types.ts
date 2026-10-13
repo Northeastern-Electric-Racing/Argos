@@ -1,3 +1,5 @@
+import { TimedLap } from './types.utils';
+
 export const LAP_STORE_SCHEMA_VERSION = 1;
 export const LAP_STORE_STORAGE_KEY = 'argos_lap_store_v1';
 
@@ -61,6 +63,22 @@ export const formatDeltaMs = (deltaMs: number | null): string => {
   if (deltaMs === 0) return `±${formatMs(0)}`;
   const sign = deltaMs > 0 ? '+' : '-';
   return `${sign}${formatMs(Math.abs(deltaMs))}`;
+};
+
+type LapRow = { number: number; time: string; deltaToBest: string; isBest: boolean };
+
+export const lapTable = (laps: TimedLap[]): { best: string; rows: LapRow[] } | null => {
+  if (laps.length === 0) return null;
+  const bestMs = Math.min(...laps.map((lap) => lap.durationMs));
+  return {
+    best: formatMs(bestMs),
+    rows: laps.map((lap) => ({
+      number: lap.number,
+      time: formatMs(lap.durationMs),
+      deltaToBest: formatDeltaMs(lap.durationMs - bestMs),
+      isBest: lap.durationMs === bestMs
+    }))
+  };
 };
 
 export const defaultSessionName = (startEpochMs: number, runId: number | null): string => {

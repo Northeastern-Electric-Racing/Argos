@@ -2,6 +2,7 @@ use chrono::serde::ts_milliseconds;
 
 pub mod controllers;
 pub mod error;
+pub mod lap_timing;
 pub mod services;
 
 pub mod argos_inserter;

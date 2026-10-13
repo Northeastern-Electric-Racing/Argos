@@ -43,6 +43,15 @@ const editRule = (ruleId: string) => `${baseURL}/rules/edit/${ruleId}`;
 const subscribeToRule = () => `${baseURL}/rules/subscribe`;
 const unsubscribeFromRule = () => `${baseURL}/rules/unsubscribe`;
 
+/* Tracks */
+const getAllTracks = () => `${baseURL}/tracks`;
+const addTrack = () => `${baseURL}/tracks/add`;
+const editTrack = (id: number) => `${baseURL}/tracks/edit/${id}`;
+const deleteTrack = (id: number) => `${baseURL}/tracks/delete/${id}`;
+
+/* Laps */
+const getLaps = (runId: number, trackId: number) => `${baseURL}/laps/${runId}/${trackId}`;
+
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
 
@@ -82,6 +91,13 @@ export const urls = {
   editRule,
   subscribeToRule,
   unsubscribeFromRule,
+
+  getAllTracks,
+  addTrack,
+  editTrack,
+  deleteTrack,
+
+  getLaps,
 
   authenticate,
 
