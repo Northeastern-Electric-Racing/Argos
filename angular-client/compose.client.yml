@@ -12,3 +12,4 @@ services:
 
     environment:
       BACKEND_URL: "http://192.168.100.11:8000"
+      MAP_PMTILES_URL: ${MAP_PMTILES_URL:-}

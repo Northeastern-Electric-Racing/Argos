@@ -4,4 +4,5 @@ import { Injectable } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class EnvService {
   backendUrl = (window as any).__env.BACKEND_URL;
+  mapPmtilesUrl: string | undefined = (window as any).__env.MAP_PMTILES_URL;
 }

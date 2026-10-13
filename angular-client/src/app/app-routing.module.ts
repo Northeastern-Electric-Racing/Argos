@@ -13,6 +13,10 @@ export const routes: Routes = [
   },
   { path: '', redirectTo: appRoutes.landingRoute(), pathMatch: 'full' },
   {
+    path: 'map',
+    loadComponent: () => import('src/pages/map/map.component')
+  },
+  {
     path: 'charging',
     loadComponent: () => import('src/pages/charging-page/charging-page.component')
   },

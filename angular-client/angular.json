@@ -25,9 +25,18 @@
             },
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets",
+              { "glob": "maplibre-gl-worker.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" }
+            ],
             "inlineStyleLanguage": "css",
-            "styles": ["src/styles.css", "node_modules/primeicons/primeicons.css", "primeicons/primeicons.css"],
+            "styles": [
+              "src/styles.css",
+              "node_modules/primeicons/primeicons.css",
+              "primeicons/primeicons.css",
+              "node_modules/maplibre-gl/dist/maplibre-gl.css"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules/"]
             },

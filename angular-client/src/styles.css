@@ -34,6 +34,8 @@
   --color-battery-med: #ffea00;
   --color-battery-high: #1ae824;
   --color-widget-glass: #ffffff;
+  --color-timing-start: #1ae824;
+  --color-timing-finish: #ef4343;
 
   /* Typography */
   --font-family: 'Roboto', sans-serif;
@@ -196,4 +198,19 @@ body {
 
 .cell-compare-dialog {
   pointer-events: auto !important;
+}
+
+/* Map line-end markers: created by MapLibre outside the map component's view, so styled globally. */
+.line-end-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--line-end-color);
+}
+/* No scale: MapLibre positions markers with transform, which scale would multiply, moving the marker off the cursor. */
+.line-end-marker:hover {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text-primary) 40%, transparent);
+}
+.line-end-marker.dragging {
+  box-shadow: 0 0 0 4px var(--color-text-primary);
 }
