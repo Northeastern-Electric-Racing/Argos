@@ -69,7 +69,7 @@
   min-height: 0;
   overflow: hidden;
   padding-right: 16px;
-  padding-bottom: 40px; /* reserve space for ApexCharts legend when multiple topics are plotted */
+  padding-bottom: 40px; /* room below the time axis */
 }
 
 .mobile-sidebar {

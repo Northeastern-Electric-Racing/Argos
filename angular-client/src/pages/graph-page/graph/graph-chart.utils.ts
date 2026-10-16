@@ -1,0 +1,115 @@
+import { LineData, Time, UTCTimestamp } from 'lightweight-charts';
+import { binarySearchInsertIndex } from 'src/utils/array.utils';
+import { GraphData } from 'src/utils/types.utils';
+
+export const DAY_MS = 24 * 60 * 60 * 1000;
+
+// ApexCharts' default palette, so series keep the colors people are used to.
+export const SERIES_COLORS = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#3F51B5', '#03A9F4', '#4CAF50'];
+
+export const seriesColor = (index: number): string => SERIES_COLORS[index % SERIES_COLORS.length];
+
+/** lightweight-charts' default time scale takes UNIX seconds; fractional seconds keep sub-second data apart. */
+export const toChartTime = (ms: number): UTCTimestamp => (ms / 1000) as UTCTimestamp;
+
+export const fromChartTime = (time: Time): number => (time as number) * 1000;
+
+/**
+ * Converts a series (sorted by x, in ms) to lightweight-charts line data.
+ * The library needs strictly increasing times, so a repeated timestamp keeps its latest value,
+ * matching what series.update() does when a point lands on the last point's time.
+ */
+export function toLineData(points: GraphData[]): LineData<Time>[] {
+  const out: LineData<Time>[] = [];
+  for (const point of points) {
+    const time = toChartTime(point.x);
+    if (out.length > 0 && out[out.length - 1].time === time) {
+      out[out.length - 1] = { time, value: point.y };
+    } else {
+      out.push({ time, value: point.y });
+    }
+  }
+  return out;
+}
+
+const pad = (n: number, width = 2) => n.toString().padStart(width, '0');
+
+const timeOfDay = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+/** Time-of-day with milliseconds only when the instant isn't on a whole second. */
+const preciseTimeOfDay = (d: Date) =>
+  d.getMilliseconds() === 0 ? timeOfDay(d) : `${timeOfDay(d)}.${pad(d.getMilliseconds(), 3)}`;
+
+/** Time axis labels: time of day, or date and minute on multi-day ranges. */
+export function formatTickMark(time: Time, multiDay: boolean): string {
+  const d = new Date(fromChartTime(time));
+  if (multiDay) {
+    return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  return preciseTimeOfDay(d);
+}
+
+/** Crosshair label and hover legend time, e.g. `3/14/26, 09:26:53.589`. */
+export function formatCrosshairTime(time: Time): string {
+  const d = new Date(fromChartTime(time));
+  return `${d.getMonth() + 1}/${d.getDate()}/${pad(d.getFullYear() % 100)}, ${preciseTimeOfDay(d)}`;
+}
+
+/** Values are rounded to 4 decimals on the way in; show them without trailing zeros. */
+export const formatValue = (value: number): string => (Math.round(value * 10000) / 10000).toString();
+
+/**
+ * Which price scale a series uses. One shared left axis by default; with multiple y-axes the first
+ * two series get the left and right axes and the rest get their own (unlabelled) overlay scale,
+ * since lightweight-charts only draws two price axes per pane.
+ */
+export function priceScaleIdFor(index: number, multipleYAxes: boolean): string {
+  if (!multipleYAxes || index === 0) return 'left';
+  if (index === 1) return 'right';
+  return `overlay-${index}`;
+}
+
+export interface DayBoundary {
+  /** The first plotted time on or after local midnight, in ms (the time scale only has data times). */
+  timeMs: number;
+  label: string;
+}
+
+/**
+ * One boundary per local day change across the series, placed at the first point of the new day.
+ * Returns nothing unless the data spans more than a day. Midnights inside a gap with no data
+ * collapse onto the next day's first point, labelled with that day.
+ */
+export function buildDayBoundaries(lines: GraphData[][]): DayBoundary[] {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const line of lines) {
+    if (line.length === 0) continue;
+    minX = Math.min(minX, line[0].x);
+    maxX = Math.max(maxX, line[line.length - 1].x);
+  }
+  if (!isFinite(minX) || maxX - minX <= DAY_MS) return [];
+
+  const boundaries: DayBoundary[] = [];
+  const cursor = new Date(minX);
+  cursor.setHours(24, 0, 0, 0);
+  while (cursor.getTime() <= maxX) {
+    const midnight = cursor.getTime();
+    let first = Infinity;
+    for (const line of lines) {
+      const idx = binarySearchInsertIndex(line, midnight);
+      if (idx < line.length) first = Math.min(first, line[idx].x);
+    }
+    if (isFinite(first)) {
+      const label = new Date(first).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      if (boundaries.at(-1)?.timeMs === first) {
+        // Several midnights fell in one gap: label the day the data resumes on.
+        boundaries[boundaries.length - 1].label = label;
+      } else {
+        boundaries.push({ timeMs: first, label });
+      }
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return boundaries;
+}

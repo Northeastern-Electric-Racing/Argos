@@ -1,31 +1,70 @@
 import {
+  ChangeDetectionStrategy,
   Component,
-  effect,
-  input,
+  DestroyRef,
+  ElementRef,
   OnDestroy,
   OnInit,
-  ChangeDetectionStrategy,
-  untracked,
+  effect,
   inject,
-  DestroyRef
+  input,
+  signal,
+  untracked,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  AutoscaleInfo,
+  ColorType,
+  CrosshairMode,
+  IChartApi,
+  ISeriesApi,
+  LineSeries,
+  MouseEventParams,
+  Time,
+  createChart
+} from 'lightweight-charts';
 import { Subject, takeUntil } from 'rxjs';
-import ApexCharts from 'apexcharts';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
-import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { DayBoundariesPrimitive } from './day-boundaries.primitive';
+import {
+  buildDayBoundaries,
+  formatCrosshairTime,
+  formatTickMark,
+  formatValue,
+  fromChartTime,
+  priceScaleIdFor,
+  seriesColor,
+  toChartTime,
+  toLineData
+} from './graph-chart.utils';
 
-// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
-type ApexOptions = Required<ApexCharts.ApexOptions>;
-type ChartOptions = Pick<
-  ApexOptions,
-  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke'
-> &
-  Partial<Pick<ApexOptions, 'legend' | 'annotations'>> & {
-    yaxis: Extract<ApexOptions['yaxis'], unknown[]>;
-  };
+export interface GraphConfig {
+  maxPoints: number;
+  yMin: number | null;
+  yMax: number | null;
+  rangeMode: 'time' | 'points';
+  timeRangeMs: number;
+}
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export interface LegendItem {
+  label: string;
+  color: string;
+}
+
+export interface HoverValues {
+  time: string;
+  /** series label -> value at or before the hovered time */
+  values: Map<string, string>;
+}
+
+/**
+ * Points trimmed off a series' head stay drawn (off-screen, left of the live window) until this many
+ * pile up, so live updates stay O(1) appends instead of a full setData on every trim.
+ */
+const MIN_STALE_HEAD = 50;
+const STALE_HEAD_FRACTION = 0.1;
 
 @Component({
   selector: 'graph',
@@ -38,232 +77,111 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
+  private container = viewChild.required<ElementRef<HTMLDivElement>>('chartContainer');
+
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<ObservableGraphInfo[]>();
   limitRange = input(true);
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
   clearGraph = input<number>(0);
-  options!: ChartOptions;
-  chart!: ApexCharts;
-  // label -> x,y (topic, data point)
-  data!: Map<string, Array<{ x: number; y: number }>>;
-  isSliding: boolean = false;
-  timeRangeMs: number | undefined = undefined;
-  private timeOuts: NodeJS.Timeout[] = [];
-  graphConfig = input.required<{
-    maxPoints: number;
-    yMin: number | null;
-    yMax: number | null;
-    rangeMode: 'time' | 'points';
-    timeRangeMs: number;
-  }>();
+  graphConfig = input.required<GraphConfig>();
   range = input<number | undefined>(undefined);
+
+  chart: IChartApi | undefined;
+  // label -> x,y (topic, data point), each sorted by x
+  data = new Map<string, GraphData[]>();
+  timeRangeMs: number | undefined = undefined;
+
+  readonly legend = signal<LegendItem[]>([]);
+  readonly hover = signal<HoverValues | null>(null);
+
+  private series = new Map<string, ISeriesApi<'Line'>>();
+  /** Points per series that were trimmed from `data` but are still in the chart's copy. */
+  private staleHead = new Map<string, number>();
+  private dayBoundaries = new DayBoundariesPrimitive();
+  private multiDay = false;
 
   constructor() {
     effect(() => {
       if (this.isPaused()) {
-        this.resetRange();
+        untracked(() => this.resetRange());
       }
     });
-    effect(() => {
-      const config = this.graphConfig();
-      if (this.chart && config) {
-        this.options.yaxis = [
-          {
-            ...this.options.yaxis,
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            },
-            max: config.yMax === null ? undefined : config.yMax,
-            min: config.yMin === null ? undefined : config.yMin
-          }
-        ];
 
-        this.chart.updateOptions(this.options);
+    effect(() => {
+      this.graphConfig();
+      untracked(() => {
+        // y min/max are read by each series' autoscaleInfoProvider; ask the scales to re-run it.
+        this.series.forEach((s) => s.priceScale().applyOptions({ autoScale: true }));
         this.resetRange();
-      }
+      });
     });
 
     effect(() => {
       this.realTime();
       this.clearGraph();
       this.valuesSubject();
-      if (this.chart) {
-        this.chart.updateSeries([]);
-      }
-      this.data = new Map();
-      this.timeRangeMs = undefined;
+      untracked(() => this.clearChart());
     });
 
     effect(() => {
-      // Re-run whenever the toggle flips. Per-topic axes are also rebuilt in updateChart
-      // (see applyMultiYAxisConfigs) so they stay in sync as topics are selected/deselected.
-      if (this.showMultipleYAxes()) {
-        this.applyMultiYAxisConfigs();
-      } else {
-        this.options.yaxis = [
-          {
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            }
-          }
-        ];
-      }
-      if (this.chart) {
-        this.chart.updateOptions(this.options);
-      }
+      this.showMultipleYAxes();
+      // Series can't move between price scales in place, so rebuild them on the new layout.
+      untracked(() => this.rebuildSeries());
     });
+
     effect(() => {
-      // End the subscriptions made for the previous topics
-      this.valuesChange$.next();
-
-      // Clean up existing timeouts
-      this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-      this.timeOuts = [];
-
-      this.valuesSubject().forEach(({ label, updates }) => {
-        updates
-          .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
-          .subscribe((data) => this.graphInfoCallback({ label, data }));
+      const values = this.valuesSubject();
+      untracked(() => {
+        // End the subscriptions made for the previous topics
+        this.valuesChange$.next();
+        values.forEach(({ label, updates }) => {
+          updates
+            .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
+            .subscribe((data) => this.graphInfoCallback({ label, data }));
+        });
       });
-
-      this.updateChart();
     });
+  }
+
+  ngOnInit(): void {
+    this.chart = createChart(this.container().nativeElement, {
+      autoSize: true,
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: '#fff',
+        fontSize: 12
+      },
+      grid: {
+        vertLines: { color: 'rgba(255, 255, 255, 0.08)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.08)' }
+      },
+      crosshair: { mode: CrosshairMode.Normal },
+      leftPriceScale: { visible: true, borderVisible: false },
+      rightPriceScale: { visible: false, borderVisible: false },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+        borderVisible: false,
+        tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay)
+      },
+      localization: {
+        timeFormatter: formatCrosshairTime,
+        priceFormatter: formatValue
+      }
+    });
+    this.chart.panes()[0].attachPrimitive(this.dayBoundaries);
+    this.chart.subscribeCrosshairMove(this.onCrosshairMove);
+    this.rebuildSeries();
   }
 
   ngOnDestroy(): void {
-    // Clean up timeouts
-    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-    this.timeOuts = [];
-
-    // Destroy chart and clear data
-    if (this.chart) {
-      this.chart.destroy();
-    }
+    this.chart?.unsubscribeCrosshairMove(this.onCrosshairMove);
+    this.chart?.remove();
+    this.chart = undefined;
+    this.series.clear();
     this.data.clear();
-  }
-
-  updateChart = () => {
-    // Skip chart updates if paused
-    if (this.isPaused() && this.limitRange()) {
-      return;
-    }
-
-    const series = Array.from(this.data).map(([key, points], index) => ({
-      name: key,
-      data: points,
-      yaxis: index
-    }));
-
-    // Keep the per-topic y-axes matched to the current series set: deselecting a topic
-    // drops its series here, so its y-axis must be pruned too (#630). untracked() so calling
-    // updateChart from an effect doesn't add showMultipleYAxes as a dependency.
-    if (untracked(this.showMultipleYAxes)) {
-      this.applyMultiYAxisConfigs();
-    }
-
-    // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
-    let effectiveRange: number | undefined = undefined;
-    if (this.realTime()) {
-      effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
-    }
-
-    // Multi-day historical ranges get date-aware labels and per-day boundary annotations.
-    // Skip the O(N) span scan in real-time mode — realtime ranges are bounded and never multi-day.
-    const span = this.realTime() ? null : this.computeDataSpan();
-    const isMultiDay = !!span && span.spanMs > DAY_MS;
-
-    // Single updateOptions call with series included — avoids two separate re-renders
-    // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
-    this.chart.updateOptions(
-      {
-        ...this.options,
-        series,
-        xaxis: {
-          ...this.options.xaxis,
-          range: effectiveRange,
-          labels: {
-            ...this.options.xaxis.labels,
-            formatter: isMultiDay ? this.multiDayLabelFormatter : this.singleDayLabelFormatter
-          }
-        },
-        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span!) : [] }
-      },
-      false, // redraw (default is false)
-      false // animate (default is true)
-    );
-  };
-
-  // Build one y-axis per current topic (order matches the series' `yaxis: index`).
-  private applyMultiYAxisConfigs(): void {
-    this.options.yaxis = Array.from(this.data.keys()).map((key, index) => ({
-      title: {
-        text: key.replace('0', ''),
-        style: {
-          color: 'grey',
-          fontSize: '20px',
-          fontWeight: 'bold'
-        }
-      },
-      labels: {
-        style: {
-          colors: '#fff'
-        }
-      },
-      opposite: index % 2 !== 0 // Alternate sides for each y-axis
-    }));
-  }
-
-  private computeDataSpan(): { minX: number; maxX: number; spanMs: number } | null {
-    let minX = Infinity;
-    let maxX = -Infinity;
-    for (const points of this.data.values()) {
-      if (points.length === 0) continue;
-      // Series data is kept sorted by x (see graphInfoCallback), so endpoints are the extrema.
-      if (points[0].x < minX) minX = points[0].x;
-      if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
-    }
-    if (!isFinite(minX) || !isFinite(maxX)) return null;
-    return { minX, maxX, spanMs: maxX - minX };
-  }
-
-  private singleDayLabelFormatter = (val: string | number): string =>
-    new Date(+val).toLocaleTimeString('en-US', { hour12: false });
-
-  private multiDayLabelFormatter = (val: string | number): string => {
-    const d = new Date(+val);
-    const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-    const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    return `${date} ${time}`;
-  };
-
-  private buildDayBoundaryAnnotations(span: { minX: number; maxX: number }) {
-    const annotations: { x: number; strokeDashArray: number; borderColor: string; label: object }[] = [];
-    // First local-midnight strictly after minX.
-    const cursor = new Date(span.minX);
-    cursor.setHours(24, 0, 0, 0);
-    for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
-      const date = new Date(t);
-      annotations.push({
-        x: t,
-        strokeDashArray: 4,
-        borderColor: '#8fcadd',
-        label: {
-          borderColor: '#8fcadd',
-          style: { color: '#fff', background: '#0c2026', fontSize: '11px' },
-          orientation: 'horizontal',
-          position: 'top',
-          offsetY: -4,
-          text: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-        }
-      });
-    }
-    return annotations;
   }
 
   graphInfoCallback = (info: GraphInfo) => {
@@ -277,6 +195,10 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         this.data.set(seriesLabel, []);
       }
       const line = this.data.get(seriesLabel)!;
+      // A first batch (e.g. a historical query) or an out-of-order point is handed over whole;
+      // in-order live points are appended one by one.
+      let rebuild = line.length === 0;
+      const appended: GraphData[] = [];
 
       value.forEach((val) => {
         const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
@@ -284,14 +206,17 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         // if the point is in order according to it's timestamp, just push it to the end of the line
         if (line.length === 0 || val.x >= line.at(-1)!.x) {
           line.push(point);
+          appended.push(point);
         } else {
           // Out of order: binary search for correct sorted position
           // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
           const idx = binarySearchInsertIndex(line, val.x);
           line.splice(idx, 0, point);
+          rebuild = true;
         }
       });
 
+      let trimmed = 0;
       // Trim after processing all points in this series batch
       if (this.realTime() && line.length > 0) {
         const config = this.graphConfig();
@@ -303,121 +228,165 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
           const cutoff = latestX - config.timeRangeMs - buffer;
           if (line[0].x < cutoff) {
             line.shift();
+            trimmed++;
           }
         } else if (line.length > config.maxPoints * 1.1) {
           const shiftedPoint = line.shift();
+          trimmed++;
           // point based trim requires is to calculate the max time range we can show that
           // doesn't show points being deleted. So we default to smallest range.
           const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
       }
+
+      this.syncSeries(seriesLabel, line, appended, rebuild, trimmed);
     });
 
-    this.updateChart();
+    this.refreshView();
   };
 
-  ngOnInit(): void {
-    this.data = new Map();
-
-    const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) return;
-
-    this.options = {
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: false,
-          dynamicAnimation: {
-            speed: 1
-          }
-        }
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        width: 3
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 6,
-        labels: {
-          style: {
-            colors: '#fff'
-          },
-          formatter: (val: string | number) => new Date(+val).toLocaleTimeString('en-US', { hour12: false })
-        }
-      },
-      // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
-      yaxis: [
-        {
-          labels: {
-            style: {
-              colors: '#fff'
-            }
-          }
-        }
-      ],
-      tooltip: {
-        enabled: true,
-        // Make the tooltip “follow” your cursor as you hover
-        followCursor: true,
-        // If you’d rather show a shared tooltip for multiple series, set shared: true
-        shared: false,
-        intersect: false,
-        x: {
-          //format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        },
-        theme: 'dark'
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 100]
-        }
-      },
-      grid: {
-        show: true
-      },
-      legend: {
-        labels: {
-          colors: '#fff'
-        },
-        fontSize: '15px'
-      }
-    };
-
-    this.chart = new ApexCharts(chartContainer, {
-      series: [],
-      ...this.options
-    });
-    this.chart.render().then(() => {
-      this.updateChart();
-    });
+  /** The hovered value of a series, for the legend. */
+  hoverValue(label: string): string | undefined {
+    return this.hover()?.values.get(label);
   }
 
   resetRange() {
     this.timeRangeMs = undefined;
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: undefined
-      }
-    });
+    this.chart?.timeScale().fitContent();
   }
+
+  /** Pushes one series' changes to the chart: appends when possible, a full setData otherwise. */
+  private syncSeries(label: string, line: GraphData[], appended: GraphData[], rebuild: boolean, trimmed: number) {
+    if (!this.chart) return;
+    let series = this.series.get(label);
+    if (!series) {
+      series = this.addSeries(label);
+      rebuild = true;
+    }
+
+    const stale = (this.staleHead.get(label) ?? 0) + trimmed;
+    if (rebuild || stale > Math.max(MIN_STALE_HEAD, line.length * STALE_HEAD_FRACTION)) {
+      series.setData(toLineData(line));
+      this.staleHead.set(label, 0);
+      return;
+    }
+    for (const point of appended) {
+      series.update({ time: toChartTime(point.x), value: point.y });
+    }
+    this.staleHead.set(label, stale);
+  }
+
+  private addSeries(label: string): ISeriesApi<'Line'> {
+    const index = this.series.size;
+    const color = seriesColor(index);
+    const multipleYAxes = untracked(this.showMultipleYAxes);
+    const series = this.chart!.addSeries(LineSeries, {
+      color,
+      lineWidth: 3,
+      priceScaleId: priceScaleIdFor(index, multipleYAxes),
+      // With an axis per topic, tag each axis' last-value label with its topic.
+      title: multipleYAxes ? label : '',
+      priceLineVisible: false,
+      priceFormat: { type: 'custom', formatter: formatValue, minMove: 0.0001 },
+      autoscaleInfoProvider: (original: () => AutoscaleInfo | null) => this.applyYLimits(original(), multipleYAxes)
+    });
+    this.series.set(label, series);
+    this.legend.update((items) => [...items, { label, color }]);
+    return series;
+  }
+
+  /** Fixed y min/max from the graph config, on the shared axis only (as before). */
+  private applyYLimits(info: AutoscaleInfo | null, multipleYAxes: boolean): AutoscaleInfo | null {
+    const { yMin, yMax } = untracked(this.graphConfig);
+    if (multipleYAxes || !info?.priceRange || (yMin === null && yMax === null)) return info;
+    return {
+      ...info,
+      priceRange: {
+        minValue: yMin ?? info.priceRange.minValue,
+        maxValue: yMax ?? info.priceRange.maxValue
+      }
+    };
+  }
+
+  private removeAllSeries() {
+    this.series.forEach((s) => this.chart?.removeSeries(s));
+    this.series.clear();
+    this.staleHead.clear();
+    this.legend.set([]);
+    this.hover.set(null);
+  }
+
+  private clearChart() {
+    this.removeAllSeries();
+    this.data = new Map();
+    this.timeRangeMs = undefined;
+    this.dayBoundaries.setBoundaries([]);
+  }
+
+  /** Recreates every series from `data` (first render, or the y-axis layout changed). */
+  private rebuildSeries() {
+    if (!this.chart) return;
+    this.removeAllSeries();
+    const multipleYAxes = untracked(this.showMultipleYAxes);
+    this.chart.applyOptions({ rightPriceScale: { visible: multipleYAxes && this.data.size > 1 } });
+    this.data.forEach((line, label) => this.syncSeries(label, line, [], true, 0));
+    this.refreshView();
+  }
+
+  /** Visible time window: the live window in real time, everything (plus day boundaries) otherwise. */
+  private refreshView() {
+    if (!this.chart) return;
+    // While paused the user can scroll and zoom freely
+    if (untracked(this.isPaused) && untracked(this.limitRange)) return;
+
+    if (untracked(this.showMultipleYAxes)) {
+      this.chart.applyOptions({ rightPriceScale: { visible: this.series.size > 1 } });
+    }
+
+    const timeScale = this.chart.timeScale();
+    if (untracked(this.realTime)) {
+      this.setMultiDay(false);
+      const config = untracked(this.graphConfig);
+      const range = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
+      let latest = -Infinity;
+      this.data.forEach((line) => {
+        if (line.length > 0) latest = Math.max(latest, line[line.length - 1].x);
+      });
+      if (range !== undefined && isFinite(latest)) {
+        timeScale.setVisibleRange({ from: toChartTime(latest - range), to: toChartTime(latest) });
+      } else {
+        timeScale.fitContent();
+      }
+      return;
+    }
+
+    const boundaries = buildDayBoundaries(Array.from(this.data.values()));
+    this.setMultiDay(boundaries.length > 0);
+    this.dayBoundaries.setBoundaries(boundaries);
+    timeScale.fitContent();
+  }
+
+  private setMultiDay(multiDay: boolean) {
+    if (multiDay === this.multiDay) return;
+    this.multiDay = multiDay;
+    // A new formatter function makes the time scale drop its cached labels.
+    this.chart?.applyOptions({ timeScale: { tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay) } });
+  }
+
+  private onCrosshairMove = (param: MouseEventParams<Time>) => {
+    if (param.time === undefined) {
+      this.hover.set(null);
+      return;
+    }
+    // Hold each series' latest value at the hovered time, since topics rarely share timestamps.
+    const timeMs = fromChartTime(param.time);
+    const values = new Map<string, string>();
+    this.data.forEach((line, label) => {
+      let idx = binarySearchInsertIndex(line, timeMs);
+      if (line[idx]?.x !== timeMs) idx--;
+      if (idx >= 0) values.set(label, formatValue(line[idx].y));
+    });
+    this.hover.set({ time: formatCrosshairTime(param.time), values });
+  };
 }

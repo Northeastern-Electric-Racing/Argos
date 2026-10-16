@@ -35,6 +35,7 @@
     "@primeuix/themes": "^2.0.3",
     "@types/mapbox-gl": "^2.7.19",
     "apexcharts": "^5.16.0",
+    "lightweight-charts": "5.2.1",
     "mapbox-gl": "^3.1.0",
     "material-design-icons": "^3.0.1",
     "ng-apexcharts": "2.5.0",
