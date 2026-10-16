@@ -1,4 +1,4 @@
-import { Component, HostListener, input, OnInit } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mobile.component';
@@ -13,7 +13,10 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
   templateUrl: './graph-sidebar.component.html',
   styleUrls: ['./graph-sidebar.component.css'],
   standalone: true,
-  imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent]
+  imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class GraphSidebarComponent implements OnInit {
   dataTypes = input.required<DataType[]>();
@@ -25,7 +28,6 @@ export default class GraphSidebarComponent implements OnInit {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnDestroy, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { MessageService, PrimeTemplate } from 'primeng/api';
@@ -52,7 +52,10 @@ export interface NavItem {
     NotificationListComponent,
     Popover,
     Badge
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
@@ -95,7 +98,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   }
 
   // on resize, set the screen width
-  @HostListener('window:resize')
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;

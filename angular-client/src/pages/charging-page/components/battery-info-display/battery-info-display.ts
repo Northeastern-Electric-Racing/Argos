@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -12,7 +12,10 @@ import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobil
   templateUrl: './battery-info-display.html',
   styleUrls: ['./battery-info-display.css'],
   standalone: true,
-  imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent]
+  imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class BatteryInfoDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -58,7 +61,6 @@ export class BatteryInfoDisplayComponent implements OnInit {
       });
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }

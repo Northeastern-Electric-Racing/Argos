@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -34,7 +34,10 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
     StateOfChargeDisplayComponent,
     PackTempComponent,
     CombinedStatusDisplayComponent
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class ChargingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -52,7 +55,6 @@ export default class ChargingPageComponent implements OnInit {
       });
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
