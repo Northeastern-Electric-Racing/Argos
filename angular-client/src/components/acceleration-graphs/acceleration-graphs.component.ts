@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -19,7 +19,7 @@ import VStackComponent from '../vstack/vstack.component';
   selector: 'acceleration-graphs',
   templateUrl: './acceleration-graphs.component.html',
   styleUrls: ['./acceleration-graphs.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, GraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export class AccelerationGraphsComponent implements OnInit {

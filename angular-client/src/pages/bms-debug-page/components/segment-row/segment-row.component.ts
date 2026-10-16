@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Segment } from 'src/utils/bms.utils';
@@ -16,6 +16,7 @@ import { SegmentOverviewComponent } from '../segment-overview/segment-overview.c
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
 })
 export class SegmentRowComponent implements OnInit {

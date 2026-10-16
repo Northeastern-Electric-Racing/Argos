@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { allSegments } from 'src/utils/bms.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
@@ -23,6 +23,7 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
     SegmentRowComponent,
     SectionHeaderComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

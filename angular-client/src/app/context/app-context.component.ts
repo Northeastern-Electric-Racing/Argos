@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CellService } from 'src/services/cell.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
@@ -16,7 +16,7 @@ import { NotificationLogService } from 'src/services/notification-log.service';
 @Component({
   selector: 'app-context',
   templateUrl: './app-context.component.html',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [Toast, AppNavBarComponent, RouterOutlet]
 })
 export default class AppContextComponent implements OnInit {

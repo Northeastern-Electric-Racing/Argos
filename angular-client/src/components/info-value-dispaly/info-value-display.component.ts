@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { formatDisplayValue } from 'src/utils/pipes.utils';
 import { BatteryPercentageComponent } from '../battery-percentage/battery-percentage.component';
 import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
@@ -33,7 +33,7 @@ export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConf
   selector: 'info-value-display',
   templateUrl: './info-value-display.component.html',
   styleUrl: './info-value-display.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     BatteryPercentageComponent,
     ConnectionDotWithMessageComponent,

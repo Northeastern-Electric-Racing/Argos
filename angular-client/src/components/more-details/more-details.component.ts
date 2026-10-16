@@ -7,7 +7,6 @@ import { ButtonComponent } from '../argos-button/argos-button.component';
 @Component({
   selector: 'more-details',
   templateUrl: './more-details.component.html',
-  standalone: true,
   imports: [ButtonComponent]
 })
 export default class MoreDetailsComponent {

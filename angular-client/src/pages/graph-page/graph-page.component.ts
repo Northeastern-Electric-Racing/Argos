@@ -1,4 +1,14 @@
-import { ChangeDetectorRef, Component, computed, OnDestroy, OnInit, signal, inject, DestroyRef } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  OnDestroy,
+  OnInit,
+  signal,
+  inject,
+  DestroyRef,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -29,6 +39,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
   styleUrls: ['./graph-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,

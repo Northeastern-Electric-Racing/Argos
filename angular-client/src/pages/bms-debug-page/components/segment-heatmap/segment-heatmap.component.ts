@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
@@ -24,6 +24,7 @@ export interface DisplayCell {
   selector: 'segment-heatmap',
   templateUrl: './segment-heatmap.component.html',
   styleUrl: './segment-heatmap.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [HexTileComponent]
 })
 export class SegmentHeatmapComponent implements OnInit {

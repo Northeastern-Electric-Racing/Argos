@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { startNewRun } from 'src/api/run.api';
@@ -28,7 +28,6 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
   selector: 'landing-page',
   styleUrls: ['./landing-page.component.css'],
   templateUrl: './landing-page.component.html',
-  standalone: true,
   imports: [
     LandingPageMobileComponent,
     MatGridList,
@@ -47,6 +46,7 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
     LatencyDisplayComponent,
     ConnectionDisplayComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -13,7 +13,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   selector: 'pack-voltage-display',
   templateUrl: './pack-voltage-display.component.html',
   styleUrls: ['./pack-voltage-display.component.css'],
-  standalone: true,
   imports: [
     InfoBackgroundComponent,
     PackVoltageMobileDisplayComponent,
@@ -21,6 +20,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     TypographyComponent,
     HStackComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

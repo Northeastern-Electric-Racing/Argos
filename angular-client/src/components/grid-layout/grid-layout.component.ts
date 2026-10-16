@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { NgStyle } from '@angular/common';
 
 type RepeatMode = 'auto-fit' | 'auto-fill';
@@ -16,7 +16,7 @@ type RepeatMode = 'auto-fit' | 'auto-fill';
   selector: 'grid-layout',
   templateUrl: './grid-layout.component.html',
   styleUrls: ['./grid-layout.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgStyle]
 })
 export default class GridLayoutComponent {

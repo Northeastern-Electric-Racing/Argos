@@ -16,7 +16,7 @@
       </tr>
     </ng-template>
     <div style="width: 100%; padding-right: 5px; padding-left: 0px" class="fault-text-body"></div>
-    <ng-template pTemplate="body" let-fault>
+    <ng-template #body let-fault>
       <tr [pSelectableRow]="fault">
         <td>{{ fault.name }}</td>
         <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>

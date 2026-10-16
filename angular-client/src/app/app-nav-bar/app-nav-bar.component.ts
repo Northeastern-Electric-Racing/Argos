@@ -1,7 +1,7 @@
-import { Component, inject, OnDestroy, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { MessageService, PrimeTemplate } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
@@ -36,10 +36,8 @@ export interface NavItem {
   selector: 'app-nav-bar',
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
-  standalone: true,
   imports: [
     Drawer,
-    PrimeTemplate,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -53,6 +51,7 @@ export interface NavItem {
     Popover,
     Badge
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

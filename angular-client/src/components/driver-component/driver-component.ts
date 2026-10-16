@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { getLatestRun } from 'src/api/run.api';
 import { topics } from 'src/utils/topic.utils';
@@ -13,7 +13,7 @@ import VStackComponent from '../vstack/vstack.component';
   selector: 'driver-component',
   templateUrl: './driver-component.html',
   styleUrls: ['./driver-component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export class DriverComponent implements OnInit {

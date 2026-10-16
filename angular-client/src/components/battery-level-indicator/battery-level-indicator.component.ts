@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 
 /**
@@ -9,7 +9,7 @@ import Theme from 'src/services/theme.service';
   selector: 'battery-level-indicator',
   templateUrl: './battery-level-indicator.component.html',
   styleUrl: './battery-level-indicator.component.css',
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class BatteryLevelIndicatorComponent {
   percentage = input<number>(0);

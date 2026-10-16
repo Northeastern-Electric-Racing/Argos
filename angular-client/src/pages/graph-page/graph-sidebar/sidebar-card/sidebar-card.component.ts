@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, input, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -15,7 +15,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'sidebar-card',
   templateUrl: './sidebar-card.component.html',
   styleUrls: ['./sidebar-card.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon, NgStyle, TypographyComponent]
 })
 export default class SidebarCardComponent implements OnInit {

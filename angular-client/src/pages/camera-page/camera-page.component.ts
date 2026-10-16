@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { SelectChangeEvent, Select } from 'primeng/select';
@@ -13,7 +13,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'camera-page',
   templateUrl: './camera-page.component.html',
   styleUrl: './camera-page.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
 })
 export class CameraPageComponent implements OnInit {

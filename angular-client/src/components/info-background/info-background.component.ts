@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import { MatIcon } from '@angular/material/icon';
@@ -19,7 +19,7 @@ interface ButtonInputs {
   selector: 'info-background',
   templateUrl: './info-background.component.html',
   styleUrls: ['./info-background.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent]
 })
 export class InfoBackgroundComponent {

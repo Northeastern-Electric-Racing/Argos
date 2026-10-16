@@ -1,35 +1,11 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
-import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   selector: 'battery-percentage',
   templateUrl: 'battery-percentage.component.html',
   styleUrls: ['battery-percentage.component.css'],
-  // TODO: this is just a dumb animation that changes the color of the nub, would like to make something actually
-  // cool or interesting in the future
-  animations: [
-    // metadata array
-    trigger('toggleClick', [
-      // trigger block
-      state(
-        'true',
-        style({
-          // final CSS following animation
-          backgroundColor: 'grey'
-        })
-      ),
-      state(
-        'false',
-        style({
-          backgroundColor: Theme.batteryBack
-        })
-      ),
-      transition('true => false', animate('1000ms linear')), // animation timing
-      transition('false => true', animate('1000ms linear'))
-    ])
-  ],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class BatteryPercentageComponent {
   percentage = input.required<number>();
@@ -45,7 +21,7 @@ export class BatteryPercentageComponent {
   fillWidth = computed(() => this.width() * 0.9 + 'px');
   fillMarginBottom = computed(() => this.height() * 0.05 + 'px');
 
-  // Nub Styles
+  // Nub Styles (clicking greys the nub; the CSS transition fades it)
   clicked: boolean = false;
   nubHeight = computed(() => this.height() / 10 + 'px');
   nubWidth = computed(() => this.width() / 2 + 'px');

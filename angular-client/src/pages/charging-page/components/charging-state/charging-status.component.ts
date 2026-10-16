@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import Theme from 'src/services/theme.service';
@@ -11,7 +11,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   selector: 'charging-status',
   templateUrl: './charging-status.component.html',
   styleUrls: ['./charging-status.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, CurrentTotalTimerComponent, HStackComponent]
 })
 export default class ChargingStatusComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
 import { DividerComponent } from '../../../../components/divider/divider';
@@ -12,7 +12,6 @@ import ActiveStatusComponent from '../active-status/active-status.component';
   selector: 'combined-status-display',
   templateUrl: './combined-status-display.component.html',
   styleUrls: ['./combined-status-display.component.css'],
-  standalone: true,
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -22,6 +21,7 @@ import ActiveStatusComponent from '../active-status/active-status.component';
     FaultedStatusComponent,
     ActiveStatusComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

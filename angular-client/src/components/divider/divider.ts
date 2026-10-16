@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'divider',
   templateUrl: './divider.html',
   styleUrls: ['./divider.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class DividerComponent {}

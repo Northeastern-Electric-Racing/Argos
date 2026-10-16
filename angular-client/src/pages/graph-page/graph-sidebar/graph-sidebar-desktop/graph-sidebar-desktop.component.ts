@@ -1,7 +1,18 @@
-import { Component, Injector, OnDestroy, computed, inject, input, linkedSignal, signal, untracked } from '@angular/core';
+import {
+  Component,
+  Injector,
+  OnDestroy,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  untracked,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode, PrimeTemplate } from 'primeng/api';
+import { TreeNode } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { ToggleSwitch } from 'primeng/toggleswitch';
@@ -31,7 +42,8 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
-  imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [ButtonComponent, Tree, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);

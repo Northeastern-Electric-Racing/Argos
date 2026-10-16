@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -10,7 +10,7 @@ import HStackComponent from '../hstack/hstack.component';
   selector: 'torque-display',
   templateUrl: './torque-display.component.html',
   styleUrls: ['./torque-display.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent]
 })
 export default class TorqueDisplayComponent implements OnInit {

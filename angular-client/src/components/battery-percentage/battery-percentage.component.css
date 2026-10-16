@@ -4,6 +4,10 @@
   align-items: center;
 }
 
+.nub {
+  transition: background-color 1000ms linear;
+}
+
 .battery-bar {
   transform: rotate(180deg);
   /* Center a div */

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, Renderer2, computed, inject, input } from '@angular/core';
+import { Component, ElementRef, OnInit, Renderer2, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import {
   ApexNonAxisChartSeries,
   ApexPlotOptions,
@@ -22,7 +22,7 @@ export type ChartOptions = {
   selector: 'pie-chart',
   templateUrl: 'pie-chart.component.html',
   styleUrls: ['pie-chart.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgApexchartsModule]
 })
 export default class PieChartComponent implements OnInit {

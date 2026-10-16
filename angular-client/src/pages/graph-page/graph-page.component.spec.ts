@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -13,7 +14,7 @@ import GraphPageComponent from './graph-page.component';
 describe('GraphPageComponent — URL/topic-selection sync', () => {
   let fixture: ComponentFixture<GraphPageComponent>;
   let topicService: TopicSelectionService;
-  let routerNavigate: jasmine.Spy;
+  let routerNavigate: Mock;
 
   const dataTypeA: DataType = { name: 'BMS/Pack/SoC', unit: '%' };
   const dataTypeB: DataType = { name: 'MPU/State/Speed', unit: 'mph' };
@@ -59,7 +60,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
         }
       }
     };
-    routerNavigate = jasmine.createSpy('navigate').and.returnValue(Promise.resolve(true));
+    routerNavigate = vi.fn().mockName('navigate').mockResolvedValue(true);
     const routerMock = {
       url: '/graph',
       navigate: routerNavigate
@@ -127,7 +128,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     topicService.clearSelection();
 
     expect(topicService.getSelectedDataTypes().value).toEqual([]);
-    const lastNav = routerNavigate.calls.mostRecent();
-    expect(lastNav.args[1].queryParams.topics).toBeNull();
+    const lastNav = routerNavigate.mock.lastCall!;
+    expect(lastNav[1].queryParams.topics).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -12,7 +12,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   selector: 'state-of-charge-display',
   templateUrl: './state-of-charge-display.component.html',
   styleUrls: ['./state-of-charge-display.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, BatteryPercentageComponent, TypographyComponent, HStackComponent]
 })
 export default class StateOfChargeDisplayComponent implements OnInit {

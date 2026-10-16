@@ -1,4 +1,4 @@
-import { Component, input, computed } from '@angular/core';
+import { Component, input, computed, ChangeDetectionStrategy } from '@angular/core';
 
 /** Use one-dot-leader (U+2024) instead of period — it falls back to
  *  monospace with a consistent advance width in the Segment7 font. */
@@ -16,7 +16,7 @@ const DOT = '\u2024';
   selector: 'seven-segment-display',
   templateUrl: './seven-segment-display.component.html',
   styleUrls: ['./seven-segment-display.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class SevenSegmentDisplayComponent {
   /** The value to display (e.g., "1.70") */

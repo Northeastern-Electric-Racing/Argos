@@ -10,7 +10,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'graph-header',
   templateUrl: './graph-header.component.html',
   styleUrls: ['./graph-header.component.css'],
-  standalone: true,
   imports: [TypographyComponent, SidebarToggleComponent],
   host: {
     '(window:resize)': 'onResize()'

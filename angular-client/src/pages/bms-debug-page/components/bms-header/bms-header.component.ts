@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 
 import { SegmentSelectorComponent } from '../segment-selector/segment-selector.component';
@@ -10,8 +10,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'bms-header',
   templateUrl: './bms-header.component.html',
   styleUrl: './bms-header.component.css',
-  standalone: true,
   imports: [MatGridList, MatGridTile, SegmentSelectorComponent, CRCComponent, BmsOverflowComponent, TypographyComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

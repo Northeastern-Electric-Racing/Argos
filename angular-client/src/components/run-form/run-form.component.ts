@@ -1,4 +1,4 @@
-import { Component, OnInit, DestroyRef } from '@angular/core';
+import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
@@ -16,7 +16,7 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
   selector: 'run-form',
   templateUrl: './run-form.component.html',
   styleUrl: './run-form.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
 })
 export class RunFormComponent implements OnInit {

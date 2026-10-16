@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { NgStyle } from '@angular/common';
 
 type JusitfyContent = 'space-between' | 'space-around' | 'space-evenly' | 'center' | 'start' | 'end';
@@ -9,7 +9,7 @@ type AlignItems = 'center' | 'start' | 'end' | 'stretch';
   selector: 'hstack',
   templateUrl: './hstack.component.html',
   styleUrls: ['./hstack.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgStyle]
 })
 export default class HStackComponent {

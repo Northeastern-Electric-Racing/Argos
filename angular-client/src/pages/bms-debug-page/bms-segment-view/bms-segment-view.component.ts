@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { allSegments, Chip, Segment } from 'src/utils/bms.utils';
@@ -23,6 +23,7 @@ const formatAllSelectorName = (name: string) => {
   host: {
     '(window:resize)': 'onResize()'
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     MatGridList,
     MatGridTile,

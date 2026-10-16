@@ -1,4 +1,4 @@
-import { Component, OnInit, input, computed, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, input, computed, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -33,7 +33,7 @@ export enum EfuseLockMode {
   selector: 'efuse-card',
   templateUrl: './efuse-card.component.html',
   styleUrls: ['./efuse-card.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
     HStackComponent,

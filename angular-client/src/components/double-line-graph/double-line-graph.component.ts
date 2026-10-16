@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, inject, input } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
@@ -19,7 +19,7 @@ type ChartOptions = Pick<
   templateUrl: './double-line-graph.component.html',
   styleUrls: ['./double-line-graph.component.css'],
   providers: [DialogService],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   public dialogService = inject(DialogService);

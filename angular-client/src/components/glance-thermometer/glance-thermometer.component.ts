@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Compact thermometer widget sized for the At A Glance bar.
@@ -8,7 +8,7 @@ import { Component, computed, input } from '@angular/core';
   selector: 'glance-thermometer',
   templateUrl: './glance-thermometer.component.html',
   styleUrl: './glance-thermometer.component.css',
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class GlanceThermometerComponent {
   temperature = input<number>(0);

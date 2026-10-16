@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { BatteryPercentageComponent } from './battery-percentage.component';
 
 describe('BatteryPercentageComponent', () => {
@@ -8,8 +7,7 @@ describe('BatteryPercentageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BatteryPercentageComponent],
-      providers: [provideNoopAnimations()]
+      imports: [BatteryPercentageComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(BatteryPercentageComponent);
@@ -39,5 +37,18 @@ describe('BatteryPercentageComponent', () => {
     const bar: HTMLElement = fixture.nativeElement.querySelector('.battery-bar');
     expect(bar.style.height).toBe('100px');
     expect(bar.style.width).toBe('50px');
+  });
+
+  it('greys the nub while clicked and fades back on a second click', () => {
+    const nub: HTMLElement = fixture.nativeElement.querySelector('.nub');
+    const idle = nub.style.backgroundColor;
+
+    nub.click();
+    fixture.detectChanges();
+    expect(nub.style.backgroundColor).toBe('grey');
+
+    nub.click();
+    fixture.detectChanges();
+    expect(nub.style.backgroundColor).toBe(idle);
   });
 });

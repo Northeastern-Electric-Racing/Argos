@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from '../typography/typography.component';
 
@@ -6,7 +6,7 @@ import TypographyComponent from '../typography/typography.component';
   selector: 'sidebar-chip',
   templateUrl: './sidebar-chip.component.html',
   styleUrls: ['./sidebar-chip.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon, TypographyComponent]
 })
 export default class SidebarChipComponent {

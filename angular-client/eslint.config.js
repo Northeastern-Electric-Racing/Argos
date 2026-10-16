@@ -2,7 +2,8 @@
 const eslint = require('@eslint/js');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
-const rxjsAngularX = require('eslint-plugin-rxjs-angular-x');
+// ESM-only since 1.0, so require() returns the module namespace.
+const rxjsAngularX = require('eslint-plugin-rxjs-angular-x').default;
 
 module.exports = tseslint.config(
   {
@@ -49,6 +50,9 @@ module.exports = tseslint.config(
           style: 'kebab-case'
         }
       ],
+      // Angular 22 defaults to OnPush; components pinned to Eager by the v22 migration keep their
+      // old behaviour until they move to OnPush (#863).
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
       'guard-for-in': 'error',
       'prefer-arrow-callback': 'error',
       'no-unsafe-negation': ['error', { enforceForOrderingRelations: true }],

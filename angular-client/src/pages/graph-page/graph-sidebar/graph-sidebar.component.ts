@@ -1,4 +1,4 @@
-import { Component, input, OnInit } from '@angular/core';
+import { Component, input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mobile.component';
@@ -12,8 +12,8 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
   selector: 'graph-sidebar',
   templateUrl: './graph-sidebar.component.html',
   styleUrls: ['./graph-sidebar.component.css'],
-  standalone: true,
   imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

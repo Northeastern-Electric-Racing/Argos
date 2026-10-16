@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import SidebarService from 'src/services/sidebar.service';
 import { MatIcon } from '@angular/material/icon';
 
@@ -6,7 +6,7 @@ import { MatIcon } from '@angular/material/icon';
   selector: 'sidebar-toggle',
   templateUrl: './sidebar-toggle.component.html',
   styleUrls: ['./sidebar-toggle.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon]
 })
 export default class SidebarToggleComponent {

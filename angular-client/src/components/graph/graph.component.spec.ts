@@ -14,7 +14,9 @@ describe('GraphComponent (info graph)', () => {
     fixture = TestBed.createComponent(GraphComponent);
     component = fixture.componentInstance;
     // ngOnInit (chart rendering) is never run; stub the chart so ngOnDestroy can tear down.
-    component.chart = jasmine.createSpyObj<ApexCharts>('ApexCharts', ['destroy']);
+    component.chart = {
+      destroy: vi.fn().mockName('ApexCharts.destroy')
+    } as unknown as ApexCharts;
     fixture.componentRef.setInput('data', []);
     fixture.componentRef.setInput('color', '#ff0000');
     fixture.componentRef.setInput('graphContainerId', 'graph');

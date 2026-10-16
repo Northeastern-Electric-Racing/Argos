@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { StyleVariant } from 'src/utils/style-variant';
 
@@ -15,7 +15,7 @@ import { StyleVariant } from 'src/utils/style-variant';
   selector: 'typography',
   templateUrl: './typography.component.html',
   styleUrls: ['./typography.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class TypographyComponent {
   variant = input.required<StyleVariant>();
@@ -23,7 +23,7 @@ export default class TypographyComponent {
   additionalStyles = input<string>('');
 
   style = computed(() => {
-    let baseStyle: string = '';
+    let baseStyle: string;
 
     switch (this.variant()) {
       case 'header':

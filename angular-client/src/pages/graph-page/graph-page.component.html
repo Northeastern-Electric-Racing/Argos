@@ -44,7 +44,7 @@
                 additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
               />
               <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputNumber
+              <p-inputnumber
                 [(ngModel)]="rangeValue"
                 mode="decimal"
                 [min]="1"
@@ -53,13 +53,13 @@
                 inputStyleClass="text-xs p-4"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
                 (onInput)="onGraphConfigChange()"
-              ></p-inputNumber>
+              ></p-inputnumber>
             </div>
           }
 
           <div class="toolbar-group config-group">
             <label class="input-label">Y Min:</label>
-            <p-inputNumber
+            <p-inputnumber
               [(ngModel)]="yAxisMin"
               mode="decimal"
               [minFractionDigits]="0"
@@ -68,10 +68,10 @@
               inputStyleClass="text-xs p-1"
               placeholder="Auto"
               (onInput)="onGraphConfigChange()"
-            ></p-inputNumber>
+            ></p-inputnumber>
 
             <label class="input-label">Y Max:</label>
-            <p-inputNumber
+            <p-inputnumber
               [(ngModel)]="yAxisMax"
               mode="decimal"
               [minFractionDigits]="0"
@@ -80,7 +80,7 @@
               inputStyleClass="text-xs p-1"
               placeholder="Auto"
               (onInput)="onGraphConfigChange()"
-            ></p-inputNumber>
+            ></p-inputnumber>
           </div>
 
           <div class="toolbar-group">

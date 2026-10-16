@@ -11,7 +11,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'graph-caption',
   styleUrls: ['./graph-caption.component.css'],
   templateUrl: './graph-caption.component.html',
-  standalone: true,
   imports: [NgTemplateOutlet, TypographyComponent]
 })
 export default class GraphInfoComponent implements OnInit {

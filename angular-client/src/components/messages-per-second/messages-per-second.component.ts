@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, DestroyRef } from '@angular/core';
+import { Component, computed, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -10,7 +10,7 @@ import VStackComponent from '../vstack/vstack.component';
   templateUrl: './messages-per-second.component.html',
   styleUrl: './messages-per-second.component.css',
   imports: [TypographyComponent, VStackComponent],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class MessagesPerSecondComponent {
   private destroyRef = inject(DestroyRef);

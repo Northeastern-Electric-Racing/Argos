@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, output, signal, OnInit } from '@angular/core';
+import { Component, computed, effect, input, output, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
 
@@ -21,7 +21,7 @@ export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
   selector: 'efuse-switch',
   templateUrl: './efuse-switch.component.html',
   styleUrls: ['./efuse-switch.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class EfuseSwitchComponent implements OnInit {
   /** Font size in px for the button labels */

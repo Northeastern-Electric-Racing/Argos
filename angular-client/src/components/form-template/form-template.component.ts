@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, effect, inject, input, output, untracked } from '@angular/core';
+import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -28,7 +28,7 @@ export interface DynamicFormField {
   selector: 'form-template',
   templateUrl: './form-template.component.html',
   styleUrl: './form-template.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
 })
 export class FormTemplateComponent {

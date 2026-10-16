@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Run } from 'src/utils/types.utils';
 import { CarouselComponent } from '../../../../components/carousel/carousel.component';
@@ -12,7 +12,7 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
   styleUrls: ['./run-selector.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ButtonComponent]
 })
 export class RunSelectorComponent implements OnInit {

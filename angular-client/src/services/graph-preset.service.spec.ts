@@ -24,7 +24,7 @@ describe('GraphPresetService', () => {
     return TestBed.inject(GraphPresetService);
   }
 
-  it('seeds defaults when localStorage has never been written', (done) => {
+  it('seeds defaults when localStorage has never been written', async () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
 
     const service = build();
@@ -34,22 +34,20 @@ describe('GraphPresetService', () => {
       expect(presets.every((p) => p.id.length > 0)).toBe(true);
       expect(presets.every((p) => p.createdAt > 0)).toBe(true);
       expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(presets);
-      done();
     });
   });
 
-  it('does not seed when localStorage holds an empty array', (done) => {
+  it('does not seed when localStorage holds an empty array', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
 
     const service = build();
 
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([]);
-      done();
     });
   });
 
-  it('does not seed when localStorage already has user presets', (done) => {
+  it('does not seed when localStorage already has user presets', async () => {
     const stored = makeStoredPreset({ id: 'user-1', name: 'My Preset' });
     localStorage.setItem(STORAGE_KEY, JSON.stringify([stored]));
 
@@ -57,11 +55,10 @@ describe('GraphPresetService', () => {
 
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([stored]);
-      done();
     });
   });
 
-  it('addPreset appends a preset and persists it', (done) => {
+  it('addPreset appends a preset and persists it', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
 
@@ -74,7 +71,6 @@ describe('GraphPresetService', () => {
 
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([preset]);
-      done();
     });
   });
 
@@ -94,7 +90,7 @@ describe('GraphPresetService', () => {
     expect(() => service.addPreset('   ', ['A'])).toThrowError(/empty/i);
   });
 
-  it('replacePreset updates fields without changing id or createdAt', (done) => {
+  it('replacePreset updates fields without changing id or createdAt', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
     const original = service.addPreset('Vitals', ['A']);
@@ -106,11 +102,10 @@ describe('GraphPresetService', () => {
       expect(updated.createdAt).toBe(original.createdAt);
       expect(updated.name).toBe('Vitals v2');
       expect(updated.topicNames).toEqual(['A', 'B']);
-      done();
     });
   });
 
-  it('deletePreset removes the entry by id', (done) => {
+  it('deletePreset removes the entry by id', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
     const a = service.addPreset('A', ['x']);
@@ -121,7 +116,6 @@ describe('GraphPresetService', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([b]);
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([b]);
-      done();
     });
   });
 
@@ -134,7 +128,7 @@ describe('GraphPresetService', () => {
     expect(service.findByName('vitals')).toBeUndefined();
   });
 
-  it('clearAll empties the list and writes [] to localStorage', (done) => {
+  it('clearAll empties the list and writes [] to localStorage', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
     service.addPreset('A', ['x']);
@@ -145,18 +139,16 @@ describe('GraphPresetService', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([]);
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([]);
-      done();
     });
   });
 
-  it('addDefaultPresets adds only seed entries whose names are missing', (done) => {
+  it('addDefaultPresets adds only seed entries whose names are missing', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
 
     // No defaults shipped yet — addDefaultPresets is a no-op.
     if (PRESET_SEEDS.length === 0) {
       expect(service.addDefaultPresets()).toBe(0);
-      done();
       return;
     }
 
@@ -170,19 +162,17 @@ describe('GraphPresetService', () => {
     expect(kept!.topicNames).toEqual(['existing-topic']);
 
     service.getPresets().subscribe((presets) => {
-      expect(presets.map((p) => p.name)).toEqual(jasmine.arrayWithExactContents(PRESET_SEEDS.map((s) => s.name)));
-      done();
+      expect(presets.map((p) => p.name).sort()).toEqual(PRESET_SEEDS.map((s) => s.name).sort());
     });
   });
 
-  it('addDefaultPresets assigns fresh ids and createdAt to new seeded entries', (done) => {
+  it('addDefaultPresets assigns fresh ids and createdAt to new seeded entries', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     const service = build();
 
     // No defaults shipped yet — addDefaultPresets is a no-op.
     if (PRESET_SEEDS.length === 0) {
       expect(service.addDefaultPresets()).toBe(0);
-      done();
       return;
     }
 
@@ -197,7 +187,6 @@ describe('GraphPresetService', () => {
         expect(p.createdAt).toBeGreaterThanOrEqual(before);
         expect(p.createdAt).toBeLessThanOrEqual(after);
       });
-      done();
     });
   });
 
@@ -211,18 +200,17 @@ describe('GraphPresetService', () => {
     expect(added).toBe(0);
   });
 
-  it('falls back to an empty list on corrupt JSON (no auto-seed)', (done) => {
+  it('falls back to an empty list on corrupt JSON (no auto-seed)', async () => {
     localStorage.setItem(STORAGE_KEY, 'not json');
 
     const service = build();
 
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([]);
-      done();
     });
   });
 
-  it('drops malformed entries but keeps valid ones', (done) => {
+  it('drops malformed entries but keeps valid ones', async () => {
     const valid = makeStoredPreset({ id: 'valid' });
     const malformed = [
       { id: 1, name: 'wrong-id-type', topicNames: ['x'], createdAt: 1 },
@@ -237,18 +225,16 @@ describe('GraphPresetService', () => {
 
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([valid]);
-      done();
     });
   });
 
-  it('falls back to an empty list when stored value is not an array', (done) => {
+  it('falls back to an empty list when stored value is not an array', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'an array' }));
 
     const service = build();
 
     service.getPresets().subscribe((presets) => {
       expect(presets).toEqual([]);
-      done();
     });
   });
 });
