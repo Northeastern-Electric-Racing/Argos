@@ -21,8 +21,6 @@ export class BmsHeaderComponent {
   windowSize: number = window.innerWidth;
   isMobile = window.innerWidth < this.mobileThreshold;
 
-  constructor() {}
-
   @HostListener('window:resize')
   onResize() {
     this.isMobile = window.innerWidth <= this.mobileThreshold;
