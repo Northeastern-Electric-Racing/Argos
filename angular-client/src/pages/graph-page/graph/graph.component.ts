@@ -1,31 +1,52 @@
 import {
-  Component,
-  effect,
-  input,
-  OnDestroy,
-  OnInit,
+  afterNextRender,
   ChangeDetectionStrategy,
-  untracked,
+  Component,
+  DestroyRef,
+  effect,
+  ElementRef,
   inject,
-  DestroyRef
+  input,
+  signal,
+  untracked,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
-import ApexCharts from 'apexcharts';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
-import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { DrawSeries, GraphRenderer, OverlayMarks } from './graph-renderer';
+import { computeView, formatTooltipTime, nearestPoint, pixelMapping, plotArea, Range, Rect, View } from './graph-scale';
 
-// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
-type ApexOptions = Required<ApexCharts.ApexOptions>;
-type ChartOptions = Pick<
-  ApexOptions,
-  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke'
-> &
-  Partial<Pick<ApexOptions, 'legend' | 'annotations'>> & {
-    yaxis: Extract<ApexOptions['yaxis'], unknown[]>;
-  };
+// ApexCharts' default palette, so series keep the colours people are used to.
+const PALETTE = [
+  '#008FFB',
+  '#00E396',
+  '#FEB019',
+  '#FF4560',
+  '#775DD0',
+  '#3F51B5',
+  '#26A69A',
+  '#D4526E',
+  '#F86624',
+  '#A5978B'
+];
+const DRAG_THRESHOLD_PX = 5;
+const WHEEL_ZOOM = 1.25;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export interface LegendEntry {
+  name: string;
+  color: string;
+}
+
+export interface HoverInfo {
+  left: number;
+  top: number;
+  /** Show the tooltip left of the cursor, near the right edge. */
+  flip: boolean;
+  time: string;
+  rows: { name: string; color: string; value: number }[];
+}
 
 @Component({
   selector: 'graph',
@@ -34,7 +55,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export default class CustomGraphComponent implements OnInit, OnDestroy {
+export default class CustomGraphComponent {
   private destroyRef = inject(DestroyRef);
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
@@ -44,13 +65,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
   clearGraph = input<number>(0);
-  options!: ChartOptions;
-  chart!: ApexCharts;
-  // label -> x,y (topic, data point)
-  data!: Map<string, Array<{ x: number; y: number }>>;
-  isSliding: boolean = false;
-  timeRangeMs: number | undefined = undefined;
-  private timeOuts: NodeJS.Timeout[] = [];
   graphConfig = input.required<{
     maxPoints: number;
     yMin: number | null;
@@ -60,6 +74,30 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }>();
   range = input<number | undefined>(undefined);
 
+  // label -> x,y (topic, data point), kept sorted by x
+  data = new Map<string, GraphData[]>();
+  timeRangeMs: number | undefined = undefined;
+
+  readonly legend = signal<LegendEntry[]>([]);
+  readonly hidden = signal<ReadonlySet<string>>(new Set());
+  readonly hover = signal<HoverInfo | null>(null);
+  readonly zoom = signal<Range | null>(null);
+  readonly renderError = signal<string | null>(null);
+
+  private container = viewChild.required<ElementRef<HTMLDivElement>>('chartContainer');
+  private glCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('glCanvas');
+  private overlayCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('overlayCanvas');
+
+  private renderer?: GraphRenderer;
+  private resizeObserver?: ResizeObserver;
+  private size = { width: 0, height: 0 };
+  private frame?: number;
+  private dataDirty = true;
+  private cursor: { x: number; y: number } | null = null;
+  private dragStart: number | null = null;
+  private lastView: View | null = null;
+  private lastArea: Rect | null = null;
+
   constructor() {
     effect(() => {
       if (this.isPaused()) {
@@ -67,203 +105,40 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
-      const config = this.graphConfig();
-      if (this.chart && config) {
-        this.options.yaxis = [
-          {
-            ...this.options.yaxis,
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            },
-            max: config.yMax === null ? undefined : config.yMax,
-            min: config.yMin === null ? undefined : config.yMin
-          }
-        ];
-
-        this.chart.updateOptions(this.options);
-        this.resetRange();
-      }
+      this.graphConfig();
+      this.showMultipleYAxes();
+      this.resetRange();
     });
 
     effect(() => {
       this.realTime();
       this.clearGraph();
       this.valuesSubject();
-      if (this.chart) {
-        this.chart.updateSeries([]);
-      }
       this.data = new Map();
       this.timeRangeMs = undefined;
+      this.zoom.set(null);
+      this.hidden.set(new Set());
+      untracked(() => this.markDataChanged());
     });
 
-    effect(() => {
-      // Re-run whenever the toggle flips. Per-topic axes are also rebuilt in updateChart
-      // (see applyMultiYAxisConfigs) so they stay in sync as topics are selected/deselected.
-      if (this.showMultipleYAxes()) {
-        this.applyMultiYAxisConfigs();
-      } else {
-        this.options.yaxis = [
-          {
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            }
-          }
-        ];
-      }
-      if (this.chart) {
-        this.chart.updateOptions(this.options);
-      }
-    });
     effect(() => {
       // End the subscriptions made for the previous topics
       this.valuesChange$.next();
 
-      // Clean up existing timeouts
-      this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-      this.timeOuts = [];
-
-      this.valuesSubject().forEach(({ label, updates }) => {
-        updates
-          .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
-          .subscribe((data) => this.graphInfoCallback({ label, data }));
-      });
-
-      this.updateChart();
+      const values = this.valuesSubject();
+      // untracked: BehaviorSubjects replay synchronously, and the callback's signal reads
+      // (isPaused, graphConfig...) must not make this effect resubscribe when they change
+      untracked(() =>
+        values.forEach(({ label, updates }) => {
+          updates
+            .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
+            .subscribe((data) => this.graphInfoCallback({ label, data }));
+        })
+      );
     });
-  }
 
-  ngOnDestroy(): void {
-    // Clean up timeouts
-    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-    this.timeOuts = [];
-
-    // Destroy chart and clear data
-    if (this.chart) {
-      this.chart.destroy();
-    }
-    this.data.clear();
-  }
-
-  updateChart = () => {
-    // Skip chart updates if paused
-    if (this.isPaused() && this.limitRange()) {
-      return;
-    }
-
-    const series = Array.from(this.data).map(([key, points], index) => ({
-      name: key,
-      data: points,
-      yaxis: index
-    }));
-
-    // Keep the per-topic y-axes matched to the current series set: deselecting a topic
-    // drops its series here, so its y-axis must be pruned too (#630). untracked() so calling
-    // updateChart from an effect doesn't add showMultipleYAxes as a dependency.
-    if (untracked(this.showMultipleYAxes)) {
-      this.applyMultiYAxisConfigs();
-    }
-
-    // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
-    let effectiveRange: number | undefined = undefined;
-    if (this.realTime()) {
-      effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
-    }
-
-    // Multi-day historical ranges get date-aware labels and per-day boundary annotations.
-    // Skip the O(N) span scan in real-time mode — realtime ranges are bounded and never multi-day.
-    const span = this.realTime() ? null : this.computeDataSpan();
-    const isMultiDay = !!span && span.spanMs > DAY_MS;
-
-    // Single updateOptions call with series included — avoids two separate re-renders
-    // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
-    this.chart.updateOptions(
-      {
-        ...this.options,
-        series,
-        xaxis: {
-          ...this.options.xaxis,
-          range: effectiveRange,
-          labels: {
-            ...this.options.xaxis.labels,
-            formatter: isMultiDay ? this.multiDayLabelFormatter : this.singleDayLabelFormatter
-          }
-        },
-        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span!) : [] }
-      },
-      false, // redraw (default is false)
-      false // animate (default is true)
-    );
-  };
-
-  // Build one y-axis per current topic (order matches the series' `yaxis: index`).
-  private applyMultiYAxisConfigs(): void {
-    this.options.yaxis = Array.from(this.data.keys()).map((key, index) => ({
-      title: {
-        text: key.replace('0', ''),
-        style: {
-          color: 'grey',
-          fontSize: '20px',
-          fontWeight: 'bold'
-        }
-      },
-      labels: {
-        style: {
-          colors: '#fff'
-        }
-      },
-      opposite: index % 2 !== 0 // Alternate sides for each y-axis
-    }));
-  }
-
-  private computeDataSpan(): { minX: number; maxX: number; spanMs: number } | null {
-    let minX = Infinity;
-    let maxX = -Infinity;
-    for (const points of this.data.values()) {
-      if (points.length === 0) continue;
-      // Series data is kept sorted by x (see graphInfoCallback), so endpoints are the extrema.
-      if (points[0].x < minX) minX = points[0].x;
-      if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
-    }
-    if (!isFinite(minX) || !isFinite(maxX)) return null;
-    return { minX, maxX, spanMs: maxX - minX };
-  }
-
-  private singleDayLabelFormatter = (val: string | number): string =>
-    new Date(+val).toLocaleTimeString('en-US', { hour12: false });
-
-  private multiDayLabelFormatter = (val: string | number): string => {
-    const d = new Date(+val);
-    const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-    const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    return `${date} ${time}`;
-  };
-
-  private buildDayBoundaryAnnotations(span: { minX: number; maxX: number }) {
-    const annotations: { x: number; strokeDashArray: number; borderColor: string; label: object }[] = [];
-    // First local-midnight strictly after minX.
-    const cursor = new Date(span.minX);
-    cursor.setHours(24, 0, 0, 0);
-    for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
-      const date = new Date(t);
-      annotations.push({
-        x: t,
-        strokeDashArray: 4,
-        borderColor: '#8fcadd',
-        label: {
-          borderColor: '#8fcadd',
-          style: { color: '#fff', background: '#0c2026', fontSize: '11px' },
-          orientation: 'horizontal',
-          position: 'top',
-          offsetY: -4,
-          text: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-        }
-      });
-    }
-    return annotations;
+    afterNextRender(() => this.setupRenderer());
+    this.destroyRef.onDestroy(() => this.teardown());
   }
 
   graphInfoCallback = (info: GraphInfo) => {
@@ -314,110 +189,201 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.updateChart();
+    this.markDataChanged();
   };
-
-  ngOnInit(): void {
-    this.data = new Map();
-
-    const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) return;
-
-    this.options = {
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: false,
-          dynamicAnimation: {
-            speed: 1
-          }
-        }
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        width: 3
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 6,
-        labels: {
-          style: {
-            colors: '#fff'
-          },
-          formatter: (val: string | number) => new Date(+val).toLocaleTimeString('en-US', { hour12: false })
-        }
-      },
-      // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
-      yaxis: [
-        {
-          labels: {
-            style: {
-              colors: '#fff'
-            }
-          }
-        }
-      ],
-      tooltip: {
-        enabled: true,
-        // Make the tooltip “follow” your cursor as you hover
-        followCursor: true,
-        // If you’d rather show a shared tooltip for multiple series, set shared: true
-        shared: false,
-        intersect: false,
-        x: {
-          //format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        },
-        theme: 'dark'
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 100]
-        }
-      },
-      grid: {
-        show: true
-      },
-      legend: {
-        labels: {
-          colors: '#fff'
-        },
-        fontSize: '15px'
-      }
-    };
-
-    this.chart = new ApexCharts(chartContainer, {
-      series: [],
-      ...this.options
-    });
-    this.chart.render().then(() => {
-      this.updateChart();
-    });
-  }
 
   resetRange() {
     this.timeRangeMs = undefined;
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: undefined
-      }
+    this.requestFrame();
+  }
+
+  resetZoom() {
+    this.zoom.set(null);
+    this.requestFrame();
+  }
+
+  toggleSeries(name: string) {
+    this.hidden.update((hidden) => {
+      const next = new Set(hidden);
+      if (!next.delete(name)) next.add(name);
+      return next;
     });
+    this.requestFrame();
+  }
+
+  onPointerMove(event: PointerEvent) {
+    this.cursor = this.localPoint(event);
+    this.requestFrame();
+  }
+
+  onPointerLeave() {
+    this.cursor = null;
+    this.hover.set(null);
+    this.requestFrame();
+  }
+
+  onPointerDown(event: PointerEvent) {
+    const p = this.localPoint(event);
+    if (event.button !== 0 || !this.inPlot(p)) return;
+    this.dragStart = p.x;
+    (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
+  }
+
+  /** Drag across the plot to zoom into that time range. */
+  onPointerUp(event: PointerEvent) {
+    const start = this.dragStart;
+    this.dragStart = null;
+    const end = this.localPoint(event).x;
+    if (start !== null && this.lastView && this.lastArea && Math.abs(end - start) > DRAG_THRESHOLD_PX) {
+      const { pxToX } = pixelMapping(this.lastView, this.lastArea);
+      this.zoom.set({ min: pxToX(Math.min(start, end)), max: pxToX(Math.max(start, end)) });
+    }
+    this.requestFrame();
+  }
+
+  /** Wheel to zoom the time axis around the cursor. */
+  onWheel(event: WheelEvent) {
+    const p = this.localPoint(event);
+    if (!this.lastView || !this.lastArea || !this.inPlot(p)) return;
+    event.preventDefault();
+    const { x } = this.lastView;
+    const anchor = pixelMapping(this.lastView, this.lastArea).pxToX(p.x);
+    const factor = event.deltaY > 0 ? WHEEL_ZOOM : 1 / WHEEL_ZOOM;
+    this.zoom.set({ min: anchor - (anchor - x.min) * factor, max: anchor + (x.max - anchor) * factor });
+    this.requestFrame();
+  }
+
+  /** Current series in data-map order, with their colours and visibility. */
+  private drawSeries(): DrawSeries[] {
+    const hidden = this.hidden();
+    return Array.from(this.data, ([name, points], i) => ({
+      name,
+      points,
+      color: PALETTE[i % PALETTE.length],
+      visible: !hidden.has(name)
+    }));
+  }
+
+  private markDataChanged() {
+    this.dataDirty = true;
+    this.syncLegend();
+    // Skip chart updates if paused (live mode); the last frame stays on screen
+    if (this.isPaused() && this.limitRange()) return;
+    this.requestFrame();
+  }
+
+  /** Coalesce every update in a frame into one draw: data can arrive far faster than 60 Hz. */
+  private requestFrame() {
+    if (this.frame !== undefined || !this.renderer) return;
+    this.frame = requestAnimationFrame(() => {
+      this.frame = undefined;
+      this.renderFrame();
+    });
+  }
+
+  private renderFrame() {
+    if (!this.renderer) return;
+    const series = this.drawSeries();
+    if (this.dataDirty) {
+      this.renderer.upload(series);
+      this.dataDirty = false;
+    }
+
+    const config = this.graphConfig();
+    const realTime = this.realTime();
+    const multiAxis = this.showMultipleYAxes();
+    // Only constrain the x-axis range in real-time mode; historical mode auto-fits all data
+    const view = computeView({
+      series,
+      multiAxis,
+      realTime,
+      windowMs: realTime ? (config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs) : undefined,
+      zoom: this.zoom(),
+      yOverride: { min: config.yMin, max: config.yMax }
+    });
+    const area = plotArea(this.size.width, this.size.height, view?.axes.length ?? 1);
+    this.lastView = view;
+    this.lastArea = area;
+
+    const marks: OverlayMarks = {};
+    if (view && this.cursor && this.inPlot(this.cursor)) {
+      marks.crosshairX = this.cursor.x;
+      marks.dots = this.updateHover(series, view, area);
+      if (this.dragStart !== null) marks.selection = { from: this.dragStart, to: this.cursor.x };
+    } else if (this.hover()) {
+      this.hover.set(null);
+    }
+    this.renderer.draw(series, view, area, marks);
+  }
+
+  /** Tooltip values at the cursor's time, one row per visible series. Returns the hover dots. */
+  private updateHover(series: DrawSeries[], view: View, area: Rect): OverlayMarks['dots'] {
+    const cursor = this.cursor!;
+    const { pxToX, xToPx, yToPx } = pixelMapping(view, area);
+    const x = pxToX(cursor.x);
+    const rows: HoverInfo['rows'] = [];
+    const dots: NonNullable<OverlayMarks['dots']> = [];
+    series.forEach((s, i) => {
+      const point = s.visible ? nearestPoint(s.points, x) : undefined;
+      if (!point) return;
+      rows.push({ name: s.name, color: s.color, value: point.y });
+      dots.push({ x: xToPx(point.x), y: yToPx(point.y, view.axes[view.seriesAxis[i]]), color: s.color });
+    });
+    this.hover.set(
+      rows.length === 0
+        ? null
+        : {
+            left: cursor.x,
+            top: cursor.y,
+            flip: cursor.x > area.left + area.width / 2,
+            time: formatTooltipTime(x),
+            rows
+          }
+    );
+    return dots;
+  }
+
+  /** Keep the legend matched to the series set; a no-op while only points change. */
+  private syncLegend() {
+    const names = Array.from(this.data.keys());
+    const current = this.legend();
+    if (current.length === names.length && current.every((entry, i) => entry.name === names[i])) return;
+    this.legend.set(names.map((name, i) => ({ name, color: PALETTE[i % PALETTE.length] })));
+  }
+
+  private localPoint(event: MouseEvent): { x: number; y: number } {
+    const rect = this.container().nativeElement.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  private inPlot(p: { x: number; y: number }): boolean {
+    const a = this.lastArea;
+    return !!a && p.x >= a.left && p.x <= a.left + a.width && p.y >= a.top && p.y <= a.top + a.height;
+  }
+
+  private setupRenderer() {
+    try {
+      this.renderer = new GraphRenderer(this.glCanvas().nativeElement, this.overlayCanvas().nativeElement);
+    } catch (e) {
+      this.renderError.set(`The graph needs WebGL2, which this browser can't provide (${(e as Error).message}).`);
+      return;
+    }
+    const container = this.container().nativeElement;
+    this.resizeObserver = new ResizeObserver(([entry]) => {
+      this.size = { width: entry.contentRect.width, height: entry.contentRect.height };
+      this.renderer?.resize(this.size.width, this.size.height, window.devicePixelRatio || 1);
+      // Resizing a canvas clears it, so redraw right away rather than next frame
+      this.renderFrame();
+    });
+    this.resizeObserver.observe(container);
+    this.requestFrame();
+  }
+
+  private teardown() {
+    if (this.frame !== undefined) cancelAnimationFrame(this.frame);
+    this.resizeObserver?.disconnect();
+    this.renderer?.destroy();
+    this.renderer = undefined;
+    this.data.clear();
   }
 }
