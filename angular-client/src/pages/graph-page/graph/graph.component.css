@@ -1,13 +1,58 @@
-#chart-container {
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chart-container {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  height: 100%;
 }
 
-.apexcharts-tooltip {
-  pointer-events: none;
+.legend-container {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  font-size: 15px;
+  color: #fff;
 }
 
-/* Temp fix for styling of download (svg / png / csv) menu */
-::ng-deep .apexcharts-menu-item {
-  color: black !important;
+/* dygraphs renders axis labels, titles and legend entries as plain DOM; these replace its stock stylesheet. */
+:host ::ng-deep .dygraph-axis-label {
+  color: #fff;
+}
+
+:host ::ng-deep .dygraph-label {
+  color: grey;
+  font-weight: bold;
+}
+
+:host ::ng-deep .dygraph-label-rotate-left {
+  text-align: center;
+  transform: rotate(90deg);
+}
+
+:host ::ng-deep .dygraph-label-rotate-right {
+  text-align: center;
+  transform: rotate(-90deg);
+}
+
+.legend-container ::ng-deep > span {
+  white-space: nowrap;
+  margin-right: 12px;
+}
+
+.legend-container ::ng-deep > span.highlight {
+  font-weight: bold;
+}
+
+:host ::ng-deep .dygraph-legend-line {
+  display: inline-block;
+  position: relative;
+  bottom: 0.5ex;
+  height: 1px;
+  padding-left: 1.5em;
+  margin-right: 4px;
+  border-bottom-width: 3px;
+  border-bottom-style: solid;
 }
