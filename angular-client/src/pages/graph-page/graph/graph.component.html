@@ -1,1 +1,15 @@
-<div id="chart-container"></div>
+<ul class="legend" aria-label="Graph legend">
+  @for (item of legend(); track item.label) {
+    <li class="legend-item">
+      <span class="swatch" [style.background]="item.color" aria-hidden="true"></span>
+      <span class="legend-label">{{ item.label }}</span>
+      @if (hoverValue(item.label); as value) {
+        <span class="legend-value">{{ value }}</span>
+      }
+    </li>
+  }
+  @if (hover(); as h) {
+    <li class="legend-time">{{ h.time }}</li>
+  }
+</ul>
+<div #chartContainer class="chart-container"></div>
