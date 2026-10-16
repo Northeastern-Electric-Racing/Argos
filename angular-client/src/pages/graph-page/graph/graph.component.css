@@ -1,13 +1,16 @@
-#chart-container {
-  width: 100%;
-  height: 100%;
+:host {
+  display: block;
+  position: relative;
+  min-height: 0;
 }
 
-.apexcharts-tooltip {
-  pointer-events: none;
+/* Sized by the host rather than its content, so the chart never feeds back into the layout. */
+uplot-chart {
+  position: absolute;
+  inset: 0;
 }
 
-/* Temp fix for styling of download (svg / png / csv) menu */
-::ng-deep .apexcharts-menu-item {
-  color: black !important;
+:host ::ng-deep .u-legend {
+  color: #fff;
+  font-size: 15px;
 }
