@@ -1,34 +1,17 @@
 import { Component, OnDestroy, OnInit, computed, inject, input } from '@angular/core';
 import ApexCharts from 'apexcharts';
-import {
-  ApexAxisChartSeries,
-  ApexXAxis,
-  ApexYAxis,
-  ApexDataLabels,
-  ApexChart,
-  ApexMarkers,
-  ApexGrid,
-  ApexTooltip,
-  ApexFill,
-  ApexStroke,
-  ApexLegend
-} from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
-type ChartOptions = {
-  chart: ApexChart;
-  xaxis: ApexXAxis;
-  yaxis: ApexYAxis;
-  dataLabels: ApexDataLabels;
-  markers: ApexMarkers;
-  grid: ApexGrid;
-  tooltip: ApexTooltip;
-  fill: ApexFill;
-  stroke: ApexStroke;
-  legend: ApexLegend;
-  colors: string[];
+// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
+type ApexOptions = Required<ApexCharts.ApexOptions>;
+type ApexAxisChartSeries = Extract<ApexOptions['series'], { data: unknown }[]>;
+type ChartOptions = Pick<
+  ApexOptions,
+  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke' | 'legend' | 'colors'
+> & {
+  yaxis: Exclude<ApexOptions['yaxis'], unknown[]>;
 };
 
 @Component({
@@ -182,7 +165,8 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.chart.updateSeries(this.series);
+    // updateOptions, not updateSeries: apexcharts 5's updateSeries fast path replots the lines without redrawing the axes or legend
+    this.chart.updateOptions({ series: this.series });
     this.timeOuts.push(
       setTimeout(() => {
         this.updateChart();

@@ -12,34 +12,18 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import ApexCharts from 'apexcharts';
-import {
-  ApexXAxis,
-  ApexDataLabels,
-  ApexChart,
-  ApexMarkers,
-  ApexGrid,
-  ApexTooltip,
-  ApexFill,
-  ApexLegend,
-  ApexYAxis,
-  ApexAnnotations
-} from 'ng-apexcharts';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 
-type ChartOptions = {
-  chart: ApexChart;
-  xaxis: ApexXAxis;
-  yaxis: ApexYAxis[];
-  dataLabels: ApexDataLabels;
-  markers: ApexMarkers;
-  grid: ApexGrid;
-  tooltip: ApexTooltip;
-  fill: ApexFill;
-  stroke: ApexStroke;
-  legend?: ApexLegend; // Add legend property to match the options object
-  annotations?: ApexAnnotations;
-};
+// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
+type ApexOptions = Required<ApexCharts.ApexOptions>;
+type ChartOptions = Pick<
+  ApexOptions,
+  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke'
+> &
+  Partial<Pick<ApexOptions, 'legend' | 'annotations'>> & {
+    yaxis: Extract<ApexOptions['yaxis'], unknown[]>;
+  };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
