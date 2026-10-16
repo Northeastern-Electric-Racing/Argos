@@ -1,64 +1,195 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BehaviorSubject } from 'rxjs';
+import { Chart } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+import { By } from '@angular/platform-browser';
 import CustomGraphComponent from './graph.component';
+import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 
-// Regression coverage for #630: with "Multiple Y-Axes" on, the y-axis set must always
-// match the currently selected topics. applyMultiYAxisConfigs is the seam that rebuilds
-// options.yaxis from the current data map, and updateChart now calls it every render so
-// deselecting a topic prunes its axis. These tests drive that seam directly (the full
-// component needs ApexCharts + a live DOM chart container, out of scope for a unit test).
-describe('CustomGraphComponent — multi y-axis sync (#630)', () => {
-  function makeComponent(): CustomGraphComponent {
-    const c = TestBed.createComponent(CustomGraphComponent).componentInstance;
-    // applyMultiYAxisConfigs only reads `data` and writes `options.yaxis`.
-    (c as unknown as { options: { yaxis: unknown[] } }).options = { yaxis: [] };
-    return c;
+type GraphConfig = ReturnType<CustomGraphComponent['graphConfig']>;
+
+const BASE_CONFIG: GraphConfig = { maxPoints: 1000, yMin: null, yMax: null, rangeMode: 'time', timeRangeMs: 10_000 };
+
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+const topic = (label: string, points: GraphData[]): ObservableGraphInfo => ({
+  label,
+  updates: new BehaviorSubject<GraphData[][]>([points])
+});
+
+describe('CustomGraphComponent (Chart.js)', () => {
+  let fixture: ComponentFixture<CustomGraphComponent>;
+
+  async function render(inputs: Partial<Record<string, unknown>>): Promise<Chart> {
+    fixture = TestBed.createComponent(CustomGraphComponent);
+    const host = fixture.nativeElement as HTMLElement;
+    host.style.width = '600px';
+    host.style.height = '300px';
+    document.body.appendChild(host);
+    fixture.componentRef.setInput('graphConfig', BASE_CONFIG);
+    for (const [name, value] of Object.entries(inputs)) {
+      fixture.componentRef.setInput(name, value);
+    }
+    fixture.detectChanges();
+    await settle();
+    return chart();
   }
 
-  function applyAxes(c: CustomGraphComponent): void {
-    (c as unknown as { applyMultiYAxisConfigs: () => void }).applyMultiYAxisConfigs();
+  async function settle(): Promise<void> {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await nextFrame();
   }
 
-  it('builds one y-axis per topic in the current data map', () => {
-    const c = makeComponent();
-    c.data = new Map([
-      ['BMS/Pack/Voltage 0', []],
-      ['BMS/Pack/Current 0', []]
+  function chart(): Chart {
+    return fixture.debugElement.query(By.directive(BaseChartDirective)).injector.get(BaseChartDirective).chart!;
+  }
+
+  afterEach(() => fixture?.destroy());
+
+  it('draws one line per topic value with its points', async () => {
+    const c = await render({
+      valuesSubject: [
+        topic('BMS/Pack/Voltage', [
+          { x: 1000, y: 400 },
+          { x: 2000, y: 401 }
+        ])
+      ]
+    });
+
+    expect(c.data.datasets.map((d) => d.label)).toEqual(['BMS/Pack/Voltage 0']);
+    expect(c.data.datasets[0].data).toEqual([
+      { x: 1000, y: 400 },
+      { x: 2000, y: 401 }
     ]);
-
-    applyAxes(c);
-
-    expect(c.options.yaxis.length).toBe(2);
   });
 
-  it('prunes a y-axis when its topic is deselected (removed from the data map)', () => {
-    const c = makeComponent();
-    c.data = new Map([
-      ['BMS/Pack/Voltage 0', []],
-      ['BMS/Pack/Current 0', []]
-    ]);
-    applyAxes(c);
-    expect(c.options.yaxis.length).toBe(2);
+  it('adds new live points to the existing line without replacing it', async () => {
+    const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    const c = await render({ valuesSubject: [voltage], realTime: true });
+    const [datasetBefore] = c.data.datasets;
 
-    // Deselecting a topic removes its series from the data map...
-    c.data.delete('BMS/Pack/Current 0');
-    applyAxes(c);
+    voltage.updates.next([[{ x: 2000, y: 402 }]]);
+    await settle();
 
-    // ...so its y-axis must go too, leaving axes matched to the remaining series.
-    expect(c.options.yaxis.length).toBe(1);
-    expect((c.options.yaxis[0] as { title: { text: string } }).title.text).toBe('BMS/Pack/Voltage ');
+    expect(c.data.datasets[0]).toBe(datasetBefore);
+    expect(c.data.datasets[0].data.length).toBe(2);
   });
 
-  it('alternates y-axis sides so stacked axes stay readable', () => {
-    const c = makeComponent();
-    c.data = new Map([
-      ['A 0', []],
-      ['B 0', []],
-      ['C 0', []]
+  it('keeps out-of-order points sorted by time', async () => {
+    const voltage = topic('V', [{ x: 1000, y: 1 }]);
+    const c = await render({ valuesSubject: [voltage] });
+
+    voltage.updates.next([[{ x: 3000, y: 3 }]]);
+    voltage.updates.next([[{ x: 2000, y: 2 }]]);
+    await settle();
+
+    expect((c.data.datasets[0].data as GraphData[]).map((p) => p.x)).toEqual([1000, 2000, 3000]);
+  });
+
+  it('gives each topic its own y-axis when multi-axis is on, and prunes it on deselect (#630)', async () => {
+    const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    const current = topic('BMS/Pack/Current', [{ x: 1000, y: 20 }]);
+    const c = await render({ valuesSubject: [voltage, current], showMultipleYAxes: true });
+
+    expect(Object.keys(c.scales).sort()).toEqual(['x', 'y', 'y1']);
+    expect(c.data.datasets.map((d) => (d as { yAxisID?: string }).yAxisID)).toEqual(['y', 'y1']);
+
+    fixture.componentRef.setInput('valuesSubject', [voltage]);
+    await settle();
+
+    expect(Object.keys(c.scales).sort()).toEqual(['x', 'y']);
+  });
+
+  it('shows only the configured time window in real-time mode', async () => {
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: 0, y: 1 },
+          { x: 30_000, y: 2 }
+        ])
+      ],
+      realTime: true
+    });
+
+    expect(c.scales['x'].min).toBe(30_000 - BASE_CONFIG.timeRangeMs);
+  });
+
+  it('fits all data in historical mode', async () => {
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: 0, y: 1 },
+          { x: 30_000, y: 2 }
+        ])
+      ]
+    });
+
+    expect(c.scales['x'].min).toBe(0);
+    expect(c.scales['x'].max).toBe(30_000);
+  });
+
+  it('applies the configured y-limits', async () => {
+    const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
+
+    fixture.componentRef.setInput('graphConfig', { ...BASE_CONFIG, yMin: -10, yMax: 50 });
+    await settle();
+
+    expect(c.scales['y'].min).toBe(-10);
+    expect(c.scales['y'].max).toBe(50);
+  });
+
+  it('marks day boundaries on multi-day historical ranges', async () => {
+    const start = new Date(2026, 0, 1, 12).getTime();
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: start, y: 1 },
+          { x: start + 36 * 60 * 60 * 1000, y: 2 }
+        ])
+      ]
+    });
+
+    const annotations = c.options.plugins?.annotation?.annotations as unknown[];
+    expect(annotations.length).toBe(1);
+  });
+
+  it('empties the chart when the graph is cleared', async () => {
+    const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
+
+    fixture.componentRef.setInput('clearGraph', 1);
+    await settle();
+
+    expect(c.data.datasets.length).toBe(0);
+  });
+
+  it('stops following the live window while zoomed, and resumes on reset', async () => {
+    const voltage = topic('V', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
     ]);
+    const c = await render({ valuesSubject: [voltage], realTime: true });
 
-    applyAxes(c);
+    c.zoomScale('x', { min: 5_000, max: 6_000 }, 'none');
+    fixture.componentInstance.zoomed.set(true);
+    voltage.updates.next([[{ x: 40_000, y: 3 }]]);
+    await settle();
+    expect(c.scales['x'].min).toBe(5_000);
 
-    const sides = (c.options.yaxis as { opposite: boolean }[]).map((y) => y.opposite);
-    expect(sides).toEqual([false, true, false]);
+    fixture.componentInstance.resetZoom();
+    await settle();
+    expect(fixture.componentInstance.zoomed()).toBeFalse();
+    expect(c.scales['x'].min).toBe(40_000 - BASE_CONFIG.timeRangeMs);
+  });
+
+  it('ignores incoming points while paused', async () => {
+    const voltage = topic('V', [{ x: 0, y: 1 }]);
+    const c = await render({ valuesSubject: [voltage], realTime: true });
+
+    fixture.componentRef.setInput('isPaused', true);
+    voltage.updates.next([[{ x: 1000, y: 2 }]]);
+    await settle();
+
+    expect(c.data.datasets[0].data.length).toBe(1);
   });
 });
