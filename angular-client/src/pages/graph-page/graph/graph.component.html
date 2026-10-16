@@ -1,1 +1,14 @@
-<div id="chart-container"></div>
+<div class="chart-container">
+  <canvas
+    baseChart
+    type="line"
+    [data]="chartData"
+    [options]="chartOptions"
+    role="img"
+    aria-label="Telemetry graph of the selected topics. Drag to zoom, shift-drag to pan, double-click to reset."
+    (dblclick)="resetZoom()"
+  ></canvas>
+  @if (zoomed()) {
+    <button type="button" class="reset-zoom" (click)="resetZoom()">Reset zoom</button>
+  }
+</div>
