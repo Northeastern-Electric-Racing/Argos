@@ -50,7 +50,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20.17.0
+          node-version-file: angular-client/.nvmrc
           cache: "npm"
           cache-dependency-path: angular-client/package-lock.json
       - name: Install modules
