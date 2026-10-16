@@ -10,12 +10,22 @@ describe('CustomGraphComponent — multi y-axis sync (#630)', () => {
   function makeComponent(): CustomGraphComponent {
     const c = TestBed.createComponent(CustomGraphComponent).componentInstance;
     // applyMultiYAxisConfigs only reads `data` and writes `options.yaxis`.
-    (c as unknown as { options: { yaxis: unknown[] } }).options = { yaxis: [] };
+    (
+      c as unknown as {
+        options: {
+          yaxis: unknown[];
+        };
+      }
+    ).options = { yaxis: [] };
     return c;
   }
 
   function applyAxes(c: CustomGraphComponent): void {
-    (c as unknown as { applyMultiYAxisConfigs: () => void }).applyMultiYAxisConfigs();
+    (
+      c as unknown as {
+        applyMultiYAxisConfigs: () => void;
+      }
+    ).applyMultiYAxisConfigs();
   }
 
   it('builds one y-axis per topic in the current data map', () => {
@@ -45,7 +55,15 @@ describe('CustomGraphComponent — multi y-axis sync (#630)', () => {
 
     // ...so its y-axis must go too, leaving axes matched to the remaining series.
     expect(c.options.yaxis.length).toBe(1);
-    expect((c.options.yaxis[0] as { title: { text: string } }).title.text).toBe('BMS/Pack/Voltage ');
+    expect(
+      (
+        c.options.yaxis[0] as {
+          title: {
+            text: string;
+          };
+        }
+      ).title.text
+    ).toBe('BMS/Pack/Voltage ');
   });
 
   it('alternates y-axis sides so stacked axes stay readable', () => {
@@ -58,7 +76,11 @@ describe('CustomGraphComponent — multi y-axis sync (#630)', () => {
 
     applyAxes(c);
 
-    const sides = (c.options.yaxis as { opposite: boolean }[]).map((y) => y.opposite);
+    const sides = (
+      c.options.yaxis as {
+        opposite: boolean;
+      }[]
+    ).map((y) => y.opposite);
     expect(sides).toEqual([false, true, false]);
   });
 });

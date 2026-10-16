@@ -10,7 +10,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'fault-display-info',
   templateUrl: './fault-display-info.component.html',
   styleUrl: './fault-display-info.component.css',
-  standalone: true,
   imports: [DatePipe, TypographyComponent]
 })
 export class FaultDisplayInfoComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -21,7 +21,6 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
   selector: 'charging-page',
   styleUrls: ['./charging-page.component.css'],
   templateUrl: './charging-page.component.html',
-  standalone: true,
   imports: [
     ChargingPageMobileComponent,
     MatGridList,
@@ -35,6 +34,7 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
     PackTempComponent,
     CombinedStatusDisplayComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

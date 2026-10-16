@@ -44,7 +44,7 @@ describe('NotificationRulesPageComponent', () => {
 
   describe('CSV parsing', () => {
     it('should reject files without .csv extension', async () => {
-      const addSpy = spyOn(messageService, 'add');
+      const addSpy = vi.spyOn(messageService, 'add').mockReturnValue(undefined);
       const event = {
         target: {
           files: [new File(['test'], 'rules.txt', { type: 'text/plain' })],
@@ -53,7 +53,7 @@ describe('NotificationRulesPageComponent', () => {
       } as unknown as Event;
 
       await component.onFileSelected(event);
-      expect(addSpy).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'error', summary: 'Invalid File' }));
+      expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', summary: 'Invalid File' }));
     });
   });
 });

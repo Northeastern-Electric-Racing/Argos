@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { BatteryPercentageComponent } from '../../../../../components/battery-percentage/battery-percentage.component';
 import { DividerComponent } from '../../../../../components/divider/divider';
@@ -11,7 +11,7 @@ import ThermometerComponent from 'src/components/thermometer/thermometer.compone
   selector: 'battery-info-desktop',
   templateUrl: './battery-info-desktop.component.html',
   styleUrls: ['./battery-info-desktop.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     BatteryPercentageComponent,
     DividerComponent,

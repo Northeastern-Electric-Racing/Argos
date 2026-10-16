@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Single-button lock control that mirrors the 3D styling of the eFuse switch.
@@ -8,7 +8,7 @@ import { Component, input, output } from '@angular/core';
   selector: 'lock-button',
   templateUrl: './lock-button.component.html',
   styleUrls: ['./lock-button.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class LockButtonComponent {
   /** Whether the lock is currently engaged */

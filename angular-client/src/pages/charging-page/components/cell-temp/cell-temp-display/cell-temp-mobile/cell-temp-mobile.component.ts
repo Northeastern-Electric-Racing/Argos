@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import Storage from 'src/services/storage.service';
 
 import { GraphData } from 'src/utils/types.utils';
@@ -14,7 +14,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   selector: 'cell-temp-mobile',
   templateUrl: './cell-temp-mobile.component.html',
   styleUrls: ['./cell-temp-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
     DividerComponent,

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MapService } from '../../services/map.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -17,8 +17,8 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   selector: 'map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css'],
-  standalone: true,
   imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

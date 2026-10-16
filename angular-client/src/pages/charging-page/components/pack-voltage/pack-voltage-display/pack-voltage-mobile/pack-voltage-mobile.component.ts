@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoBackgroundComponent } from '../../../../../../components/info-background/info-background.component';
@@ -11,7 +11,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'pack-voltage-mobile',
   templateUrl: './pack-voltage-mobile.component.html',
   styleUrls: ['./pack-voltage-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, PackVoltageGraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export default class PackVoltageMobileDisplayComponent {

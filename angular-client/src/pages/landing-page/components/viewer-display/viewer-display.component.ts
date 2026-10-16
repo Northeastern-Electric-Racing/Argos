@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -9,7 +9,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'viewer-display',
   templateUrl: './viewer-display.component.html',
   styleUrl: './viewer-display.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class ViewerDisplayComponent implements OnInit {

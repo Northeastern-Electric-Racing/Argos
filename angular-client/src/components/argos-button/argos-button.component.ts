@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 
 export type ButtonSize = 'default' | 'sm';
 
@@ -11,7 +11,7 @@ export type ButtonSize = 'default' | 'sm';
   selector: 'argos-button',
   templateUrl: './argos-button.component.html',
   styleUrls: ['./argos-button.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ButtonComponent {
   label = input.required<string>();

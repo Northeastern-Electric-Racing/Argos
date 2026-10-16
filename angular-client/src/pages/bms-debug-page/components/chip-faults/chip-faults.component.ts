@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
@@ -11,15 +11,14 @@ import { FaultData } from 'src/utils/types.utils';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import { TableModule } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
 import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'chip-faults',
   templateUrl: './chip-faults.component.html',
   styleUrl: './chip-faults.component.css',
-  standalone: true,
-  imports: [InfoBackgroundComponent, TableModule, PrimeTemplate, DatePipe]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [InfoBackgroundComponent, TableModule, DatePipe]
 })
 export class ChipFaultsComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
