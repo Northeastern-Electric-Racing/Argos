@@ -1,0 +1,186 @@
+import type { Annotations, Layout, LayoutAxis, PlotData, Shape } from 'plotly.js';
+
+export const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** One line's points as columns, sorted by x. The plot's trace shares these arrays, so nothing is copied per frame. */
+export interface Series {
+  x: number[];
+  y: number[];
+}
+
+export interface DataSpan {
+  minX: number;
+  maxX: number;
+  spanMs: number;
+}
+
+export interface LayoutOptions {
+  seriesNames: string[];
+  multipleYAxes: boolean;
+  yMin: number | null;
+  yMax: number | null;
+  /** Visible x window; undefined autoranges to all data. */
+  xRange?: [number, number];
+  /** Historical data span, for multi-day labels and day boundaries; null in real-time mode. */
+  span: DataSpan | null;
+  /** Kept while the topics stay the same, so a user's zoom survives updates. */
+  uiRevision: number;
+  /** Bumped every frame: the series arrays are mutated in place, so Plotly.react needs this to recalc them. */
+  dataRevision: number;
+}
+
+/** Paper-width gap between stacked y-axes on the same side. */
+const AXIS_STEP = 0.07;
+const TEXT_COLOR = '#fff';
+const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
+const BOUNDARY_COLOR = '#8fcadd';
+
+/**
+ * Plotly date axes take epoch ms as UTC and have no time-zone setting, so x values are shifted
+ * to local wall-clock time before plotting; ticks and hover labels then read as local time.
+ */
+export const toWallClockMs = (ms: number): number => ms - new Date(ms).getTimezoneOffset() * 60_000;
+
+const axisRef = (index: number) => (index === 0 ? 'y' : `y${index + 1}`);
+const axisKey = (index: number) => (index === 0 ? 'yaxis' : `yaxis${index + 1}`);
+
+export function buildTraces(data: Map<string, Series>, multipleYAxes: boolean): Partial<PlotData>[] {
+  return Array.from(data, ([name, series], index) => ({
+    type: 'scattergl',
+    mode: 'lines',
+    name,
+    x: series.x,
+    y: series.y,
+    yaxis: multipleYAxes ? axisRef(index) : 'y',
+    line: { width: 3 }
+  }));
+}
+
+export function computeDataSpan(data: Map<string, Series>): DataSpan | null {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const { x } of data.values()) {
+    if (x.length === 0) continue;
+    // Series are kept sorted by x, so the endpoints are the extrema.
+    const [first] = x;
+    const last = x[x.length - 1];
+    if (first < minX) minX = first;
+    if (last > maxX) maxX = last;
+  }
+  if (!isFinite(minX) || !isFinite(maxX)) return null;
+  return { minX, maxX, spanMs: maxX - minX };
+}
+
+/** Latest x across all series, the right edge of the live window. */
+export function latestX(data: Map<string, Series>): number | null {
+  let max = -Infinity;
+  for (const { x } of data.values()) {
+    if (x.length > 0 && x[x.length - 1] > max) max = x[x.length - 1];
+  }
+  return isFinite(max) ? max : null;
+}
+
+/** Applies the user's y bounds; a missing bound autoranges that end only. */
+function boundedAxis(yMin: number | null, yMax: number | null): Partial<LayoutAxis> {
+  if (yMin === null && yMax === null) return { autorange: true };
+  if (yMin !== null && yMax !== null) return { autorange: false, range: [yMin, yMax] };
+  return yMin !== null ? { autorange: 'max', range: [yMin, null] } : { autorange: 'min', range: [null, yMax] };
+}
+
+/**
+ * One y-axis per series, alternating left and right. Axes after the first on each side stack
+ * outward, and the x domain shrinks to leave them room.
+ */
+export function buildMultiYAxes(names: string[]): { xDomain: [number, number]; axes: Record<string, Partial<LayoutAxis>> } {
+  const leftCount = Math.ceil(names.length / 2);
+  const rightCount = Math.floor(names.length / 2);
+  const xDomain: [number, number] = [Math.max(leftCount - 1, 0) * AXIS_STEP, 1 - Math.max(rightCount - 1, 0) * AXIS_STEP];
+  const axes: Record<string, Partial<LayoutAxis>> = {};
+  names.forEach((name, index) => {
+    const side = index % 2 === 0 ? 'left' : 'right';
+    const offset = Math.floor(index / 2) * AXIS_STEP;
+    axes[axisKey(index)] = {
+      title: { text: name.replace('0', ''), font: { color: 'grey', size: 20, weight: 'bold' } },
+      color: TEXT_COLOR,
+      gridcolor: GRID_COLOR,
+      showgrid: index === 0,
+      side,
+      anchor: 'free',
+      position: side === 'left' ? xDomain[0] - offset : xDomain[1] + offset,
+      ...(index === 0 ? {} : { overlaying: 'y' })
+    };
+  });
+  return { xDomain, axes };
+}
+
+/** A dashed line and a date label at each local midnight inside the span (x is wall-clock ms). */
+export function buildDayBoundaries(span: { minX: number; maxX: number }): {
+  shapes: Partial<Shape>[];
+  annotations: Partial<Annotations>[];
+} {
+  const shapes: Partial<Shape>[] = [];
+  const annotations: Partial<Annotations>[] = [];
+  // Wall-clock ms puts local midnights on multiples of DAY_MS; start at the first one after minX.
+  for (let t = Math.floor(span.minX / DAY_MS) * DAY_MS + DAY_MS; t < span.maxX; t += DAY_MS) {
+    shapes.push({
+      type: 'line',
+      xref: 'x',
+      yref: 'paper',
+      x0: t,
+      x1: t,
+      y0: 0,
+      y1: 1,
+      line: { color: BOUNDARY_COLOR, dash: 'dash', width: 1 }
+    });
+    annotations.push({
+      x: t,
+      xref: 'x',
+      y: 1,
+      yref: 'paper',
+      yanchor: 'bottom',
+      showarrow: false,
+      text: new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }),
+      font: { color: TEXT_COLOR, size: 11 },
+      bgcolor: '#0c2026',
+      bordercolor: BOUNDARY_COLOR
+    });
+  }
+  return { shapes, annotations };
+}
+
+export function buildLayout(options: LayoutOptions): Partial<Layout> {
+  const isMultiDay = !!options.span && options.span.spanMs > DAY_MS;
+  const multi = options.multipleYAxes && options.seriesNames.length > 0 ? buildMultiYAxes(options.seriesNames) : null;
+  const boundaries = isMultiDay ? buildDayBoundaries(options.span!) : { shapes: [], annotations: [] };
+
+  return {
+    autosize: true,
+    paper_bgcolor: 'rgba(0, 0, 0, 0)',
+    plot_bgcolor: 'rgba(0, 0, 0, 0)',
+    font: { color: TEXT_COLOR },
+    margin: { l: 60, r: 30, t: 30, b: 40 },
+    // Nearest point of any series with no distance cutoff, like ApexCharts' non-intersecting tooltip.
+    hovermode: 'closest',
+    hoverdistance: -1,
+    hoverlabel: { bgcolor: '#1e1e1e', font: { color: TEXT_COLOR } },
+    dragmode: 'zoom',
+    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.1, yanchor: 'top', font: { color: TEXT_COLOR, size: 15 } },
+    uirevision: options.uiRevision,
+    datarevision: options.dataRevision,
+    xaxis: {
+      type: 'date',
+      nticks: 7,
+      color: TEXT_COLOR,
+      gridcolor: GRID_COLOR,
+      tickformat: isMultiDay ? '%-m/%-d %H:%M' : '%H:%M:%S',
+      hoverformat: '%-m/%-d/%y, %H:%M:%S',
+      ...(options.xRange ? { autorange: false, range: options.xRange } : { autorange: true }),
+      ...(multi ? { domain: multi.xDomain } : {})
+    },
+    ...(multi
+      ? multi.axes
+      : { yaxis: { color: TEXT_COLOR, gridcolor: GRID_COLOR, ...boundedAxis(options.yMin, options.yMax) } }),
+    shapes: boundaries.shapes,
+    annotations: boundaries.annotations
+  };
+}

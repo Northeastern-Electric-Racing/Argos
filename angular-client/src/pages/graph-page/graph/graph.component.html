@@ -1,1 +1,10 @@
-<div id="chart-container"></div>
+<plotly-plot
+  class="plot"
+  [data]="traces()"
+  [layout]="layout()"
+  [config]="config"
+  [revision]="revision()"
+  [updateOnlyWithRevision]="true"
+  [innerStyle]="{ position: 'relative', width: '100%', height: '100%' }"
+  (initialized)="onPlotInitialized()"
+/>

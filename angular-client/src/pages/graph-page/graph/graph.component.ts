@@ -1,40 +1,36 @@
 import {
+  ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   effect,
+  inject,
   input,
   OnDestroy,
-  OnInit,
-  ChangeDetectionStrategy,
-  untracked,
-  inject,
-  DestroyRef
+  signal,
+  untracked
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
-import ApexCharts from 'apexcharts';
+import { PlotlyComponent, PlotlyService } from 'angular-plotly.js';
+import Plotly from 'plotly.js-gl2d-dist-min';
+import type { Config, Layout, PlotData } from 'plotly.js';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { buildLayout, buildTraces, computeDataSpan, latestX, Series, toWallClockMs } from './graph-layout.utils';
 
-// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
-type ApexOptions = Required<ApexCharts.ApexOptions>;
-type ChartOptions = Pick<
-  ApexOptions,
-  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke'
-> &
-  Partial<Pick<ApexOptions, 'legend' | 'annotations'>> & {
-    yaxis: Extract<ApexOptions['yaxis'], unknown[]>;
-  };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+// The gl2d partial bundle (scatter + scattergl) instead of the full plotly.js build. Set statically
+// rather than through PlotlyModule.forRoot so the bundle stays in the graph page's lazy chunk.
+PlotlyService.setPlotly(Plotly);
 
 @Component({
   selector: 'graph',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
   standalone: true,
+  imports: [PlotlyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export default class CustomGraphComponent implements OnInit, OnDestroy {
+export default class CustomGraphComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
@@ -44,13 +40,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
   clearGraph = input<number>(0);
-  options!: ChartOptions;
-  chart!: ApexCharts;
-  // label -> x,y (topic, data point)
-  data!: Map<string, Array<{ x: number; y: number }>>;
-  isSliding: boolean = false;
-  timeRangeMs: number | undefined = undefined;
-  private timeOuts: NodeJS.Timeout[] = [];
   graphConfig = input.required<{
     maxPoints: number;
     yMin: number | null;
@@ -60,71 +49,56 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }>();
   range = input<number | undefined>(undefined);
 
+  /** label (topic + value index) -> its points; x is wall-clock ms (see toWallClockMs). */
+  data = new Map<string, Series>();
+  timeRangeMs: number | undefined = undefined;
+
+  // What the plot is drawn from. angular-plotly.js only redraws when `revision` bumps, so each
+  // frame is exactly one Plotly.react call, never a diff of the traces in DoCheck.
+  readonly traces = signal<Partial<PlotData>[]>([]);
+  readonly layout = signal<Partial<Layout>>({});
+  readonly revision = signal(0);
+  readonly config: Partial<Config> = { displaylogo: false, responsive: true };
+
+  private plotReady = false;
+  private frame: number | undefined;
+  private dataRevision = 0;
+  private uiRevision = 0;
+  /** Set by resetRange: the next frame autoranges x, and draws even while paused. */
+  private autorangeNext = false;
+
   constructor() {
     effect(() => {
       if (this.isPaused()) {
-        this.resetRange();
+        untracked(() => this.resetRange());
       }
     });
-    effect(() => {
-      const config = this.graphConfig();
-      if (this.chart && config) {
-        this.options.yaxis = [
-          {
-            ...this.options.yaxis,
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            },
-            max: config.yMax === null ? undefined : config.yMax,
-            min: config.yMin === null ? undefined : config.yMin
-          }
-        ];
 
-        this.chart.updateOptions(this.options);
-        this.resetRange();
-      }
+    effect(() => {
+      this.graphConfig();
+      untracked(() => this.resetRange());
     });
 
     effect(() => {
       this.realTime();
       this.clearGraph();
       this.valuesSubject();
-      if (this.chart) {
-        this.chart.updateSeries([]);
-      }
       this.data = new Map();
-      this.timeRangeMs = undefined;
+      // New topics or a cleared graph start from a fresh zoom.
+      this.uiRevision++;
+      untracked(() => this.resetRange());
     });
 
     effect(() => {
-      // Re-run whenever the toggle flips. Per-topic axes are also rebuilt in updateChart
-      // (see applyMultiYAxisConfigs) so they stay in sync as topics are selected/deselected.
-      if (this.showMultipleYAxes()) {
-        this.applyMultiYAxisConfigs();
-      } else {
-        this.options.yaxis = [
-          {
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            }
-          }
-        ];
-      }
-      if (this.chart) {
-        this.chart.updateOptions(this.options);
-      }
+      // Per-topic axes are rebuilt from the data map every frame, so they stay matched to the
+      // selected topics (#630); the toggle just needs a redraw.
+      this.showMultipleYAxes();
+      untracked(() => this.scheduleRender());
     });
+
     effect(() => {
       // End the subscriptions made for the previous topics
       this.valuesChange$.next();
-
-      // Clean up existing timeouts
-      this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-      this.timeOuts = [];
 
       this.valuesSubject().forEach(({ label, updates }) => {
         updates
@@ -132,20 +106,19 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
           .subscribe((data) => this.graphInfoCallback({ label, data }));
       });
 
-      this.updateChart();
+      untracked(() => this.updateChart());
     });
   }
 
   ngOnDestroy(): void {
-    // Clean up timeouts
-    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-    this.timeOuts = [];
-
-    // Destroy chart and clear data
-    if (this.chart) {
-      this.chart.destroy();
-    }
+    if (this.frame !== undefined) cancelAnimationFrame(this.frame);
     this.data.clear();
+  }
+
+  /** angular-plotly.js finished its first newPlot; from here on revisions reach the chart. */
+  onPlotInitialized(): void {
+    this.plotReady = true;
+    this.scheduleRender();
   }
 
   updateChart = () => {
@@ -153,117 +126,59 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     if (this.isPaused() && this.limitRange()) {
       return;
     }
+    this.scheduleRender();
+  };
 
-    const series = Array.from(this.data).map(([key, points], index) => ({
-      name: key,
-      data: points,
-      yaxis: index
-    }));
+  resetRange() {
+    this.timeRangeMs = undefined;
+    this.autorangeNext = true;
+    this.scheduleRender();
+  }
 
-    // Keep the per-topic y-axes matched to the current series set: deselecting a topic
-    // drops its series here, so its y-axis must be pruned too (#630). untracked() so calling
-    // updateChart from an effect doesn't add showMultipleYAxes as a dependency.
-    if (untracked(this.showMultipleYAxes)) {
-      this.applyMultiYAxisConfigs();
+  /** Coalesce bursts of incoming data into at most one redraw per animation frame. */
+  private scheduleRender(): void {
+    if (this.frame !== undefined) return;
+    this.frame = requestAnimationFrame(() => {
+      this.frame = undefined;
+      this.render();
+    });
+  }
+
+  private render(): void {
+    const autorange = this.autorangeNext;
+    this.autorangeNext = false;
+    if (this.isPaused() && this.limitRange() && !autorange) {
+      return;
     }
 
-    // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
-    let effectiveRange: number | undefined = undefined;
-    if (this.realTime()) {
-      effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
+    const multipleYAxes = this.showMultipleYAxes();
+    const config = this.graphConfig();
+
+    // Only constrain the x-axis range in real-time mode; historical mode auto-fits all data
+    let xRange: [number, number] | undefined;
+    if (this.realTime() && !autorange) {
+      const rangeMs = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
+      const end = latestX(this.data);
+      if (rangeMs !== undefined && end !== null) xRange = [end - rangeMs, end];
     }
 
-    // Multi-day historical ranges get date-aware labels and per-day boundary annotations.
-    // Skip the O(N) span scan in real-time mode — realtime ranges are bounded and never multi-day.
-    const span = this.realTime() ? null : this.computeDataSpan();
-    const isMultiDay = !!span && span.spanMs > DAY_MS;
-
-    // Single updateOptions call with series included — avoids two separate re-renders
-    // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
-    this.chart.updateOptions(
-      {
-        ...this.options,
-        series,
-        xaxis: {
-          ...this.options.xaxis,
-          range: effectiveRange,
-          labels: {
-            ...this.options.xaxis.labels,
-            formatter: isMultiDay ? this.multiDayLabelFormatter : this.singleDayLabelFormatter
-          }
-        },
-        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span!) : [] }
-      },
-      false, // redraw (default is false)
-      false // animate (default is true)
+    this.traces.set(buildTraces(this.data, multipleYAxes));
+    this.layout.set(
+      buildLayout({
+        seriesNames: Array.from(this.data.keys()),
+        multipleYAxes,
+        yMin: config.yMin,
+        yMax: config.yMax,
+        xRange,
+        // Skip the O(series) span scan in real-time mode: live ranges are never multi-day.
+        span: this.realTime() ? null : computeDataSpan(this.data),
+        uiRevision: this.uiRevision,
+        dataRevision: ++this.dataRevision
+      })
     );
-  };
-
-  // Build one y-axis per current topic (order matches the series' `yaxis: index`).
-  private applyMultiYAxisConfigs(): void {
-    this.options.yaxis = Array.from(this.data.keys()).map((key, index) => ({
-      title: {
-        text: key.replace('0', ''),
-        style: {
-          color: 'grey',
-          fontSize: '20px',
-          fontWeight: 'bold'
-        }
-      },
-      labels: {
-        style: {
-          colors: '#fff'
-        }
-      },
-      opposite: index % 2 !== 0 // Alternate sides for each y-axis
-    }));
-  }
-
-  private computeDataSpan(): { minX: number; maxX: number; spanMs: number } | null {
-    let minX = Infinity;
-    let maxX = -Infinity;
-    for (const points of this.data.values()) {
-      if (points.length === 0) continue;
-      // Series data is kept sorted by x (see graphInfoCallback), so endpoints are the extrema.
-      if (points[0].x < minX) minX = points[0].x;
-      if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
+    if (this.plotReady) {
+      this.revision.update((r) => r + 1);
     }
-    if (!isFinite(minX) || !isFinite(maxX)) return null;
-    return { minX, maxX, spanMs: maxX - minX };
-  }
-
-  private singleDayLabelFormatter = (val: string | number): string =>
-    new Date(+val).toLocaleTimeString('en-US', { hour12: false });
-
-  private multiDayLabelFormatter = (val: string | number): string => {
-    const d = new Date(+val);
-    const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-    const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    return `${date} ${time}`;
-  };
-
-  private buildDayBoundaryAnnotations(span: { minX: number; maxX: number }) {
-    const annotations: { x: number; strokeDashArray: number; borderColor: string; label: object }[] = [];
-    // First local-midnight strictly after minX.
-    const cursor = new Date(span.minX);
-    cursor.setHours(24, 0, 0, 0);
-    for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
-      const date = new Date(t);
-      annotations.push({
-        x: t,
-        strokeDashArray: 4,
-        borderColor: '#8fcadd',
-        label: {
-          borderColor: '#8fcadd',
-          style: { color: '#fff', background: '#0c2026', fontSize: '11px' },
-          orientation: 'horizontal',
-          position: 'top',
-          offsetY: -4,
-          text: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-        }
-      });
-    }
-    return annotations;
   }
 
   graphInfoCallback = (info: GraphInfo) => {
@@ -273,42 +188,48 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     }
     info.data.forEach((value, i) => {
       const seriesLabel = info.label + ' ' + i;
-      if (!this.data.has(seriesLabel)) {
-        this.data.set(seriesLabel, []);
+      let line = this.data.get(seriesLabel);
+      if (!line) {
+        line = { x: [], y: [] };
+        this.data.set(seriesLabel, line);
       }
-      const line = this.data.get(seriesLabel)!;
 
       value.forEach((val) => {
-        const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
+        const x = toWallClockMs(val.x);
+        const y = Math.round(val.y * 10000) / 10000;
 
         // if the point is in order according to it's timestamp, just push it to the end of the line
-        if (line.length === 0 || val.x >= line.at(-1)!.x) {
-          line.push(point);
+        if (line.x.length === 0 || x >= line.x[line.x.length - 1]) {
+          line.x.push(x);
+          line.y.push(y);
         } else {
           // Out of order: binary search for correct sorted position
           // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
-          const idx = binarySearchInsertIndex(line, val.x);
-          line.splice(idx, 0, point);
+          const idx = binarySearchInsertIndex(line.x, x);
+          line.x.splice(idx, 0, x);
+          line.y.splice(idx, 0, y);
         }
       });
 
       // Trim after processing all points in this series batch
-      if (this.realTime() && line.length > 0) {
+      if (this.realTime() && line.x.length > 0) {
         const config = this.graphConfig();
-        const latestX = line[line.length - 1].x;
+        const newestX = line.x[line.x.length - 1];
 
         if (config.rangeMode === 'time') {
           // remove point if outside the time range + 10% buffer (for better UX)
           const buffer = config.timeRangeMs * 0.1;
-          const cutoff = latestX - config.timeRangeMs - buffer;
-          if (line[0].x < cutoff) {
-            line.shift();
+          const cutoff = newestX - config.timeRangeMs - buffer;
+          if (line.x[0] < cutoff) {
+            line.x.shift();
+            line.y.shift();
           }
-        } else if (line.length > config.maxPoints * 1.1) {
-          const shiftedPoint = line.shift();
+        } else if (line.x.length > config.maxPoints * 1.1) {
+          const shiftedX = line.x.shift();
+          line.y.shift();
           // point based trim requires is to calculate the max time range we can show that
           // doesn't show points being deleted. So we default to smallest range.
-          const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
+          const timeDiff = shiftedX !== undefined ? newestX - shiftedX : 0;
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
       }
@@ -316,108 +237,4 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     this.updateChart();
   };
-
-  ngOnInit(): void {
-    this.data = new Map();
-
-    const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) return;
-
-    this.options = {
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: false,
-          dynamicAnimation: {
-            speed: 1
-          }
-        }
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        width: 3
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 6,
-        labels: {
-          style: {
-            colors: '#fff'
-          },
-          formatter: (val: string | number) => new Date(+val).toLocaleTimeString('en-US', { hour12: false })
-        }
-      },
-      // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
-      yaxis: [
-        {
-          labels: {
-            style: {
-              colors: '#fff'
-            }
-          }
-        }
-      ],
-      tooltip: {
-        enabled: true,
-        // Make the tooltip “follow” your cursor as you hover
-        followCursor: true,
-        // If you’d rather show a shared tooltip for multiple series, set shared: true
-        shared: false,
-        intersect: false,
-        x: {
-          //format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        },
-        theme: 'dark'
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 100]
-        }
-      },
-      grid: {
-        show: true
-      },
-      legend: {
-        labels: {
-          colors: '#fff'
-        },
-        fontSize: '15px'
-      }
-    };
-
-    this.chart = new ApexCharts(chartContainer, {
-      series: [],
-      ...this.options
-    });
-    this.chart.render().then(() => {
-      this.updateChart();
-    });
-  }
-
-  resetRange() {
-    this.timeRangeMs = undefined;
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: undefined
-      }
-    });
-  }
 }
