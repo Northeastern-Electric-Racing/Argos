@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, Renderer2, inject, input } from '@angular/core';
+import { Component, ElementRef, OnInit, Renderer2, computed, inject, input } from '@angular/core';
 import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
 import Theme from 'src/services/theme.service';
 
@@ -21,35 +21,23 @@ export type ChartOptions = {
 export default class PieChartComponent implements OnInit {
   private renderer = inject(Renderer2);
   private el = inject(ElementRef);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public chartOptions!: Partial<ChartOptions> | any;
   data = input.required<{ value: number; name: string }[]>();
   backgroundColor = input<string>(Theme.infoBackground);
   title = input<string>('Pie Chart');
-  currentWidth: number = 0;
+  // Values change every tick; bound on their own so apx-chart only updates the series.
+  series = computed(() => this.data().map((item) => item.value));
+  // Labels keep their identity while names are unchanged, so chartOptions isn't rebuilt per tick.
+  private labels = computed(() => this.data().map((item) => item.name), {
+    equal: (a, b) => a.length === b.length && a.every((name, i) => name === b[i])
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public chartOptions = computed<Partial<ChartOptions> | any>(() => {
+    const labels = this.labels();
 
-  ngOnInit() {
-    this.setChartOptions();
-    this.setChartWidth();
-    setInterval(() => {
-      this.setChartOptions();
-    }, 2000);
-  }
-
-  setChartOptions() {
-    const labels = this.data().map((item) => {
-      return item.name;
-    });
-    const series = this.data().map((item) => {
-      return item.value;
-    });
-
-    if (series.length === 0) {
-      this.chartOptions = {};
-      return;
+    if (labels.length === 0) {
+      return {};
     }
-    this.chartOptions = {
-      series,
+    return {
       plotOptions: {
         pie: {
           dataLabels: {
@@ -81,6 +69,11 @@ export default class PieChartComponent implements OnInit {
         text: this.title()
       }
     };
+  });
+  currentWidth: number = 0;
+
+  ngOnInit() {
+    this.setChartWidth();
   }
 
   private setChartWidth() {

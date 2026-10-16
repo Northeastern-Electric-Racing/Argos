@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -28,11 +28,9 @@ export default class SidebarCardComponent implements OnInit {
   dataValue = signal<string | undefined>(undefined);
   topicName = input.required<string>();
   isDesktop = input<boolean>(true);
-  iconId!: string;
+  iconId = computed(() => `${this.title()}-icon`);
 
   ngOnInit(): void {
-    this.iconId = `${this.title()}-icon`;
-
     this.storage
       .get(this.topicName().slice(0, -1))
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -53,7 +51,7 @@ export default class SidebarCardComponent implements OnInit {
         card.classList.remove('selected');
       }, 250);
     }
-    const dropDown = document.getElementById(this.iconId);
+    const dropDown = document.getElementById(this.iconId());
     if (dropDown) {
       dropDown.classList.toggle('selected');
     }

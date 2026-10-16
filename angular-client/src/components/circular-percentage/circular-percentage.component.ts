@@ -1,4 +1,4 @@
-import { Component, OnInit, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import TypographyComponent from '../typography/typography.component';
@@ -15,7 +15,7 @@ import TypographyComponent from '../typography/typography.component';
   standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
-export class CircularPercentageComponent implements OnInit {
+export class CircularPercentageComponent {
   dimension = input.required<number>();
   ringColor = input.required<string>();
   percentage = input.required<number>();
@@ -23,19 +23,11 @@ export class CircularPercentageComponent implements OnInit {
 
   //values needed for styling and scaling
   backgroundColor: string = Theme.infoBackground;
-  innerCircleDimension: number = 0;
   emptyAngle: number = 360;
-  percentageFontSize: number = 0;
-  percentageSignFontSize: number = 0;
-  percentageSignOffset: number = 0;
-
-  //assigns values needed for styling and scaling
-  ngOnInit() {
-    this.innerCircleDimension = this.dimension() * 0.87;
-    this.percentageFontSize = this.dimension() * 0.39;
-    this.percentageSignFontSize = this.dimension() * 0.17;
-    this.percentageSignOffset = this.dimension() * 0.02;
-  }
+  innerCircleDimension = computed(() => this.dimension() * 0.87);
+  percentageFontSize = computed(() => this.dimension() * 0.39);
+  percentageSignFontSize = computed(() => this.dimension() * 0.17);
+  percentageSignOffset = computed(() => this.dimension() * 0.02);
 
   getFilledAngle(percentage: number): number {
     return (percentage / 100) * 360;
