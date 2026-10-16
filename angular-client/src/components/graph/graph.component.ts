@@ -1,20 +1,16 @@
 import { Component, OnDestroy, OnInit, computed, inject, input } from '@angular/core';
 import ApexCharts from 'apexcharts';
-import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
-type ChartOptions = {
-  chart: ApexChart;
-  xaxis: ApexXAxis;
-  yaxis: ApexYAxis;
-  dataLabels: ApexDataLabels;
-  markers: ApexMarkers;
-  grid: ApexGrid;
-  tooltip: ApexTooltip;
-  fill: ApexFill;
-  stroke: ApexStroke;
+// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
+type ApexOptions = Required<ApexCharts.ApexOptions>;
+type ChartOptions = Pick<
+  ApexOptions,
+  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke'
+> & {
+  yaxis: Exclude<ApexOptions['yaxis'], unknown[]>;
 };
 
 @Component({
@@ -133,12 +129,15 @@ export class GraphComponent implements OnInit, OnDestroy {
   };
 
   updateChart = () => {
-    this.chart.updateSeries([
-      {
-        name: this.title(),
-        data: Array.from(this.data())
-      }
-    ]);
+    // updateOptions, not updateSeries: apexcharts 5's updateSeries fast path replots the line without redrawing the axes
+    this.chart.updateOptions({
+      series: [
+        {
+          name: this.title(),
+          data: Array.from(this.data())
+        }
+      ]
+    });
 
     if (!this.isSliding && this.data().length > 2) {
       this.timeDiffMs = this.data()[this.data().length - 1].x - this.data()[0].x;

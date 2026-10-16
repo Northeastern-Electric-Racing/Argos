@@ -73,7 +73,7 @@ export class HeatMapService {
         closeAriaLabel: 'Close',
         styleClass: 'cell-compare-dialog'
       });
-      this.dialogRef.onClose.subscribe(() => {
+      this.dialogRef?.onClose.subscribe(() => {
         this.clearSelection();
         this.dialogRef = null;
       });

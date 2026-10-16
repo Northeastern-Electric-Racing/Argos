@@ -98,7 +98,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       if (error) {
         console.log('loading error: ', error);
       }
@@ -172,7 +172,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       if (error) {
         console.log('loading error: ', error);
       }

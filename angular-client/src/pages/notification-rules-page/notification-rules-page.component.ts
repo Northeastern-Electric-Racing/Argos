@@ -54,8 +54,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
 
-  private confirmRef: DynamicDialogRef | undefined;
-  private addRuleRef: DynamicDialogRef | undefined;
+  private confirmRef: DynamicDialogRef | null | undefined;
+  private addRuleRef: DynamicDialogRef | null | undefined;
 
   ngOnInit(): void {
     // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
@@ -82,8 +82,8 @@ export default class NotificationRulesPageComponent implements OnInit {
       closeAriaLabel: 'Close'
     });
 
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.addRuleRef.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.addRuleRef?.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
       if (!rule) return;
 
       try {
@@ -213,8 +213,8 @@ export default class NotificationRulesPageComponent implements OnInit {
       data: { rules: result }
     });
 
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.confirmRef.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.confirmRef?.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
       if (confirmed) {
         this.batchAddRules(result);
       }

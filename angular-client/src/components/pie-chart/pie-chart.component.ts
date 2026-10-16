@@ -1,5 +1,12 @@
 import { Component, ElementRef, OnInit, Renderer2, computed, inject, input } from '@angular/core';
-import { ApexNonAxisChartSeries, ApexPlotOptions, ApexChart, ApexFill, NgApexchartsModule } from 'ng-apexcharts';
+import {
+  ApexNonAxisChartSeries,
+  ApexPlotOptions,
+  ApexChart,
+  ApexFill,
+  ApexTitleSubtitle,
+  NgApexchartsModule
+} from 'ng-apexcharts';
 import Theme from 'src/services/theme.service';
 
 export type ChartOptions = {

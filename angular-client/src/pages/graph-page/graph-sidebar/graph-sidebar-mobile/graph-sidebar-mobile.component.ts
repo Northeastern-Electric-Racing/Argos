@@ -15,7 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { Sidebar } from 'primeng/sidebar';
+import { Drawer } from 'primeng/drawer';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { take } from 'rxjs';
 import {
@@ -45,7 +45,7 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Sidebar,
+    Drawer,
     PrimeTemplate,
     Tree,
     ButtonComponent,
@@ -63,7 +63,7 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   private dialogService = inject(DialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef;
+  private presetDialogRef?: DynamicDialogRef | null;
 
   sidebarVisible = false;
   treeNodes = computed(() => {
@@ -131,8 +131,8 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
         dataTypes: this.dataTypes()
       }
     });
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
       if (matched) {
         this.applyMatched(matched);
       }

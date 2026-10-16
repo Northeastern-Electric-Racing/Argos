@@ -15,7 +15,7 @@ enum BMSMODE {
 }
 
 @Component({
-  selector: 'BMS-mode-display',
+  selector: 'bms-mode-display',
   templateUrl: './BMS-mode-display.component.html',
   styleUrls: ['./BMS-mode-display.component.css'],
   standalone: true,

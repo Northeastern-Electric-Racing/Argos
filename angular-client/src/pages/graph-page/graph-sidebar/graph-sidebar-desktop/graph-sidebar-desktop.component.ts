@@ -39,7 +39,7 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   private dialogService = inject(DialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef;
+  private presetDialogRef?: DynamicDialogRef | null;
 
   dataTypes = input<DataType[]>([]);
   treeNodes = computed(() => {
@@ -103,8 +103,8 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
         dataTypes: this.dataTypes()
       }
     });
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
       if (matched) {
         this.applyMatched(matched);
       }
