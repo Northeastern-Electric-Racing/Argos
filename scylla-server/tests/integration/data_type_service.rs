@@ -1,6 +1,4 @@
-#[path = "test_utils.rs"]
-mod test_utils;
-
+use crate::test_utils::cleanup_and_prepare;
 use diesel::{
     ExpressionMethods, SelectableHelper,
     query_dsl::methods::{FilterDsl, SelectDsl},
@@ -10,7 +8,6 @@ use scylla_server::{
     models::DataType, schema::data_type, services::data_type_service,
     transformers::data_type_transformer::PublicDataType,
 };
-use test_utils::cleanup_and_prepare;
 
 #[tokio::test]
 async fn test_get_all_datatypes() -> Result<(), diesel::result::Error> {
