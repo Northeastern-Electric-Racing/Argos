@@ -8,10 +8,7 @@
     [isDesktop]="isDesktop()"
   />
   @if (node().subnodesVisible) {
-    <div
-      [class]="isDesktop() ? '' : 'mobile-subcontainer'"
-      [@toggleExpand]="{ value: (isDesktop() ? 'desktop' : 'mobile') + '-' + node().subnodesVisible }"
-    >
+    <div [class]="isDesktop() ? '' : 'mobile-subcontainer'">
       @for (subNode of node().nodes | async | nodeFilter: 'name' : searchFilter(); track subNode) {
         <div [class]="isDesktop() ? 'desktop-subcontainer' : 'mobile-subcontainer'">
           <node-display

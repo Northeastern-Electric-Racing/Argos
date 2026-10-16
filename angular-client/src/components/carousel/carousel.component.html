@@ -8,7 +8,7 @@
     [autoplayInterval]="3000"
     (onPage)="handlePageChange($event)"
   >
-    <ng-template let-run let-i="index" pTemplate="item">
+    <ng-template let-run let-i="index" #item>
       <div class="run-card">
         <mat-grid-list cols="2" rowHeight="40px">
           <mat-grid-tile>

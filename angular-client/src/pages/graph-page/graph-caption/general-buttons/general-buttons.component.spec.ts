@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
@@ -5,13 +6,13 @@ import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './gener
 describe('GeneralButtonsComponent — custom range validation', () => {
   let fixture: ComponentFixture<GeneralButtonsComponent>;
   let component: GeneralButtonsComponent;
-  let toastSpy: jasmine.SpyObj<MessageService>;
-  let onSelectPresetSpy: jasmine.Spy;
-  let onApplyCustomLastXSpy: jasmine.Spy;
-  let onApplyCustomDateRangeSpy: jasmine.Spy;
-  let onRunSelectedSpy: jasmine.Spy;
-  let onClearDataTypeSpy: jasmine.Spy;
-  let onSetRealTimeSpy: jasmine.Spy;
+  let toastSpy: { add: Mock };
+  let onSelectPresetSpy: Mock;
+  let onApplyCustomLastXSpy: Mock;
+  let onApplyCustomDateRangeSpy: Mock;
+  let onRunSelectedSpy: Mock;
+  let onClearDataTypeSpy: Mock;
+  let onSetRealTimeSpy: Mock;
 
   const presets: RangePreset[] = [
     { label: '1 minute', minutes: 1 },
@@ -19,13 +20,21 @@ describe('GeneralButtonsComponent — custom range validation', () => {
   ];
 
   beforeEach(async () => {
-    toastSpy = jasmine.createSpyObj<MessageService>('MessageService', ['add']);
-    onSelectPresetSpy = jasmine.createSpy('onSelectPreset');
-    onApplyCustomLastXSpy = jasmine.createSpy('onApplyCustomLastX');
-    onApplyCustomDateRangeSpy = jasmine.createSpy('onApplyCustomDateRange');
-    onRunSelectedSpy = jasmine.createSpy('onRunSelected');
-    onClearDataTypeSpy = jasmine.createSpy('onClearDataType');
-    onSetRealTimeSpy = jasmine.createSpy('onSetRealTime');
+    // The run selector inside fetches the run list on init; keep it off the network so its
+    // failure toast does not land in these assertions.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {}))
+    );
+    toastSpy = {
+      add: vi.fn().mockName('MessageService.add')
+    };
+    onSelectPresetSpy = vi.fn().mockName('onSelectPreset');
+    onApplyCustomLastXSpy = vi.fn().mockName('onApplyCustomLastX');
+    onApplyCustomDateRangeSpy = vi.fn().mockName('onApplyCustomDateRange');
+    onRunSelectedSpy = vi.fn().mockName('onRunSelected');
+    onClearDataTypeSpy = vi.fn().mockName('onClearDataType');
+    onSetRealTimeSpy = vi.fn().mockName('onSetRealTime');
 
     await TestBed.configureTestingModule({
       imports: [GeneralButtonsComponent],
@@ -44,15 +53,16 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => vi.unstubAllGlobals());
+
   describe('applyCustomLastX', () => {
     it('rejects 0 hours / 0 minutes with a toast and no callback', () => {
       component.customHours.set(0);
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledOnceWith(
-        jasmine.objectContaining({ severity: 'warn', summary: 'Invalid Range' })
-      );
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'warn', summary: 'Invalid Range' }));
     });
 
     it('rejects total exceeding MAX_RANGE_MINUTES with a toast', () => {
@@ -60,14 +70,16 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
     });
 
     it('emits the total minutes when valid', () => {
       component.customHours.set(2);
       component.customMinutes.set(15);
       component.applyCustomLastX();
-      expect(onApplyCustomLastXSpy).toHaveBeenCalledOnceWith(135);
+      expect(onApplyCustomLastXSpy).toHaveBeenCalledTimes(1);
+      expect(onApplyCustomLastXSpy).toHaveBeenCalledWith(135);
       expect(toastSpy.add).not.toHaveBeenCalled();
     });
 
@@ -76,7 +88,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(null);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
   });
 
@@ -88,7 +101,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
 
     it('rejects an end time more than 1 minute in the future', () => {
@@ -96,7 +110,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now + 5 * 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
 
     it('rejects a span exceeding MAX_RANGE_MINUTES', () => {
@@ -105,7 +120,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - oneMinuteMs));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
     });
 
     it('emits start and end ms when valid', () => {
@@ -114,7 +130,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customFromDate.set(start);
       component.customToDate.set(end);
       component.applyCustomDateRange();
-      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledOnceWith(start.getTime(), end.getTime());
+      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledTimes(1);
+      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledWith(start.getTime(), end.getTime());
       expect(toastSpy.add).not.toHaveBeenCalled();
     });
   });
@@ -130,7 +147,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     });
 
     it('seeds Date Range mode + From/To when activeDateRange is set', () => {
-      const range = { startMs: 1_700_000_000_000, endMs: 1_700_000_900_000 };
+      const range = { startMs: 1700000000000, endMs: 1700000900000 };
       fixture.componentRef.setInput('activeDateRange', range);
       fixture.detectChanges();
       component.onCustomPopoverShow();

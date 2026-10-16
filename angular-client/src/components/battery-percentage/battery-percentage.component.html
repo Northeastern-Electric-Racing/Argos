@@ -1,11 +1,11 @@
 <div class="battery">
   <div
+    class="nub"
     (click)="toggleIsCorrect()"
-    [@toggleClick]="clicked"
     [style]="{
       height: nubHeight(),
       width: nubWidth(),
-      'background-color': backgroundColor,
+      'background-color': clicked ? 'grey' : backgroundColor,
       'border-top-left-radius': roundCorner(),
       'border-top-right-radius': roundCorner()
     }"

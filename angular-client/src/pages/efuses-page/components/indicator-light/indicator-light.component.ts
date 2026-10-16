@@ -1,4 +1,4 @@
-import { Component, input, computed } from '@angular/core';
+import { Component, input, computed, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Backlit annunciator plate indicator — mimics vintage panel-mount
@@ -12,7 +12,7 @@ import { Component, input, computed } from '@angular/core';
   selector: 'indicator-light',
   templateUrl: './indicator-light.component.html',
   styleUrls: ['./indicator-light.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class IndicatorLightComponent {
   /** The text displayed on the plate (e.g., "FAULTED", "ENABLED") */

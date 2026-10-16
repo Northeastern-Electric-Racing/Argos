@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ProgressSpinner } from 'primeng/progressspinner';
 
 /**
@@ -8,7 +8,7 @@ import { ProgressSpinner } from 'primeng/progressspinner';
   selector: 'loading-page',
   templateUrl: './loading-page.component.html',
   styleUrls: ['./loading-page.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ProgressSpinner]
 })
 export default class LoadingPageComponent {}

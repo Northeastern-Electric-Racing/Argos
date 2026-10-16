@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CircularPercentageComponent } from '../../circular-percentage/circular-percentage.component';
 import { DividerComponent } from '../../divider/divider';
 import { MatIcon } from '@angular/material/icon';
@@ -11,7 +11,7 @@ import ThermometerComponent from 'src/components/thermometer/thermometer.compone
   selector: 'raspberry-pi-desktop',
   templateUrl: './raspberry-pi-desktop.component.html',
   styleUrls: ['./raspberry-pi-desktop.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     CircularPercentageComponent,
     DividerComponent,

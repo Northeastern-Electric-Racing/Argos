@@ -1,10 +1,10 @@
 <button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
 <p-drawer [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
-  <ng-template pTemplate="header">
+  <ng-template #header>
     <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
   </ng-template>
-  <ng-template pTemplate="content">
+  <ng-template #content>
     <div class="sidebar-content">
       <div class="presets-row">
         <select-dropdown
@@ -29,7 +29,7 @@
       <div class="toggle-group">
         <label class="flatten-toggle">
           <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
-          <p-toggleSwitch
+          <p-toggleswitch
             [ngModel]="selectedOnly()"
             (ngModelChange)="toggleSelectedOnly($event)"
             ariaLabel="Show only selected topics"
@@ -37,7 +37,7 @@
         </label>
         <label class="flatten-toggle">
           <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-          <p-toggleSwitch
+          <p-toggleswitch
             [ngModel]="flattenMode()"
             (ngModelChange)="toggleFlattenMode($event)"
             ariaLabel="Flatten topic tree"
@@ -56,7 +56,7 @@
         [metaKeySelection]="false"
         selectionMode="multiple"
       >
-        <ng-template let-node pTemplate="default">
+        <ng-template let-node #node>
           <div class="tree-node-container" (click)="onRowClick($event, node)">
             <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
             @if (node.children?.length === 0) {

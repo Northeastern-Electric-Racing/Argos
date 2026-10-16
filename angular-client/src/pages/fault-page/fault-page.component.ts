@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
@@ -15,7 +15,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'fault-page',
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {

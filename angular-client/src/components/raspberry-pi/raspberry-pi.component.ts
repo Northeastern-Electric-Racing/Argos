@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -11,8 +11,8 @@ import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-
   selector: 'raspberry-pi',
   templateUrl: './raspberry-pi.component.html',
   styleUrls: ['./raspberry-pi.component.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

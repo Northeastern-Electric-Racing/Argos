@@ -9,7 +9,6 @@ import HalfGaugeComponent from '../half-gauge/half-gauge.component';
   selector: 'speed-display',
   templateUrl: './speed-display.component.html',
   styleUrls: ['./speed-display.component.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, HalfGaugeComponent]
 })
 export default class SpeedDisplayComponent implements OnInit {

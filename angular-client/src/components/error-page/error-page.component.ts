@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import TypographyComponent from '../typography/typography.component';
 
 /**
@@ -10,7 +10,7 @@ import TypographyComponent from '../typography/typography.component';
   templateUrl: './error-page.component.html',
   styleUrls: ['./error-page.component.css'],
   imports: [TypographyComponent],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class ErrorPageComponent {
   errorMessage = input.required<string>();
