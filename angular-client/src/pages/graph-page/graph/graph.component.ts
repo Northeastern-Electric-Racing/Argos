@@ -29,6 +29,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import { DayBoundariesPrimitive } from './day-boundaries.primitive';
+import { HoverMarker, HoverMarkersPrimitive } from './hover-markers.primitive';
 import {
   buildDayBoundaries,
   formatCrosshairTime,
@@ -115,6 +116,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   /** Points per series that were trimmed from `data` but are still in the chart's copy. */
   private staleHead = new Map<string, number>();
   private dayBoundaries = new DayBoundariesPrimitive();
+  private hoverMarkers = new HoverMarkersPrimitive();
   private multiDay = false;
 
   constructor() {
@@ -223,6 +225,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
     this.chart.panes()[0].attachPrimitive(this.dayBoundaries);
+    this.chart.panes()[0].attachPrimitive(this.hoverMarkers);
     this.chart.subscribeCrosshairMove(this.onCrosshairMove);
     this.rebuildSeries();
   }
@@ -340,6 +343,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       // With an axis per topic, tag each axis' last-value label with its topic.
       title: multipleYAxes ? label : '',
       priceLineVisible: false,
+      // hoverMarkers marks every series at its held value instead.
+      crosshairMarkerVisible: false,
       priceFormat: { type: 'custom', formatter: formatValue, minMove: 0.0001 },
       autoscaleInfoProvider: (original: () => AutoscaleInfo | null) => this.applyYLimits(original(), multipleYAxes)
     });
@@ -377,6 +382,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.staleHead.clear();
     this.legend.set([]);
     this.hover.set(null);
+    this.hoverMarkers.setMarkers([]);
   }
 
   private clearChart() {
@@ -440,17 +446,24 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   private onCrosshairMove = (param: MouseEventParams<Time>) => {
     if (param.time === undefined || param.point === undefined || param.point.x < 0 || param.point.y < 0) {
       this.hover.set(null);
+      this.hoverMarkers.setMarkers([]);
       return;
     }
     // Hold each series' latest value at the hovered time, since topics rarely share timestamps.
     const timeMs = fromChartTime(param.time);
     const rows: TooltipRow[] = [];
+    const markers: HoverMarker[] = [];
     for (const item of this.legend()) {
       const line = this.data.get(item.label) ?? [];
+      const series = this.series.get(item.label);
       let idx = binarySearchInsertIndex(line, timeMs);
       if (line[idx]?.x !== timeMs) idx--;
-      if (idx >= 0) rows.push({ ...item, value: formatValue(line[idx].y) });
+      if (idx < 0 || !series) continue;
+      const { x, y } = line[idx];
+      rows.push({ ...item, value: formatValue(y) });
+      markers.push({ series, timeMs: x, value: y, color: item.color });
     }
+    this.hoverMarkers.setMarkers(markers);
     // The chart reports the cursor relative to the pane, which starts right of the left price axis.
     const paneLeft = this.chart?.priceScale('left').width() ?? 0;
     this.hover.set({ time: formatCrosshairTime(param.time), rows, x: paneLeft + param.point.x, y: param.point.y });

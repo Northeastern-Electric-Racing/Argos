@@ -1,10 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AutoscaleInfo, ISeriesApi, MouseEventParams, SeriesType, Time, TimeScaleOptions } from 'lightweight-charts';
+import {
+  AutoscaleInfo,
+  ISeriesApi,
+  LineSeriesOptions,
+  MouseEventParams,
+  SeriesType,
+  Time,
+  TimeScaleOptions
+} from 'lightweight-charts';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent, { GraphConfig } from './graph.component';
 import { toChartTime } from './graph-chart.utils';
 import { DayBoundariesPrimitive } from './day-boundaries.primitive';
+import { HoverMarkersPrimitive } from './hover-markers.primitive';
 
 const T0 = new Date(2026, 2, 14, 9, 0, 0).getTime();
 
@@ -327,6 +336,39 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     await hoverAt(undefined);
     expect(component.hover()).toBeNull();
     expect(tooltip()).toBeNull();
+  });
+
+  it('marks each topic’s held point at the hovered time, in place of the exact-bar crosshair marker', async () => {
+    const a = topic('A', [
+      [
+        { x: T0, y: 1 },
+        { x: T0 + 2000, y: 3 }
+      ]
+    ]);
+    const b = topic('B', [[{ x: T0 + 1000, y: 20 }]]);
+    await render({ topics: [a, b], multi: true });
+    expect(allSeries().map((s) => (s.options() as LineSeriesOptions).crosshairMarkerVisible)).toEqual([false, false]);
+    const { hoverMarkers } = component as unknown as { hoverMarkers: HoverMarkersPrimitive };
+    const timeScale = component.chart!.timeScale();
+    const [seriesA, seriesB] = allSeries();
+
+    await hoverAt(T0 + 1000);
+
+    expect(hoverMarkers.positions()).toEqual([
+      {
+        x: timeScale.timeToCoordinate(toChartTime(T0))!,
+        y: seriesA.priceToCoordinate(1)!,
+        color: component.legend()[0].color
+      },
+      {
+        x: timeScale.timeToCoordinate(toChartTime(T0 + 1000))!,
+        y: seriesB.priceToCoordinate(20)!,
+        color: component.legend()[1].color
+      }
+    ]);
+
+    await hoverAt(undefined);
+    expect(hoverMarkers.positions()).toEqual([]);
   });
 
   it('places the tooltip beside the cursor, flipping to its other side near the right and bottom edges', async () => {
