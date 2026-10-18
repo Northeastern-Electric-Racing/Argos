@@ -21,24 +21,32 @@ describe('graph layout utils', () => {
     expect(yaxis?.range).toEqual([0, 10]);
   });
 
-  it('autoranges only the open end when one y bound is set', () => {
-    expect(buildLayout({ ...base, yMin: 5 }).yaxis).toEqual(
-      jasmine.objectContaining({ autorange: 'max', range: [5, null] })
-    );
-    expect(buildLayout({ ...base, yMax: 5 }).yaxis).toEqual(
-      jasmine.objectContaining({ autorange: 'min', range: [null, 5] })
-    );
+  it('pins only the set end when one y bound is set, autoranging the other', () => {
+    // autorangeoptions rather than a partial range with autorange 'min'/'max': Plotly.react
+    // ignores a switch from autorange true to 'min'/'max' while uirevision stays the same.
+    const minOnly = buildLayout({ ...base, yMin: 5 }).yaxis;
+    expect(minOnly?.autorange).toBeTrue();
+    expect(minOnly?.autorangeoptions).toEqual({ minallowed: 5 });
+    const maxOnly = buildLayout({ ...base, yMax: 5 }).yaxis;
+    expect(maxOnly?.autorange).toBeTrue();
+    expect(maxOnly?.autorangeoptions).toEqual({ maxallowed: 5 });
   });
 
-  it('shrinks the x domain to make room for stacked y-axes', () => {
-    const { xDomain, axes } = buildMultiYAxes(['A', 'B', 'C', 'D', 'E']);
-    // Three on the left (two stacked outward), two on the right (one stacked outward).
-    expect(xDomain[0]).toBeCloseTo(0.14);
-    expect(xDomain[1]).toBeCloseTo(0.93);
-    expect(axes['yaxis5'].position).toBeCloseTo(0);
-    expect(axes['yaxis4'].position).toBeCloseTo(1);
-    expect(axes['yaxis2'].overlaying).toBe('y');
+  it('stacks extra y-axes outward on alternating sides without overlapping', () => {
+    const axes = buildMultiYAxes(['A', 'B', 'C', 'D', 'E']);
     expect(axes['yaxis'].overlaying).toBeUndefined();
+    expect(axes['yaxis'].anchor).toBeUndefined();
+    ['yaxis2', 'yaxis3', 'yaxis4', 'yaxis5'].forEach((key) => {
+      expect(axes[key]).toEqual(jasmine.objectContaining({ overlaying: 'y', anchor: 'free', autoshift: true }));
+    });
+    expect(axes['yaxis4'].position).toBe(1);
+    expect(axes['yaxis5'].position).toBe(0);
+    // automargin grows the margins to fit the stacked axes' ticks and titles.
+    expect(Object.values(axes).every((axis) => axis.automargin === true)).toBeTrue();
+  });
+
+  it('shows full series names in hover labels', () => {
+    expect(buildLayout(base).hoverlabel?.namelength).toBe(-1);
   });
 
   it('places no day boundary inside a single day', () => {

@@ -66,6 +66,8 @@ export default class CustomGraphComponent implements OnDestroy {
   private uiRevision = 0;
   /** Set by resetRange: the next frame autoranges x, and draws even while paused. */
   private autorangeNext = false;
+  /** The next frame draws even while paused, for view changes (like the y-axis toggle) that need no new data. */
+  private drawNext = false;
 
   constructor() {
     effect(() => {
@@ -76,6 +78,9 @@ export default class CustomGraphComponent implements OnDestroy {
 
     effect(() => {
       this.graphConfig();
+      // A fresh zoom, like ApexCharts' reset on new options: under an unchanged uirevision Plotly
+      // keeps a user's y zoom over new Y Min/Max bounds.
+      this.uiRevision++;
       untracked(() => this.resetRange());
     });
 
@@ -93,6 +98,7 @@ export default class CustomGraphComponent implements OnDestroy {
       // Per-topic axes are rebuilt from the data map every frame, so they stay matched to the
       // selected topics (#630); the toggle just needs a redraw.
       this.showMultipleYAxes();
+      this.drawNext = true;
       untracked(() => this.scheduleRender());
     });
 
@@ -146,8 +152,10 @@ export default class CustomGraphComponent implements OnDestroy {
 
   private render(): void {
     const autorange = this.autorangeNext;
+    const force = autorange || this.drawNext;
     this.autorangeNext = false;
-    if (this.isPaused() && this.limitRange() && !autorange) {
+    this.drawNext = false;
+    if (this.isPaused() && this.limitRange() && !force) {
       return;
     }
 

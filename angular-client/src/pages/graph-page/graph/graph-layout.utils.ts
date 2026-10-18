@@ -29,8 +29,9 @@ export interface LayoutOptions {
   dataRevision: number;
 }
 
-/** Paper-width gap between stacked y-axes on the same side. */
-const AXIS_STEP = 0.07;
+/** autoshift (plotly.js 2.20+) is missing from @types/plotly.js. */
+export type YAxis = Partial<LayoutAxis> & { autoshift?: boolean };
+
 const TEXT_COLOR = '#fff';
 const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
 const BOUNDARY_COLOR = '#8fcadd';
@@ -80,37 +81,38 @@ export function latestX(data: Map<string, Series>): number | null {
   return isFinite(max) ? max : null;
 }
 
-/** Applies the user's y bounds; a missing bound autoranges that end only. */
+/**
+ * Applies the user's y bounds; a missing bound autoranges that end only. One bound goes through
+ * autorangeoptions, not a partial range with autorange 'min'/'max': Plotly.react ignores a switch
+ * from autorange true to 'min'/'max' while uirevision is unchanged, so a lone Y Min never showed.
+ */
 function boundedAxis(yMin: number | null, yMax: number | null): Partial<LayoutAxis> {
-  if (yMin === null && yMax === null) return { autorange: true };
   if (yMin !== null && yMax !== null) return { autorange: false, range: [yMin, yMax] };
-  return yMin !== null ? { autorange: 'max', range: [yMin, null] } : { autorange: 'min', range: [null, yMax] };
+  if (yMin !== null) return { autorange: true, autorangeoptions: { minallowed: yMin } };
+  if (yMax !== null) return { autorange: true, autorangeoptions: { maxallowed: yMax } };
+  return { autorange: true };
 }
 
 /**
- * One y-axis per series, alternating left and right. Axes after the first on each side stack
- * outward, and the x domain shrinks to leave them room.
+ * One y-axis per series, alternating left and right. The first sits on the plot's edge; the rest
+ * are free axes that autoshift outward past their side's earlier axes (ticks and title included),
+ * and automargin grows the margins to fit them.
  */
-export function buildMultiYAxes(names: string[]): { xDomain: [number, number]; axes: Record<string, Partial<LayoutAxis>> } {
-  const leftCount = Math.ceil(names.length / 2);
-  const rightCount = Math.floor(names.length / 2);
-  const xDomain: [number, number] = [Math.max(leftCount - 1, 0) * AXIS_STEP, 1 - Math.max(rightCount - 1, 0) * AXIS_STEP];
-  const axes: Record<string, Partial<LayoutAxis>> = {};
+export function buildMultiYAxes(names: string[]): Record<string, YAxis> {
+  const axes: Record<string, YAxis> = {};
   names.forEach((name, index) => {
     const side = index % 2 === 0 ? 'left' : 'right';
-    const offset = Math.floor(index / 2) * AXIS_STEP;
     axes[axisKey(index)] = {
       title: { text: name.replace('0', ''), font: { color: 'grey', size: 20, weight: 'bold' } },
       color: TEXT_COLOR,
       gridcolor: GRID_COLOR,
       showgrid: index === 0,
       side,
-      anchor: 'free',
-      position: side === 'left' ? xDomain[0] - offset : xDomain[1] + offset,
-      ...(index === 0 ? {} : { overlaying: 'y' })
+      automargin: true,
+      ...(index === 0 ? {} : { overlaying: 'y', anchor: 'free', autoshift: true, position: side === 'left' ? 0 : 1 })
     };
   });
-  return { xDomain, axes };
+  return axes;
 }
 
 /** A dashed line and a date label at each local midnight inside the span (x is wall-clock ms). */
@@ -162,7 +164,8 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
     // Nearest point of any series with no distance cutoff, like ApexCharts' non-intersecting tooltip.
     hovermode: 'closest',
     hoverdistance: -1,
-    hoverlabel: { bgcolor: '#1e1e1e', font: { color: TEXT_COLOR } },
+    // namelength -1: full topic names, not Plotly's 15-character cut.
+    hoverlabel: { bgcolor: '#1e1e1e', font: { color: TEXT_COLOR }, namelength: -1 },
     dragmode: 'zoom',
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.1, yanchor: 'top', font: { color: TEXT_COLOR, size: 15 } },
     uirevision: options.uiRevision,
@@ -174,12 +177,11 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
       gridcolor: GRID_COLOR,
       tickformat: isMultiDay ? '%-m/%-d %H:%M' : '%H:%M:%S',
       hoverformat: '%-m/%-d/%y, %H:%M:%S',
-      ...(options.xRange ? { autorange: false, range: options.xRange } : { autorange: true }),
-      ...(multi ? { domain: multi.xDomain } : {})
+      ...(options.xRange ? { autorange: false, range: options.xRange } : { autorange: true })
     },
-    ...(multi
-      ? multi.axes
-      : { yaxis: { color: TEXT_COLOR, gridcolor: GRID_COLOR, ...boundedAxis(options.yMin, options.yMax) } }),
+    ...(multi ?? {
+      yaxis: { color: TEXT_COLOR, gridcolor: GRID_COLOR, automargin: true, ...boundedAxis(options.yMin, options.yMax) }
+    }),
     shapes: boundaries.shapes,
     annotations: boundaries.annotations
   };

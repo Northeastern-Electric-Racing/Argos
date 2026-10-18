@@ -133,6 +133,33 @@ describe('CustomGraphComponent (Plotly)', () => {
     expect(graph.data.size).toBe(0);
   });
 
+  it('redraws a multi y-axis toggle while paused', () => {
+    setup({ realTime: true });
+    push('A', [{ x: 1, y: 1 }]);
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    flushFrames();
+
+    fixture.componentRef.setInput('showMultipleYAxes', true);
+    fixture.detectChanges();
+    flushFrames();
+
+    expect(yAxes()[0].anchor).toBeUndefined();
+    expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'A ' }));
+  });
+
+  it('starts a fresh zoom when the graph config changes, so new y bounds always apply', () => {
+    setup();
+    const before = graph.layout().uirevision;
+
+    fixture.componentRef.setInput('graphConfig', { ...baseConfig, yMin: 5 });
+    fixture.detectChanges();
+    flushFrames();
+
+    expect(graph.layout().uirevision).not.toBe(before);
+    expect(graph.layout().yaxis?.autorangeoptions).toEqual({ minallowed: 5 });
+  });
+
   it('shows the latest time window in real-time mode', () => {
     setup({ realTime: true, config: { timeRangeMs: 10_000 } });
     push('A', [
