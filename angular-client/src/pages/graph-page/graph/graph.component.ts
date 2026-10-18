@@ -208,8 +208,21 @@ export default class CustomGraphComponent implements OnDestroy {
       if (this.realTime()) {
         effectiveRange = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
       }
-      scales['x']!.min = effectiveRange !== undefined && span ? span.maxX - effectiveRange : undefined;
-      scales['x']!.max = undefined;
+      const x = scales['x']!;
+      if (!span) {
+        x.min = undefined;
+        x.max = undefined;
+      } else {
+        // Pin both ends to the data, as ApexCharts' range/auto-fit did: left unset, Chart.js rounds linear
+        // bounds out to the next "nice" tick, leaving up to a tick step of empty axis past the latest point
+        x.min = effectiveRange !== undefined ? span.maxX - effectiveRange : span.minX;
+        x.max = span.maxX;
+        if (x.min === x.max) {
+          // A single point: give it a second of width (Chart.js would otherwise pad by 5% of the epoch value)
+          x.min -= 500;
+          x.max += 500;
+        }
+      }
     }
 
     // Multi-day historical ranges get date-aware labels and per-day boundary annotations.

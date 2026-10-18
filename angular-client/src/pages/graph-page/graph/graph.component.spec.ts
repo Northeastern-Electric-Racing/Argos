@@ -101,32 +101,42 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(Object.keys(c.scales).sort()).toEqual(['x', 'y']);
   });
 
-  it('shows only the configured time window in real-time mode', async () => {
+  it('shows only the configured time window in real-time mode, ending at the latest point', async () => {
     const c = await render({
       valuesSubject: [
         topic('V', [
-          { x: 0, y: 1 },
-          { x: 30_000, y: 2 }
+          { x: 1_234, y: 1 },
+          { x: 31_234, y: 2 }
         ])
       ],
       realTime: true
     });
 
-    expect(c.scales['x'].min).toBe(30_000 - BASE_CONFIG.timeRangeMs);
+    // Not rounded out to a "nice" tick: the live edge sits at the right edge, as with ApexCharts' range
+    expect(c.scales['x'].min).toBe(31_234 - BASE_CONFIG.timeRangeMs);
+    expect(c.scales['x'].max).toBe(31_234);
   });
 
-  it('fits all data in historical mode', async () => {
+  it('fits all data in historical mode, without padding out to nice ticks', async () => {
     const c = await render({
       valuesSubject: [
         topic('V', [
-          { x: 0, y: 1 },
-          { x: 30_000, y: 2 }
+          { x: 1_234, y: 1 },
+          { x: 28_765, y: 2 }
         ])
       ]
     });
 
-    expect(c.scales['x'].min).toBe(0);
-    expect(c.scales['x'].max).toBe(30_000);
+    expect(c.scales['x'].min).toBe(1_234);
+    expect(c.scales['x'].max).toBe(28_765);
+  });
+
+  it('keeps a usable x-axis around a single point', async () => {
+    const c = await render({ valuesSubject: [topic('V', [{ x: 1_792_000_000_000, y: 1 }])] });
+
+    const spanMs = c.scales['x'].max - c.scales['x'].min;
+    expect(spanMs).toBeGreaterThan(0);
+    expect(spanMs).toBeLessThan(60_000);
   });
 
   it('applies the configured y-limits', async () => {
