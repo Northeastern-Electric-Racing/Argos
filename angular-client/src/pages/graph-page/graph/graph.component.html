@@ -3,13 +3,22 @@
     <li class="legend-item">
       <span class="swatch" [style.background]="item.color" aria-hidden="true"></span>
       <span class="legend-label">{{ item.label }}</span>
-      @if (hoverValue(item.label); as value) {
-        <span class="legend-value">{{ value }}</span>
-      }
     </li>
   }
-  @if (hover(); as h) {
-    <li class="legend-time">{{ h.time }}</li>
-  }
 </ul>
-<div #chartContainer class="chart-container" (dblclick)="resetZoom()"></div>
+<div class="chart-area">
+  <div #chartContainer class="chart-container" (dblclick)="resetZoom()"></div>
+  @if (hover(); as h) {
+    <!-- Hidden until placed after render, so it never flashes at the corner. -->
+    <div #tooltip class="tooltip" role="tooltip">
+      <div class="tooltip-time">{{ h.time }}</div>
+      @for (row of h.rows; track row.label) {
+        <div class="tooltip-row">
+          <span class="swatch" [style.background]="row.color" aria-hidden="true"></span>
+          <span class="tooltip-label">{{ row.label }}</span>
+          <span class="tooltip-value">{{ row.value }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

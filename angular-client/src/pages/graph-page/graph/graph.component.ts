@@ -5,6 +5,7 @@ import {
   ElementRef,
   OnDestroy,
   OnInit,
+  afterRenderEffect,
   effect,
   inject,
   input,
@@ -53,11 +54,21 @@ export interface LegendItem {
   color: string;
 }
 
-export interface HoverValues {
-  time: string;
-  /** series label -> value at or before the hovered time */
-  values: Map<string, string>;
+export interface TooltipRow extends LegendItem {
+  /** The series' value at or before the hovered time. */
+  value: string;
 }
+
+export interface HoverState {
+  time: string;
+  rows: TooltipRow[];
+  /** Cursor position in the chart, in px from its top-left corner. */
+  x: number;
+  y: number;
+}
+
+/** Gap between the cursor and the tooltip, in px. */
+const TOOLTIP_OFFSET = 12;
 
 /**
  * Points trimmed off a series' head stay drawn (off-screen, left of the live window) until this many
@@ -81,6 +92,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
   private container = viewChild.required<ElementRef<HTMLDivElement>>('chartContainer');
+  private tooltip = viewChild<ElementRef<HTMLDivElement>>('tooltip');
 
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<ObservableGraphInfo[]>();
@@ -97,7 +109,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   timeRangeMs: number | undefined = undefined;
 
   readonly legend = signal<LegendItem[]>([]);
-  readonly hover = signal<HoverValues | null>(null);
+  readonly hover = signal<HoverState | null>(null);
 
   private series = new Map<string, ISeriesApi<'Line'>>();
   /** Points per series that were trimmed from `data` but are still in the chart's copy. */
@@ -106,6 +118,33 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   private multiDay = false;
 
   constructor() {
+    // Beside the cursor, flipped to its other side where it would overflow the chart's right or bottom edge.
+    afterRenderEffect({
+      earlyRead: () => {
+        const hover = this.hover();
+        const tooltip = this.tooltip()?.nativeElement;
+        if (!hover || !tooltip) return null;
+        const area = this.container().nativeElement;
+        const { x, y } = hover;
+        const { offsetWidth: width, offsetHeight: height } = tooltip;
+        // The page can push the chart's bottom off screen, so flip against the visible part of it.
+        const bottom = Math.min(area.clientHeight, window.innerHeight - area.getBoundingClientRect().top);
+        const flipX = x + TOOLTIP_OFFSET + width > area.clientWidth;
+        const flipY = y + TOOLTIP_OFFSET + height > bottom;
+        return {
+          tooltip,
+          left: flipX ? Math.max(0, x - TOOLTIP_OFFSET - width) : x + TOOLTIP_OFFSET,
+          top: flipY ? Math.max(0, y - TOOLTIP_OFFSET - height) : y + TOOLTIP_OFFSET
+        };
+      },
+      write: (position) => {
+        const placed = position();
+        if (!placed) return;
+        placed.tooltip.style.transform = `translate(${placed.left}px, ${placed.top}px)`;
+        placed.tooltip.style.visibility = 'visible';
+      }
+    });
+
     effect(() => {
       if (this.isPaused()) {
         untracked(() => this.resetRange());
@@ -258,11 +297,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.refreshView();
   };
 
-  /** The hovered value of a series, for the legend. */
-  hoverValue(label: string): string | undefined {
-    return this.hover()?.values.get(label);
-  }
-
   resetRange() {
     this.timeRangeMs = undefined;
     this.chart?.timeScale().fitContent();
@@ -404,18 +438,19 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }
 
   private onCrosshairMove = (param: MouseEventParams<Time>) => {
-    if (param.time === undefined) {
+    if (param.time === undefined || param.point === undefined || param.point.x < 0 || param.point.y < 0) {
       this.hover.set(null);
       return;
     }
     // Hold each series' latest value at the hovered time, since topics rarely share timestamps.
     const timeMs = fromChartTime(param.time);
-    const values = new Map<string, string>();
-    this.data.forEach((line, label) => {
+    const rows: TooltipRow[] = [];
+    for (const item of this.legend()) {
+      const line = this.data.get(item.label) ?? [];
       let idx = binarySearchInsertIndex(line, timeMs);
       if (line[idx]?.x !== timeMs) idx--;
-      if (idx >= 0) values.set(label, formatValue(line[idx].y));
-    });
-    this.hover.set({ time: formatCrosshairTime(param.time), values });
+      if (idx >= 0) rows.push({ ...item, value: formatValue(line[idx].y) });
+    }
+    this.hover.set({ time: formatCrosshairTime(param.time), rows, x: param.point.x, y: param.point.y });
   };
 }

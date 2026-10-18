@@ -22,6 +22,12 @@ const topic = (label: string, points: GraphData[][] = []): ObservableGraphInfo =
   updates: new BehaviorSubject<GraphData[][]>(points)
 });
 
+/** Inline style colors read back as rgb(). */
+const hexToRgb = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`;
+};
+
 describe('CustomGraphComponent (lightweight-charts)', () => {
   let fixture: ComponentFixture<CustomGraphComponent>;
   let component: CustomGraphComponent;
@@ -268,7 +274,27 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(allSeries()[0].data().length).toBe(1);
   });
 
-  it('shows each topic’s latest value at the hovered time in the legend', async () => {
+  // The chart only reports crosshair moves for real pointer events (setCrosshairPosition is silent),
+  // so hand the handler what the chart passes it when the pointer is at (x, y) over `timeMs`.
+  async function hoverAt(timeMs: number | undefined, x = 100, y = 100) {
+    const { onCrosshairMove } = component as unknown as { onCrosshairMove: (p: MouseEventParams<Time>) => void };
+    onCrosshairMove(
+      (timeMs === undefined
+        ? { seriesData: new Map() }
+        : { time: toChartTime(timeMs), point: { x, y }, seriesData: new Map() }) as MouseEventParams<Time>
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  const tooltip = (): HTMLElement | null => fixture.nativeElement.querySelector('.tooltip');
+  const tooltipRows = () =>
+    Array.from(tooltip()!.querySelectorAll('.tooltip-row')).map((el) => [
+      el.querySelector('.tooltip-label')!.textContent!.trim(),
+      el.querySelector('.tooltip-value')!.textContent!.trim()
+    ]);
+
+  it('shows a tooltip with the hovered time and each topic’s latest value at it', async () => {
     const a = topic('A', [
       [
         { x: T0, y: 1 },
@@ -276,29 +302,49 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
       ]
     ]);
     const b = topic('B', [[{ x: T0 + 1000, y: 20 }]]);
-    await render({ topics: [a, b] });
+    const c = topic('C', [[{ x: T0 + 5000, y: 7 }]]);
+    await render({ topics: [a, b, c] });
 
-    // The chart only reports crosshair moves for real pointer events (setCrosshairPosition is silent),
-    // so hand the handler what the chart passes it when the pointer is over T0 + 1s.
-    const { onCrosshairMove } = component as unknown as { onCrosshairMove: (p: MouseEventParams<Time>) => void };
-    onCrosshairMove({
-      time: toChartTime(T0 + 1000),
-      point: { x: 100, y: 100 },
-      seriesData: new Map()
-    } as MouseEventParams<Time>);
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await hoverAt(T0 + 1000);
 
-    const hover = component.hover();
-    expect(hover).not.toBeNull();
-    expect(hover!.values.get('A 0')).toBe('1');
-    expect(hover!.values.get('B 0')).toBe('20');
-    const legendValues = Array.from(fixture.nativeElement.querySelectorAll('.legend-value')).map((el) =>
-      (el as HTMLElement).textContent?.trim()
+    expect(tooltip()).not.toBeNull();
+    expect(tooltip()!.querySelector('.tooltip-time')!.textContent!.trim()).toBe('3/14/26, 09:00:01');
+    // C has no point at or before the hovered time, so it is left out.
+    expect(tooltipRows()).toEqual([
+      ['A 0', '1'],
+      ['B 0', '20']
+    ]);
+    const swatches = Array.from(tooltip()!.querySelectorAll('.tooltip-row .swatch')) as HTMLElement[];
+    expect(swatches.map((s) => s.style.background)).toEqual(
+      component
+        .legend()
+        .slice(0, 2)
+        .map((l) => hexToRgb(l.color))
     );
-    expect(legendValues).toEqual(['1', '20']);
+    // The values live in the tooltip now, not the legend.
+    expect(fixture.nativeElement.querySelectorAll('.legend-value').length).toBe(0);
 
-    onCrosshairMove({ seriesData: new Map() } as MouseEventParams<Time>);
+    await hoverAt(undefined);
     expect(component.hover()).toBeNull();
+    expect(tooltip()).toBeNull();
+  });
+
+  it('places the tooltip beside the cursor, flipping to its other side near the right and bottom edges', async () => {
+    await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])] });
+    const area = fixture.nativeElement.querySelector('.chart-area') as HTMLElement;
+    const box = () => {
+      const t = tooltip()!.getBoundingClientRect();
+      const a = area.getBoundingClientRect();
+      return { left: t.left - a.left, top: t.top - a.top, right: t.right - a.left, bottom: t.bottom - a.top };
+    };
+
+    await hoverAt(T0, 100, 100);
+    expect(box().left).toBeGreaterThan(100);
+    expect(box().top).toBeGreaterThan(100);
+
+    await hoverAt(T0, area.clientWidth - 5, area.clientHeight - 5);
+    expect(box().right).toBeLessThan(area.clientWidth - 5);
+    expect(box().bottom).toBeLessThan(area.clientHeight - 5);
+    expect(box().left).toBeGreaterThanOrEqual(0);
   });
 });

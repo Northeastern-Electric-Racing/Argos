@@ -29,20 +29,57 @@
   border-radius: 50%;
 }
 
-.legend-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: bold;
-}
-
-.legend-time {
-  margin-left: auto;
-  color: #ccc;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+.chart-area {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .chart-container {
   position: relative;
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  visibility: hidden;
+  padding: 6px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: rgba(30, 30, 30, 0.92);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tooltip-time {
+  margin-bottom: 2px;
+  color: #ccc;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltip-row .swatch {
+  width: 8px;
+  height: 8px;
+}
+
+/* White text beside a color swatch: some palette colors miss WCAG AA contrast as text on the dark tooltip. */
+.tooltip-value {
+  margin-left: auto;
+  padding-left: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
 }
