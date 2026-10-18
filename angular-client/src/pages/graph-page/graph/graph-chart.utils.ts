@@ -1,5 +1,4 @@
 import uPlot from 'uplot';
-import { GraphData } from 'src/utils/types.utils';
 import { UplotChartOptions } from 'src/components/uplot-chart/uplot-chart.component';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
@@ -12,29 +11,41 @@ const GRID_COLOR = 'rgba(255, 255, 255, 0.12)';
 const DAY_BOUNDARY_COLOR = '#8fcadd';
 
 /**
- * Merges each series' points (each sorted by x) onto one shared, sorted x array: uPlot's aligned-data shape.
+ * One topic's points as two columns, sorted by x: plain number arrays, so a point costs two unboxed doubles
+ * instead of an object, and a single topic is already in uPlot's aligned-data shape.
+ */
+export interface SeriesColumns {
+  xs: number[];
+  ys: number[];
+}
+
+/**
+ * Merges each series (each sorted by x) onto one shared, sorted x array: uPlot's aligned-data shape.
  * A series with no point at an x gets `undefined` there, which uPlot treats as an alignment gap:
  * `spanGaps` draws the line across it and the hover cursor skips it to the series' nearest real point.
- * A k-way merge, O(points x series), so it stays cheap enough to run once per animation frame.
+ * A single series is passed through without a copy. Otherwise a k-way merge, O(points x series),
+ * so it stays cheap enough to run once per animation frame.
  */
-export function alignSeries(lines: GraphData[][]): uPlot.AlignedData {
-  const cursors = lines.map(() => 0);
+export function alignSeries(series: SeriesColumns[]): uPlot.AlignedData {
+  if (series.length === 1) return [series[0].xs, series[0].ys];
+
+  const cursors = series.map(() => 0);
   const xs: number[] = [];
-  const ys: (number | undefined)[][] = lines.map(() => []);
+  const ys: (number | undefined)[][] = series.map(() => []);
 
   for (;;) {
     let nextX = Infinity;
-    for (let s = 0; s < lines.length; s++) {
-      const point = lines[s][cursors[s]];
-      if (point !== undefined && point.x < nextX) nextX = point.x;
+    for (let s = 0; s < series.length; s++) {
+      const x = series[s].xs[cursors[s]];
+      if (x !== undefined && x < nextX) nextX = x;
     }
     if (nextX === Infinity) break;
 
     xs.push(nextX);
-    for (let s = 0; s < lines.length; s++) {
-      const point = lines[s][cursors[s]];
-      if (point !== undefined && point.x === nextX) {
-        ys[s].push(point.y);
+    for (let s = 0; s < series.length; s++) {
+      const i = cursors[s];
+      if (series[s].xs[i] === nextX) {
+        ys[s].push(series[s].ys[i]);
         cursors[s]++;
       } else {
         ys[s].push(undefined);
@@ -46,13 +57,14 @@ export function alignSeries(lines: GraphData[][]): uPlot.AlignedData {
 }
 
 /** The x extent of every series (each sorted by x), or null when there are no points. */
-export function dataSpan(lines: GraphData[][]): { minX: number; maxX: number; spanMs: number } | null {
+export function dataSpan(series: SeriesColumns[]): { minX: number; maxX: number; spanMs: number } | null {
   let minX = Infinity;
   let maxX = -Infinity;
-  for (const points of lines) {
-    if (points.length === 0) continue;
-    if (points[0].x < minX) minX = points[0].x;
-    if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
+  for (const { xs } of series) {
+    if (xs.length === 0) continue;
+    const [first] = xs;
+    if (first < minX) minX = first;
+    if (xs[xs.length - 1] > maxX) maxX = xs[xs.length - 1];
   }
   if (!isFinite(minX) || !isFinite(maxX)) return null;
   return { minX, maxX, spanMs: maxX - minX };

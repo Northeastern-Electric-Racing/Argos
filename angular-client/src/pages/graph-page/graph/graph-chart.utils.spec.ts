@@ -12,14 +12,8 @@ describe('graph chart utils', () => {
   describe('alignSeries', () => {
     it('merges series onto one sorted x array, leaving undefined where a series has no point', () => {
       const aligned = alignSeries([
-        [
-          { x: 1, y: 10 },
-          { x: 3, y: 30 }
-        ],
-        [
-          { x: 2, y: 200 },
-          { x: 3, y: 300 }
-        ]
+        { xs: [1, 3], ys: [10, 30] },
+        { xs: [2, 3], ys: [200, 300] }
       ]);
 
       expect(aligned).toEqual([
@@ -31,16 +25,23 @@ describe('graph chart utils', () => {
 
     it('keeps duplicate timestamps within a series', () => {
       const aligned = alignSeries([
-        [
-          { x: 1, y: 1 },
-          { x: 1, y: 2 }
-        ]
+        { xs: [1, 1], ys: [1, 2] },
+        { xs: [1], ys: [5] }
       ]);
 
       expect(aligned).toEqual([
         [1, 1],
-        [1, 2]
+        [1, 2],
+        [5, undefined]
       ]);
+    });
+
+    it('hands a single series to uPlot as is, without copying it', () => {
+      const series = { xs: [1, 2], ys: [10, 20] };
+      const [xs, ys] = alignSeries([series]);
+
+      expect(xs).toBe(series.xs);
+      expect(ys).toBe(series.ys);
     });
 
     it('returns just an empty x array with no series', () => {
@@ -51,15 +52,12 @@ describe('graph chart utils', () => {
   it('dataSpan reads the extent from each sorted series and is null with no points', () => {
     expect(
       dataSpan([
-        [
-          { x: 5, y: 0 },
-          { x: 9, y: 0 }
-        ],
-        [{ x: 2, y: 0 }],
-        []
+        { xs: [5, 9], ys: [0, 0] },
+        { xs: [2], ys: [0] },
+        { xs: [], ys: [] }
       ])
     ).toEqual({ minX: 2, maxX: 9, spanMs: 7 });
-    expect(dataSpan([[]])).toBeNull();
+    expect(dataSpan([{ xs: [], ys: [] }])).toBeNull();
   });
 
   it('dayBoundaries lists each local midnight strictly inside the range', () => {

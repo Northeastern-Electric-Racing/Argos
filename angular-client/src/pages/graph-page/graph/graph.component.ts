@@ -13,9 +13,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import uPlot from 'uplot';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
-import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import { UplotChartComponent, UplotChartOptions, UplotXRange } from 'src/components/uplot-chart/uplot-chart.component';
-import { alignSeries, buildGraphChartOptions, dataSpan, DAY_MS } from './graph-chart.utils';
+import { alignSeries, buildGraphChartOptions, dataSpan, DAY_MS, SeriesColumns } from './graph-chart.utils';
 
 @Component({
   selector: 'graph',
@@ -44,8 +44,8 @@ export default class CustomGraphComponent implements OnDestroy {
   }>();
   range = input<number | undefined>(undefined);
 
-  // label -> x,y (topic, data point), each kept sorted by x
-  data = new Map<string, GraphData[]>();
+  // label -> the topic's points as x and y columns, kept sorted by x
+  data = new Map<string, SeriesColumns>();
   timeRangeMs: number | undefined = undefined;
 
   /** What the uPlot wrapper draws. Options change only when the chart's structure does; data changes every frame. */
@@ -141,14 +141,14 @@ export default class CustomGraphComponent implements OnDestroy {
   }
 
   /** Real-time mode slides a window over the newest data; historical mode auto-fits all of it. */
-  private liveWindow(lines: GraphData[][]): UplotXRange | null {
+  private liveWindow(lines: SeriesColumns[]): UplotXRange | null {
     if (!untracked(this.realTime)) return null;
     const config = untracked(this.graphConfig);
     const rangeMs = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
     if (rangeMs === undefined) return null;
     let latestX = -Infinity;
-    for (const line of lines) {
-      if (line.length > 0 && line[line.length - 1].x > latestX) latestX = line[line.length - 1].x;
+    for (const { xs } of lines) {
+      if (xs.length > 0 && xs[xs.length - 1] > latestX) latestX = xs[xs.length - 1];
     }
     if (!isFinite(latestX)) return null;
     return { min: latestX - rangeMs, max: latestX };
@@ -177,41 +177,45 @@ export default class CustomGraphComponent implements OnDestroy {
     info.data.forEach((value, i) => {
       const seriesLabel = info.label + ' ' + i;
       if (!this.data.has(seriesLabel)) {
-        this.data.set(seriesLabel, []);
+        this.data.set(seriesLabel, { xs: [], ys: [] });
       }
-      const line = this.data.get(seriesLabel)!;
+      const { xs, ys } = this.data.get(seriesLabel)!;
 
       value.forEach((val) => {
-        const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
+        const y = Math.round(val.y * 10000) / 10000;
 
         // if the point is in order according to it's timestamp, just push it to the end of the line
-        if (line.length === 0 || val.x >= line.at(-1)!.x) {
-          line.push(point);
+        if (xs.length === 0 || val.x >= xs[xs.length - 1]) {
+          xs.push(val.x);
+          ys.push(y);
         } else {
           // Out of order: binary search for correct sorted position
           // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
-          const idx = binarySearchInsertIndex(line, val.x);
-          line.splice(idx, 0, point);
+          const idx = binarySearchInsertIndex(xs, val.x);
+          xs.splice(idx, 0, val.x);
+          ys.splice(idx, 0, y);
         }
       });
 
       // Trim after processing all points in this series batch
-      if (untracked(this.realTime) && line.length > 0) {
+      if (untracked(this.realTime) && xs.length > 0) {
         const config = untracked(this.graphConfig);
-        const latestX = line[line.length - 1].x;
+        const latestX = xs[xs.length - 1];
 
         if (config.rangeMode === 'time') {
           // remove point if outside the time range + 10% buffer (for better UX)
           const buffer = config.timeRangeMs * 0.1;
           const cutoff = latestX - config.timeRangeMs - buffer;
-          if (line[0].x < cutoff) {
-            line.shift();
+          if (xs[0] < cutoff) {
+            xs.shift();
+            ys.shift();
           }
-        } else if (line.length > config.maxPoints * 1.1) {
-          const shiftedPoint = line.shift();
+        } else if (xs.length > config.maxPoints * 1.1) {
+          const shiftedX = xs.shift();
+          ys.shift();
           // point based trim requires is to calculate the max time range we can show that
           // doesn't show points being deleted. So we default to smallest range.
-          const timeDiff = shiftedPoint !== undefined ? latestX - shiftedPoint.x : 0;
+          const timeDiff = shiftedX !== undefined ? latestX - shiftedX : 0;
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
       }
