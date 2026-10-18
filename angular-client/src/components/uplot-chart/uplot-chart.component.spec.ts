@@ -68,6 +68,27 @@ describe('UplotChartComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelectorAll('.uplot').length).toBe(1);
   });
 
+  it('fits the plot and its legend to the host after a rebuild with long series labels', async () => {
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const labelled = (labels: string[]): UplotChartOptions => ({
+      ms: 1,
+      scales: { x: { time: true } },
+      series: [{}, ...labels.map((label) => ({ label }))]
+    });
+    const chart = await create(labelled([]), [[]]);
+
+    // Labels like the graph page's topics: long, with few break points
+    const labels = ['BMS/Segment_Total_Volt/0 0', 'BMS/Segment_Total_Volt/3 0', 'BMS/Segment_Total_Volt/4 0'];
+    fixture.componentRef.setInput('options', labelled(labels));
+    fixture.componentRef.setInput('data', [[1000], [1], [2], [3]]);
+    await settle();
+    await nextFrame();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const legend = host.querySelector<HTMLElement>('.u-legend')!;
+    expect(chart.instance!.height + legend.offsetHeight).toBe(host.clientHeight);
+  });
+
   it('pins the x scale to xRange instead of fitting the data', async () => {
     const chart = await create(options(1), [
       [1000, 2000, 3000],

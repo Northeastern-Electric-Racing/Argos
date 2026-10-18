@@ -46,6 +46,8 @@ export class UplotChartComponent {
   private target = viewChild.required<ElementRef<HTMLElement>>('target');
   private rendered = signal(false);
   private chart: uPlot | null = null;
+  /** The live chart's legend, observed alongside the host since it takes its height out of the plot's. */
+  private legend: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
   constructor() {
@@ -72,6 +74,7 @@ export class UplotChartComponent {
       this.resizeObserver?.disconnect();
       this.chart?.destroy();
       this.chart = null;
+      this.legend = null;
     });
   }
 
@@ -82,9 +85,12 @@ export class UplotChartComponent {
 
   private build(options: UplotChartOptions): void {
     this.chart?.destroy();
-    const { width, height } = this.size();
-    this.chart = new uPlot({ ...options, width, height }, this.data(), this.target().nativeElement);
-    this.fit();
+    const el = this.target().nativeElement;
+    this.chart = new uPlot({ ...options, width: el.clientWidth, height: el.clientHeight }, this.data(), el);
+    // Fit once the legend is laid out, not now: uPlot sizes its canvas in a microtask, and until then its
+    // min-content root collapses and the legend wraps into a tall column. Observing the legend also refits
+    // when it re-wraps (more topics, a narrower host) while the host's own size stays the same.
+    this.observeLegend(this.chart.root.querySelector<HTMLElement>('.u-legend'));
     const range = this.xRange();
     if (range) this.chart.setScale('x', range);
   }
@@ -99,10 +105,15 @@ export class UplotChartComponent {
     });
   }
 
+  private observeLegend(legend: HTMLElement | null): void {
+    if (this.legend) this.resizeObserver?.unobserve(this.legend);
+    this.legend = legend;
+    if (legend) this.resizeObserver?.observe(legend);
+  }
+
   private size(): { width: number; height: number } {
     const el = this.target().nativeElement;
-    const legend = this.chart?.root.querySelector<HTMLElement>('.u-legend');
-    return { width: el.clientWidth, height: Math.max(el.clientHeight - (legend?.offsetHeight ?? 0), 0) };
+    return { width: el.clientWidth, height: Math.max(el.clientHeight - (this.legend?.offsetHeight ?? 0), 0) };
   }
 
   private fit(): void {

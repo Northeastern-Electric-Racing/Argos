@@ -114,9 +114,19 @@ export function buildYAxes(keys: string[], multipleYAxes: boolean): uPlot.Axis[]
   }));
 }
 
-/** Auto-ranges a y scale, with the user's fixed bounds taking precedence on either side. */
+/**
+ * Auto-ranges a y scale, with the user's fixed bounds taking precedence on either side.
+ * A single fixed bound beyond the data would invert the range (uPlot then draws no axis), so the auto side
+ * keeps the auto range's span past it instead.
+ */
 export function yRange(dataMin: number | null, dataMax: number | null, yMin: number | null, yMax: number | null) {
-  const [autoMin, autoMax] = dataMin === null || dataMax === null ? [0, 1] : uPlot.rangeNum(dataMin, dataMax, 0.1, true);
+  // rangeNum only returns nulls for null input
+  const [autoMin, autoMax] = (
+    dataMin === null || dataMax === null ? [0, 1] : uPlot.rangeNum(dataMin, dataMax, 0.1, true)
+  ) as [number, number];
+  const span = autoMax - autoMin;
+  if (yMin !== null && yMax === null && yMin >= autoMax) return [yMin, yMin + span] as uPlot.Range.MinMax;
+  if (yMax !== null && yMin === null && yMax <= autoMin) return [yMax - span, yMax] as uPlot.Range.MinMax;
   return [yMin ?? autoMin, yMax ?? autoMax] as uPlot.Range.MinMax;
 }
 

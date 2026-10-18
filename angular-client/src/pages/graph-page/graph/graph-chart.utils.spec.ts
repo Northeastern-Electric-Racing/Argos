@@ -80,6 +80,14 @@ describe('graph chart utils', () => {
     expect(yRange(null, null, null, null)).toEqual([0, 1]);
   });
 
+  it('yRange keeps the auto side past a fixed bound that lies outside the data', () => {
+    const [autoMin, autoMax] = yRange(60, 105, null, null) as [number, number];
+    const autoSpan = autoMax - autoMin;
+
+    expect(yRange(60, 105, 120, null)).toEqual([120, 120 + autoSpan]);
+    expect(yRange(60, 105, null, 40)).toEqual([40 - autoSpan, 40]);
+  });
+
   // Regression coverage for #630: with "Multiple Y-Axes" on, the y-axis set must always
   // match the currently selected topics, so deselecting a topic prunes its axis.
   describe('buildYAxes (#630)', () => {
