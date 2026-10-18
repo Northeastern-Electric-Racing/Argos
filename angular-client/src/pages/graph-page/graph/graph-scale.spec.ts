@@ -6,6 +6,7 @@ import {
   computeView,
   dayBoundaries,
   formatTick,
+  hoverPoint,
   nearestPoint,
   niceTicks,
   plotArea,
@@ -73,6 +74,22 @@ describe('graph-scale', () => {
       expect(nearestPoint(line, -5)).toEqual({ x: 0, y: 1 });
       expect(nearestPoint(line, 99)).toEqual({ x: 20, y: 3 });
       expect(nearestPoint([], 1)).toBeUndefined();
+    });
+  });
+
+  describe('hoverPoint', () => {
+    const line = pts([0, 1], [10, 2], [20, 3]);
+
+    it('returns the nearest point inside the series, and just past its ends', () => {
+      expect(hoverPoint(line, 6, 2)).toEqual({ x: 10, y: 2 });
+      expect(hoverPoint(line, -2, 2)).toEqual({ x: 0, y: 1 });
+      expect(hoverPoint(line, 22, 2)).toEqual({ x: 20, y: 3 });
+    });
+
+    it('skips a series with no data near the cursor', () => {
+      expect(hoverPoint(line, -5, 2)).toBeUndefined();
+      expect(hoverPoint(line, 99, 2)).toBeUndefined();
+      expect(hoverPoint([], 1, 2)).toBeUndefined();
     });
   });
 

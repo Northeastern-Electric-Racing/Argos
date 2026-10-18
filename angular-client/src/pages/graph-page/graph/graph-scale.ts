@@ -186,6 +186,18 @@ export function nearestPoint(points: GraphData[], x: number): GraphData | undefi
   return x - points[i - 1].x <= points[i].x - x ? points[i - 1] : points[i];
 }
 
+/**
+ * The point to show in the tooltip at `x`: the nearest one, or undefined when `x` is more
+ * than `tolerance` outside the series' data, so a series with no data near the cursor
+ * (one that started later or stopped publishing) gets no row instead of a far-off value.
+ */
+export function hoverPoint(points: GraphData[], x: number, tolerance: number): GraphData | undefined {
+  if (points.length === 0 || x < points[0].x - tolerance || x > points[points.length - 1].x + tolerance) {
+    return undefined;
+  }
+  return nearestPoint(points, x);
+}
+
 /** Min and max y of the points with x inside `range`, or null when none are. */
 export function valueExtent(points: GraphData[], range: Range): Range | null {
   const lo = binarySearchInsertIndex(points, range.min);

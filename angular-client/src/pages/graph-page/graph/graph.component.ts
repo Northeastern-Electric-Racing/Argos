@@ -16,7 +16,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import { DrawSeries, GraphRenderer, OverlayMarks } from './graph-renderer';
-import { computeView, formatTooltipTime, nearestPoint, pixelMapping, plotArea, Range, Rect, View } from './graph-scale';
+import { computeView, formatTooltipTime, hoverPoint, pixelMapping, plotArea, Range, Rect, View } from './graph-scale';
 
 // ApexCharts' default palette, so series keep the colours people are used to.
 const PALETTE = [
@@ -33,6 +33,8 @@ const PALETTE = [
 ];
 const DRAG_THRESHOLD_PX = 5;
 const WHEEL_ZOOM = 1.25;
+/** How far past a series' first or last point the cursor can be and still show its value. */
+const HOVER_TOLERANCE_PX = 12;
 
 export interface LegendEntry {
   name: string;
@@ -321,10 +323,11 @@ export default class CustomGraphComponent {
     const cursor = this.cursor!;
     const { pxToX, xToPx, yToPx } = pixelMapping(view, area);
     const x = pxToX(cursor.x);
+    const tolerance = pxToX(cursor.x + HOVER_TOLERANCE_PX) - x;
     const rows: HoverInfo['rows'] = [];
     const dots: NonNullable<OverlayMarks['dots']> = [];
     series.forEach((s, i) => {
-      const point = s.visible ? nearestPoint(s.points, x) : undefined;
+      const point = s.visible ? hoverPoint(s.points, x, tolerance) : undefined;
       if (!point) return;
       rows.push({ name: s.name, color: s.color, value: point.y });
       dots.push({ x: xToPx(point.x), y: yToPx(point.y, view.axes[view.seriesAxis[i]]), color: s.color });
