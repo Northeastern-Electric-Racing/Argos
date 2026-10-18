@@ -82,6 +82,41 @@ describe('MapComponent run', () => {
     expect(map.trace()).toEqual([]);
     expect(map.lapTable()).toBeNull();
   });
+
+  it('polls a live run for the laps since its last lap and numbers them after it', async () => {
+    const realSetTimeout = window.setTimeout.bind(window);
+    const flush = () => new Promise((resolve) => realSetTimeout(resolve));
+    const lapsByUrl = new Map<string, TimedLap[]>([
+      ['/laps/1/7', [{ number: 1, startMs: 0, endMs: 72500, durationMs: 72500 }]],
+      ['/laps/1/7?since=72500', [{ number: 1, startMs: 72500, endMs: 143500, durationMs: 71000 }]]
+    ]);
+    fetchSpy.and.callFake((url: RequestInfo | URL) => {
+      const laps = lapsByUrl.get(String(url).replace(/.*(?=\/laps\/)/, ''));
+      return laps ? Promise.resolve(json(laps)) : pending;
+    });
+    jasmine.clock().install();
+    storage.setCurrentRunId(1);
+    map.selectedTrack.set(track(7));
+    fixture.detectChanges();
+    jasmine.clock().tick(0);
+    await flush();
+    jasmine.clock().tick(3000);
+    await flush();
+    jasmine.clock().uninstall();
+
+    const lapUrls = fetchSpy.calls
+      .allArgs()
+      .map(([url]) => String(url))
+      .filter((url) => url.includes('/laps/'));
+    expect(lapUrls.map((url) => url.replace(/.*(?=\/laps\/)/, ''))).toEqual(['/laps/1/7', '/laps/1/7?since=72500']);
+    expect(map.lapTable()).toEqual({
+      best: '01:11.00',
+      rows: [
+        { number: 1, time: '01:12.50', deltaToBest: '+00:01.50', isBest: false },
+        { number: 2, time: '01:11.00', deltaToBest: '±00:00.00', isBest: true }
+      ]
+    });
+  });
 });
 
 describe('MapComponent placing', () => {

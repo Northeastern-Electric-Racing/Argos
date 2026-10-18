@@ -23,6 +23,28 @@ pub async fn get_data_by_run_id(
         .await
 }
 
+/// Get datapoints of a run at or after a time
+/// * `db` - The database connection to use
+/// * `data_type_name` - The data type name to filter the data by
+/// * `run_id` - The run id to filter the data
+/// * `since_us` - The earliest time to include, in microseconds since epoch
+///   returns: A result containing the data or the error propogated by the db
+pub async fn get_data_by_run_id_since(
+    db: &mut Database<'_>,
+    data_type_name: &str,
+    run_id: i32,
+    since_us: i64,
+) -> Result<Vec<Data>, diesel::result::Error> {
+    data.filter(
+        runId
+            .eq(run_id)
+            .and(dataTypeName.eq(data_type_name))
+            .and(time.ge(since_us)),
+    )
+    .load(db)
+    .await
+}
+
 /// Get datapoints that mach criteria
 /// * `db` - The database connection to use
 /// * `data_type_name` - The data type name to filter the data by

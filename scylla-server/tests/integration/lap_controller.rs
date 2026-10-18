@@ -1,8 +1,8 @@
 use crate::test_utils::cleanup_and_prepare;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use scylla_server::{
-    ClientData, Database,
-    controllers::lap_controller,
+    ClientData, Database, PoolHandle,
+    controllers::lap_controller::{self, LapsQuery},
     error::ScyllaError,
     lap_timing::{GPS_LOCATION_TOPIC, GeoPoint, Lap, TimingLine},
     models::TrackLines,
@@ -13,7 +13,8 @@ use scylla_server::{
 async fn test_laps_for_unknown_track_is_empty_result() {
     let pool = cleanup_and_prepare().await.unwrap();
 
-    let laps = lap_controller::get_laps(State(pool), Path((1, 1))).await;
+    let laps =
+        lap_controller::get_laps(State(pool), Path((1, 1)), Query(LapsQuery { since: None })).await;
 
     assert!(matches!(laps, Err(ScyllaError::EmptyResult)));
 }
@@ -27,11 +28,9 @@ async fn test_laps_for_track_without_start_line_is_empty() {
         .unwrap();
     drop(db);
 
-    let laps = lap_controller::get_laps(State(pool), Path((1, track.id)))
-        .await
-        .unwrap();
+    let laps = get_laps(&pool, 1, track.id, None).await.unwrap();
 
-    assert_eq!(laps.0, vec![]);
+    assert_eq!(laps, vec![]);
 }
 
 const START_LON: f64 = -71.0;
@@ -100,19 +99,17 @@ fn lap(number: u32, start_offset_ms: f64, end_offset_ms: f64) -> Lap {
     }
 }
 
-#[tokio::test]
-async fn test_laps_between_consecutive_start_crossings() -> Result<(), ScyllaError> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
+/// A run that times laps (1 500.5, 11 501.5) and (11 501.5, 21 503.5) on a start-only track
+async fn start_only_run(db: &mut Database<'_>) -> Result<(i32, i32), ScyllaError> {
     let run = run_service::create_run(
-        &mut db,
+        db,
         chrono::DateTime::from_timestamp_millis(RUN_START_MS).unwrap(),
     )
     .await?;
     let west = START_LON - STEP;
     let east = START_LON + STEP;
     insert_locations(
-        &mut db,
+        db,
         run.runId,
         &[
             (12_003, vec![LINE_LAT, east]),
@@ -129,24 +126,14 @@ async fn test_laps_between_consecutive_start_crossings() -> Result<(), ScyllaErr
         ],
     )
     .await?;
-    let track_id = track_with_lines(&mut db, vertical_line(START_LON), None).await?;
-    drop(db);
-
-    let laps = lap_controller::get_laps(State(pool), Path((run.runId, track_id))).await?;
-
-    assert_eq!(
-        laps.0,
-        vec![lap(1, 1_500.5, 11_501.5), lap(2, 11_501.5, 21_503.5)]
-    );
-    Ok(())
+    let track_id = track_with_lines(db, vertical_line(START_LON), None).await?;
+    Ok((run.runId, track_id))
 }
 
-#[tokio::test]
-async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
+/// A run that times laps (1 500.5, 3 500.5) and (11 501.5, 13 502.5) on a start and finish track
+async fn start_finish_run(db: &mut Database<'_>) -> Result<(i32, i32), ScyllaError> {
     let run = run_service::create_run(
-        &mut db,
+        db,
         chrono::DateTime::from_timestamp_millis(RUN_START_MS).unwrap(),
     )
     .await?;
@@ -155,7 +142,7 @@ async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
     let west_of_finish = FINISH_LON - STEP;
     let east_of_finish = FINISH_LON + STEP;
     insert_locations(
-        &mut db,
+        db,
         run.runId,
         &[
             (13_000, vec![LINE_LAT, west_of_finish]),
@@ -173,18 +160,120 @@ async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
     )
     .await?;
     let track_id = track_with_lines(
-        &mut db,
+        db,
         vertical_line(START_LON),
         Some(vertical_line(FINISH_LON)),
     )
     .await?;
+    Ok((run.runId, track_id))
+}
+
+async fn get_laps(
+    pool: &PoolHandle,
+    run_id: i32,
+    track_id: i32,
+    since: Option<f64>,
+) -> Result<Vec<Lap>, ScyllaError> {
+    let laps = lap_controller::get_laps(
+        State(pool.clone()),
+        Path((run_id, track_id)),
+        Query(LapsQuery { since }),
+    )
+    .await?;
+    Ok(laps.0)
+}
+
+/// Polling with `since` = each lap's end, renumbered after the laps before it, rebuilds the full laps
+async fn assert_since_continues_full_laps(
+    pool: &PoolHandle,
+    run_id: i32,
+    track_id: i32,
+) -> Result<(), ScyllaError> {
+    let full = get_laps(pool, run_id, track_id, None).await?;
+    assert_eq!(full.len(), 2);
+    for known in 1..=full.len() {
+        let since = full[known - 1].end_ms;
+        let continued: Vec<Lap> = get_laps(pool, run_id, track_id, Some(since))
+            .await?
+            .into_iter()
+            .map(|timed| Lap {
+                number: known as u32 + timed.number,
+                ..timed
+            })
+            .collect();
+        let rebuilt: Vec<&Lap> = full[..known].iter().chain(&continued).collect();
+        assert_eq!(rebuilt, full.iter().collect::<Vec<_>>(), "since {since}");
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_laps_between_consecutive_start_crossings() -> Result<(), ScyllaError> {
+    let pool = cleanup_and_prepare().await.unwrap();
+    let mut db = pool.get().await.unwrap();
+    let (run_id, track_id) = start_only_run(&mut db).await?;
     drop(db);
 
-    let laps = lap_controller::get_laps(State(pool), Path((run.runId, track_id))).await?;
+    let laps = get_laps(&pool, run_id, track_id, None).await?;
 
     assert_eq!(
-        laps.0,
+        laps,
+        vec![lap(1, 1_500.5, 11_501.5), lap(2, 11_501.5, 21_503.5)]
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
+    let pool = cleanup_and_prepare().await.unwrap();
+    let mut db = pool.get().await.unwrap();
+    let (run_id, track_id) = start_finish_run(&mut db).await?;
+    drop(db);
+
+    let laps = get_laps(&pool, run_id, track_id, None).await?;
+
+    assert_eq!(
+        laps,
         vec![lap(1, 1_500.5, 3_500.5), lap(2, 11_501.5, 13_502.5)]
     );
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_laps_since_continue_start_only_laps() -> Result<(), ScyllaError> {
+    let pool = cleanup_and_prepare().await.unwrap();
+    let mut db = pool.get().await.unwrap();
+    let (run_id, track_id) = start_only_run(&mut db).await?;
+    drop(db);
+
+    assert_since_continues_full_laps(&pool, run_id, track_id).await
+}
+
+#[tokio::test]
+async fn test_laps_since_continue_start_finish_laps() -> Result<(), ScyllaError> {
+    let pool = cleanup_and_prepare().await.unwrap();
+    let mut db = pool.get().await.unwrap();
+    let (run_id, track_id) = start_finish_run(&mut db).await?;
+    drop(db);
+
+    assert_since_continues_full_laps(&pool, run_id, track_id).await
+}
+
+#[tokio::test]
+async fn test_laps_since_the_last_lap_is_empty() -> Result<(), ScyllaError> {
+    let pool = cleanup_and_prepare().await.unwrap();
+    let mut db = pool.get().await.unwrap();
+    let (run_id, track_id) = start_only_run(&mut db).await?;
+    drop(db);
+
+    let laps = get_laps(
+        &pool,
+        run_id,
+        track_id,
+        Some(RUN_START_MS as f64 + 21_503.5),
+    )
+    .await?;
+
+    assert_eq!(laps, vec![]);
     Ok(())
 }

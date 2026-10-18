@@ -287,11 +287,14 @@ export default class MapComponent {
   private pollLaps(runId: number, trackId: number, isLive: boolean) {
     let lastError: string | null = null;
     return (isLive ? timer(0, LAP_POLL_MS) : of(0)).pipe(
-      exhaustMap(() => this.fetchLaps(runId, trackId)),
+      exhaustMap(() => this.fetchLaps(runId, trackId, this.laps().at(-1)?.endMs)),
       tap((result) => {
         if (!(result instanceof Error)) {
           lastError = null;
-          this.laps.set(result);
+          this.laps.update((laps) => [
+            ...laps,
+            ...result.map((lap, index) => ({ ...lap, number: laps.length + index + 1 }))
+          ]);
         } else if (result.message !== lastError) {
           lastError = result.message;
           this.messageService.add({ severity: 'error', summary: 'Laps unavailable', detail: result.message });
@@ -300,8 +303,9 @@ export default class MapComponent {
     );
   }
 
-  private fetchLaps(runId: number, trackId: number): Observable<TimedLap[] | Error> {
-    const query = this.apiService.query<TimedLap[]>(() => getLaps(runId, trackId));
+  /** With `since`, only the laps starting at or after it, numbered from 1 */
+  private fetchLaps(runId: number, trackId: number, since?: number): Observable<TimedLap[] | Error> {
+    const query = this.apiService.query<TimedLap[]>(() => getLaps(runId, trackId, since));
     return merge(query.error, query.data).pipe(first((result): result is TimedLap[] | Error => result !== null));
   }
 

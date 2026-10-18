@@ -1,5 +1,5 @@
 use scylla_server::lap_timing::{
-    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps,
+    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps, laps_since,
 };
 
 const REFERENCE: GeoPoint = GeoPoint {
@@ -280,4 +280,25 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
         laps(&fixes, start_line(), Some(finish_line())),
         vec![lap(1, 1000.0, 5000.0), lap(2, 5000.0, 9000.0)]
     );
+}
+
+#[test]
+fn laps_since_keeps_laps_starting_at_or_after_it_numbered_from_one() {
+    let timed = vec![
+        lap(1, 1000.0, 9000.0),
+        lap(2, 9000.0, 20000.0),
+        lap(3, 20000.0, 31000.0),
+    ];
+
+    assert_eq!(
+        laps_since(timed, 9000.0),
+        vec![lap(1, 9000.0, 20000.0), lap(2, 20000.0, 31000.0)]
+    );
+}
+
+#[test]
+fn laps_since_after_the_last_start_is_empty() {
+    let timed = vec![lap(1, 1000.0, 9000.0), lap(2, 9000.0, 20000.0)];
+
+    assert_eq!(laps_since(timed, 9000.5), vec![]);
 }

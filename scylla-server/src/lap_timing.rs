@@ -201,6 +201,16 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
     timed
 }
 
+/// The `laps` starting at or after `since_ms`, numbered from 1
+#[must_use]
+pub fn laps_since(laps: Vec<Lap>, since_ms: f64) -> Vec<Lap> {
+    laps.into_iter()
+        .filter(|timed| timed.start_ms >= since_ms)
+        .zip(1..)
+        .map(|(timed, number)| Lap { number, ..timed })
+        .collect()
+}
+
 fn lap(number: u32, start_ms: f64, end_ms: f64) -> Lap {
     Lap {
         number,
