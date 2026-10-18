@@ -332,6 +332,10 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
   it('places the tooltip beside the cursor, flipping to its other side near the right and bottom edges', async () => {
     await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])] });
     const area = fixture.nativeElement.querySelector('.chart-area') as HTMLElement;
+    await new Promise((resolve) => requestAnimationFrame(resolve)); // lays out the price axis
+    // The chart reports the cursor relative to the pane, which starts right of the left price axis.
+    const paneLeft = component.chart!.priceScale('left').width();
+    expect(paneLeft).toBeGreaterThan(0);
     const box = () => {
       const t = tooltip()!.getBoundingClientRect();
       const a = area.getBoundingClientRect();
@@ -339,12 +343,12 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     };
 
     await hoverAt(T0, 100, 100);
-    expect(box().left).toBeGreaterThan(100);
-    expect(box().top).toBeGreaterThan(100);
+    expect(box().left).toBeCloseTo(paneLeft + 100 + 12, 0);
+    expect(box().top).toBeCloseTo(100 + 12, 0);
 
-    await hoverAt(T0, area.clientWidth - 5, area.clientHeight - 5);
-    expect(box().right).toBeLessThan(area.clientWidth - 5);
-    expect(box().bottom).toBeLessThan(area.clientHeight - 5);
-    expect(box().left).toBeGreaterThanOrEqual(0);
+    const right = area.clientWidth - paneLeft - 5;
+    await hoverAt(T0, right, area.clientHeight - 5);
+    expect(box().right).toBeCloseTo(paneLeft + right - 12, 0);
+    expect(box().bottom).toBeCloseTo(area.clientHeight - 5 - 12, 0);
   });
 });

@@ -62,7 +62,7 @@ export interface TooltipRow extends LegendItem {
 export interface HoverState {
   time: string;
   rows: TooltipRow[];
-  /** Cursor position in the chart, in px from its top-left corner. */
+  /** Cursor position in px from the chart's top-left corner (left of its left price axis). */
   x: number;
   y: number;
 }
@@ -451,6 +451,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       if (line[idx]?.x !== timeMs) idx--;
       if (idx >= 0) rows.push({ ...item, value: formatValue(line[idx].y) });
     }
-    this.hover.set({ time: formatCrosshairTime(param.time), rows, x: param.point.x, y: param.point.y });
+    // The chart reports the cursor relative to the pane, which starts right of the left price axis.
+    const paneLeft = this.chart?.priceScale('left').width() ?? 0;
+    this.hover.set({ time: formatCrosshairTime(param.time), rows, x: paneLeft + param.point.x, y: param.point.y });
   };
 }
