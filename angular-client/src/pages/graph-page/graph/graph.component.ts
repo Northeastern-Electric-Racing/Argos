@@ -67,6 +67,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   timeRangeMs: number | undefined = undefined;
   /** Set while the user is zoomed in; live updates then hold the x window until a double-click resets it. */
   private userZoomed = false;
+  /** The x window render last applied for live data (null when it fits all data). */
+  private appliedLiveWindow: [number, number] | null = null;
   private dayBoundaryTimes: number[] = [];
   private frame: number | undefined;
 
@@ -90,6 +92,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       this.valuesSubject();
       this.data = new Map();
       this.timeRangeMs = undefined;
+      // A zoom window from the previous mode or topics would hide the new data.
+      this.userZoomed = false;
       this.updateChart();
     });
 
@@ -136,12 +140,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
         y2: { axisLabelWidth: 60 }
       },
       underlayCallback: this.drawDayBoundaries,
-      zoomCallback: () => {
-        // A drag-zoom leaves an x window set; a double-click (resetZoom) clears it, and also drops the
-        // configured y range, so redraw to put that back.
-        this.userZoomed = !!this.chart?.isZoomed('x');
-        if (!this.userZoomed) this.updateChart();
-      }
+      zoomCallback: this.onZoom
     });
     this.render();
   }
@@ -186,10 +185,27 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       axes: { x: { axisLabelFormatter: isMultiDay ? multiDayLabel : singleDayLabel } }
     };
     if (!this.userZoomed) {
-      options.dateWindow = this.liveWindow(rows);
+      options.dateWindow = this.appliedLiveWindow = this.liveWindow(rows);
     }
     this.chart.updateOptions(options);
   }
+
+  private onZoom = (minX: number, maxX: number) => {
+    const { chart } = this;
+    if (!chart) return;
+    if (!chart.isZoomed()) {
+      // A double-click (resetZoom) clears the x window and also drops the configured y range,
+      // so redraw to put both back.
+      this.userZoomed = false;
+      this.updateChart();
+      return;
+    }
+    // A vertical drag zooms y only and reports the x window unchanged. In real time that is the live
+    // window, which must keep following new data rather than freeze as if the user had zoomed in on x.
+    const live = this.appliedLiveWindow;
+    if (live && live[0] === minX && live[1] === maxX) return;
+    this.userZoomed = chart.isZoomed('x');
+  };
 
   /** Only real-time mode constrains the x window; historical mode fits all data (null). */
   private liveWindow(rows: DygraphRow[]): [number, number] | null {

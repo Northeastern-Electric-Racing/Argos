@@ -131,6 +131,48 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(chart.xAxisRange()).toEqual([21_000, 31_000]);
   });
 
+  it('keeps following live data after a vertical (y-only) zoom', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
+    await setup({ values: [speed], realTime: true, config: { timeRangeMs: 10_000 } });
+    const chart = component.chart!;
+
+    // What a vertical drag does: set a y range, then call zoomCallback with the x window unchanged.
+    const [minX, maxX] = chart.xAxisRange();
+    chart.updateOptions({ axes: { y: { valueRange: [1.2, 1.8] } } });
+    chart.getOption('zoomCallback')(minX, maxX, chart.yAxisRanges());
+    speed.updates.next([[{ x: 31_000, y: 3 }]]);
+    await nextFrame();
+
+    expect(chart.xAxisRange()).toEqual([21_000, 31_000]);
+  });
+
+  it('drops a zoom window when the mode or topics change', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
+    await setup({ values: [speed], realTime: true });
+    const chart = component.chart!;
+    chart.updateOptions({ dateWindow: [22_000, 24_000] });
+    chart.getOption('zoomCallback')(22_000, 24_000, chart.yAxisRanges());
+
+    fixture.componentRef.setInput('realTime', false);
+    fixture.componentRef.setInput('valuesSubject', [
+      topic('VCU/CarState/speed', [
+        { x: 100_000, y: 1 },
+        { x: 200_000, y: 2 }
+      ])
+    ]);
+    fixture.detectChanges();
+    await nextFrame();
+
+    expect(chart.isZoomed('x')).toBeFalse();
+    expect(chart.xAxisRange()).toEqual([100_000, 200_000]);
+  });
+
   it('fits all data in historical mode', async () => {
     await setup({
       values: [
