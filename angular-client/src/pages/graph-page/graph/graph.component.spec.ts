@@ -170,4 +170,53 @@ describe('CustomGraphComponent with ECharts', () => {
     expect(series[0]['data']).toEqual([[2000, 401]]);
     expect((chart.getOption()['yAxis'] as unknown[]).length).toBe(1);
   });
+
+  describe('in a live window', () => {
+    // The window is the last 60 s, so it starts at 40 s; the points at 0 s, 20 s and 38 s are off screen
+    const live = () =>
+      createChart({
+        realTime: true,
+        valuesSubject: [
+          topic('BMS/Pack/Voltage', [
+            { x: 0, y: 1 },
+            { x: 20_000, y: 1000 },
+            { x: 38_000, y: 2 },
+            { x: 50_000, y: 3 },
+            { x: 100_000, y: 4 }
+          ])
+        ]
+      });
+
+    /** What ECharts draws: the series' data after dataZoom filtering, and the axes' extents. */
+    function drawn(chart: ECharts) {
+      const model = (chart as unknown as { getModel(): ChartModel }).getModel();
+      const data = model.getSeriesByIndex(0).getData();
+      return {
+        xs: Array.from({ length: data.count() }, (_, i) => data.get(data.dimensions[0], i)),
+        xExtent: model.getComponent('xAxis', 0).axis.scale.getExtent(),
+        yExtent: model.getComponent('yAxis', 0).axis.scale.getExtent()
+      };
+    }
+
+    it("runs the line out to the window's left edge, so a point slides off instead of its segment vanishing", async () => {
+      const { chart } = await live();
+
+      const { xs, xExtent } = drawn(chart);
+      expect(xExtent[0]).toBe(40_000);
+      expect(xs[0]).toBe(38_000);
+    });
+
+    it('scales the y-axis to what is on screen, not to points further off it', async () => {
+      const { chart } = await live();
+
+      expect(drawn(chart).yExtent[1]).toBeLessThan(1000);
+    });
+  });
 });
+
+interface ChartModel {
+  getSeriesByIndex(index: number): {
+    getData(): { count(): number; dimensions: string[]; get(dim: string, index: number): number };
+  };
+  getComponent(type: string, index: number): { axis: { scale: { getExtent(): [number, number] } } };
+}

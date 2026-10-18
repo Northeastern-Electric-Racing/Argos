@@ -75,7 +75,7 @@ export function baseGraphChartOption(): GraphChartOption {
       }
     },
     // Wheel/drag zoom on the time axis. 'filter' drops points outside the window, so the y-axis
-    // rescales to what is visible (ApexCharts' autoScaleYaxis).
+    // rescales to what is visible (ApexCharts' autoScaleYaxis); a live window turns it off (see graphChartUpdate).
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'filter' }],
     xAxis: {
       type: 'time',
@@ -116,10 +116,15 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
     sampling: 'lttb',
     animation: false
   }));
+  const liveWindow = state.xRangeMs !== undefined && !!span;
   return {
+    // A live window keeps its one point past the left edge (the graph trims the rest), so the line runs
+    // through it and is clipped at the edge. Filtering would drop that point, and with it the segment
+    // into the edge: the line would stop short of the edge and jump each time its oldest point left.
+    dataZoom: [{ filterMode: liveWindow ? 'none' : 'filter' }],
     xAxis: {
       // null clears a previous window so the axis fits all data again
-      min: state.xRangeMs !== undefined && span ? span.maxX - state.xRangeMs : null,
+      min: liveWindow ? span!.maxX - state.xRangeMs! : null,
       axisLabel: { formatter: isMultiDay ? multiDayLabel : singleDayLabel }
     } as XAxisOption,
     yAxis,

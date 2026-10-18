@@ -209,12 +209,12 @@ export default class CustomGraphComponent implements OnDestroy {
         const [latestX] = line[line.length - 1];
 
         if (config.rangeMode === 'time') {
-          // remove point if outside the time range + 10% buffer (for better UX)
-          const buffer = config.timeRangeMs * 0.1;
-          const cutoff = latestX - config.timeRangeMs - buffer;
-          if (line[0][0] < cutoff) {
-            line.shift();
-          }
+          // Keep one point at or past the window's left edge, so the line runs off the edge instead of
+          // stopping short of it; anything older is off screen and would only stretch the y-axis
+          const windowStart = latestX - config.timeRangeMs;
+          let offScreen = 0;
+          while (offScreen + 1 < line.length && line[offScreen + 1][0] <= windowStart) offScreen++;
+          if (offScreen > 0) line.splice(0, offScreen);
         } else if (line.length > config.maxPoints * 1.1) {
           const shiftedPoint = line.shift();
           // point based trim requires is to calculate the max time range we can show that
