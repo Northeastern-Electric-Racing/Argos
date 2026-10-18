@@ -114,6 +114,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       untracked(() => {
         // y min/max are read by each series' autoscaleInfoProvider; ask the scales to re-run it.
         this.series.forEach((s) => s.priceScale().applyOptions({ autoScale: true }));
+        this.applyYScaleMargins();
         this.resetRange();
       });
     });
@@ -158,12 +159,17 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         horzLines: { color: 'rgba(255, 255, 255, 0.08)' }
       },
       crosshair: { mode: CrosshairMode.Normal },
+      // The library's time-axis double-click reset restores its default zoom, not the whole range;
+      // resetZoom() handles double-clicks instead.
+      handleScale: { axisDoubleClickReset: { time: false, price: true } },
       leftPriceScale: { visible: true, borderVisible: false },
       rightPriceScale: { visible: false, borderVisible: false },
       timeScale: {
         timeVisible: true,
         secondsVisible: true,
         borderVisible: false,
+        // Labels run to `HH:MM:SS.mmm`; the default spacing assumes 8 characters, so they overlapped.
+        tickMarkMaxCharacterLength: 12,
         tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay)
       },
       localization: {
@@ -256,6 +262,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.chart?.timeScale().fitContent();
   }
 
+  /** Double-click: back to the whole range on both axes (stands in for ApexCharts' reset-zoom button). */
+  resetZoom() {
+    this.chart?.timeScale().fitContent();
+    this.series.forEach((s) => s.priceScale().applyOptions({ autoScale: true }));
+  }
+
   /** Pushes one series' changes to the chart: appends when possible, a full setData otherwise. */
   private syncSeries(label: string, line: GraphData[], appended: GraphData[], rebuild: boolean, trimmed: number) {
     if (!this.chart) return;
@@ -309,6 +321,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     };
   }
 
+  /** A fixed y min/max is the shared axis' exact edge, so drop the scale's default padding on that side. */
+  private applyYScaleMargins() {
+    if (!this.chart) return;
+    const { yMin, yMax } = untracked(this.graphConfig);
+    const pinned = !untracked(this.showMultipleYAxes);
+    this.chart.priceScale('left').applyOptions({
+      scaleMargins: { top: pinned && yMax !== null ? 0 : 0.2, bottom: pinned && yMin !== null ? 0 : 0.1 }
+    });
+  }
+
   private removeAllSeries() {
     this.series.forEach((s) => this.chart?.removeSeries(s));
     this.series.clear();
@@ -330,6 +352,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.removeAllSeries();
     const multipleYAxes = untracked(this.showMultipleYAxes);
     this.chart.applyOptions({ rightPriceScale: { visible: multipleYAxes && this.data.size > 1 } });
+    this.applyYScaleMargins();
     this.data.forEach((line, label) => this.syncSeries(label, line, [], true, 0));
     this.refreshView();
   }

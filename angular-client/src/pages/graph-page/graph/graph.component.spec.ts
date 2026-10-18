@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent, { GraphConfig } from './graph.component';
 import { toChartTime } from './graph-chart.utils';
+import { DayBoundariesPrimitive } from './day-boundaries.primitive';
 
 const T0 = new Date(2026, 2, 14, 9, 0, 0).getTime();
 
@@ -137,6 +138,51 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
 
     const format = (component.chart!.options().timeScale as TimeScaleOptions).tickMarkFormatter!;
     expect(format(toChartTime(T0), 0, 'en-US')).toBe('3/14 09:00');
+  });
+
+  it('draws each day boundary between the last bar of one day and the first of the next', async () => {
+    const hour = 60 * 60 * 1000;
+    const points = Array.from({ length: 60 }, (_, i) => ({ x: T0 + i * hour, y: i }));
+    await render({ topics: [topic('A', [points])] });
+
+    const { dayBoundaries } = component as unknown as { dayBoundaries: DayBoundariesPrimitive };
+    const timeScale = component.chart!.timeScale();
+    const midnights = [new Date(2026, 2, 15).getTime(), new Date(2026, 2, 16).getTime()];
+    const expected = midnights.map(
+      (ms) => (timeScale.timeToCoordinate(toChartTime(ms))! + timeScale.timeToCoordinate(toChartTime(ms - hour))!) / 2
+    );
+
+    const xs = dayBoundaries.positions().map((p) => p.x);
+    expect(xs.length).toBe(2);
+    xs.forEach((x, i) => expect(x).toBeCloseTo(expected[i], 5));
+    expect(xs[0]).toBeGreaterThan(0);
+  });
+
+  it('zooms back out to the whole range on double-click', async () => {
+    await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])] });
+    expect(component.chart!.options().handleScale).toEqual(
+      jasmine.objectContaining({ axisDoubleClickReset: { time: false, price: true } })
+    );
+    const fitContent = spyOn(component.chart!.timeScale(), 'fitContent').and.callThrough();
+
+    fixture.nativeElement.querySelector('.chart-container').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+    expect(fitContent).toHaveBeenCalled();
+  });
+
+  it('ends the shared y-axis exactly at a configured min and max', async () => {
+    await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])], graphConfig: config({ yMin: 0, yMax: 100 }) });
+    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0, bottom: 0 });
+
+    fixture.componentRef.setInput('graphConfig', config({ yMin: 0, yMax: null }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0.2, bottom: 0 });
+
+    fixture.componentRef.setInput('showMultipleYAxes', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0.2, bottom: 0.1 });
   });
 
   it('drops a series and its axis when its topic is deselected (#630)', async () => {

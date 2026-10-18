@@ -53,10 +53,14 @@ export class DayBoundariesPrimitive implements IPanePrimitive<Time> {
     if (!timeScale) return [];
     const out: { x: number; label: string }[] = [];
     for (const { timeMs, label } of this.boundaries) {
-      const index = timeScale.timeToIndex(toChartTime(timeMs), true);
-      if (index === null) continue;
-      const x = timeScale.logicalToCoordinate((index - 0.5) as Logical);
-      if (x !== null) out.push({ x, label });
+      const found = timeScale.timeToIndex(toChartTime(timeMs), true);
+      if (found === null) continue;
+      const index = found as number as Logical;
+      // logicalToCoordinate returns 0 for a fractional index, so average the two bars' coordinates.
+      const x = timeScale.logicalToCoordinate(index);
+      if (x === null) continue;
+      const before = index > 0 ? timeScale.logicalToCoordinate((index - 1) as Logical) : null;
+      out.push({ x: before === null ? x : (x + before) / 2, label });
     }
     return out;
   }
@@ -68,6 +72,8 @@ export class DayBoundariesPrimitive implements IPanePrimitive<Time> {
       ctx.save();
       ctx.font = '11px sans-serif';
       ctx.textBaseline = 'top';
+      // Days squeezed together on the point-spaced axis would stack their labels; keep only the first.
+      let labelEnd = -Infinity;
       for (const { x, label } of positions) {
         if (x < 0 || x > mediaSize.width) continue;
         ctx.strokeStyle = LINE_COLOR;
@@ -79,12 +85,16 @@ export class DayBoundariesPrimitive implements IPanePrimitive<Time> {
         ctx.stroke();
 
         const width = ctx.measureText(label).width + 8;
+        // Centred on the line, but kept inside the pane
+        const left = Math.min(Math.max(x - width / 2, 0), mediaSize.width - width);
+        if (left < labelEnd + 4) continue;
+        labelEnd = left + width;
         ctx.setLineDash([]);
         ctx.fillStyle = LABEL_BACKGROUND;
-        ctx.fillRect(x - width / 2, 4, width, 16);
-        ctx.strokeRect(x - width / 2, 4, width, 16);
+        ctx.fillRect(left, 4, width, 16);
+        ctx.strokeRect(left, 4, width, 16);
         ctx.fillStyle = LABEL_TEXT;
-        ctx.fillText(label, x - width / 2 + 4, 7);
+        ctx.fillText(label, left + 4, 7);
       }
       ctx.restore();
     });
