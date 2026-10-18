@@ -1,4 +1,4 @@
-import { createWebGL2Context, WebglLinePlot } from 'webgl-plot';
+import { WebglLinePlot } from 'webgl-plot';
 import { GraphData } from 'src/utils/types.utils';
 import {
   AXIS_WIDTH,
@@ -58,8 +58,13 @@ export class GraphRenderer {
     private readonly glCanvas: HTMLCanvasElement,
     private readonly overlayCanvas: HTMLCanvasElement
   ) {
-    // Throws when WebGL2 is unavailable; the component shows a fallback message.
-    this.gl = createWebGL2Context(glCanvas, { transparent: true, antialias: true });
+    // Not webgl-plot's createWebGL2Context: it can't turn off the depth buffer, and its default
+    // multisampling (antialias) holds several samples per pixel. 1px lines need neither, and
+    // together they were most of the drawing buffer's GPU memory. Throws when WebGL2 is
+    // unavailable; the component shows a fallback message.
+    const gl = glCanvas.getContext('webgl2', { alpha: true, antialias: false, depth: false, stencil: false });
+    if (!gl) throw new Error('WebGL2 is not supported or context creation failed');
+    this.gl = gl;
     this.gl.clearColor(0, 0, 0, 0);
     this.lines = new WebglLinePlot(this.gl, this.capacity);
     const ctx = overlayCanvas.getContext('2d');
