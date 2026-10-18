@@ -70,6 +70,12 @@ describe('graph chart options', () => {
       expect((update.yAxis as AnyRecord[]).length).toBe(2);
     });
 
+    it('keeps one y-axis with multiple y-axes on but no data, so ECharts can still lay out the grid', () => {
+      const update = graphChartUpdate(state({ multipleYAxes: true }));
+
+      expect((update.yAxis as AnyRecord[]).length).toBe(1);
+    });
+
     it('shows a live window ending at the newest point', () => {
       const update = graphChartUpdate(state({ data, xRangeMs: 500 }));
 
@@ -115,7 +121,8 @@ describe('graph chart options', () => {
 
       const update = graphChartUpdate(state({ data: multiDay, detectMultiDay: false }));
 
-      expect((update.series as AnyRecord[])[0]['markLine']).toBeUndefined();
+      // An empty markLine, not none: series merge by id, so lines from an earlier multi-day range must be cleared
+      expect((update.series as AnyRecord[])[0]['markLine']).toEqual({ data: [] });
       expect(((update.xAxis as AnyRecord)['axisLabel'] as AnyRecord)['formatter']).toBe(singleDayLabel);
     });
   });

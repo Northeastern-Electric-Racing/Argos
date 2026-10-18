@@ -118,6 +118,14 @@ export default class CustomGraphComponent implements OnDestroy {
     this.requestRender();
   }
 
+  /**
+   * The toolbox's restore resets the chart to {@link baseOptions}, which has no series, so draw the data back.
+   * Deferred like every redraw: setOption can't run inside the restore action ECharts is still processing.
+   */
+  onChartRestore(): void {
+    this.requestRender();
+  }
+
   /** Redraw for new data, unless a paused live graph should hold still. */
   updateChart = () => {
     untracked(() => {

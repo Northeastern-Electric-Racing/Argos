@@ -121,10 +121,12 @@ describe('CustomGraphComponent', () => {
 });
 
 describe('CustomGraphComponent with ECharts', () => {
-  it('renders through ngx-echarts into a real chart', async () => {
+  /** Mounts the real template, so ngx-echarts creates a real chart, and waits for it. */
+  async function createChart(inputs: Record<string, unknown> = {}) {
     const fixture = TestBed.createComponent(CustomGraphComponent);
     fixture.componentRef.setInput('graphConfig', config);
     fixture.componentRef.setInput('valuesSubject', [topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }])]);
+    Object.entries(inputs).forEach(([name, value]) => fixture.componentRef.setInput(name, value));
     fixture.detectChanges();
 
     // ngx-echarts creates the chart on a timer after the view initialises
@@ -134,8 +136,38 @@ describe('CustomGraphComponent with ECharts', () => {
     const chart = fixture.componentInstance.chart!;
     expect(chart).toBeDefined();
     await nextFrame();
+    return { fixture, chart };
+  }
+
+  it('renders through ngx-echarts into a real chart', async () => {
+    const { chart } = await createChart();
 
     const series = chart.getOption()['series'] as AnyRecord[];
     expect(series.map((s) => s['name'])).toEqual(['BMS/Pack/Voltage 0']);
+  });
+
+  it("draws the data back after the toolbox's restore resets the chart", async () => {
+    const { chart } = await createChart();
+
+    chart.dispatchAction({ type: 'restore' });
+    expect((chart.getOption()['series'] as unknown[]).length).toBe(0);
+    await nextFrame();
+
+    expect((chart.getOption()['series'] as unknown[]).length).toBe(1);
+  });
+
+  it('keeps drawing after Clear Graph with multiple y-axes on', async () => {
+    const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    const { fixture, chart } = await createChart({ showMultipleYAxes: true, valuesSubject: [voltage] });
+
+    fixture.componentRef.setInput('clearGraph', 1);
+    fixture.detectChanges();
+    await nextFrame();
+    voltage.updates.next([[{ x: 2000, y: 401 }]]);
+    await nextFrame();
+
+    const series = chart.getOption()['series'] as AnyRecord[];
+    expect(series[0]['data']).toEqual([[2000, 401]]);
+    expect((chart.getOption()['yAxis'] as unknown[]).length).toBe(1);
   });
 });

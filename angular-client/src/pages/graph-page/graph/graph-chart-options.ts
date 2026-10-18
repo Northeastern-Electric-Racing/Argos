@@ -95,7 +95,10 @@ export function baseGraphChartOption(): GraphChartOption {
 export function graphChartUpdate(state: GraphChartState): GraphChartOption {
   const span = computeDataSpan(state.data);
   const isMultiDay = state.detectMultiDay && !!span && span.spanMs > DAY_MS;
-  const yAxis = state.multipleYAxes
+  // With no topics (or right after a clear) there are no per-topic axes; keep one so the grid always has a y-axis,
+  // which ECharts needs to lay out the x-axis and toolbox
+  const multipleYAxes = state.multipleYAxes && state.data.size > 0;
+  const yAxis = multipleYAxes
     ? buildMultiYAxes([...state.data.keys()])
     : [{ ...baseYAxis(), min: state.yMin ?? undefined, max: state.yMax ?? undefined }];
 
@@ -104,17 +107,15 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
     name,
     type: 'line',
     data: points as Point[],
-    yAxisIndex: state.multipleYAxes ? index : 0,
+    yAxisIndex: multipleYAxes ? index : 0,
+    // Series merge into the existing ones by id, so a range that stops spanning days must clear old boundary lines
+    markLine: isMultiDay && index === 0 ? buildDayBoundaryMarkLine(span!) : { data: [] },
     showSymbol: false,
     lineStyle: { width: 3 },
     // Downsample to the canvas width, keeping peaks; matters for long historical ranges
     sampling: 'lttb',
     animation: false
   }));
-  if (isMultiDay && series.length > 0) {
-    series[0].markLine = buildDayBoundaryMarkLine(span!);
-  }
-
   return {
     xAxis: {
       // null clears a previous window so the axis fits all data again
