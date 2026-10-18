@@ -158,6 +158,19 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(xs[0]).toBeGreaterThan(0);
   });
 
+  it('fits a whole long historical run, not just the bars the default minimum spacing allows', async () => {
+    // 50 hours at one point every 30 s: 6001 bars, far more than an 800 px chart fits at 0.5 px each.
+    const points = Array.from({ length: 6001 }, (_, i) => ({ x: T0 + i * 30_000, y: i % 100 }));
+    await render({ topics: [topic('A', [points])] });
+    // autoSize measures the container on the next frame; fit once the chart has its width.
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    component.resetZoom();
+
+    const range = component.chart!.timeScale().getVisibleRange()!;
+    expect(range.from).toBe(toChartTime(T0));
+    expect(range.to).toBe(toChartTime(points.at(-1)!.x));
+  });
+
   it('zooms back out to the whole range on double-click', async () => {
     await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])] });
     expect(component.chart!.options().handleScale).toEqual(

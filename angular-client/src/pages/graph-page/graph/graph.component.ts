@@ -66,6 +66,9 @@ export interface HoverValues {
 const MIN_STALE_HEAD = 50;
 const STALE_HEAD_FRACTION = 0.1;
 
+/** Smallest bar spacing (px) the time scale allows, so fitContent() fits about 1000 bars per pixel. */
+const MIN_BAR_SPACING = 0.001;
+
 @Component({
   selector: 'graph',
   templateUrl: './graph.component.html',
@@ -170,6 +173,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         borderVisible: false,
         // Labels run to `HH:MM:SS.mmm`; the default spacing assumes 8 characters, so they overlapped.
         tickMarkMaxCharacterLength: 12,
+        // The default 0.5 px minimum lets fitContent() show only (width * 2) bars, so a long run
+        // (a 50-hour run at 30 s is 6000 bars) showed just its last hours. Allow far denser bars.
+        minBarSpacing: MIN_BAR_SPACING,
         tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay)
       },
       localization: {
