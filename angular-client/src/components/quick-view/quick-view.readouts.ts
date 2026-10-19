@@ -178,7 +178,7 @@ const locatedCellReadout = (
 export const highCellVoltReadout = (): QuickViewReadout =>
   locatedCellReadout(
     'High Cell',
-    'arrow_drop_down_circle',
+    'battery_charging_full',
     'V',
     3,
     topics.highVoltsValue(),
@@ -189,7 +189,7 @@ export const highCellVoltReadout = (): QuickViewReadout =>
 export const lowCellVoltReadout = (): QuickViewReadout =>
   locatedCellReadout(
     'Low Cell',
-    'arrow_drop_down_circle',
+    'battery_charging_full',
     'V',
     3,
     topics.lowVoltsValue(),
