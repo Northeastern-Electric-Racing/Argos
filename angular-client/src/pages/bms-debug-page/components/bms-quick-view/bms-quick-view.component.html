@@ -7,7 +7,7 @@
 <quick-view-chip label="Discharge Limit (DCL)" unit="A" [precision]="0" [value]="dcl()" />
 <quick-view-chip
   label="Critical BMS Fault"
-  [value]="faults()[0] ?? 'None'"
+  [value]="faultsValue()"
   [detail]="faultDetail()"
   [status]="faults().length ? 'fault' : 'ok'"
   [statusLabel]="faults().length ? 'Critical BMS fault active' : 'No critical BMS fault'"

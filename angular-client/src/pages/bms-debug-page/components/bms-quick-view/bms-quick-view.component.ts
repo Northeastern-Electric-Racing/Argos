@@ -53,6 +53,8 @@ export default class BmsQuickViewComponent {
   protected dcl = this.latest(topics.accDCL());
 
   protected faults = toSignal(activeFaultNames(this.storage, BMS_CRITICAL_FAULTS), { requireSync: true });
+  /** The first active fault's name, or None. */
+  protected faultsValue = computed(() => this.faults().at(0) ?? 'None');
   protected faultDetail = computed(() => {
     const extra = this.faults().length - 1;
     return extra > 0 ? `+${extra} more` : '';

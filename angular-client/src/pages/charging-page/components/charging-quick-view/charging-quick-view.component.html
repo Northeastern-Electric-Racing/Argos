@@ -12,7 +12,7 @@
 <quick-view-chip label="Cell Spread" unit="mV" [precision]="0" [value]="spreadMillivolts()" [detail]="spreadDetail()" />
 <quick-view-chip
   label="Charger Fault"
-  [value]="chargerFaults()[0] ?? 'None'"
+  [value]="chargerFaultsValue()"
   [detail]="chargerFaultDetail()"
   [status]="chargerFaults().length ? 'fault' : 'ok'"
   [statusLabel]="chargerFaults().length ? 'Charger fault active' : 'No charger fault'"

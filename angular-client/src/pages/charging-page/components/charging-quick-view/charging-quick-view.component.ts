@@ -67,6 +67,8 @@ export default class ChargingQuickViewComponent {
   });
 
   protected chargerFaults = toSignal(activeFaultNames(this.storage, CHARGER_FAULTS), { requireSync: true });
+  /** The first active fault's name, or None. */
+  protected chargerFaultsValue = computed(() => this.chargerFaults().at(0) ?? 'None');
   protected chargerFaultDetail = computed(() => {
     const extra = this.chargerFaults().length - 1;
     return extra > 0 ? `+${extra} more` : '';
