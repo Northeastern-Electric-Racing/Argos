@@ -1,4 +1,0 @@
-/* The card itself is styled by the shared quick-view-chip; keep the eFuses chip shrink-to-fit. */
-:host {
-  display: inline-block;
-}

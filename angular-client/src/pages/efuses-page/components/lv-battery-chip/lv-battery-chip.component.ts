@@ -12,7 +12,7 @@ import QuickViewChipComponent from 'src/components/quick-view-chip/quick-view-ch
 @Component({
   selector: 'lv-battery-chip',
   templateUrl: './lv-battery-chip.component.html',
-  styleUrl: './lv-battery-chip.component.css',
+  styles: ':host { display: inline-block; }',
   imports: [QuickViewChipComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
