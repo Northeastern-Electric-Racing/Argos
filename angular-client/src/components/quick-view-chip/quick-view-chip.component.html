@@ -1,0 +1,20 @@
+<div class="card">
+  @if (icon()) {
+    <mat-icon class="icon" [svgIcon]="icon()" aria-hidden="true" />
+  }
+  <div class="col">
+    <div>
+      <span class="value">{{ formattedValue() }}</span>
+      @if (unit()) {
+        <span class="unit">{{ unit() }}</span>
+      }
+    </div>
+    <div class="label">{{ label() }}</div>
+    @if (detail()) {
+      <div class="detail">{{ detail() }}</div>
+    }
+  </div>
+  @if (status(); as status) {
+    <span class="dot" [class]="status" role="img" [attr.aria-label]="statusLabel()"></span>
+  }
+</div>

@@ -1,11 +1,9 @@
-<div class="card">
-  <mat-icon class="icon" svgIcon="battery_charging_2" aria-hidden="true" />
-  <div class="col">
-    <div>
-      <span class="value">{{ value() }}</span
-      ><span class="unit">V</span>
-    </div>
-    <div class="subtitle">LV Battery</div>
-  </div>
-  <span class="dot" role="img" [style.background]="dotColor()" [attr.aria-label]="dotLabel()"></span>
-</div>
+<quick-view-chip
+  icon="battery_charging_2"
+  label="LV Battery"
+  unit="V"
+  [precision]="2"
+  [value]="voltage()"
+  [status]="faulted() ? 'fault' : 'ok'"
+  [statusLabel]="dotLabel()"
+/>
