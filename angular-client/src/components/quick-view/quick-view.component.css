@@ -1,0 +1,5 @@
+/* No box of our own: the sticky status bar's containing block must be the shell host, which spans
+   the whole page, or the bar would stop sticking once this element scrolled out of view. */
+:host {
+  display: contents;
+}

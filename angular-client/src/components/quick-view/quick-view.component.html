@@ -1,0 +1,7 @@
+@if (readouts().length > 0) {
+  <status-bar>
+    @for (readout of readouts(); track readout) {
+      <quick-view-readout [readout]="readout" />
+    }
+  </status-bar>
+}
