@@ -8,6 +8,16 @@ import { SegmentRowComponent } from './components/segment-row/segment-row.compon
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
+import { QuickViewService } from 'src/services/quick-view.service';
+import {
+  bmsCriticalFaultReadout,
+  currentLimitsReadout,
+  highCellTempReadout,
+  highCellVoltReadout,
+  lowCellVoltReadout,
+  packVoltageReadout,
+  stateOfChargeReadout
+} from 'src/components/quick-view/quick-view.readouts';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
 
@@ -69,6 +79,19 @@ export class BmsDebugPageComponent implements OnInit {
     options: this.allViewOptions,
     placeholder: 'Set ALL Maps'
   };
+
+  constructor() {
+    // Pack-level state stays in the app quick view while scrolling through the segment rows.
+    inject(QuickViewService).register([
+      stateOfChargeReadout(),
+      packVoltageReadout(),
+      highCellVoltReadout(),
+      lowCellVoltReadout(),
+      highCellTempReadout(),
+      currentLimitsReadout(),
+      bmsCriticalFaultReadout()
+    ]);
+  }
 
   ngOnInit(): void {
     this.heatMapService.globalView$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
