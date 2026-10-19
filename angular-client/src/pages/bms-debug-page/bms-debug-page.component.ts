@@ -8,6 +8,8 @@ import { SegmentRowComponent } from './components/segment-row/segment-row.compon
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
+import StatusBarComponent from 'src/components/status-bar/status-bar.component';
+import BmsQuickViewComponent from './components/bms-quick-view/bms-quick-view.component';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
 
@@ -21,7 +23,9 @@ const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
     BmsHeaderComponent,
     BmsAtAGlanceComponent,
     SegmentRowComponent,
-    SectionHeaderComponent
+    SectionHeaderComponent,
+    StatusBarComponent,
+    BmsQuickViewComponent
   ],
   host: {
     '(window:resize)': 'onResize()'

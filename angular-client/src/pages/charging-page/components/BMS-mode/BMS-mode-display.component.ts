@@ -7,7 +7,7 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
-enum BMSMODE {
+export enum BMSMODE {
   DEFAULT = 0,
   READY = 1,
   CHARGING = 2,

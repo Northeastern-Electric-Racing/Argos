@@ -1,0 +1,7 @@
+/* Stack the chips at one shared width inside the status-bar panel. */
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 190px;
+}

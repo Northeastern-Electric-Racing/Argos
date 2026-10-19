@@ -19,4 +19,10 @@ describe('BmsDebugPageComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('owns its quick view: a status bar holding the BMS readouts', () => {
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('status-bar bms-quick-view')).toBeTruthy();
+  });
 });

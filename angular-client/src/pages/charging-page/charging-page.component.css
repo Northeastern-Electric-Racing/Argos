@@ -1,3 +1,8 @@
+/* Block host so the sticky quick view's containing block spans the whole page (see efuses-page). */
+:host {
+  display: block;
+}
+
 .image-container {
   /* background-image: url(../../assets/images/NERO.jpeg); */
   background-size: cover;

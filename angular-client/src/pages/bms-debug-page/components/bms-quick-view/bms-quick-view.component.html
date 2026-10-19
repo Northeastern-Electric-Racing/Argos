@@ -1,0 +1,14 @@
+<quick-view-chip label="State of Charge" unit="%" [precision]="0" [value]="socPercent()" />
+<quick-view-chip label="Pack Voltage" unit="V" [value]="packVoltage()" />
+<quick-view-chip label="Highest Cell" unit="V" [precision]="3" [value]="highVolts()" [detail]="highVoltsAt()" />
+<quick-view-chip label="Lowest Cell" unit="V" [precision]="3" [value]="lowVolts()" [detail]="lowVoltsAt()" />
+<quick-view-chip label="Highest Cell Temp" unit="°C" [value]="highTemp()" [detail]="highTempAt()" />
+<quick-view-chip label="Charge Limit (CCL)" unit="A" [precision]="0" [value]="ccl()" />
+<quick-view-chip label="Discharge Limit (DCL)" unit="A" [precision]="0" [value]="dcl()" />
+<quick-view-chip
+  label="Critical BMS Fault"
+  [value]="faults()[0] ?? 'None'"
+  [detail]="faultDetail()"
+  [status]="faults().length ? 'fault' : 'ok'"
+  [statusLabel]="faults().length ? 'Critical BMS fault active' : 'No critical BMS fault'"
+/>

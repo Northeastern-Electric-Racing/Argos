@@ -13,6 +13,8 @@ import StateOfChargeDisplayComponent from './components/state-of-charge/state-of
 import PackTempComponent from './components/pack-temp/pack-temp.component';
 import CombinedStatusDisplayComponent from './components/combined-status-display/combined-status-display.component';
 import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mobile.component';
+import StatusBarComponent from 'src/components/status-bar/status-bar.component';
+import ChargingQuickViewComponent from './components/charging-quick-view/charging-quick-view.component';
 
 /**
  * Container for the Charging page, obtains data from the storage service.
@@ -33,7 +35,9 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
     CurrentDisplayComponent,
     StateOfChargeDisplayComponent,
     PackTempComponent,
-    CombinedStatusDisplayComponent
+    CombinedStatusDisplayComponent,
+    StatusBarComponent,
+    ChargingQuickViewComponent
   ],
   host: {
     '(window:resize)': 'onResize()'

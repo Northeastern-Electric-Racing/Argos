@@ -1,5 +1,10 @@
 /* AI-generated  */
 
+/* Block host so the sticky quick view's containing block spans the whole page (see efuses-page). */
+:host {
+  display: block;
+}
+
 /* Grid container for the page title row */
 .title-style {
   display: grid;
