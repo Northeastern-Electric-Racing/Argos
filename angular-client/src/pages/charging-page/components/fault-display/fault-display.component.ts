@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
-import { topics } from 'src/utils/topic.utils';
+import { BMS_CRITICAL_FAULTS, CHARGER_FAULTS } from 'src/utils/fault.utils';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -31,106 +31,8 @@ export default class FaultDisplayComponent implements OnInit {
   };
 
   ngOnInit() {
-    const chargerFaultAndDisplayNames = [
-      {
-        displayName: 'Comm Timeout',
-        faultIdentifier: topics.commTimeoutFault()
-      },
-      {
-        displayName: 'Hardware Failure',
-        faultIdentifier: topics.hardwareFailureFault()
-      },
-      {
-        displayName: 'Over Temp',
-        faultIdentifier: topics.overTempFault()
-      },
-      {
-        displayName: 'Over Voltage Fault',
-        faultIdentifier: topics.overVoltageFault()
-      },
-      {
-        displayName: 'Wrong Battery Connect',
-        faultIdentifier: topics.wrongBatConnectFault()
-      }
-    ];
-    chargerFaultAndDisplayNames.forEach((faultAndDisplayName) => {
-      this.faultSubcribe(faultAndDisplayName.displayName, faultAndDisplayName.faultIdentifier, FaultType.Charger);
-    });
-
-    const bmsFaultAndDisplayNames = [
-      {
-        displayName: 'Open Wire',
-        faultIdentifier: topics.openWire()
-      },
-      {
-        displayName: 'Charger Limit Enforcement',
-        faultIdentifier: topics.chargerLimitEnforcementFault()
-      },
-      {
-        displayName: 'Charger Can Fault',
-        faultIdentifier: topics.chargerCanFault()
-      },
-      {
-        displayName: 'Battery Thermistor',
-        faultIdentifier: topics.batteryThermistor()
-      },
-      {
-        displayName: 'Charger Safety Relay',
-        faultIdentifier: topics.chargerSafetyRelay()
-      },
-      {
-        displayName: 'Discharge Limit Enforcement',
-        faultIdentifier: topics.dischargeLimitEnforcementFault()
-      },
-      {
-        displayName: 'External Can Fault',
-        faultIdentifier: topics.externalCanFault()
-      },
-      {
-        displayName: 'Weak Pack Fault',
-        faultIdentifier: topics.weakPackFault()
-      },
-      {
-        displayName: 'Low Cell Voltage',
-        faultIdentifier: topics.lowCellVoltage()
-      },
-      {
-        displayName: 'Charge Reading Mismatch',
-        faultIdentifier: topics.chargeReadingMismatch()
-      },
-      {
-        displayName: 'Current Sensor Fault',
-        faultIdentifier: topics.currentSensorFault()
-      },
-      {
-        displayName: 'Internal Cell Comm Fault',
-        faultIdentifier: topics.internalCellCommFault()
-      },
-      {
-        displayName: 'Internal Software Fault',
-        faultIdentifier: topics.internalSoftwareFault()
-      },
-      {
-        displayName: 'Pack Overheat',
-        faultIdentifier: topics.packOverheat()
-      },
-      {
-        displayName: 'Cell Undervoltage',
-        faultIdentifier: topics.cellUndervoltage()
-      },
-      {
-        displayName: 'Cell Overvoltage',
-        faultIdentifier: topics.cellOvervoltage()
-      },
-      {
-        displayName: 'Cells Not Balancing',
-        faultIdentifier: topics.cellsNotBalancing()
-      }
-    ];
-
-    bmsFaultAndDisplayNames.forEach((faultAndDisplayName) => {
-      this.faultSubcribe(faultAndDisplayName.displayName, faultAndDisplayName.faultIdentifier, FaultType.BMS);
-    });
+    CHARGER_FAULTS.forEach(({ name, topic }) => this.faultSubcribe(name, topic, FaultType.Charger));
+    BMS_CRITICAL_FAULTS.forEach(({ name, topic }) => this.faultSubcribe(name, topic, FaultType.BMS));
   }
 
   /**
