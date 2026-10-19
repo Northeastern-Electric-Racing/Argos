@@ -8,7 +8,7 @@ body:
       value: |
         **Pipeline:** idea → spikes (sub-issues) → epic → dev work.
         Keep an idea short. If it is small enough to just try, file a spike instead.
-        Don't prescribe a solution. Approaches stay open options for spikes to explore, not a chosen design.
+        Don't prescribe a solution. Areas stay open questions for spikes to explore, not a chosen design.
         After filing, add a written-by label (`by: human`, `by: ai`, `by: ai-assisted`) and area labels (`frontend`, `backend`, `devops`).
   - type: textarea
     id: idea
@@ -26,14 +26,14 @@ body:
     validations:
       required: true
   - type: textarea
-    id: approaches
+    id: areas
     attributes:
-      label: Approaches to explore
+      label: Areas to explore
       description: |
-        The range of possible solutions worth exploring. Each bullet is an area and the options in it.
-        List areas that need real exploration or design decisions, not questions with quick answers. Each one should be big enough to become a spike.
-        Name options to weigh, not a plan or a recommended pick.
+        The open questions to explore before building. Each bullet is an area (an open question) and the directions worth trying in it; each spike tries one direction in one area.
+        List areas that need real exploration or design decisions, not questions with quick answers. Each direction should be big enough to become its own spike.
+        Name directions to weigh, not a plan or a recommended pick.
       value: |
-        - **Area:** option, option, or option.
+        - **Area:** direction, direction, or direction.
     validations:
       required: true
