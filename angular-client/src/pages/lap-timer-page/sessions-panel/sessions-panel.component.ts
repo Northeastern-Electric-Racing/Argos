@@ -70,6 +70,12 @@ export default class SessionsPanelComponent {
     });
   };
 
+  // The actions menu lets its click reach the document, so an open popover elsewhere closes; skip row selection for it
+  onRowClick = (event: MouseEvent, id: string) => {
+    if ((event.target as HTMLElement).closest('.col-actions')) return;
+    this.onSelectSession(id);
+  };
+
   onSelectSession = (id: string) => {
     if (this.timer.activeSession()?.id === id) return;
     this.timer.selectSession(id);

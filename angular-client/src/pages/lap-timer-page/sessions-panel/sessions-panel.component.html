@@ -50,7 +50,7 @@
             <tr
               class="session-row"
               [class.session-row-active]="timer.activeSession()?.id === s.id"
-              (click)="onSelectSession(s.id)"
+              (click)="onRowClick($event, s.id)"
               role="button"
               tabindex="0"
               (keyup.enter)="onSelectSession(s.id)"
@@ -88,11 +88,7 @@
               </td>
               <td class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
               <td class="col-actions">
-                <button
-                  class="session-menu-btn"
-                  (click)="$event.stopPropagation(); rowPopover.toggle($event)"
-                  aria-label="Session actions"
-                >
+                <button class="session-menu-btn" (click)="rowPopover.toggle($event)" aria-label="Session actions">
                   <mat-icon>more_vert</mat-icon>
                 </button>
                 <p-popover #rowPopover>

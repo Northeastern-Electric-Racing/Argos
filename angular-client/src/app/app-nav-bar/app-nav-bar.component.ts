@@ -119,6 +119,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   };
 
   openRunForm = () => {
+    this.menuRef?.close();
     this.editRunRef = this.dialogService.open(RunFormComponent, {
       width: '550px',
       header: 'Edit Run',
