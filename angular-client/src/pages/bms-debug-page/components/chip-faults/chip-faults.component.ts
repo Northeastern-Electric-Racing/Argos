@@ -10,7 +10,7 @@ import { allChipFaults, topics } from 'src/utils/topic.utils';
 import { FaultData } from 'src/utils/types.utils';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-import { TableModule } from 'primeng/table';
+import { NzTableModule } from 'ng-zorro-antd/table';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -18,7 +18,7 @@ import { DatePipe } from '@angular/common';
   templateUrl: './chip-faults.component.html',
   styleUrl: './chip-faults.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [InfoBackgroundComponent, TableModule, DatePipe]
+  imports: [InfoBackgroundComponent, NzTableModule, DatePipe]
 })
 export class ChipFaultsComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -68,7 +68,8 @@ export class ChipFaultsComponent implements OnInit {
     this.title = `Chip ${chipToString(this.chip())} Faults`;
   }
 
-  onRowSelect = () => {
+  onRowSelect = (fault: FaultData) => {
+    this.selectedFault = fault;
     if (this.selectedFault) {
       this.faultService.selectFault(this.selectedFault);
       this.navigateTo(appRoutes.faultsGraphRoute());

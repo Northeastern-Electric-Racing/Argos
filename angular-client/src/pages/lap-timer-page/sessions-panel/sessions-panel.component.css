@@ -70,13 +70,13 @@
 }
 
 /* Body font shared by the table, rename input, and menu items. */
-.sessions-table-wrap :where(.p-datatable),
+.sessions-table-wrap :where(.ant-table),
 .session-rename-input,
 .session-menu-item {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
 }
-.sessions-table-wrap :where(.p-datatable) {
+.sessions-table-wrap :where(.ant-table) {
   color: var(--color-text-primary);
 }
 .sessions-table-wrap :where(th) {
@@ -193,27 +193,11 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-.session-menu-list {
-  display: flex;
-  flex-direction: column;
-  min-width: 160px;
-}
 .session-menu-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  text-align: left;
-}
-.session-menu-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-.session-menu-item.destructive {
-  color: var(--color-battery-low);
+  min-width: 160px;
 }
 
 /* Shared 18px icon sizing for the state icon and menu icons. */

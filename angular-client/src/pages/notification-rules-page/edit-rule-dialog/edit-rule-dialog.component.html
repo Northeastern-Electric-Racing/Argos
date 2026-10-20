@@ -1,7 +1,7 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="field">
     <label for="edit-expr">Expression</label>
-    <input id="edit-expr" pInputText formControlName="expr" />
+    <input id="edit-expr" nz-input formControlName="expr" />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
       <small class="error" role="alert">Expression is required</small>
     }
@@ -9,7 +9,7 @@
 
   <div class="field">
     <label for="edit-debounce">Debounce Time (seconds)</label>
-    <input id="edit-debounce" pInputText formControlName="debounce_time" type="number" />
+    <input id="edit-debounce" nz-input formControlName="debounce_time" type="number" />
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
       <small class="error" role="alert">Debounce time is required</small>
     }
@@ -19,7 +19,7 @@
   </div>
 
   <div class="button-row">
-    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton type="submit" label="Save"></button>
+    <button nz-button nzType="text" type="button" (click)="onCancel()">Cancel</button>
+    <button nz-button nzType="primary" type="submit">Save</button>
   </div>
 </form>

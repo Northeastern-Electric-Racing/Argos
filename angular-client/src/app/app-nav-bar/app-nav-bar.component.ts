@@ -1,14 +1,14 @@
-import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -22,8 +22,8 @@ import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
+import { NzPopoverModule } from 'ng-zorro-antd/popover';
+import { NzBadgeModule } from 'ng-zorro-antd/badge';
 
 export interface NavItem {
   id: string;
@@ -37,7 +37,7 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    NzDrawerModule,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -48,26 +48,25 @@ export interface NavItem {
     SidebarChipComponent,
     MatIcon,
     NotificationListComponent,
-    Popover,
-    Badge
+    NzPopoverModule,
+    NzBadgeModule,
+    NavOptionsMenuComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
 })
-export class AppNavBarComponent implements OnInit, OnDestroy {
+export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private notification = inject(NzNotificationService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private modal = inject(NzModalService);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  menuOpen = false;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -90,12 +89,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
-  }
-
   // on resize, set the screen width
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
@@ -114,16 +107,17 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       this.newRunIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.error('Error', error.message);
     });
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
+    this.menuOpen = false;
+    this.modal.create({
+      nzContent: RunFormComponent,
+      nzWidth: 550,
+      nzTitle: 'Edit Run',
+      nzFooter: null
     });
   };
 
@@ -159,15 +153,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
-
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
 
   navMenuItems: NavItem[] = [
     {
@@ -215,26 +200,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
-
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
-      data: {
-        items: this.navMenuItems
-      }
-    });
-
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
-  }
 
   navigateTo(route: string): void {
     this.selectedRoute = route;

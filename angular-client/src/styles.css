@@ -53,6 +53,11 @@ body {
   height: 100%;
   font-family: var(--font-family);
 }
+
+/* Ant Design's base reset drops the top margin of <p>; the typography component relies on the browser default. */
+p {
+  margin-block: 1em;
+}
 body {
   margin: 0;
   background-color: var(--color-background-page);
@@ -80,115 +85,45 @@ body {
   border-radius: 50%;
 }
 
-.p-dialog-title {
-  --p-dialog-title-font-weight: bold;
+/* ---- ng-zorro overlays (theme tokens live in styles/ng-zorro-theme.less) ---- */
+
+/* Modals: rounder corners than Ant's default, closer to the old dialogs */
+.ant-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.p-dialog {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 20px !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-}
-.p-dialog-header {
-  background-color: #262626 !important;
-  color: white !important;
-  padding: 1rem !important;
-  font-size: 1.2rem;
-  padding: 1rem;
-  border-radius: 20px 20px 0px 0px !important;
-}
-.p-dialog-content {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 0px 0px 20px 20px !important;
+/* Navbar "more pages" and notification popovers: no padding or arrow, panel draws its own surface */
+.nav-options-popover .ant-popover-inner-content,
+.notification-popover .ant-popover-inner-content {
+  padding: 0;
 }
 
-/* Main select button */
-.p-select {
-  color: white !important;
-  background-color: #5a5a5a !important;
-
-  border: none !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+.notification-popover .ant-popover-inner {
+  background: transparent;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-radius: var(--border-radius-panel);
 }
 
-/* Dropdown panel */
-.p-select-panel {
-  background-color: #5a5a5a !important;
-  color: white !important;
-  border-radius: 0 0 5px 5px !important;
-  gap: 0px !important;
+.nav-options-popover .ant-popover-arrow,
+.notification-popover .ant-popover-arrow {
+  display: none;
 }
 
-/* Dropdown items */
-.p-select-option {
-  color: white !important;
-  background-color: transparent !important;
-  padding: 8px 16px !important;
-  border-radius: 5px !important;
-}
-
-/* Hovered item */
-.p-select-option:hover {
-  background-color: #45454594 !important;
-  border-radius: 0px !important;
-}
-
-/* Selected item */
-.p-select-option.p-highlight {
-  background-color: rgba(0, 122, 255, 0.15) !important;
-  color: #007aff !important;
-}
-
-/* Dropdown list container */
-.p-select-list {
-  background-color: #5a5a5a !important;
-  border-radius: 0 0 5px 5px !important;
-  margin: 0px;
-}
-
-/* Navbar options dropdown */
-.nav-options-dialog.p-dialog {
-  position: fixed !important;
-  top: 70px !important;
-  right: 10px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-}
-
-.nav-options-dialog .p-dialog-content {
-  padding: 0 !important;
-}
-
-.p-dialog-mask:has(.nav-options-dialog) {
-  background: transparent !important;
-}
-
-/* Cell comparison dialog — compact, no backdrop */
-.cell-compare-dialog.p-dialog {
-  width: auto !important;
-  min-width: 0 !important;
-  border-radius: 12px !important;
-}
-
-.cell-compare-dialog .p-dialog-header {
-  padding: 8px 14px !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-.cell-compare-dialog .p-dialog-content {
-  padding: 0 14px 10px !important;
-  border-radius: 0 0 12px 12px !important;
-}
-
-.p-dialog-mask:has(.cell-compare-dialog) {
-  background: transparent !important;
-  pointer-events: none !important;
-}
-
+/* Cell comparison modal: compact and non-blocking, so cells stay clickable behind it */
 .cell-compare-dialog {
-  pointer-events: auto !important;
+  pointer-events: none;
+}
+
+.cell-compare-dialog .ant-modal {
+  pointer-events: auto;
+  max-width: calc(100vw - 32px);
+}
+
+.cell-compare-dialog .ant-modal-header {
+  padding: 8px 14px;
+}
+
+.cell-compare-dialog .ant-modal-body {
+  padding: 0 14px 10px;
 }

@@ -1,5 +1,5 @@
 import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
@@ -17,7 +17,7 @@ export interface DropdownOption {
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  imports: [NzSelectModule, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -53,8 +53,11 @@ export class SelectDropdownComponent {
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
-    changeEvent.value.function();
+  // Options are keyed by name; ngModelChange only fires on user picks, as PrimeNG's onChange did.
+  handleChangedOption(name: string) {
+    const option = this.options().find((o) => o.name === name);
+    this.selectedOption = option;
+    option?.function();
   }
 
   // Get display text for the dropdown

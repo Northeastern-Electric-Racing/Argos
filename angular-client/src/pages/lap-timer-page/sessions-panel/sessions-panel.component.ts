@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Popover } from 'primeng/popover';
-import { TableModule } from 'primeng/table';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
+import { NzTableModule } from 'ng-zorro-antd/table';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -20,8 +21,8 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     DatePipe,
     FormsModule,
     MatIcon,
-    TableModule,
-    Popover,
+    NzTableModule,
+    NzDropdownModule,
     ButtonComponent,
     InfoBackgroundComponent,
     TypographyComponent
@@ -29,8 +30,8 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 })
 export default class SessionsPanelComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private modal = inject(NzModalService);
+  private notification = inject(NzNotificationService);
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');
@@ -38,12 +39,13 @@ export default class SessionsPanelComponent {
   onClearAllSessions = () => {
     const count = this.timer.sessions().length;
     if (count === 0) return;
-    this.confirmationService.confirm({
-      message: `Delete all ${count} ${count === 1 ? 'session' : 'sessions'} and their laps? This cannot be undone.`,
-      header: 'Clear All Sessions',
-      acceptLabel: 'Clear All',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.modal.confirm({
+      nzContent: `Delete all ${count} ${count === 1 ? 'session' : 'sessions'} and their laps? This cannot be undone.`,
+      nzTitle: 'Clear All Sessions',
+      nzOkText: 'Clear All',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
         this.timer.clearAllSessions();
         this.toast('success', 'All sessions cleared', '');
       }
@@ -57,12 +59,12 @@ export default class SessionsPanelComponent {
       this.toast('success', 'Session created', s ? `"${s.name}"` : '');
       return;
     }
-    this.confirmationService.confirm({
-      message: 'Pause the current session and start a new one?',
-      header: 'New Session',
-      acceptLabel: 'New Session',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.modal.confirm({
+      nzContent: 'Pause the current session and start a new one?',
+      nzTitle: 'New Session',
+      nzOkText: 'New Session',
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
         this.timer.createSession();
         const s = this.timer.activeSession();
         this.toast('success', 'Session created', s ? `"${s.name}"` : '');
@@ -75,33 +77,31 @@ export default class SessionsPanelComponent {
     this.timer.selectSession(id);
   };
 
-  onDeleteSession = (session: LapSession, popover?: Popover) => {
-    popover?.hide();
+  onDeleteSession = (session: LapSession) => {
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
       this.toast('success', 'Session deleted', `"${session.name}"`);
       return;
     }
-    this.confirmationService.confirm({
-      message: `Delete "${session.name}" and its ${session.laps.length} laps?`,
-      header: 'Delete Session',
-      acceptLabel: 'Delete',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.modal.confirm({
+      nzContent: `Delete "${session.name}" and its ${session.laps.length} laps?`,
+      nzTitle: 'Delete Session',
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
         this.timer.deleteSession(session.id);
         this.toast('success', 'Session deleted', `"${session.name}"`);
       }
     });
   };
 
-  onDownload = (sessionId: string, popover?: Popover) => {
-    popover?.hide();
+  onDownload = (sessionId: string) => {
     const filename = this.timer.downloadCsv(sessionId);
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  startEdit(session: LapSession, popover?: Popover): void {
-    popover?.hide();
+  startEdit(session: LapSession): void {
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
   }
@@ -136,7 +136,7 @@ export default class SessionsPanelComponent {
     return null;
   }
 
-  private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
-    this.messageService.add({ severity, summary, detail, life: 2000 });
+  private toast(severity: 'success' | 'warning' | 'error' | 'info', summary: string, detail: string): void {
+    this.notification.create(severity, summary, detail, { nzDuration: 2000 });
   }
 }

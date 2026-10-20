@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MessageService } from 'primeng/api';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
@@ -14,12 +14,12 @@ import TypographyComponent from 'src/components/typography/typography.component'
   templateUrl: './camera-page.component.html',
   styleUrl: './camera-page.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
+  imports: [NzSelectModule, ReactiveFormsModule, FormsModule, TypographyComponent]
 })
 export class CameraPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private notification = inject(NzNotificationService);
 
   url = 'http://192.168.100.11:8889/frontcam/';
   urlAvailable = false;
@@ -48,7 +48,7 @@ export class CameraPageComponent implements OnInit {
 
     const videosQueryResponse = this.serverService.query<string[]>(() => getAllVideos(), { queryKey: ['videos'] });
     videosQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
     });
     videosQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading) => {
       this.videoUrlsIsLoading = isLoading;
@@ -82,11 +82,11 @@ export class CameraPageComponent implements OnInit {
     this.liveStream = true;
   };
 
-  onDropdownChange = (event: SelectChangeEvent) => {
-    if (event.value === 'Live Stream') {
+  onDropdownChange = (videoName: string) => {
+    if (videoName === 'Live Stream') {
       this.onLiveStreamSelected();
     } else {
-      this.onVideoSelected(event.value);
+      this.onVideoSelected(videoName);
     }
   };
 }

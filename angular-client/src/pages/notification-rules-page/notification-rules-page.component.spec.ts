@@ -1,12 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import NotificationRulesPageComponent from './notification-rules-page.component';
 
 describe('NotificationRulesPageComponent', () => {
   let component: NotificationRulesPageComponent;
   let fixture: ComponentFixture<NotificationRulesPageComponent>;
-  let messageService: MessageService;
+  let notification: NzNotificationService;
 
   beforeEach(async () => {
     // The real app eagerly creates the client ID in SocketService, which AppContextComponent injects at bootstrap;
@@ -14,13 +13,12 @@ describe('NotificationRulesPageComponent', () => {
     localStorage.setItem('notification_rules_client_id', 'test-client-id');
 
     await TestBed.configureTestingModule({
-      imports: [NotificationRulesPageComponent],
-      providers: [MessageService, DialogService]
+      imports: [NotificationRulesPageComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotificationRulesPageComponent);
     component = fixture.componentInstance;
-    messageService = TestBed.inject(MessageService);
+    notification = TestBed.inject(NzNotificationService);
     fixture.detectChanges();
   });
 
@@ -44,7 +42,7 @@ describe('NotificationRulesPageComponent', () => {
 
   describe('CSV parsing', () => {
     it('should reject files without .csv extension', async () => {
-      const addSpy = vi.spyOn(messageService, 'add').mockReturnValue(undefined);
+      const createSpy = vi.spyOn(notification, 'create').mockReturnValue(undefined as never);
       const event = {
         target: {
           files: [new File(['test'], 'rules.txt', { type: 'text/plain' })],
@@ -53,7 +51,7 @@ describe('NotificationRulesPageComponent', () => {
       } as unknown as Event;
 
       await component.onFileSelected(event);
-      expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', summary: 'Invalid File' }));
+      expect(createSpy).toHaveBeenCalledWith('error', 'Invalid File', expect.any(String));
     });
   });
 });

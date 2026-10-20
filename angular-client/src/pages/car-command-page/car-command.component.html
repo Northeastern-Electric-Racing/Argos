@@ -13,7 +13,9 @@
           <div class="auth-form">
             <div class="auth-input-group">
               <label for="password">Password</label>
-              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+              <nz-input-password>
+                <input nz-input id="password" [(ngModel)]="enteredPw" />
+              </nz-input-password>
             </div>
             <argos-button label="Authenticate" [onClick]="authenticatePw" />
             @if (authError()) {
@@ -51,7 +53,5 @@
         </div>
       </info-background>
     </div>
-
-    <p-confirmdialog />
   }
 </div>

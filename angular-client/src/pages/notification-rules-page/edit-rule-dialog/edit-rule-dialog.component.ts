@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
+import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 
 export interface EditRuleResult {
   expr: string;
@@ -12,18 +12,18 @@ export interface EditRuleResult {
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, ButtonDirective],
+  imports: [ReactiveFormsModule, NzInputModule, NzButtonModule],
   templateUrl: './edit-rule-dialog.component.html',
   styleUrls: ['./edit-rule-dialog.component.css']
 })
 export class EditRuleDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject(NzModalRef);
+  private data = inject(NZ_MODAL_DATA);
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    expr: [this.config.data.expr as string, Validators.required],
-    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]]
+    expr: [this.data.expr as string, Validators.required],
+    debounce_time: [this.data.debounce_time as number, [Validators.required, Validators.min(0)]]
   });
 
   onSubmit(): void {

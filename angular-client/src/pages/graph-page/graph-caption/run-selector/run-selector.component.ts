@@ -4,8 +4,8 @@ import { Run } from 'src/utils/types.utils';
 import { CarouselComponent } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
+import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
@@ -17,13 +17,13 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  public dialogService = inject(DialogService);
+  private modal = inject(NzModalService);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private notification = inject(NzNotificationService);
   label!: string;
   runs!: Run[];
   runsIsLoading = true;
-  ref?: DynamicDialogRef | null;
+  ref?: NzModalRef<CarouselComponent>;
   selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
@@ -32,7 +32,7 @@ export class RunSelectorComponent implements OnInit {
       this.runsIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
     });
     runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) this.runs = data;
@@ -42,14 +42,13 @@ export class RunSelectorComponent implements OnInit {
   }
 
   openDialog = () => {
-    this.ref = this.dialogService.open(CarouselComponent, {
-      width: '550px',
-      data: { runs: this.runs, selectRun: this.selectRun() },
-      header: 'Select a run to view',
-      modal: true, // makes the dialog modal
-      dismissableMask: true, // enables auto-close on outside click
-      closable: true,
-      closeAriaLabel: 'Close'
+    this.ref = this.modal.create({
+      nzContent: CarouselComponent,
+      nzWidth: 550,
+      nzData: { runs: this.runs, selectRun: this.selectRun() },
+      nzTitle: 'Select a run to view',
+      nzFooter: null,
+      nzMaskClosable: true // auto-close on outside click
     });
   };
 }

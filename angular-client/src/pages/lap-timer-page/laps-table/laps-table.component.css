@@ -38,7 +38,7 @@
   padding: 32px;
 }
 
-.lap-table-wrap :where(.p-datatable) {
+.lap-table-wrap :where(.ant-table) {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);

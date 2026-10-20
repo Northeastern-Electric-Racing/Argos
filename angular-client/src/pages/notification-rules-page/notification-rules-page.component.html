@@ -28,7 +28,7 @@
         </div>
         <div class="search-container">
           <input
-            pInputText
+            nz-input
             type="text"
             placeholder="Search..."
             [value]="searchTerm()"
@@ -54,7 +54,7 @@
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
       [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
-      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
+      <nz-icon [nzType]="streamRailOpen() ? 'right' : 'left'" />
     </button>
 
     <aside

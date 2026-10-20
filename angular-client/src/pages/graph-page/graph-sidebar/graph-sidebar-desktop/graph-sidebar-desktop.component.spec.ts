@@ -1,6 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop.component';
@@ -15,8 +13,7 @@ describe('GraphSidebarDesktopComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GraphSidebarDesktopComponent],
-      providers: [MessageService, DialogService]
+      imports: [GraphSidebarDesktopComponent]
     }).compileComponents();
 
     topicService = TestBed.inject(TopicSelectionService);
@@ -27,7 +24,7 @@ describe('GraphSidebarDesktopComponent', () => {
   });
 
   it('builds the tree from dataTypes', () => {
-    expect(component.treeNodes().map((n) => n.label)).toEqual(['BMS']);
+    expect(component.treeNodes().map((n) => n.title)).toEqual(['BMS']);
     expect(component.flatNodes().map((n) => n.data?.dataType.name)).toEqual(['BMS/Pack/SoC']);
   });
 
@@ -36,7 +33,7 @@ describe('GraphSidebarDesktopComponent', () => {
     fixture.componentRef.setInput('dataTypes', [soc, speed]);
     fixture.detectChanges();
 
-    expect(component.treeNodes().map((n) => n.label)).toEqual(['BMS', 'MPU']);
+    expect(component.treeNodes().map((n) => n.title)).toEqual(['BMS', 'MPU']);
     expect(component.flatNodes().length).toBe(2);
     expect(component.selectedNodes()?.map((n) => n.data?.dataType.name)).toEqual(['MPU/State/Speed']);
   });

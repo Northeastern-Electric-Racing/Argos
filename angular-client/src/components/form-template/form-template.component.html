@@ -10,7 +10,7 @@
         [formControlName]="field.name"
         [type]="field.type"
         [value]="'boston'"
-        pInputText
+        nz-input
         class="form-control w-full"
         [ngClass]="{
           'ng-invalid ng-dirty':
@@ -27,5 +27,5 @@
     </div>
   }
 
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+  <button nz-button nzType="primary" type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>
 </form>

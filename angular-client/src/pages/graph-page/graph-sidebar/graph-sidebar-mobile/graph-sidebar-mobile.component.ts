@@ -12,11 +12,11 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { Drawer } from 'primeng/drawer';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NzFormatEmitEvent, NzTreeModule } from 'ng-zorro-antd/tree';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -31,7 +31,8 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
-  TreeNodeData
+  collectExpandedKeys,
+  TopicTreeNode
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
@@ -44,17 +45,26 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Drawer, Tree, ButtonComponent, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [
+    NzDrawerModule,
+    NzTreeModule,
+    NzInputModule,
+    ButtonComponent,
+    TypographyComponent,
+    NzSwitchModule,
+    FormsModule,
+    SelectDropdownComponent
+  ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private modal = inject(NzModalService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
+  private presetDialogRef?: NzModalRef<PresetDialogComponent, DataType[] | null>;
 
   sidebarVisible = false;
   treeNodes = computed(() => {
@@ -64,9 +74,13 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   });
   flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
   // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
-  selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>
+  selectedNodes = linkedSignal<TopicTreeNode[] | undefined>(() =>
     findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
   );
+  selectedKeys = computed(() => (this.selectedNodes() ?? []).map((n) => n.key));
+  searchValue = signal('');
+  // Bumped to hand the tree a fresh nzData, so it re-reads each node's expanded state.
+  private treeVersion = signal(0);
   flattenMode = signal(false);
   selectedOnly = signal(false);
 
@@ -75,6 +89,15 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   activeNodes = computed(() => {
     if (this.selectedOnly()) return this.selectedFlatNodes();
     return this.flattenMode() ? this.flatNodes() : this.treeNodes();
+  });
+  treeData = computed(() => {
+    this.treeVersion();
+    return [...this.activeNodes()];
+  });
+  // Parents of selected topics, expanded by findSelectedTreeNodes.
+  expandedKeys = computed(() => {
+    this.selectedNodes();
+    return collectExpandedKeys(this.activeNodes());
   });
 
   private presets = toSignal(this.presetService.getPresets(), { initialValue: [] as Preset[] });
@@ -109,21 +132,21 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
     this.treeNodes().forEach((n) => (n.expanded = false));
     this.topicSelectionService.clearSelection();
     this.selectedNodes.set(undefined);
+    this.treeVersion.update((v) => v + 1);
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
-      header: 'Topic Presets',
-      width: '90vw',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: {
+    this.presetDialogRef = this.modal.create<PresetDialogComponent, { dataTypes: DataType[] }, DataType[] | null>({
+      nzTitle: 'Topic Presets',
+      nzContent: PresetDialogComponent,
+      nzFooter: null,
+      nzWidth: '90vw',
+      nzData: {
         dataTypes: this.dataTypes()
       }
     });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef.afterClose.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -132,28 +155,23 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     if (this.presetDialogRef) {
-      this.presetDialogRef.close();
+      this.presetDialogRef.destroy();
     }
   }
 
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
-    if (dt) {
+  /** Branch rows toggle open; leaf rows toggle their topic (the tree has already flipped isSelected). */
+  onNodeClick(event: NzFormatEmitEvent) {
+    const { node } = event;
+    if (!node) return;
+    if (!node.isLeaf) {
+      node.isExpanded = !node.isExpanded;
+      return;
+    }
+    const dt = (node.origin as TopicTreeNode).data?.dataType;
+    if (!dt) return;
+    if (node.isSelected) {
       this.topicSelectionService.addDataType(dt);
-    }
-  }
-
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
-    if (dt) {
+    } else {
       this.topicSelectionService.removeDataType(dt);
     }
   }

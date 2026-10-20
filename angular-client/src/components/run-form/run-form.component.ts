@@ -4,9 +4,9 @@ import { DynamicFormField, FormTemplateComponent } from '../form-template/form-t
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { NzModalRef } from 'ng-zorro-antd/modal';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -22,8 +22,8 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
+  private notification = inject(NzNotificationService);
+  private ref = inject(NzModalRef);
   templateReady = false;
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
@@ -68,9 +68,12 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
+    // afterClose fires once the modal's content is torn down and then completes, so it can't be tied to destroyRef.
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result
+    this.ref.afterClose.subscribe((form: FormGroup | undefined) => {
+      if (!form) return; // closed without submitting
       if (this.selectedRun === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
+        this.notification.create('error', 'Error', 'No run selected');
         return;
       }
       updateRun(
@@ -98,7 +101,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
       if (error) {
         console.log('loading error: ', error);
       }
@@ -172,7 +175,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
       if (error) {
         console.log('loading error: ', error);
       }

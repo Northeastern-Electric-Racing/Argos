@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import {
   authenticatePw,
   getSettings,
@@ -17,7 +18,7 @@ import APIService from 'src/services/api.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
-import { Password } from 'primeng/password';
+import { NzInputModule } from 'ng-zorro-antd/input';
 import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
@@ -27,16 +28,14 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'car-command',
   templateUrl: './car-command.component.html',
   styleUrls: ['./car-command.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
   imports: [
-    Password,
+    NzInputModule,
     FormsModule,
     ButtonComponent,
     LoadingPageComponent,
@@ -45,14 +44,13 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
     InfoBackgroundComponent,
     SettingToggleComponent,
     SettingInputComponent,
-    CommandCardComponent,
-    ConfirmDialog
+    CommandCardComponent
   ]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
-  private toastService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private notification = inject(NzNotificationService);
+  private modal = inject(NzModalService);
   private destroyRef = inject(DestroyRef);
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);
@@ -99,22 +97,22 @@ export default class CarCommandComponent implements OnInit {
   }
 
   confirmSendCommand(title: string, value: number) {
-    this.confirmationService.confirm({
-      message: `Send command "${title}" with value ${value} to the car?`,
-      header: 'Confirm Command',
-      acceptLabel: 'Send',
-      rejectLabel: 'Cancel',
-      accept: () => this.sendCarCommand(title, [value])
+    this.modal.confirm({
+      nzContent: `Send command "${title}" with value ${value} to the car?`,
+      nzTitle: 'Confirm Command',
+      nzOkText: 'Send',
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.sendCarCommand(title, [value])
     });
   }
 
   private sendCarCommand(title: string, values: number[]) {
     const commandQueryResponse = this.serverService.query<string>(() => sendConfig(title, values));
     commandQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.toastService.add({ severity: 'error', summary: 'Command Failed', detail: error.message });
+      if (error) this.notification.create('error', 'Command Failed', error.message);
     });
     commandQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message) => {
-      if (message) this.toastService.add({ severity: 'success', summary: 'Success', detail: message });
+      if (message) this.notification.create('success', 'Success', message);
     });
   }
 
@@ -134,23 +132,23 @@ export default class CarCommandComponent implements OnInit {
 
   onUpdateVideosPressed = () => {
     const updateVideoQueryResponse = this.serverService.query(() => updateVideos(), { invalidates: ['videos'] });
-    this.toastService.add({
-      severity: 'success',
-      summary: 'Update Videos',
-      detail: 'A request was made for scylla to update its videos, this may take a minute, please refresh in a moment'
-    });
+    this.notification.create(
+      'success',
+      'Update Videos',
+      'A request was made for scylla to update its videos, this may take a minute, please refresh in a moment'
+    );
     updateVideoQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
     });
   };
 
   confirmSaveSettings = () => {
-    this.confirmationService.confirm({
-      message: 'Save all settings changes? This will update the live server configuration.',
-      header: 'Confirm Settings Update',
-      acceptLabel: 'Save',
-      rejectLabel: 'Cancel',
-      accept: () => this.onUpdateSettingsPressed()
+    this.modal.confirm({
+      nzContent: 'Save all settings changes? This will update the live server configuration.',
+      nzTitle: 'Confirm Settings Update',
+      nzOkText: 'Save',
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.onUpdateSettingsPressed()
     });
   };
 
@@ -166,10 +164,10 @@ export default class CarCommandComponent implements OnInit {
     if (value === undefined) return;
     const response = this.serverService.query(() => apiCall(value), { invalidates: ['settings'] });
     response.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.toastService.add({ severity: 'success', summary });
+      this.notification.create('success', summary, '');
     });
     response.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
     });
   }
 }

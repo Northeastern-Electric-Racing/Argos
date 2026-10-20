@@ -1,11 +1,10 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { CarouselPageEvent, Carousel } from 'primeng/carousel';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { NzCarouselModule } from 'ng-zorro-antd/carousel';
+import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 import { Run } from 'src/utils/types.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
-
-import { Button } from 'primeng/button';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import TypographyComponent from '../typography/typography.component';
 
 // the data for the dialog, basically just all the runs
@@ -18,44 +17,28 @@ export interface DialogData {
   templateUrl: 'carousel.component.html',
   styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Carousel, MatGridList, MatGridTile, Button, TypographyComponent]
+  imports: [NzCarouselModule, MatGridList, MatGridTile, NzButtonModule, TypographyComponent]
 })
 export class CarouselComponent {
-  public dialogRef = inject(DynamicDialogRef);
-  public config = inject(DynamicDialogConfig);
+  public dialogRef = inject(NzModalRef);
+  public data = inject(NZ_MODAL_DATA);
   public router = inject(Router);
   runs: Run[];
   currentIndex: number = 0;
-  previousIndex: number = 0;
   selectRun: (run: Run) => void = () => {
     this.dialogRef.close();
   };
 
   constructor() {
-    this.runs = this.config.data.runs;
+    this.runs = this.data.runs;
     this.selectRun = (run: Run) => {
       this.dialogRef.close();
-      this.config.data.selectRun(run);
+      this.data.selectRun(run);
     };
   }
 
   updateIndex(nexIndex: number) {
     this.currentIndex = nexIndex;
-  }
-
-  handlePageChange(event: CarouselPageEvent): void {
-    const newIndex = event.page;
-    if (newIndex) {
-      if (newIndex === this.runs.length) {
-        this.currentIndex = 0;
-      } else if (newIndex === -1) {
-        this.currentIndex = this.runs.length - 1;
-      } else {
-        this.currentIndex = newIndex;
-      }
-
-      this.previousIndex = newIndex;
-    }
   }
 
   datePipe = (date: Date) => {

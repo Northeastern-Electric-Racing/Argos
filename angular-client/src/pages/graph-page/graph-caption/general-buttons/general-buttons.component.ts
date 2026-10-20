@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { Popover } from 'primeng/popover';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzPopoverModule } from 'ng-zorro-antd/popover';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -37,14 +37,14 @@ type CustomMode = 'last-x' | 'date-range';
     RunSelectorComponent,
     ButtonComponent,
     SelectDropdownComponent,
-    Popover,
-    DatePicker,
-    InputNumberModule,
+    NzPopoverModule,
+    NzDatePickerModule,
+    NzInputNumberModule,
     FormsModule
   ]
 })
 export class GeneralButtonsComponent {
-  private toastService = inject(MessageService);
+  private notification = inject(NzNotificationService);
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
@@ -66,7 +66,7 @@ export class GeneralButtonsComponent {
   onApplyCustomLastX = input.required<(totalMinutes: number) => void>();
   onApplyCustomDateRange = input.required<(startMs: number, endMs: number) => void>();
 
-  customPopover = viewChild.required<Popover>('customPopover');
+  customPopoverOpen = signal(false);
 
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);
@@ -93,9 +93,11 @@ export class GeneralButtonsComponent {
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
 
-  toggleCustomPopover = (event?: Event) => {
-    if (event) this.customPopover().toggle(event);
-  };
+  // The popover's own click trigger opens and closes it; the button only needs a handler.
+  noop = () => {};
+
+  // Disables days after `maxDate` in the date pickers (refreshed each time the popover opens).
+  isAfterMaxDate = (date: Date): boolean => date.getTime() > this.maxDate().getTime();
 
   // Refresh the popover contents every time it opens. Without this, the From/To pickers
   // and `maxDate` go stale (component-init values) once the page has been open a while,
@@ -132,19 +134,15 @@ export class GeneralButtonsComponent {
     const minutes = this.customMinutes() ?? 0;
     const totalMinutes = Math.floor(hours * 60 + minutes);
     if (totalMinutes <= 0) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Custom range must be greater than 0 minutes.'
-      });
+      this.notification.create('warning', 'Invalid Range', 'Custom range must be greater than 0 minutes.');
       return;
     }
     if (totalMinutes > MAX_RANGE_MINUTES) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Range Too Large',
-        detail: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
-      });
+      this.notification.create(
+        'warning',
+        'Range Too Large',
+        `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
+      );
       return;
     }
     this.onApplyCustomLastX()(totalMinutes);
@@ -155,37 +153,25 @@ export class GeneralButtonsComponent {
     const to = this.customToDate();
     const now = Date.now();
     if (!from || !to) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Pick both a start and end time.'
-      });
+      this.notification.create('warning', 'Invalid Range', 'Pick both a start and end time.');
       return;
     }
     const startMs = from.getTime();
     const endMs = to.getTime();
     if (startMs >= endMs) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Start must be before end.'
-      });
+      this.notification.create('warning', 'Invalid Range', 'Start must be before end.');
       return;
     }
     if (endMs > now + 60 * 1000) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'End time cannot be in the future.'
-      });
+      this.notification.create('warning', 'Invalid Range', 'End time cannot be in the future.');
       return;
     }
     if (endMs - startMs > MAX_RANGE_MINUTES * 60 * 1000) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Range Too Large',
-        detail: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
-      });
+      this.notification.create(
+        'warning',
+        'Range Too Large',
+        `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
+      );
       return;
     }
     this.onApplyCustomDateRange()(startMs, endMs);

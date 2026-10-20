@@ -1,16 +1,16 @@
 import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { TreeNode } from 'primeng/api';
-import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNodeData } from './tree.utils';
+import { collectExpandedKeys, compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TopicTreeNode } from './tree.utils';
 import { DataType, Node } from './types.utils';
 
 const EMPTY_DISPLAY = signal('');
 
-const leaf = (name: string, unit = ''): TreeNode<TreeNodeData> => {
+const leaf = (name: string, unit = ''): TopicTreeNode => {
   const dataType: DataType = { name, unit };
   return {
-    label: name.split('/').pop(),
+    title: name.split('/').pop()!,
     key: name + '/',
+    isLeaf: true,
     selectable: true,
     children: [],
     data: {
@@ -23,9 +23,10 @@ const leaf = (name: string, unit = ''): TreeNode<TreeNodeData> => {
   };
 };
 
-const branch = (name: string, children: TreeNode<TreeNodeData>[]): TreeNode<TreeNodeData> => ({
-  label: name,
+const branch = (name: string, children: TopicTreeNode[]): TopicTreeNode => ({
+  title: name,
   key: name + '/',
+  isLeaf: false,
   selectable: false,
   children,
   data: {
@@ -74,13 +75,13 @@ describe('flattenTreeNodes', () => {
     const tree = [branch('BMS', [branch('Pack', [leaf('BMS/Pack/Voltage')])])];
     const flat = flattenTreeNodes(tree);
     expect(flat.length).toBe(1);
-    expect(flat[0].label).toBe('BMS/Pack/Voltage');
+    expect(flat[0].title).toBe('BMS/Pack/Voltage');
   });
 
   it('compacts long paths using firstSegment...tail', () => {
     const tree = [branch('BMS', [leaf('BMS/PerCell/AlphaSomething/1/Burning/0')])];
     const flat = flattenTreeNodes(tree, 30);
-    expect(flat[0].label).toBe('BMS...1/Burning/0');
+    expect(flat[0].title).toBe('BMS...1/Burning/0');
   });
 
   it('preserves the leaf data so displayValue stays wired', () => {
@@ -98,7 +99,7 @@ describe('flattenTreeNodes', () => {
       leaf('Aux/Sensor/Zeta')
     ];
     const flat = flattenTreeNodes(tree);
-    const labels = flat.map((n) => n.label);
+    const labels = flat.map((n) => n.title);
     expect(labels).toEqual(['Aux/Sensor/Zeta', 'BMS/Pack/SoC', 'BMS/Pack/Voltage', 'MPU/State/Speed']);
   });
 
@@ -119,7 +120,7 @@ describe('filterSelectedNodes', () => {
     expect(result).toEqual([voltage, speed]);
   });
 
-  it('preserves original node references so PrimeNG selection-by-ref works', () => {
+  it('preserves original node references so live values and tree state carry over', () => {
     const [match] = filterSelectedNodes(flat, [voltage.data!.dataType]);
     expect(match).toBe(voltage);
   });
@@ -132,5 +133,15 @@ describe('filterSelectedNodes', () => {
     const ghost: DataType = { name: 'Does/Not/Exist', unit: '' };
     const result = filterSelectedNodes(flat, [ghost, soc.data!.dataType]);
     expect(result).toEqual([soc]);
+  });
+});
+
+describe('collectExpandedKeys', () => {
+  it('returns the keys of expanded nodes at any depth', () => {
+    const pack = branch('Pack', [leaf('BMS/Pack/Voltage')]);
+    const bms = branch('BMS', [pack]);
+    bms.expanded = true;
+    pack.expanded = true;
+    expect(collectExpandedKeys([bms, branch('MPU', [])])).toEqual(['BMS/', 'Pack/']);
   });
 });

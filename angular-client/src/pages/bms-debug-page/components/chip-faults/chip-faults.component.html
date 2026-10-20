@@ -1,26 +1,26 @@
 <info-background [title]="this.title" svgIcon="battery_charging_2">
   <div style="padding-top: 20px"></div>
-  <p-table
-    selectionMode="single"
-    stripedRows
-    [value]="this.chipFaults"
-    [scrollable]="true"
-    scrollHeight="300px"
-    [(selection)]="selectedFault"
-    (onRowSelect)="onRowSelect()"
+  <nz-table
+    #faultsTable
+    nzSize="small"
+    [nzData]="this.chipFaults"
+    [nzFrontPagination]="false"
+    [nzShowPagination]="false"
+    [nzScroll]="{ y: '300px' }"
   >
-    <ng-template #header>
+    <thead>
       <tr>
         <th>Name</th>
         <th>Occurred At</th>
       </tr>
-    </ng-template>
-    <div style="width: 100%; padding-right: 5px; padding-left: 0px" class="fault-text-body"></div>
-    <ng-template #body let-fault>
-      <tr [pSelectableRow]="fault">
-        <td>{{ fault.name }}</td>
-        <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
+    </thead>
+    <tbody>
+      @for (fault of faultsTable.data; track $index) {
+        <tr class="fault-row" tabindex="0" (click)="onRowSelect(fault)" (keydown.enter)="onRowSelect(fault)">
+          <td>{{ fault.name }}</td>
+          <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
 </info-background>
