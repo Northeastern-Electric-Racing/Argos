@@ -52,6 +52,6 @@ describe('ButtonComponent', () => {
     const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
     button.click();
     expect(received).toBeDefined();
-    expect(received instanceof Event).toBeTrue();
+    expect(received instanceof Event).toBe(true);
   });
 });

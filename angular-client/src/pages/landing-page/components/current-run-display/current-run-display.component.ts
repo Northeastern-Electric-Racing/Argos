@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 
@@ -10,7 +10,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
   selector: 'current-run-display',
   templateUrl: './current-run-display.component.html',
   styleUrl: './current-run-display.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent]
 })
 export class CurrentRunDisplayComponent implements OnInit {

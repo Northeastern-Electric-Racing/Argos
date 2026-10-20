@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import Theme from 'src/services/theme.service';
 
@@ -20,7 +20,7 @@ import Theme from 'src/services/theme.service';
   selector: 'info-panel',
   templateUrl: './info-panel.component.html',
   styleUrl: './info-panel.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon]
 })
 export class InfoPanelComponent {

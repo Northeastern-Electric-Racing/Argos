@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -11,8 +11,8 @@ import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobil
   selector: 'battery-info-display',
   templateUrl: './battery-info-display.html',
   styleUrls: ['./battery-info-display.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

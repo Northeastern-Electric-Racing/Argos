@@ -6,7 +6,6 @@ import { Run } from 'src/utils/types.utils';
   selector: 'general-display-info',
   templateUrl: './general-display-info.component.html',
   styleUrl: './general-display-info.component.css',
-  standalone: true,
   imports: [TypographyComponent]
 })
 export class GeneralDisplayInfoComponent {

@@ -92,7 +92,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
     push(storage, topics.alphaOw(SEGMENT, CELL), '1');
 
-    expect(alphaCell(CELL)?.boolValue).toBeTrue();
+    expect(alphaCell(CELL)?.boolValue).toBe(true);
     expect(component.getColor(alphaCell(CELL)!)).toBe('#dc2626');
   });
 
@@ -100,7 +100,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
     push(storage, topics.alphaOw(SEGMENT, CELL), '0');
 
-    expect(alphaCell(CELL)?.boolValue).toBeFalse();
+    expect(alphaCell(CELL)?.boolValue).toBe(false);
     expect(component.getColor(alphaCell(CELL)!)).toBe('#16a34a');
   });
 
@@ -118,10 +118,10 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     push(storage, topics.alphaOw(SEGMENT, CELL), '1');
 
     heatMap.setCurrentView(SEGMENT, HeatMapView.CvsFailure);
-    expect(alphaCell(CELL)?.boolValue).toBeFalse();
+    expect(alphaCell(CELL)?.boolValue).toBe(false);
 
     heatMap.setCurrentView(SEGMENT, HeatMapView.OpenWire);
-    expect(alphaCell(CELL)?.boolValue).toBeTrue();
+    expect(alphaCell(CELL)?.boolValue).toBe(true);
   });
 
   it('keeps C Volts and S Volts as independent readings for the same cell', () => {

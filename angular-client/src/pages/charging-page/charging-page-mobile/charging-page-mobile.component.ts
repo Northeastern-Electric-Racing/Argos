@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -23,7 +23,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   selector: 'charging-page-mobile',
   templateUrl: './charging-page-mobile.component.html',
   styleUrls: ['./charging-page-mobile.component.css'],
-  standalone: true,
   imports: [
     DividerComponent,
     DatePipe,
@@ -41,6 +40,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
     HStackComponent,
     SidebarToggleComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

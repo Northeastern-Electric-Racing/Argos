@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { GraphData } from 'src/utils/types.utils';
 import { DoubleLineGraphComponent } from '../../../../../components/double-line-graph/double-line-graph.component';
@@ -7,7 +7,7 @@ import { DoubleLineGraphComponent } from '../../../../../components/double-line-
   selector: 'high-low-cell-graph',
   templateUrl: './high-low-cell-graph.component.html',
   styleUrls: ['./high-low-cell-graph.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [DoubleLineGraphComponent]
 })
 export default class HighLowCellGraphComponent {

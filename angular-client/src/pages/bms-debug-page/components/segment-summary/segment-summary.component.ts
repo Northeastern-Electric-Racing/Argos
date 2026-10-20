@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
@@ -15,7 +15,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'segment-summary',
   templateUrl: './segment-summary.component.html',
   styleUrl: './segment-summary.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
 })
 export class SegmentSummaryComponent implements OnInit {

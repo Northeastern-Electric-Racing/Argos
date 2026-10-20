@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 export interface StatConfig {
   label: string;
@@ -11,7 +11,7 @@ export interface StatConfig {
   selector: 'stat-summary',
   templateUrl: './stat-summary.component.html',
   styleUrl: './stat-summary.component.css',
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class StatSummaryComponent {
   configs = input.required<StatConfig[]>();

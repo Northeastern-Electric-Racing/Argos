@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import TypographyComponent from '../typography/typography.component';
@@ -12,7 +12,7 @@ import TypographyComponent from '../typography/typography.component';
   selector: 'circular-percentage',
   templateUrl: './circular-percentage.component.html',
   styleUrls: ['./circular-percentage.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class CircularPercentageComponent {

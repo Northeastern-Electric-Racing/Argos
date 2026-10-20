@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { EFUSE_TOPICS } from '../../efuses-page.topics';
@@ -13,7 +13,7 @@ import IndicatorLightComponent from '../indicator-light/indicator-light.componen
   selector: 'rtds-debug-card',
   templateUrl: './rtds-debug-card.component.html',
   styleUrls: ['./rtds-debug-card.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
     VStackComponent,
