@@ -59,6 +59,8 @@ html,
 body {
   height: 100%;
   font-family: var(--font-family);
+  /* Tailwind's preflight sets 1.5; the existing layouts were built on the browser default. */
+  line-height: normal;
 }
 body {
   margin: 0;
@@ -172,4 +174,14 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/*
+ * Dialogs opened through HlmDialogService render our component as the only child of
+ * hlm-dialog-content, so lay its header, body and footer out with the content's own gap.
+ */
+hlm-dialog-content > :not([data-slot='button']) {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
 }
