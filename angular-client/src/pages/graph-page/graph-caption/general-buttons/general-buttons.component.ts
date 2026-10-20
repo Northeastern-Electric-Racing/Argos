@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { ToastService } from 'src/services/toast.service';
 import { FormsModule } from '@angular/forms';
 import { TuiActiveZone, TuiDay, TuiTime } from '@taiga-ui/cdk';
-import { TuiCalendar, TuiDropdown, TuiTextfield } from '@taiga-ui/core';
+import { TuiCalendar, tuiDateFormatProvider, TuiDropdown, TuiTextfield } from '@taiga-ui/core';
 import { TuiInputDateTime, TuiInputNumber } from '@taiga-ui/kit';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
@@ -46,6 +46,8 @@ export function fromDayTime([day, time]: readonly [TuiDay, TuiTime?]): Date {
   templateUrl: './general-buttons.component.html',
   styleUrl: './general-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Same yyyy-mm-dd dates the PrimeNG date picker showed
+  providers: [tuiDateFormatProvider({ mode: 'yyyy/mm/dd', separator: '-' })],
   imports: [
     RunSelectorComponent,
     ButtonComponent,

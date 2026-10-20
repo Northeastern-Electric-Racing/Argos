@@ -6,7 +6,7 @@
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
   <tui-accordion [closeOthers]="false">
-    @for (node of nodeArray; track node) {
+    @for (node of nodeArray; track node.node) {
       <button tuiAccordion type="button">{{ node.node }}</button>
       <tui-expand>
         <table tuiTable size="m" class="fault-table">

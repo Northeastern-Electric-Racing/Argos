@@ -99,6 +99,8 @@ body {
   --tui-background-accent-1-hover: #f26a6c;
   --tui-background-accent-1-pressed: #c9383a;
   --tui-text-primary-on-accent-1: #fff;
+  --tui-text-action: #f26a6c;
+  --tui-text-action-hover: #ef4345;
 }
 
 /* tui-root sets Taiga's 14px/20px body font; the app's own components are sized for the browser default

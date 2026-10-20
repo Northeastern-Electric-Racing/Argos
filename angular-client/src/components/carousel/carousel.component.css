@@ -9,6 +9,11 @@
   min-width: 0;
 }
 
+/* Taiga centres each item in a full-width slot; let the run card fill it */
+.slide {
+  inline-size: 100%;
+}
+
 .select-button-container {
   width: 100%;
   text-align: center;
