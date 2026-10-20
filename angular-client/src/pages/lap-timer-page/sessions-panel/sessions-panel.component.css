@@ -194,10 +194,13 @@
 }
 
 .session-menu-item {
-  display: flex;
+  min-width: 160px;
+}
+/* nz-menu-item wraps its content in a title span: lay the icon and label out inside it */
+.session-menu-item ::ng-deep .ant-menu-title-content {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-width: 160px;
 }
 
 /* Shared 18px icon sizing for the state icon and menu icons. */
