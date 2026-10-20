@@ -1,1 +1,6 @@
-<config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
+<div cdkDrag cdkDragRootElement=".cdk-overlay-pane" class="cell-view">
+  <hlm-dialog-header cdkDragHandle class="drag-handle">
+    <h2 hlmDialogTitle>Cell Comparison</h2>
+  </hlm-dialog-header>
+  <config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
+</div>

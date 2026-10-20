@@ -1,7 +1,9 @@
 import { Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideArrowRight, lucideBellOff, lucideX } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
 
@@ -12,7 +14,8 @@ export type NotificationListVariant = 'popover' | 'stream';
   templateUrl: './notification-list.component.html',
   styleUrls: ['./notification-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button]
+  imports: [DatePipe, HlmButton, NgIcon],
+  providers: [provideIcons({ lucideArrowRight, lucideBellOff, lucideX })]
 })
 export class NotificationListComponent {
   protected notificationLogService = inject(NotificationLogService);

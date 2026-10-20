@@ -218,8 +218,9 @@
   outline: none;
 }
 
-.entry-dismiss .pi {
-  font-size: 0.7rem;
+.entry-dismiss ng-icon,
+.view-all-button ng-icon {
+  font-size: 0.8rem;
 }
 
 /* ---- Empty state ---- */
@@ -286,10 +287,6 @@
   color: #ef4345;
   background-color: #ef434514;
   outline: none;
-}
-
-.view-all-button .pi {
-  font-size: 0.72rem;
 }
 
 /* ---- Mobile ---- */

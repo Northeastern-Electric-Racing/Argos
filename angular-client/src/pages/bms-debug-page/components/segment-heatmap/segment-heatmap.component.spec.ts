@@ -1,6 +1,5 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DialogService } from 'primeng/dynamicdialog';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
@@ -36,13 +35,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SegmentHeatmapComponent],
-      providers: [
-        provideZonelessChangeDetection(),
-        Storage,
-        CellService,
-        HeatMapService,
-        { provide: DialogService, useValue: {} }
-      ]
+      providers: [provideZonelessChangeDetection(), Storage, CellService, HeatMapService]
     }).compileComponents();
 
     storage = TestBed.inject(Storage);

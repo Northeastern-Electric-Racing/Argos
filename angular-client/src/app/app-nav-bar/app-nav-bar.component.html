@@ -1,9 +1,11 @@
 @if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
+  <hlm-sheet side="left" [state]="sidebarVisible ? 'open' : 'closed'" (stateChanged)="onSidebarStateChanged($event)">
+    <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-80 overflow-y-auto">
+      <hlm-sheet-header>
+        <h2 hlmSheetTitle class="text-center">
+          <typography variant="large-header" content="Argos" />
+        </h2>
+      </hlm-sheet-header>
       @for (navItem of allNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
@@ -13,8 +15,8 @@
         >
         </sidebar-chip>
       }
-    </ng-template>
-  </p-drawer>
+    </hlm-sheet-content>
+  </hlm-sheet>
 } @else {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">
@@ -50,25 +52,25 @@
         additionalStyles="fontSize: 36px"
       />
       <messages-per-second />
-      <button
-        type="button"
-        class="navbar-notification"
-        aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
-      >
-        <mat-icon [svgIcon]="'notifications'" />
-        @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
-        }
-      </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
+      <hlm-popover align="end" sideOffset="8" (stateChanged)="onNotificationPanelStateChanged($event)">
+        <button hlmPopoverTrigger type="button" class="navbar-notification" aria-label="Notifications">
+          <mat-icon [svgIcon]="'notifications'" />
+          @if (notificationLogService.unreadCount() > 0) {
+            <span hlmBadge variant="destructive" class="notification-badge">{{ notificationLogService.unreadCount() }}</span>
+          }
+        </button>
+        <hlm-popover-content *hlmPopoverPortal="let ctx" class="notification-popover w-auto p-0">
           <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
-        <mat-icon [svgIcon]="'apps'" />
-      </div>
+        </hlm-popover-content>
+      </hlm-popover>
+      <hlm-popover #menuPopover align="end" sideOffset="8" (stateChanged)="menuOpen = $event === 'open'">
+        <button hlmPopoverTrigger type="button" class="navbar-menu" [class.selected]="menuOpen" aria-label="More pages">
+          <mat-icon [svgIcon]="'apps'" />
+        </button>
+        <hlm-popover-content *hlmPopoverPortal="let ctx" class="w-auto p-0">
+          <app-nav-options-menu [menuItems]="navMenuItems" (itemSelected)="closeMenu()" />
+        </hlm-popover-content>
+      </hlm-popover>
     </hstack>
   </nav>
 }

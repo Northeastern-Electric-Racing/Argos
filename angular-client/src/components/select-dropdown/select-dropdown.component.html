@@ -1,9 +1,10 @@
-<p-select
-  class="small-grey-select"
-  [options]="options()"
-  [(ngModel)]="selectedOption"
-  optionLabel="name"
-  [placeholder]="placeholder()"
-  (onChange)="handleChangedOption($event)"
-  appendTo="body"
-></p-select>
+<hlm-select [value]="selectedName()" (valueChange)="handleChangedOption($event)">
+  <hlm-select-trigger size="sm" class="small-grey-select w-full">
+    <hlm-select-value [placeholder]="placeholder()" />
+  </hlm-select-trigger>
+  <hlm-select-content *hlmSelectPortal class="max-h-80">
+    @for (option of options(); track option.name) {
+      <hlm-select-item [value]="option.name">{{ option.name }}</hlm-select-item>
+    }
+  </hlm-select-content>
+</hlm-select>

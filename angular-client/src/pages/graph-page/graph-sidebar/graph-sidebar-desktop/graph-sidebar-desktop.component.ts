@@ -12,10 +12,10 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.component';
+import { HlmSwitch } from '@spartan-ng/helm/switch';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -30,6 +30,7 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
+  TreeNode,
   TreeNodeData
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
@@ -43,15 +44,15 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent, Tree, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [ButtonComponent, TopicTreeComponent, TypographyComponent, HlmSwitch, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(HlmDialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
+  private presetDialogRef?: BrnDialogRef<DataType[] | null>;
 
   dataTypes = input<DataType[]>([]);
   treeNodes = computed(() => {
@@ -105,18 +106,14 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
-      header: 'Topic Presets',
-      width: '640px',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: {
+    this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
+      contentClass: 'sm:max-w-[640px]',
+      context: {
         dataTypes: this.dataTypes()
       }
     });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef?.closed$.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -129,23 +126,15 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
     }
   }
 
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
+  nodeSelect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.addDataType(dt);
     }
   }
 
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
+  onNodeUnselect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
     }

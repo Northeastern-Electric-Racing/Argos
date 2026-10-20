@@ -68,17 +68,6 @@
 .sessions-table-wrap::-webkit-scrollbar-track {
   background: transparent;
 }
-
-/* Body font shared by the table, rename input, and menu items. */
-.sessions-table-wrap :where(.p-datatable),
-.session-rename-input,
-.session-menu-item {
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-}
-.sessions-table-wrap :where(.p-datatable) {
-  color: var(--color-text-primary);
-}
 .sessions-table-wrap :where(th) {
   font-weight: 600;
   background: transparent;
@@ -165,17 +154,7 @@
 .session-rename-input {
   width: 100%;
   min-width: 0;
-  background: transparent;
-  border: 1px solid var(--color-divider);
-  border-radius: 4px;
-  color: var(--color-text-primary);
   font-weight: 600;
-  padding: 2px 6px;
-  outline: none;
-  box-sizing: border-box;
-}
-.session-rename-input:focus {
-  border-color: var(--color-battery-high);
 }
 
 .session-menu-btn {
@@ -193,33 +172,10 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-.session-menu-list {
-  display: flex;
-  flex-direction: column;
-  min-width: 160px;
-}
-.session-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  text-align: left;
-}
-.session-menu-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-.session-menu-item.destructive {
-  color: var(--color-battery-low);
-}
-
 /* Shared 18px icon sizing for the state icon and menu icons. */
 .session-state-icon,
 .session-menu-btn mat-icon,
-.session-menu-item mat-icon {
+hlm-dropdown-menu mat-icon {
   font-size: 18px;
   width: 18px;
   height: 18px;

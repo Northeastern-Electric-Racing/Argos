@@ -96,16 +96,8 @@
   width: 80px !important;
 }
 
-::ng-deep .time-range-input .p-inputnumber-input {
-  width: 100% !important;
-}
-
 ::ng-deep .y-axis-input {
   width: 60px !important;
-}
-
-::ng-deep .y-axis-input .p-inputnumber-input {
-  width: 100% !important;
 }
 
 /* ======================== Mobile ======================== */
@@ -171,11 +163,5 @@
 
   ::ng-deep .y-axis-input {
     width: 55px !important;
-  }
-
-  ::ng-deep .p-select-label,
-  ::ng-deep .p-select-label.p-placeholder {
-    width: auto !important;
-    min-width: 100px;
   }
 }

@@ -1,7 +1,9 @@
 import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { TableModule } from 'primeng/table';
-import { Button } from 'primeng/button';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideBellOff, lucideTrash2, lucideX } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 
@@ -10,7 +12,8 @@ import { NotificationLogService } from 'src/services/notification-log.service';
   templateUrl: './notification-log-page.component.html',
   styleUrls: ['./notification-log-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, DatePipe, Button, TypographyComponent]
+  imports: [HlmTableImports, DatePipe, HlmButton, NgIcon, TypographyComponent],
+  providers: [provideIcons({ lucideBellOff, lucideTrash2, lucideX })]
 })
 export default class NotificationLogPageComponent {
   protected notificationLogService = inject(NotificationLogService);

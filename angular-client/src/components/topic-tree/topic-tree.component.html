@@ -1,0 +1,57 @@
+<div class="topic-tree">
+  <div hlmInputGroup class="tree-filter">
+    <input
+      hlmInputGroupInput
+      type="search"
+      [placeholder]="filterPlaceholder()"
+      [value]="filter()"
+      (input)="onFilterInput($event)"
+      aria-label="Filter topics"
+    />
+    <div hlmInputGroupAddon>
+      <ng-icon name="lucideSearch" />
+    </div>
+  </div>
+  <ul class="tree-list" role="tree" aria-label="Topics" aria-multiselectable="true" [style.height]="height()">
+    <ng-container *ngTemplateOutlet="branch; context: { $implicit: nodes(), level: 1 }" />
+  </ul>
+</div>
+
+<ng-template #branch let-nodes let-level="level">
+  @for (node of nodes; track node.key ?? node.label) {
+    @if (isShown(node)) {
+      <li
+        role="treeitem"
+        [attr.aria-level]="level"
+        [attr.aria-expanded]="isBranch(node) ? isExpanded(node) : null"
+        [attr.aria-selected]="node.selectable ? isSelected(node) : null"
+      >
+        <div
+          class="tree-row"
+          tabindex="0"
+          [class.selected]="isSelected(node)"
+          [style.padding-left.rem]="0.25 + (level - 1) * 1.25"
+          (click)="activate(node)"
+          (keydown)="onKeydown($event, node)"
+        >
+          @if (isBranch(node)) {
+            <ng-icon class="toggler" [name]="isExpanded(node) ? 'lucideChevronDown' : 'lucideChevronRight'" />
+          } @else {
+            <span class="toggler" aria-hidden="true"></span>
+          }
+          <div class="tree-node-content">
+            <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
+            @if (!isBranch(node) && node.data) {
+              <typography [content]="node.data.displayValue()" variant="subheader" />
+            }
+          </div>
+        </div>
+        @if (isBranch(node) && isExpanded(node)) {
+          <ul role="group">
+            <ng-container *ngTemplateOutlet="branch; context: { $implicit: node.children, level: level + 1 }" />
+          </ul>
+        }
+      </li>
+    }
+  }
+</ng-template>

@@ -1,5 +1,3 @@
-import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import {
@@ -8,9 +6,8 @@ import {
   bootstrapApplication,
   withNoIncrementalHydration
 } from '@angular/platform-browser';
-import Lara from '@primeuix/themes/aura';
-import { providePrimeNG } from 'primeng/config';
 import { provideRouter } from '@angular/router';
+import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { routes } from './app/app-routing.module';
 import { importProvidersFrom, provideZonelessChangeDetection } from '@angular/core';
 import AppContextComponent from './app/context/app-context.component';
@@ -18,19 +15,11 @@ import AppContextComponent from './app/context/app-context.component';
 bootstrapApplication(AppContextComponent, {
   providers: [
     provideRouter(routes),
-    importProvidersFrom(BrowserModule, DynamicDialogModule),
-    DialogService,
-    MessageService,
+    importProvidersFrom(BrowserModule),
     ChipFaultPipe,
     provideHttpClient(withInterceptorsFromDi()),
-    providePrimeNG({
-      theme: {
-        preset: Lara,
-        options: {
-          darkModeSelector: '.dark-mode-always'
-        }
-      }
-    }),
+    // Keeps CDK overlays (dialogs, sheets, popovers) layered above the Sonner toaster.
+    provideSpartanHlm(),
     provideClientHydration(withNoIncrementalHydration()),
     provideZonelessChangeDetection()
   ]

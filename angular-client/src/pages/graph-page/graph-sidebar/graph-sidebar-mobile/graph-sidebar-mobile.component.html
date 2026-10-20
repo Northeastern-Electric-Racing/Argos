@@ -1,10 +1,12 @@
 <button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
-<p-drawer [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
-  <ng-template #header>
-    <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
-  </ng-template>
-  <ng-template #content>
+<hlm-sheet side="right" [state]="sidebarVisible ? 'open' : 'closed'" (stateChanged)="sidebarVisible = $event === 'open'">
+  <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-[85vw] sm:max-w-none">
+    <hlm-sheet-header>
+      <h2 hlmSheetTitle class="text-center">
+        <typography variant="large-header" content="Topics" />
+      </h2>
+    </hlm-sheet-header>
     <div class="sidebar-content">
       <div class="presets-row">
         <select-dropdown
@@ -29,42 +31,29 @@
       <div class="toggle-group">
         <label class="flatten-toggle">
           <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
-          <p-toggleswitch
-            [ngModel]="selectedOnly()"
-            (ngModelChange)="toggleSelectedOnly($event)"
-            ariaLabel="Show only selected topics"
+          <hlm-switch
+            [checked]="selectedOnly()"
+            (checkedChange)="toggleSelectedOnly($event)"
+            aria-label="Show only selected topics"
           />
         </label>
         <label class="flatten-toggle">
           <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-          <p-toggleswitch
-            [ngModel]="flattenMode()"
-            (ngModelChange)="toggleFlattenMode($event)"
-            ariaLabel="Flatten topic tree"
+          <hlm-switch
+            [checked]="flattenMode()"
+            (checkedChange)="toggleFlattenMode($event)"
+            aria-label="Flatten topic tree"
           />
         </label>
       </div>
-      <p-tree
-        [value]="activeNodes()"
-        (onNodeSelect)="nodeSelect($event)"
-        (onNodeUnselect)="onNodeUnselect($event)"
+      <topic-tree
+        [nodes]="activeNodes()"
         [(selection)]="selectedNodes"
-        [filter]="true"
+        (nodeSelect)="nodeSelect($event)"
+        (nodeUnselect)="onNodeUnselect($event)"
         filterPlaceholder="Search topics..."
-        styleClass="w-full"
-        [style]="{ height: 'calc(100vh - 160px)', overflow: 'auto' }"
-        [metaKeySelection]="false"
-        selectionMode="multiple"
-      >
-        <ng-template let-node #node>
-          <div class="tree-node-container" (click)="onRowClick($event, node)">
-            <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
-            @if (node.children?.length === 0) {
-              <typography [content]="node.data.displayValue()" variant="subheader" />
-            }
-          </div>
-        </ng-template>
-      </p-tree>
+        height="calc(100vh - 220px)"
+      />
     </div>
-  </ng-template>
-</p-drawer>
+  </hlm-sheet-content>
+</hlm-sheet>

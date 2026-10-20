@@ -17,7 +17,7 @@
       [placeholder]="quickSelectConfig().placeholder"
       [defaultValue]="selectedPresetLabel()"
     />
-    <div class="custom-stack">
+    <div class="custom-stack" #customAnchor>
       <argos-button
         [onClick]="toggleCustomPopover"
         label="Custom"
@@ -34,8 +34,14 @@
     </div>
   </div>
 
-  <p-popover #customPopover styleClass="custom-range-popover" (onShow)="onCustomPopoverShow()">
-    <ng-template #content>
+  <hlm-popover
+    align="start"
+    sideOffset="8"
+    [attachTo]="customAnchor"
+    [state]="customPopoverOpen() ? 'open' : 'closed'"
+    (stateChanged)="onCustomPopoverStateChanged($event)"
+  >
+    <hlm-popover-content *hlmPopoverPortal="let ctx" class="w-auto">
       <div class="custom-popover-body">
         <div class="mode-toggle">
           <button
@@ -59,26 +65,30 @@
         @if (customMode() === 'last-x') {
           <div class="mode-body">
             <div class="field-row">
-              <label class="popover-label">Hours</label>
-              <p-inputnumber
+              <label hlmLabel class="popover-label" for="custom-hours">Hours</label>
+              <input
+                hlmInput
+                id="custom-hours"
+                type="number"
+                class="h-8 text-xs"
                 [ngModel]="customHours()"
                 (ngModelChange)="customHours.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
+                min="0"
+                step="1"
                 placeholder="0"
               />
             </div>
             <div class="field-row">
-              <label class="popover-label">Minutes</label>
-              <p-inputnumber
+              <label hlmLabel class="popover-label" for="custom-minutes">Minutes</label>
+              <input
+                hlmInput
+                id="custom-minutes"
+                type="number"
+                class="h-8 text-xs"
                 [ngModel]="customMinutes()"
                 (ngModelChange)="customMinutes.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
+                min="0"
+                step="1"
                 placeholder="30"
               />
             </div>
@@ -92,32 +102,48 @@
         } @else {
           <div class="mode-body">
             <div class="field-row">
-              <label class="popover-label">From</label>
-              <p-datepicker
-                [ngModel]="customFromDate()"
-                (ngModelChange)="customFromDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
-              />
+              <span class="popover-label">From</span>
+              <div class="date-time-row">
+                <hlm-date-picker
+                  [date]="customFromDate()"
+                  (dateChange)="customFromDate.set(withDay(customFromDate(), $event))"
+                  [maxDate]="maxDate()"
+                  [formatDate]="formatDay"
+                >
+                  <hlm-date-picker-trigger buttonId="custom-from-date" class="h-8 text-xs" />
+                </hlm-date-picker>
+                <input
+                  hlmInput
+                  type="time"
+                  step="1"
+                  class="time-input h-8 text-xs"
+                  [value]="timeOf(customFromDate())"
+                  (change)="customFromDate.set(withTime(customFromDate(), $any($event.target).value))"
+                  aria-label="From time"
+                />
+              </div>
             </div>
             <div class="field-row">
-              <label class="popover-label">To</label>
-              <p-datepicker
-                [ngModel]="customToDate()"
-                (ngModelChange)="customToDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
-              />
+              <span class="popover-label">To</span>
+              <div class="date-time-row">
+                <hlm-date-picker
+                  [date]="customToDate()"
+                  (dateChange)="customToDate.set(withDay(customToDate(), $event))"
+                  [maxDate]="maxDate()"
+                  [formatDate]="formatDay"
+                >
+                  <hlm-date-picker-trigger buttonId="custom-to-date" class="h-8 text-xs" />
+                </hlm-date-picker>
+                <input
+                  hlmInput
+                  type="time"
+                  step="1"
+                  class="time-input h-8 text-xs"
+                  [value]="timeOf(customToDate())"
+                  (change)="customToDate.set(withTime(customToDate(), $any($event.target).value))"
+                  aria-label="To time"
+                />
+              </div>
             </div>
             <argos-button
               [onClick]="applyCustomDateRange"
@@ -128,6 +154,6 @@
           </div>
         }
       </div>
-    </ng-template>
-  </p-popover>
+    </hlm-popover-content>
+  </hlm-popover>
 </div>

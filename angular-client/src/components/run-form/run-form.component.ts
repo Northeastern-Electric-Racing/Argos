@@ -4,9 +4,10 @@ import { DynamicFormField, FormTemplateComponent } from '../form-template/form-t
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
+import { toast } from '@spartan-ng/brain/sonner';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -17,13 +18,12 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
   templateUrl: './run-form.component.html',
   styleUrl: './run-form.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
+  imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent, HlmDialogImports]
 })
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
+  private ref = inject(BrnDialogRef);
   templateReady = false;
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
@@ -68,9 +68,13 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- closed$ completes when the dialog closes
+    this.ref.closed$.subscribe((result) => {
+      const form = result as FormGroup | undefined;
+      // Closed with the X or Escape: nothing to save.
+      if (!form) return;
       if (this.selectedRun === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
+        toast.error('Error', { description: 'No run selected' });
         return;
       }
       updateRun(
@@ -98,7 +102,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) toast.error('Error', { description: error.message });
       if (error) {
         console.log('loading error: ', error);
       }
@@ -172,7 +176,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) toast.error('Error', { description: error.message });
       if (error) {
         console.log('loading error: ', error);
       }

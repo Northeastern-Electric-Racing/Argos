@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { NgClass } from '@angular/common';
-import { ButtonDirective } from 'primeng/button';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
+import { HlmInput } from '@spartan-ng/helm/input';
 
 type anyType = string | number | boolean | undefined;
 
@@ -29,15 +29,13 @@ export interface DynamicFormField {
   templateUrl: './form-template.component.html',
   styleUrl: './form-template.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
+  imports: [ReactiveFormsModule, HlmInput, HlmButton, HlmFieldImports]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
-  public config = inject(DynamicDialogConfig);
-
   fields = input.required<DynamicFormField[]>();
 
-  public ref = inject(DynamicDialogRef);
+  public ref = inject(BrnDialogRef);
 
   formData = input<Map<string, anyType>>(new Map());
   submitForm = output<FormGroup>();

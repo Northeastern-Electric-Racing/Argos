@@ -1,3 +1,13 @@
 :host {
   display: block;
 }
+
+.cell-view {
+  display: grid;
+  gap: 12px;
+}
+
+.drag-handle {
+  cursor: move;
+  padding-right: 2.5rem;
+}

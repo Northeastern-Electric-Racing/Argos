@@ -91,23 +91,7 @@
   right: 2px;
 }
 
-:host {
-  --p-dialog-background: transparent !important;
-  --p-dialog-border-color: transparent !important;
-}
-
-:host ::ng-deep .notification-popover.p-popover {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  border-radius: var(--border-radius-panel) !important;
-}
-
-:host ::ng-deep .notification-popover .p-popover-content {
-  padding: 0 !important;
-  background: transparent !important;
-}
-
-:host ::ng-deep .notification-popover .p-popover-arrow {
-  display: none !important;
+.notification-popover {
+  overflow: hidden;
+  border-radius: var(--border-radius-panel);
 }

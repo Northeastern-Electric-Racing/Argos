@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
-import { DialogService } from 'primeng/dynamicdialog';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
@@ -17,11 +17,10 @@ type ChartOptions = Pick<
   selector: 'graph-component',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  providers: [DialogService],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class GraphComponent implements OnInit, OnDestroy {
-  public dialogService = inject(DialogService);
+  public dialogService = inject(HlmDialogService);
   data = input.required<GraphData[]>();
   color = input.required<string>(); // Must be hex
   title = input<string | undefined>(undefined);
@@ -118,8 +117,8 @@ export class GraphComponent implements OnInit, OnDestroy {
   timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
-      header: this.title(),
-      data: {
+      contentClass: 'sm:max-w-fit',
+      context: {
         data: this.data(),
         color: this.color(),
         title: this.title(),
