@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
@@ -60,11 +60,17 @@ export class AddRuleDialogComponent implements OnInit {
       });
   }
 
-  private topicQuery = toSignal(this.form.controls.topic.valueChanges, { initialValue: '' });
+  /**
+   * The typed topic text. Read from the input, not the control: with requireSelection the control
+   * only takes a value once a listed topic is picked.
+   */
+  topicQuery = signal('');
 
   /** Topics matching what's typed, on the full path or any of its segments. */
   filteredTopics = computed(() => {
-    const search = (this.topicQuery() ?? '').toLowerCase();
+    const search = this.topicQuery().toLowerCase();
+    // Like PrimeNG's autocomplete, suggest only once something is typed (there are ~1200 topics).
+    if (!search) return [];
     const lower = (t: string) => t.toLowerCase();
     return this.allTopics().filter(
       (topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search))

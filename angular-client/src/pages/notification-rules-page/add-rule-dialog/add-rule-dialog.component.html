@@ -10,7 +10,14 @@
     </mat-form-field>
     <mat-form-field>
       <mat-label>Topic</mat-label>
-      <input matInput formControlName="topic" placeholder="e.g. BMS/Pack/Voltage" [matAutocomplete]="topicAuto" required />
+      <input
+        matInput
+        formControlName="topic"
+        placeholder="e.g. BMS/Pack/Voltage"
+        [matAutocomplete]="topicAuto"
+        (input)="topicQuery.set($any($event.target).value)"
+        required
+      />
       <!-- requireSelection: like PrimeNG's forceSelection, only a listed topic is kept. -->
       <mat-autocomplete #topicAuto="matAutocomplete" [requireSelection]="true">
         @for (topic of filteredTopics(); track topic) {
