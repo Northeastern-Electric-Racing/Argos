@@ -1,9 +1,9 @@
 @if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
+  <mat-sidenav-container class="nav-drawer" [class.nav-drawer--open]="sidebarVisible" [hasBackdrop]="true">
+    <mat-sidenav mode="over" [(opened)]="sidebarVisible" aria-label="Navigation">
+      <div class="drawer-header">
+        <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+      </div>
       @for (navItem of allNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
@@ -13,8 +13,8 @@
         >
         </sidebar-chip>
       }
-    </ng-template>
-  </p-drawer>
+    </mat-sidenav>
+  </mat-sidenav-container>
 } @else {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">
@@ -54,21 +54,55 @@
         type="button"
         class="navbar-notification"
         aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
+        [attr.aria-expanded]="notificationsOpen()"
+        cdkOverlayOrigin
+        #notificationOrigin="cdkOverlayOrigin"
+        (click)="toggleNotifications()"
+        [matBadge]="notificationLogService.unreadCount()"
+        [matBadgeHidden]="notificationLogService.unreadCount() === 0"
+        [matBadgeDescription]="notificationLogService.unreadCount() + ' unread notifications'"
       >
         <mat-icon [svgIcon]="'notifications'" />
-        @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
-        }
       </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
-          <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
+      <ng-template
+        cdkConnectedOverlay
+        [cdkConnectedOverlayOrigin]="notificationOrigin"
+        [cdkConnectedOverlayOpen]="notificationsOpen()"
+        [cdkConnectedOverlayPositions]="overlayPositions"
+        [cdkConnectedOverlayHasBackdrop]="true"
+        cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+        (attach)="onNotificationPanelShow()"
+        (backdropClick)="notificationsOpen.set(false)"
+        (detach)="notificationsOpen.set(false)"
+        (overlayKeydown)="closeOnEscape($event, notificationsOpen)"
+      >
+        <notification-list variant="popover" class="notification-popover" />
+      </ng-template>
+      <button
+        type="button"
+        class="navbar-menu"
+        aria-label="More pages"
+        [attr.aria-expanded]="menuOpen()"
+        cdkOverlayOrigin
+        #menuOrigin="cdkOverlayOrigin"
+        (click)="toggleMenu()"
+        [class.selected]="menuOpen()"
+      >
         <mat-icon [svgIcon]="'apps'" />
-      </div>
+      </button>
+      <ng-template
+        cdkConnectedOverlay
+        [cdkConnectedOverlayOrigin]="menuOrigin"
+        [cdkConnectedOverlayOpen]="menuOpen()"
+        [cdkConnectedOverlayPositions]="overlayPositions"
+        [cdkConnectedOverlayHasBackdrop]="true"
+        cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+        (backdropClick)="menuOpen.set(false)"
+        (detach)="menuOpen.set(false)"
+        (overlayKeydown)="closeOnEscape($event, menuOpen)"
+      >
+        <app-nav-options-menu [items]="navMenuItems" (itemSelected)="menuOpen.set(false)" />
+      </ng-template>
     </hstack>
   </nav>
 }

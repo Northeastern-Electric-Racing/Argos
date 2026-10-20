@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { Popover } from 'primeng/popover';
+import { ToastService } from 'src/services/toast.service';
+import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
+import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatDatepicker, MatDatepickerInput, MatDatepickerToggle } from '@angular/material/datepicker';
+import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatTimepicker, MatTimepickerInput, MatTimepickerToggle } from '@angular/material/timepicker';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -37,14 +40,25 @@ type CustomMode = 'last-x' | 'date-range';
     RunSelectorComponent,
     ButtonComponent,
     SelectDropdownComponent,
-    Popover,
-    DatePicker,
-    InputNumberModule,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
+    MatButtonToggleGroup,
+    MatButtonToggle,
+    MatFormField,
+    MatLabel,
+    MatSuffix,
+    MatInput,
+    MatDatepicker,
+    MatDatepickerInput,
+    MatDatepickerToggle,
+    MatTimepicker,
+    MatTimepickerInput,
+    MatTimepickerToggle,
     FormsModule
   ]
 })
 export class GeneralButtonsComponent {
-  private toastService = inject(MessageService);
+  private toastService = inject(ToastService);
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
@@ -66,7 +80,12 @@ export class GeneralButtonsComponent {
   onApplyCustomLastX = input.required<(totalMinutes: number) => void>();
   onApplyCustomDateRange = input.required<(startMs: number, endMs: number) => void>();
 
-  customPopover = viewChild.required<Popover>('customPopover');
+  /** The custom-range panel is a CDK overlay anchored under the Custom button. */
+  customPopoverOpen = signal(false);
+  readonly popoverPositions: ConnectedPosition[] = [
+    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 6 },
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 6 }
+  ];
 
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);
@@ -93,9 +112,26 @@ export class GeneralButtonsComponent {
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
 
-  toggleCustomPopover = (event?: Event) => {
-    if (event) this.customPopover().toggle(event);
+  toggleCustomPopover = () => {
+    this.customPopoverOpen.update((open) => !open);
   };
+
+  closeCustomPopover = () => {
+    this.customPopoverOpen.set(false);
+  };
+
+  onPopoverKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') this.closeCustomPopover();
+  }
+
+  /** Datepicker and timepicker share one Date; either can emit null while the text is invalid. */
+  setFromDate(date: Date | null) {
+    if (date) this.customFromDate.set(date);
+  }
+
+  setToDate(date: Date | null) {
+    if (date) this.customToDate.set(date);
+  }
 
   // Refresh the popover contents every time it opens. Without this, the From/To pickers
   // and `maxDate` go stale (component-init values) once the page has been open a while,

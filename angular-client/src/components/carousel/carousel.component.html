@@ -1,34 +1,18 @@
-<div class="modal-container">
-  <!-- Carousel Content -->
-  <p-carousel
-    [value]="runs"
-    [numVisible]="1"
-    [numScroll]="1"
-    [circular]="true"
-    [autoplayInterval]="3000"
-    (onPage)="handlePageChange($event)"
-  >
-    <ng-template let-run let-i="index" #item>
-      <div class="run-card">
-        <mat-grid-list cols="2" rowHeight="40px">
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-          </mat-grid-tile>
-        </mat-grid-list>
-      </div>
-
-      <div class="select-button-container">
-        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
-      </div>
-    </ng-template>
-  </p-carousel>
-</div>
+<h2 mat-dialog-title>Select a run to view</h2>
+<mat-dialog-content>
+  @if (runs.length === 0) {
+    <p class="empty">No runs recorded yet.</p>
+  } @else {
+    <mat-action-list class="run-list">
+      @for (run of runs; track run.id) {
+        <button mat-list-item (click)="selectRun(run)">
+          <span matListItemTitle>Run #{{ run.id }} · {{ run.driverName || 'No driver' }}</span>
+          <span matListItemLine>{{ run.time | date: 'M/d/yy, HH:mm:ss' }} · {{ run.locationName || 'No location' }}</span>
+        </button>
+      }
+    </mat-action-list>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>

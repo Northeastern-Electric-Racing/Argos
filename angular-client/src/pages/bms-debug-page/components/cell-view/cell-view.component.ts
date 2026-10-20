@@ -1,5 +1,8 @@
 import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
+import { MatIconButton } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogClose, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
+import { MatIcon } from '@angular/material/icon';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
@@ -36,12 +39,21 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ConfigTableComponent]
+  imports: [
+    ConfigTableComponent,
+    CdkDrag,
+    CdkDragHandle,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogClose,
+    MatIconButton,
+    MatIcon
+  ]
 })
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
-  public config = inject(DynamicDialogConfig);
+  private data = inject<{ cells: Map<CellReading, SelectedCellInfo> }>(MAT_DIALOG_DATA);
 
   /** Shared Map reference — mutations by SegmentHeatmapComponent
    *  are visible here because it's the same Map object. */
@@ -54,7 +66,7 @@ export class CellViewComponent implements OnDestroy {
   }
 
   constructor() {
-    this.cellsMap = this.config.data.cells;
+    this.cellsMap = this.data.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
   }

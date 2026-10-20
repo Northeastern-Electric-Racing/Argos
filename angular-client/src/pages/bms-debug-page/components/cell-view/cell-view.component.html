@@ -1,1 +1,12 @@
-<config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
+<!-- Non-modal and draggable by its title: cdkDrag moves the whole dialog pane. -->
+<div class="cell-compare" cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragBoundary=".cdk-overlay-container">
+  <div class="title-row" cdkDragHandle>
+    <h2 mat-dialog-title>Cell Comparison</h2>
+    <button mat-icon-button mat-dialog-close aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <mat-dialog-content>
+    <config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
+  </mat-dialog-content>
+</div>

@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 
 import { NavOptionsMenuComponent } from './nav-options-menu.component';
 
@@ -9,12 +8,12 @@ describe('NavOptionsMenuComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NavOptionsMenuComponent],
-      providers: [{ provide: DynamicDialogConfig, useValue: { data: { items: [] } } }]
+      imports: [NavOptionsMenuComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NavOptionsMenuComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('items', []);
     fixture.detectChanges();
   });
 

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CellReading } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 
 export enum HeatMapView {
@@ -24,7 +24,7 @@ export interface SelectedCellInfo {
   providedIn: 'root'
 })
 export class HeatMapService {
-  private dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
 
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
@@ -33,7 +33,7 @@ export class HeatMapService {
 
   /** Multi-cell selection state, keyed by CellReading identity */
   private selectedCells = new Map<CellReading, SelectedCellInfo>();
-  dialogRef: DynamicDialogRef | null = null;
+  dialogRef: MatDialogRef<CellViewComponent> | null = null;
 
   /**
    * Toggle a group of readings as a unit. Uses the first reading's
@@ -64,16 +64,15 @@ export class HeatMapService {
   openDialogForSelectedCells(): void {
     // Open dialog if not already open, and the caller requested it.
     if (this.selectedCells.size > 0 && !this.dialogRef) {
-      this.dialogRef = this.dialogService.open(CellViewComponent, {
+      // Non-modal so cells stay clickable behind it; the dialog drags by its title (cdkDrag).
+      this.dialogRef = this.dialog.open(CellViewComponent, {
         data: { cells: this.selectedCells },
-        header: 'Cell Comparison',
-        draggable: true,
-        closable: true,
-        modal: false,
-        closeAriaLabel: 'Close',
-        styleClass: 'cell-compare-dialog'
+        hasBackdrop: false,
+        autoFocus: false,
+        restoreFocus: false,
+        position: { top: '96px', right: '24px' }
       });
-      this.dialogRef?.onClose.subscribe(() => {
+      this.dialogRef.afterClosed().subscribe(() => {
         this.clearSelection();
         this.dialogRef = null;
       });

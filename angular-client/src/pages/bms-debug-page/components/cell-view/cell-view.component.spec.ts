@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { CellViewComponent } from './cell-view.component';
 
@@ -10,7 +10,7 @@ describe('CellViewComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CellViewComponent],
-      providers: [{ provide: DynamicDialogConfig, useValue: { data: { cells: new Map() } } }]
+      providers: [{ provide: MAT_DIALOG_DATA, useValue: { cells: new Map() } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(CellViewComponent);

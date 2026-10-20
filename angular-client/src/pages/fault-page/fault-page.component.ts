@@ -5,9 +5,8 @@ import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
-import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
-import { Ripple } from 'primeng/ripple';
-import { TableModule } from 'primeng/table';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTableModule } from '@angular/material/table';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -16,14 +15,14 @@ import TypographyComponent from 'src/components/typography/typography.component'
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
+  imports: [MatExpansionModule, MatTableModule, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private faultService = inject(FaultService);
   private router = inject(Router);
   nodeArray: FaultNode[] = [];
-  selectedFault: FaultData | undefined = undefined;
+  readonly columns = ['name', 'occurredAt', 'lastSeen', 'expired'];
 
   ngOnInit() {
     this.faultService
@@ -42,11 +41,9 @@ export default class FaultPageComponent implements OnInit {
       });
   }
 
-  onRowSelect = () => {
-    if (this.selectedFault) {
-      this.faultService.selectFault(this.selectedFault);
-      this.navigateTo(appRoutes.faultsGraphRoute());
-    }
+  onRowSelect = (fault: FaultData) => {
+    this.faultService.selectFault(fault);
+    this.navigateTo(appRoutes.faultsGraphRoute());
   };
 
   navigateTo(route: string): void {

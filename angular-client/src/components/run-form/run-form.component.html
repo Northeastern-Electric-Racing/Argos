@@ -1,11 +1,16 @@
-@if (!this.templateReady) {
-  <loading-page />
-} @else {
-  <select-dropdown
-    [options]="this.selectorConfig.options"
-    [placeholder]="this.selectorConfig.placeholder"
-    [defaultValue]="this.selectorConfig.defaultValue"
-  >
-  </select-dropdown>
-  <form-template [fields]="this.inputFields" />
-}
+<h2 mat-dialog-title>Edit Run</h2>
+<mat-dialog-content>
+  @if (!this.templateReady()) {
+    <loading-page />
+  } @else {
+    <select-dropdown
+      class="run-select"
+      label="Run"
+      [options]="this.selectorConfig.options"
+      [placeholder]="this.selectorConfig.placeholder"
+      [defaultValue]="this.selectorConfig.defaultValue"
+    >
+    </select-dropdown>
+    <form-template [fields]="this.inputFields" />
+  }
+</mat-dialog-content>

@@ -1,11 +1,9 @@
 <button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
-<p-drawer [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
-  <ng-template #header>
-    <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
-  </ng-template>
-  <ng-template #content>
+<mat-sidenav-container class="topics-drawer" [class.topics-drawer--open]="sidebarVisible" [hasBackdrop]="true">
+  <mat-sidenav mode="over" position="end" class="topics-sidenav" [(opened)]="sidebarVisible" aria-label="Topics">
     <div class="sidebar-content">
+      <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
       <div class="presets-row">
         <select-dropdown
           class="preset-select"
@@ -27,44 +25,31 @@
         additionalStyles="background-color: #323232; border: 1.4px solid #027bd7; width: 100%;"
       />
       <div class="toggle-group">
-        <label class="flatten-toggle">
-          <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
-          <p-toggleswitch
-            [ngModel]="selectedOnly()"
-            (ngModelChange)="toggleSelectedOnly($event)"
-            ariaLabel="Show only selected topics"
-          />
-        </label>
-        <label class="flatten-toggle">
-          <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-          <p-toggleswitch
-            [ngModel]="flattenMode()"
-            (ngModelChange)="toggleFlattenMode($event)"
-            ariaLabel="Flatten topic tree"
-          />
-        </label>
+        <mat-slide-toggle
+          class="flatten-toggle"
+          [checked]="selectedOnly()"
+          (change)="toggleSelectedOnly($event.checked)"
+          aria-label="Show only selected topics"
+        >
+          Selected
+        </mat-slide-toggle>
+        <mat-slide-toggle
+          class="flatten-toggle"
+          [checked]="flattenMode()"
+          (change)="toggleFlattenMode($event.checked)"
+          aria-label="Flatten topic tree"
+        >
+          Flat
+        </mat-slide-toggle>
       </div>
-      <p-tree
-        [value]="activeNodes()"
-        (onNodeSelect)="nodeSelect($event)"
-        (onNodeUnselect)="onNodeUnselect($event)"
-        [(selection)]="selectedNodes"
-        [filter]="true"
+      <topic-tree
+        [nodes]="activeNodes()"
+        [selectedNames]="selectedNames()"
         filterPlaceholder="Search topics..."
-        styleClass="w-full"
-        [style]="{ height: 'calc(100vh - 160px)', overflow: 'auto' }"
-        [metaKeySelection]="false"
-        selectionMode="multiple"
-      >
-        <ng-template let-node #node>
-          <div class="tree-node-container" (click)="onRowClick($event, node)">
-            <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
-            @if (node.children?.length === 0) {
-              <typography [content]="node.data.displayValue()" variant="subheader" />
-            }
-          </div>
-        </ng-template>
-      </p-tree>
+        height="calc(100vh - 220px)"
+        (nodeSelect)="nodeSelect($event)"
+        (nodeUnselect)="onNodeUnselect($event)"
+      />
     </div>
-  </ng-template>
-</p-drawer>
+  </mat-sidenav>
+</mat-sidenav-container>

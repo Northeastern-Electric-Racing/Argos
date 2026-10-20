@@ -85,29 +85,30 @@
   color: #ef4345;
 }
 
-.notification-badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
+.navbar-menu {
+  background: none;
+  border: none;
+  color: inherit;
 }
 
-:host {
-  --p-dialog-background: transparent !important;
-  --p-dialog-border-color: transparent !important;
+/* Mobile drawer: a full-viewport sidenav container that only takes pointer events while open. */
+.nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
 }
 
-:host ::ng-deep .notification-popover.p-popover {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  border-radius: var(--border-radius-panel) !important;
+.nav-drawer--open {
+  pointer-events: auto;
 }
 
-:host ::ng-deep .notification-popover .p-popover-content {
-  padding: 0 !important;
-  background: transparent !important;
+.drawer-header {
+  padding: 16px 8px;
 }
 
-:host ::ng-deep .notification-popover .p-popover-arrow {
-  display: none !important;
+.notification-popover {
+  display: block;
+  box-shadow: var(--mat-sys-level3);
+  border-radius: var(--border-radius-panel);
 }

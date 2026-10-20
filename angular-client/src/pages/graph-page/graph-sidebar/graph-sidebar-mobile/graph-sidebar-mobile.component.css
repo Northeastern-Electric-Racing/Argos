@@ -44,35 +44,6 @@
   flex-shrink: 0;
 }
 
-.presets-row argos-button ::ng-deep .btn {
-  white-space: nowrap;
-}
-
-.preset-select ::ng-deep .p-select {
-  height: 28px !important;
-  min-height: 28px;
-  width: 100%;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.preset-select ::ng-deep .p-select-label,
-.preset-select ::ng-deep .p-select-label.p-placeholder {
-  width: 100% !important;
-  padding: 0 0.5rem !important;
-  font-size: 12px;
-  line-height: 28px;
-  height: 28px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.preset-select ::ng-deep .p-select-dropdown {
-  width: 1.75rem;
-}
-
 .toggle-group {
   display: inline-flex;
   align-items: center;
@@ -80,28 +51,20 @@
   align-self: flex-start;
 }
 
-.flatten-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+/* Drawer: a full-viewport sidenav container that only takes pointer events while open. */
+.topics-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
 }
 
-.tree-node-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 44px;
+.topics-drawer--open {
+  pointer-events: auto;
 }
 
-:host {
-  --p-tree-background: transparent !important;
-  --p-tree-node-hover-color: #ef4343;
-  --p-tree-node-selected-background: #ef434355;
-  --p-tree-node-focus-ring-color: #ef4343;
-}
-
-::ng-deep .p-tree-node-label {
-  width: 100%;
+.topics-sidenav {
+  width: 85vw;
+  padding: 12px;
+  box-sizing: border-box;
 }

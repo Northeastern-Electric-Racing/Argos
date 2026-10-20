@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ToastService } from 'src/services/toast.service';
 
 export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
 
@@ -10,7 +10,7 @@ export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ToastButtonComponent implements OnInit {
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   buttonLabel = input.required<string>();
   popUpSeverity = input<toastSeverity>('success');
   popUpTitle = input<string>('Success!');

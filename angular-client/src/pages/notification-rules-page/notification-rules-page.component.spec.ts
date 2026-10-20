@@ -1,12 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { ToastService } from 'src/services/toast.service';
 import NotificationRulesPageComponent from './notification-rules-page.component';
 
 describe('NotificationRulesPageComponent', () => {
   let component: NotificationRulesPageComponent;
   let fixture: ComponentFixture<NotificationRulesPageComponent>;
-  let messageService: MessageService;
+  let messageService: ToastService;
 
   beforeEach(async () => {
     // The real app eagerly creates the client ID in SocketService, which AppContextComponent injects at bootstrap;
@@ -14,13 +13,12 @@ describe('NotificationRulesPageComponent', () => {
     localStorage.setItem('notification_rules_client_id', 'test-client-id');
 
     await TestBed.configureTestingModule({
-      imports: [NotificationRulesPageComponent],
-      providers: [MessageService, DialogService]
+      imports: [NotificationRulesPageComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotificationRulesPageComponent);
     component = fixture.componentInstance;
-    messageService = TestBed.inject(MessageService);
+    messageService = TestBed.inject(ToastService);
     fixture.detectChanges();
   });
 

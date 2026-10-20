@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { ProgressSpinner } from 'primeng/progressspinner';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 /**
  * Loading Page Component to display while loading information from the backend.
@@ -9,6 +9,6 @@ import { ProgressSpinner } from 'primeng/progressspinner';
   templateUrl: './loading-page.component.html',
   styleUrls: ['./loading-page.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ProgressSpinner]
+  imports: [MatProgressSpinner]
 })
 export default class LoadingPageComponent {}

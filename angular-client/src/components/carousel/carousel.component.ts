@@ -1,65 +1,52 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
-import { CarouselPageEvent, Carousel } from 'primeng/carousel';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DatePipe } from '@angular/common';
+import { MatButton } from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from '@angular/material/dialog';
+import { MatActionList, MatListItem, MatListItemLine, MatListItemTitle } from '@angular/material/list';
 import { Run } from 'src/utils/types.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 
-import { Button } from 'primeng/button';
-import TypographyComponent from '../typography/typography.component';
-
-// the data for the dialog, basically just all the runs
+// the data for the dialog: all the runs, and what to do with the picked one
 export interface DialogData {
   runs: Run[];
+  selectRun: (run: Run) => void;
 }
 
+/**
+ * Run picker dialog. Angular Material has no carousel, so the runs are an action list
+ * (newest first) the user scrolls and clicks, instead of PrimeNG's one-at-a-time carousel.
+ */
 @Component({
   selector: 'carousel',
   templateUrl: 'carousel.component.html',
   styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Carousel, MatGridList, MatGridTile, Button, TypographyComponent]
+  imports: [
+    DatePipe,
+    MatButton,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose,
+    MatActionList,
+    MatListItem,
+    MatListItemTitle,
+    MatListItemLine
+  ]
 })
 export class CarouselComponent {
-  public dialogRef = inject(DynamicDialogRef);
-  public config = inject(DynamicDialogConfig);
-  public router = inject(Router);
-  runs: Run[];
-  currentIndex: number = 0;
-  previousIndex: number = 0;
-  selectRun: (run: Run) => void = () => {
+  private dialogRef = inject(MatDialogRef<CarouselComponent>);
+  private data = inject<DialogData>(MAT_DIALOG_DATA);
+  runs: Run[] = (this.data.runs ?? []).slice().reverse();
+
+  selectRun(run: Run) {
     this.dialogRef.close();
-  };
-
-  constructor() {
-    this.runs = this.config.data.runs;
-    this.selectRun = (run: Run) => {
-      this.dialogRef.close();
-      this.config.data.selectRun(run);
-    };
+    this.data.selectRun(run);
   }
-
-  updateIndex(nexIndex: number) {
-    this.currentIndex = nexIndex;
-  }
-
-  handlePageChange(event: CarouselPageEvent): void {
-    const newIndex = event.page;
-    if (newIndex) {
-      if (newIndex === this.runs.length) {
-        this.currentIndex = 0;
-      } else if (newIndex === -1) {
-        this.currentIndex = this.runs.length - 1;
-      } else {
-        this.currentIndex = newIndex;
-      }
-
-      this.previousIndex = newIndex;
-    }
-  }
-
-  datePipe = (date: Date) => {
-    date = new Date(date);
-    return `${date.toLocaleString()}`;
-  };
 }

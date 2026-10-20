@@ -1,26 +1,26 @@
 <info-background [title]="this.title" svgIcon="battery_charging_2">
-  <div style="padding-top: 20px"></div>
-  <p-table
-    selectionMode="single"
-    stripedRows
-    [value]="this.chipFaults"
-    [scrollable]="true"
-    scrollHeight="300px"
-    [(selection)]="selectedFault"
-    (onRowSelect)="onRowSelect()"
-  >
-    <ng-template #header>
-      <tr>
-        <th>Name</th>
-        <th>Occurred At</th>
+  <div class="table-scroll">
+    <table mat-table [dataSource]="chipFaults" class="fault-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let fault">{{ fault.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="occurredAt">
+        <th mat-header-cell *matHeaderCellDef>Occurred At</th>
+        <td mat-cell *matCellDef="let fault">{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+      <tr
+        mat-row
+        *matRowDef="let fault; columns: columns"
+        class="clickable-row"
+        tabindex="0"
+        (click)="onRowSelect(fault)"
+        (keyup.enter)="onRowSelect(fault)"
+      ></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-row" [attr.colspan]="columns.length">No faults</td>
       </tr>
-    </ng-template>
-    <div style="width: 100%; padding-right: 5px; padding-left: 0px" class="fault-text-body"></div>
-    <ng-template #body let-fault>
-      <tr [pSelectableRow]="fault">
-        <td>{{ fault.name }}</td>
-        <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
+    </table>
+  </div>
 </info-background>

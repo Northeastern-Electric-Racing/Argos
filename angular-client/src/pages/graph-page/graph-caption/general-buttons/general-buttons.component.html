@@ -17,7 +17,7 @@
       [placeholder]="quickSelectConfig().placeholder"
       [defaultValue]="selectedPresetLabel()"
     />
-    <div class="custom-stack">
+    <div class="custom-stack" cdkOverlayOrigin #customOrigin="cdkOverlayOrigin">
       <argos-button
         [onClick]="toggleCustomPopover"
         label="Custom"
@@ -34,100 +34,122 @@
     </div>
   </div>
 
-  <p-popover #customPopover styleClass="custom-range-popover" (onShow)="onCustomPopoverShow()">
-    <ng-template #content>
-      <div class="custom-popover-body">
-        <div class="mode-toggle">
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'last-x'"
-            (click)="setCustomMode('last-x')"
-          >
-            Last X
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'date-range'"
-            (click)="setCustomMode('date-range')"
-          >
-            Date Range
-          </button>
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="customOrigin"
+    [cdkConnectedOverlayOpen]="customPopoverOpen()"
+    [cdkConnectedOverlayPositions]="popoverPositions"
+    [cdkConnectedOverlayHasBackdrop]="true"
+    cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+    (attach)="onCustomPopoverShow()"
+    (backdropClick)="closeCustomPopover()"
+    (detach)="closeCustomPopover()"
+    (overlayKeydown)="onPopoverKeydown($event)"
+  >
+    <div class="custom-popover-body" role="dialog" aria-label="Custom range">
+      <mat-button-toggle-group
+        class="mode-toggle"
+        [value]="customMode()"
+        (change)="setCustomMode($event.value)"
+        aria-label="Custom range mode"
+        hideSingleSelectionIndicator
+      >
+        <mat-button-toggle value="last-x">Last X</mat-button-toggle>
+        <mat-button-toggle value="date-range">Date Range</mat-button-toggle>
+      </mat-button-toggle-group>
+      @if (customMode() === 'last-x') {
+        <div class="mode-body">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Hours</mat-label>
+            <input
+              matInput
+              type="number"
+              [ngModel]="customHours()"
+              (ngModelChange)="customHours.set($event)"
+              [min]="0"
+              [step]="1"
+              placeholder="0"
+            />
+          </mat-form-field>
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Minutes</mat-label>
+            <input
+              matInput
+              type="number"
+              [ngModel]="customMinutes()"
+              (ngModelChange)="customMinutes.set($event)"
+              [min]="0"
+              [step]="1"
+              placeholder="30"
+            />
+          </mat-form-field>
+          <argos-button
+            [onClick]="applyCustomLastX"
+            label="Apply"
+            size="sm"
+            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+          />
         </div>
-
-        @if (customMode() === 'last-x') {
-          <div class="mode-body">
-            <div class="field-row">
-              <label class="popover-label">Hours</label>
-              <p-inputnumber
-                [ngModel]="customHours()"
-                (ngModelChange)="customHours.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
-                placeholder="0"
-              />
-            </div>
-            <div class="field-row">
-              <label class="popover-label">Minutes</label>
-              <p-inputnumber
-                [ngModel]="customMinutes()"
-                (ngModelChange)="customMinutes.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
-                placeholder="30"
-              />
-            </div>
-            <argos-button
-              [onClick]="applyCustomLastX"
-              label="Apply"
-              size="sm"
-              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-            />
-          </div>
-        } @else {
-          <div class="mode-body">
-            <div class="field-row">
-              <label class="popover-label">From</label>
-              <p-datepicker
+      } @else {
+        <div class="mode-body">
+          <div class="datetime-row">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>From date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="fromDatePicker"
+                [max]="maxDate()"
                 [ngModel]="customFromDate()"
-                (ngModelChange)="customFromDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
+                (ngModelChange)="setFromDate($event)"
               />
-            </div>
-            <div class="field-row">
-              <label class="popover-label">To</label>
-              <p-datepicker
-                [ngModel]="customToDate()"
-                (ngModelChange)="customToDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
+              <mat-datepicker-toggle matSuffix [for]="fromDatePicker" />
+              <mat-datepicker #fromDatePicker />
+            </mat-form-field>
+            <mat-form-field subscriptSizing="dynamic" class="time-field">
+              <mat-label>From time</mat-label>
+              <input
+                matInput
+                [matTimepicker]="fromTimePicker"
+                [ngModel]="customFromDate()"
+                (ngModelChange)="setFromDate($event)"
               />
-            </div>
-            <argos-button
-              [onClick]="applyCustomDateRange"
-              label="Apply"
-              size="sm"
-              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-            />
+              <mat-timepicker-toggle matSuffix [for]="fromTimePicker" />
+              <mat-timepicker #fromTimePicker interval="15m" />
+            </mat-form-field>
           </div>
-        }
-      </div>
-    </ng-template>
-  </p-popover>
+          <div class="datetime-row">
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>To date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="toDatePicker"
+                [max]="maxDate()"
+                [ngModel]="customToDate()"
+                (ngModelChange)="setToDate($event)"
+              />
+              <mat-datepicker-toggle matSuffix [for]="toDatePicker" />
+              <mat-datepicker #toDatePicker />
+            </mat-form-field>
+            <mat-form-field subscriptSizing="dynamic" class="time-field">
+              <mat-label>To time</mat-label>
+              <input
+                matInput
+                [matTimepicker]="toTimePicker"
+                [ngModel]="customToDate()"
+                (ngModelChange)="setToDate($event)"
+              />
+              <mat-timepicker-toggle matSuffix [for]="toTimePicker" />
+              <mat-timepicker #toTimePicker interval="15m" />
+            </mat-form-field>
+          </div>
+          <argos-button
+            [onClick]="applyCustomDateRange"
+            label="Apply"
+            size="sm"
+            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+          />
+        </div>
+      }
+    </div>
+  </ng-template>
 </div>

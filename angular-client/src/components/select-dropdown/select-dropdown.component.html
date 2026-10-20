@@ -1,9 +1,13 @@
-<p-select
-  class="small-grey-select"
-  [options]="options()"
-  [(ngModel)]="selectedOption"
-  optionLabel="name"
-  [placeholder]="placeholder()"
-  (onChange)="handleChangedOption($event)"
-  appendTo="body"
-></p-select>
+<mat-form-field class="select-field dense-controls" subscriptSizing="dynamic">
+  <mat-select
+    [(ngModel)]="selectedOption"
+    [compareWith]="compareOptions"
+    [placeholder]="placeholder()"
+    [aria-label]="label() ?? placeholder()"
+    (selectionChange)="handleChangedOption($event)"
+  >
+    @for (option of options(); track option.name) {
+      <mat-option [value]="option">{{ option.name }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>

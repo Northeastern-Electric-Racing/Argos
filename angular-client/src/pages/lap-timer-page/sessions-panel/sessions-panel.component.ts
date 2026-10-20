@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Popover } from 'primeng/popover';
-import { TableModule } from 'primeng/table';
+import { ConfirmService } from 'src/services/confirm.service';
+import { ToastService } from 'src/services/toast.service';
+import { MatIconButton } from '@angular/material/button';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatTableModule } from '@angular/material/table';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -20,8 +22,11 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     DatePipe,
     FormsModule,
     MatIcon,
-    TableModule,
-    Popover,
+    MatTableModule,
+    MatMenu,
+    MatMenuItem,
+    MatMenuTrigger,
+    MatIconButton,
     ButtonComponent,
     InfoBackgroundComponent,
     TypographyComponent
@@ -29,11 +34,12 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 })
 export default class SessionsPanelComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmService);
+  private messageService = inject(ToastService);
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');
+  readonly columns = ['state', 'name', 'started', 'laps', 'best', 'run', 'actions'];
 
   onClearAllSessions = () => {
     const count = this.timer.sessions().length;
@@ -75,8 +81,7 @@ export default class SessionsPanelComponent {
     this.timer.selectSession(id);
   };
 
-  onDeleteSession = (session: LapSession, popover?: Popover) => {
-    popover?.hide();
+  onDeleteSession = (session: LapSession) => {
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
       this.toast('success', 'Session deleted', `"${session.name}"`);
@@ -94,14 +99,12 @@ export default class SessionsPanelComponent {
     });
   };
 
-  onDownload = (sessionId: string, popover?: Popover) => {
-    popover?.hide();
+  onDownload = (sessionId: string) => {
     const filename = this.timer.downloadCsv(sessionId);
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  startEdit(session: LapSession, popover?: Popover): void {
-    popover?.hide();
+  startEdit(session: LapSession): void {
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
   }

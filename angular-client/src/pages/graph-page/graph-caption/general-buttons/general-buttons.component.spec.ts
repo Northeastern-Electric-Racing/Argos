@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
+import { ToastService } from 'src/services/toast.service';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
 describe('GeneralButtonsComponent — custom range validation', () => {
@@ -27,7 +27,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       vi.fn(() => new Promise(() => {}))
     );
     toastSpy = {
-      add: vi.fn().mockName('MessageService.add')
+      add: vi.fn().mockName('ToastService.add')
     };
     onSelectPresetSpy = vi.fn().mockName('onSelectPreset');
     onApplyCustomLastXSpy = vi.fn().mockName('onApplyCustomLastX');
@@ -38,7 +38,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
 
     await TestBed.configureTestingModule({
       imports: [GeneralButtonsComponent],
-      providers: [{ provide: MessageService, useValue: toastSpy }]
+      providers: [{ provide: ToastService, useValue: toastSpy }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneralButtonsComponent);

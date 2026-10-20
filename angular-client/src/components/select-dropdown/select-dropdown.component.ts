@@ -1,5 +1,6 @@
 import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { MatFormField } from '@angular/material/form-field';
+import { MatOption, MatSelect, MatSelectChange } from '@angular/material/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
@@ -17,7 +18,7 @@ export interface DropdownOption {
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  imports: [MatFormField, MatSelect, MatOption, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -29,6 +30,8 @@ export class SelectDropdownComponent {
     }
   ]);
   placeholder = input<string>('placeholder');
+  /** Accessible name; the compact field has no floating label, so this falls back to the placeholder. */
+  label = input<string | undefined>(undefined);
   defaultValue = input<string | undefined>(undefined);
 
   selectedOption: DropdownOption | undefined;
@@ -53,9 +56,12 @@ export class SelectDropdownComponent {
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
+  handleChangedOption(changeEvent: MatSelectChange<DropdownOption>) {
     changeEvent.value.function();
   }
+
+  // Options are rebuilt by parents on every change, so match them by name rather than identity.
+  compareOptions = (a: DropdownOption | undefined, b: DropdownOption | undefined) => a?.name === b?.name;
 
   // Get display text for the dropdown
   getDisplayText(): string {

@@ -5,38 +5,43 @@
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
-  <p-accordion [value]="0" [multiple]="true">
-    @for (node of nodeArray; track node) {
-      <p-accordion-panel [value]="node.node">
-        <p-accordion-header>{{ node.node }}</p-accordion-header>
-        <p-accordion-content>
-          <p-table
-            selectionMode="single"
-            [(selection)]="selectedFault"
-            (onRowSelect)="onRowSelect()"
-            metaKeySelection
-            [value]="node.data"
-            stripedRows
+  <mat-accordion multi>
+    @for (node of nodeArray; track node.node) {
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>{{ node.node }}</mat-panel-title>
+          <mat-panel-description
+            >{{ node.data.length }} {{ node.data.length === 1 ? 'fault' : 'faults' }}</mat-panel-description
           >
-            <ng-template #header>
-              <tr>
-                <th>Name</th>
-                <th>Occurred At</th>
-                <th>Last Seen</th>
-                <th>Expired?</th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-node>
-              <tr [pSelectableRow]="node">
-                <td>{{ node.name }}</td>
-                <td>{{ node.occurredAt | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.lastSeen | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.expired ? 'Yes' : 'No' }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </p-accordion-content>
-      </p-accordion-panel>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="node.data" class="fault-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let fault">{{ fault.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="occurredAt">
+            <th mat-header-cell *matHeaderCellDef>Occurred At</th>
+            <td mat-cell *matCellDef="let fault">{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="lastSeen">
+            <th mat-header-cell *matHeaderCellDef>Last Seen</th>
+            <td mat-cell *matCellDef="let fault">{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="expired">
+            <th mat-header-cell *matHeaderCellDef>Expired?</th>
+            <td mat-cell *matCellDef="let fault">{{ fault.expired ? 'Yes' : 'No' }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let fault; columns: columns"
+            class="clickable-row"
+            tabindex="0"
+            (click)="onRowSelect(fault)"
+            (keyup.enter)="onRowSelect(fault)"
+          ></tr>
+        </table>
+      </mat-expansion-panel>
     }
-  </p-accordion>
+  </mat-accordion>
 </div>

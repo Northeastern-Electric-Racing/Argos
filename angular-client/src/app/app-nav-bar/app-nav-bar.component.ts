@@ -1,14 +1,16 @@
-import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal, WritableSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ToastService } from 'src/services/toast.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
+import { MatBadge } from '@angular/material/badge';
+import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -22,8 +24,6 @@ import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -37,7 +37,12 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    MatSidenavContainer,
+    MatSidenav,
+    MatBadge,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
+    NavOptionsMenuComponent,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -47,27 +52,28 @@ export interface NavItem {
     HStackComponent,
     SidebarChipComponent,
     MatIcon,
-    NotificationListComponent,
-    Popover,
-    Badge
+    NotificationListComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
 })
-export class AppNavBarComponent implements OnInit, OnDestroy {
+export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  /** Apps grid and notifications panel are CDK overlays anchored to their nav bar buttons. */
+  menuOpen = signal(false);
+  notificationsOpen = signal(false);
+  readonly overlayPositions: ConnectedPosition[] = [
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 }
+  ];
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -88,12 +94,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
       });
-  }
-
-  ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
   }
 
   // on resize, set the screen width
@@ -119,12 +119,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    this.dialog.open(RunFormComponent, { width: '550px' });
   };
 
   homeNavItem: NavItem = {
@@ -161,12 +156,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
 
   toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
+    this.menuOpen.update((open) => !open);
   }
 
   navMenuItems: NavItem[] = [
@@ -216,24 +206,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
-      data: {
-        items: this.navMenuItems
-      }
-    });
+  closeOnEscape(event: KeyboardEvent, open: WritableSignal<boolean>) {
+    if (event.key === 'Escape') open.set(false);
+  }
 
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
+  toggleNotifications() {
+    this.notificationsOpen.update((open) => !open);
   }
 
   navigateTo(route: string): void {

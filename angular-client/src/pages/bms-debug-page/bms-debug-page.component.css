@@ -10,7 +10,7 @@
   padding-left: 20px;
 }
 
-/* Allow PrimeNG dropdowns inside mat-grid-tiles to overflow the tile boundary */
+/* Let content inside mat-grid-tiles (e.g. focus rings) overflow the tile boundary */
 mat-grid-tile {
   overflow: visible !important;
 }

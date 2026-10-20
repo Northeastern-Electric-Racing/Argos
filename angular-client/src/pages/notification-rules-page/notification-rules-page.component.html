@@ -26,17 +26,17 @@
           <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
           <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
         </div>
-        <div class="search-container">
+        <mat-form-field class="search-container dense-controls" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
           <input
-            pInputText
-            type="text"
-            placeholder="Search..."
+            matInput
+            type="search"
+            placeholder="Search rules"
+            aria-label="Search rules"
             [value]="searchTerm()"
             (input)="onSearchInput($event)"
-            aria-label="Search rules"
-            class="search-input"
           />
-        </div>
+        </mat-form-field>
       </div>
 
       <rules-table
@@ -48,13 +48,14 @@
     </div>
 
     <button
+      mat-icon-button
       type="button"
       class="stream-toggle"
       (click)="toggleStreamRail()"
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
       [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
-      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
+      <mat-icon>{{ streamRailOpen() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
     </button>
 
     <aside

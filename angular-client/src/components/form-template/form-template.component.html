@@ -1,31 +1,23 @@
-<!-- dynamic-form.component.html -->
-<form class="form" [formGroup]="form">
+<form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
   @for (field of fields(); track field) {
-    <div class="flex flex-column gap-1">
+    <mat-form-field class="form-field">
       @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+        <mat-label>{{ field.label }}</mat-label>
       }
       <input
+        matInput
         [attr.placeholder]="field.placeholder"
         [formControlName]="field.name"
         [type]="field.type"
-        [value]="'boston'"
-        pInputText
-        class="form-control w-full"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
-        }"
+        [required]="!!field.required"
       />
-
-      <!-- Error Message -->
-      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
-        <div class="error-msg">
-          {{ getErrorMessage(field) }}
-        </div>
+      @if (form.get(field.name)?.invalid) {
+        <mat-error>{{ getErrorMessage(field) }}</mat-error>
       }
-    </div>
+    </mat-form-field>
   }
 
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+  <div class="form-actions">
+    <button mat-flat-button type="submit" [disabled]="!form.valid">Submit</button>
+  </div>
 </form>

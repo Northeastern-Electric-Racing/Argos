@@ -38,8 +38,8 @@
     transform 0.08s ease;
 }
 
-.switch-label.material-icons {
-  font-family: 'Material Icons';
+.switch-label.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
   letter-spacing: normal;
   text-transform: none;
 }
