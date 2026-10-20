@@ -12,7 +12,7 @@
   <ng-template #header>
     <tr>
       <th style="width: 3rem">
-        <p-tableheadercheckbox />
+        <p-tableHeaderCheckbox />
       </th>
       <th>Rule</th>
       <th>Applied To</th>
@@ -27,7 +27,7 @@
   <ng-template #body let-rule>
     <tr>
       <td>
-        <p-tablecheckbox [value]="rule" />
+        <p-tableCheckbox [value]="rule" />
       </td>
       <td>{{ rule.expr }}</td>
       <td>{{ rule.topic }}</td>
