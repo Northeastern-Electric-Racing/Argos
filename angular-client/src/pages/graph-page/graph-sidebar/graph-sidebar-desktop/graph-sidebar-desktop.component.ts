@@ -109,7 +109,7 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
     this.presetDialogRef = this.dialog.open<PresetDialogComponent, PresetDialogData, DataType[] | null>(
       PresetDialogComponent,
       {
-        width: '640px',
+        width: '720px',
         maxWidth: '95vw',
         data: { dataTypes: this.dataTypes() }
       }
