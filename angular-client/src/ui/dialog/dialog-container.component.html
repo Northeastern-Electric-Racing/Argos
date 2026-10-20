@@ -1,0 +1,15 @@
+<div class="ui-dialog-surface" cdkDrag cdkDragRootElement=".cdk-overlay-pane" [cdkDragDisabled]="!_config.uiDraggable">
+  @if (_config.uiShowHeader) {
+    <header class="ui-dialog-header" cdkDragHandle [class.draggable]="_config.uiDraggable">
+      <h2 class="ui-dialog-title">{{ _config.uiHeader }}</h2>
+      @if (_config.uiClosable) {
+        <button type="button" class="ui-dialog-close" aria-label="Close" (click)="close()">
+          <mat-icon aria-hidden="true">close</mat-icon>
+        </button>
+      }
+    </header>
+  }
+  <div class="ui-dialog-content" [class.headerless]="!_config.uiShowHeader">
+    <ng-template cdkPortalOutlet />
+  </div>
+</div>

@@ -1,0 +1,17 @@
+@if (origin(); as anchor) {
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="anchor"
+    [cdkConnectedOverlayOpen]="open()"
+    [cdkConnectedOverlayPositions]="positions"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayViewportMargin]="8"
+    (overlayOutsideClick)="onOutsideClick($event)"
+    (detach)="hide()"
+    (attach)="shown.emit()"
+  >
+    <div class="ui-popover-panel" [class]="panelClass()" role="dialog" [attr.aria-label]="ariaLabel()">
+      <ng-content />
+    </div>
+  </ng-template>
+}

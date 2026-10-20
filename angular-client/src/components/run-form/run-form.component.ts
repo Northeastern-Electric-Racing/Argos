@@ -1,12 +1,12 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -22,8 +22,8 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
+  private messageService = inject(ToastService);
+  private ref = inject(DialogRef);
   templateReady = false;
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
@@ -68,7 +68,9 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
+    this.ref.closed.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup | undefined) => {
+      // Closed without submitting (close button, Escape): nothing to save.
+      if (!form) return;
       if (this.selectedRun === undefined) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
         return;

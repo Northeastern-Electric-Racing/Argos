@@ -1,63 +1,91 @@
-.select-button-container {
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-}
-
-/* Run select button - using PrimeNG's CSS variables */
-.run-select-button {
-  --p-button-primary-color: #ffffff;
-  --p-button-primary-background: #313131;
-  --p-button-primary-border-color: #777777;
-  --p-button-primary-hover-background: rgba(104, 104, 104, 0.261);
-  --p-button-primary-hover-border-color: #777777;
-  --p-button-border-radius: 10px;
-  --p-button-padding-y: 8px;
-  --p-button-padding-x: 1.5rem;
-  --p-button-transition-duration: 0.15s;
-  --p-iconwrapper-padding-x: 1rem;
-}
-
-.run-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border: 2.5px solid #0099ff;
-  margin-left: 8px;
-  margin-right: 8px;
-  border-radius: 10px;
-}
-
-.number-buttons {
-  background-color: #262626;
-  border-radius: 10px;
-  color: white !important;
-  padding: 15px;
-  font-size: small;
-}
-
-/* Container that holds the carousel */
 .modal-container {
   background-color: #262626;
   border-radius: 20px;
   overflow: hidden;
 }
 
-:host ::ng-deep .p-carousel-prev,
-:host ::ng-deep .p-carousel-next {
-  background-color: #262626;
-  border-color: #262626;
-  color: white;
-  border-radius: 100px;
+.carousel-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* should eventually be replaced with Grid component */
+.slide {
+  flex: 1;
+  min-width: 0;
+}
 
-.row {
+.nav-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ui-text);
+  cursor: pointer;
+}
+
+.nav-button:hover {
+  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
+}
+
+.nav-button:focus-visible,
+.indicator:focus-visible {
+  outline: var(--ui-focus-ring);
+}
+
+.select-button-container {
+  text-align: center;
+  padding: 10px;
+}
+
+.run-select-button {
+  background: #313131;
+  border-color: #777777;
+  border-radius: 10px;
+  padding: 0 1.5rem;
+}
+
+.run-select-button:hover:not(:disabled) {
+  background: rgba(104, 104, 104, 0.261);
+  border-color: #777777;
+}
+
+.run-card {
+  border: 2.5px solid #0099ff;
+  margin: 0 8px;
+  border-radius: 10px;
+}
+
+.indicators {
   display: flex;
-  background-color: #262626;
-  color: #ffff;
-  width: 100%;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 6px;
+}
+
+.indicator {
+  width: 1.5rem;
+  height: 0.3rem;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: #555;
+  cursor: pointer;
+}
+
+.indicator[aria-current='true'] {
+  background: var(--ui-accent);
+}
+
+.counter,
+.empty {
+  text-align: center;
+  color: var(--ui-text-muted);
+  font-size: 0.85rem;
+  padding-bottom: 6px;
 }
 
 .left {
@@ -70,19 +98,4 @@
   margin-left: auto;
   margin-right: 5px;
   text-align: right;
-}
-
-.number_buttons.highlight {
-  border: 2px solid #0099ff; /* Highlight color */
-  background-color: #808080; /* Slightly different background to stand out */
-}
-
-.modal-close-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  scale: 75%;
-  border-radius: 10px;
-  margin-top: 15px;
-  margin-right: 10px;
 }

@@ -113,34 +113,18 @@
   background-color: #1e9ad8;
 }
 
-/* ── PrimeNG Select overrides: force the dropdown to match the controls-zone styling ── */
+/* Select sized to match the controls-zone styling */
 .controls-zone ::ng-deep .small-grey-select {
-  width: 100% !important;
-  min-width: 0 !important;
-  height: clamp(18px, 2.3vw, 44px) !important;
-  border-radius: clamp(8px, 1.25vw, 24px) !important;
-  background-color: #555 !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  min-width: 0;
 }
 
-.controls-zone ::ng-deep .p-select-label,
-.controls-zone ::ng-deep .p-select-label.p-placeholder {
-  width: auto !important;
-  padding: 0 clamp(4px, 0.94vw, 20px) !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  font-weight: 600 !important;
-  color: #c0c0c0 !important;
-  --p-select-placeholder-color: #c0c0c0 !important;
-  line-height: clamp(18px, 2.3vw, 44px) !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.controls-zone ::ng-deep .p-select-trigger {
-  padding-right: clamp(3px, 0.63vw, 14px) !important;
-  display: flex !important;
-  align-items: center !important;
+.controls-zone ::ng-deep .ui-select {
+  height: clamp(18px, 2.3vw, 44px);
+  border-radius: clamp(8px, 1.25vw, 24px);
+  background-color: #555;
+  font-size: clamp(7px, 0.94vw, 18px);
+  font-weight: 600;
+  color: #c0c0c0;
+  padding-left: clamp(4px, 0.94vw, 20px);
 }

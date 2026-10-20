@@ -1,3 +1,4 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import {
   ChangeDetectorRef,
   Component,
@@ -11,7 +12,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
@@ -32,7 +32,6 @@ import LiveValueStripComponent from './live-value-strip/live-value-strip.compone
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -50,7 +49,6 @@ import { FormsModule } from '@angular/forms';
     CustomGraphComponent,
     LiveValueStripComponent,
     TypographyComponent,
-    InputNumberModule,
     FormsModule
   ]
 })
@@ -58,7 +56,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private toastService = inject(MessageService);
+  private toastService = inject(ToastService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation

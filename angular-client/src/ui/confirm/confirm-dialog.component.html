@@ -1,0 +1,7 @@
+<p class="message">{{ data.message }}</p>
+<div class="actions">
+  <button type="button" class="ui-button ui-button--text" (click)="ref.close(false)">{{ data.rejectLabel }}</button>
+  <button type="button" class="ui-button" [class.ui-button--danger]="data.danger" (click)="ref.close(true)">
+    {{ data.acceptLabel }}
+  </button>
+</div>

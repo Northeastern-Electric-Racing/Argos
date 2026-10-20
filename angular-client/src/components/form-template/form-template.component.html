@@ -10,8 +10,7 @@
         [formControlName]="field.name"
         [type]="field.type"
         [value]="'boston'"
-        pInputText
-        class="form-control w-full"
+        class="ui-input ui-input--fluid form-control"
         [ngClass]="{
           'ng-invalid ng-dirty':
             form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
@@ -27,5 +26,5 @@
     </div>
   }
 
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+  <button class="ui-button" type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>
 </form>

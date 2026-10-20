@@ -1,0 +1,66 @@
+.ui-drawer {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  box-shadow: var(--ui-shadow);
+  animation: ui-drawer-in-right 200ms ease-out;
+}
+
+.ui-drawer[data-position='left'] {
+  animation-name: ui-drawer-in-left;
+}
+
+@keyframes ui-drawer-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes ui-drawer-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+.ui-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.75rem 0.5rem 1rem;
+}
+
+.ui-drawer-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-drawer-close {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+}
+
+.ui-drawer-close:hover {
+  color: var(--ui-text);
+  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
+}
+
+.ui-drawer-close:focus-visible {
+  outline: var(--ui-focus-ring);
+}
+
+.ui-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 1rem 1rem;
+}

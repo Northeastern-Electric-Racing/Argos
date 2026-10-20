@@ -1,5 +1,5 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { FormTemplateComponent } from './form-template.component';
 
@@ -11,8 +11,8 @@ describe('FormTemplateComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FormTemplateComponent],
       providers: [
-        { provide: DynamicDialogConfig, useValue: { data: {} } },
-        { provide: DynamicDialogRef, useValue: { close: () => {} } }
+        { provide: DIALOG_DATA, useValue: {} },
+        { provide: DialogRef, useValue: { close: () => {} } }
       ]
     }).compileComponents();
 

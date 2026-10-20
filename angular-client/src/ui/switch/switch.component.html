@@ -1,0 +1,12 @@
+<button
+  type="button"
+  role="switch"
+  class="ui-switch"
+  [id]="inputId()"
+  [attr.aria-checked]="checked()"
+  [attr.aria-label]="ariaLabel()"
+  [disabled]="disabled()"
+  (click)="toggle()"
+>
+  <span class="ui-switch-thumb" aria-hidden="true"></span>
+</button>

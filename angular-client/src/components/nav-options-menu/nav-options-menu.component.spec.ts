@@ -1,5 +1,5 @@
+import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 
 import { NavOptionsMenuComponent } from './nav-options-menu.component';
 
@@ -10,7 +10,7 @@ describe('NavOptionsMenuComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [NavOptionsMenuComponent],
-      providers: [{ provide: DynamicDialogConfig, useValue: { data: { items: [] } } }]
+      providers: [{ provide: DIALOG_DATA, useValue: { items: [] } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NavOptionsMenuComponent);

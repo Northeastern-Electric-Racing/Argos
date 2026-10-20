@@ -218,10 +218,7 @@
   outline: none;
 }
 
-.entry-dismiss .pi {
-  font-size: 0.7rem;
-}
-
+.entry-dismiss mat-icon,
 /* ---- Empty state ---- */
 
 .empty-state {
@@ -237,6 +234,8 @@
 
 .empty-icon {
   font-size: 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
   color: #444;
 }
 
@@ -286,10 +285,6 @@
   color: #ef4345;
   background-color: #ef434514;
   outline: none;
-}
-
-.view-all-button .pi {
-  font-size: 0.72rem;
 }
 
 /* ---- Mobile ---- */

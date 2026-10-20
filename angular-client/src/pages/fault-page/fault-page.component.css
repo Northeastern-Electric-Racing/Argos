@@ -18,3 +18,55 @@
   justify-content: left;
   overflow-y: auto;
 }
+
+.accordion {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  overflow: hidden;
+  background: var(--ui-surface-1);
+}
+
+.accordion-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.accordion-heading:not(:first-of-type) {
+  border-top: 1px solid var(--ui-border);
+}
+
+.accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  color: var(--ui-text);
+  cursor: pointer;
+  outline: none;
+}
+
+.accordion-trigger:hover {
+  background: color-mix(in srgb, var(--ui-text) 5%, transparent);
+}
+
+.accordion-trigger:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.accordion-trigger[aria-expanded='true'] {
+  color: var(--ui-accent);
+}
+
+.expand-icon {
+  transition: transform 150ms ease;
+}
+
+.accordion-trigger[aria-expanded='true'] .expand-icon {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  padding: 0 1.25rem 1rem;
+}

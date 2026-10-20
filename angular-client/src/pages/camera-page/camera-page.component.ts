@@ -1,7 +1,7 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MessageService } from 'primeng/api';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { UiSelectComponent } from 'src/ui/select/select.component';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
@@ -14,12 +14,12 @@ import TypographyComponent from 'src/components/typography/typography.component'
   templateUrl: './camera-page.component.html',
   styleUrl: './camera-page.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
+  imports: [UiSelectComponent, ReactiveFormsModule, FormsModule, TypographyComponent]
 })
 export class CameraPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
 
   url = 'http://192.168.100.11:8889/frontcam/';
   urlAvailable = false;
@@ -82,11 +82,11 @@ export class CameraPageComponent implements OnInit {
     this.liveStream = true;
   };
 
-  onDropdownChange = (event: SelectChangeEvent) => {
-    if (event.value === 'Live Stream') {
+  onDropdownChange = (value: string) => {
+    if (value === 'Live Stream') {
       this.onLiveStreamSelected();
     } else {
-      this.onVideoSelected(event.value);
+      this.onVideoSelected(value);
     }
   };
 }

@@ -1,20 +1,16 @@
 @if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
-    </ng-template>
-  </p-drawer>
+  <ui-drawer [(visible)]="sidebarVisible" position="left" width="20rem" ariaLabel="Navigation">
+    <typography uiDrawerHeader style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+    @for (navItem of allNavItems; track navItem) {
+      <sidebar-chip
+        icon="{{ navItem.icon }}"
+        value="{{ navItem.label }}"
+        [active]="this.isSelected(navItem)"
+        (click)="navItem.onClick()"
+      >
+      </sidebar-chip>
+    }
+  </ui-drawer>
 } @else {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">
@@ -53,19 +49,17 @@
       <button
         type="button"
         class="navbar-notification"
-        aria-label="Notifications"
+        [attr.aria-label]="'Notifications, ' + notificationLogService.unreadCount() + ' unread'"
         (click)="notificationPanel.toggle($event)"
       >
         <mat-icon [svgIcon]="'notifications'" />
         @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
+          <span class="ui-badge notification-badge" aria-hidden="true">{{ notificationLogService.unreadCount() }}</span>
         }
       </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
-          <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
+      <ui-popover #notificationPanel (shown)="onNotificationPanelShow()" ariaLabel="Notifications">
+        <notification-list variant="popover" />
+      </ui-popover>
       <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
         <mat-icon [svgIcon]="'apps'" />
       </div>

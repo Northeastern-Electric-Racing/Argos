@@ -1,0 +1,52 @@
+:host {
+  display: inline-flex;
+}
+
+.ui-switch {
+  position: relative;
+  width: 2.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #555;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.ui-switch:hover:not(:disabled) {
+  background: #666;
+}
+
+.ui-switch[aria-checked='true'] {
+  background: var(--ui-accent);
+}
+
+.ui-switch[aria-checked='true']:hover:not(:disabled) {
+  background: var(--ui-accent-hover);
+}
+
+.ui-switch:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.ui-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-switch-thumb {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 150ms ease;
+}
+
+.ui-switch[aria-checked='true'] .ui-switch-thumb {
+  transform: translateX(1rem);
+}
