@@ -23,43 +23,36 @@
     <div class="toggle-group">
       <label class="flatten-toggle">
         <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
-        <p-toggleswitch
+        <input
+          tuiSwitch
+          type="checkbox"
+          size="s"
+          aria-label="Show only selected topics"
+          [showIcons]="false"
           [ngModel]="selectedOnly()"
           (ngModelChange)="toggleSelectedOnly($event)"
-          ariaLabel="Show only selected topics"
         />
       </label>
       <label class="flatten-toggle">
         <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-        <p-toggleswitch
+        <input
+          tuiSwitch
+          type="checkbox"
+          size="s"
+          aria-label="Flatten topic tree"
+          [showIcons]="false"
           [ngModel]="flattenMode()"
           (ngModelChange)="toggleFlattenMode($event)"
-          ariaLabel="Flatten topic tree"
         />
       </label>
     </div>
   </div>
-  <p-tree
-    [value]="activeNodes()"
-    styleClass="w-full md:w-[30rem]"
-    (onNodeSelect)="nodeSelect($event)"
-    (onNodeUnselect)="onNodeUnselect($event)"
-    [(selection)]="selectedNodes"
-    [filter]="true"
+  <topic-tree
+    class="tree"
     filterPlaceholder="Select Data Type"
-    styleClass="w-full"
-    [autofocus]="true"
-    [style]="{ height: '80vh', overflow: 'auto' }"
-    [metaKeySelection]="false"
-    selectionMode="multiple"
-  >
-    <ng-template let-node #node>
-      <div class="tree-node-container" (click)="onRowClick($event, node)">
-        <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
-        @if (node.children?.length === 0) {
-          <typography [content]="node.data.displayValue()" variant="subheader" />
-        }
-      </div>
-    </ng-template>
-  </p-tree>
+    [nodes]="activeNodes()"
+    [selection]="selectedNodes()"
+    (nodeSelect)="nodeSelect($event)"
+    (nodeUnselect)="onNodeUnselect($event)"
+  />
 </div>

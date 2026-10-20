@@ -91,21 +91,12 @@
   margin-left: 8px;
 }
 
-/* PrimeNG InputNumber width customization */
-::ng-deep .time-range-input {
-  width: 80px !important;
+.time-range-input {
+  width: 5.5rem;
 }
 
-::ng-deep .time-range-input .p-inputnumber-input {
-  width: 100% !important;
-}
-
-::ng-deep .y-axis-input {
-  width: 60px !important;
-}
-
-::ng-deep .y-axis-input .p-inputnumber-input {
-  width: 100% !important;
+.y-axis-input {
+  width: 6rem;
 }
 
 /* ======================== Mobile ======================== */
@@ -165,17 +156,11 @@
     flex: 0 0 auto;
   }
 
-  ::ng-deep .time-range-input {
-    width: 70px !important;
+  .time-range-input {
+    width: 5rem;
   }
 
-  ::ng-deep .y-axis-input {
-    width: 55px !important;
-  }
-
-  ::ng-deep .p-select-label,
-  ::ng-deep .p-select-label.p-placeholder {
-    width: auto !important;
-    min-width: 100px;
+  .y-axis-input {
+    width: 5.5rem;
   }
 }

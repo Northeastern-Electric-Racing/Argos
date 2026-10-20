@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { FormTemplateComponent } from './form-template.component';
 
@@ -9,11 +8,7 @@ describe('FormTemplateComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FormTemplateComponent],
-      providers: [
-        { provide: DynamicDialogConfig, useValue: { data: {} } },
-        { provide: DynamicDialogRef, useValue: { close: () => {} } }
-      ]
+      imports: [FormTemplateComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FormTemplateComponent);

@@ -1,3 +1,9 @@
 :host {
   display: block;
 }
+
+.cell-compare-drawer {
+  inline-size: auto;
+  min-inline-size: 18rem;
+  max-inline-size: min(40rem, calc(100vw - 3rem));
+}

@@ -1,6 +1,8 @@
-import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import ApexCharts from 'apexcharts';
-import { DialogService } from 'primeng/dynamicdialog';
+import { TuiDialogService } from '@taiga-ui/core';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
@@ -17,11 +19,11 @@ type ChartOptions = Pick<
   selector: 'graph-component',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  providers: [DialogService],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class GraphComponent implements OnInit, OnDestroy {
-  public dialogService = inject(DialogService);
+  private destroyRef = inject(DestroyRef);
+  private readonly dialogs = inject(TuiDialogService);
   data = input.required<GraphData[]>();
   color = input.required<string>(); // Must be hex
   title = input<string | undefined>(undefined);
@@ -117,15 +119,19 @@ export class GraphComponent implements OnInit, OnDestroy {
   timeRangeMs = computed(() => (this.timeRangeSec() ?? 120) * 1000); // defaults to 2 minutes
   timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
-    this.dialogService.open(GraphDialogComponent, {
-      header: this.title(),
-      data: {
-        data: this.data(),
-        color: this.color(),
-        title: this.title(),
-        graphContainerId: this.graphContainerId() + 'big'
-      }
-    });
+    this.dialogs
+      .open<void>(new PolymorpheusComponent(GraphDialogComponent), {
+        label: this.title(),
+        size: null,
+        data: {
+          data: this.data(),
+          color: this.color(),
+          title: this.title(),
+          graphContainerId: this.graphContainerId() + 'big'
+        }
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   };
 
   updateChart = () => {

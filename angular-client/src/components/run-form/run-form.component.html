@@ -7,5 +7,5 @@
     [defaultValue]="this.selectorConfig.defaultValue"
   >
   </select-dropdown>
-  <form-template [fields]="this.inputFields" />
+  <form-template [fields]="this.inputFields" (submitForm)="onSubmit($event)" />
 }

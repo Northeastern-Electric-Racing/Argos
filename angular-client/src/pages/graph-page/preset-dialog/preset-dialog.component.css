@@ -29,18 +29,12 @@
   flex: 1 1 280px;
 }
 
-.save-form label {
-  color: #ccc;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
 .save-form-controls {
   display: flex;
   gap: 8px;
 }
 
-.save-form-controls input {
+.name-field {
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -71,21 +65,6 @@
 .preset-table {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
-  color: #eee;
-}
-
-.preset-table th,
-.preset-table td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #2a2a2a;
-  font-size: 0.9rem;
-}
-
-.preset-table th {
-  color: #aaa;
-  font-weight: 600;
 }
 
 .preset-table td.topic-count,
@@ -101,8 +80,9 @@
   white-space: nowrap;
 }
 
-.preset-table td.actions button {
-  margin-left: 6px;
+.action-buttons {
+  display: inline-flex;
+  gap: 6px;
 }
 
 .preset-table .name-text {

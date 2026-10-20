@@ -1,12 +1,13 @@
 import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
+import { type TuiDialogContext } from '@taiga-ui/core';
+import { injectContext } from '@taiga-ui/polymorpheus';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -22,8 +23,8 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
+  private toasts = inject(ToastService);
+  private readonly context = injectContext<TuiDialogContext>();
   templateReady = false;
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
@@ -67,19 +68,18 @@ export class RunFormComponent implements OnInit {
 
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
-  constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
-      if (this.selectedRun === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
-        return;
-      }
-      updateRun(
-        this.selectedRun.id,
-        form.controls['driverName'].value,
-        form.controls['locationName'].value,
-        form.controls['notes'].value
-      );
-    });
+  onSubmit(form: FormGroup) {
+    if (this.selectedRun === undefined) {
+      this.toasts.show('No run selected', { label: 'Error', appearance: 'negative' });
+      return;
+    }
+    updateRun(
+      this.selectedRun.id,
+      form.controls['driverName'].value,
+      form.controls['locationName'].value,
+      form.controls['notes'].value
+    );
+    this.context.completeWith();
   }
 
   ngOnInit() {
@@ -98,7 +98,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.toasts.show(error.message, { label: 'Error', appearance: 'negative' });
       if (error) {
         console.log('loading error: ', error);
       }
@@ -172,7 +172,7 @@ export class RunFormComponent implements OnInit {
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.toasts.show(error.message, { label: 'Error', appearance: 'negative' });
       if (error) {
         console.log('loading error: ', error);
       }

@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { Popover } from 'primeng/popover';
+import { TuiActiveZone, TuiDay, TuiTime } from '@taiga-ui/cdk';
+import { TuiCalendar, TuiDropdown, TuiTextfield } from '@taiga-ui/core';
+import { TuiInputDateTime, TuiInputNumber } from '@taiga-ui/kit';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -28,6 +28,19 @@ export const MAX_RANGE_MINUTES = 7 * 24 * 60;
 
 type CustomMode = 'last-x' | 'date-range';
 
+/** The [day, time] pair Taiga's date-time input works with */
+export type DayTime = [TuiDay, TuiTime];
+
+export function toDayTime(date: Date): DayTime {
+  return [TuiDay.fromLocalNativeDate(date), TuiTime.fromLocalNativeDate(date)];
+}
+
+export function fromDayTime([day, time]: readonly [TuiDay, TuiTime?]): Date {
+  const date = day.toLocalNativeDate();
+  if (time) date.setHours(time.hours, time.minutes, time.seconds, time.ms);
+  return date;
+}
+
 @Component({
   selector: 'general-buttons',
   templateUrl: './general-buttons.component.html',
@@ -37,14 +50,17 @@ type CustomMode = 'last-x' | 'date-range';
     RunSelectorComponent,
     ButtonComponent,
     SelectDropdownComponent,
-    Popover,
-    DatePicker,
-    InputNumberModule,
+    TuiActiveZone,
+    TuiCalendar,
+    TuiDropdown,
+    TuiInputDateTime,
+    TuiInputNumber,
+    TuiTextfield,
     FormsModule
   ]
 })
 export class GeneralButtonsComponent {
-  private toastService = inject(MessageService);
+  private toasts = inject(ToastService);
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
@@ -66,7 +82,7 @@ export class GeneralButtonsComponent {
   onApplyCustomLastX = input.required<(totalMinutes: number) => void>();
   onApplyCustomDateRange = input.required<(startMs: number, endMs: number) => void>();
 
-  customPopover = viewChild.required<Popover>('customPopover');
+  customOpen = signal(false);
 
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);
@@ -74,6 +90,10 @@ export class GeneralButtonsComponent {
   customFromDate = signal<Date>(new Date(Date.now() - 30 * 60 * 1000));
   customToDate = signal<Date>(new Date());
   maxDate = signal<Date>(new Date());
+  // Taiga's date-time input works in [TuiDay, TuiTime]; the component keeps native Dates
+  maxDayTime = computed(() => toDayTime(this.maxDate()));
+  customFromDayTime = computed(() => toDayTime(this.customFromDate()));
+  customToDayTime = computed(() => toDayTime(this.customToDate()));
 
   // Build the dropdown config from the preset list each time it changes; preserves the
   // existing select-dropdown contract without leaking it back to the parent.
@@ -93,9 +113,24 @@ export class GeneralButtonsComponent {
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
 
-  toggleCustomPopover = (event?: Event) => {
-    if (event) this.customPopover().toggle(event);
+  toggleCustomPopover = () => {
+    const open = !this.customOpen();
+    if (open) this.onCustomPopoverShow();
+    this.customOpen.set(open);
   };
+
+  /** Close the popover once focus and clicks leave it (Taiga's active zone) */
+  onCustomActiveZone(active: boolean) {
+    if (!active) this.customOpen.set(false);
+  }
+
+  setCustomFrom(value: DayTime | null) {
+    if (value) this.customFromDate.set(fromDayTime(value));
+  }
+
+  setCustomTo(value: DayTime | null) {
+    if (value) this.customToDate.set(fromDayTime(value));
+  }
 
   // Refresh the popover contents every time it opens. Without this, the From/To pickers
   // and `maxDate` go stale (component-init values) once the page has been open a while,
@@ -132,18 +167,13 @@ export class GeneralButtonsComponent {
     const minutes = this.customMinutes() ?? 0;
     const totalMinutes = Math.floor(hours * 60 + minutes);
     if (totalMinutes <= 0) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Custom range must be greater than 0 minutes.'
-      });
+      this.toasts.show('Custom range must be greater than 0 minutes.', { label: 'Invalid Range', appearance: 'warning' });
       return;
     }
     if (totalMinutes > MAX_RANGE_MINUTES) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Range Too Large',
-        detail: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
+      this.toasts.show(`Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`, {
+        label: 'Range Too Large',
+        appearance: 'warning'
       });
       return;
     }
@@ -155,36 +185,23 @@ export class GeneralButtonsComponent {
     const to = this.customToDate();
     const now = Date.now();
     if (!from || !to) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Pick both a start and end time.'
-      });
+      this.toasts.show('Pick both a start and end time.', { label: 'Invalid Range', appearance: 'warning' });
       return;
     }
     const startMs = from.getTime();
     const endMs = to.getTime();
     if (startMs >= endMs) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Start must be before end.'
-      });
+      this.toasts.show('Start must be before end.', { label: 'Invalid Range', appearance: 'warning' });
       return;
     }
     if (endMs > now + 60 * 1000) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'End time cannot be in the future.'
-      });
+      this.toasts.show('End time cannot be in the future.', { label: 'Invalid Range', appearance: 'warning' });
       return;
     }
     if (endMs - startMs > MAX_RANGE_MINUTES * 60 * 1000) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Range Too Large',
-        detail: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
+      this.toasts.show(`Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`, {
+        label: 'Range Too Large',
+        appearance: 'warning'
       });
       return;
     }

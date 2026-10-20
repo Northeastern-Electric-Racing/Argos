@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 import { ButtonComponent } from '../argos-button/argos-button.component';
 
@@ -12,7 +12,7 @@ import { ButtonComponent } from '../argos-button/argos-button.component';
 export default class MoreDetailsComponent {
   private router = inject(Router);
   private storage = inject(Storage);
-  private messageService = inject(MessageService);
+  private toasts = inject(ToastService);
   label: string = 'More Details';
   goToGraph = () => {
     const runId = this.storage.getCurrentRunId().value;
@@ -25,11 +25,7 @@ export default class MoreDetailsComponent {
 
   showRouterDisconnectedToast() {
     setTimeout(() => {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Router is disconnected'
-      });
+      this.toasts.show('Router is disconnected', { label: 'Error', appearance: 'negative' });
     });
   }
 }

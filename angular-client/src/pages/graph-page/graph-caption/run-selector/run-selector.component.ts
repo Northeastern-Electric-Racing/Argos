@@ -1,11 +1,12 @@
 import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Run } from 'src/utils/types.utils';
-import { CarouselComponent } from '../../../../components/carousel/carousel.component';
+import { CarouselComponent, DialogData } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
+import { TuiDialogService } from '@taiga-ui/core';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
@@ -17,13 +18,12 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  public dialogService = inject(DialogService);
+  private dialogs = inject(TuiDialogService);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private toasts = inject(ToastService);
   label!: string;
   runs!: Run[];
   runsIsLoading = true;
-  ref?: DynamicDialogRef | null;
   selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
@@ -32,7 +32,7 @@ export class RunSelectorComponent implements OnInit {
       this.runsIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.toasts.show(error.message, { label: 'Error', appearance: 'negative' });
     });
     runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) this.runs = data;
@@ -42,14 +42,12 @@ export class RunSelectorComponent implements OnInit {
   }
 
   openDialog = () => {
-    this.ref = this.dialogService.open(CarouselComponent, {
-      width: '550px',
-      data: { runs: this.runs, selectRun: this.selectRun() },
-      header: 'Select a run to view',
-      modal: true, // makes the dialog modal
-      dismissableMask: true, // enables auto-close on outside click
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    this.dialogs
+      .open<void>(new PolymorpheusComponent(CarouselComponent), {
+        label: 'Select a run to view',
+        data: { runs: this.runs, selectRun: this.selectRun() } satisfies DialogData
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   };
 }

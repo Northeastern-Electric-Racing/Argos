@@ -1,13 +1,14 @@
 <div class="setting-input-wrapper">
   <label [for]="label() + '-input'" class="setting-label">{{ label() }}</label>
-  <input
-    pInputText
-    type="number"
-    [id]="label() + '-input'"
-    [(ngModel)]="value"
-    [attr.min]="min()"
-    [attr.max]="max()"
-    (change)="onValueChange($any($event.target).value)"
-    autocomplete="off"
-  />
+  <tui-textfield tuiTextfieldSize="m" [tuiTextfieldCleaner]="false">
+    <input
+      tuiInputNumber
+      [id]="label() + '-input'"
+      [min]="min() ?? null"
+      [max]="max() ?? null"
+      [ngModel]="value() ?? null"
+      (ngModelChange)="onValueChange($event)"
+      autocomplete="off"
+    />
+  </tui-textfield>
 </div>

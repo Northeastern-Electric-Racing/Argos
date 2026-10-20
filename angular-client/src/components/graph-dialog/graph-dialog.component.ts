@@ -1,28 +1,27 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { type TuiDialogContext } from '@taiga-ui/core';
+import { injectContext } from '@taiga-ui/polymorpheus';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
+
+export interface GraphDialogData {
+  data: GraphData[];
+  color: string;
+  title?: string;
+  subTitle?: string;
+  graphContainerId: string;
+}
 
 @Component({
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
-  providers: [DialogService],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [GraphComponent]
 })
 export class GraphDialogComponent {
-  public dialogService = inject(DialogService);
-  public config = inject(DynamicDialogConfig);
-  public ref = inject(DynamicDialogRef);
-  data: GraphData[];
-  color: string;
-  title: string;
-  graphContainerId: string;
-
-  constructor() {
-    this.data = this.config.data.data;
-    this.color = this.config.data.color;
-    this.title = this.config.data.title;
-    this.graphContainerId = this.config.data.graphContainerId;
-  }
+  readonly context = injectContext<TuiDialogContext<void, GraphDialogData>>();
+  data: GraphData[] = this.context.data.data;
+  color: string = this.context.data.color;
+  title: string | undefined = this.context.data.title;
+  graphContainerId: string = this.context.data.graphContainerId;
 }

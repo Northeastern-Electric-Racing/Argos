@@ -17,58 +17,60 @@
         }
       </div>
     } @else {
-      <p-table [value]="lapsNewestFirst()">
-        <ng-template #header>
+      <table tuiTable size="m" class="laps-table">
+        <thead>
           <tr>
-            <th class="col-num">#</th>
-            <th class="col-dur">Duration</th>
-            <th class="col-delta">Δ Best</th>
-            <th class="col-time">Time of Day</th>
-            <th class="col-time">Started At</th>
-            <th class="col-run">Run</th>
-            <th class="col-stat">Avg Speed</th>
-            <th class="col-stat">Energy</th>
-            <th class="col-stat">Max Temp</th>
+            <th tuiTh class="col-num">#</th>
+            <th tuiTh class="col-dur">Duration</th>
+            <th tuiTh class="col-delta">Δ Best</th>
+            <th tuiTh class="col-time">Time of Day</th>
+            <th tuiTh class="col-time">Started At</th>
+            <th tuiTh class="col-run">Run</th>
+            <th tuiTh class="col-stat">Avg Speed</th>
+            <th tuiTh class="col-stat">Energy</th>
+            <th tuiTh class="col-stat">Max Temp</th>
           </tr>
-        </ng-template>
-        <ng-template #body let-lap>
-          <tr [class.lap-row-best]="isBestLap(lap)" [class.lap-row-worst]="isWorstLap(lap)">
-            <td class="col-num">{{ lap.number }}</td>
-            <td class="col-dur monospace">{{ formatLapMs(lap.durationMs) }}</td>
-            <td class="col-delta monospace" [class.delta-positive]="!isBestLap(lap)">
-              @if (isBestLap(lap)) {
-                <span class="best-flag"><mat-icon>flag</mat-icon> —</span>
-              } @else {
-                {{ formatLapDelta(lap) }}
-              }
-            </td>
-            <td class="col-time monospace">{{ lap.endEpochMs | date: 'HH:mm:ss.SSS' }}</td>
-            <td class="col-time monospace">{{ lap.startEpochMs | date: 'HH:mm:ss.SSS' }}</td>
-            <td class="col-run">{{ lap.runId ?? '—' }}</td>
-            <td class="col-stat">
-              @if (lap.stats.avgSpeed !== null) {
-                {{ lap.stats.avgSpeed | number: '1.0-0' }} mph
-              } @else {
-                —
-              }
-            </td>
-            <td class="col-stat">
-              @if (lap.stats.energyUsed !== null) {
-                {{ lap.stats.energyUsed | number: '1.2-2' }}%
-              } @else {
-                —
-              }
-            </td>
-            <td class="col-stat">
-              @if (lap.stats.maxMotorTemp !== null) {
-                {{ lap.stats.maxMotorTemp | number: '1.0-0' }}°C
-              } @else {
-                —
-              }
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+        </thead>
+        <tbody tuiTbody>
+          @for (lap of lapsNewestFirst(); track lap.number) {
+            <tr tuiTr [class.lap-row-best]="isBestLap(lap)" [class.lap-row-worst]="isWorstLap(lap)">
+              <td tuiTd class="col-num">{{ lap.number }}</td>
+              <td tuiTd class="col-dur monospace">{{ formatLapMs(lap.durationMs) }}</td>
+              <td tuiTd class="col-delta monospace" [class.delta-positive]="!isBestLap(lap)">
+                @if (isBestLap(lap)) {
+                  <span class="best-flag"><mat-icon>flag</mat-icon> —</span>
+                } @else {
+                  {{ formatLapDelta(lap) }}
+                }
+              </td>
+              <td tuiTd class="col-time monospace">{{ lap.endEpochMs | date: 'HH:mm:ss.SSS' }}</td>
+              <td tuiTd class="col-time monospace">{{ lap.startEpochMs | date: 'HH:mm:ss.SSS' }}</td>
+              <td tuiTd class="col-run">{{ lap.runId ?? '—' }}</td>
+              <td tuiTd class="col-stat">
+                @if (lap.stats.avgSpeed !== null) {
+                  {{ lap.stats.avgSpeed | number: '1.0-0' }} mph
+                } @else {
+                  —
+                }
+              </td>
+              <td tuiTd class="col-stat">
+                @if (lap.stats.energyUsed !== null) {
+                  {{ lap.stats.energyUsed | number: '1.2-2' }}%
+                } @else {
+                  —
+                }
+              </td>
+              <td tuiTd class="col-stat">
+                @if (lap.stats.maxMotorTemp !== null) {
+                  {{ lap.stats.maxMotorTemp | number: '1.0-0' }}°C
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     }
   </div>
 </info-background>

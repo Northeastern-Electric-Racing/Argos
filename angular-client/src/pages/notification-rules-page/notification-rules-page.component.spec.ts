@@ -1,12 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { ToastService } from 'src/services/toast.service';
 import NotificationRulesPageComponent from './notification-rules-page.component';
 
 describe('NotificationRulesPageComponent', () => {
   let component: NotificationRulesPageComponent;
   let fixture: ComponentFixture<NotificationRulesPageComponent>;
-  let messageService: MessageService;
+  let toasts: ToastService;
 
   beforeEach(async () => {
     // The real app eagerly creates the client ID in SocketService, which AppContextComponent injects at bootstrap;
@@ -15,12 +14,13 @@ describe('NotificationRulesPageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [NotificationRulesPageComponent],
-      providers: [MessageService, DialogService]
+      // Toasts render through tui-root, which a component test doesn't mount
+      providers: [{ provide: ToastService, useValue: { show: vi.fn() } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotificationRulesPageComponent);
     component = fixture.componentInstance;
-    messageService = TestBed.inject(MessageService);
+    toasts = TestBed.inject(ToastService);
     fixture.detectChanges();
   });
 
@@ -44,7 +44,7 @@ describe('NotificationRulesPageComponent', () => {
 
   describe('CSV parsing', () => {
     it('should reject files without .csv extension', async () => {
-      const addSpy = vi.spyOn(messageService, 'add').mockReturnValue(undefined);
+      const showSpy = vi.mocked(toasts.show);
       const event = {
         target: {
           files: [new File(['test'], 'rules.txt', { type: 'text/plain' })],
@@ -53,7 +53,10 @@ describe('NotificationRulesPageComponent', () => {
       } as unknown as Event;
 
       await component.onFileSelected(event);
-      expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', summary: 'Invalid File' }));
+      expect(showSpy).toHaveBeenCalledWith(
+        'Please select a .csv file',
+        expect.objectContaining({ appearance: 'negative', label: 'Invalid File' })
+      );
     });
   });
 });

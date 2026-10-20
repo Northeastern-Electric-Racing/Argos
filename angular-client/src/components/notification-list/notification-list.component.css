@@ -218,8 +218,8 @@
   outline: none;
 }
 
-.entry-dismiss .pi {
-  font-size: 0.7rem;
+.entry-dismiss-icon {
+  font-size: 0.875rem;
 }
 
 /* ---- Empty state ---- */
@@ -288,8 +288,8 @@
   outline: none;
 }
 
-.view-all-button .pi {
-  font-size: 0.72rem;
+.view-all-icon {
+  font-size: 0.875rem;
 }
 
 /* ---- Mobile ---- */

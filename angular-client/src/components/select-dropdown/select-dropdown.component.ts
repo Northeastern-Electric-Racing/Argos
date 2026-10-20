@@ -1,5 +1,6 @@
 import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { TuiTextfield } from '@taiga-ui/core';
+import { TuiChevron, TuiDataListWrapper, TuiSelect } from '@taiga-ui/kit';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
@@ -17,7 +18,7 @@ export interface DropdownOption {
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  imports: [TuiTextfield, TuiChevron, TuiDataListWrapper, TuiSelect, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -53,8 +54,12 @@ export class SelectDropdownComponent {
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
-    changeEvent.value.function();
+  readonly stringify = (option: DropdownOption) => option.name;
+  readonly identityMatcher = (a: DropdownOption, b: DropdownOption) => a.name === b.name;
+
+  handleChangedOption(option: DropdownOption | null) {
+    this.selectedOption = option ?? undefined;
+    option?.function();
   }
 
   // Get display text for the dropdown

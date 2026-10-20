@@ -1,17 +1,27 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+  DestroyRef
+} from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { TuiTable } from '@taiga-ui/addon-table';
+import { TuiButton, type TuiDialogContext, TuiInput, TuiLabel } from '@taiga-ui/core';
+import { type TuiConfirmData } from '@taiga-ui/kit';
+import { injectContext } from '@taiga-ui/polymorpheus';
+import { injectConfirm } from 'src/utils/confirm.utils';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { DataType } from 'src/utils/types.utils';
 
-interface PresetDialogData {
+export interface PresetDialogData {
   dataTypes: DataType[];
 }
 
@@ -20,18 +30,17 @@ interface PresetDialogData {
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
+  imports: [FormsModule, TuiButton, TuiInput, TuiLabel, TuiTable]
 })
 export class PresetDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private destroyRef = inject(DestroyRef);
+  private readonly context = injectContext<TuiDialogContext<DataType[] | null, PresetDialogData>>();
+  private confirmDialog = injectConfirm();
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private toasts = inject(ToastService);
 
-  private data = this.config.data as PresetDialogData;
+  private data = this.context.data;
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
     initialValue: [] as DataType[]
@@ -51,20 +60,15 @@ export class PresetDialogComponent {
     if (existing) {
       this.confirmReplace(name, () => {
         this.presetService.replacePreset(existing.id, { topicNames });
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Preset Replaced',
-          detail: `"${name}" now contains ${topicNames.length} topic(s)`
+        this.toasts.show(`"${name}" now contains ${topicNames.length} topic(s)`, {
+          label: 'Preset Replaced',
+          appearance: 'positive'
         });
         this.newPresetName.set('');
       });
     } else {
       this.presetService.addPreset(name, topicNames);
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Preset Saved',
-        detail: `"${name}" with ${topicNames.length} topic(s)`
-      });
+      this.toasts.show(`"${name}" with ${topicNames.length} topic(s)`, { label: 'Preset Saved', appearance: 'positive' });
       this.newPresetName.set('');
     }
   }
@@ -85,9 +89,9 @@ export class PresetDialogComponent {
       text = await readTextFile(file, '.json');
     } catch (err) {
       if (err instanceof FileReadError && err.kind === 'invalid-extension') {
-        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .json file' });
+        this.toasts.show('Please select a .json file', { label: 'Invalid File', appearance: 'negative' });
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+        this.toasts.show('Failed to read file', { label: 'Read Error', appearance: 'negative' });
       }
       return;
     }
@@ -112,7 +116,7 @@ export class PresetDialogComponent {
 
   onApply(preset: Preset): void {
     const matched = this.presetService.resolvePresetTopics(preset, this.dataTypes);
-    this.ref.close(matched);
+    this.context.completeWith(matched);
   }
 
   onDownload(preset: Preset): void {
@@ -125,55 +129,48 @@ export class PresetDialogComponent {
   }
 
   onDelete(preset: Preset): void {
-    this.confirmationService.confirm({
-      message: `Delete preset "${preset.name}"?`,
-      header: 'Delete Preset',
-      acceptLabel: 'Delete',
-      rejectLabel: 'Cancel',
-      accept: () => {
-        this.presetService.deletePreset(preset.id);
-        this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
-      }
+    this.confirm('Delete Preset', { content: `Delete preset "${preset.name}"?`, yes: 'Delete', no: 'Cancel' }, () => {
+      this.presetService.deletePreset(preset.id);
+      this.toasts.show(preset.name, { label: 'Preset Deleted', appearance: 'positive' });
     });
   }
 
   private confirmReplace(name: string, onAccept: () => void): void {
-    this.confirmationService.confirm({
-      message: `A preset named "${name}" already exists. Replace its topics?`,
-      header: 'Replace Preset',
-      acceptLabel: 'Replace',
-      rejectLabel: 'Cancel',
-      accept: onAccept
-    });
+    this.confirm(
+      'Replace Preset',
+      { content: `A preset named "${name}" already exists. Replace its topics?`, yes: 'Replace', no: 'Cancel' },
+      onAccept
+    );
+  }
+
+  /** Opens Taiga's confirm dialog on top of this one and runs `onAccept` if the user confirms */
+  private confirm(label: string, data: TuiConfirmData, onAccept: () => void): void {
+    this.confirmDialog(label, data)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => onAccept());
   }
 
   private toastImported(name: string, count: number): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Preset Imported',
-      detail: `"${name}" with ${count} topic(s)`
-    });
+    this.toasts.show(`"${name}" with ${count} topic(s)`, { label: 'Preset Imported', appearance: 'positive' });
   }
 
   onAddDefaultPresets(): void {
     const added = this.presetService.addDefaultPresets();
     if (added === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Defaults Already Present',
-        detail: 'All default presets are already in your list.'
+      this.toasts.show('All default presets are already in your list.', {
+        label: 'Defaults Already Present',
+        appearance: 'info'
       });
     } else {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Defaults Added',
-        detail: `Added ${added} default preset${added === 1 ? '' : 's'}.`
+      this.toasts.show(`Added ${added} default preset${added === 1 ? '' : 's'}.`, {
+        label: 'Defaults Added',
+        appearance: 'positive'
       });
     }
   }
 
   onClose(): void {
-    this.ref.close(null);
+    this.context.completeWith(null);
   }
 
   private parsePresetJson(text: string): { name?: string; topicNames: string[] } | null {
@@ -181,14 +178,14 @@ export class PresetDialogComponent {
     try {
       parsed = JSON.parse(text);
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'File is not valid JSON' });
+      this.toasts.show('File is not valid JSON', { label: 'Parse Error', appearance: 'negative' });
       return null;
     }
 
     if (Array.isArray(parsed)) {
       const topics = parsed.filter((n): n is string => typeof n === 'string' && n.length > 0);
       if (topics.length === 0) {
-        this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'No topic names found' });
+        this.toasts.show('No topic names found', { label: 'Parse Error', appearance: 'negative' });
         return null;
       }
       return { topicNames: Array.from(new Set(topics)) };
@@ -208,10 +205,9 @@ export class PresetDialogComponent {
       }
     }
 
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Parse Error',
-      detail: 'Expected an object with a "topicNames" string array, or a bare array of topic names'
+    this.toasts.show('Expected an object with a "topicNames" string array, or a bare array of topic names', {
+      label: 'Parse Error',
+      appearance: 'negative'
     });
     return null;
   }

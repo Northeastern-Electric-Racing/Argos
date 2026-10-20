@@ -20,6 +20,10 @@
   min-height: 80px;
   user-select: none;
   transition: color 0.2s ease-in-out;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
 }
 
 .menu-icon {

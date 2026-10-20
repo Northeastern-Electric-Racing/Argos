@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { NgClass } from '@angular/common';
-import { ButtonDirective } from 'primeng/button';
+import { TuiButton, TuiError, TuiInput } from '@taiga-ui/core';
+import { TuiForm } from '@taiga-ui/layout';
 
 type anyType = string | number | boolean | undefined;
 
@@ -29,15 +27,11 @@ export interface DynamicFormField {
   templateUrl: './form-template.component.html',
   styleUrl: './form-template.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
+  imports: [ReactiveFormsModule, TuiButton, TuiError, TuiInput, TuiForm]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
-  public config = inject(DynamicDialogConfig);
-
   fields = input.required<DynamicFormField[]>();
-
-  public ref = inject(DynamicDialogRef);
 
   formData = input<Map<string, anyType>>(new Map());
   submitForm = output<FormGroup>();
@@ -80,7 +74,7 @@ export class FormTemplateComponent {
   }
 
   closeForm() {
-    this.ref.close(this.form);
+    this.submitForm.emit(this.form);
   }
 
   onSubmit() {

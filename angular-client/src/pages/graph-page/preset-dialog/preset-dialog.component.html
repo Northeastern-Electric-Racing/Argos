@@ -11,27 +11,31 @@
   <section class="save-section">
     <div class="actions-row">
       <div class="save-form">
-        <label for="preset-name">Save current selection</label>
+        <label tuiLabel for="preset-name">Save current selection</label>
         <div class="save-form-controls">
-          <input
-            id="preset-name"
-            pInputText
-            [ngModel]="newPresetName()"
-            (ngModelChange)="newPresetName.set($event)"
-            placeholder="Preset name…"
-            (keyup.enter)="onSaveCurrent()"
-          />
+          <tui-textfield tuiTextfieldSize="m" class="name-field">
+            <input
+              id="preset-name"
+              tuiInput
+              [ngModel]="newPresetName()"
+              (ngModelChange)="newPresetName.set($event)"
+              placeholder="Preset name…"
+              (keyup.enter)="onSaveCurrent()"
+            />
+          </tui-textfield>
           <button
-            pButton
+            size="m"
+            tuiButton
             type="button"
-            label="Save"
             (click)="onSaveCurrent()"
             [disabled]="!hasSelection() || newPresetName().trim().length === 0"
-          ></button>
+          >
+            Save
+          </button>
         </div>
       </div>
 
-      <button pButton type="button" label="Upload JSON" class="p-button-outlined" (click)="onUploadClick()"></button>
+      <button appearance="outline" size="m" tuiButton type="button" (click)="onUploadClick()">Upload JSON</button>
     </div>
     @if (!hasSelection()) {
       <small class="hint">Select a topic to save a preset</small>
@@ -45,37 +49,31 @@
         <small> Save your current topic selection or upload a JSON of your preset </small>
       </div>
     } @else {
-      <table class="preset-table">
+      <table tuiTable size="m" class="preset-table">
         <thead>
           <tr>
-            <th class="name">Name</th>
-            <th class="topic-count">Topics</th>
-            <th class="actions">Actions</th>
+            <th tuiTh class="name">Name</th>
+            <th tuiTh class="topic-count">Topics</th>
+            <th tuiTh class="actions">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody tuiTbody>
           @for (preset of presets(); track preset.id) {
-            <tr>
-              <td class="name" [title]="preset.name">
+            <tr tuiTr>
+              <td tuiTd class="name" [title]="preset.name">
                 <span class="name-text">{{ preset.name }}</span>
               </td>
-              <td class="topic-count">{{ preset.topicNames.length }}</td>
-              <td class="actions">
-                <button pButton type="button" label="Apply" (click)="onApply(preset)"></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Download"
-                  class="p-button-outlined"
-                  (click)="onDownload(preset)"
-                ></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Delete"
-                  class="p-button-text p-button-danger"
-                  (click)="onDelete(preset)"
-                ></button>
+              <td tuiTd class="topic-count">{{ preset.topicNames.length }}</td>
+              <td tuiTd class="actions">
+                <span class="action-buttons">
+                  <button size="xs" tuiButton type="button" (click)="onApply(preset)">Apply</button>
+                  <button appearance="outline" size="xs" tuiButton type="button" (click)="onDownload(preset)">
+                    Download
+                  </button>
+                  <button appearance="flat-destructive" size="xs" tuiButton type="button" (click)="onDelete(preset)">
+                    Delete
+                  </button>
+                </span>
               </td>
             </tr>
           }
@@ -85,9 +83,7 @@
   </section>
 
   <div class="footer">
-    <button pButton type="button" label="Add Default Presets" class="p-button-text" (click)="onAddDefaultPresets()"></button>
-    <button pButton type="button" label="Close" class="p-button-text" (click)="onClose()"></button>
+    <button appearance="flat" size="m" tuiButton type="button" (click)="onAddDefaultPresets()">Add Default Presets</button>
+    <button appearance="secondary" size="m" tuiButton type="button" (click)="onClose()">Close</button>
   </div>
-
-  <p-confirmdialog />
 </div>

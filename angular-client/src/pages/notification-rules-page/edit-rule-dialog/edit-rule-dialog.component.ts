@@ -1,29 +1,38 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
+import { TUI_VALIDATION_ERRORS, TuiButton, type TuiDialogContext, TuiError, TuiInput } from '@taiga-ui/core';
+import { TuiInputNumber } from '@taiga-ui/kit';
+import { TuiForm } from '@taiga-ui/layout';
+import { injectContext } from '@taiga-ui/polymorpheus';
 
 export interface EditRuleResult {
   expr: string;
   debounce_time: number;
 }
 
+export type EditRuleData = EditRuleResult;
+
+/** Messages tui-error shows for the rule dialogs' validators */
+export const RULE_VALIDATION_ERRORS = {
+  provide: TUI_VALIDATION_ERRORS,
+  useValue: { required: 'This field is required', min: 'Must be 0 or greater' }
+};
+
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, ButtonDirective],
+  imports: [ReactiveFormsModule, TuiButton, TuiError, TuiInput, TuiInputNumber, TuiForm],
+  providers: [RULE_VALIDATION_ERRORS],
   templateUrl: './edit-rule-dialog.component.html',
   styleUrls: ['./edit-rule-dialog.component.css']
 })
 export class EditRuleDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private readonly context = injectContext<TuiDialogContext<EditRuleResult | null, EditRuleData>>();
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    expr: [this.config.data.expr as string, Validators.required],
-    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]]
+    expr: [this.context.data.expr, Validators.required],
+    debounce_time: [this.context.data.debounce_time, [Validators.required, Validators.min(0)]]
   });
 
   onSubmit(): void {
@@ -38,10 +47,10 @@ export class EditRuleDialogComponent {
       debounce_time: Number(value.debounce_time)
     };
 
-    this.ref.close(result);
+    this.context.completeWith(result);
   }
 
   onCancel(): void {
-    this.ref.close(null);
+    this.context.completeWith(null);
   }
 }

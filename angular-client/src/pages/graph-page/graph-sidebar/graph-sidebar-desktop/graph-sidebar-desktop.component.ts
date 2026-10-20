@@ -1,22 +1,20 @@
 import {
   Component,
   Injector,
-  OnDestroy,
   computed,
   inject,
   input,
   linkedSignal,
   signal,
   untracked,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  DestroyRef
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { ToggleSwitch } from 'primeng/toggleswitch';
-import { take } from 'rxjs';
+import { TuiDialogService } from '@taiga-ui/core';
+import { TuiSwitch } from '@taiga-ui/kit';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import {
   DropdownOption,
   SelectDropdownComponent,
@@ -30,28 +28,30 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
+  TreeNode,
   TreeNodeData
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
+import { PresetDialogComponent, PresetDialogData } from '../../preset-dialog/preset-dialog.component';
+import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.component';
 
 @Component({
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent, Tree, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [ButtonComponent, TopicTreeComponent, TypographyComponent, TuiSwitch, FormsModule, SelectDropdownComponent]
 })
-export default class GraphSidebarDesktopComponent implements OnDestroy {
+export default class GraphSidebarDesktopComponent {
+  private destroyRef = inject(DestroyRef);
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private dialogs = inject(TuiDialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
 
   dataTypes = input<DataType[]>([]);
   treeNodes = computed(() => {
@@ -105,49 +105,32 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
-      header: 'Topic Presets',
-      width: '640px',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: {
-        dataTypes: this.dataTypes()
-      }
-    });
-    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
-      if (matched) {
-        this.applyMatched(matched);
-      }
-    });
+    this.dialogs
+      .open<DataType[] | null>(new PolymorpheusComponent(PresetDialogComponent), {
+        label: 'Topic Presets',
+        data: { dataTypes: this.dataTypes() } satisfies PresetDialogData
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((matched) => {
+        if (matched) {
+          this.applyMatched(matched);
+        }
+      });
   };
 
-  ngOnDestroy(): void {
-    if (this.presetDialogRef) {
-      this.presetDialogRef.close();
-    }
-  }
-
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
+  nodeSelect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.addDataType(dt);
+      this.selectedNodes.update((selected) => [...(selected ?? []), node]);
     }
   }
 
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
+  onNodeUnselect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
+      this.selectedNodes.update((selected) => selected?.filter((n) => n.data?.dataType.name !== dt.name));
     }
   }
 

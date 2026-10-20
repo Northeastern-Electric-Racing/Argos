@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
+import { TuiButton, TuiIcon } from '@taiga-ui/core';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
 
@@ -12,7 +12,7 @@ export type NotificationListVariant = 'popover' | 'stream';
   templateUrl: './notification-list.component.html',
   styleUrls: ['./notification-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button]
+  imports: [DatePipe, TuiButton, TuiIcon]
 })
 export class NotificationListComponent {
   protected notificationLogService = inject(NotificationLogService);

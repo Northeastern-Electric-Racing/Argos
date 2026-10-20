@@ -1,16 +1,14 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
-import { CarouselPageEvent, Carousel } from 'primeng/carousel';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { TuiButton, TuiCarousel, type TuiDialogContext } from '@taiga-ui/core';
+import { injectContext } from '@taiga-ui/polymorpheus';
 import { Run } from 'src/utils/types.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
-
-import { Button } from 'primeng/button';
 import TypographyComponent from '../typography/typography.component';
 
-// the data for the dialog, basically just all the runs
+// the data for the dialog: all the runs, and what to do with the one picked
 export interface DialogData {
   runs: Run[];
+  selectRun: (run: Run) => void;
 }
 
 @Component({
@@ -18,44 +16,22 @@ export interface DialogData {
   templateUrl: 'carousel.component.html',
   styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Carousel, MatGridList, MatGridTile, Button, TypographyComponent]
+  imports: [TuiCarousel, TuiButton, MatGridList, MatGridTile, TypographyComponent]
 })
 export class CarouselComponent {
-  public dialogRef = inject(DynamicDialogRef);
-  public config = inject(DynamicDialogConfig);
-  public router = inject(Router);
-  runs: Run[];
-  currentIndex: number = 0;
-  previousIndex: number = 0;
-  selectRun: (run: Run) => void = () => {
-    this.dialogRef.close();
-  };
+  readonly context = injectContext<TuiDialogContext<void, DialogData>>();
+  runs: Run[] = this.context.data.runs;
+  // Taiga's carousel loops with an unbounded index, so map it back onto the runs
+  index = signal(0);
 
-  constructor() {
-    this.runs = this.config.data.runs;
-    this.selectRun = (run: Run) => {
-      this.dialogRef.close();
-      this.config.data.selectRun(run);
-    };
+  runAt(index: number): Run | undefined {
+    const count = this.runs.length;
+    return count ? this.runs[((index % count) + count) % count] : undefined;
   }
 
-  updateIndex(nexIndex: number) {
-    this.currentIndex = nexIndex;
-  }
-
-  handlePageChange(event: CarouselPageEvent): void {
-    const newIndex = event.page;
-    if (newIndex) {
-      if (newIndex === this.runs.length) {
-        this.currentIndex = 0;
-      } else if (newIndex === -1) {
-        this.currentIndex = this.runs.length - 1;
-      } else {
-        this.currentIndex = newIndex;
-      }
-
-      this.previousIndex = newIndex;
-    }
+  selectRun(run: Run) {
+    this.context.completeWith();
+    this.context.data.selectRun(run);
   }
 
   datePipe = (date: Date) => {

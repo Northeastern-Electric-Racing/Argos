@@ -1,0 +1,18 @@
+.fault-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.fault-table {
+  width: 100%;
+}
+
+.selectable-row {
+  cursor: pointer;
+}
+
+.selectable-row:hover,
+.selectable-row:focus-visible {
+  background: var(--tui-background-neutral-1-hover);
+  outline: none;
+}
