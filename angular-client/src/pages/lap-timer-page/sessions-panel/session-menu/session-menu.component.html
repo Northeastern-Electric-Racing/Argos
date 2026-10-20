@@ -1,0 +1,40 @@
+<button
+  type="button"
+  class="session-menu-btn"
+  ngMenuTrigger
+  #origin
+  #trigger="ngMenuTrigger"
+  [menu]="menu()"
+  (click)="$event.stopPropagation()"
+  (keyup.enter)="$event.stopPropagation()"
+  aria-label="Session actions"
+>
+  <mat-icon aria-hidden="true">more_vert</mat-icon>
+</button>
+<ng-template
+  [cdkConnectedOverlayOpen]="trigger.expanded()"
+  [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }"
+  [cdkConnectedOverlayPositions]="menuPositions"
+  cdkAttachPopoverAsChild
+>
+  <div
+    ngMenu
+    class="session-menu-list"
+    #rowMenu="ngMenu"
+    (itemSelected)="action.emit($event)"
+    (click)="$event.stopPropagation()"
+    (keyup.enter)="$event.stopPropagation()"
+  >
+    <ng-template ngMenuContent>
+      <div ngMenuItem class="session-menu-item" value="rename">
+        <mat-icon aria-hidden="true">edit</mat-icon><span>Rename</span>
+      </div>
+      <div ngMenuItem class="session-menu-item" value="download">
+        <mat-icon aria-hidden="true">download</mat-icon><span>Download CSV</span>
+      </div>
+      <div ngMenuItem class="session-menu-item destructive" value="delete">
+        <mat-icon aria-hidden="true">delete</mat-icon><span>Delete</span>
+      </div>
+    </ng-template>
+  </div>
+</ng-template>

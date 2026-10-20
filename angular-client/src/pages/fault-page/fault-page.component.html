@@ -5,38 +5,47 @@
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
-  <p-accordion [value]="0" [multiple]="true">
-    @for (node of nodeArray; track node) {
-      <p-accordion-panel [value]="node.node">
-        <p-accordion-header>{{ node.node }}</p-accordion-header>
-        <p-accordion-content>
-          <p-table
-            selectionMode="single"
-            [(selection)]="selectedFault"
-            (onRowSelect)="onRowSelect()"
-            metaKeySelection
-            [value]="node.data"
-            stripedRows
-          >
-            <ng-template #header>
-              <tr>
-                <th>Name</th>
-                <th>Occurred At</th>
-                <th>Last Seen</th>
-                <th>Expired?</th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-node>
-              <tr [pSelectableRow]="node">
-                <td>{{ node.name }}</td>
-                <td>{{ node.occurredAt | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.lastSeen | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.expired ? 'Yes' : 'No' }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </p-accordion-content>
-      </p-accordion-panel>
+  <div ngAccordionGroup class="accordion" [multiExpandable]="true">
+    @for (node of nodeArray; track node.node) {
+      <h3 class="accordion-heading">
+        <span ngAccordionTrigger [panel]="panel" #trigger="ngAccordionTrigger" class="accordion-trigger">
+          {{ node.node }}
+          <mat-icon class="expand-icon" aria-hidden="true">expand_more</mat-icon>
+        </span>
+      </h3>
+      <div ngAccordionPanel #panel="ngAccordionPanel" class="accordion-panel">
+        <ng-template ngAccordionContent>
+          <div class="accordion-body">
+            <table cdk-table class="ui-table ui-table--striped ui-table--hover" [dataSource]="node.data">
+              <ng-container cdkColumnDef="name">
+                <th cdk-header-cell *cdkHeaderCellDef>Name</th>
+                <td cdk-cell *cdkCellDef="let fault">{{ fault.name }}</td>
+              </ng-container>
+              <ng-container cdkColumnDef="occurredAt">
+                <th cdk-header-cell *cdkHeaderCellDef>Occurred At</th>
+                <td cdk-cell *cdkCellDef="let fault">{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+              </ng-container>
+              <ng-container cdkColumnDef="lastSeen">
+                <th cdk-header-cell *cdkHeaderCellDef>Last Seen</th>
+                <td cdk-cell *cdkCellDef="let fault">{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
+              </ng-container>
+              <ng-container cdkColumnDef="expired">
+                <th cdk-header-cell *cdkHeaderCellDef>Expired?</th>
+                <td cdk-cell *cdkCellDef="let fault">{{ fault.expired ? 'Yes' : 'No' }}</td>
+              </ng-container>
+              <tr cdk-header-row *cdkHeaderRowDef="columns"></tr>
+              <tr
+                cdk-row
+                *cdkRowDef="let fault; columns: columns"
+                tabindex="0"
+                [attr.aria-label]="'Graph fault ' + fault.name"
+                (click)="onRowSelect(fault)"
+                (keydown.enter)="onRowSelect(fault)"
+              ></tr>
+            </table>
+          </div>
+        </ng-template>
+      </div>
     }
-  </p-accordion>
+  </div>
 </div>

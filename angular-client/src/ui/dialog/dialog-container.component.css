@@ -1,0 +1,72 @@
+.ui-dialog {
+  display: block;
+  outline: none;
+}
+
+.ui-dialog-surface {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
+  animation: ui-dialog-in 140ms ease-out;
+}
+
+@keyframes ui-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.ui-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem 0.5rem 1.25rem;
+}
+
+.ui-dialog-header.draggable {
+  cursor: move;
+}
+
+.ui-dialog-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.ui-dialog-close {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+}
+
+.ui-dialog-close:hover {
+  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
+  color: var(--ui-text);
+}
+
+.ui-dialog-close:focus-visible {
+  outline: var(--ui-focus-ring);
+}
+
+.ui-dialog-content {
+  padding: 0 1.25rem 1.25rem;
+  overflow: auto;
+}
+
+.ui-dialog-content.headerless {
+  padding: 0;
+}

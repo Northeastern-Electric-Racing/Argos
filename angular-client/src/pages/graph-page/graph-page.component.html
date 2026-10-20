@@ -44,43 +44,41 @@
                 additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
               />
               <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputnumber
+              <input
+                type="number"
+                class="ui-input ui-input--sm time-range-input"
                 [(ngModel)]="rangeValue"
-                mode="decimal"
-                [min]="1"
-                [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
+                min="1"
+                step="1"
+                [attr.aria-label]="rangeMode === 'time' ? 'X seconds' : 'X points'"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (onInput)="onGraphConfigChange()"
-              ></p-inputnumber>
+                (ngModelChange)="onGraphConfigChange()"
+              />
             </div>
           }
 
           <div class="toolbar-group config-group">
             <label class="input-label">Y Min:</label>
-            <p-inputnumber
+            <input
+              type="number"
+              class="ui-input ui-input--sm y-axis-input"
               [(ngModel)]="yAxisMin"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+              step="any"
+              aria-label="Y min"
               placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              (ngModelChange)="onGraphConfigChange()"
+            />
 
             <label class="input-label">Y Max:</label>
-            <p-inputnumber
+            <input
+              type="number"
+              class="ui-input ui-input--sm y-axis-input"
               [(ngModel)]="yAxisMax"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+              step="any"
+              aria-label="Y max"
               placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              (ngModelChange)="onGraphConfigChange()"
+            />
           </div>
 
           <div class="toolbar-group">

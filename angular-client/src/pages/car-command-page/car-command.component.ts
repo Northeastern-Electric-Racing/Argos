@@ -1,6 +1,7 @@
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
+import { ToastService } from 'src/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   authenticatePw,
   getSettings,
@@ -17,7 +18,6 @@ import APIService from 'src/services/api.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
-import { Password } from 'primeng/password';
 import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
@@ -27,16 +27,13 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'car-command',
   templateUrl: './car-command.component.html',
   styleUrls: ['./car-command.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
   imports: [
-    Password,
     FormsModule,
     ButtonComponent,
     LoadingPageComponent,
@@ -45,14 +42,13 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
     InfoBackgroundComponent,
     SettingToggleComponent,
     SettingInputComponent,
-    CommandCardComponent,
-    ConfirmDialog
+    CommandCardComponent
   ]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
-  private toastService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private toastService = inject(ToastService);
+  private confirmationService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);

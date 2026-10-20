@@ -1,0 +1,132 @@
+:host {
+  display: block;
+}
+
+.topic-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.filter {
+  position: relative;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--ui-text-muted);
+  pointer-events: none;
+}
+
+.filter-input {
+  padding-left: 2rem;
+}
+
+.tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 0.25rem;
+  user-select: none;
+}
+
+.tree ul[role='group'] {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.tree-item {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 30px;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+.tree-item:hover {
+  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
+}
+
+.tree-item:hover .item-label {
+  color: var(--ui-accent);
+}
+
+.tree-item:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.tree-item[aria-selected='true'] {
+  background: color-mix(in srgb, var(--ui-accent) 33%, transparent);
+}
+
+.item-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-value {
+  flex-shrink: 0;
+}
+
+.expand-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--ui-text-muted);
+  transition: transform 150ms ease;
+}
+
+.tree-item[aria-expanded='true'] .expand-icon {
+  transform: rotate(90deg);
+}
+
+/* Leaf checkbox look, driven by aria-selected */
+.check {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border: 1.5px solid #7a7a7a;
+  border-radius: 4px;
+}
+
+.check mat-icon {
+  font-size: 0.85rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  color: #fff;
+  visibility: hidden;
+}
+
+.tree-item[aria-selected='true'] .check {
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+}
+
+.tree-item[aria-selected='true'] .check mat-icon {
+  visibility: visible;
+}
+
+li[aria-expanded='false'] + ul[role='group'] {
+  display: none;
+}
+
+.empty {
+  color: var(--ui-text-muted);
+  text-align: center;
+  font-size: 0.85rem;
+}

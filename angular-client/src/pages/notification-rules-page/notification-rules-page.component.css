@@ -31,8 +31,10 @@
   outline: none;
 }
 
-.stream-toggle .pi {
-  font-size: 0.95rem;
+.stream-toggle mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
   transition: transform 0.25s ease;
 }
 

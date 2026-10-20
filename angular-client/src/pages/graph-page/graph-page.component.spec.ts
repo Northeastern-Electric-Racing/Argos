@@ -1,7 +1,7 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { BehaviorSubject } from 'rxjs';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
@@ -72,7 +72,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
         TopicSelectionService,
         FaultService,
         Storage,
-        MessageService,
+        ToastService,
         { provide: APIService, useValue: apiServiceMock },
         { provide: ActivatedRoute, useValue: routeMock },
         { provide: Router, useValue: routerMock }

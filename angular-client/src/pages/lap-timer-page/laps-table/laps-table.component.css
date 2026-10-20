@@ -38,7 +38,9 @@
   padding: 32px;
 }
 
-.lap-table-wrap :where(.p-datatable) {
+.laps-table {
+  width: 100%;
+  border-collapse: collapse;
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
@@ -70,36 +72,35 @@
   border-left: 3px solid var(--color-battery-low);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
 .lap-table-wrap th.col-num,
 .lap-table-wrap td.col-num {
   width: 56px;
-  text-align: right !important;
+  text-align: right;
 }
 .lap-table-wrap th.col-dur,
 .lap-table-wrap td.col-dur {
   width: 100px;
-  text-align: right !important;
+  text-align: right;
 }
 .lap-table-wrap th.col-delta,
 .lap-table-wrap td.col-delta {
   width: 110px;
-  text-align: right !important;
+  text-align: right;
 }
 .lap-table-wrap th.col-time,
 .lap-table-wrap td.col-time {
   width: 130px;
-  text-align: right !important;
+  text-align: right;
 }
 .lap-table-wrap th.col-run,
 .lap-table-wrap td.col-run {
   width: 64px;
-  text-align: right !important;
+  text-align: right;
 }
 .lap-table-wrap th.col-stat,
 .lap-table-wrap td.col-stat {
   width: 100px;
-  text-align: right !important;
+  text-align: right;
 }
 
 .delta-positive {

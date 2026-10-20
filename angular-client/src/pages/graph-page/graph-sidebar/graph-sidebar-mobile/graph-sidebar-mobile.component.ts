@@ -1,3 +1,5 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,11 +14,9 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { Drawer } from 'primeng/drawer';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { TopicTreeComponent } from '../topic-tree/topic-tree.component';
+import { UiDrawerComponent } from 'src/ui/drawer/drawer.component';
+import { UiSwitchComponent } from 'src/ui/switch/switch.component';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -31,6 +31,7 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
+  TreeNode,
   TreeNodeData
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
@@ -44,19 +45,27 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Drawer, Tree, ButtonComponent, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [
+    UiDrawerComponent,
+    TopicTreeComponent,
+    ButtonComponent,
+    TypographyComponent,
+    UiSwitchComponent,
+    FormsModule,
+    SelectDropdownComponent
+  ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(UiDialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
+  private presetDialogRef?: DialogRef<DataType[] | null> | null;
 
-  sidebarVisible = false;
+  sidebarVisible = signal(false);
   treeNodes = computed(() => {
     const nodes = dataTypesToNodes(this.dataTypes());
     // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
@@ -67,6 +76,9 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>
     findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
   );
+  selectedKeys = computed(() => (this.selectedNodes() ?? []).map((n) => n.key ?? ''));
+  /** Leaf nodes by topic key; flat leaves share keys and data with their tree originals. */
+  leafByKey = computed(() => new Map(this.flatNodes().map((n) => [n.key ?? '', n])));
   flattenMode = signal(false);
   selectedOnly = signal(false);
 
@@ -90,7 +102,7 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   activePresetName = toSignal(this.presetService.getActivePresetName(), { initialValue: undefined });
 
   toggleSidebar = () => {
-    this.sidebarVisible = !this.sidebarVisible;
+    this.sidebarVisible.update((v) => !v);
   };
 
   toggleFlattenMode(value: boolean) {
@@ -112,18 +124,16 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
+    this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
       header: 'Topic Presets',
       width: '90vw',
       draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
       data: {
         dataTypes: this.dataTypes()
       }
     });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef?.closed.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -136,25 +146,20 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
     }
   }
 
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
-    if (dt) {
+  nodeSelect(key: string) {
+    const node = this.leafByKey().get(key);
+    const dt = node?.data?.dataType;
+    if (node && dt) {
       this.topicSelectionService.addDataType(dt);
+      this.selectedNodes.update((nodes) => [...(nodes ?? []), node]);
     }
   }
 
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
+  onNodeUnselect(key: string) {
+    const dt = this.leafByKey().get(key)?.data?.dataType;
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
+      this.selectedNodes.update((nodes) => (nodes ?? []).filter((n) => n.key !== key));
     }
   }
 

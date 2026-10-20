@@ -1,8 +1,9 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CellReading } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 
 export enum HeatMapView {
@@ -24,7 +25,7 @@ export interface SelectedCellInfo {
   providedIn: 'root'
 })
 export class HeatMapService {
-  private dialogService = inject(DialogService);
+  private dialogService = inject(UiDialogService);
 
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
@@ -33,7 +34,7 @@ export class HeatMapService {
 
   /** Multi-cell selection state, keyed by CellReading identity */
   private selectedCells = new Map<CellReading, SelectedCellInfo>();
-  dialogRef: DynamicDialogRef | null = null;
+  dialogRef: DialogRef | null = null;
 
   /**
    * Toggle a group of readings as a unit. Uses the first reading's
@@ -68,12 +69,10 @@ export class HeatMapService {
         data: { cells: this.selectedCells },
         header: 'Cell Comparison',
         draggable: true,
-        closable: true,
         modal: false,
-        closeAriaLabel: 'Close',
-        styleClass: 'cell-compare-dialog'
+        panelClass: 'cell-compare-dialog'
       });
-      this.dialogRef?.onClose.subscribe(() => {
+      this.dialogRef?.closed.subscribe(() => {
         this.clearSelection();
         this.dialogRef = null;
       });

@@ -1,0 +1,12 @@
+<input
+  type="datetime-local"
+  step="1"
+  class="ui-input ui-input--sm ui-input--fluid"
+  [id]="inputId()"
+  [attr.aria-label]="ariaLabel()"
+  [attr.max]="max()"
+  [value]="text()"
+  [disabled]="disabled()"
+  (input)="onInput($any($event.target).value)"
+  (blur)="onTouched()"
+/>

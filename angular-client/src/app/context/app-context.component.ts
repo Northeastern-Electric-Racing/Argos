@@ -3,7 +3,7 @@ import { CellService } from 'src/services/cell.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
-import { Toast } from 'primeng/toast';
+import { ToastHostComponent } from 'src/ui/toast/toast-host.component';
 import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
@@ -17,7 +17,7 @@ import { NotificationLogService } from 'src/services/notification-log.service';
   selector: 'app-context',
   templateUrl: './app-context.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Toast, AppNavBarComponent, RouterOutlet]
+  imports: [ToastHostComponent, AppNavBarComponent, RouterOutlet]
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
@@ -90,7 +90,6 @@ export default class AppContextComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
   }

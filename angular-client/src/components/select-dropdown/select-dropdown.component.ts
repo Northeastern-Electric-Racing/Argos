@@ -1,5 +1,5 @@
 import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { UiSelectComponent } from 'src/ui/select/select.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
@@ -17,7 +17,7 @@ export interface DropdownOption {
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  imports: [UiSelectComponent, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -53,8 +53,8 @@ export class SelectDropdownComponent {
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
-    changeEvent.value.function();
+  handleChangedOption(option: DropdownOption) {
+    option.function();
   }
 
   // Get display text for the dropdown

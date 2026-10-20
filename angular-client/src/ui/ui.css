@@ -1,0 +1,356 @@
+/*
+ * Argos UI primitives: our own styles for Angular Aria directives and CDK building blocks.
+ * Angular Aria and the CDK ship no visual styles, so every look here is ours. Following the
+ * Aria guide, states are styled through ARIA attributes ([aria-selected], [aria-expanded],
+ * [aria-checked], [data-active]) so the visuals and the accessibility state never drift apart.
+ */
+@import '@angular/cdk/overlay-prebuilt.css';
+
+:root {
+  --ui-accent: #ef4343;
+  --ui-accent-hover: #f26b6b;
+  --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 18%, transparent);
+  --ui-danger: #f87171;
+  --ui-success: #4ade80;
+  --ui-warn: #fbbf24;
+  --ui-info: #60a5fa;
+  --ui-surface-0: #101010;
+  --ui-surface-1: #1c1c1c;
+  --ui-surface-2: #262626;
+  --ui-surface-3: #333333;
+  --ui-surface-4: #444444;
+  --ui-border: #3f3f3f;
+  --ui-text: #f0f0f0;
+  --ui-text-muted: #a3a3a3;
+  --ui-radius: 8px;
+  --ui-radius-lg: 16px;
+  --ui-focus-ring: 2px solid color-mix(in srgb, var(--ui-accent) 70%, transparent);
+  --ui-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Buttons ---------- */
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--ui-radius);
+  background: var(--ui-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.ui-button:hover:not(:disabled) {
+  background: var(--ui-accent-hover);
+  border-color: var(--ui-accent-hover);
+}
+.ui-button:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+.ui-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ui-button--outlined {
+  background: transparent;
+  color: var(--ui-accent);
+}
+.ui-button--outlined:hover:not(:disabled) {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-hover);
+}
+.ui-button--text {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ui-text);
+}
+.ui-button--text:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  border-color: transparent;
+}
+.ui-button--danger.ui-button--text {
+  color: var(--ui-danger);
+}
+.ui-button--sm {
+  min-height: 1.9rem;
+  padding: 0 0.6rem;
+  font-size: 0.8rem;
+}
+.ui-button--icon {
+  padding: 0;
+  width: 2rem;
+  min-height: 2rem;
+}
+.ui-button .material-icons {
+  font-size: 1.15rem;
+}
+
+/* ---------- Text / number / date inputs ---------- */
+.ui-input {
+  box-sizing: border-box;
+  height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface-1);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 0.9rem;
+  color-scheme: dark;
+}
+.ui-input::placeholder {
+  color: var(--ui-text-muted);
+}
+.ui-input:hover {
+  border-color: #5a5a5a;
+}
+.ui-input:focus {
+  outline: none;
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 1px var(--ui-accent);
+}
+.ui-input[aria-invalid='true'],
+.ui-input.ng-invalid.ng-touched {
+  border-color: var(--ui-danger);
+}
+.ui-input--sm {
+  height: 1.9rem;
+  font-size: 0.8rem;
+  padding: 0 0.5rem;
+}
+.ui-input--fluid {
+  width: 100%;
+}
+textarea.ui-input {
+  height: auto;
+  padding: 0.5rem 0.7rem;
+}
+
+/* ---------- Checkbox ---------- */
+.ui-checkbox {
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  border: 1.5px solid #7a7a7a;
+  border-radius: 4px;
+  background: transparent;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.ui-checkbox::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.35rem;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform 100ms ease;
+}
+.ui-checkbox:checked,
+.ui-checkbox:indeterminate {
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+}
+.ui-checkbox:checked::before {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+.ui-checkbox:indeterminate::before {
+  border-left: none;
+  height: 0;
+  transform: none;
+}
+.ui-checkbox:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Table (CDK table) ---------- */
+.ui-table-wrapper {
+  overflow: auto;
+  border-radius: var(--ui-radius);
+}
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--ui-text);
+  font-size: 0.9rem;
+}
+.ui-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  font-weight: 600;
+  padding: 0.7rem 0.8rem;
+  background: var(--ui-surface-3);
+  border-bottom: 1px solid var(--ui-border);
+}
+.ui-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--ui-border);
+}
+.ui-table--striped tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--ui-text) 4%, transparent);
+}
+.ui-table--hover tbody tr:hover {
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  cursor: pointer;
+}
+.ui-table tbody tr[aria-selected='true'] {
+  background: var(--ui-accent-soft);
+}
+.ui-table tbody tr:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-table .ui-table-empty {
+  text-align: center;
+  color: var(--ui-text-muted);
+  padding: 2rem;
+}
+
+/* ---------- Spinner ---------- */
+.ui-spinner {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: 4px solid color-mix(in srgb, var(--ui-text) 15%, transparent);
+  border-top-color: var(--ui-accent);
+  animation: ui-spin 0.9s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Badge ---------- */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--ui-accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* ---------- Dialog (CDK dialog + our container) ---------- */
+.ui-dialog-backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+.ui-dialog-pane {
+  max-width: 100vw !important;
+  max-height: 100vh;
+}
+.ui-dialog-pane--modeless {
+  pointer-events: auto;
+}
+
+/* ---------- Drawer ---------- */
+.ui-drawer-pane {
+  height: 100%;
+  max-width: 100vw !important;
+}
+
+/* ---------- Popover (CDK connected overlay) ---------- */
+.ui-popover-panel {
+  margin-top: 8px;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  animation: ui-pop-in 120ms ease-out;
+}
+@keyframes ui-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- Listbox popup (Aria combobox + listbox, used by select and autocomplete) ---------- */
+.ui-listbox-popup {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0.3rem;
+  max-height: 16rem;
+  overflow: auto;
+  background: var(--ui-surface-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-text);
+  font-size: 0.85rem;
+  animation: ui-pop-in 120ms ease-out;
+}
+.ui-listbox-popup [ngListbox] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  outline: none;
+}
+.ui-listbox-popup [ngOption] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ui-listbox-popup [ngOption]:hover {
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+}
+.ui-listbox-popup [ngOption][data-active='true'] {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-listbox-popup [ngOption][aria-selected='true'] {
+  background: var(--ui-accent-soft);
+  color: #ffb4b4;
+}
+.ui-listbox-popup .ui-option-check {
+  margin-left: auto;
+  font-size: 1rem;
+}
+.ui-listbox-popup [ngOption]:not([aria-selected='true']) .ui-option-check {
+  visibility: hidden;
+}
+.ui-listbox-empty {
+  padding: 0.5rem 0.7rem;
+  color: var(--ui-text-muted);
+}
+
+/* ---------- Toast ---------- */
+.ui-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

@@ -1,20 +1,19 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { ButtonDirective } from 'primeng/button';
 import { RulePayload } from 'src/api/rules.api';
 
 @Component({
   selector: 'upload-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonDirective],
+  imports: [],
   templateUrl: './upload-confirm-dialog.component.html',
   styleUrls: ['./upload-confirm-dialog.component.css']
 })
 export class UploadConfirmDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject(DialogRef);
+  private dialogData = inject(DIALOG_DATA);
 
-  rules: RulePayload[] = this.config.data.rules;
+  rules: RulePayload[] = this.dialogData.rules;
 
   onConfirm(): void {
     this.ref.close(true);

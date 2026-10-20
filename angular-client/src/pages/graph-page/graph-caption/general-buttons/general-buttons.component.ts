@@ -1,9 +1,8 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { Popover } from 'primeng/popover';
+import { UiPopoverComponent } from 'src/ui/popover/popover.component';
+import { UiDateTimeInputComponent } from 'src/ui/datetime/datetime-input.component';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -37,14 +36,13 @@ type CustomMode = 'last-x' | 'date-range';
     RunSelectorComponent,
     ButtonComponent,
     SelectDropdownComponent,
-    Popover,
-    DatePicker,
-    InputNumberModule,
+    UiPopoverComponent,
+    UiDateTimeInputComponent,
     FormsModule
   ]
 })
 export class GeneralButtonsComponent {
-  private toastService = inject(MessageService);
+  private toastService = inject(ToastService);
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
@@ -66,7 +64,7 @@ export class GeneralButtonsComponent {
   onApplyCustomLastX = input.required<(totalMinutes: number) => void>();
   onApplyCustomDateRange = input.required<(startMs: number, endMs: number) => void>();
 
-  customPopover = viewChild.required<Popover>('customPopover');
+  customPopover = viewChild.required<UiPopoverComponent>('customPopover');
 
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);

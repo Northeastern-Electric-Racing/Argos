@@ -1,0 +1,66 @@
+.session-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+.session-menu-btn:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.session-menu-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--ui-surface-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+}
+.session-menu-list[data-visible='false'] {
+  display: none;
+}
+.session-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+.session-menu-item {
+  border-radius: 4px;
+  outline: none;
+}
+.session-menu-item:hover,
+.session-menu-item:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+.session-menu-item:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.session-menu-item.destructive {
+  color: var(--color-battery-low);
+}
+
+.session-menu-item {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+}
+
+.session-menu-btn mat-icon,
+.session-menu-item mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

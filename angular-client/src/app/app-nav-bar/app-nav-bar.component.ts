@@ -1,14 +1,16 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { ToastService } from 'src/ui/toast/toast.service';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
+import { UiDrawerComponent } from 'src/ui/drawer/drawer.component';
+import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -22,8 +24,6 @@ import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -37,7 +37,7 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    UiDrawerComponent,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -48,8 +48,7 @@ export interface NavItem {
     SidebarChipComponent,
     MatIcon,
     NotificationListComponent,
-    Popover,
-    Badge
+    UiPopoverComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
@@ -59,15 +58,15 @@ export interface NavItem {
 export class AppNavBarComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(UiDialogService);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  ref: DialogRef | null | undefined;
+  menuRef: DialogRef | null | undefined;
+  editRunRef: DialogRef | null | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -121,9 +120,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   openRunForm = () => {
     this.editRunRef = this.dialogService.open(RunFormComponent, {
       width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
+      header: 'Edit Run'
     });
   };
 
@@ -220,18 +217,15 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
       showHeader: false,
       modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
       dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
+      panelClass: 'nav-options-dialog',
+      position: { top: '70px', right: '10px' },
       data: {
         items: this.navMenuItems
       }
     });
 
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.menuRef?.closed.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.menuRef = undefined;
     });
   }

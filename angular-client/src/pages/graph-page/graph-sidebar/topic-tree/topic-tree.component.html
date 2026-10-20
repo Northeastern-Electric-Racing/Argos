@@ -1,0 +1,67 @@
+<div class="topic-tree" [style.height]="height()">
+  <div class="filter">
+    <mat-icon class="filter-icon" aria-hidden="true">search</mat-icon>
+    <input
+      type="search"
+      class="ui-input ui-input--fluid filter-input"
+      [placeholder]="filterPlaceholder()"
+      [attr.aria-label]="filterPlaceholder()"
+      [value]="filter()"
+      (input)="onFilterInput($event)"
+    />
+  </div>
+
+  <ul
+    ngTree
+    #tree="ngTree"
+    class="tree"
+    aria-label="Topics"
+    [multi]="true"
+    [value]="selectedKeys()"
+    (valueChange)="onValueChange($event)"
+  >
+    <ng-template [ngTemplateOutlet]="treeNodes" [ngTemplateOutletContext]="{ nodes: visibleNodes(), parent: tree }" />
+  </ul>
+  @if (visibleNodes().length === 0) {
+    <p class="empty">No topics found</p>
+  }
+</div>
+
+<ng-template #treeNodes let-nodes="nodes" let-parent="parent">
+  @for (node of nodes; track node.key) {
+    <li
+      ngTreeItem
+      #treeItem="ngTreeItem"
+      [parent]="parent"
+      [value]="node.key"
+      [label]="node.label"
+      [selectable]="!!node.selectable"
+      [(expanded)]="node.expanded"
+      class="tree-item"
+      [class.leaf]="!node.children?.length"
+    >
+      @if (node.children?.length) {
+        <mat-icon class="expand-icon" aria-hidden="true">chevron_right</mat-icon>
+      } @else {
+        <span class="check" aria-hidden="true"><mat-icon>check</mat-icon></span>
+      }
+      <typography class="item-label" additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
+      @if (!node.children?.length) {
+        <typography
+          class="item-value"
+          additionalStyles="margin: 0px;"
+          [content]="node.data.displayValue()"
+          variant="subheader"
+        />
+      }
+    </li>
+
+    @if (node.children?.length) {
+      <ul role="group">
+        <ng-template ngTreeItemGroup [ownedBy]="treeItem" #group="ngTreeItemGroup">
+          <ng-template [ngTemplateOutlet]="treeNodes" [ngTemplateOutletContext]="{ nodes: node.children, parent: group }" />
+        </ng-template>
+      </ul>
+    }
+  }
+</ng-template>
