@@ -1,4 +1,11 @@
-import { buildDayBoundaries, buildLayout, buildMultiYAxes, DAY_MS, LayoutOptions } from './graph-layout.utils';
+import {
+  buildDayBoundaries,
+  buildLayout,
+  buildMultiYAxes,
+  DAY_MS,
+  LayoutOptions,
+  SERIES_COLORS
+} from './graph-layout.utils';
 
 const base: LayoutOptions = {
   seriesNames: ['A 0'],
@@ -44,6 +51,57 @@ describe('graph layout utils', () => {
     expect(axes['yaxis5'].position).toBe(0);
     // automargin grows the margins to fit the stacked axes' ticks and titles.
     expect(Object.values(axes).every((axis) => axis.automargin === true)).toBeTrue();
+  });
+
+  it('autoranges every per-topic y-axis', () => {
+    // Without an explicit autorange, Plotly.react under an unchanged uirevision restores the last
+    // range into yaxis and turns its autorange off, freezing it at a stale or empty range.
+    const axes = buildMultiYAxes(['A', 'B', 'C']);
+    expect(Object.values(axes).every((axis) => axis.autorange === true)).toBeTrue();
+  });
+
+  it('colours each per-topic y-axis like its line', () => {
+    const layout = buildLayout({ ...base, multipleYAxes: true, seriesNames: ['A 0', 'B 0'] });
+    expect(layout.colorway).toEqual(SERIES_COLORS);
+    expect(layout.yaxis?.color).toBe(SERIES_COLORS[0]);
+    expect(layout.yaxis2?.color).toBe(SERIES_COLORS[1]);
+    expect(layout.yaxis2?.title?.font?.color).toBe(SERIES_COLORS[1]);
+  });
+
+  it('gives stacked y-axes their own round ticks, not ticks synced to the first axis', () => {
+    // Synced ticks land on values like 61.913, whose changing widths shift the plot every frame.
+    const axes = buildMultiYAxes(['A', 'B']);
+    expect(axes['yaxis2'].tickmode).toBe('auto');
+  });
+
+  it('drops only the single-value index from y-axis titles', () => {
+    const axes = buildMultiYAxes(['BMS/Segment_Total_Volt/0 0', 'BMS/Cell/Temps 1']);
+    expect(axes['yaxis'].title?.text).toBe('BMS/Segment_Total_Volt/0');
+    expect(axes['yaxis2'].title?.text).toBe('BMS/Cell/Temps 1');
+  });
+
+  it('draws zero lines like grid lines, not as bright rules over the data', () => {
+    const single = buildLayout(base);
+    const multi = buildLayout({ ...base, multipleYAxes: true, seriesNames: ['A 0', 'B 0'] });
+    [single.xaxis, single.yaxis, multi.yaxis, multi.yaxis2].forEach((axis) =>
+      expect(axis?.zerolinecolor).toBe('rgba(255, 255, 255, 0.1)')
+    );
+  });
+
+  it('hides tick labels and the zero line on an empty graph', () => {
+    const { xaxis, yaxis } = buildLayout({ ...base, seriesNames: [] });
+    expect(xaxis?.showticklabels).toBeFalse();
+    expect(yaxis?.showticklabels).toBeFalse();
+    expect(yaxis?.zeroline).toBeFalse();
+    expect(buildLayout(base).xaxis?.showticklabels).toBeTrue();
+  });
+
+  it('shows every topic at the hovered time in one labelled box', () => {
+    expect(buildLayout(base).hovermode).toBe('x unified');
+  });
+
+  it('uses the app font for chart text', () => {
+    expect(buildLayout(base).font?.family).toContain('Roboto');
   });
 
   it('fixes the x-axis only while following live data, so a live drag zooms y alone', () => {

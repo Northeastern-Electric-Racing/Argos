@@ -42,6 +42,21 @@ export type YAxis = Partial<LayoutAxis> & { autoshift?: boolean };
 const TEXT_COLOR = '#fff';
 const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
 const BOUNDARY_COLOR = '#8fcadd';
+const FONT_FAMILY = 'Roboto, sans-serif';
+
+/** Plotly's default colorway, set explicitly so each per-topic y-axis can take its line's colour. */
+export const SERIES_COLORS = [
+  '#1f77b4',
+  '#ff7f0e',
+  '#2ca02c',
+  '#d62728',
+  '#9467bd',
+  '#8c564b',
+  '#e377c2',
+  '#7f7f7f',
+  '#bcbd22',
+  '#17becf'
+];
 
 /**
  * Plotly date axes take epoch ms as UTC and have no time-zone setting, so x values are shifted
@@ -60,6 +75,8 @@ export function buildTraces(data: Map<string, Series>, multipleYAxes: boolean): 
     x: series.x,
     y: series.y,
     yaxis: multipleYAxes ? axisRef(index) : 'y',
+    // The name in every hover row: unified hover leaves it out when only one series is drawn.
+    hovertemplate: '%{fullData.name}: %{y}<extra></extra>',
     line: { width: 3 }
   }));
 }
@@ -101,22 +118,33 @@ function boundedAxis(yMin: number | null, yMax: number | null): Partial<LayoutAx
 }
 
 /**
- * One y-axis per series, alternating left and right. The first sits on the plot's edge; the rest
- * are free axes that autoshift outward past their side's earlier axes (ticks and title included),
- * and automargin grows the margins to fit them.
+ * One y-axis per series, alternating left and right, coloured like its line. The first sits on the
+ * plot's edge; the rest are free axes that autoshift outward past their side's earlier axes (ticks
+ * and title included), and automargin grows the margins to fit them.
+ *
+ * Every axis autoranges explicitly: otherwise Plotly.react, under an unchanged uirevision, puts the
+ * last drawn range back and turns autorange off, freezing the first axis at a stale or empty range.
+ * The stacked axes take their own round ticks ('auto'), not Plotly's default for overlaying axes
+ * ('sync'), whose values like 61.913 change width every frame and shift the plot sideways.
  */
 export function buildMultiYAxes(names: string[]): Record<string, YAxis> {
   const axes: Record<string, YAxis> = {};
   names.forEach((name, index) => {
     const side = index % 2 === 0 ? 'left' : 'right';
+    const color = SERIES_COLORS[index % SERIES_COLORS.length];
     axes[axisKey(index)] = {
-      title: { text: name.replace('0', ''), font: { color: 'grey', size: 20, weight: 'bold' } },
-      color: TEXT_COLOR,
+      // A single-value topic's label ends in its value index " 0"; the title drops it.
+      title: { text: name.replace(/ 0$/, ''), font: { color, size: 13 } },
+      color,
       gridcolor: GRID_COLOR,
+      zerolinecolor: GRID_COLOR,
       showgrid: index === 0,
+      autorange: true,
       side,
       automargin: true,
-      ...(index === 0 ? {} : { overlaying: 'y', anchor: 'free', autoshift: true, position: side === 'left' ? 0 : 1 })
+      ...(index === 0
+        ? {}
+        : { overlaying: 'y', anchor: 'free', autoshift: true, position: side === 'left' ? 0 : 1, tickmode: 'auto' })
     };
   });
   return axes;
@@ -166,15 +194,19 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
   const isMultiDay = !!options.span && options.span.spanMs > DAY_MS;
   const multi = options.multipleYAxes && options.seriesNames.length > 0 ? buildMultiYAxes(options.seriesNames) : null;
   const boundaries = isMultiDay ? buildDayBoundaries(options.span!) : { shapes: [], annotations: [] };
+  // An empty plot's axes span placeholder ranges (a year of identical "00:00:00" ticks, -1 to 4).
+  const empty = options.seriesNames.length === 0;
 
   return {
     autosize: true,
     paper_bgcolor: 'rgba(0, 0, 0, 0)',
     plot_bgcolor: 'rgba(0, 0, 0, 0)',
-    font: { color: TEXT_COLOR },
+    font: { color: TEXT_COLOR, family: FONT_FAMILY },
+    colorway: SERIES_COLORS,
     margin: { l: 60, r: 30, t: 30, b: 40 },
-    // Nearest point of any series with no distance cutoff, like ApexCharts' non-intersecting tooltip.
-    hovermode: 'closest',
+    // One box at the cursor's time: a time header, then each series' nearest point by x, named and
+    // colour-keyed. hoverdistance -1 drops the distance cutoff, like ApexCharts' non-intersecting tooltip.
+    hovermode: 'x unified',
     hoverdistance: -1,
     // namelength -1: full topic names, not Plotly's 15-character cut.
     hoverlabel: { bgcolor: '#1e1e1e', font: { color: TEXT_COLOR }, namelength: -1 },
@@ -187,6 +219,8 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
       nticks: 7,
       color: TEXT_COLOR,
       gridcolor: GRID_COLOR,
+      zerolinecolor: GRID_COLOR,
+      showticklabels: !empty,
       tickformat: isMultiDay ? '%-m/%-d %H:%M' : '%H:%M:%S',
       hoverformat: '%-m/%-d/%y, %H:%M:%S',
       fixedrange: !!options.followLive,
@@ -194,7 +228,15 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
     },
     ...withUiRevision(
       multi ?? {
-        yaxis: { color: TEXT_COLOR, gridcolor: GRID_COLOR, automargin: true, ...boundedAxis(options.yMin, options.yMax) }
+        yaxis: {
+          color: TEXT_COLOR,
+          gridcolor: GRID_COLOR,
+          zerolinecolor: GRID_COLOR,
+          zeroline: !empty,
+          showticklabels: !empty,
+          automargin: true,
+          ...boundedAxis(options.yMin, options.yMax)
+        }
       },
       `${options.uiRevision}.${options.yRevision}`
     ),

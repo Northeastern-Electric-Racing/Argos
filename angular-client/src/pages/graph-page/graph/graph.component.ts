@@ -59,8 +59,9 @@ export default class CustomGraphComponent implements OnDestroy {
   readonly layout = signal<Partial<Layout>>({});
   readonly revision = signal(0);
   // showSendToCloud defaults to true in plotly.js 4: its "Share chart" button uploads the plotted
-  // telemetry to Plotly Cloud.
-  readonly config: Partial<Config> = { displaylogo: false, responsive: true, showSendToCloud: false };
+  // telemetry to Plotly Cloud. showTips off: the first zoom's "Double-click to zoom back out" toast
+  // covers the page title; the modebar's Reset axes does the same.
+  readonly config: Partial<Config> = { displaylogo: false, responsive: true, showSendToCloud: false, showTips: false };
 
   private plotReady = false;
   private frame: number | undefined;

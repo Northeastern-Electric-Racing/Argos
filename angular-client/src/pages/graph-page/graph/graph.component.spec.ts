@@ -99,6 +99,14 @@ describe('CustomGraphComponent (Plotly)', () => {
     expect(trace.x).toBe(graph.data.get('BMS/Pack/Voltage 0')!.x);
   });
 
+  it('names the series in its hover row, even when it is the only one', () => {
+    // Plotly's unified hover drops the name of a lone trace and shows a bare value.
+    setup();
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    expect(graph.traces()[0].hovertemplate).toBe('%{fullData.name}: %{y}<extra></extra>');
+  });
+
   it('coalesces a burst of updates into one redraw per frame, once the plot is ready', () => {
     setup();
     graph.onPlotInitialized();
@@ -145,12 +153,17 @@ describe('CustomGraphComponent (Plotly)', () => {
     flushFrames();
 
     expect(yAxes()[0].anchor).toBeUndefined();
-    expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'A ' }));
+    expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'A' }));
   });
 
   it('hides the modebar button that uploads the chart to Plotly Cloud', () => {
     setup();
     expect(graph.config.showSendToCloud).toBeFalse();
+  });
+
+  it("turns off Plotly's 'Double-click to zoom back out' toast, which covers the page title", () => {
+    setup();
+    expect(graph.config.showTips).toBeFalse();
   });
 
   it('fixes the x-axis only while following live data', () => {
@@ -266,7 +279,7 @@ describe('CustomGraphComponent (Plotly)', () => {
       flushFrames();
 
       expect(yAxes().length).toBe(1);
-      expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'BMS/Pack/Voltage ' }));
+      expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'BMS/Pack/Voltage' }));
     });
 
     it('alternates y-axis sides so stacked axes stay readable', () => {
