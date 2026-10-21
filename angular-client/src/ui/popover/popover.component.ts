@@ -57,7 +57,11 @@ export class UiPopoverComponent {
   }
 
   protected onAttach(): void {
-    this.trap()?.focusTrap.focusInitialElementWhenReady();
+    // With nothing tabbable inside (e.g. an empty notification log), focus the panel itself so
+    // the trap still holds Tab and Escape reaches the overlay.
+    this.trap()
+      ?.focusTrap.focusInitialElementWhenReady()
+      .then((focused) => focused || this.panel()?.nativeElement.focus());
     this.shown.emit();
   }
 

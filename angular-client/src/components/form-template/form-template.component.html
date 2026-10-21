@@ -3,7 +3,7 @@
   @for (field of fields(); track field) {
     <div class="flex flex-column gap-1">
       @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+        <label class="text-sm font-semibold mb-1" [class.required]="field.required">{{ field.label }}</label>
       }
       <input
         [attr.placeholder]="field.placeholder"

@@ -1,6 +1,17 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
-import { Component, OnInit, DestroyRef, ChangeDetectionStrategy, ChangeDetectorRef, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  effect,
+  signal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
@@ -25,6 +36,9 @@ export class RunFormComponent implements OnInit {
   private messageService = inject(ToastService);
   private ref = inject(DialogRef);
   private cdr = inject(ChangeDetectorRef);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
+  private focusedFirstField = false;
   templateReady = signal(false);
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
@@ -69,6 +83,21 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
+    // The dialog picks its initial focus while only the spinner is here, so it lands on Close.
+    // Once the form first renders, move focus to its first field (unless the user moved it).
+    effect(() => {
+      if (!this.templateReady() || this.focusedFirstField) return;
+      this.focusedFirstField = true;
+      afterNextRender(
+        () => {
+          const active = document.activeElement;
+          if (active && active !== document.body && !active.classList.contains('ui-dialog-close')) return;
+          this.host.nativeElement.querySelector<HTMLElement>('[role="combobox"], input')?.focus();
+        },
+        { injector: this.injector }
+      );
+    });
+
     this.ref.closed.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup | undefined) => {
       // Closed without submitting (close button, Escape): nothing to save.
       if (!form) return;
