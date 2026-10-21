@@ -191,7 +191,8 @@ export default class CustomGraphComponent implements OnDestroy {
     for (const id of Object.keys(scales)) {
       if (id !== 'x') delete scales[id];
     }
-    Object.assign(scales, buildYScales(keys, multipleYAxes, config));
+    const colors = chart.data.datasets.map((dataset) => dataset.borderColor as string);
+    Object.assign(scales, buildYScales(keys, multipleYAxes, config, colors));
 
     const span = computeDataSpan(this.data);
 

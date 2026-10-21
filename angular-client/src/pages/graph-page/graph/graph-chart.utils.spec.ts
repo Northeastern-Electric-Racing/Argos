@@ -6,7 +6,9 @@ import {
   computeDataSpan,
   DAY_MS,
   formatTimeTick,
+  formatTooltipTime,
   pickTimeStep,
+  SERIES_COLORS,
   yAxisIdFor
 } from './graph-chart.utils';
 
@@ -23,6 +25,24 @@ describe('graph-chart utils', () => {
     it('never zooms the x-axis in past one second', () => {
       expect(options.plugins!.zoom!.limits!['x']!.minRange).toBe(1000);
     });
+
+    it('hovers the point nearest the cursor in both x and y, not only the fastest topic', () => {
+      expect(options.interaction!.axis).toBe('xy');
+    });
+
+    it('reserves room for the last x label so the plot does not jump sideways as ticks slide in', () => {
+      expect((options.layout!.padding as { right: number }).right).toBeGreaterThanOrEqual(32);
+    });
+
+    it('draws text in the app font and the tooltip in the app theme', () => {
+      expect(options.font!.family).toContain('Roboto');
+      expect(options.plugins!.tooltip!.backgroundColor).toBe('#0c2026');
+      expect(options.plugins!.tooltip!.borderColor).toBe('#8fcadd');
+    });
+  });
+
+  it('gives at least ten topics distinct colors', () => {
+    expect(new Set(SERIES_COLORS.slice(0, 10)).size).toBe(10);
   });
 
   describe('time ticks on the x-axis', () => {
@@ -67,6 +87,11 @@ describe('graph-chart utils', () => {
       expect(formatTimeTick(at(0), 12 * 60 * 60_000)).toBe('10/17');
       expect(formatTimeTick(at(12), 12 * 60 * 60_000)).toBe('12:00');
     });
+
+    it('titles the tooltip in 24-hour time, with milliseconds once the axis does', () => {
+      expect(formatTooltipTime(at(13, 50, 24, 120), 30_000)).toBe('10/17/2026, 13:50:24');
+      expect(formatTooltipTime(at(13, 50, 24, 120), 1_000)).toBe('10/17/2026, 13:50:24.120');
+    });
   });
 
   describe('buildYScales (#630: y-axes match the selected topics)', () => {
@@ -86,7 +111,34 @@ describe('graph-chart utils', () => {
       const scales = buildYScales(['BMS/Pack/Voltage 0'], true, NO_LIMITS);
 
       expect(Object.keys(scales)).toEqual(['y']);
-      expect((scales['y'] as { title: { text: string } }).title.text).toBe('BMS/Pack/Voltage ');
+      expect((scales['y'] as { title: { text: string } }).title.text).toBe('BMS/Pack/Voltage');
+    });
+
+    it("titles each axis with its topic, dropping only the trailing value index ' 0'", () => {
+      const scales = buildYScales(['BMS/Segment_Temp/0 0', 'Motor/Phase 1'], true, NO_LIMITS);
+
+      const titles = Object.values(scales).map((s) => (s as { title: { text: string } }).title.text);
+      expect(titles).toEqual(['BMS/Segment_Temp/0', 'Motor/Phase 1']);
+    });
+
+    it("colors each axis's title and ticks like its series", () => {
+      const scales = buildYScales(['A 0', 'B 0'], true, NO_LIMITS, ['#111111', '#222222']);
+
+      const colors = Object.values(scales).map((s) => s as { title: { color: string }; ticks: { color: string } });
+      expect(colors.map((s) => s.title.color)).toEqual(['#111111', '#222222']);
+      expect(colors.map((s) => s.ticks.color)).toEqual(['#111111', '#222222']);
+    });
+
+    it('hides the axis of a series hidden from the legend', () => {
+      const scales = buildYScales(['A 0', 'B 0'], true, NO_LIMITS);
+
+      for (const scale of Object.values(scales)) {
+        expect((scale as { display: unknown }).display).toBe('auto');
+      }
+    });
+
+    it('leaves headroom so lines at the extremes clear the plot border', () => {
+      expect((buildYScales(['A 0'], false, NO_LIMITS)['y'] as { grace: string }).grace).toBe('5%');
     });
 
     it('alternates y-axis sides so stacked axes stay readable', () => {
@@ -154,6 +206,13 @@ describe('graph-chart utils', () => {
 
       expect(annotations.map((a) => a.xMin)).toEqual([new Date(2026, 0, 2).getTime(), new Date(2026, 0, 3).getTime()]);
       expect(annotations.every((a) => a.xMin === a.xMax)).toBeTrue();
+    });
+
+    it('labels each day at the top of the plot, clear of the data and the x ticks', () => {
+      const start = new Date(2026, 0, 1, 12).getTime();
+      const [annotation] = buildDayBoundaryAnnotations({ minX: start, maxX: start + DAY_MS });
+
+      expect(annotation.label!.position).toBe('end');
     });
 
     it('draws nothing inside a single day', () => {
