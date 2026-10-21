@@ -1,13 +1,48 @@
-#chart-container {
-  width: 100%;
-  height: 100%;
+:host {
+  display: block;
+  position: relative;
+  min-height: 0;
 }
 
-.apexcharts-tooltip {
+/* Sized by the host rather than its content, so the chart never feeds back into the layout. */
+uplot-chart {
+  position: absolute;
+  inset: 0;
+}
+
+:host ::ng-deep .u-legend {
+  color: #fff;
+  font-size: 15px;
+}
+
+:host ::ng-deep .uplot {
+  font-family: inherit;
+}
+
+/* uPlot's default selection tint is invisible on the dark page: use the page's accent. */
+:host ::ng-deep .u-select {
+  background: rgba(143, 202, 221, 0.18);
+}
+
+/* The plot is drag-to-zoom. */
+:host ::ng-deep .u-over {
+  cursor: crosshair;
+}
+
+.reset-zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+}
+
+.empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
   pointer-events: none;
-}
-
-/* Temp fix for styling of download (svg / png / csv) menu */
-::ng-deep .apexcharts-menu-item {
-  color: black !important;
 }

@@ -69,7 +69,9 @@
   min-height: 0;
   overflow: hidden;
   padding-right: 16px;
-  padding-bottom: 40px; /* reserve space for ApexCharts legend when multiple topics are plotted */
+  /* The chart fits its legend inside itself; this only clears the page bottom, since the page overflows the
+     viewport by ~16px (the nav bar is ~76px tall, not the 60px :host allows for). */
+  padding-bottom: 24px;
 }
 
 .mobile-sidebar {
