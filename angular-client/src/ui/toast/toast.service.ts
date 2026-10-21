@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { Injectable, inject, signal } from '@angular/core';
 
 export type ToastSeverity = 'success' | 'info' | 'warn' | 'error';
 
@@ -21,18 +22,22 @@ const DEFAULT_LIFE_MS = 3000;
 
 /**
  * App-wide toasts. Neither Angular Aria nor the CDK has a toast, so this is our own:
- * a signal of active messages rendered by `<ui-toast-host>` in an ARIA live region.
- * `add()` mirrors PrimeNG's MessageService.add so call sites stay the same.
+ * a signal of active messages rendered by `<ui-toast-host>`. Screen readers hear each toast through
+ * the CDK's LiveAnnouncer (a persistent live region), since a live region inserted together with
+ * its text is announced unreliably. `add()` mirrors PrimeNG's MessageService.add so call sites stay the same.
  */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private nextId = 0;
   private timers = new Map<number, ReturnType<typeof setTimeout>>();
+  private announcer = inject(LiveAnnouncer);
   readonly toasts = signal<ActiveToast[]>([]);
 
   add(message: ToastMessage): void {
     const toast: ActiveToast = { ...message, id: this.nextId++, severity: message.severity ?? 'info' };
     this.toasts.update((list) => [...list, toast]);
+    const text = [message.summary, message.detail].filter(Boolean).join(': ');
+    if (text) this.announcer.announce(text, toast.severity === 'error' ? 'assertive' : 'polite');
     if (!message.sticky) {
       this.timers.set(
         toast.id,

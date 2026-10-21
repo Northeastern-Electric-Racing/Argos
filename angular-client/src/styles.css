@@ -79,10 +79,6 @@ body {
 * {
   scrollbar-width: none;
 }
-.mat-mdc-dialog-container {
-  --mat-dialog-container-color: transparent !important;
-}
-
 .connection-dot {
   background-color: transparent;
   border: 3px solid;
@@ -92,18 +88,13 @@ body {
   border-radius: 50%;
 }
 
-/* Navbar options menu: our dialog container without the surface chrome */
-.nav-options-dialog .ui-dialog-surface {
-  border-radius: 20px;
-}
-
 /* Cell comparison dialog: compact, modeless */
 .cell-compare-dialog .ui-dialog-surface {
+  --ui-dialog-header-top: 6px;
+  --ui-dialog-header-right: 8px;
+  --ui-dialog-header-bottom: 4px;
+  --ui-dialog-header-left: 14px;
   border-radius: 12px;
-}
-
-.cell-compare-dialog .ui-dialog-header {
-  padding: 6px 8px 4px 14px;
 }
 
 .cell-compare-dialog .ui-dialog-title {

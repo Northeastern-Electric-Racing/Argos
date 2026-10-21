@@ -33,7 +33,7 @@
                 <th cdk-header-cell *cdkHeaderCellDef>Expired?</th>
                 <td cdk-cell *cdkCellDef="let fault">{{ fault.expired ? 'Yes' : 'No' }}</td>
               </ng-container>
-              <tr cdk-header-row *cdkHeaderRowDef="columns"></tr>
+              <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
               <tr
                 cdk-row
                 *cdkRowDef="let fault; columns: columns"

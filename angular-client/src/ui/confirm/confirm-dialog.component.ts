@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 export interface ConfirmDialogData {
   message: string;
+  /** Id of the message element; the dialog's aria-describedby points at it. */
+  messageId: string;
   acceptLabel: string;
   rejectLabel: string;
   danger: boolean;

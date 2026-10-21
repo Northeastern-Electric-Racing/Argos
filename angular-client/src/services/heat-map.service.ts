@@ -1,5 +1,5 @@
-import { DialogRef } from '@angular/cdk/dialog';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { UiPanelRef } from 'src/ui/dialog/panel.component';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CellReading } from './cell.service';
@@ -34,7 +34,7 @@ export class HeatMapService {
 
   /** Multi-cell selection state, keyed by CellReading identity */
   private selectedCells = new Map<CellReading, SelectedCellInfo>();
-  dialogRef: DialogRef | null = null;
+  dialogRef: UiPanelRef | null = null;
 
   /**
    * Toggle a group of readings as a unit. Uses the first reading's
@@ -65,11 +65,11 @@ export class HeatMapService {
   openDialogForSelectedCells(): void {
     // Open dialog if not already open, and the caller requested it.
     if (this.selectedCells.size > 0 && !this.dialogRef) {
-      this.dialogRef = this.dialogService.open(CellViewComponent, {
+      // Non-modal: the user keeps clicking heat-map cells while it is open.
+      this.dialogRef = this.dialogService.openPanel(CellViewComponent, {
         data: { cells: this.selectedCells },
         header: 'Cell Comparison',
         draggable: true,
-        modal: false,
         panelClass: 'cell-compare-dialog'
       });
       this.dialogRef?.closed.subscribe(() => {

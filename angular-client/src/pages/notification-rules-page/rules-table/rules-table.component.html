@@ -56,7 +56,7 @@
     </ng-container>
 
     <ng-container cdkColumnDef="actions">
-      <th cdk-header-cell *cdkHeaderCellDef class="col-actions"><span class="ui-visually-hidden">Actions</span></th>
+      <th cdk-header-cell *cdkHeaderCellDef class="col-actions"><span class="cdk-visually-hidden">Actions</span></th>
       <td cdk-cell *cdkCellDef="let rule" class="col-actions">
         <div class="action-icons">
           <button
@@ -80,7 +80,7 @@
     </ng-container>
 
     <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
-    <tr cdk-row *cdkRowDef="let rule; columns: columns" [attr.aria-selected]="isSelected(rule)"></tr>
+    <tr cdk-row *cdkRowDef="let rule; columns: columns" [class.ui-row-selected]="isSelected(rule)"></tr>
     <tr *cdkNoDataRow>
       <td [attr.colspan]="columns.length" class="ui-table-empty">
         @if (loading()) {

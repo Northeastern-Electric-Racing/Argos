@@ -1,5 +1,5 @@
 .btn {
-  background-color: #f04346;
+  background-color: var(--ui-accent);
   border: none;
   color: white;
   border-radius: 4px;
@@ -15,5 +15,5 @@
 .btn:hover {
   transition: ease;
   transition-duration: 0.2s;
-  background-color: #f04346b2;
+  background-color: color-mix(in srgb, var(--ui-accent) 70%, transparent);
 }

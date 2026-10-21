@@ -41,26 +41,6 @@
   flex: 1;
 }
 
-.navbar-menu {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.navbar-menu mat-icon {
-  width: 48px;
-  height: 48px;
-  transition: color 0.2s ease;
-}
-
-.navbar-menu.selected,
-.navbar-menu:hover {
-  color: #ef4345;
-}
-
 .navbar-notification {
   cursor: pointer;
   display: flex;

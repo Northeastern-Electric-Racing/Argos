@@ -23,7 +23,7 @@
         (blur)="onTopicBlur()"
       />
     </div>
-    <div aria-live="polite" class="ui-visually-hidden">
+    <div aria-live="polite" class="cdk-visually-hidden">
       {{ query() && filteredTopics().length === 0 ? 'No topics match ' + query() : '' }}
     </div>
     <ng-template

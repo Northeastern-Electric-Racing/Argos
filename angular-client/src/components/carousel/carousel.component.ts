@@ -16,8 +16,9 @@ const AUTOPLAY_MS = 3000;
 
 /**
  * Run picker carousel. Neither Angular Aria nor the CDK has a carousel, so this follows the
- * WAI-ARIA carousel pattern by hand: prev/next buttons, a live slide label, and autoplay that
- * pauses while the pointer or keyboard focus is inside.
+ * WAI-ARIA carousel pattern by hand: prev/next buttons, a stop/start rotation control, autoplay
+ * that pauses while the pointer or keyboard focus is inside (and is off under reduced motion),
+ * and a slide live region that only announces while not rotating.
  */
 @Component({
   selector: 'carousel',
@@ -33,11 +34,14 @@ export class CarouselComponent {
   runs: Run[] = this.dialogData.runs ?? [];
   currentIndex = signal(0);
   currentRun = computed(() => this.runs[this.currentIndex()]);
+  /** The user's stop/start choice; starts off when the OS asks for reduced motion. */
+  autoplay = signal(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   private paused = signal(false);
+  rotating = computed(() => this.autoplay() && !this.paused());
 
   constructor() {
     const timer = setInterval(() => {
-      if (!this.paused()) this.next();
+      if (this.rotating()) this.next();
     }, AUTOPLAY_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
@@ -63,6 +67,11 @@ export class CarouselComponent {
 
   setPaused(paused: boolean): void {
     this.paused.set(paused);
+  }
+
+  /** Keyboard focus pauses rotation; the dialog's initial focus after a mouse click doesn't. */
+  onFocusIn(event: FocusEvent): void {
+    if ((event.target as HTMLElement).matches?.(':focus-visible')) this.setPaused(true);
   }
 
   datePipe = (date: Date) => {

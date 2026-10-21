@@ -9,13 +9,13 @@
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: #555;
+  background: var(--ui-control-off);
   cursor: pointer;
   transition: background-color 150ms ease;
 }
 
 .ui-switch:hover:not(:disabled) {
-  background: #666;
+  background: var(--ui-control-off-hover);
 }
 
 .ui-switch[aria-checked='true'] {
@@ -43,7 +43,7 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background: #fff;
+  background: var(--ui-on-accent);
   transition: transform 150ms ease;
 }
 

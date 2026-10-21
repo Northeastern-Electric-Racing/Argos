@@ -109,34 +109,34 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
+/* Column rules; the base th/td rules above are :where()-wrapped, so these win without. */
 .sessions-table-wrap th.col-state,
 .sessions-table-wrap td.col-state {
   width: 32px;
-  text-align: center !important;
-  padding-left: 8px !important;
-  padding-right: 0 !important;
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 0;
 }
 .sessions-table-wrap th.col-name,
 .sessions-table-wrap td.col-name {
   min-width: 0;
-  text-align: left !important;
+  text-align: left;
 }
 .sessions-table-wrap th.col-started,
 .sessions-table-wrap td.col-started {
   width: 140px;
   white-space: nowrap;
-  text-align: left !important;
+  text-align: left;
 }
 .sessions-table-wrap th.col-laps,
 .sessions-table-wrap td.col-laps {
   width: 60px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap th.col-best,
 .sessions-table-wrap td.col-best {
   width: 90px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap td.col-best {
   color: var(--color-battery-high);
@@ -144,12 +144,12 @@
 .sessions-table-wrap th.col-run,
 .sessions-table-wrap td.col-run {
   width: 60px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap th.col-actions,
 .sessions-table-wrap td.col-actions {
   width: 40px;
-  text-align: right !important;
+  text-align: right;
 }
 
 .session-name {

@@ -14,18 +14,23 @@ export interface ConfirmOptions {
   reject?: () => void;
 }
 
+let nextMessageId = 0;
+
 /** Yes/no confirmation in an alert dialog; mirrors PrimeNG's ConfirmationService.confirm(). */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
   private dialogService = inject(UiDialogService);
 
   confirm(options: ConfirmOptions): void {
+    const messageId = `ui-confirm-message-${nextMessageId++}`;
     const ref = this.dialogService.open<boolean, ConfirmDialogData>(ConfirmDialogComponent, {
       header: options.header ?? 'Confirm',
       width: '420px',
       role: 'alertdialog',
+      ariaDescribedBy: messageId,
       data: {
         message: options.message,
+        messageId,
         acceptLabel: options.acceptLabel ?? 'Yes',
         rejectLabel: options.rejectLabel ?? 'No',
         danger: options.danger ?? false

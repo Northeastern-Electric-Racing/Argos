@@ -10,7 +10,7 @@ const ICONS: Record<ToastSeverity, string> = {
 };
 
 /**
- * Renders the active toasts top-right, inside polite (or assertive, for errors) live regions.
+ * Renders the active toasts top-right. ToastService announces them to screen readers.
  * CDK 22 overlays (dialogs, drawers, popovers) live in the browser's top layer, so the stack is a
  * manual popover too, re-shown on each new toast so it stays above any open dialog.
  */

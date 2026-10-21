@@ -1,6 +1,6 @@
 <info-background [title]="this.title" svgIcon="battery_charging_2">
   <div class="ui-table-wrapper chip-faults-table">
-    <table cdk-table class="ui-table ui-table--striped ui-table--hover" [dataSource]="this.chipFaults">
+    <table cdk-table class="ui-table ui-table--striped ui-table--hover" [dataSource]="this.chipFaults()">
       <ng-container cdkColumnDef="name">
         <th cdk-header-cell *cdkHeaderCellDef>Name</th>
         <td cdk-cell *cdkCellDef="let fault">{{ fault.name }}</td>
