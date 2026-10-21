@@ -9,32 +9,34 @@
     @for (node of nodeArray(); track node.node) {
       <button tuiAccordion type="button">{{ node.node }}</button>
       <tui-expand>
-        <table tuiTable size="m" class="fault-table">
-          <thead>
-            <tr>
-              <th tuiTh>Name</th>
-              <th tuiTh>Occurred At</th>
-              <th tuiTh>Last Seen</th>
-              <th tuiTh>Expired?</th>
-            </tr>
-          </thead>
-          <tbody tuiTbody>
-            @for (fault of node.data; track fault) {
-              <tr
-                tuiTr
-                class="selectable-row"
-                tabindex="0"
-                (click)="onRowSelect(fault)"
-                (keydown.enter)="onRowSelect(fault)"
-              >
-                <td tuiTd>{{ fault.name }}</td>
-                <td tuiTd>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
-                <td tuiTd>{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
-                <td tuiTd>{{ fault.expired ? 'Yes' : 'No' }}</td>
+        <ng-container *tuiItem>
+          <table tuiTable size="m" class="fault-table">
+            <thead>
+              <tr>
+                <th tuiTh>Name</th>
+                <th tuiTh>Occurred At</th>
+                <th tuiTh>Last Seen</th>
+                <th tuiTh>Expired?</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody tuiTbody>
+              @for (fault of node.data; track fault) {
+                <tr
+                  tuiTr
+                  class="selectable-row"
+                  tabindex="0"
+                  (click)="onRowSelect(fault)"
+                  (keydown.enter)="onRowSelect(fault)"
+                >
+                  <td tuiTd>{{ fault.name }}</td>
+                  <td tuiTd>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+                  <td tuiTd>{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
+                  <td tuiTd>{{ fault.expired ? 'Yes' : 'No' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </ng-container>
       </tui-expand>
     }
   </tui-accordion>

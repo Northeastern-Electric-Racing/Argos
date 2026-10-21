@@ -1,10 +1,11 @@
 <div class="menu-container">
-  <div class="menu-grid">
+  <!-- The dropdown panel is the listbox; tuiOption gives each item role="option" and arrow-key focus -->
+  <tui-data-list class="menu-grid">
     @for (menuItem of items(); track menuItem) {
-      <button type="button" class="menu-item" (click)="itemClick.emit(menuItem)" [attr.data-id]="menuItem.id">
+      <button tuiOption type="button" class="menu-item" (click)="itemClick.emit(menuItem)" [attr.data-id]="menuItem.id">
         <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
         <span class="menu-label">{{ menuItem.label }}</span>
       </button>
     }
-  </div>
+  </tui-data-list>
 </div>

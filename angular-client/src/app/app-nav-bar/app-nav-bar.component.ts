@@ -2,7 +2,9 @@ import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrate
 import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { TuiDialogService, TuiDropdown, TuiPopup } from '@taiga-ui/core';
+import { TuiButton, TuiClose, TuiDialogService, TuiDropdown, TuiPopup, TuiTitle } from '@taiga-ui/core';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
+import { TuiHeader } from '@taiga-ui/layout';
 import { TuiBadgeNotification, TuiDrawer } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { interval, map, Observable, startWith } from 'rxjs';
@@ -36,8 +38,13 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
+    TuiAutoFocus,
+    TuiButton,
+    TuiClose,
     TuiDrawer,
+    TuiHeader,
     TuiPopup,
+    TuiTitle,
     TuiDropdown,
     TuiBadgeNotification,
     CurrentRunDisplayComponent,

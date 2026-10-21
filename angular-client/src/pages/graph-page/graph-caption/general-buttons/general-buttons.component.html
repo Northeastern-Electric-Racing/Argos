@@ -21,11 +21,12 @@
       class="custom-stack"
       tuiDropdownAlign="end"
       [tuiDropdown]="customPopover"
-      [tuiDropdownManual]="customOpen()"
-      (tuiActiveZoneChange)="onCustomActiveZone($event)"
+      [tuiDropdownOpen]="customOpen()"
+      (tuiDropdownOpenChange)="onCustomOpenChange($event)"
     >
+      <!-- tuiDropdownOpen toggles the popover on the button's click, Esc and outside clicks -->
       <argos-button
-        [onClick]="toggleCustomPopover"
+        [onClick]="noop"
         label="Custom"
         size="sm"
         [additionalStyles]="
@@ -42,24 +43,15 @@
 
   <ng-template #customPopover>
     <div class="custom-popover-body">
-      <div class="mode-toggle">
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="customMode() === 'last-x'"
-          (click)="setCustomMode('last-x')"
-        >
-          Last X
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="customMode() === 'date-range'"
-          (click)="setCustomMode('date-range')"
-        >
-          Date Range
-        </button>
-      </div>
+      <tui-segmented
+        size="s"
+        class="mode-toggle"
+        [activeItemIndex]="customMode() === 'last-x' ? 0 : 1"
+        (activeItemIndexChange)="setCustomMode($event === 0 ? 'last-x' : 'date-range')"
+      >
+        <button type="button">Last X</button>
+        <button type="button">Date Range</button>
+      </tui-segmented>
 
       @if (customMode() === 'last-x') {
         <div class="mode-body">

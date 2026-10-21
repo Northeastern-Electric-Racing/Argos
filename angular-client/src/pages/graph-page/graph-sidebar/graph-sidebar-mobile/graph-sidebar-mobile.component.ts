@@ -12,7 +12,8 @@ import {
 } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiDialogService, TuiPopup, TuiTitle } from '@taiga-ui/core';
+import { TuiButton, TuiClose, TuiDialogService, TuiPopup, TuiTitle } from '@taiga-ui/core';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
 import { TuiHeader } from '@taiga-ui/layout';
 import { TuiDrawer, TuiSwitch } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
@@ -45,7 +46,9 @@ import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.compone
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TuiAutoFocus,
     TuiButton,
+    TuiClose,
     TuiDrawer,
     TuiPopup,
     TuiHeader,
@@ -103,6 +106,10 @@ export default class GraphSidebarMobileComponent {
 
   toggleSidebar = () => {
     this.sidebarVisible = !this.sidebarVisible;
+  };
+
+  closeSidebar = () => {
+    this.sidebarVisible = false;
   };
 
   toggleFlattenMode(value: boolean) {

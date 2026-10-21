@@ -28,6 +28,8 @@
   --color-text-subtitle: #cacaca;
   --color-background-info: #2c2c2c;
   --color-background-page: #101010;
+  --color-background-elevated: #262626;
+  --color-accent: #ef4345;
   --color-divider: #414141;
   --color-battery-shell: #efefed;
   --color-battery-low: #f50905;
@@ -87,20 +89,20 @@ body {
 }
 
 /* ---- Taiga UI theme ----
- * Taiga's dark palette with a few tokens moved toward today's look: near-black page,
+ * Taiga's dark palette with a few tokens pointed at the app's own tokens above: near-black page,
  * slightly lighter panels, the NER red as the accent, and the Roboto font the app already bundles
  * (Taiga's optional Manrope font stylesheet loads from Google Fonts at runtime, so it is left out).
  */
 [tuiTheme='dark'] {
-  --tui-background-base: #101010;
-  --tui-background-elevation-1: #262626;
-  --tui-background-elevation-2: #2c2c2c;
-  --tui-background-accent-1: #ef4345;
+  --tui-background-base: var(--color-background-page);
+  --tui-background-elevation-1: var(--color-background-elevated);
+  --tui-background-elevation-2: var(--color-background-info);
+  --tui-background-accent-1: var(--color-accent);
   --tui-background-accent-1-hover: #f26a6c;
   --tui-background-accent-1-pressed: #c9383a;
   --tui-text-primary-on-accent-1: #fff;
   --tui-text-action: #f26a6c;
-  --tui-text-action-hover: #ef4345;
+  --tui-text-action-hover: var(--color-accent);
 }
 
 /* tui-root sets Taiga's 14px/20px body font; the app's own components are sized for the browser default

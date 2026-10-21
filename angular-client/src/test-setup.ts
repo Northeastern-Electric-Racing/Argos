@@ -38,9 +38,8 @@ for (const name of ['IntersectionObserver', 'ResizeObserver', 'MutationObserver'
 //   - provideZonelessChangeDetection: the app is zoneless, as in main.ts.
 //   - provideTaiga / ChipFaultPipe: provided at root in main.ts (Taiga's dialog and notification
 //     services are providedIn: 'root').
-//   - ToastService: a no-op, since toasts render into tui-root, which component tests don't mount
-//     (PrimeNG's MessageService was likewise silent without a p-toast). Specs that assert on toasts
-//     provide their own spy.
+//   - ToastService: a no-op, since toasts render into tui-root, which component tests don't mount.
+//     Specs that assert on toasts provide their own spy.
 // Per-spec configureTestingModule calls still apply on top.
 export default [
   provideZonelessChangeDetection(),

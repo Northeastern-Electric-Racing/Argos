@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { ToastService } from 'src/services/toast.service';
 import { FormsModule } from '@angular/forms';
-import { TuiActiveZone, TuiDay, TuiTime } from '@taiga-ui/cdk';
+import { TuiDay, TuiTime } from '@taiga-ui/cdk';
 import { TuiCalendar, tuiDateFormatProvider, TuiDropdown, TuiTextfield } from '@taiga-ui/core';
-import { TuiInputDateTime, TuiInputNumber } from '@taiga-ui/kit';
+import { TuiInputDateTime, TuiInputNumber, TuiSegmented } from '@taiga-ui/kit';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -46,17 +46,17 @@ export function fromDayTime([day, time]: readonly [TuiDay, TuiTime?]): Date {
   templateUrl: './general-buttons.component.html',
   styleUrl: './general-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Same yyyy-mm-dd dates the PrimeNG date picker showed
+  // yyyy-mm-dd dates, as the baseline date picker showed
   providers: [tuiDateFormatProvider({ mode: 'yyyy/mm/dd', separator: '-' })],
   imports: [
     RunSelectorComponent,
     ButtonComponent,
     SelectDropdownComponent,
-    TuiActiveZone,
     TuiCalendar,
     TuiDropdown,
     TuiInputDateTime,
     TuiInputNumber,
+    TuiSegmented,
     TuiTextfield,
     FormsModule
   ]
@@ -115,15 +115,13 @@ export class GeneralButtonsComponent {
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
 
-  toggleCustomPopover = () => {
-    const open = !this.customOpen();
+  // The Custom button's own click is a no-op: tuiDropdownOpen opens and closes the popover
+  readonly noop = () => {};
+
+  /** Taiga's tuiDropdownOpen reports clicks, Esc and outside clicks; seed the fields on open */
+  onCustomOpenChange(open: boolean) {
     if (open) this.onCustomPopoverShow();
     this.customOpen.set(open);
-  };
-
-  /** Close the popover once focus and clicks leave it (Taiga's active zone) */
-  onCustomActiveZone(active: boolean) {
-    if (!active) this.customOpen.set(false);
   }
 
   setCustomFrom(value: DayTime | null) {

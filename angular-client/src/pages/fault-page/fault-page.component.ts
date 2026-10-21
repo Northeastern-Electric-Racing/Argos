@@ -6,6 +6,7 @@ import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
 import { TuiTable } from '@taiga-ui/addon-table';
+import { TuiItem } from '@taiga-ui/cdk';
 import { TuiAccordion } from '@taiga-ui/kit';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -15,7 +16,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [TuiAccordion, TuiTable, DatePipe, TypographyComponent]
+  imports: [TuiAccordion, TuiItem, TuiTable, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

@@ -1,11 +1,19 @@
 <button type="button" class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
-<tui-drawer *tuiPopup="sidebarVisible" direction="end" class="topics-drawer" [overlay]="true">
+<tui-drawer *tuiPopup="sidebarVisible" direction="end" class="topics-drawer" [overlay]="true" (tuiClose)="closeSidebar()">
   <header>
     <div tuiHeader="h6">
       <div tuiTitle>Topics</div>
       <div tuiAccessories>
-        <button appearance="icon" iconStart="@tui.x" size="s" tuiIconButton type="button" (click)="toggleSidebar()">
+        <button
+          appearance="icon"
+          iconStart="@tui.x"
+          size="s"
+          tuiAutoFocus
+          tuiIconButton
+          type="button"
+          (click)="closeSidebar()"
+        >
           Close topics
         </button>
       </div>

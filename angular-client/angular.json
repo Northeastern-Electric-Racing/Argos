@@ -28,7 +28,12 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              { "glob": "**/*", "input": "node_modules/@taiga-ui/icons/src", "output": "assets/taiga-ui/icons" }
+              {
+                "glob": "**/*",
+                "input": "node_modules/@taiga-ui/icons/src",
+                "output": "assets/taiga-ui/icons",
+                "ignore": ["flags/**", "**/*-filled.svg"]
+              }
             ],
             "inlineStyleLanguage": "css",
             "styles": ["@taiga-ui/styles/taiga-ui-theme.less", "src/styles.css"],
