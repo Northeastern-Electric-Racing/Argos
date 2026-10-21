@@ -24,6 +24,7 @@ import {
   MismatchDirection,
   MouseEventParams,
   Time,
+  UTCTimestamp,
   WhitespaceData,
   createChart
 } from 'lightweight-charts';
@@ -37,10 +38,10 @@ import {
   formatCrosshairTime,
   formatTickMark,
   formatValue,
-  fromChartTime,
   gridStep,
   priceScaleIdFor,
   seriesColor,
+  toChartMs,
   toChartTime,
   toLineData
 } from './graph-chart.utils';
@@ -142,7 +143,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   private staleHead = new Map<string, number>();
   private dayBoundaries = new DayBoundariesPrimitive();
   private hoverMarkers = new HoverMarkersPrimitive();
-  private multiDay = false;
   /** Hidden whitespace series that spaces the time scale by time (see syncGrid). */
   private grid: ISeriesApi<'Line'> | undefined;
   private gridState: GridState | null = null;
@@ -248,7 +248,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         // Left false on purpose: the grid's points stay tick and crosshair stops, so ticks land on
         // round times instead of raw data times, and the crosshair moves through gaps.
         ignoreWhitespaceIndices: false,
-        tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay)
+        tickMarkFormatter: formatTickMark
       },
       localization: {
         timeFormatter: formatCrosshairTime,
@@ -462,7 +462,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     const { first, latest } = extent;
     const timeScale = this.chart.timeScale();
     if (untracked(this.realTime)) {
-      this.setMultiDay(false);
       const config = untracked(this.graphConfig);
       const range = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
       this.syncGrid(range ?? latest - first, first, latest, true);
@@ -475,9 +474,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     }
 
     this.syncGrid(latest - first, first, latest, false);
-    const boundaries = buildDayBoundaries(Array.from(this.data.values()));
-    this.setMultiDay(boundaries.length > 0);
-    this.dayBoundaries.setBoundaries(boundaries);
+    this.dayBoundaries.setBoundaries(buildDayBoundaries(Array.from(this.data.values())));
     this.fitData();
   }
 
@@ -485,13 +482,15 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
    * Keeps whitespace grid points every `gridStep(span)` ms across the data, so the index-spaced time
    * scale is spaced by time and gaps keep their width. Live (`lookAhead`), the grid reaches back at
    * most two spans from the latest point and GRID_SLACK points past it, and is rebuilt once the data
-   * passes its end, its head goes stale, or its step changes.
+   * passes its end, its head goes stale, or its step changes. The grid is laid in chart time (local
+   * wall-clock), so its points, and the ticks on them, fall on local round times and midnights.
    */
   private syncGrid(spanMs: number, firstMs: number, lastMs: number, lookAhead: boolean) {
     if (!this.grid) return;
     const step = gridStep(spanMs, GRID_BARS);
-    const from = Math.ceil(Math.max(firstMs, lastMs - 2 * spanMs) / step);
-    const last = Math.floor(lastMs / step);
+    const lastChartMs = toChartMs(lastMs);
+    const from = Math.ceil(Math.max(toChartMs(firstMs), lastChartMs - 2 * spanMs) / step);
+    const last = Math.floor(lastChartMs / step);
     const current = this.gridState;
     if (current?.step === step) {
       const fresh = lookAhead
@@ -501,7 +500,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     }
     const to = lookAhead ? last + GRID_SLACK : last;
     const points: WhitespaceData<Time>[] = [];
-    for (let k = from; k <= to; k++) points.push({ time: toChartTime(k * step) });
+    for (let k = from; k <= to; k++) points.push({ time: ((k * step) / 1000) as UTCTimestamp });
     this.grid.setData(points);
     this.gridState = { step, from, to };
   }
@@ -523,13 +522,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       latest = Math.max(latest, line[line.length - 1].x);
     });
     return isFinite(latest) ? { first, latest } : null;
-  }
-
-  private setMultiDay(multiDay: boolean) {
-    if (multiDay === this.multiDay) return;
-    this.multiDay = multiDay;
-    // A new formatter function makes the time scale drop its cached labels.
-    this.chart?.applyOptions({ timeScale: { tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay) } });
   }
 
   private onCrosshairMove = (param: MouseEventParams<Time>) => {
@@ -554,7 +546,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       const held = series?.dataByIndex(logical, MismatchDirection.NearestLeft);
       if (!series || !held || !('value' in held)) continue;
       rows.push({ ...item, value: formatValue(held.value) });
-      markers.push({ series, timeMs: fromChartTime(held.time), value: held.value, color: item.color });
+      markers.push({ series, time: held.time, value: held.value, color: item.color });
     }
     this.hoverMarkers.setMarkers(markers);
     // The chart reports the cursor relative to the pane, which starts right of the left price axis.

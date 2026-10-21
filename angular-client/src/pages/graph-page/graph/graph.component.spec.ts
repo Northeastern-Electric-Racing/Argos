@@ -5,6 +5,7 @@ import {
   LineSeriesOptions,
   MouseEventParams,
   SeriesType,
+  TickMarkType,
   Time,
   TimeScaleOptions
 } from 'lightweight-charts';
@@ -183,7 +184,7 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(times.length).toBeLessThanOrEqual(2 * 1500 + 500 + 1);
   });
 
-  it('labels the time axis with dates on multi-day historical ranges', async () => {
+  it('labels day changes on the time axis with their date, and other ticks with the time', async () => {
     const day = 24 * 60 * 60 * 1000;
     await render({
       topics: [
@@ -197,7 +198,12 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     });
 
     const format = (component.chart!.options().timeScale as TimeScaleOptions).tickMarkFormatter!;
-    expect(format(toChartTime(T0), 0, 'en-US')).toBe('3/14 09:00');
+    const midnight = new Date(2026, 2, 15).getTime();
+    expect(format(toChartTime(midnight), TickMarkType.DayOfMonth, 'en-US')).toBe('3/15');
+    expect(format(toChartTime(T0), TickMarkType.DayOfMonth, 'en-US')).toBe('3/14 09:00');
+    expect(format(toChartTime(T0), TickMarkType.Time, 'en-US')).toBe('09:00');
+    // A day tick sits on local midnight: the grid has a bar there, in any time zone.
+    expect(component.chart!.timeScale().timeToCoordinate(toChartTime(midnight))).not.toBeNull();
   });
 
   it('draws each day boundary at local midnight', async () => {

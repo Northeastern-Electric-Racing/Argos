@@ -1,14 +1,27 @@
+import { TickMarkType, Time } from 'lightweight-charts';
 import {
   DAY_MS,
+  ZoneOffset,
   buildDayBoundaries,
   formatCrosshairTime,
   formatTickMark,
   formatValue,
+  fromChartMs,
+  fromChartTime,
   gridStep,
   priceScaleIdFor,
+  toChartMs,
   toChartTime,
   toLineData
 } from './graph-chart.utils';
+
+const HOUR = 60 * 60 * 1000;
+/** New York in 2026: EDT (UTC-4) from 3/8 07:00Z, EST (UTC-5) from 11/1 06:00Z. */
+const SPRING_FORWARD = Date.UTC(2026, 2, 8, 7);
+const FALL_BACK = Date.UTC(2026, 10, 1, 6);
+const newYork: ZoneOffset = (ms) => (ms >= SPRING_FORWARD && ms < FALL_BACK ? -4 : -5) * HOUR;
+/** A chart time that reads as this wall-clock time (the library places and labels ticks in UTC). */
+const wall = (...args: [number, number, number, number?, number?, number?, number?]) => (Date.UTC(...args) / 1000) as Time;
 
 describe('graph-chart utils', () => {
   const t = (h: number, m = 0, s = 0, ms = 0, day = 14) => new Date(2026, 2, day, h, m, s, ms).getTime();
@@ -16,7 +29,7 @@ describe('graph-chart utils', () => {
   describe('toLineData', () => {
     it('converts ms to fractional chart seconds', () => {
       expect(toLineData([{ x: 1500, y: 2 }])).toEqual([{ time: toChartTime(1500), value: 2 }]);
-      expect(toChartTime(1500) as number).toBe(1.5);
+      expect((toChartTime(2500) as number) - (toChartTime(1000) as number)).toBe(1.5);
     });
 
     it('keeps the latest value for a repeated timestamp so times stay strictly increasing', () => {
@@ -29,14 +42,56 @@ describe('graph-chart utils', () => {
     });
   });
 
-  describe('time labels', () => {
-    it('shows milliseconds only for sub-second instants', () => {
-      expect(formatTickMark(toChartTime(t(9, 26, 53)), false)).toBe('09:26:53');
-      expect(formatTickMark(toChartTime(t(9, 26, 53, 589)), false)).toBe('09:26:53.589');
+  describe('chart time in the local time zone', () => {
+    it('writes each instant as its local wall-clock time, so ticks land on local round times', () => {
+      // 2026-10-16 12:00Z is 08:00 in New York.
+      expect(toChartMs(Date.UTC(2026, 9, 16, 12), newYork)).toBe(Date.UTC(2026, 9, 16, 8));
+      expect(toChartMs(Date.UTC(2026, 0, 16, 12), newYork)).toBe(Date.UTC(2026, 0, 16, 7));
+      expect(toChartMs(Date.UTC(2026, 9, 16, 12), () => 0)).toBe(Date.UTC(2026, 9, 16, 12));
+      // Local midnight, where the day lines go, is a whole day in chart time.
+      expect(toChartMs(Date.UTC(2026, 9, 17, 4), newYork) % DAY_MS).toBe(0);
     });
 
-    it('shows date and minute on multi-day ranges', () => {
-      expect(formatTickMark(toChartTime(t(9, 5, 53, 589)), true)).toBe('3/14 09:05');
+    it('skips the missing hour where the clock springs forward', () => {
+      expect(toChartMs(SPRING_FORWARD - 1, newYork)).toBe(Date.UTC(2026, 2, 8, 2) - 1);
+      expect(toChartMs(SPRING_FORWARD, newYork)).toBe(Date.UTC(2026, 2, 8, 3));
+    });
+
+    it('stays strictly increasing where the clock falls back, and reads back the same instant', () => {
+      for (const around of [SPRING_FORWARD, FALL_BACK]) {
+        let previous = -Infinity;
+        for (let ms = around - 3 * HOUR; ms <= around + 3 * HOUR; ms += 61_001) {
+          const chart = toChartMs(ms, newYork);
+          expect(chart).toBeGreaterThan(previous);
+          expect(fromChartMs(chart, newYork)).toBe(ms);
+          previous = chart;
+        }
+      }
+      // Local 01:00-02:00 happens twice; both hours are drawn, at half width, in its one hour.
+      expect(toChartMs(FALL_BACK - HOUR, newYork)).toBe(Date.UTC(2026, 10, 1, 1));
+      expect(toChartMs(FALL_BACK, newYork)).toBe(Date.UTC(2026, 10, 1, 1, 30));
+      expect(toChartMs(FALL_BACK + HOUR, newYork)).toBe(Date.UTC(2026, 10, 1, 2));
+    });
+  });
+
+  describe('time labels', () => {
+    it('labels ticks with the wall-clock time the chart time encodes, milliseconds only when needed', () => {
+      expect(formatTickMark(wall(2026, 9, 16, 9, 26, 53), TickMarkType.TimeWithSeconds)).toBe('09:26:53');
+      expect(formatTickMark(wall(2026, 9, 16, 9, 26, 53, 589), TickMarkType.TimeWithSeconds)).toBe('09:26:53.589');
+      expect(formatTickMark(wall(2026, 9, 16, 9, 27), TickMarkType.Time)).toBe('09:27');
+    });
+
+    it('labels day ticks with the date, and the time too when not on midnight', () => {
+      expect(formatTickMark(wall(2026, 9, 17), TickMarkType.DayOfMonth)).toBe('10/17');
+      expect(formatTickMark(wall(2026, 9, 17, 0, 5), TickMarkType.DayOfMonth)).toBe('10/17 00:05');
+      expect(formatTickMark(wall(2027, 0, 1), TickMarkType.Year)).toBe('1/1');
+    });
+
+    it('reads the crosshair time back in the local zone, even inside the repeated hour', () => {
+      // 06:30Z on 11/1 is the second 01:30 in New York.
+      const time = (toChartMs(FALL_BACK + HOUR / 2, newYork) / 1000) as Time;
+      expect(fromChartTime(time, newYork)).toBe(FALL_BACK + HOUR / 2);
+      expect(formatCrosshairTime(time, newYork)).toBe('11/1/26, 01:30:00');
     });
 
     it('formats the crosshair time with date and milliseconds', () => {

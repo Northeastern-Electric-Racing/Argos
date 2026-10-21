@@ -8,14 +8,13 @@ import {
   SeriesType,
   Time
 } from 'lightweight-charts';
-import { toChartTime } from './graph-chart.utils';
 
 type RenderTarget = Parameters<IPrimitivePaneRenderer['draw']>[0];
 
 export interface HoverMarker {
   series: ISeriesApi<SeriesType, Time>;
-  /** Time of the series' point the tooltip reports, in ms. */
-  timeMs: number;
+  /** Chart time of the series' point the tooltip reports. */
+  time: Time;
   value: number;
   color: string;
 }
@@ -64,8 +63,8 @@ export class HoverMarkersPrimitive implements IPanePrimitive<Time> {
     const timeScale = this.chart?.timeScale();
     if (!timeScale) return [];
     const out: { x: number; y: number; color: string }[] = [];
-    for (const { series, timeMs, value, color } of this.markers) {
-      const x = timeScale.timeToCoordinate(toChartTime(timeMs));
+    for (const { series, time, value, color } of this.markers) {
+      const x = timeScale.timeToCoordinate(time);
       const y = series.priceToCoordinate(value);
       if (x !== null && y !== null) out.push({ x, y, color });
     }
