@@ -1,64 +1,327 @@
-import { TestBed } from '@angular/core/testing';
+import { Component, input, output } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { PlotlyComponent } from 'angular-plotly.js';
+import type { LayoutAxis } from 'plotly.js';
+import { BehaviorSubject } from 'rxjs';
+import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent from './graph.component';
+import { toPlotlyDate, toWallClockMs } from './graph-layout.utils';
 
-// Regression coverage for #630: with "Multiple Y-Axes" on, the y-axis set must always
-// match the currently selected topics. applyMultiYAxisConfigs is the seam that rebuilds
-// options.yaxis from the current data map, and updateChart now calls it every render so
-// deselecting a topic prunes its axis. These tests drive that seam directly (the full
-// component needs ApexCharts + a live DOM chart container, out of scope for a unit test).
-describe('CustomGraphComponent — multi y-axis sync (#630)', () => {
-  function makeComponent(): CustomGraphComponent {
-    const c = TestBed.createComponent(CustomGraphComponent).componentInstance;
-    // applyMultiYAxisConfigs only reads `data` and writes `options.yaxis`.
-    (c as unknown as { options: { yaxis: unknown[] } }).options = { yaxis: [] };
-    return c;
+// Stands in for angular-plotly.js's <plotly-plot>, which needs WebGL; the tests check what the
+// graph hands the plot (traces, layout, revision), not Plotly's drawing.
+@Component({ selector: 'plotly-plot', template: '' })
+class PlotlyPlotStubComponent {
+  data = input<unknown>();
+  layout = input<unknown>();
+  config = input<unknown>();
+  revision = input<number>();
+  updateOnlyWithRevision = input<boolean>();
+  innerStyle = input<unknown>();
+  initialized = output<void>();
+}
+
+type GraphConfig = ReturnType<CustomGraphComponent['graphConfig']>;
+
+const baseConfig: GraphConfig = { maxPoints: 100, yMin: null, yMax: null, rangeMode: 'time', timeRangeMs: 60_000 };
+
+describe('CustomGraphComponent (Plotly)', () => {
+  let fixture: ComponentFixture<CustomGraphComponent>;
+  let graph: CustomGraphComponent;
+  let frames: FrameRequestCallback[];
+
+  /** Run the pending animation frame(s), i.e. the coalesced redraw. */
+  function flushFrames(): void {
+    const pending = frames;
+    frames = [];
+    pending.forEach((cb) => cb(0));
   }
 
-  function applyAxes(c: CustomGraphComponent): void {
-    (c as unknown as { applyMultiYAxisConfigs: () => void }).applyMultiYAxisConfigs();
+  function setup(inputs: { realTime?: boolean; config?: Partial<GraphConfig>; topics?: string[] } = {}): void {
+    TestBed.overrideComponent(CustomGraphComponent, {
+      remove: { imports: [PlotlyComponent] },
+      add: { imports: [PlotlyPlotStubComponent] }
+    });
+    fixture = TestBed.createComponent(CustomGraphComponent);
+    graph = fixture.componentInstance;
+    const values: ObservableGraphInfo[] = (inputs.topics ?? []).map((label) => ({
+      label,
+      updates: new BehaviorSubject<GraphData[][]>([])
+    }));
+    fixture.componentRef.setInput('valuesSubject', values);
+    fixture.componentRef.setInput('graphConfig', { ...baseConfig, ...inputs.config });
+    fixture.componentRef.setInput('realTime', inputs.realTime ?? false);
+    fixture.componentRef.setInput('limitRange', inputs.realTime ?? false);
+    fixture.detectChanges();
+    flushFrames();
   }
 
-  it('builds one y-axis per topic in the current data map', () => {
-    const c = makeComponent();
-    c.data = new Map([
-      ['BMS/Pack/Voltage 0', []],
-      ['BMS/Pack/Current 0', []]
-    ]);
+  function push(label: string, points: GraphData[]): void {
+    graph.graphInfoCallback({ label, data: [points] });
+  }
 
-    applyAxes(c);
+  function yAxes(): Partial<LayoutAxis>[] {
+    const layout = graph.layout() as Record<string, unknown>;
+    return Object.keys(layout)
+      .filter((key) => /^yaxis\d*$/.test(key))
+      .sort()
+      .map((key) => layout[key] as Partial<LayoutAxis>);
+  }
 
-    expect(c.options.yaxis.length).toBe(2);
+  beforeEach(() => {
+    frames = [];
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      frames.push(cb);
+      return frames.length;
+    });
   });
 
-  it('prunes a y-axis when its topic is deselected (removed from the data map)', () => {
-    const c = makeComponent();
-    c.data = new Map([
-      ['BMS/Pack/Voltage 0', []],
-      ['BMS/Pack/Current 0', []]
+  it('keeps each series sorted by time, inserting late points in place', () => {
+    setup();
+    push('VCU/CarState/speed', [
+      { x: 1000, y: 1 },
+      { x: 3000, y: 3 }
     ]);
-    applyAxes(c);
-    expect(c.options.yaxis.length).toBe(2);
+    push('VCU/CarState/speed', [{ x: 2000, y: 2 }]);
 
-    // Deselecting a topic removes its series from the data map...
-    c.data.delete('BMS/Pack/Current 0');
-    applyAxes(c);
-
-    // ...so its y-axis must go too, leaving axes matched to the remaining series.
-    expect(c.options.yaxis.length).toBe(1);
-    expect((c.options.yaxis[0] as { title: { text: string } }).title.text).toBe('BMS/Pack/Voltage ');
+    const series = graph.data.get('VCU/CarState/speed 0')!;
+    expect(series.t).toEqual([1000, 2000, 3000]);
+    expect(series.y).toEqual([1, 2, 3]);
   });
 
-  it('alternates y-axis sides so stacked axes stay readable', () => {
-    const c = makeComponent();
-    c.data = new Map([
-      ['A 0', []],
-      ['B 0', []],
-      ['C 0', []]
+  it('draws a scattergl line per series that shares the series arrays', () => {
+    setup();
+    push('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    flushFrames();
+
+    const [trace] = graph.traces();
+    expect(trace.type).toBe('scattergl');
+    expect(trace.mode).toBe('lines');
+    expect(trace.x).toBe(graph.data.get('BMS/Pack/Voltage 0')!.t);
+  });
+
+  it('plots raw epoch times, which Plotly itself shows in local time', () => {
+    // Plotly reads numbers on a date axis as epoch ms in local time; shifting them first
+    // drew New York's 16:48 at 12:48. Layout positions are wall-clock strings, read as-is.
+    spyOn(Date.prototype, 'getTimezoneOffset').and.returnValue(240);
+    setup({ realTime: true, config: { timeRangeMs: 10_000 } });
+    const t = Date.UTC(2026, 9, 21, 20, 48);
+    push('A', [{ x: t, y: 1 }]);
+    flushFrames();
+
+    expect(graph.traces()[0].x).toEqual([t]);
+    expect(graph.layout().xaxis?.range).toEqual(['2026-10-21 16:47:50.000', '2026-10-21 16:48:00.000']);
+  });
+
+  it('names the series in its hover row, even when it is the only one', () => {
+    // Plotly's unified hover drops the name of a lone trace and shows a bare value.
+    setup();
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    expect(graph.traces()[0].hovertemplate).toBe('%{fullData.name}: %{y}<extra></extra>');
+  });
+
+  it('coalesces a burst of updates into one redraw per frame, once the plot is ready', () => {
+    setup();
+    graph.onPlotInitialized();
+    flushFrames();
+    const before = graph.revision();
+
+    push('A', [{ x: 1, y: 1 }]);
+    push('A', [{ x: 2, y: 2 }]);
+    push('A', [{ x: 3, y: 3 }]);
+    expect(graph.revision()).toBe(before);
+
+    flushFrames();
+    expect(graph.revision()).toBe(before + 1);
+  });
+
+  it('does not push revisions before the plot has initialized', () => {
+    setup();
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+
+    expect(graph.revision()).toBe(0);
+    expect(graph.traces().length).toBe(1);
+  });
+
+  it('ignores data while paused', () => {
+    setup({ realTime: true });
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+
+    push('A', [{ x: 1, y: 1 }]);
+
+    expect(graph.data.size).toBe(0);
+  });
+
+  it('redraws a multi y-axis toggle while paused', () => {
+    setup({ realTime: true });
+    push('A', [{ x: 1, y: 1 }]);
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    flushFrames();
+
+    fixture.componentRef.setInput('showMultipleYAxes', true);
+    fixture.detectChanges();
+    flushFrames();
+
+    expect(yAxes()[0].anchor).toBeUndefined();
+    expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'A' }));
+  });
+
+  it('hides the modebar button that uploads the chart to Plotly Cloud', () => {
+    setup();
+    expect(graph.config.showSendToCloud).toBeFalse();
+  });
+
+  it("turns off Plotly's 'Double-click to zoom back out' toast, which covers the page title", () => {
+    setup();
+    expect(graph.config.showTips).toBeFalse();
+  });
+
+  it('fixes the x-axis only while following live data', () => {
+    setup({ realTime: true });
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    expect(graph.layout().xaxis?.fixedrange).toBeTrue();
+
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    flushFrames();
+    expect(graph.layout().xaxis?.fixedrange).toBeFalsy();
+  });
+
+  it('lets x zoom in historical mode', () => {
+    setup();
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    expect(graph.layout().xaxis?.fixedrange).toBeFalsy();
+  });
+
+  it('resets a live y zoom on pause, keeping legend toggles', () => {
+    setup({ realTime: true });
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    const { uirevision } = graph.layout();
+    const yRevision = graph.layout().yaxis?.uirevision;
+
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    flushFrames();
+
+    expect(graph.layout().yaxis?.uirevision).not.toBe(yRevision);
+    expect(graph.layout().uirevision).toBe(uirevision);
+  });
+
+  it('starts a fresh zoom when the graph config changes, so new y bounds always apply', () => {
+    setup();
+    const before = graph.layout().uirevision;
+
+    fixture.componentRef.setInput('graphConfig', { ...baseConfig, yMin: 5 });
+    fixture.detectChanges();
+    flushFrames();
+
+    expect(graph.layout().uirevision).not.toBe(before);
+    expect(graph.layout().yaxis?.autorangeoptions).toEqual({ minallowed: 5 });
+  });
+
+  it('shows the latest time window in real-time mode', () => {
+    setup({ realTime: true, config: { timeRangeMs: 10_000 } });
+    push('A', [
+      { x: 100_000, y: 1 },
+      { x: 120_000, y: 2 }
     ]);
+    flushFrames();
 
-    applyAxes(c);
+    const end = toWallClockMs(120_000);
+    expect(graph.layout().xaxis?.range).toEqual([end - 10_000, end].map(toPlotlyDate));
+  });
 
-    const sides = (c.options.yaxis as { opposite: boolean }[]).map((y) => y.opposite);
-    expect(sides).toEqual([false, true, false]);
+  it('trims points that fall out of the live time window', () => {
+    setup({ realTime: true, config: { timeRangeMs: 10_000 } });
+    push('A', [{ x: 0, y: 1 }]);
+    push('A', [{ x: 20_000, y: 2 }]);
+
+    expect(graph.data.get('A 0')!.y).toEqual([2]);
+  });
+
+  it('keeps following live data when the clocks fall back', () => {
+    // 2026-11-01 06:00Z: 02:00 EDT (UTC-4) becomes 01:00 EST (UTC-5), so wall-clock time jumps back an hour.
+    const fallBack = Date.UTC(2026, 10, 1, 6);
+    spyOn(Date.prototype, 'getTimezoneOffset').and.callFake(function (this: Date) {
+      return this.getTime() < fallBack ? 240 : 300;
+    });
+    setup({ realTime: true, config: { timeRangeMs: 30_000 } });
+    const last = fallBack + 60_000;
+    for (let t = fallBack - 60_000; t <= last; t += 1000) {
+      // y is seconds from the fall-back, to tell real times apart.
+      push('A', [{ x: t, y: (t - fallBack) / 1000 }]);
+    }
+    flushFrames();
+
+    const series = graph.data.get('A 0')!;
+    // The newest point is kept, and the old hour's points are trimmed on real time.
+    expect(series.y[series.y.length - 1]).toBe(60);
+    expect(series.y.every((s) => s >= 60 - 33)).toBeTrue();
+    const end = toWallClockMs(last);
+    expect(graph.layout().xaxis?.range).toEqual([end - 30_000, end].map(toPlotlyDate));
+  });
+
+  it('autoranges x in historical mode', () => {
+    setup();
+    push('A', [{ x: 0, y: 1 }]);
+    flushFrames();
+
+    expect(graph.layout().xaxis?.autorange).toBeTrue();
+    expect(graph.layout().xaxis?.range).toBeUndefined();
+  });
+
+  it('marks each day boundary on multi-day historical data', () => {
+    setup();
+    // Noon on day 0 to noon on day 3, local time: three midnights in between.
+    const noon = new Date(2026, 9, 1, 12).getTime();
+    push('A', [
+      { x: noon, y: 1 },
+      { x: noon + 3 * 24 * 60 * 60 * 1000, y: 2 }
+    ]);
+    flushFrames();
+
+    expect(graph.layout().shapes?.length).toBe(3);
+    expect(graph.layout().annotations?.length).toBe(3);
+    expect(graph.layout().xaxis?.tickformat).toBe('%-m/%-d %H:%M');
+  });
+
+  // Regression coverage for #630: with "Multiple Y-Axes" on, the y-axis set must always
+  // match the currently selected topics.
+  describe('multi y-axis sync (#630)', () => {
+    beforeEach(() => {
+      setup();
+      fixture.componentRef.setInput('showMultipleYAxes', true);
+      fixture.detectChanges();
+      push('BMS/Pack/Voltage', [{ x: 1, y: 1 }]);
+      push('BMS/Pack/Current', [{ x: 1, y: 1 }]);
+      flushFrames();
+    });
+
+    it('builds one y-axis per topic and puts each series on its own axis', () => {
+      expect(yAxes().length).toBe(2);
+      expect(graph.traces().map((t) => t.yaxis)).toEqual(['y', 'y2']);
+    });
+
+    it('prunes a y-axis when its topic is deselected (removed from the data map)', () => {
+      graph.data.delete('BMS/Pack/Current 0');
+      graph.updateChart();
+      flushFrames();
+
+      expect(yAxes().length).toBe(1);
+      expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'BMS/Pack/Voltage' }));
+    });
+
+    it('alternates y-axis sides so stacked axes stay readable', () => {
+      push('BMS/Pack/Temp', [{ x: 1, y: 1 }]);
+      flushFrames();
+
+      expect(yAxes().map((y) => y.side)).toEqual(['left', 'right', 'left']);
+    });
   });
 });
