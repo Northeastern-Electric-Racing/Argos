@@ -3,6 +3,14 @@ import { View } from './graph-scale';
 
 const HOUR = 60 * 60 * 1000;
 
+// Pure colour math, outside the WebGL specs so it runs without WebGL too
+describe('lighten', () => {
+  it('moves a colour toward white for tick labels', () => {
+    expect(lighten('#3F51B5', 0)).toBe('rgb(63, 81, 181)');
+    expect(lighten('#000000', 0.5)).toBe('rgb(128, 128, 128)');
+  });
+});
+
 describe('GraphRenderer', () => {
   let glCanvas: HTMLCanvasElement;
   let renderer: GraphRenderer;
@@ -40,11 +48,6 @@ describe('GraphRenderer', () => {
     gl.readPixels(0, 5, width, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
     return Array.from({ length: width }, (_, i) => i).filter((i) => px[i * 4 + 3] > 0);
   }
-
-  it('lightens a colour toward white for tick labels', () => {
-    expect(lighten('#3F51B5', 0)).toBe('rgb(63, 81, 181)');
-    expect(lighten('#000000', 0.5)).toBe('rgb(128, 128, 128)');
-  });
 
   it('sizes the canvases to the exact device-pixel box when the browser reports it', () => {
     renderer.resize(905.6, 400, 2, { width: 1811, height: 800 });

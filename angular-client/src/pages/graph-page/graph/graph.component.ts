@@ -123,6 +123,8 @@ export default class CustomGraphComponent {
   /** Shift-drag pan: where it started and the x range it started from. */
   private panStart: { px: number; x: Range } | null = null;
   private lastView: View | null = null;
+  /** What `lastView` was computed from besides the data, so a hover-only frame can reuse it. */
+  private viewInputs: unknown[] = [];
   private lastArea: Rect | null = null;
 
   constructor() {
@@ -329,6 +331,7 @@ export default class CustomGraphComponent {
   private renderFrame() {
     if (!this.renderer) return;
     const series = this.drawSeries();
+    const dataChanged = this.dataDirty;
     if (this.dataDirty) {
       this.renderer.upload(series, this.changed);
       this.changed.clear();
@@ -339,14 +342,16 @@ export default class CustomGraphComponent {
     const realTime = this.realTime();
     const multiAxis = this.showMultipleYAxes();
     // Only constrain the x-axis range in real-time mode; historical mode auto-fits all data
-    const view = computeView({
-      series,
-      multiAxis,
-      realTime,
-      windowMs: realTime ? (config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs) : undefined,
-      zoom: this.zoom(),
-      yOverride: { min: config.yMin, max: config.yMax }
-    });
+    const windowMs = realTime ? (config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs) : undefined;
+    const zoom = this.zoom();
+    const inputs = [config, realTime, multiAxis, windowMs, zoom, this.hidden()];
+    // computeView scans every visible point for the y ranges, so a frame that only moves the
+    // hover marks reuses the last view
+    let view = this.lastView;
+    if (dataChanged || inputs.some((v, i) => v !== this.viewInputs[i])) {
+      view = computeView({ series, multiAxis, realTime, windowMs, zoom, yOverride: { min: config.yMin, max: config.yMax } });
+      this.viewInputs = inputs;
+    }
     const area = plotArea(this.size.width, this.size.height, view?.axes.length ?? 1);
     this.lastView = view;
     this.lastArea = area;
@@ -369,7 +374,8 @@ export default class CustomGraphComponent {
     const cursor = this.cursor!;
     const { pxToX, xToPx, yToPx } = pixelMapping(view, area);
     const tolerance = pxToX(cursor.x + HOVER_TOLERANCE_PX) - pxToX(cursor.x);
-    const x = snapX(series, pxToX(cursor.x), tolerance);
+    // Only points inside the view, so a zoom finer than the sample rate never snaps off the plot
+    const x = snapX(series, pxToX(cursor.x), tolerance, view.x);
     if (x === undefined) {
       if (this.hover()) this.hover.set(null);
       return { crosshairX: cursor.x };
@@ -377,7 +383,7 @@ export default class CustomGraphComponent {
     const rows: HoverInfo['rows'] = [];
     const dots: NonNullable<OverlayMarks['dots']> = [];
     series.forEach((s, i) => {
-      const point = s.visible ? hoverPoint(s.points, x, tolerance) : undefined;
+      const point = s.visible ? hoverPoint(s.points, x, tolerance, view.x) : undefined;
       if (!point) return;
       rows.push({ name: s.name, color: s.color, value: point.y });
       dots.push({ x: xToPx(point.x), y: yToPx(point.y, view.axes[view.seriesAxis[i]]), color: s.color });

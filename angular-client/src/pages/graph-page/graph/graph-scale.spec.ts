@@ -54,6 +54,26 @@ describe('graph-scale', () => {
       const ticks = timeTicks({ min: start, max: start + 6 * 60 * 60 * 1000 }, 6);
       ticks.forEach((t) => expect(new Date(t).getMinutes()).toBe(0));
     });
+
+    // Needs a zone with DST (run with TZ=America/New_York); CI's UTC would pass it vacuously
+    it('stays on round local hours and midnights across a DST change', () => {
+      if (new Date(2026, 0, 1).getTimezoneOffset() === new Date(2026, 6, 1).getTimezoneOffset()) {
+        pending('the local time zone has no DST');
+      }
+      const hours = (min: Date, max: Date, maxTicks: number) =>
+        timeTicks({ min: min.getTime(), max: max.getTime() }, maxTicks).map((t) => new Date(t).getHours());
+      // 1-day and 2-day steps over a fall-back week: every tick at midnight, every date once
+      const week = { min: new Date(2026, 9, 29).getTime(), max: new Date(2026, 10, 5).getTime() };
+      expect(hours(new Date(week.min), new Date(week.max), 8)).toEqual(Array(8).fill(0));
+      expect(hours(new Date(week.min), new Date(week.max), 4).every((h) => h === 0)).toBeTrue();
+      const { labels } = timeAxis(week, 900, (label) => label.length * 7);
+      expect(new Set(labels).size).toBe(labels.length);
+      // 12 h steps over fall-back and spring-forward days
+      expect(hours(new Date(2026, 9, 31), new Date(2026, 10, 3), 7)).toEqual([0, 12, 0, 12, 0, 12, 0]);
+      expect(hours(new Date(2026, 2, 7), new Date(2026, 2, 10), 6)).toEqual([0, 12, 0, 12, 0, 12, 0]);
+      // 3 h steps through the fall-back day
+      expect(hours(new Date(2026, 10, 1), new Date(2026, 10, 1, 23), 8)).toEqual([0, 3, 6, 9, 12, 15, 18, 21]);
+    });
   });
 
   // Labels are local time; these build dates with the local-time Date constructor, so they hold
@@ -146,6 +166,7 @@ describe('graph-scale', () => {
   });
 
   it('snapX picks the visible point nearest the cursor across series', () => {
+    const all = { min: -Infinity, max: Infinity };
     const a = pts([0, 1], [10, 2]);
     const b = pts([4, 5], [14, 6]);
     expect(
@@ -155,7 +176,8 @@ describe('graph-scale', () => {
           { points: b, visible: true }
         ],
         6,
-        2
+        2,
+        all
       )
     ).toBe(4);
     expect(
@@ -165,10 +187,19 @@ describe('graph-scale', () => {
           { points: b, visible: false }
         ],
         6,
-        2
+        2,
+        all
       )
     ).toBe(10);
-    expect(snapX([{ points: a, visible: true }], 50, 2)).toBeUndefined();
+    expect(snapX([{ points: a, visible: true }], 50, 2, all)).toBeUndefined();
+  });
+
+  it('snapX only picks points inside the view, so a deep zoom never snaps off the plot', () => {
+    const line = pts([0, 1], [45, 2], [62, 3]);
+    // 62 is nearer the cursor but outside the view
+    expect(snapX([{ points: line, visible: true }], 58, 2, { min: 40, max: 60 })).toBe(45);
+    // A view between two samples has nothing to snap to
+    expect(snapX([{ points: line, visible: true }], 55, 2, { min: 50, max: 60 })).toBeUndefined();
   });
 
   it('formatTick shows only the decimals the step needs', () => {
@@ -211,12 +242,34 @@ describe('graph-scale', () => {
       expect(hoverPoint(line, 99, 2)).toBeUndefined();
       expect(hoverPoint([], 1, 2)).toBeUndefined();
     });
+
+    it('keeps to the points inside a view when given one', () => {
+      expect(hoverPoint(line, 16, 2, { min: 0, max: 12 })).toEqual({ x: 10, y: 2 });
+      expect(hoverPoint(line, 9, 2, { min: 0, max: 8 })).toEqual({ x: 0, y: 1 });
+      expect(hoverPoint(line, 5, 2, { min: 2, max: 8 })).toBeUndefined();
+    });
   });
 
-  it('valueExtent only counts points inside the x range (autoscale to the visible window)', () => {
+  describe('valueExtent', () => {
     const line = pts([0, 100], [10, 2], [20, 5], [30, -50]);
-    expect(valueExtent(line, { min: 5, max: 25 })).toEqual({ min: 2, max: 5 });
-    expect(valueExtent(line, { min: 40, max: 50 })).toBeNull();
+
+    it('counts the points inside the x range and the line where it crosses its edges', () => {
+      expect(valueExtent(line, { min: 10, max: 20 })).toEqual({ min: 2, max: 5 });
+      // The edges at 5 and 25 sit halfway along the segments to 100 and -50
+      expect(valueExtent(line, { min: 5, max: 25 })).toEqual({ min: -22.5, max: 51 });
+      expect(valueExtent(line, { min: 40, max: 50 })).toBeNull();
+    });
+
+    it('follows the line across a range between two samples', () => {
+      const extent = valueExtent(line, { min: 12, max: 14 })!;
+      expect(extent.min).toBeCloseTo(2.6, 9);
+      expect(extent.max).toBeCloseTo(3.2, 9);
+    });
+
+    it('skips values that are not numbers', () => {
+      expect(valueExtent(pts([0, NaN], [10, NaN]), { min: 0, max: 10 })).toBeNull();
+      expect(valueExtent(pts([0, 1], [10, NaN], [20, 3]), { min: 0, max: 20 })).toEqual({ min: 1, max: 3 });
+    });
   });
 
   describe('axisRange', () => {
@@ -341,6 +394,14 @@ describe('graph-scale', () => {
       // 2.5 s of data in a 10 s live window: zooming in from the window must still work
       const live = computeView(viewInput({ series, zoom, realTime: true, windowMs: 10_000 }))!;
       expect(live.zoomBounds).toEqual({ min: -7500, max: 2500 });
+    });
+
+    it('scales y to the line when a zoom falls between two samples', () => {
+      const line = pts([0, 390], [1000, 392]);
+      const view = computeView(viewInput({ series: [{ points: line, visible: true }], zoom: { min: 400, max: 410 } }))!;
+      expect(view.axes[0].min).toBeLessThanOrEqual(390.8);
+      expect(view.axes[0].max).toBeGreaterThanOrEqual(390.82);
+      expect(view.axes[0].max - view.axes[0].min).toBeLessThan(1);
     });
 
     it('flags a view that crosses a local midnight as multi-day, from the view rather than the data', () => {

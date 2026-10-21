@@ -89,16 +89,44 @@ describe('CustomGraphComponent', () => {
     if (!document.createElement('canvas').getContext('webgl2')) {
       pending('WebGL2 is unavailable in this browser');
     }
+    const drawArrays = spyOn(WebGL2RenderingContext.prototype, 'drawArrays').and.callThrough();
     await render([topic('A', [0, 1], [1000, 5], [2000, 3]).info, topic('B', [0, 7], [2000, 9]).info]);
     fixture.nativeElement.style.cssText = 'display: flex; width: 400px; height: 300px';
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(component.renderError()).toBeNull();
     const [glCanvas, overlay] = fixture.nativeElement.querySelectorAll('canvas') as NodeListOf<HTMLCanvasElement>;
-    expect(glCanvas.width).toBeGreaterThan(0);
+    // Sized to the container (an unsized canvas is 300 px wide), and the lines drawn
+    expect(glCanvas.width).toBe(Math.round(400 * devicePixelRatio));
+    expect(drawArrays).toHaveBeenCalled();
     // The overlay has drawn something (grid and tick labels)
     const pixels = overlay.getContext('2d')!.getImageData(0, 0, overlay.width, overlay.height).data;
     expect(pixels.some((v) => v !== 0)).toBeTrue();
+  });
+
+  it('reuses the view for a hover-only frame, and recomputes it when the data changes', async () => {
+    if (!document.createElement('canvas').getContext('webgl2')) {
+      pending('WebGL2 is unavailable in this browser');
+    }
+    const a = topic('A', [0, 1], [1000, 5], [2000, 3]);
+    await render([a.info]);
+    fixture.nativeElement.style.cssText = 'display: flex; width: 400px; height: 300px';
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const container: HTMLElement = fixture.nativeElement.querySelector('.chart-container');
+    const box = container.getBoundingClientRect();
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve)));
+    const view = component['lastView'];
+    expect(view).not.toBeNull();
+
+    container.dispatchEvent(new PointerEvent('pointermove', { clientX: box.left + 200, clientY: box.top + 100 }));
+    await nextFrame();
+    expect(component.hover()).not.toBeNull();
+    expect(component['lastView']).toBe(view);
+
+    a.updates.next([[{ x: 3000, y: 4 }]]);
+    await nextFrame();
+    expect(component['lastView']).not.toBe(view);
+    expect(component['lastView']!.x.max).toBe(3000);
   });
 
   it('redraws the lines after the browser restores a lost WebGL context', async () => {

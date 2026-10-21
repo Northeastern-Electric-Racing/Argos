@@ -127,10 +127,41 @@ export function timeTicks(range: Range, maxTicks: number): number[] {
   const span = range.max - range.min;
   if (!(span > 0)) return [range.min];
   const step = timeStep(span, maxTicks);
+  if (step >= HOUR_MS) return wallClockTicks(range, step);
+  // Steps under an hour divide a DST shift, so a fixed offset keeps them round
   const tzOffset = new Date(range.min).getTimezoneOffset() * MINUTE_MS;
   const ticks: number[] = [];
   for (let t = Math.ceil((range.min - tzOffset) / step) * step + tzOffset; t <= range.max; t += step) {
     ticks.push(t);
+  }
+  return ticks;
+}
+
+/**
+ * Ticks of an hour or more, built from local dates and hours rather than fixed ms steps, so
+ * they stay on round hours and midnights across a DST change. Day steps are aligned to whole
+ * multiples of the step since the epoch, so panning keeps the same ticks.
+ */
+function wallClockTicks(range: Range, step: number): number[] {
+  const start = new Date(range.min);
+  const [year, month, date] = [start.getFullYear(), start.getMonth(), start.getDate()];
+  const at = (day: number, hour = 0) => new Date(year, month, day, hour).getTime();
+  const ticks: number[] = [];
+  const keep = (t: number) => {
+    if (t >= range.min && t <= range.max) ticks.push(t);
+  };
+  if (step >= DAY_MS) {
+    const days = Math.round(step / DAY_MS);
+    const index = Date.UTC(year, month, date) / DAY_MS;
+    for (let day = date - (((index % days) + days) % days); at(day) <= range.max; day += days) keep(at(day));
+    return ticks;
+  }
+  const hours = step / HOUR_MS;
+  for (let day = date; at(day) <= range.max; day++) {
+    for (let hour = 0; hour < 24; hour += hours) {
+      // Skip the hour a spring-forward change leaves out
+      if (new Date(at(day, hour)).getHours() === hour) keep(at(day, hour));
+    }
   }
   return ticks;
 }
@@ -222,36 +253,47 @@ function upperBound(points: GraphData[], x: number): number {
   return lo;
 }
 
-/** The point nearest `x` in x-sorted `points`, or undefined when there are none. */
-export function nearestPoint(points: GraphData[], x: number): GraphData | undefined {
-  if (points.length === 0) return undefined;
-  const i = binarySearchInsertIndex(points, x);
-  if (i === 0) return points[0];
-  if (i === points.length) return points[i - 1];
+/** The point nearest `x` among `points[lo..hi)` of x-sorted `points`, or undefined when that is empty. */
+function nearestIn(points: GraphData[], x: number, lo: number, hi: number): GraphData | undefined {
+  if (lo >= hi) return undefined;
+  const i = Math.min(Math.max(binarySearchInsertIndex(points, x), lo), hi);
+  if (i === lo) return points[lo];
+  if (i === hi) return points[hi - 1];
   return x - points[i - 1].x <= points[i].x - x ? points[i - 1] : points[i];
 }
 
+/** The point nearest `x` in x-sorted `points`, or undefined when there are none. */
+export function nearestPoint(points: GraphData[], x: number): GraphData | undefined {
+  return nearestIn(points, x, 0, points.length);
+}
+
 /**
- * The point to show in the tooltip at `x`: the nearest one, or undefined when `x` is more
- * than `tolerance` outside the series' data, so a series with no data near the cursor
- * (one that started later or stopped publishing) gets no row instead of a far-off value.
+ * The point to show in the tooltip at `x`: the nearest one (inside `view`, when given, so a
+ * deep zoom never reaches off the plot), or undefined when `x` is more than `tolerance` outside
+ * the series' data, so a series with no data near the cursor (one that started later or
+ * stopped publishing) gets no row instead of a far-off value.
  */
-export function hoverPoint(points: GraphData[], x: number, tolerance: number): GraphData | undefined {
+export function hoverPoint(points: GraphData[], x: number, tolerance: number, view?: Range): GraphData | undefined {
   if (points.length === 0 || x < points[0].x - tolerance || x > points[points.length - 1].x + tolerance) {
     return undefined;
   }
-  return nearestPoint(points, x);
+  if (!view) return nearestPoint(points, x);
+  return nearestIn(points, x, binarySearchInsertIndex(points, view.min), upperBound(points, view.max));
 }
 
-/** The x of the visible point nearest `x` across `series`, or undefined when none is within `tolerance`. */
+/**
+ * The x of the visible point nearest `x` across `series`, among the points inside `view`, or
+ * undefined when none is within `tolerance`.
+ */
 export function snapX(
   series: { points: GraphData[]; visible: boolean }[],
   x: number,
-  tolerance: number
+  tolerance: number,
+  view: Range
 ): number | undefined {
   let best: number | undefined;
   for (const s of series) {
-    const p = s.visible ? hoverPoint(s.points, x, tolerance) : undefined;
+    const p = s.visible ? hoverPoint(s.points, x, tolerance, view) : undefined;
     if (p && (best === undefined || Math.abs(p.x - x) < Math.abs(best - x))) best = p.x;
   }
   return best;
@@ -286,19 +328,35 @@ export function clampZoom(zoom: Range, data: Range, minSpan: number): Range | nu
   return { min, max: min + span };
 }
 
-/** Min and max y of the points with x inside `range`, or null when none are. */
+/** The line's y at `x`, interpolated between the points either side; NaN outside the data. */
+function valueAt(points: GraphData[], x: number): number {
+  const i = binarySearchInsertIndex(points, x);
+  if (i < points.length && points[i].x === x) return points[i].y;
+  if (i === 0 || i === points.length) return NaN;
+  const a = points[i - 1];
+  const b = points[i];
+  return a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x);
+}
+
+/**
+ * Min and max y of the line inside `range`: its points there, and where it crosses the range's
+ * edges, so a zoom between two samples still fits the line through it. Null when no part of
+ * the line is a number inside the range.
+ */
 export function valueExtent(points: GraphData[], range: Range): Range | null {
   const lo = binarySearchInsertIndex(points, range.min);
   const hi = upperBound(points, range.max);
-  if (lo >= hi) return null;
+  // Comparisons with NaN are false, so NaN values are skipped
   let min = Infinity;
   let max = -Infinity;
-  for (let i = lo; i < hi; i++) {
-    const { y } = points[i];
+  const add = (y: number) => {
     if (y < min) min = y;
     if (y > max) max = y;
-  }
-  return { min, max };
+  };
+  for (let i = lo; i < hi; i++) add(points[i].y);
+  add(valueAt(points, range.min));
+  add(valueAt(points, range.max));
+  return min <= max ? { min, max } : null;
 }
 
 /**
