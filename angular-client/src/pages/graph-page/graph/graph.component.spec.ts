@@ -263,6 +263,49 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(fixture.componentInstance.zoomed()).toBeFalse();
   });
 
+  function toolbarButton(label: string): HTMLButtonElement {
+    const buttons = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'));
+    return buttons.find((b) => b.textContent!.trim() === label)!;
+  }
+
+  it('zooms in and back out from the toolbar', async () => {
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: 0, y: 1 },
+          { x: 40_000, y: 2 }
+        ])
+      ]
+    });
+    expect(toolbarButton('Reset Zoom').disabled).toBeTrue();
+    expect(toolbarButton('Zoom Out').disabled).toBeTrue();
+
+    toolbarButton('Zoom In').click();
+    await settle();
+
+    expect(fixture.componentInstance.zoomed()).toBeTrue();
+    expect(c.scales['x'].max - c.scales['x'].min).toBeLessThan(40_000);
+    expect(toolbarButton('Reset Zoom').disabled).toBeFalse();
+
+    toolbarButton('Reset Zoom').click();
+    await settle();
+
+    expect(fixture.componentInstance.zoomed()).toBeFalse();
+    expect(c.scales['x'].max - c.scales['x'].min).toBe(40_000);
+  });
+
+  it('saves the chart as a PNG from the toolbar', async () => {
+    await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
+    const download = spyOn(HTMLAnchorElement.prototype, 'click');
+
+    toolbarButton('Save PNG').click();
+
+    expect(download).toHaveBeenCalledTimes(1);
+    const saved = download.calls.mostRecent().object as unknown as HTMLAnchorElement;
+    expect(saved.download).toMatch(/\.png$/);
+    expect(saved.href).toMatch(/^data:image\/png/);
+  });
+
   it('ignores incoming points while paused', async () => {
     const voltage = topic('V', [{ x: 0, y: 1 }]);
     const c = await render({ valuesSubject: [voltage], realTime: true });

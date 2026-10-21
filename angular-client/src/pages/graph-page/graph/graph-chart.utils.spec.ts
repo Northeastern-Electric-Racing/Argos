@@ -34,6 +34,17 @@ describe('graph-chart utils', () => {
       expect((options.layout!.padding as { right: number }).right).toBeGreaterThanOrEqual(32);
     });
 
+    it('shows a pointer over legend items, which toggle their series', () => {
+      const legend = options.plugins!.legend!;
+      const canvas = document.createElement('canvas');
+      const event = { native: { target: canvas } } as never;
+
+      legend.onHover!.call(undefined as never, event, undefined as never, undefined as never);
+      expect(canvas.style.cursor).toBe('pointer');
+      legend.onLeave!.call(undefined as never, event, undefined as never, undefined as never);
+      expect(canvas.style.cursor).toBe('');
+    });
+
     it('draws text in the app font and the tooltip in the app theme', () => {
       expect(options.font!.family).toContain('Roboto');
       expect(options.plugins!.tooltip!.backgroundColor).toBe('#0c2026');

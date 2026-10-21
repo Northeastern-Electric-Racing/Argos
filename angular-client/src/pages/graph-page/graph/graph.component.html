@@ -1,14 +1,41 @@
-<div class="chart-container">
-  <canvas
-    baseChart
-    type="line"
-    [data]="chartData"
-    [options]="chartOptions"
-    role="img"
-    aria-label="Telemetry graph of the selected topics. Drag to zoom, shift-drag to pan, double-click to reset."
-    (dblclick)="resetZoom()"
-  ></canvas>
-  @if (zoomed()) {
-    <button type="button" class="reset-zoom" (click)="resetZoom()">Reset zoom</button>
-  }
+<div class="graph">
+  <div class="chart-toolbar" title="Drag to zoom, shift-drag to pan, ctrl-scroll to zoom, double-click to reset">
+    <argos-button
+      label="Zoom In"
+      size="sm"
+      [onClick]="zoomIn"
+      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+    />
+    <argos-button
+      label="Zoom Out"
+      size="sm"
+      [onClick]="zoomOut"
+      [disabled]="!zoomed()"
+      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+    />
+    <argos-button
+      label="Reset Zoom"
+      size="sm"
+      [onClick]="resetZoom"
+      [disabled]="!zoomed()"
+      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+    />
+    <argos-button
+      label="Save PNG"
+      size="sm"
+      [onClick]="savePng"
+      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+    />
+  </div>
+  <div class="chart-container">
+    <canvas
+      baseChart
+      type="line"
+      [data]="chartData"
+      [options]="chartOptions"
+      role="img"
+      aria-label="Telemetry graph of the selected topics. Drag to zoom, shift-drag to pan, double-click to reset."
+      (dblclick)="resetZoom()"
+    ></canvas>
+  </div>
 </div>

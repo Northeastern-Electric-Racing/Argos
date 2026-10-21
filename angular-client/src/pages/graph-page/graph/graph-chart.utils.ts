@@ -1,4 +1,4 @@
-import type { ChartOptions } from 'chart.js';
+import type { ChartEvent, ChartOptions } from 'chart.js';
 import type { AnnotationOptions } from 'chartjs-plugin-annotation';
 import { GraphData } from 'src/utils/types.utils';
 
@@ -210,6 +210,11 @@ export function buildDayBoundaryAnnotations(span: { minX: number; maxX: number }
   return annotations;
 }
 
+function setCanvasCursor(event: ChartEvent, cursor: string): void {
+  const target = event.native?.target;
+  if (target instanceof HTMLElement) target.style.cursor = cursor;
+}
+
 /** Base options for the graph page's line chart. Scales, windowing and annotations are filled in per frame. */
 export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOptions<'line'> {
   return {
@@ -251,7 +256,10 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#fff', font: { size: 15 } }
+        labels: { color: '#fff', font: { size: 15 } },
+        // The canvas is a crosshair for zooming (graph.component.css); a legend item toggles its series
+        onHover: (event) => setCanvasCursor(event, 'pointer'),
+        onLeave: (event) => setCanvasCursor(event, '')
       },
       tooltip: {
         enabled: true,

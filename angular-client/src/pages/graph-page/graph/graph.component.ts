@@ -27,6 +27,7 @@ import {
 import annotationPlugin from 'chartjs-plugin-annotation';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
+import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import {
@@ -46,7 +47,7 @@ type LineDataset = ChartDataset<'line', GraphData[]>;
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
   standalone: true,
-  imports: [BaseChartDirective],
+  imports: [BaseChartDirective, ButtonComponent],
   // Register only what the line chart uses, so the rest of Chart.js tree-shakes out
   providers: [
     provideCharts({
@@ -281,12 +282,39 @@ export default class CustomGraphComponent implements OnDestroy {
   };
 
   /** Drops any user zoom/pan and lets the chart follow the live window (or fit all data) again. */
-  resetZoom(): void {
+  resetZoom = (): void => {
     // The zoom plugin fires onZoomComplete from resetZoom too, so clear the flag after it
     this.chart?.resetZoom('none');
     this.zoomed.set(false);
     this.updateChart();
+  };
+
+  // The plugin scales the range by (2 - factor): 0.8x in, then 1.25x out, so Zoom Out undoes Zoom In
+  zoomIn = () => this.zoomBy(1.2);
+  zoomOut = () => this.zoomBy(0.75);
+
+  /** Zooms the x-axis about its centre; like a drag-zoom, this stops the live window from following. */
+  private zoomBy(factor: number): void {
+    this.chart?.zoom({ x: factor }, 'none');
+    this.zoomed.set(true);
   }
+
+  /** Downloads the chart as a PNG, on the page's background (the canvas itself is transparent). */
+  savePng = () => {
+    const { chart } = this;
+    if (!chart) return;
+    const image = document.createElement('canvas');
+    image.width = chart.canvas.width;
+    image.height = chart.canvas.height;
+    const context = image.getContext('2d')!;
+    context.fillStyle = getComputedStyle(document.body).backgroundColor;
+    context.fillRect(0, 0, image.width, image.height);
+    context.drawImage(chart.canvas, 0, 0);
+    const link = document.createElement('a');
+    link.href = image.toDataURL('image/png');
+    link.download = `argos-graph-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+    link.click();
+  };
 
   resetRange() {
     this.timeRangeMs = undefined;
