@@ -126,6 +126,7 @@ export class PresetDialogComponent {
       header: 'Delete Preset',
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => {
         this.presetService.deletePreset(preset.id);
         this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });

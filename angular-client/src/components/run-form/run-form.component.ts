@@ -1,6 +1,6 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
-import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, DestroyRef, ChangeDetectionStrategy, ChangeDetectorRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
@@ -24,7 +24,8 @@ export class RunFormComponent implements OnInit {
   public apiService = inject(APIService);
   private messageService = inject(ToastService);
   private ref = inject(DialogRef);
-  templateReady = false;
+  private cdr = inject(ChangeDetectorRef);
+  templateReady = signal(false);
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
   runsLoaded = false;
@@ -92,11 +93,11 @@ export class RunFormComponent implements OnInit {
   loadAllRuns = () => {
     if (this.runsLoaded) return;
 
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runsQueryResponse = this.apiService.query<Run[]>(() => getAllRuns());
 
     runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
@@ -124,6 +125,8 @@ export class RunFormComponent implements OnInit {
             defaultValue: this.formatRunInfo(latestRun)
           };
         }
+        // Zoneless: the form fields and selector config are plain fields, so ask for a re-render.
+        this.cdr.markForCheck();
       }
     });
   };
@@ -166,11 +169,11 @@ export class RunFormComponent implements OnInit {
     }
 
     // If not found locally, fetch from API
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runQueryResponse = this.apiService.query<Run>(() => getRunById(runId));
 
     runQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
@@ -190,6 +193,7 @@ export class RunFormComponent implements OnInit {
           ...this.selectorConfig,
           defaultValue: this.formatRunInfo(run)
         };
+        this.cdr.markForCheck();
       }
     });
   };

@@ -1,6 +1,6 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, forwardRef } from '@angular/core';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
 
@@ -8,7 +8,7 @@ import { GraphComponent } from '../graph/graph.component';
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [GraphComponent]
+  imports: [forwardRef(() => GraphComponent)]
 })
 export class GraphDialogComponent {
   public dialogService = inject(UiDialogService);

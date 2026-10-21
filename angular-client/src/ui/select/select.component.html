@@ -18,7 +18,7 @@
   [cdkConnectedOverlayOpen]="expanded()"
 >
   <ng-template ngComboboxPopup [combobox]="combobox">
-    <div class="ui-listbox-popup">
+    <div class="ui-listbox-popup ui-listbox-popup--grow" [class.ui-listbox-popup--sm]="size() === 'sm'">
       <div
         #listbox="ngListbox"
         ngListbox

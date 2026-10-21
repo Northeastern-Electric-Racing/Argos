@@ -42,7 +42,10 @@ export default class BalancingStatusComponent implements OnInit {
           this.currentSeconds = (Date.now() - value.last_change) / 1000;
         }
         this.totalSeconds = Math.round(
-          value.total_time_per_value_map[1].reduce((acc, currVal) => acc + (currVal.end_time - currVal.start_time), 0) /
+          (value.total_time_per_value_map[1] ?? []).reduce(
+            (acc, currVal) => acc + (currVal.end_time - currVal.start_time),
+            0
+          ) /
             1000 +
             this.currentSeconds
         );

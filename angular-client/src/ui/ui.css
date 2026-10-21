@@ -10,7 +10,9 @@
   --ui-accent: #ef4343;
   --ui-accent-hover: #f26b6b;
   --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 18%, transparent);
-  --ui-danger: #f87171;
+  /* NER red is the accent, so danger takes a separate orange hue and destructive buttons are never filled. */
+  --ui-danger: #fb923c;
+  --ui-danger-soft: color-mix(in srgb, var(--ui-danger) 16%, transparent);
   --ui-success: #4ade80;
   --ui-warn: #fbbf24;
   --ui-info: #60a5fa;
@@ -24,7 +26,9 @@
   --ui-text-muted: #a3a3a3;
   --ui-radius: 8px;
   --ui-radius-lg: 16px;
-  --ui-focus-ring: 2px solid color-mix(in srgb, var(--ui-accent) 70%, transparent);
+  /* Neutral focus colour, so a focused field never reads as a red validation error. */
+  --ui-focus-color: #d4d4d4;
+  --ui-focus-ring: 2px solid color-mix(in srgb, var(--ui-focus-color) 80%, transparent);
   --ui-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
 }
 
@@ -77,8 +81,20 @@
   background: color-mix(in srgb, var(--ui-text) 8%, transparent);
   border-color: transparent;
 }
-.ui-button--danger.ui-button--text {
+.ui-button--danger {
+  background: transparent;
+  border-color: var(--ui-danger);
   color: var(--ui-danger);
+}
+.ui-button--danger:hover:not(:disabled) {
+  background: var(--ui-danger-soft);
+  border-color: var(--ui-danger);
+}
+.ui-button--danger.ui-button--text {
+  border-color: transparent;
+}
+.ui-button--danger.ui-button--text:hover:not(:disabled) {
+  border-color: transparent;
 }
 .ui-button--sm {
   min-height: 1.9rem;
@@ -115,8 +131,8 @@
 }
 .ui-input:focus {
   outline: none;
-  border-color: var(--ui-accent);
-  box-shadow: 0 0 0 1px var(--ui-accent);
+  border-color: var(--ui-focus-color);
+  box-shadow: 0 0 0 1px var(--ui-focus-color);
 }
 .ui-input[aria-invalid='true'],
 .ui-input.ng-invalid.ng-touched {
@@ -257,7 +273,8 @@ textarea.ui-input {
   background: rgba(0, 0, 0, 0.55);
 }
 .ui-dialog-pane {
-  max-width: 100vw !important;
+  /* Keep a 16px gutter each side on phones (beats the CDK's inline max-width). */
+  max-width: calc(100vw - 32px) !important;
   max-height: 100vh;
 }
 .ui-dialog-pane--modeless {
@@ -268,6 +285,10 @@ textarea.ui-input {
 .ui-drawer-pane {
   height: 100%;
   max-width: 100vw !important;
+}
+/* The drawer focuses its container on open; the panel itself needs no focus outline. */
+.ui-drawer-pane .cdk-dialog-container:focus {
+  outline: none;
 }
 
 /* ---------- Popover (CDK connected overlay) ---------- */
@@ -302,6 +323,16 @@ textarea.ui-input {
   color: var(--ui-text);
   font-size: 0.85rem;
   animation: ui-pop-in 120ms ease-out;
+}
+/* Select popups: at least the trigger's width, wider when an option needs it. */
+.ui-listbox-popup--grow {
+  flex-shrink: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.ui-listbox-popup--sm {
+  font-size: 0.8rem;
 }
 .ui-listbox-popup [ngListbox] {
   display: flex;
