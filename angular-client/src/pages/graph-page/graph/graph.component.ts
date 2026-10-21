@@ -75,6 +75,9 @@ export interface HoverState {
 /** Gap between the cursor and the tooltip, in px. */
 const TOOLTIP_OFFSET = 12;
 
+/** Scale margin on a side pinned to a y min/max: just enough to draw the limit's own label whole. */
+const PINNED_MARGIN = 0.02;
+
 /**
  * Points trimmed off a series' head stay drawn (off-screen, left of the live window) until this many
  * pile up, so live updates stay O(1) appends instead of a full setData on every trim.
@@ -234,12 +237,18 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       // The library's time-axis double-click reset restores its default zoom, not the whole range;
       // resetZoom() handles double-clicks instead.
       handleScale: { axisDoubleClickReset: { time: false, price: true } },
-      leftPriceScale: { visible: true, borderVisible: false },
-      rightPriceScale: { visible: false, borderVisible: false },
+      // entireTextOnly: no top or bottom label cut in half at the axis' edge.
+      leftPriceScale: { visible: true, borderVisible: false, entireTextOnly: true },
+      rightPriceScale: { visible: false, borderVisible: false, entireTextOnly: true },
       timeScale: {
         timeVisible: true,
         secondsVisible: true,
         borderVisible: false,
+        // Keeps the first and last labels inside the axis, and stops scrolling past the data's ends.
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        // Bold went to whichever ticks had the top weight in view, flipping as the live window slid.
+        allowBoldLabels: false,
         // Labels run to `HH:MM:SS.mmm`; the default spacing assumes 8 characters, so they overlapped.
         tickMarkMaxCharacterLength: 12,
         // The default 0.5 px minimum lets fitContent() show only (width * 2) bars, so a long run
@@ -408,13 +417,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     };
   }
 
-  /** A fixed y min/max is the shared axis' exact edge, so drop the scale's default padding on that side. */
+  /** A fixed y min/max is the shared axis' edge, so drop the scale's default padding on that side. */
   private applyYScaleMargins() {
     if (!this.chart) return;
     const { yMin, yMax } = untracked(this.graphConfig);
     const pinned = !untracked(this.showMultipleYAxes);
     this.chart.priceScale('left').applyOptions({
-      scaleMargins: { top: pinned && yMax !== null ? 0 : 0.2, bottom: pinned && yMin !== null ? 0 : 0.1 }
+      scaleMargins: {
+        top: pinned && yMax !== null ? PINNED_MARGIN : 0.2,
+        bottom: pinned && yMin !== null ? PINNED_MARGIN : 0.1
+      }
     });
   }
 

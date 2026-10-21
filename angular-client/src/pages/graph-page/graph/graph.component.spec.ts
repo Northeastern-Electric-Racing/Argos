@@ -271,12 +271,14 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
 
   it('ends the shared y-axis exactly at a configured min and max', async () => {
     await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])], graphConfig: config({ yMin: 0, yMax: 100 }) });
-    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0, bottom: 0 });
+    // A whisker of margin, so the limits' own labels are drawn whole.
+    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0.02, bottom: 0.02 });
+    expect(component.chart!.priceScale('left').options().entireTextOnly).toBeTrue();
 
     fixture.componentRef.setInput('graphConfig', config({ yMin: 0, yMax: null }));
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0.2, bottom: 0 });
+    expect(component.chart!.priceScale('left').options().scaleMargins).toEqual({ top: 0.2, bottom: 0.02 });
 
     fixture.componentRef.setInput('showMultipleYAxes', true);
     fixture.detectChanges();

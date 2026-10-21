@@ -36,11 +36,10 @@
   min-height: 0;
 }
 
+/* Out of flow, so the chart's canvas never feeds back into the layout's height and the chart can shrink. */
 .chart-container {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
 }
 
 .tooltip {
