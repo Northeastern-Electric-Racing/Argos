@@ -49,7 +49,7 @@ export default class CustomGraphComponent implements OnDestroy {
   }>();
   range = input<number | undefined>(undefined);
 
-  /** label (topic + value index) -> its points; x is wall-clock ms (see toWallClockMs). */
+  /** label (topic + value index) -> its points; t is epoch ms, x is wall-clock ms (see toWallClockMs). */
   data = new Map<string, Series>();
   timeRangeMs: number | undefined = undefined;
 
@@ -206,46 +206,51 @@ export default class CustomGraphComponent implements OnDestroy {
       const seriesLabel = info.label + ' ' + i;
       let line = this.data.get(seriesLabel);
       if (!line) {
-        line = { x: [], y: [] };
+        line = { t: [], x: [], y: [] };
         this.data.set(seriesLabel, line);
       }
 
       value.forEach((val) => {
-        const x = toWallClockMs(val.x);
+        const t = val.x;
+        const x = toWallClockMs(t);
         const y = Math.round(val.y * 10000) / 10000;
 
         // if the point is in order according to it's timestamp, just push it to the end of the line
-        if (line.x.length === 0 || x >= line.x[line.x.length - 1]) {
+        if (line.t.length === 0 || t >= line.t[line.t.length - 1]) {
+          line.t.push(t);
           line.x.push(x);
           line.y.push(y);
         } else {
           // Out of order: binary search for correct sorted position
           // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
-          const idx = binarySearchInsertIndex(line.x, x);
+          const idx = binarySearchInsertIndex(line.t, t);
+          line.t.splice(idx, 0, t);
           line.x.splice(idx, 0, x);
           line.y.splice(idx, 0, y);
         }
       });
 
       // Trim after processing all points in this series batch
-      if (this.realTime() && line.x.length > 0) {
+      if (this.realTime() && line.t.length > 0) {
         const config = this.graphConfig();
-        const newestX = line.x[line.x.length - 1];
+        const newestT = line.t[line.t.length - 1];
 
         if (config.rangeMode === 'time') {
           // remove point if outside the time range + 10% buffer (for better UX)
           const buffer = config.timeRangeMs * 0.1;
-          const cutoff = newestX - config.timeRangeMs - buffer;
-          if (line.x[0] < cutoff) {
+          const cutoff = newestT - config.timeRangeMs - buffer;
+          if (line.t[0] < cutoff) {
+            line.t.shift();
             line.x.shift();
             line.y.shift();
           }
-        } else if (line.x.length > config.maxPoints * 1.1) {
-          const shiftedX = line.x.shift();
+        } else if (line.t.length > config.maxPoints * 1.1) {
+          const shiftedT = line.t.shift();
+          line.x.shift();
           line.y.shift();
           // point based trim requires is to calculate the max time range we can show that
           // doesn't show points being deleted. So we default to smallest range.
-          const timeDiff = shiftedX !== undefined ? newestX - shiftedX : 0;
+          const timeDiff = shiftedT !== undefined ? newestT - shiftedT : 0;
           this.timeRangeMs = timeDiff < (this.timeRangeMs ?? Number.MAX_SAFE_INTEGER) ? timeDiff : this.timeRangeMs;
         }
       }

@@ -232,6 +232,28 @@ describe('CustomGraphComponent (Plotly)', () => {
     expect(graph.data.get('A 0')!.y).toEqual([2]);
   });
 
+  it('keeps following live data when the clocks fall back', () => {
+    // 2026-11-01 06:00Z: 02:00 EDT (UTC-4) becomes 01:00 EST (UTC-5), so wall-clock time jumps back an hour.
+    const fallBack = Date.UTC(2026, 10, 1, 6);
+    spyOn(Date.prototype, 'getTimezoneOffset').and.callFake(function (this: Date) {
+      return this.getTime() < fallBack ? 240 : 300;
+    });
+    setup({ realTime: true, config: { timeRangeMs: 30_000 } });
+    const last = fallBack + 60_000;
+    for (let t = fallBack - 60_000; t <= last; t += 1000) {
+      // y is seconds from the fall-back, to tell real times apart.
+      push('A', [{ x: t, y: (t - fallBack) / 1000 }]);
+    }
+    flushFrames();
+
+    const series = graph.data.get('A 0')!;
+    // The newest point is kept, and the old hour's points are trimmed on real time.
+    expect(series.y[series.y.length - 1]).toBe(60);
+    expect(series.y.every((s) => s >= 60 - 33)).toBeTrue();
+    const end = toWallClockMs(last);
+    expect(graph.layout().xaxis?.range).toEqual([end - 30_000, end]);
+  });
+
   it('autoranges x in historical mode', () => {
     setup();
     push('A', [{ x: 0, y: 1 }]);

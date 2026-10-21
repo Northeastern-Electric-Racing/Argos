@@ -2,8 +2,14 @@ import type { Annotations, Layout, LayoutAxis, PlotData, Shape } from 'plotly.js
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** One line's points as columns, sorted by x. The plot's trace shares these arrays, so nothing is copied per frame. */
+/**
+ * One line's points as columns, sorted by real time t. The plot's trace shares x and y, so nothing
+ * is copied per frame. x is t shifted to wall-clock time (toWallClockMs) for plotting only: it jumps
+ * back an hour when clocks fall back, so ordering, trimming and the live window use t.
+ */
 export interface Series {
+  /** Epoch ms, ascending. */
+  t: number[];
   x: number[];
   y: number[];
 }
@@ -86,7 +92,7 @@ export function computeDataSpan(data: Map<string, Series>): DataSpan | null {
   let maxX = -Infinity;
   for (const { x } of data.values()) {
     if (x.length === 0) continue;
-    // Series are kept sorted by x, so the endpoints are the extrema.
+    // Series are kept sorted by time, so the endpoints are the extrema (up to the hour that repeats at a DST fall-back).
     const [first] = x;
     const last = x[x.length - 1];
     if (first < minX) minX = first;
@@ -96,13 +102,13 @@ export function computeDataSpan(data: Map<string, Series>): DataSpan | null {
   return { minX, maxX, spanMs: maxX - minX };
 }
 
-/** Latest x across all series, the right edge of the live window. */
+/** The wall-clock x of the latest point across all series, the right edge of the live window. */
 export function latestX(data: Map<string, Series>): number | null {
   let max = -Infinity;
-  for (const { x } of data.values()) {
-    if (x.length > 0 && x[x.length - 1] > max) max = x[x.length - 1];
+  for (const { t } of data.values()) {
+    if (t.length > 0 && t[t.length - 1] > max) max = t[t.length - 1];
   }
-  return isFinite(max) ? max : null;
+  return isFinite(max) ? toWallClockMs(max) : null;
 }
 
 /**

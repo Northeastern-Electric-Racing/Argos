@@ -4,7 +4,8 @@ import {
   buildMultiYAxes,
   DAY_MS,
   LayoutOptions,
-  SERIES_COLORS
+  SERIES_COLORS,
+  toWallClockMs
 } from './graph-layout.utils';
 
 const base: LayoutOptions = {
@@ -139,5 +140,24 @@ describe('graph layout utils', () => {
     const { shapes, annotations } = buildDayBoundaries({ minX: DAY_MS / 2, maxX: 2 * DAY_MS + 1 });
     expect(shapes.map((s) => s.x0)).toEqual([DAY_MS, 2 * DAY_MS]);
     expect(annotations[0].text).toBe('Fri, Jan 2');
+  });
+
+  describe('in a time zone behind UTC (EDT, UTC-4)', () => {
+    // Karma runs in UTC, where the wall-clock shift is a no-op; fake New York's summer offset.
+    beforeEach(() => spyOn(Date.prototype, 'getTimezoneOffset').and.returnValue(240));
+
+    it('shifts x to local wall-clock time', () => {
+      expect(toWallClockMs(Date.UTC(2026, 9, 21, 12))).toBe(Date.UTC(2026, 9, 21, 8));
+    });
+
+    it('places the day boundary at local midnight', () => {
+      // 10/17 00:00Z to 08:00Z is 10/16 20:00 to 10/17 04:00 in New York.
+      const { shapes, annotations } = buildDayBoundaries({
+        minX: toWallClockMs(Date.UTC(2026, 9, 17, 0)),
+        maxX: toWallClockMs(Date.UTC(2026, 9, 17, 8))
+      });
+      expect(shapes.map((s) => s.x0)).toEqual([Date.UTC(2026, 9, 17)]);
+      expect(annotations.map((a) => a.text)).toEqual(['Sat, Oct 17']);
+    });
   });
 });
