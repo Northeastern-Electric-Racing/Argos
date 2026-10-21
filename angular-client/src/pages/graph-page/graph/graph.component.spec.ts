@@ -227,6 +227,42 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(c.scales['x'].min).toBe(40_000 - BASE_CONFIG.timeRangeMs);
   });
 
+  it('drops the zoom when the data resets, fitting the new data', async () => {
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: 0, y: 1 },
+          { x: 30_000, y: 2 }
+        ])
+      ]
+    });
+    c.zoomScale('x', { min: 5_000, max: 6_000 }, 'none');
+    fixture.componentInstance.zoomed.set(true);
+
+    fixture.componentRef.setInput('valuesSubject', [
+      topic('W', [
+        { x: 100_000, y: 1 },
+        { x: 160_000, y: 2 }
+      ])
+    ]);
+    await settle();
+
+    expect(fixture.componentInstance.zoomed()).toBeFalse();
+    expect(c.scales['x'].min).toBe(100_000);
+    expect(c.scales['x'].max).toBe(160_000);
+  });
+
+  it('drops the zoom when the graph is cleared', async () => {
+    const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
+    c.zoomScale('x', { min: 0, max: 1_000 }, 'none');
+    fixture.componentInstance.zoomed.set(true);
+
+    fixture.componentRef.setInput('clearGraph', 1);
+    await settle();
+
+    expect(fixture.componentInstance.zoomed()).toBeFalse();
+  });
+
   it('ignores incoming points while paused', async () => {
     const voltage = topic('V', [{ x: 0, y: 1 }]);
     const c = await render({ valuesSubject: [voltage], realTime: true });

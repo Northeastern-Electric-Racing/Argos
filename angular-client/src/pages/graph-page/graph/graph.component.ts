@@ -115,7 +115,8 @@ export default class CustomGraphComponent implements OnDestroy {
       this.data = new Map();
       this.datasets.clear();
       this.timeRangeMs = undefined;
-      untracked(() => this.updateChart());
+      // A zoom window from the old data would leave the new data off-screen
+      untracked(() => this.resetZoom());
     });
 
     effect(() => {
