@@ -3,14 +3,19 @@ import {
   DAY_MS,
   axisRange,
   axisSlots,
+  clampZoom,
   computeView,
   dayBoundaries,
   formatTick,
+  formatTimeTick,
   hoverPoint,
   nearestPoint,
   niceTicks,
   plotArea,
+  snapX,
+  timeAxis,
   timeTicks,
+  tooltipTop,
   valueExtent,
   ViewInput
 } from './graph-scale';
@@ -49,6 +54,121 @@ describe('graph-scale', () => {
       const ticks = timeTicks({ min: start, max: start + 6 * 60 * 60 * 1000 }, 6);
       ticks.forEach((t) => expect(new Date(t).getMinutes()).toBe(0));
     });
+  });
+
+  // Labels are local time; these build dates with the local-time Date constructor, so they hold
+  // in any zone (CI runs UTC, the team America/New_York).
+  describe('formatTimeTick', () => {
+    const t = new Date(2026, 9, 17, 22, 42, 30, 250).getTime();
+
+    it('shows only as much precision as the tick step needs', () => {
+      expect(formatTimeTick(t, 100, false)).toBe('22:42:30.250');
+      expect(formatTimeTick(t, 5000, false)).toBe('22:42:30');
+      expect(formatTimeTick(t, 60_000, false)).toBe('22:42');
+    });
+
+    it('adds the date when asked, and shows only the date for day steps', () => {
+      expect(formatTimeTick(t, 60_000, true)).toBe('10/17 22:42');
+      expect(formatTimeTick(t, 1000, true)).toBe('10/17 22:42:30');
+      expect(formatTimeTick(new Date(2026, 9, 18).getTime(), DAY_MS, true)).toBe('10/18');
+    });
+
+    it('writes midnight as 00, not 24', () => {
+      expect(formatTimeTick(new Date(2026, 9, 18).getTime(), 1000, false)).toBe('00:00:00');
+    });
+  });
+
+  describe('timeAxis', () => {
+    const charWidth = (s: string) => s.length * 7;
+
+    it('labels sub-second ticks with milliseconds so they stay distinct', () => {
+      const start = new Date(2026, 9, 17, 12, 17, 34).getTime();
+      const { labels } = timeAxis({ min: start, max: start + 800 }, 900, charWidth);
+      expect(new Set(labels).size).toBe(labels.length);
+      labels.forEach((l) => expect(l).toMatch(/^12:17:34\.\d{3}$/));
+    });
+
+    it('labels second ticks without the date inside one day', () => {
+      const start = new Date(2026, 9, 17, 22, 42, 10).getTime();
+      const { labels } = timeAxis({ min: start, max: start + 40_000 }, 900, charWidth);
+      expect(new Set(labels).size).toBe(labels.length);
+      labels.forEach((l) => expect(l).toMatch(/^22:4\d:\d\d$/));
+    });
+
+    it('adds the date when the view crosses a midnight', () => {
+      const start = new Date(2026, 9, 17, 20).getTime();
+      const { labels } = timeAxis({ min: start, max: start + 30 * 60 * 60 * 1000 }, 900, charWidth);
+      expect(new Set(labels).size).toBe(labels.length);
+      labels.forEach((l) => expect(l).toMatch(/^10\/1[89]( \d\d:\d\d)?$/));
+    });
+
+    it('spaces ticks so the labels never overlap', () => {
+      const start = new Date(2026, 9, 17, 20).getTime();
+      const { ticks, labels } = timeAxis({ min: start, max: start + 30 * 60 * 60 * 1000 }, 500, charWidth);
+      const px = (t: number) => ((t - start) / (30 * 60 * 60 * 1000)) * 500;
+      for (let i = 1; i < ticks.length; i++) {
+        const half = (charWidth(labels[i - 1]) + charWidth(labels[i])) / 2;
+        expect(px(ticks[i]) - px(ticks[i - 1])).toBeGreaterThan(half);
+      }
+    });
+  });
+
+  describe('tooltipTop', () => {
+    it('sits below the cursor when it fits', () => {
+      expect(tooltipTop(100, 80, 500)).toBe(112);
+    });
+
+    it('flips above the cursor near the bottom', () => {
+      expect(tooltipTop(450, 80, 500)).toBe(450 - 12 - 80);
+    });
+
+    it('stays inside the container when it fits neither way', () => {
+      expect(tooltipTop(50, 200, 220)).toBe(20);
+      expect(tooltipTop(50, 300, 220)).toBe(0);
+    });
+  });
+
+  describe('clampZoom', () => {
+    const data = { min: 1000, max: 2000 };
+
+    it('keeps a zoom inside the data', () => {
+      expect(clampZoom({ min: 900, max: 1100 }, data, 10)).toEqual({ min: 1000, max: 1200 });
+      expect(clampZoom({ min: 1950, max: 2150 }, data, 10)).toEqual({ min: 1800, max: 2000 });
+    });
+
+    it('ends the zoom once it covers all the data', () => {
+      expect(clampZoom({ min: 500, max: 3000 }, data, 10)).toBeNull();
+    });
+
+    it('stops zooming in at the minimum span', () => {
+      expect(clampZoom({ min: 1500, max: 1502 }, data, 10)).toEqual({ min: 1496, max: 1506 });
+    });
+  });
+
+  it('snapX picks the visible point nearest the cursor across series', () => {
+    const a = pts([0, 1], [10, 2]);
+    const b = pts([4, 5], [14, 6]);
+    expect(
+      snapX(
+        [
+          { points: a, visible: true },
+          { points: b, visible: true }
+        ],
+        6,
+        2
+      )
+    ).toBe(4);
+    expect(
+      snapX(
+        [
+          { points: a, visible: true },
+          { points: b, visible: false }
+        ],
+        6,
+        2
+      )
+    ).toBe(10);
+    expect(snapX([{ points: a, visible: true }], 50, 2)).toBeUndefined();
   });
 
   it('formatTick shows only the decimals the step needs', () => {
@@ -195,10 +315,40 @@ describe('graph-scale', () => {
       expect(one.axes.length).toBe(1);
     });
 
-    it('flags historical data spanning more than a day as multi-day', () => {
-      const long = pts([0, 1], [2 * DAY_MS, 2]);
+    it('leaves hidden series out of the axes in multi-axis mode', () => {
+      const view = computeView(
+        viewInput({
+          series: [
+            { points: a, visible: false },
+            { points: b, visible: true }
+          ],
+          multiAxis: true
+        })
+      )!;
+      expect(view.axes.length).toBe(1);
+      expect(view.axisSeries).toEqual([1]);
+      expect(view.seriesAxis).toEqual([-1, 0]);
+      expect(view.axes[0].min).toBeGreaterThanOrEqual(100);
+    });
+
+    it('bounds zoom by the data, or by the live window when that is wider', () => {
+      const series = [
+        { points: a, visible: true },
+        { points: b, visible: true }
+      ];
+      const zoom = { min: 100, max: 200 };
+      expect(computeView(viewInput({ series, zoom }))!.zoomBounds).toEqual({ min: 0, max: 2500 });
+      // 2.5 s of data in a 10 s live window: zooming in from the window must still work
+      const live = computeView(viewInput({ series, zoom, realTime: true, windowMs: 10_000 }))!;
+      expect(live.zoomBounds).toEqual({ min: -7500, max: 2500 });
+    });
+
+    it('flags a view that crosses a local midnight as multi-day, from the view rather than the data', () => {
+      const midnight = new Date(2026, 9, 18).getTime();
+      const long = pts([midnight - DAY_MS / 2, 1], [midnight + DAY_MS, 2]);
       expect(computeView(viewInput({ series: [{ points: long, visible: true }] }))!.multiDay).toBeTrue();
-      expect(computeView(viewInput({ series: [{ points: long, visible: true }], realTime: true }))!.multiDay).toBeFalse();
+      const zoom = { min: midnight + 60_000, max: midnight + 120_000 };
+      expect(computeView(viewInput({ series: [{ points: long, visible: true }], zoom }))!.multiDay).toBeFalse();
     });
   });
 });

@@ -16,7 +16,19 @@ import { Subject, takeUntil } from 'rxjs';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import { DrawSeries, GraphRenderer, OverlayMarks } from './graph-renderer';
-import { computeView, formatTooltipTime, hoverPoint, pixelMapping, plotArea, Range, Rect, View } from './graph-scale';
+import {
+  clampZoom,
+  computeView,
+  formatTooltipTime,
+  hoverPoint,
+  pixelMapping,
+  plotArea,
+  Range,
+  Rect,
+  snapX,
+  tooltipTop,
+  View
+} from './graph-scale';
 
 // ApexCharts' default palette, so series keep the colours people are used to.
 const PALETTE = [
@@ -35,6 +47,8 @@ const DRAG_THRESHOLD_PX = 5;
 const WHEEL_ZOOM = 1.25;
 /** How far past a series' first or last point the cursor can be and still show its value. */
 const HOVER_TOLERANCE_PX = 12;
+/** Narrowest zoom, in ms: the finest tick step is 1 ms. */
+const MIN_ZOOM_MS = 10;
 
 export interface LegendEntry {
   name: string;
@@ -44,7 +58,7 @@ export interface LegendEntry {
 export interface HoverInfo {
   left: number;
   top: number;
-  /** Show the tooltip left of the cursor, near the right edge. */
+  /** Show the tooltip left of the crosshair, past the middle of the plot. */
   flip: boolean;
   time: string;
   rows: { name: string; color: string; value: number }[];
@@ -84,23 +98,30 @@ export default class CustomGraphComponent {
   readonly hidden = signal<ReadonlySet<string>>(new Set());
   readonly hover = signal<HoverInfo | null>(null);
   readonly zoom = signal<Range | null>(null);
+  readonly panning = signal(false);
   readonly renderError = signal<string | null>(null);
 
   private container = viewChild.required<ElementRef<HTMLDivElement>>('chartContainer');
   private glCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('glCanvas');
   private overlayCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('overlayCanvas');
+  private tooltip = viewChild<ElementRef<HTMLDivElement>>('tooltip');
 
   private renderer?: GraphRenderer;
   /** Removes the WebGL context-loss listeners. */
   private glListeners?: AbortController;
   private resizeObserver?: ResizeObserver;
+  /** Re-arms a device-pixel-ratio listener where ResizeObserver can't report device pixels. */
+  private dprListener?: AbortController;
   private size = { width: 0, height: 0 };
+  private devicePx?: { width: number; height: number };
   private frame?: number;
   private dataDirty = true;
   /** Series whose points changed since the last upload, so only those are re-sent. */
   private changed = new Set<string>();
   private cursor: { x: number; y: number } | null = null;
   private dragStart: number | null = null;
+  /** Shift-drag pan: where it started and the x range it started from. */
+  private panStart: { px: number; x: Range } | null = null;
   private lastView: View | null = null;
   private lastArea: Rect | null = null;
 
@@ -220,6 +241,11 @@ export default class CustomGraphComponent {
 
   onPointerMove(event: PointerEvent) {
     this.cursor = this.localPoint(event);
+    if (this.panStart && this.lastView && this.lastArea) {
+      const { px, x } = this.panStart;
+      const shift = ((this.cursor.x - px) / this.lastArea.width) * (x.max - x.min);
+      this.setZoom({ min: x.min - shift, max: x.max - shift });
+    }
     this.requestFrame();
   }
 
@@ -232,18 +258,25 @@ export default class CustomGraphComponent {
   onPointerDown(event: PointerEvent) {
     const p = this.localPoint(event);
     if (event.button !== 0 || !this.inPlot(p)) return;
-    this.dragStart = p.x;
+    if (event.shiftKey && this.lastView) {
+      this.panStart = { px: p.x, x: this.lastView.x };
+      this.panning.set(true);
+    } else {
+      this.dragStart = p.x;
+    }
     (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
   }
 
-  /** Drag across the plot to zoom into that time range. */
+  /** Drag across the plot to zoom into that time range; shift-drag pans instead. */
   onPointerUp(event: PointerEvent) {
     const start = this.dragStart;
     this.dragStart = null;
+    this.panStart = null;
+    this.panning.set(false);
     const end = this.localPoint(event).x;
     if (start !== null && this.lastView && this.lastArea && Math.abs(end - start) > DRAG_THRESHOLD_PX) {
       const { pxToX } = pixelMapping(this.lastView, this.lastArea);
-      this.zoom.set({ min: pxToX(Math.min(start, end)), max: pxToX(Math.max(start, end)) });
+      this.setZoom({ min: pxToX(Math.min(start, end)), max: pxToX(Math.max(start, end)) });
     }
     this.requestFrame();
   }
@@ -256,8 +289,13 @@ export default class CustomGraphComponent {
     const { x } = this.lastView;
     const anchor = pixelMapping(this.lastView, this.lastArea).pxToX(p.x);
     const factor = event.deltaY > 0 ? WHEEL_ZOOM : 1 / WHEEL_ZOOM;
-    this.zoom.set({ min: anchor - (anchor - x.min) * factor, max: anchor + (x.max - anchor) * factor });
+    this.setZoom({ min: anchor - (anchor - x.min) * factor, max: anchor + (x.max - anchor) * factor });
     this.requestFrame();
+  }
+
+  /** Zoom to `range`, kept inside the data; zooming out past all of it ends the zoom. */
+  private setZoom(range: Range) {
+    this.zoom.set(this.lastView ? clampZoom(range, this.lastView.zoomBounds, MIN_ZOOM_MS) : range);
   }
 
   /** Current series in data-map order, with their colours and visibility. */
@@ -315,8 +353,7 @@ export default class CustomGraphComponent {
 
     const marks: OverlayMarks = {};
     if (view && this.cursor && this.inPlot(this.cursor)) {
-      marks.crosshairX = this.cursor.x;
-      marks.dots = this.updateHover(series, view, area);
+      Object.assign(marks, this.updateHover(series, view, area));
       if (this.dragStart !== null) marks.selection = { from: this.dragStart, to: this.cursor.x };
     } else if (this.hover()) {
       this.hover.set(null);
@@ -324,12 +361,19 @@ export default class CustomGraphComponent {
     this.renderer.draw(series, view, area, marks);
   }
 
-  /** Tooltip values at the cursor's time, one row per visible series. Returns the hover dots. */
-  private updateHover(series: DrawSeries[], view: View, area: Rect): OverlayMarks['dots'] {
+  /**
+   * Snap the crosshair to the visible point nearest the cursor, and list each visible series'
+   * value at that point's time. Returns the crosshair and hover dots.
+   */
+  private updateHover(series: DrawSeries[], view: View, area: Rect): Pick<OverlayMarks, 'crosshairX' | 'dots'> {
     const cursor = this.cursor!;
     const { pxToX, xToPx, yToPx } = pixelMapping(view, area);
-    const x = pxToX(cursor.x);
-    const tolerance = pxToX(cursor.x + HOVER_TOLERANCE_PX) - x;
+    const tolerance = pxToX(cursor.x + HOVER_TOLERANCE_PX) - pxToX(cursor.x);
+    const x = snapX(series, pxToX(cursor.x), tolerance);
+    if (x === undefined) {
+      if (this.hover()) this.hover.set(null);
+      return { crosshairX: cursor.x };
+    }
     const rows: HoverInfo['rows'] = [];
     const dots: NonNullable<OverlayMarks['dots']> = [];
     series.forEach((s, i) => {
@@ -338,18 +382,19 @@ export default class CustomGraphComponent {
       rows.push({ name: s.name, color: s.color, value: point.y });
       dots.push({ x: xToPx(point.x), y: yToPx(point.y, view.axes[view.seriesAxis[i]]), color: s.color });
     });
-    this.hover.set(
-      rows.length === 0
-        ? null
-        : {
-            left: cursor.x,
-            top: cursor.y,
-            flip: cursor.x > area.left + area.width / 2,
-            time: formatTooltipTime(x),
-            rows
-          }
-    );
-    return dots;
+    // The tooltip as last rendered; a row-count estimate before it first shows
+    const height = this.tooltip()?.nativeElement.offsetHeight || 16 + 17 * (rows.length + 1);
+    // Beside the snapped crosshair rather than the cursor, which can be far from a sparse series' point
+    const crosshairX = xToPx(x);
+    this.hover.set({
+      left: crosshairX,
+      // Kept above the x tick labels, inside the plot
+      top: tooltipTop(cursor.y, height, area.top + area.height),
+      flip: crosshairX > area.left + area.width / 2,
+      time: formatTooltipTime(x),
+      rows
+    });
+    return { crosshairX, dots };
   }
 
   /** Keep the legend matched to the series set; a no-op while only points change. */
@@ -376,12 +421,40 @@ export default class CustomGraphComponent {
     const container = this.container().nativeElement;
     this.resizeObserver = new ResizeObserver(([entry]) => {
       this.size = { width: entry.contentRect.width, height: entry.contentRect.height };
-      this.renderer?.resize(this.size.width, this.size.height, window.devicePixelRatio || 1);
-      // Resizing a canvas clears it, so redraw right away rather than next frame
-      this.renderFrame();
+      const device = entry.devicePixelContentBoxSize?.[0];
+      this.devicePx = device ? { width: device.inlineSize, height: device.blockSize } : undefined;
+      this.applySize();
     });
-    this.resizeObserver.observe(container);
+    // The device-pixel box gives the exact canvas size, and fires when only the pixel ratio
+    // changes (a window moved to a HiDPI screen, browser zoom). Safari lacks it, and Chrome's
+    // device emulation doesn't fire it, so a pixel-ratio media query backs it up.
+    try {
+      this.resizeObserver.observe(container, { box: 'device-pixel-content-box' });
+    } catch {
+      this.resizeObserver.observe(container);
+    }
+    this.watchPixelRatio();
     this.requestFrame();
+  }
+
+  private applySize() {
+    this.renderer?.resize(this.size.width, this.size.height, window.devicePixelRatio || 1, this.devicePx);
+    // Resizing a canvas clears it, so redraw right away rather than next frame
+    this.renderFrame();
+  }
+
+  /** Resize on a pixel-ratio change; each media query matches one ratio, so it re-arms itself. */
+  private watchPixelRatio() {
+    this.dprListener?.abort();
+    this.dprListener = new AbortController();
+    matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener(
+      'change',
+      () => {
+        this.applySize();
+        this.watchPixelRatio();
+      },
+      { once: true, signal: this.dprListener.signal }
+    );
   }
 
   /** Returns false, and shows the fallback message, when WebGL2 is unavailable. */
@@ -419,7 +492,7 @@ export default class CustomGraphComponent {
       'webglcontextrestored',
       () => {
         if (!this.createRenderer()) return;
-        this.renderer!.resize(this.size.width, this.size.height, window.devicePixelRatio || 1);
+        this.renderer!.resize(this.size.width, this.size.height, window.devicePixelRatio || 1, this.devicePx);
         this.dataDirty = true;
         this.requestFrame();
       },
@@ -429,6 +502,7 @@ export default class CustomGraphComponent {
 
   private teardown() {
     this.glListeners?.abort();
+    this.dprListener?.abort();
     if (this.frame !== undefined) cancelAnimationFrame(this.frame);
     this.resizeObserver?.disconnect();
     this.renderer?.destroy();

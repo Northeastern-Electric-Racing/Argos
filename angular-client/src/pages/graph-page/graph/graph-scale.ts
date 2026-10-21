@@ -15,7 +15,11 @@ const MINUTE_MS = 60 * 1000;
 export const AXIS_WIDTH = 56;
 const PLOT_TOP = 22; // room for the day-boundary labels
 const PLOT_BOTTOM = 26; // room for the x-axis tick labels
-const PLOT_EDGE = 12; // breathing room on a side with no axis
+const PLOT_EDGE = 32; // room on a side with no axis for half of the last x tick label
+/** Space between neighbouring x tick labels, in CSS px. */
+const LABEL_GAP = 24;
+/** Gap between the cursor and the tooltip, in CSS px. */
+const TOOLTIP_GAP = 12;
 
 export interface Range {
   min: number;
@@ -48,11 +52,15 @@ export interface ViewInput {
 
 export interface View {
   x: Range;
+  /** How far zoom and pan may reach: all the data, and the live window when it is wider. */
+  zoomBounds: Range;
   /** One range per y-axis. */
   axes: Range[];
-  /** Series index -> axis index. */
+  /** Series index -> axis index; -1 for a hidden series, which has no axis in multi-axis mode. */
   seriesAxis: number[];
-  /** Historical data spanning more than a day: date-aware labels and day boundaries. */
+  /** Axis index -> the series it belongs to; -1 for the shared axis. */
+  axisSeries: number[];
+  /** The view crosses a local midnight: date-aware labels and day boundaries. */
   multiDay: boolean;
 }
 
@@ -109,11 +117,16 @@ const TIME_STEPS = [
   DAY_MS
 ];
 
+/** The round time step that splits `span` ms into at most `maxTicks` pieces. */
+export function timeStep(span: number, maxTicks: number): number {
+  return TIME_STEPS.find((s) => span / s <= maxTicks) ?? niceStep(span / DAY_MS, maxTicks) * DAY_MS;
+}
+
 /** Round wall-clock times inside `range` (epoch ms), aligned to local time so hours land on :00. */
 export function timeTicks(range: Range, maxTicks: number): number[] {
   const span = range.max - range.min;
   if (!(span > 0)) return [range.min];
-  const step = TIME_STEPS.find((s) => span / s <= maxTicks) ?? niceStep(span / DAY_MS, maxTicks) * DAY_MS;
+  const step = timeStep(span, maxTicks);
   const tzOffset = new Date(range.min).getTimezoneOffset() * MINUTE_MS;
   const ticks: number[] = [];
   for (let t = Math.ceil((range.min - tzOffset) / step) * step + tzOffset; t <= range.max; t += step) {
@@ -122,12 +135,44 @@ export function timeTicks(range: Range, maxTicks: number): number[] {
   return ticks;
 }
 
-export function formatTimeTick(ms: number, multiDay: boolean): string {
+const pad = (n: number, width = 2) => String(n).padStart(width, '0');
+
+/**
+ * A local-time x tick label with the precision `step` needs: `M/D` for day steps,
+ * `HH:MM` for minute steps, `HH:MM:SS` for second steps and `HH:MM:SS.mmm` below a second.
+ * `withDate` prefixes the date (`M/D`), for views that cross a midnight.
+ */
+export function formatTimeTick(ms: number, step: number, withDate: boolean): string {
   const d = new Date(ms);
-  if (!multiDay) return d.toLocaleTimeString('en-US', { hour12: false });
-  const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-  const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-  return `${date} ${time}`;
+  const date = `${d.getMonth() + 1}/${d.getDate()}`;
+  if (step >= DAY_MS) return date;
+  let time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (step < MINUTE_MS) time += `:${pad(d.getSeconds())}`;
+  if (step < 1000) time += `.${pad(d.getMilliseconds(), 3)}`;
+  return withDate ? `${date} ${time}` : time;
+}
+
+/**
+ * x ticks and their labels for a plot `width` px wide, as many as fit without the labels
+ * (measured with `measure`) overlapping. Labels carry the date when `range` crosses a midnight.
+ */
+export function timeAxis(
+  range: Range,
+  width: number,
+  measure: (label: string) => number
+): { ticks: number[]; labels: string[] } {
+  const span = range.max - range.min;
+  const withDate = dayBoundaries(range).length > 0;
+  let maxTicks = Math.max(2, Math.floor(width / 100));
+  for (;;) {
+    const ticks = timeTicks(range, maxTicks);
+    const step = span > 0 ? timeStep(span, maxTicks) : 1;
+    const labels = ticks.map((t) => formatTimeTick(t, step, withDate));
+    const widest = Math.max(...labels.map(measure));
+    const fits = Math.max(2, Math.floor(width / (widest + LABEL_GAP)));
+    if (fits >= maxTicks || maxTicks <= 2) return { ticks, labels };
+    maxTicks = fits;
+  }
 }
 
 export function formatTooltipTime(ms: number): string {
@@ -196,6 +241,49 @@ export function hoverPoint(points: GraphData[], x: number, tolerance: number): G
     return undefined;
   }
   return nearestPoint(points, x);
+}
+
+/** The x of the visible point nearest `x` across `series`, or undefined when none is within `tolerance`. */
+export function snapX(
+  series: { points: GraphData[]; visible: boolean }[],
+  x: number,
+  tolerance: number
+): number | undefined {
+  let best: number | undefined;
+  for (const s of series) {
+    const p = s.visible ? hoverPoint(s.points, x, tolerance) : undefined;
+    if (p && (best === undefined || Math.abs(p.x - x) < Math.abs(best - x))) best = p.x;
+  }
+  return best;
+}
+
+/**
+ * The tooltip's top edge for a cursor at `cursorY` above a `bottom` edge (px from the top):
+ * below the cursor, or above it when it would run off the bottom, or pinned inside the
+ * chart when it fits neither way.
+ */
+export function tooltipTop(cursorY: number, height: number, bottom: number): number {
+  const below = cursorY + TOOLTIP_GAP;
+  if (below + height <= bottom) return below;
+  const above = cursorY - TOOLTIP_GAP - height;
+  if (above >= 0) return above;
+  return Math.max(0, bottom - height);
+}
+
+/**
+ * Keep a zoomed x range inside the data and at least `minSpan` wide. Returns null once it
+ * covers all the data, which ends the zoom (back to the live window or the fit-all range).
+ */
+export function clampZoom(zoom: Range, data: Range, minSpan: number): Range | null {
+  let span = zoom.max - zoom.min;
+  if (span >= data.max - data.min) return null;
+  let { min } = zoom;
+  if (span < minSpan) {
+    min += (span - minSpan) / 2;
+    span = minSpan;
+  }
+  min = Math.min(Math.max(min, data.min), data.max - span);
+  return { min, max: min + span };
 }
 
 /** Min and max y of the points with x inside `range`, or null when none are. */
@@ -272,15 +360,12 @@ export function computeView(input: ViewInput): View | null {
   }
   if (!isFinite(minX)) return null;
 
-  let x: Range;
-  if (input.zoom) {
-    x = input.zoom;
-  } else if (input.realTime && input.windowMs !== undefined) {
-    x = { min: maxX - input.windowMs, max: maxX };
-  } else {
-    x = { min: minX, max: maxX };
-  }
-  if (x.max <= x.min) x = { min: x.min - 500, max: x.max + 500 };
+  // The unzoomed view: the live window, or all the data
+  let base: Range =
+    input.realTime && input.windowMs !== undefined ? { min: maxX - input.windowMs, max: maxX } : { min: minX, max: maxX };
+  if (base.max <= base.min) base = { min: base.min - 500, max: base.max + 500 };
+  const zoomBounds = { min: Math.min(base.min, minX), max: Math.max(base.max, maxX) };
+  const x = input.zoom ?? base;
 
   const extentOf = (series: ViewInput['series']): Range | null =>
     series.reduce<Range | null>((acc, s) => {
@@ -289,14 +374,18 @@ export function computeView(input: ViewInput): View | null {
       return acc ? { min: Math.min(acc.min, e.min), max: Math.max(acc.max, e.max) } : e;
     }, null);
 
-  const axes = input.multiAxis
-    ? input.series.map((s) => axisRange(extentOf([s]), input.yOverride))
-    : [axisRange(extentOf(input.series), input.yOverride)];
+  // Multi-axis: one axis per visible series, so hiding a series also frees its gutter.
+  const axisSeries = input.multiAxis ? input.series.flatMap((s, i) => (s.visible ? [i] : [])) : [];
+  if (axisSeries.length === 0) axisSeries.push(-1);
+  const axes = axisSeries.map((i) => axisRange(extentOf(i < 0 ? input.series : [input.series[i]]), input.yOverride));
+  const seriesAxis = input.series.map((_, i) => (axisSeries[0] < 0 ? 0 : axisSeries.indexOf(i)));
 
   return {
     x,
+    zoomBounds,
     axes,
-    seriesAxis: input.series.map((_, i) => (input.multiAxis ? i : 0)),
-    multiDay: !input.realTime && maxX - minX > DAY_MS
+    seriesAxis,
+    axisSeries,
+    multiDay: dayBoundaries(x).length > 0
   };
 }

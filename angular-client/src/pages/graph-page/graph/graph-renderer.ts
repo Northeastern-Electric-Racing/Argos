@@ -6,11 +6,10 @@ import {
   dayBoundaries,
   formatDayLabel,
   formatTick,
-  formatTimeTick,
   niceTicks,
   pixelMapping,
   Rect,
-  timeTicks,
+  timeAxis,
   View
 } from './graph-scale';
 
@@ -32,7 +31,8 @@ export interface OverlayMarks {
 const AXIS_TEXT = '#fff';
 const GRID = 'rgba(255, 255, 255, 0.1)';
 const DAY_LINE = '#8fcadd';
-const FONT = '12px sans-serif';
+/** How far multi-axis tick labels are mixed toward white, for at least 4.5:1 contrast on the dark page. */
+const LABEL_LIGHTEN = 0.35;
 /**
  * How many view widths the view may drift from `origin` before x is re-uploaded relative to
  * the view. Float32 holds about 7 digits, so this keeps a visible point's position exact to
@@ -45,6 +45,12 @@ const MIN_ROOM = 64;
 const hexToRgba = (hex: string): [number, number, number, number] => {
   const n = parseInt(hex.slice(1), 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255, 1];
+};
+
+/** `hex` mixed `amount` (0..1) of the way to white, as a CSS colour. */
+export const lighten = (hex: string, amount: number): string => {
+  const [r, g, b] = hexToRgba(hex).map((c) => Math.round((c + (1 - c) * amount) * 255));
+  return `rgb(${r}, ${g}, ${b})`;
 };
 
 /**
@@ -61,6 +67,8 @@ export class GraphRenderer {
   private width = 0;
   private height = 0;
   private dpr = 1;
+  /** The page's font (Roboto), so canvas text matches the HTML legend and tooltip. */
+  private readonly font: string;
   /** Each series' x,y points, in a power-of-two buffer padded with its last point. */
   private buffers: Float32Array[] = [];
   /** The series the GPU buffers are laid out for, by name. */
@@ -82,16 +90,23 @@ export class GraphRenderer {
     const ctx = overlayCanvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas unavailable');
     this.ctx = ctx;
+    this.font = `12px ${getComputedStyle(overlayCanvas).fontFamily || 'sans-serif'}`;
   }
 
-  /** Match both canvases to the container's CSS size at device resolution. */
-  resize(width: number, height: number, dpr: number): void {
+  /**
+   * Match both canvases to the container's CSS size at device resolution.
+   * @param devicePx the exact device-pixel size, when the browser reports it. It is only used
+   * when it agrees with `dpr`: Chrome's device emulation keeps reporting the old ratio's size.
+   */
+  resize(width: number, height: number, dpr: number, devicePx?: { width: number; height: number }): void {
     this.width = width;
     this.height = height;
     this.dpr = dpr;
+    const near = (device: number, css: number) => Math.abs(device - css * dpr) < 2;
+    const exact = devicePx && near(devicePx.width, width) && near(devicePx.height, height) ? devicePx : undefined;
     for (const canvas of [this.glCanvas, this.overlayCanvas]) {
-      canvas.width = Math.max(1, Math.round(width * dpr));
-      canvas.height = Math.max(1, Math.round(height * dpr));
+      canvas.width = Math.max(1, exact?.width ?? Math.round(width * dpr));
+      canvas.height = Math.max(1, exact?.height ?? Math.round(height * dpr));
     }
   }
 
@@ -160,9 +175,10 @@ export class GraphRenderer {
     this.lines.setGlobalTransform([sx, 1], [-1 - (view.x.min - this.origin) * sx, 0]);
     series.forEach((s, i) => {
       const y = view.axes[view.seriesAxis[i]];
+      this.lines.setLineEnabled(i, !!y && s.visible && s.points.length > 0);
+      if (!y) return;
       const sy = 2 / (y.max - y.min);
       this.lines.updateLineTransform(i, [1, sy], [0, -1 - y.min * sy]);
-      this.lines.setLineEnabled(i, s.visible && s.points.length > 0);
     });
     this.lines.draw();
 
@@ -192,25 +208,32 @@ export class GraphRenderer {
     const { ctx } = this;
     const bottom = area.top + area.height;
     const { xToPx, yToPx } = pixelMapping(view, area);
-    ctx.font = FONT;
+    ctx.font = this.font;
     ctx.lineWidth = 1;
 
-    // x grid and labels
+    // plot frame, so the plot's edges show even where no grid line falls (y min/max set)
     ctx.strokeStyle = GRID;
+    ctx.strokeRect(area.left + 0.5, area.top + 0.5, area.width - 1, area.height - 1);
+
+    // x grid and labels
     ctx.fillStyle = AXIS_TEXT;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    const xMaxTicks = Math.max(2, Math.floor(area.width / (view.multiDay ? 130 : 100)));
-    for (const t of timeTicks(view.x, xMaxTicks)) {
+    const measure = (label: string) => ctx.measureText(label).width;
+    const { ticks, labels } = timeAxis(view.x, area.width, measure);
+    ticks.forEach((t, i) => {
       const px = Math.round(xToPx(t)) + 0.5;
       ctx.beginPath();
       ctx.moveTo(px, area.top);
       ctx.lineTo(px, bottom);
       ctx.stroke();
-      ctx.fillText(formatTimeTick(t, view.multiDay), px, bottom + 6);
-    }
+      // A label that would run off the canvas is left out rather than cut in half
+      const half = measure(labels[i]) / 2;
+      if (px - half >= 0 && px + half <= this.width) ctx.fillText(labels[i], px, bottom + 8);
+    });
 
-    // y axes: one shared white axis, or one per series in its line colour
+    // y axes: one shared white axis, or one per visible series, marked with a stripe in its
+    // line colour and labelled in a lightened tint of it (the raw palette is too dark to read)
     const yMaxTicks = Math.max(2, Math.floor(area.height / 50));
     const slots = axisSlots(view.axes.length);
     ctx.textBaseline = 'middle';
@@ -218,9 +241,15 @@ export class GraphRenderer {
       const ticks = niceTicks(range, yMaxTicks);
       const step = ticks.length > 1 ? ticks[1] - ticks[0] : 1;
       const { side, slot } = slots[i];
-      const x = side === 'left' ? area.left - slot * AXIS_WIDTH - 6 : area.left + area.width + slot * AXIS_WIDTH + 6;
+      const edge = side === 'left' ? area.left - slot * AXIS_WIDTH : area.left + area.width + slot * AXIS_WIDTH;
+      const x = side === 'left' ? edge - 6 : edge + 6;
       ctx.textAlign = side === 'left' ? 'right' : 'left';
-      ctx.fillStyle = view.axes.length > 1 ? series[i]?.color ?? AXIS_TEXT : AXIS_TEXT;
+      const color = series[view.axisSeries[i]]?.color;
+      if (color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(side === 'left' ? edge - 3 : edge, area.top, 3, area.height);
+      }
+      ctx.fillStyle = color ? lighten(color, LABEL_LIGHTEN) : AXIS_TEXT;
       for (const v of ticks) {
         const py = Math.round(yToPx(v, range)) + 0.5;
         if (i === 0) {
@@ -229,7 +258,10 @@ export class GraphRenderer {
           ctx.lineTo(area.left + area.width, py);
           ctx.stroke();
         }
-        ctx.fillText(formatTick(v, step), x, py);
+        // A label on the bottom edge sits above it, clear of the first x label below the corner
+        const onBottom = py > bottom - 7;
+        ctx.textBaseline = onBottom ? 'bottom' : 'middle';
+        ctx.fillText(formatTick(v, step), x, onBottom ? bottom : py);
       }
     });
 

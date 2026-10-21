@@ -10,6 +10,12 @@
   min-height: 0;
   touch-action: none;
   user-select: none;
+  /* drag zooms, shift-drag pans, the wheel zooms, double-click resets */
+  cursor: crosshair;
+}
+
+.chart-container.panning {
+  cursor: grabbing;
 }
 
 .layer {
@@ -21,7 +27,8 @@
 
 .tooltip {
   position: absolute;
-  transform: translate(12px, 12px);
+  /* top is placed in code (below the cursor, or above it near the bottom) */
+  transform: translateX(12px);
   pointer-events: none;
   padding: 6px 8px;
   border-radius: 4px;
@@ -32,7 +39,7 @@
 }
 
 .tooltip.flip {
-  transform: translate(calc(-100% - 12px), 12px);
+  transform: translateX(calc(-100% - 12px));
 }
 
 .tooltip-time {
@@ -49,10 +56,11 @@
 }
 
 .reset-zoom {
-  position: absolute;
-  top: 0;
-  right: 12px;
+  grid-column: 3;
+  justify-self: end;
   padding: 2px 8px;
+  font: inherit;
+  font-size: 13px;
   border: 1px solid #8fcadd;
   border-radius: 4px;
   background: #0c2026;
@@ -69,12 +77,22 @@
   color: #fff;
 }
 
+/* legend centred, with Reset zoom at the right: equal side columns keep the legend centred */
+.footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+}
+
 .legend {
+  grid-column: 2;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 4px 16px;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -83,6 +101,7 @@
   border: none;
   background: none;
   color: #fff;
+  font: inherit;
   font-size: 15px;
   cursor: pointer;
 }

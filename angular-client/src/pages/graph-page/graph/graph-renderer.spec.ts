@@ -1,4 +1,4 @@
-import { DrawSeries, GraphRenderer } from './graph-renderer';
+import { DrawSeries, GraphRenderer, lighten } from './graph-renderer';
 import { View } from './graph-scale';
 
 const HOUR = 60 * 60 * 1000;
@@ -27,8 +27,10 @@ describe('GraphRenderer', () => {
   });
   const view = (min: number, max: number): View => ({
     x: { min, max },
+    zoomBounds: { min, max },
     axes: [{ min: -2, max: 2 }],
     seriesAxis: [0, 0],
+    axisSeries: [-1],
     multiDay: false
   });
 
@@ -38,6 +40,24 @@ describe('GraphRenderer', () => {
     gl.readPixels(0, 5, width, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
     return Array.from({ length: width }, (_, i) => i).filter((i) => px[i * 4 + 3] > 0);
   }
+
+  it('lightens a colour toward white for tick labels', () => {
+    expect(lighten('#3F51B5', 0)).toBe('rgb(63, 81, 181)');
+    expect(lighten('#000000', 0.5)).toBe('rgb(128, 128, 128)');
+  });
+
+  it('sizes the canvases to the exact device-pixel box when the browser reports it', () => {
+    renderer.resize(905.6, 400, 2, { width: 1811, height: 800 });
+    expect(glCanvas.width).toBe(1811);
+    expect(glCanvas.height).toBe(800);
+  });
+
+  it('ignores a device-pixel size that disagrees with the pixel ratio', () => {
+    // Chrome's device emulation reports the 1x box after switching to 2x
+    renderer.resize(905.6, 400, 2, { width: 906, height: 400 });
+    expect(glCanvas.width).toBe(1811);
+    expect(glCanvas.height).toBe(800);
+  });
 
   it('asks for a WebGL2 drawing buffer without multisampling, depth or stencil', () => {
     // 1px lines need none of these, and each multiplies the drawing buffer's GPU memory
