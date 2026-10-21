@@ -1,7 +1,13 @@
-<div class="menu-container" role="menu" aria-label="More pages">
+<div class="menu-container" cdkMenu aria-label="More pages">
   <div class="menu-grid">
     @for (menuItem of items(); track menuItem.label) {
-      <button type="button" class="menu-item" role="menuitem" (click)="select(menuItem)" [attr.data-id]="menuItem.id">
+      <button
+        type="button"
+        class="menu-item"
+        cdkMenuItem
+        (cdkMenuItemTriggered)="menuItem.onClick()"
+        [attr.data-id]="menuItem.id"
+      >
         <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
         <span class="menu-label">{{ menuItem.label }}</span>
       </button>

@@ -136,6 +136,29 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     });
   });
 
+  describe('range calendar', () => {
+    it('keeps the time already set when a day is picked', () => {
+      component.customFromDate.set(new Date(2026, 0, 5, 14, 30));
+      component.setFromDay(new Date(2026, 0, 2));
+      expect(component.customFromDate()).toEqual(new Date(2026, 0, 2, 14, 30));
+    });
+
+    it('keeps the end time across a half-picked range', () => {
+      component.customToDate.set(new Date(2026, 0, 5, 9, 15));
+      component.setToDay(null);
+      component.setToDay(new Date(2026, 0, 7));
+      expect(component.customToDate()).toEqual(new Date(2026, 0, 7, 9, 15));
+    });
+
+    it('clears the end while the range is half-picked, so Apply asks for both ends', () => {
+      component.setToDay(null);
+      expect(component.customToDate()).toBeNull();
+      component.applyCustomDateRange();
+      expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
+    });
+  });
+
   describe('onCustomPopoverShow', () => {
     it('seeds Last X mode + hours/minutes when activeLastXMinutes is set', () => {
       fixture.componentRef.setInput('activeLastXMinutes', 135);
@@ -152,8 +175,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       fixture.detectChanges();
       component.onCustomPopoverShow();
       expect(component.customMode()).toBe('date-range');
-      expect(component.customFromDate().getTime()).toBe(range.startMs);
-      expect(component.customToDate().getTime()).toBe(range.endMs);
+      expect(component.customFromDate()?.getTime()).toBe(range.startMs);
+      expect(component.customToDate()?.getTime()).toBe(range.endMs);
     });
 
     it('resets to fresh defaults when nothing active', () => {
@@ -163,8 +186,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(component.customHours()).toBe(0);
       expect(component.customMinutes()).toBe(30);
       // From defaults to ~now − 30m, To to ~now (allow a small jitter for execution time)
-      const toMs = component.customToDate().getTime();
-      const fromMs = component.customFromDate().getTime();
+      const toMs = component.customToDate()?.getTime() ?? NaN;
+      const fromMs = component.customFromDate()?.getTime() ?? NaN;
       expect(toMs).toBeGreaterThanOrEqual(before);
       expect(toMs).toBeLessThanOrEqual(after + 50);
       expect(toMs - fromMs).toBe(30 * 60 * 1000);

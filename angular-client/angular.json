@@ -30,7 +30,7 @@
             "styles": [
               "src/styles/theme.scss",
               "src/styles.css",
-              "node_modules/@material-symbols/font-400/outlined.css"
+              "src/styles/material-symbols.css"
             ],
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules/"]

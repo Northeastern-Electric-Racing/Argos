@@ -107,6 +107,15 @@
   padding: 16px 8px;
 }
 
+/* Material resets native button styles only in action lists; nav-list items here are buttons. */
+.nav-drawer button[mat-list-item] {
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  width: 100%;
+}
+
 .notification-popover {
   display: block;
   box-shadow: var(--mat-sys-level3);

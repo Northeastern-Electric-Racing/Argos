@@ -21,6 +21,9 @@ export class ButtonComponent {
   additionalStyles = input<string>();
   disabled = input<boolean>(false);
   size = input<ButtonSize>('default');
+  /** For buttons that open a popup (e.g. 'dialog'); sets aria-haspopup and aria-expanded on the button. */
+  hasPopup = input<string | null>(null);
+  expanded = input<boolean | null>(null);
   cssClass = computed(() => `btn btn--${this.size()}`);
   style = computed(() => {
     // The default size keeps the legacy fixed footprint; sm lets CSS drive sizing

@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { DestroyRef, inject, Injectable } from '@angular/core';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { ToastComponent } from 'src/components/toast/toast.component';
 
@@ -22,6 +22,7 @@ const DEFAULT_LIFE_MS = 3000;
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private snackBar = inject(MatSnackBar);
+  private destroyRef = inject(DestroyRef);
   private current?: MatSnackBarRef<ToastComponent>;
   private queue: ToastMessage[] = [];
 
@@ -48,7 +49,8 @@ export class ToastService {
     ref.afterDismissed().subscribe(() => {
       this.current = undefined;
       const next = this.queue.shift();
-      if (next) this.show(next);
+      // Tearing down the app (or a test) dismisses the open toast; don't open queued ones then.
+      if (next && !this.destroyRef.destroyed) this.show(next);
     });
   }
 }

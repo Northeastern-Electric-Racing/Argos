@@ -1,9 +1,11 @@
-import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { inject, Injectable, Injector } from '@angular/core';
+import { BehaviorSubject, filter } from 'rxjs';
+import { hasModifierKey } from '@angular/cdk/keycodes';
+import { createGlobalPositionStrategy, createOverlayRef, OverlayRef } from '@angular/cdk/overlay';
+import { ComponentPortal } from '@angular/cdk/portal';
 import { CellReading } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
+import { CELL_COMPARE_DATA, CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 
 export enum HeatMapView {
   Voltage = 'C Volts',
@@ -24,7 +26,7 @@ export interface SelectedCellInfo {
   providedIn: 'root'
 })
 export class HeatMapService {
-  private dialog = inject(MatDialog);
+  private injector = inject(Injector);
 
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
@@ -33,7 +35,8 @@ export class HeatMapService {
 
   /** Multi-cell selection state, keyed by CellReading identity */
   private selectedCells = new Map<CellReading, SelectedCellInfo>();
-  dialogRef: MatDialogRef<CellViewComponent> | null = null;
+  /** The open Cell Comparison panel, if any. */
+  overlayRef: OverlayRef | null = null;
 
   /**
    * Toggle a group of readings as a unit. Uses the first reading's
@@ -62,20 +65,32 @@ export class HeatMapService {
   }
 
   openDialogForSelectedCells(): void {
-    // Open dialog if not already open, and the caller requested it.
-    if (this.selectedCells.size > 0 && !this.dialogRef) {
-      // Non-modal so cells stay clickable behind it; the dialog drags by its title (cdkDrag).
-      this.dialogRef = this.dialog.open(CellViewComponent, {
-        data: { cells: this.selectedCells },
+    // Open the panel if not already open, and the caller requested it.
+    if (this.selectedCells.size > 0 && !this.overlayRef) {
+      // A plain CDK overlay rather than MatDialog: the panel is non-modal (cells behind it stay
+      // clickable), and MatDialog would aria-hide the rest of the app while it is open.
+      const overlayRef = createOverlayRef(this.injector, {
+        positionStrategy: createGlobalPositionStrategy(this.injector).top('96px').right('24px'),
         hasBackdrop: false,
-        autoFocus: false,
-        restoreFocus: false,
-        position: { top: '96px', right: '24px' }
+        panelClass: 'cell-compare-pane',
+        disposeOnNavigation: true
       });
-      this.dialogRef.afterClosed().subscribe(() => {
+      const injector = Injector.create({
+        parent: this.injector,
+        providers: [
+          { provide: CELL_COMPARE_DATA, useValue: { cells: this.selectedCells, close: () => overlayRef.dispose() } }
+        ]
+      });
+      overlayRef.attach(new ComponentPortal(CellViewComponent, null, injector));
+      overlayRef
+        .keydownEvents()
+        .pipe(filter((event) => event.key === 'Escape' && !hasModifierKey(event)))
+        .subscribe(() => overlayRef.dispose());
+      overlayRef.detachments().subscribe(() => {
         this.clearSelection();
-        this.dialogRef = null;
+        this.overlayRef = null;
       });
+      this.overlayRef = overlayRef;
     }
   }
 
@@ -93,10 +108,10 @@ export class HeatMapService {
   }
 
   closeDialogIfNoSelection(): void {
-    // close dialog if no cells remain selected and the caller requested it.
-    if (this.selectedCells.size === 0 && this.dialogRef) {
-      this.dialogRef.close();
-      this.dialogRef = null;
+    // close the panel if no cells remain selected and the caller requested it.
+    if (this.selectedCells.size === 0 && this.overlayRef) {
+      this.overlayRef.dispose();
+      this.overlayRef = null;
     }
   }
 

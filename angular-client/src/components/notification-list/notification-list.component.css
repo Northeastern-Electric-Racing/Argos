@@ -196,13 +196,10 @@
   opacity: 1;
 }
 
-.clear-button {
-  color: var(--mat-sys-error);
-}
-
 /* ---- Empty state ---- */
 
 .empty-state {
+  outline: none;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -91,6 +91,32 @@ html {
   );
 }
 
+// Destructive actions (delete, clear) in the error colour, set through each component's tokens.
+.danger-action {
+  @include mat.button-overrides(
+    (
+      text-label-text-color: var(--mat-sys-error),
+      text-state-layer-color: var(--mat-sys-error),
+      text-ripple-color: var(--mat-sys-error)
+    )
+  );
+
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-error),
+      state-layer-color: var(--mat-sys-error),
+      ripple-color: var(--mat-sys-error)
+    )
+  );
+
+  @include mat.menu-overrides(
+    (
+      item-label-text-color: var(--mat-sys-error),
+      item-icon-color: var(--mat-sys-error)
+    )
+  );
+}
+
 body {
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);

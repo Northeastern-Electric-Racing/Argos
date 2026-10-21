@@ -48,12 +48,12 @@
     </div>
 
     <button
-      mat-icon-button
+      matIconButton
       type="button"
       class="stream-toggle"
       (click)="toggleStreamRail()"
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
-      [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
+      [matTooltip]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
       <mat-icon>{{ streamRailOpen() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
     </button>

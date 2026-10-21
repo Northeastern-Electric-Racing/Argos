@@ -6,6 +6,7 @@ import { MatFormField, MatPrefix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -44,6 +45,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
     MatPrefix,
     MatInput,
     MatIcon,
+    MatTooltip,
     MatIconButton,
     RulesTableComponent,
     NotificationListComponent

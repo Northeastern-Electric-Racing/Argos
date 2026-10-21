@@ -22,6 +22,8 @@
         [onClick]="toggleCustomPopover"
         label="Custom"
         size="sm"
+        hasPopup="dialog"
+        [expanded]="customPopoverOpen()"
         [additionalStyles]="
           customActive()
             ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
@@ -46,7 +48,7 @@
     (detach)="closeCustomPopover()"
     (overlayKeydown)="onPopoverKeydown($event)"
   >
-    <div class="custom-popover-body" role="dialog" aria-label="Custom range">
+    <div class="custom-popover-body" role="dialog" aria-label="Custom range" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
       <mat-button-toggle-group
         class="mode-toggle"
         [value]="customMode()"
@@ -92,43 +94,39 @@
         </div>
       } @else {
         <div class="mode-body">
-          <div class="datetime-row">
-            <mat-form-field subscriptSizing="dynamic">
-              <mat-label>From date</mat-label>
+          <!-- One range calendar picks both days (and keeps end >= start); the time fields set the hours. -->
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Date range</mat-label>
+            <mat-date-range-input [rangePicker]="rangePicker" [max]="maxDate()">
               <input
-                matInput
-                [matDatepicker]="fromDatePicker"
-                [max]="maxDate()"
+                matStartDate
+                placeholder="From"
+                aria-label="From date"
                 [ngModel]="customFromDate()"
-                (ngModelChange)="setFromDate($event)"
+                (ngModelChange)="setFromDay($event)"
               />
-              <mat-datepicker-toggle matSuffix [for]="fromDatePicker" />
-              <mat-datepicker #fromDatePicker />
-            </mat-form-field>
+              <input
+                matEndDate
+                placeholder="To"
+                aria-label="To date"
+                [ngModel]="customToDate()"
+                (ngModelChange)="setToDay($event)"
+              />
+            </mat-date-range-input>
+            <mat-datepicker-toggle matSuffix [for]="rangePicker" />
+            <mat-date-range-picker #rangePicker />
+          </mat-form-field>
+          <div class="datetime-row">
             <mat-form-field subscriptSizing="dynamic" class="time-field">
               <mat-label>From time</mat-label>
               <input
                 matInput
                 [matTimepicker]="fromTimePicker"
                 [ngModel]="customFromDate()"
-                (ngModelChange)="setFromDate($event)"
+                (ngModelChange)="setFromTime($event)"
               />
               <mat-timepicker-toggle matSuffix [for]="fromTimePicker" />
               <mat-timepicker #fromTimePicker interval="15m" />
-            </mat-form-field>
-          </div>
-          <div class="datetime-row">
-            <mat-form-field subscriptSizing="dynamic">
-              <mat-label>To date</mat-label>
-              <input
-                matInput
-                [matDatepicker]="toDatePicker"
-                [max]="maxDate()"
-                [ngModel]="customToDate()"
-                (ngModelChange)="setToDate($event)"
-              />
-              <mat-datepicker-toggle matSuffix [for]="toDatePicker" />
-              <mat-datepicker #toDatePicker />
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic" class="time-field">
               <mat-label>To time</mat-label>
@@ -136,7 +134,7 @@
                 matInput
                 [matTimepicker]="toTimePicker"
                 [ngModel]="customToDate()"
-                (ngModelChange)="setToDate($event)"
+                (ngModelChange)="setToTime($event)"
               />
               <mat-timepicker-toggle matSuffix [for]="toTimePicker" />
               <mat-timepicker #toTimePicker interval="15m" />

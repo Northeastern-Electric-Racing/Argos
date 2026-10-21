@@ -13,8 +13,8 @@
     <div class="list-actions">
       @if (hasEntries()) {
         <button
-          mat-button
-          class="clear-button"
+          matButton
+          class="danger-action"
           (click)="notificationLogService.clearAll()"
           aria-label="Clear all notifications"
         >
@@ -26,7 +26,8 @@
 
   <div class="list-body">
     @if (!hasEntries()) {
-      <div class="empty-state">
+      <!-- Focus target when the popover opens with nothing in it (cdkFocusInitial, read by its focus trap). -->
+      <div class="empty-state" tabindex="-1" cdkFocusInitial>
         <mat-icon class="empty-icon" aria-hidden="true">notifications_off</mat-icon>
         <span class="empty-text">No notifications yet</span>
         <span class="empty-hint">Triggered rules will appear here</span>
@@ -48,7 +49,7 @@
               </div>
             </div>
             <button
-              mat-icon-button
+              matIconButton
               type="button"
               class="entry-dismiss"
               (click)="notificationLogService.dismissEntry(entry.id)"
@@ -64,7 +65,7 @@
 
   @if (variant() === 'popover' && hasEntries()) {
     <footer class="list-footer">
-      <button mat-button type="button" class="view-all-button" (click)="viewAll()">
+      <button matButton type="button" class="view-all-button" (click)="viewAll()">
         View all notifications
         <mat-icon iconPositionEnd>arrow_forward</mat-icon>
       </button>

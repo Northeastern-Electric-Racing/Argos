@@ -68,10 +68,6 @@
 
 /* ---- Log table ---- */
 
-.clear-all {
-  color: var(--mat-sys-error);
-}
-
 .log-table-wrapper {
   flex: 1;
   min-height: 0;

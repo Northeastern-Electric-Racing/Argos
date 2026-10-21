@@ -1,7 +1,14 @@
 <button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
 <mat-sidenav-container class="topics-drawer" [class.topics-drawer--open]="sidebarVisible" [hasBackdrop]="true">
-  <mat-sidenav mode="over" position="end" class="topics-sidenav" [(opened)]="sidebarVisible" aria-label="Topics">
+  <mat-sidenav
+    mode="over"
+    position="end"
+    class="topics-sidenav"
+    [(opened)]="sidebarVisible"
+    role="region"
+    aria-label="Topics"
+  >
     <div class="sidebar-content">
       <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
       <div class="presets-row">

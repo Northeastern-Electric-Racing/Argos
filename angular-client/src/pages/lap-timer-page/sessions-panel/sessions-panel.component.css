@@ -159,7 +159,3 @@
 .session-rename-input:focus {
   border-color: var(--color-battery-high);
 }
-
-.destructive {
-  color: var(--mat-sys-error);
-}

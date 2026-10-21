@@ -66,10 +66,6 @@
   white-space: nowrap;
 }
 
-.danger {
-  color: var(--mat-sys-error);
-}
-
 .spacer {
   flex: 1;
 }

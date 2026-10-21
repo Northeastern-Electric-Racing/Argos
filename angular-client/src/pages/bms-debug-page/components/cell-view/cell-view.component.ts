@@ -1,12 +1,19 @@
-import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, InjectionToken, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { MatIconButton } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogClose, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
 import { ConfigTableComponent, TableRowConfig, TableColumnConfig } from 'src/components/config-table/config-table.component';
+
+export interface CellCompareData {
+  cells: Map<CellReading, SelectedCellInfo>;
+  close: () => void;
+}
+
+/** Passed to the compare panel by HeatMapService, which opens it as a plain CDK overlay. */
+export const CELL_COMPARE_DATA = new InjectionToken<CellCompareData>('CELL_COMPARE_DATA');
 
 const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
   {
@@ -39,21 +46,13 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [
-    ConfigTableComponent,
-    CdkDrag,
-    CdkDragHandle,
-    MatDialogTitle,
-    MatDialogContent,
-    MatDialogClose,
-    MatIconButton,
-    MatIcon
-  ]
+  imports: [ConfigTableComponent, CdkDrag, CdkDragHandle, MatIconButton, MatIcon]
 })
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
-  private data = inject<{ cells: Map<CellReading, SelectedCellInfo> }>(MAT_DIALOG_DATA);
+  private data = inject(CELL_COMPARE_DATA);
+  readonly titleId = 'cell-compare-title';
 
   /** Shared Map reference — mutations by SegmentHeatmapComponent
    *  are visible here because it's the same Map object. */
@@ -69,6 +68,10 @@ export class CellViewComponent implements OnDestroy {
     this.cellsMap = this.data.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
+  }
+
+  close(): void {
+    this.data.close();
   }
 
   ngOnDestroy(): void {

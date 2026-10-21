@@ -19,6 +19,7 @@
     [expansionKey]="expansionKey"
     [trackBy]="trackBy"
     aria-label="Topics"
+    aria-multiselectable="true"
   >
     <mat-tree-node
       *matTreeNodeDef="let node"
@@ -27,6 +28,7 @@
       class="tree-node"
       [class.leaf]="!hasChildren(node)"
       [class.selected]="isSelected(node)"
+      [attr.aria-selected]="hasChildren(node) ? null : isSelected(node)"
       [isExpandable]="hasChildren(node)"
       (expandedChange)="node.expanded = $event"
       (click)="activate(node, tree)"

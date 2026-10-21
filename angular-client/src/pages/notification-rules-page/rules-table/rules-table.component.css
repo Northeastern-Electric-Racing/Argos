@@ -18,10 +18,6 @@
   white-space: nowrap;
 }
 
-.delete-button {
-  color: var(--mat-sys-error);
-}
-
 .selected-row {
   background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
 }

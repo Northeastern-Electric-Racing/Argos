@@ -1,12 +1,23 @@
-<!-- Non-modal and draggable by its title: cdkDrag moves the whole dialog pane. -->
-<div class="cell-compare" cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragBoundary=".cdk-overlay-container">
+<!--
+  Non-modal and draggable by its title: cdkDrag moves the whole overlay pane. It is a plain CDK
+  overlay, not a MatDialog, because a dialog hides the rest of the app from assistive tech.
+-->
+<div
+  class="cell-compare"
+  role="dialog"
+  aria-modal="false"
+  [attr.aria-labelledby]="titleId"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane"
+  cdkDragBoundary=".cdk-overlay-container"
+>
   <div class="title-row" cdkDragHandle>
-    <h2 mat-dialog-title>Cell Comparison</h2>
-    <button mat-icon-button mat-dialog-close aria-label="Close">
+    <h2 class="title" [id]="titleId">Cell Comparison</h2>
+    <button matIconButton type="button" aria-label="Close" (click)="close()">
       <mat-icon>close</mat-icon>
     </button>
   </div>
-  <mat-dialog-content>
+  <div class="content">
     <config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
-  </mat-dialog-content>
+  </div>
 </div>

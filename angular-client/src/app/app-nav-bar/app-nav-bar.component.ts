@@ -5,7 +5,10 @@ import { ToastService } from 'src/services/toast.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { MatBadge } from '@angular/material/badge';
+import { MatListItem, MatListItemIcon, MatListItemTitle, MatNavList } from '@angular/material/list';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
+import { CdkMenuTrigger } from '@angular/cdk/menu';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
@@ -40,8 +43,14 @@ export interface NavItem {
     MatSidenavContainer,
     MatSidenav,
     MatBadge,
+    MatNavList,
+    MatListItem,
+    MatListItemIcon,
+    MatListItemTitle,
     CdkConnectedOverlay,
     CdkOverlayOrigin,
+    CdkMenuTrigger,
+    CdkTrapFocus,
     NavOptionsMenuComponent,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
@@ -68,7 +77,10 @@ export class AppNavBarComponent implements OnInit {
   private dialog = inject(MatDialog);
   protected notificationLogService = inject(NotificationLogService);
 
-  /** Apps grid and notifications panel are CDK overlays anchored to their nav bar buttons. */
+  /**
+   * The apps grid is a CDK menu (keyboard navigation, focus management and ARIA come from
+   * @angular/cdk/menu); the notifications panel is a CDK overlay. Both anchor to their nav bar buttons.
+   */
   menuOpen = signal(false);
   notificationsOpen = signal(false);
   readonly overlayPositions: ConnectedPosition[] = [
@@ -154,10 +166,6 @@ export class AppNavBarComponent implements OnInit {
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
-
-  toggleMenu() {
-    this.menuOpen.update((open) => !open);
-  }
 
   navMenuItems: NavItem[] = [
     {

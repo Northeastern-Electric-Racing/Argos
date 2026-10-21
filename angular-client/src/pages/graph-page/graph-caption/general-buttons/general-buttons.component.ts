@@ -1,9 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from 'src/services/toast.service';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
-import { MatDatepicker, MatDatepickerInput, MatDatepickerToggle } from '@angular/material/datepicker';
+import {
+  MatDateRangeInput,
+  MatDateRangePicker,
+  MatDatepickerToggle,
+  MatEndDate,
+  MatStartDate
+} from '@angular/material/datepicker';
 import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatTimepicker, MatTimepickerInput, MatTimepickerToggle } from '@angular/material/timepicker';
@@ -31,6 +38,14 @@ export const MAX_RANGE_MINUTES = 7 * 24 * 60;
 
 type CustomMode = 'last-x' | 'date-range';
 
+/** `day`'s date with the time of day of `time` (if any). */
+const withTimeOf = (day: Date | null, time: Date | null): Date | null => {
+  if (!day || !time) return day;
+  const merged = new Date(day);
+  merged.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+  return merged;
+};
+
 @Component({
   selector: 'general-buttons',
   templateUrl: './general-buttons.component.html',
@@ -42,14 +57,17 @@ type CustomMode = 'last-x' | 'date-range';
     SelectDropdownComponent,
     CdkConnectedOverlay,
     CdkOverlayOrigin,
+    CdkTrapFocus,
     MatButtonToggleGroup,
     MatButtonToggle,
     MatFormField,
     MatLabel,
     MatSuffix,
     MatInput,
-    MatDatepicker,
-    MatDatepickerInput,
+    MatDateRangeInput,
+    MatStartDate,
+    MatEndDate,
+    MatDateRangePicker,
     MatDatepickerToggle,
     MatTimepicker,
     MatTimepickerInput,
@@ -90,8 +108,12 @@ export class GeneralButtonsComponent {
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);
   customMinutes = signal<number | null>(30);
-  customFromDate = signal<Date>(new Date(Date.now() - 30 * 60 * 1000));
-  customToDate = signal<Date>(new Date());
+  // Null while the range is half-picked (the range calendar clears the end when a new start is picked).
+  customFromDate = signal<Date | null>(new Date(Date.now() - 30 * 60 * 1000));
+  customToDate = signal<Date | null>(new Date());
+  // Last non-null value of each end, so its time survives the end being cleared mid-pick.
+  private lastFromDate: Date | null = null;
+  private lastToDate: Date | null = null;
   maxDate = signal<Date>(new Date());
 
   // Build the dropdown config from the preset list each time it changes; preserves the
@@ -124,12 +146,26 @@ export class GeneralButtonsComponent {
     if (event.key === 'Escape') this.closeCustomPopover();
   }
 
-  /** Datepicker and timepicker share one Date; either can emit null while the text is invalid. */
-  setFromDate(date: Date | null) {
+  /**
+   * The range calendar and the time fields share the same two Dates. The calendar emits a day at
+   * midnight (or null when half-picked), so keep the time already set for that end.
+   */
+  setFromDay(day: Date | null) {
+    this.lastFromDate = this.customFromDate() ?? this.lastFromDate;
+    this.customFromDate.set(withTimeOf(day, this.lastFromDate));
+  }
+
+  setToDay(day: Date | null) {
+    this.lastToDate = this.customToDate() ?? this.lastToDate;
+    this.customToDate.set(withTimeOf(day, this.lastToDate));
+  }
+
+  /** A timepicker emits null while its text is invalid; keep the last good value then. */
+  setFromTime(date: Date | null) {
     if (date) this.customFromDate.set(date);
   }
 
-  setToDate(date: Date | null) {
+  setToTime(date: Date | null) {
     if (date) this.customToDate.set(date);
   }
 

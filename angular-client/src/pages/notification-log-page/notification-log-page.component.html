@@ -7,7 +7,7 @@
       }
     </div>
     @if (hasEntries()) {
-      <button mat-button class="clear-all" (click)="notificationLogService.clearAll()">
+      <button matButton class="danger-action" (click)="notificationLogService.clearAll()">
         <mat-icon>delete</mat-icon>
         Clear All
       </button>
@@ -49,7 +49,7 @@
             <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
             <td mat-cell *matCellDef="let entry" class="col-actions">
               <button
-                mat-icon-button
+                matIconButton
                 (click)="notificationLogService.dismissEntry(entry.id)"
                 [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
               >

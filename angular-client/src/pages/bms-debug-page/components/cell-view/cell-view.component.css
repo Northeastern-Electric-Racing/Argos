@@ -2,10 +2,30 @@
   display: block;
 }
 
+/* Same surface as the app's MatDialogs (see dialog-overrides in theme.scss). */
+.cell-compare {
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  border-radius: var(--mat-sys-corner-extra-large);
+}
+
 .title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-right: 8px;
   cursor: move;
+}
+
+.title {
+  margin: 0;
+  padding: 18px 24px;
+  font: var(--mat-sys-headline-small);
+}
+
+.content {
+  padding: 20px 24px;
+  max-height: 65vh;
+  overflow: auto;
+  font: var(--mat-sys-body-medium);
 }
