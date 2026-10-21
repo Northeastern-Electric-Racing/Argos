@@ -45,6 +45,10 @@ describe('graph-chart utils', () => {
       expect(canvas.style.cursor).toBe('');
     });
 
+    it('hides the x-axis while no series is shown', () => {
+      expect(options.scales!['x']!.display).toBe('auto');
+    });
+
     it('draws text in the app font and the tooltip in the app theme', () => {
       expect(options.font!.family).toContain('Roboto');
       expect(options.plugins!.tooltip!.backgroundColor).toBe('#0c2026');

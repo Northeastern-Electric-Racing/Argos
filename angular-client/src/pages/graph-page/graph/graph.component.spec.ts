@@ -39,6 +39,8 @@ describe('CustomGraphComponent (Chart.js)', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     await nextFrame();
+    // The frame's chart sync updates signals the template reads (hasData)
+    fixture.detectChanges();
   }
 
   function chart(): Chart {
@@ -304,6 +306,38 @@ describe('CustomGraphComponent (Chart.js)', () => {
     const saved = download.calls.mostRecent().object as unknown as HTMLAnchorElement;
     expect(saved.download).toMatch(/\.png$/);
     expect(saved.href).toMatch(/^data:image\/png/);
+  });
+
+  const emptyMessage = () => (fixture.nativeElement as HTMLElement).querySelector('.empty-state')?.textContent?.trim();
+
+  it('asks for a topic, instead of drawing epoch-zero axes, when none is selected', async () => {
+    await render({ valuesSubject: [] });
+
+    expect(emptyMessage()).toBe('Select a topic to graph');
+    expect(toolbarButton('Zoom In').disabled).toBeTrue();
+    expect(toolbarButton('Save PNG').disabled).toBeTrue();
+  });
+
+  it('says it is waiting until a selected topic has points, then draws them', async () => {
+    const voltage = topic('V', []);
+    await render({ valuesSubject: [voltage], realTime: true });
+    expect(emptyMessage()).toBe('Waiting for data');
+
+    voltage.updates.next([[{ x: 1000, y: 1 }]]);
+    await settle();
+
+    expect(emptyMessage()).toBeUndefined();
+  });
+
+  it('ignores a drag-zoom on an empty chart, so arriving data is not hidden behind it', async () => {
+    const voltage = topic('V', []);
+    const c = await render({ valuesSubject: [voltage], realTime: true });
+
+    c.options.plugins!.zoom!.zoom!.onZoomComplete!({ chart: c });
+    voltage.updates.next([[{ x: 1000, y: 1 }]]);
+    await settle();
+
+    expect(fixture.componentInstance.zoomed()).toBeFalse();
   });
 
   it('ignores incoming points while paused', async () => {

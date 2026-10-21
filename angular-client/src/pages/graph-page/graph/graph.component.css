@@ -32,3 +32,15 @@
 canvas {
   cursor: crosshair;
 }
+
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: grey;
+  font-size: 18px;
+  pointer-events: none;
+}

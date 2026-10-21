@@ -238,6 +238,8 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
       // Epoch-ms on a linear scale, with ticks replaced by clock-aligned ones (see buildTimeTicks)
       x: {
         type: 'linear',
+        // Hidden with no series, rather than labelled 00:00:00.000 to 00:00:00.001 (the empty state says why)
+        display: 'auto',
         afterBuildTicks: (scale) => {
           scale.ticks = buildTimeTicks(scale.min, scale.max).map((value) => ({ value }));
         },

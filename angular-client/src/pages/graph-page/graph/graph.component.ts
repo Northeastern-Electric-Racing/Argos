@@ -88,6 +88,8 @@ export default class CustomGraphComponent implements OnDestroy {
 
   /** True once the user zooms or pans; live windowing pauses until they reset. */
   readonly zoomed = signal(false);
+  /** False until a series has a point; the template shows an empty-state message instead of bare axes. */
+  readonly hasData = signal(false);
   // label -> x,y (topic, data point). These arrays are handed to Chart.js as-is (parsing: false).
   data = new Map<string, GraphData[]>();
   timeRangeMs: number | undefined = undefined;
@@ -95,7 +97,8 @@ export default class CustomGraphComponent implements OnDestroy {
   private frame: number | undefined;
 
   readonly chartData: { datasets: LineDataset[] } = { datasets: [] };
-  readonly chartOptions = buildBaseOptions({ onZoom: () => this.zoomed.set(true) });
+  // A drag on an empty chart zooms its placeholder 0..1 axis; ignore it, or data arriving next would stay hidden
+  readonly chartOptions = buildBaseOptions({ onZoom: () => this.zoomed.set(this.hasData()) });
 
   constructor() {
     afterNextRender(() => this.updateChart());
@@ -197,6 +200,7 @@ export default class CustomGraphComponent implements OnDestroy {
     Object.assign(scales, buildYScales(keys, multipleYAxes, config, colors));
 
     const span = computeDataSpan(this.data);
+    this.hasData.set(!!span);
 
     // Only constrain the x-axis range in real-time mode, and not while the user is zoomed in;
     // historical mode auto-fits all data

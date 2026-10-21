@@ -4,6 +4,7 @@
       label="Zoom In"
       size="sm"
       [onClick]="zoomIn"
+      [disabled]="!hasData()"
       additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
     />
     <argos-button
@@ -24,6 +25,7 @@
       label="Save PNG"
       size="sm"
       [onClick]="savePng"
+      [disabled]="!hasData()"
       additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
     />
   </div>
@@ -37,5 +39,8 @@
       aria-label="Telemetry graph of the selected topics. Drag to zoom, shift-drag to pan, double-click to reset."
       (dblclick)="resetZoom()"
     ></canvas>
+    @if (!hasData()) {
+      <p class="empty-state">{{ valuesSubject().length ? 'Waiting for data' : 'Select a topic to graph' }}</p>
+    }
   </div>
 </div>
