@@ -1,38 +1,43 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { ButtonDirective } from 'primeng/button';
+import { NzModalRef } from 'ng-zorro-antd/modal';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { RulePayload } from 'src/api/rules.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
 import { DataType } from 'src/utils/types.utils';
+import { revalidateOnTouch } from 'src/utils/form.utils';
 import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, AutoComplete, ButtonDirective],
+  imports: [ReactiveFormsModule, NzFormModule, NzInputModule, NzSelectModule, NzButtonModule],
   templateUrl: './add-rule-dialog.component.html',
   styleUrls: ['./add-rule-dialog.component.css']
 })
 export class AddRuleDialogComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  private ref = inject(DynamicDialogRef);
+  private ref = inject(NzModalRef);
   private fb = inject(FormBuilder);
   private serverService = inject(APIService);
 
-  allTopics: string[] = [];
-  filteredTopics = signal<string[]>([]);
+  allTopics = signal<string[]>([]);
 
   form = this.fb.group({
     id: ['', Validators.required],
-    topic: ['', Validators.required],
+    topic: [null as string | null, Validators.required],
     expr: ['', Validators.required],
     debounce_time: [60, [Validators.required, Validators.min(0)]]
   });
+
+  constructor() {
+    revalidateOnTouch(this.form, this.destroyRef);
+  }
 
   ngOnInit(): void {
     const query = this.serverService.query<DataType[]>(getAllDatatypes);
@@ -43,18 +48,8 @@ export class AddRuleDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((dataTypes) => {
-        this.allTopics = dataTypes.map((dt) => dt.name);
+        this.allTopics.set(dataTypes.map((dt) => dt.name));
       });
-  }
-
-  filterTopics(event: AutoCompleteCompleteEvent): void {
-    const search = event.query.toLowerCase();
-    const lower = (t: string) => t.toLowerCase();
-    this.filteredTopics.set(
-      this.allTopics.filter(
-        (topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search))
-      )
-    );
   }
 
   onSubmit(): void {

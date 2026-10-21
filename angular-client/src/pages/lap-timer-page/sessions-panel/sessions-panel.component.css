@@ -70,13 +70,13 @@
 }
 
 /* Body font shared by the table, rename input, and menu items. */
-.sessions-table-wrap :where(.p-datatable),
+.sessions-table-wrap :where(.ant-table),
 .session-rename-input,
 .session-menu-item {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
 }
-.sessions-table-wrap :where(.p-datatable) {
+.sessions-table-wrap :where(.ant-table) {
   color: var(--color-text-primary);
 }
 .sessions-table-wrap :where(th) {
@@ -108,34 +108,34 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
+/* Column widths and alignment. Only the state column's padding needs !important, to beat Ant's small-table cell padding. */
 .sessions-table-wrap th.col-state,
 .sessions-table-wrap td.col-state {
   width: 32px;
-  text-align: center !important;
+  text-align: center;
   padding-left: 8px !important;
   padding-right: 0 !important;
 }
 .sessions-table-wrap th.col-name,
 .sessions-table-wrap td.col-name {
   min-width: 0;
-  text-align: left !important;
+  text-align: left;
 }
 .sessions-table-wrap th.col-started,
 .sessions-table-wrap td.col-started {
   width: 140px;
   white-space: nowrap;
-  text-align: left !important;
+  text-align: left;
 }
 .sessions-table-wrap th.col-laps,
 .sessions-table-wrap td.col-laps {
   width: 60px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap th.col-best,
 .sessions-table-wrap td.col-best {
   width: 90px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap td.col-best {
   color: var(--color-battery-high);
@@ -143,12 +143,12 @@
 .sessions-table-wrap th.col-run,
 .sessions-table-wrap td.col-run {
   width: 60px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap th.col-actions,
 .sessions-table-wrap td.col-actions {
   width: 40px;
-  text-align: right !important;
+  text-align: right;
 }
 
 .session-name {
@@ -193,27 +193,14 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-.session-menu-list {
-  display: flex;
-  flex-direction: column;
+.session-menu-item {
   min-width: 160px;
 }
-.session-menu-item {
-  display: flex;
+/* nz-menu-item wraps its content in a title span: lay the icon and label out inside it */
+.session-menu-item ::ng-deep .ant-menu-title-content {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  text-align: left;
-}
-.session-menu-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-.session-menu-item.destructive {
-  color: var(--color-battery-low);
 }
 
 /* Shared 18px icon sizing for the state icon and menu icons. */

@@ -1,12 +1,12 @@
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
 describe('GeneralButtonsComponent — custom range validation', () => {
   let fixture: ComponentFixture<GeneralButtonsComponent>;
   let component: GeneralButtonsComponent;
-  let toastSpy: { add: Mock };
+  let toastSpy: { create: Mock };
   let onSelectPresetSpy: Mock;
   let onApplyCustomLastXSpy: Mock;
   let onApplyCustomDateRangeSpy: Mock;
@@ -27,7 +27,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       vi.fn(() => new Promise(() => {}))
     );
     toastSpy = {
-      add: vi.fn().mockName('MessageService.add')
+      create: vi.fn().mockName('NzNotificationService.create')
     };
     onSelectPresetSpy = vi.fn().mockName('onSelectPreset');
     onApplyCustomLastXSpy = vi.fn().mockName('onApplyCustomLastX');
@@ -38,7 +38,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
 
     await TestBed.configureTestingModule({
       imports: [GeneralButtonsComponent],
-      providers: [{ provide: MessageService, useValue: toastSpy }]
+      providers: [{ provide: NzNotificationService, useValue: toastSpy }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneralButtonsComponent);
@@ -61,8 +61,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledTimes(1);
-      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'warn', summary: 'Invalid Range' }));
+      expect(toastSpy.create).toHaveBeenCalledTimes(1);
+      expect(toastSpy.create).toHaveBeenCalledWith('warning', 'Invalid Range', expect.anything());
     });
 
     it('rejects total exceeding MAX_RANGE_MINUTES with a toast', () => {
@@ -70,8 +70,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledTimes(1);
-      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.create).toHaveBeenCalledTimes(1);
+      expect(toastSpy.create).toHaveBeenCalledWith(expect.anything(), 'Range Too Large', expect.anything());
     });
 
     it('emits the total minutes when valid', () => {
@@ -80,7 +80,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).toHaveBeenCalledTimes(1);
       expect(onApplyCustomLastXSpy).toHaveBeenCalledWith(135);
-      expect(toastSpy.add).not.toHaveBeenCalled();
+      expect(toastSpy.create).not.toHaveBeenCalled();
     });
 
     it('treats null inputs as zero', () => {
@@ -88,8 +88,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(null);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledTimes(1);
-      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.create).toHaveBeenCalledTimes(1);
+      expect(toastSpy.create).toHaveBeenCalledWith(expect.anything(), 'Invalid Range', expect.anything());
     });
   });
 
@@ -101,8 +101,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledTimes(1);
-      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.create).toHaveBeenCalledTimes(1);
+      expect(toastSpy.create).toHaveBeenCalledWith(expect.anything(), 'Invalid Range', expect.anything());
     });
 
     it('rejects an end time more than 1 minute in the future', () => {
@@ -110,8 +110,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now + 5 * 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledTimes(1);
-      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.create).toHaveBeenCalledTimes(1);
+      expect(toastSpy.create).toHaveBeenCalledWith(expect.anything(), 'Invalid Range', expect.anything());
     });
 
     it('rejects a span exceeding MAX_RANGE_MINUTES', () => {
@@ -120,8 +120,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - oneMinuteMs));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledTimes(1);
-      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.create).toHaveBeenCalledTimes(1);
+      expect(toastSpy.create).toHaveBeenCalledWith(expect.anything(), 'Range Too Large', expect.anything());
     });
 
     it('emits start and end ms when valid', () => {
@@ -132,7 +132,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).toHaveBeenCalledTimes(1);
       expect(onApplyCustomDateRangeSpy).toHaveBeenCalledWith(start.getTime(), end.getTime());
-      expect(toastSpy.add).not.toHaveBeenCalled();
+      expect(toastSpy.create).not.toHaveBeenCalled();
     });
   });
 

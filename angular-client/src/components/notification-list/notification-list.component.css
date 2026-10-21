@@ -192,6 +192,7 @@
   justify-content: center;
   width: 24px;
   height: 24px;
+  font-size: 0.7rem; /* sizes the icon, the button's only content */
   background: none;
   border: none;
   border-radius: 4px;
@@ -216,10 +217,6 @@
   color: #ef4345;
   background-color: #ef43451a;
   outline: none;
-}
-
-.entry-dismiss .pi {
-  font-size: 0.7rem;
 }
 
 /* ---- Empty state ---- */
@@ -288,7 +285,7 @@
   outline: none;
 }
 
-.view-all-button .pi {
+.view-all-button nz-icon {
   font-size: 0.72rem;
 }
 

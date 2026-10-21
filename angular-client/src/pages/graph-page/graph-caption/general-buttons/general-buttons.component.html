@@ -18,116 +18,120 @@
       [defaultValue]="selectedPresetLabel()"
     />
     <div class="custom-stack">
-      <argos-button
-        [onClick]="toggleCustomPopover"
-        label="Custom"
-        size="sm"
-        [additionalStyles]="
-          customActive()
-            ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
-            : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
-        "
-      />
+      <span
+        nz-popover
+        nzPopoverTrigger="click"
+        nzPopoverPlacement="bottom"
+        nzPopoverOverlayClassName="custom-range-popover"
+        [nzPopoverContent]="customRangeContent"
+        [(nzPopoverVisible)]="customPopoverOpen"
+        (nzPopoverVisibleChange)="$event && onCustomPopoverShow()"
+      >
+        <argos-button
+          [onClick]="noop"
+          label="Custom"
+          size="sm"
+          [additionalStyles]="
+            customActive()
+              ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
+              : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
+          "
+        />
+      </span>
       @if (customActive() && customCaption()) {
         <span class="custom-caption">{{ customCaption() }}</span>
       }
     </div>
   </div>
 
-  <p-popover #customPopover styleClass="custom-range-popover" (onShow)="onCustomPopoverShow()">
-    <ng-template #content>
-      <div class="custom-popover-body">
-        <div class="mode-toggle">
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'last-x'"
-            (click)="setCustomMode('last-x')"
-          >
-            Last X
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'date-range'"
-            (click)="setCustomMode('date-range')"
-          >
-            Date Range
-          </button>
-        </div>
-
-        @if (customMode() === 'last-x') {
-          <div class="mode-body">
-            <div class="field-row">
-              <label class="popover-label">Hours</label>
-              <p-inputnumber
-                [ngModel]="customHours()"
-                (ngModelChange)="customHours.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
-                placeholder="0"
-              />
-            </div>
-            <div class="field-row">
-              <label class="popover-label">Minutes</label>
-              <p-inputnumber
-                [ngModel]="customMinutes()"
-                (ngModelChange)="customMinutes.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
-                placeholder="30"
-              />
-            </div>
-            <argos-button
-              [onClick]="applyCustomLastX"
-              label="Apply"
-              size="sm"
-              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-            />
-          </div>
-        } @else {
-          <div class="mode-body">
-            <div class="field-row">
-              <label class="popover-label">From</label>
-              <p-datepicker
-                [ngModel]="customFromDate()"
-                (ngModelChange)="customFromDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
-              />
-            </div>
-            <div class="field-row">
-              <label class="popover-label">To</label>
-              <p-datepicker
-                [ngModel]="customToDate()"
-                (ngModelChange)="customToDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
-              />
-            </div>
-            <argos-button
-              [onClick]="applyCustomDateRange"
-              label="Apply"
-              size="sm"
-              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-            />
-          </div>
-        }
+  <ng-template #customRangeContent>
+    <div class="custom-popover-body">
+      <div class="mode-toggle">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="customMode() === 'last-x'"
+          (click)="setCustomMode('last-x')"
+        >
+          Last X
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="customMode() === 'date-range'"
+          (click)="setCustomMode('date-range')"
+        >
+          Date Range
+        </button>
       </div>
-    </ng-template>
-  </p-popover>
+
+      @if (customMode() === 'last-x') {
+        <div class="mode-body">
+          <div class="field-row">
+            <label class="popover-label" for="custom-range-hours">Hours</label>
+            <nz-input-number
+              nzId="custom-range-hours"
+              [ngModel]="customHours()"
+              (ngModelChange)="customHours.set($event)"
+              [nzMin]="0"
+              [nzStep]="1"
+              nzSize="small"
+              nzPlaceHolder="0"
+            />
+          </div>
+          <div class="field-row">
+            <label class="popover-label" for="custom-range-minutes">Minutes</label>
+            <nz-input-number
+              nzId="custom-range-minutes"
+              [ngModel]="customMinutes()"
+              (ngModelChange)="customMinutes.set($event)"
+              [nzMin]="0"
+              [nzStep]="1"
+              nzSize="small"
+              nzPlaceHolder="30"
+            />
+          </div>
+          <argos-button
+            [onClick]="applyCustomLastX"
+            label="Apply"
+            size="sm"
+            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+          />
+        </div>
+      } @else {
+        <div class="mode-body">
+          <div class="field-row">
+            <label class="popover-label" for="custom-range-from">From</label>
+            <nz-date-picker
+              nzId="custom-range-from"
+              [ngModel]="customFromDate()"
+              (ngModelChange)="customFromDate.set($event)"
+              nzShowTime
+              nzFormat="yyyy-MM-dd HH:mm:ss"
+              nzSize="small"
+              [nzDisabledDate]="isAfterMaxDate"
+            />
+          </div>
+          <div class="field-row">
+            <label class="popover-label" for="custom-range-to">To</label>
+            <nz-date-picker
+              nzId="custom-range-to"
+              [ngModel]="customToDate()"
+              (ngModelChange)="customToDate.set($event)"
+              nzShowTime
+              nzFormat="yyyy-MM-dd HH:mm:ss"
+              nzSize="small"
+              [nzDisabledDate]="isAfterMaxDate"
+            />
+          </div>
+          <argos-button
+            [onClick]="applyCustomDateRange"
+            label="Apply"
+            size="sm"
+            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+          />
+        </div>
+      }
+    </div>
+  </ng-template>
 </div>

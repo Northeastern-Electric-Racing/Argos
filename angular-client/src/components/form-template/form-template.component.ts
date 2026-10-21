@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { NgClass } from '@angular/common';
-import { ButtonDirective } from 'primeng/button';
+import { NzModalRef } from 'ng-zorro-antd/modal';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { revalidateOnTouch } from 'src/utils/form.utils';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 
 type anyType = string | number | boolean | undefined;
 
@@ -27,17 +28,16 @@ export interface DynamicFormField {
 @Component({
   selector: 'form-template',
   templateUrl: './form-template.component.html',
-  styleUrl: './form-template.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
+  imports: [ReactiveFormsModule, NzFormModule, NzInputModule, NzButtonModule]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
-  public config = inject(DynamicDialogConfig);
+  private destroyRef = inject(DestroyRef);
 
   fields = input.required<DynamicFormField[]>();
 
-  public ref = inject(DynamicDialogRef);
+  public ref = inject(NzModalRef);
 
   formData = input<Map<string, anyType>>(new Map());
   submitForm = output<FormGroup>();
@@ -77,6 +77,7 @@ export class FormTemplateComponent {
     });
 
     this.form = this.fb.group(group);
+    revalidateOnTouch(this.form, this.destroyRef);
   }
 
   closeForm() {

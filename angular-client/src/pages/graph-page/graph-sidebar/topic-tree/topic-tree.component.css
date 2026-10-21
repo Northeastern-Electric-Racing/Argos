@@ -1,0 +1,22 @@
+/* Rows are --topic-row-height tall (the mobile drawer sets 44px), with the live value pushed to the right edge. */
+.tree-node-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--topic-row-height, 28px);
+}
+
+/* One line per row: drop the typography paragraphs' default margins */
+.tree-node-container ::ng-deep p {
+  margin: 0;
+}
+
+nz-tree-view ::ng-deep .ant-tree-node-content-wrapper {
+  min-width: 0;
+}
+
+/* Centre the expand caret on the label instead of stretching it to the top of a tall row. */
+nz-tree-view ::ng-deep .ant-tree-switcher {
+  align-self: center;
+}

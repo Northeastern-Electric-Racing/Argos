@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 
-export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
+export type toastSeverity = 'success' | 'info' | 'warning' | 'error';
 
 @Component({
   selector: 'toast-button',
@@ -10,7 +10,7 @@ export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ToastButtonComponent implements OnInit {
-  private messageService = inject(MessageService);
+  private notification = inject(NotificationAnnouncerService);
   buttonLabel = input.required<string>();
   popUpSeverity = input<toastSeverity>('success');
   popUpTitle = input<string>('Success!');
@@ -32,11 +32,7 @@ export class ToastButtonComponent implements OnInit {
     // if the toast is disabled, we don't want to show it
     if (this.disableToast()) return;
     setTimeout(() => {
-      this.messageService.add({
-        severity: this.popUpSeverity(),
-        summary: this.popUpTitle(),
-        detail: this.popUpDetails()
-      });
+      this.notification.create(this.popUpSeverity(), this.popUpTitle(), this.popUpDetails());
     });
   }
 }

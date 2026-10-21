@@ -5,38 +5,37 @@
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
-  <p-accordion [value]="0" [multiple]="true">
-    @for (node of nodeArray; track node) {
-      <p-accordion-panel [value]="node.node">
-        <p-accordion-header>{{ node.node }}</p-accordion-header>
-        <p-accordion-content>
-          <p-table
-            selectionMode="single"
-            [(selection)]="selectedFault"
-            (onRowSelect)="onRowSelect()"
-            metaKeySelection
-            [value]="node.data"
-            stripedRows
-          >
-            <ng-template #header>
-              <tr>
-                <th>Name</th>
-                <th>Occurred At</th>
-                <th>Last Seen</th>
-                <th>Expired?</th>
+  <nz-collapse (keydown.enter)="onHeaderKey($event)" (keydown.space)="onHeaderKey($event)">
+    @for (node of nodeArray; track node.node) {
+      <nz-collapse-panel [nzHeader]="node.node">
+        <nz-table
+          #faultTable
+          class="argos-striped"
+          nzSize="small"
+          [nzData]="node.data"
+          [nzFrontPagination]="false"
+          [nzShowPagination]="false"
+        >
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Occurred At</th>
+              <th>Last Seen</th>
+              <th>Expired?</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fault of faultTable.data; track $index) {
+              <tr class="fault-row" tabindex="0" (click)="onRowSelect(fault)" (keydown.enter)="onRowSelect(fault)">
+                <td>{{ fault.name }}</td>
+                <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+                <td>{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
+                <td>{{ fault.expired ? 'Yes' : 'No' }}</td>
               </tr>
-            </ng-template>
-            <ng-template #body let-node>
-              <tr [pSelectableRow]="node">
-                <td>{{ node.name }}</td>
-                <td>{{ node.occurredAt | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.lastSeen | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.expired ? 'Yes' : 'No' }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </p-accordion-content>
-      </p-accordion-panel>
+            }
+          </tbody>
+        </nz-table>
+      </nz-collapse-panel>
     }
-  </p-accordion>
+  </nz-collapse>
 </div>

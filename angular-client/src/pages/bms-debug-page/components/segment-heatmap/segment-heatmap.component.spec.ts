@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DialogService } from 'primeng/dynamicdialog';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
@@ -41,7 +41,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
         Storage,
         CellService,
         HeatMapService,
-        { provide: DialogService, useValue: {} }
+        { provide: NzModalService, useValue: {} }
       ]
     }).compileComponents();
 

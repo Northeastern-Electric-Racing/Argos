@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { InputNumber } from 'primeng/inputnumber';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import Storage from 'src/services/storage.service';
 import { CarCommandRow } from 'src/utils/types.utils';
 
@@ -20,7 +20,7 @@ import { CarCommandRow } from 'src/utils/types.utils';
   templateUrl: './command-row.component.html',
   styleUrls: ['./command-row.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputNumber]
+  imports: [FormsModule, NzInputNumberModule]
 })
 export default class CommandRowComponent implements OnInit {
   private storage = inject(Storage);

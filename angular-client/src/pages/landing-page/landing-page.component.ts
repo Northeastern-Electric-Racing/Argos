@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MessageService } from 'primeng/api';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
@@ -55,7 +55,7 @@ export default class LandingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private notification = inject(NotificationAnnouncerService);
   time = new Date();
   newRunIsLoading = false;
   mobileThreshold = 768;
@@ -69,7 +69,7 @@ export default class LandingPageComponent implements OnInit {
       });
       runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
         if (error) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+          this.notification.create('error', 'Error', error.message);
         }
       });
     };

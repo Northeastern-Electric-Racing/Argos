@@ -120,50 +120,23 @@
   text-align: right;
 }
 
-/* ---- PrimeNG table overrides ---- */
+/* ---- Ant table tweaks: sit on the panel background, emphasise unread rows ---- */
 
-:host ::ng-deep .p-datatable {
-  background-color: transparent !important;
-  color: var(--color-text-primary) !important;
+:host ::ng-deep .ant-table {
+  background: transparent;
 }
 
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
-  background-color: #252525 !important;
-  color: var(--color-text-subtitle) !important;
-  border-bottom: 1px solid var(--color-divider) !important;
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.04em !important;
-  padding: 10px 14px !important;
+:host ::ng-deep .ant-table-thead > tr > th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
-  background-color: transparent !important;
-  color: var(--color-text-primary) !important;
-  transition: background-color 0.15s ease;
+:host ::ng-deep .ant-table-tbody > tr.unread > td {
+  color: #ffffff;
 }
 
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
-  background-color: transparent !important;
-  border-bottom: 1px solid rgba(65, 65, 65, 0.4) !important;
-  padding: 10px 14px !important;
-  font-size: 0.875rem !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr.p-row-odd {
-  background-color: rgba(255, 255, 255, 0.015) !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr.unread > td {
-  color: #ffffff !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr.unread .col-rule {
+:host ::ng-deep .ant-table-tbody > tr.unread .col-rule {
   font-weight: 600;
 }
 
@@ -185,8 +158,8 @@
     font-size: 0.75rem;
   }
 
-  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
-    padding: 8px 10px !important;
-    font-size: 0.8rem !important;
+  :host ::ng-deep .ant-table-tbody > tr > td {
+    padding: 8px 10px;
+    font-size: 0.8rem;
   }
 }

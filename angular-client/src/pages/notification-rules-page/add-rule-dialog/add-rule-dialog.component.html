@@ -1,49 +1,42 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="field">
-    <label for="rule-id">Rule ID</label>
-    <input id="rule-id" pInputText formControlName="id" placeholder="e.g. high-voltage-alert" />
-    @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
-      <small class="error" role="alert">Rule ID is required</small>
-    }
-  </div>
+<form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <nz-form-item>
+    <nz-form-label nzFor="rule-id">Rule ID</nz-form-label>
+    <nz-form-control nzErrorTip="Rule ID is required">
+      <input id="rule-id" nz-input formControlName="id" placeholder="e.g. high-voltage-alert" />
+    </nz-form-control>
+  </nz-form-item>
 
-  <div class="field">
-    <label for="rule-topic">Topic</label>
-    <p-autocomplete
-      id="rule-topic"
-      formControlName="topic"
-      [suggestions]="filteredTopics()"
-      (completeMethod)="filterTopics($event)"
-      [forceSelection]="true"
-      placeholder="e.g. BMS/Pack/Voltage"
-      [fluid]="true"
-    />
-    @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
-      <small class="error" role="alert">Topic is required</small>
-    }
-  </div>
+  <nz-form-item>
+    <nz-form-label nzFor="rule-topic">Topic</nz-form-label>
+    <nz-form-control nzErrorTip="Topic is required">
+      <!-- Searchable, and only a listed topic can be picked. -->
+      <nz-select nzId="rule-topic" nzShowSearch nzAllowClear formControlName="topic" nzPlaceHolder="e.g. BMS/Pack/Voltage">
+        @for (topic of allTopics(); track topic) {
+          <nz-option [nzValue]="topic" [nzLabel]="topic" />
+        }
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
 
-  <div class="field">
-    <label for="rule-expr">Expression</label>
-    <input id="rule-expr" pInputText formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
-    @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="error" role="alert">Expression is required</small>
-    }
-  </div>
+  <nz-form-item>
+    <nz-form-label nzFor="rule-expr">Expression</nz-form-label>
+    <nz-form-control nzErrorTip="Expression is required">
+      <input id="rule-expr" nz-input formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
+    </nz-form-control>
+  </nz-form-item>
 
-  <div class="field">
-    <label for="rule-debounce">Debounce Time (seconds)</label>
-    <input id="rule-debounce" pInputText formControlName="debounce_time" type="number" placeholder="e.g. 60" />
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="error" role="alert">Debounce time is required</small>
-    }
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="error" role="alert">Must be 0 or greater</small>
-    }
-  </div>
+  <nz-form-item>
+    <nz-form-label nzFor="rule-debounce">Debounce Time (seconds)</nz-form-label>
+    <nz-form-control [nzErrorTip]="debounceError">
+      <input id="rule-debounce" nz-input formControlName="debounce_time" type="number" placeholder="e.g. 60" />
+      <ng-template #debounceError let-control>
+        {{ control.hasError('min') ? 'Must be 0 or greater' : 'Debounce time is required' }}
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
 
   <div class="button-row">
-    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton type="submit" label="Add Rule"></button>
+    <button nz-button nzType="text" type="button" (click)="onCancel()">Cancel</button>
+    <button nz-button nzType="primary" type="submit">Add Rule</button>
   </div>
 </form>

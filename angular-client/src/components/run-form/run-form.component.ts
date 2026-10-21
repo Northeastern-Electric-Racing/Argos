@@ -1,12 +1,12 @@
-import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { NzModalRef } from 'ng-zorro-antd/modal';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -22,19 +22,20 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
-  templateReady = false;
+  private notification = inject(NotificationAnnouncerService);
+  private ref = inject(NzModalRef);
+  // Signals, since the modal's OnPush container doesn't re-check this content when a subscription sets a plain field.
+  templateReady = signal(false);
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
   runsLoaded = false;
 
   // Run selector configuration
   selectorOptions: DropdownOption[] = [];
-  selectorConfig: SelectorConfig = {
+  selectorConfig = signal<SelectorConfig>({
     options: this.selectorOptions,
     placeholder: 'Select Run'
-  };
+  });
 
   locationName: DynamicFormField = {
     name: 'locationName',
@@ -65,12 +66,15 @@ export class RunFormComponent implements OnInit {
     disabled: false
   };
 
-  inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
+  inputFields = signal<DynamicFormField[]>([this.locationName, this.driverName, this.notes]);
 
   constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
+    // afterClose fires once the modal's content is torn down and then completes, so it can't be tied to destroyRef.
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result
+    this.ref.afterClose.subscribe((form: FormGroup | undefined) => {
+      if (!form) return; // closed without submitting
       if (this.selectedRun === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
+        this.notification.create('error', 'Error', 'No run selected');
         return;
       }
       updateRun(
@@ -90,15 +94,15 @@ export class RunFormComponent implements OnInit {
   loadAllRuns = () => {
     if (this.runsLoaded) return;
 
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runsQueryResponse = this.apiService.query<Run[]>(() => getAllRuns());
 
     runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
       if (error) {
         console.log('loading error: ', error);
       }
@@ -117,10 +121,7 @@ export class RunFormComponent implements OnInit {
           this.selectedRun = latestRun;
 
           // Update selector config with default value
-          this.selectorConfig = {
-            ...this.selectorConfig,
-            defaultValue: this.formatRunInfo(latestRun)
-          };
+          this.selectorConfig.update((config) => ({ ...config, defaultValue: this.formatRunInfo(latestRun) }));
         }
       }
     });
@@ -141,11 +142,11 @@ export class RunFormComponent implements OnInit {
     });
 
     // Update the selector config with options and default value if selected run exists
-    this.selectorConfig = {
+    this.selectorConfig.set({
       options: this.selectorOptions,
       placeholder: 'Select Run',
       defaultValue: this.selectedRun ? this.formatRunInfo(this.selectedRun) : undefined
-    };
+    });
   };
 
   loadRunById = (runId: number) => {
@@ -156,23 +157,20 @@ export class RunFormComponent implements OnInit {
       this.selectedRun = existingRun;
 
       // Update selector config with new default value
-      this.selectorConfig = {
-        ...this.selectorConfig,
-        defaultValue: this.formatRunInfo(existingRun)
-      };
+      this.selectorConfig.update((config) => ({ ...config, defaultValue: this.formatRunInfo(existingRun) }));
       return;
     }
 
     // If not found locally, fetch from API
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runQueryResponse = this.apiService.query<Run>(() => getRunById(runId));
 
     runQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.notification.create('error', 'Error', error.message);
       if (error) {
         console.log('loading error: ', error);
       }
@@ -184,10 +182,7 @@ export class RunFormComponent implements OnInit {
         this.selectedRun = run;
 
         // Update selector config with new default value
-        this.selectorConfig = {
-          ...this.selectorConfig,
-          defaultValue: this.formatRunInfo(run)
-        };
+        this.selectorConfig.update((config) => ({ ...config, defaultValue: this.formatRunInfo(run) }));
       }
     });
   };
@@ -196,7 +191,7 @@ export class RunFormComponent implements OnInit {
     this.locationName.optionValue = run.locationName;
     this.driverName.optionValue = run.driverName;
     this.notes.optionValue = run.notes;
-    this.inputFields = [this.locationName, this.driverName, this.notes];
+    this.inputFields.set([this.locationName, this.driverName, this.notes]);
   };
 
   formatRunInfo = (run: Run) => {

@@ -5,9 +5,8 @@ import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
-import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
-import { Ripple } from 'primeng/ripple';
-import { TableModule } from 'primeng/table';
+import { NzCollapseModule } from 'ng-zorro-antd/collapse';
+import { NzTableModule } from 'ng-zorro-antd/table';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -16,7 +15,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
+  imports: [NzCollapseModule, NzTableModule, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -42,7 +41,16 @@ export default class FaultPageComponent implements OnInit {
       });
   }
 
-  onRowSelect = () => {
+  /** nz-collapse headers are focusable buttons that ignore Enter and Space, so forward those keys as a click. */
+  onHeaderKey(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.classList.contains('ant-collapse-header')) return;
+    event.preventDefault();
+    target.click();
+  }
+
+  onRowSelect = (fault: FaultData) => {
+    this.selectedFault = fault;
     if (this.selectedFault) {
       this.faultService.selectFault(this.selectedFault);
       this.navigateTo(appRoutes.faultsGraphRoute());

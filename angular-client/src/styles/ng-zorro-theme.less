@@ -1,0 +1,38 @@
+// ng-zorro-antd's dark theme, importing only the components Argos uses
+// (https://ng.ant.design/docs/getting-started/en "Import Component Styles" and
+// https://ng.ant.design/docs/customize-theme/en). Each entry.less pulls in its own style dependencies.
+// A handful of Ant Design tokens move it toward Argos's look; everything else is Ant Design's default.
+@import 'ng-zorro-antd/style/dark.less';
+@import 'ng-zorro-antd/style/entry.less';
+@import 'ng-zorro-antd/icon/style/entry.less';
+@import 'ng-zorro-antd/badge/style/entry.less';
+@import 'ng-zorro-antd/button/style/entry.less';
+@import 'ng-zorro-antd/carousel/style/entry.less';
+@import 'ng-zorro-antd/collapse/style/entry.less';
+@import 'ng-zorro-antd/date-picker/style/entry.less';
+@import 'ng-zorro-antd/drawer/style/entry.less';
+@import 'ng-zorro-antd/dropdown/style/entry.less';
+@import 'ng-zorro-antd/form/style/entry.less';
+@import 'ng-zorro-antd/menu/style/entry.less';
+@import 'ng-zorro-antd/input/style/entry.less';
+@import 'ng-zorro-antd/input-number/style/entry.less';
+@import 'ng-zorro-antd/modal/style/entry.less';
+@import 'ng-zorro-antd/notification/style/entry.less';
+@import 'ng-zorro-antd/popover/style/entry.less';
+@import 'ng-zorro-antd/select/style/entry.less';
+@import 'ng-zorro-antd/spin/style/entry.less';
+@import 'ng-zorro-antd/switch/style/entry.less';
+@import 'ng-zorro-antd/table/style/entry.less';
+@import 'ng-zorro-antd/tree/style/entry.less';
+@import 'ng-zorro-antd/tree-view/style/entry.less';
+
+@primary-color: #ef4345; // NER red
+@font-family: 'Roboto', sans-serif;
+@body-background: #101010;
+@component-background: #262626;
+@popover-background: #262626;
+@border-radius-base: 6px;
+// Rounder modals than Ant's default, closer to the old dialogs; Ant rounds the header and footer to match.
+@modal-border-radius: 16px;
+// The dark theme's row hover equals @component-background, so hovering a table row showed no change.
+@table-row-hover-bg: #383838;
