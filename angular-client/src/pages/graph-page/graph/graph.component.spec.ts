@@ -229,13 +229,15 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(component.chart!.options().rightPriceScale.visible).toBeFalse();
   });
 
-  it('gives each topic its own price scale with multiple y-axes, and one shared axis without', async () => {
+  it('gives each topic its own price scale with multiple y-axes, labelling only the two drawn axes', async () => {
     await render({
       topics: [topic('A', [[{ x: T0, y: 1 }]]), topic('B', [[{ x: T0, y: 2 }]]), topic('C', [[{ x: T0, y: 3 }]])],
       multi: true
     });
     expect(allSeries().map((s) => s.options().priceScaleId)).toEqual(['left', 'right', 'overlay-2']);
-    expect(allSeries().map((s) => s.options().title)).toEqual(['A 0', 'B 0', 'C 0']);
+    expect(allSeries().map((s) => s.options().title)).toEqual(['A 0', 'B 0', '']);
+    // C's scale has no axis, so no last-value label of its own beside A's or B's ticks.
+    expect(allSeries().map((s) => s.options().lastValueVisible)).toEqual([true, true, false]);
 
     fixture.componentRef.setInput('showMultipleYAxes', false);
     fixture.detectChanges();

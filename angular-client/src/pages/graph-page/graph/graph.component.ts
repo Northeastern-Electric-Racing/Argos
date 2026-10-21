@@ -336,12 +336,17 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     const index = this.series.size;
     const color = seriesColor(index);
     const multipleYAxes = untracked(this.showMultipleYAxes);
+    const priceScaleId = priceScaleIdFor(index, multipleYAxes);
+    // An overlay scale draws no axis, so its last-value label (and title) would land beside another
+    // topic's ticks on the left or right axis; those topics show their values only in the tooltip.
+    const ownAxis = priceScaleId === 'left' || priceScaleId === 'right';
     const series = this.chart!.addSeries(LineSeries, {
       color,
       lineWidth: 3,
-      priceScaleId: priceScaleIdFor(index, multipleYAxes),
+      priceScaleId,
       // With an axis per topic, tag each axis' last-value label with its topic.
-      title: multipleYAxes ? label : '',
+      title: multipleYAxes && ownAxis ? label : '',
+      lastValueVisible: ownAxis,
       priceLineVisible: false,
       // hoverMarkers marks every series at its held value instead.
       crosshairMarkerVisible: false,

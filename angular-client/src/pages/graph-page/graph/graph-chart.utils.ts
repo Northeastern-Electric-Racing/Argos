@@ -60,8 +60,8 @@ export const formatValue = (value: number): string => (Math.round(value * 10000)
 
 /**
  * Which price scale a series uses. One shared left axis by default; with multiple y-axes the first
- * two series get the left and right axes and the rest get their own (unlabelled) overlay scale,
- * since lightweight-charts only draws two price axes per pane.
+ * two series get the left and right axes and the rest get their own overlay scale, which has no
+ * axis (lightweight-charts draws only two price axes per pane), so their values show only on hover.
  */
 export function priceScaleIdFor(index: number, multipleYAxes: boolean): string {
   if (!multipleYAxes || index === 0) return 'left';
