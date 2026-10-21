@@ -10,3 +10,8 @@
   font-size: 12px;
   font-weight: 500;
 }
+
+select-dropdown {
+  display: block;
+  margin-bottom: 12px;
+}

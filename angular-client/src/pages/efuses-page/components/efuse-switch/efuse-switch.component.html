@@ -1,7 +1,9 @@
-<div class="switch-group" [class.disabled]="disabled()">
+<div class="switch-group" role="group" aria-label="eFuse mode" [class.disabled]="disabled()">
   @for (option of orderedOptions(); track option) {
     <button
+      type="button"
       class="switch-button"
+      [attr.aria-pressed]="selected() === option"
       [class.active]="selected() === option"
       [class.state-on]="option === 'ON'"
       [class.state-auto]="option === 'AUTO'"

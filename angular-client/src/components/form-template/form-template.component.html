@@ -1,25 +1,22 @@
 <!-- dynamic-form.component.html -->
 <form class="form" [formGroup]="form">
   @for (field of fields(); track field) {
-    <div class="flex flex-column gap-1">
+    <div class="field">
       @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+        <label class="field-label required" [for]="'form-field-' + field.name">{{ field.label }}</label>
       }
       <input
+        [id]="'form-field-' + field.name"
         [attr.placeholder]="field.placeholder"
         [formControlName]="field.name"
         [type]="field.type"
-        [value]="'boston'"
         pInputText
-        class="form-control w-full"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
-        }"
+        [fluid]="true"
+        [invalid]="isInvalid(field)"
       />
 
       <!-- Error Message -->
-      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
+      @if (isInvalid(field)) {
         <div class="error-msg">
           {{ getErrorMessage(field) }}
         </div>
@@ -27,5 +24,5 @@
     </div>
   }
 
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+  <button pButton type="button" [disabled]="!form.valid" (click)="onSubmit()"><span pButtonLabel>Submit</span></button>
 </form>

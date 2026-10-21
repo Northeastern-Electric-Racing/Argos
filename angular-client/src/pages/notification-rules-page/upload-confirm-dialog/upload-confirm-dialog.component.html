@@ -23,7 +23,7 @@
     </table>
   </div>
   <div class="button-row">
-    <button pButton label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton label="Confirm Upload" (click)="onConfirm()"></button>
+    <button pButton [text]="true" (click)="onCancel()"><span pButtonLabel>Cancel</span></button>
+    <button pButton (click)="onConfirm()"><span pButtonLabel>Confirm Upload</span></button>
   </div>
 </div>

@@ -17,9 +17,9 @@
   </p-drawer>
 } @else {
   <nav class="navbar">
-    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+    <button type="button" class="home-logo" aria-label="Home" (click)="this.homeNavItem.onClick()">
       <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </div>
+    </button>
     <div class="navbar-nav">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
@@ -61,14 +61,46 @@
           <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
         }
       </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
+      <p-popover
+        #notificationPanel
+        (onShow)="onNotificationPanelShow()"
+        styleClass="notification-popover"
+        [dt]="notificationPopoverTokens"
+      >
         <ng-template #content>
           <notification-list variant="popover" />
         </ng-template>
       </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
+      <button
+        type="button"
+        class="navbar-menu"
+        aria-label="More pages"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="appsMenuOpen"
+        [class.selected]="appsMenuOpen"
+        (click)="appsMenu.toggle($event)"
+      >
         <mat-icon [svgIcon]="'apps'" />
-      </div>
+      </button>
     </hstack>
   </nav>
+  <!-- Outside the nav so the popup menu host takes no slot in the toolbar layout -->
+  <p-menu
+    #appsMenu
+    [model]="appsMenuItems"
+    [popup]="true"
+    appendTo="body"
+    styleClass="nav-apps-menu"
+    [dt]="appsMenuTokens"
+    ariaLabel="More pages"
+    (onShow)="appsMenuOpen = true"
+    (onHide)="appsMenuOpen = false"
+  >
+    <ng-template #item let-item>
+      <a class="nav-apps-item" tabindex="-1">
+        <mat-icon class="nav-apps-icon" [svgIcon]="item.icon" />
+        <span class="nav-apps-label">{{ item.label }}</span>
+      </a>
+    </ng-template>
+  </p-menu>
 }

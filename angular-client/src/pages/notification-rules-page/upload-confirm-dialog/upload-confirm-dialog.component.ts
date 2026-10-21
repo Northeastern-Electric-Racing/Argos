@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { ButtonDirective } from 'primeng/button';
+import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { RulePayload } from 'src/api/rules.api';
 
 @Component({
   selector: 'upload-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonDirective],
+  imports: [ButtonDirective, ButtonLabel],
   templateUrl: './upload-confirm-dialog.component.html',
   styleUrls: ['./upload-confirm-dialog.component.css']
 })

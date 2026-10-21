@@ -138,9 +138,3 @@
   display: flex !important;
   align-items: center !important;
 }
-
-.controls-zone ::ng-deep .p-select-trigger {
-  padding-right: clamp(3px, 0.63vw, 14px) !important;
-  display: flex !important;
-  align-items: center !important;
-}

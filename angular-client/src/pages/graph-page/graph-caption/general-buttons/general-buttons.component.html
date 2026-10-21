@@ -59,26 +59,26 @@
         @if (customMode() === 'last-x') {
           <div class="mode-body">
             <div class="field-row">
-              <label class="popover-label">Hours</label>
+              <label class="popover-label" for="custom-last-hours">Hours</label>
               <p-inputnumber
                 [ngModel]="customHours()"
                 (ngModelChange)="customHours.set($event)"
                 mode="decimal"
                 [min]="0"
                 [step]="1"
-                inputStyleClass="text-xs p-1"
+                inputId="custom-last-hours"
                 placeholder="0"
               />
             </div>
             <div class="field-row">
-              <label class="popover-label">Minutes</label>
+              <label class="popover-label" for="custom-last-minutes">Minutes</label>
               <p-inputnumber
                 [ngModel]="customMinutes()"
                 (ngModelChange)="customMinutes.set($event)"
                 mode="decimal"
                 [min]="0"
                 [step]="1"
-                inputStyleClass="text-xs p-1"
+                inputId="custom-last-minutes"
                 placeholder="30"
               />
             </div>
