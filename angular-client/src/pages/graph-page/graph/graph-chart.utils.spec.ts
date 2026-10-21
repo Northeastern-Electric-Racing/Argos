@@ -81,6 +81,13 @@ describe('graph-chart utils', () => {
       expect(formatTickMark(wall(2026, 9, 16, 9, 27), TickMarkType.Time)).toBe('09:27');
     });
 
+    it('leaves ticks off a whole second blank unless the view spans only a few seconds', () => {
+      const offSecond = wall(2026, 9, 16, 9, 26, 53, 440);
+      expect(formatTickMark(offSecond, TickMarkType.TimeWithSeconds, 30_000)).toBe('');
+      expect(formatTickMark(offSecond, TickMarkType.TimeWithSeconds, 2_000)).toBe('09:26:53.440');
+      expect(formatTickMark(wall(2026, 9, 16, 9, 26, 53), TickMarkType.TimeWithSeconds, 30_000)).toBe('09:26:53');
+    });
+
     it('labels day ticks with the date, and the time too when not on midnight', () => {
       expect(formatTickMark(wall(2026, 9, 17), TickMarkType.DayOfMonth)).toBe('10/17');
       expect(formatTickMark(wall(2026, 9, 17, 0, 5), TickMarkType.DayOfMonth)).toBe('10/17 00:05');
@@ -92,6 +99,17 @@ describe('graph-chart utils', () => {
       const time = (toChartMs(FALL_BACK + HOUR / 2, newYork) / 1000) as Time;
       expect(fromChartTime(time, newYork)).toBe(FALL_BACK + HOUR / 2);
       expect(formatCrosshairTime(time, newYork)).toBe('11/1/26, 01:30:00');
+    });
+
+    it('reads the crosshair time off the axis inside the hour skipped where the clock springs forward', () => {
+      // Chart times 02:00-03:00 on 3/8 match no instant in New York; they read as the axis labels them.
+      const readings = [
+        [1, 59],
+        [2, 15],
+        [2, 45],
+        [3, 0]
+      ].map(([h, m]) => formatCrosshairTime(wall(2026, 2, 8, h, m), newYork));
+      expect(readings).toEqual(['3/8/26, 01:59:00', '3/8/26, 02:15:00', '3/8/26, 02:45:00', '3/8/26, 03:00:00']);
     });
 
     it('formats the crosshair time with date and milliseconds', () => {

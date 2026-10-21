@@ -23,6 +23,7 @@ import {
   LineSeries,
   MismatchDirection,
   MouseEventParams,
+  TickMarkType,
   Time,
   UTCTimestamp,
   WhitespaceData,
@@ -191,7 +192,10 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     effect(() => {
       if (this.isPaused()) {
-        untracked(() => this.resetRange());
+        untracked(() => {
+          this.dropStaleHeads();
+          this.resetRange();
+        });
       }
     });
 
@@ -272,7 +276,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         // Left false on purpose: the grid's points stay tick and crosshair stops, so ticks land on
         // round times instead of raw data times, and the crosshair moves through gaps.
         ignoreWhitespaceIndices: false,
-        tickMarkFormatter: formatTickMark
+        tickMarkFormatter: (time: Time, type: TickMarkType) => formatTickMark(time, type, this.visibleSpanMs())
       },
       localization: {
         timeFormatter: formatCrosshairTime,
@@ -410,6 +414,24 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       series.update({ time: toChartTime(point.x), value: point.y });
     }
     this.staleHead.set(label, stale);
+  }
+
+  /**
+   * Paused, the user can zoom out past the live window, so the trimmed points still drawn left of it
+   * would show squashed against the grid's start; draw each series from `data` alone.
+   */
+  private dropStaleHeads() {
+    this.staleHead.forEach((stale, label) => {
+      if (stale === 0) return;
+      this.series.get(label)?.setData(toLineData(this.data.get(label) ?? []));
+      this.staleHead.set(label, 0);
+    });
+  }
+
+  /** Width of the time span on screen, in ms; 0 before the chart has one. */
+  private visibleSpanMs(): number {
+    const range = this.chart?.timeScale().getVisibleRange();
+    return range ? ((range.to as number) - (range.from as number)) * 1000 : 0;
   }
 
   private addSeries(label: string): ISeriesApi<'Line'> {

@@ -211,6 +211,24 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(component.chart!.timeScale().timeToCoordinate(toChartTime(midnight))).not.toBeNull();
   });
 
+  it('leaves raw data times off the time axis, keeping milliseconds for a deep zoom', async () => {
+    // A minute at 1 Hz, every point 426 ms past the second.
+    const points = Array.from({ length: 60 }, (_, i) => ({ x: T0 + 426 + i * 1000, y: i }));
+    await render({ topics: [topic('A', [points])] });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    component.resetZoom();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    const format = (component.chart!.options().timeScale as TimeScaleOptions).tickMarkFormatter!;
+    // The library fills room near the edges with any bar, often a data point off the second.
+    expect(format(toChartTime(T0 + 426), TickMarkType.TimeWithSeconds, 'en-US')).toBe('');
+    expect(format(toChartTime(T0 + 5000), TickMarkType.TimeWithSeconds, 'en-US')).toBe('09:00:05');
+
+    component.chart!.timeScale().setVisibleRange({ from: toChartTime(T0 + 10_000), to: toChartTime(T0 + 12_000) });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(format(toChartTime(T0 + 10_426), TickMarkType.TimeWithSeconds, 'en-US')).toBe('09:00:10.426');
+  });
+
   it('draws each day boundary at local midnight', async () => {
     const hour = 60 * 60 * 1000;
     const points = Array.from({ length: 60 }, (_, i) => ({ x: T0 + i * hour + 7 * 60_000, y: i }));
@@ -365,6 +383,24 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     speed.updates.next([[{ x: T0 + 100, y: 2 }]]);
 
     expect(allSeries()[0].data().length).toBe(1);
+  });
+
+  it('drops trimmed points still drawn off-screen when paused, so zooming out shows only the data', async () => {
+    const speed = topic('VCU/CarState/speed', [[{ x: T0, y: 0 }]]);
+    await render({ topics: [speed], realTime: true, graphConfig: config({ rangeMode: 'points', maxPoints: 10 }) });
+    for (let i = 1; i <= 30; i++) {
+      speed.updates.next([[{ x: T0 + i * 10, y: i }]]);
+    }
+    const [series] = allSeries();
+    const line = component.data.get('VCU/CarState/speed 0')!;
+    // Live, trimmed points stay in the chart's copy, left of the window, until enough pile up.
+    expect(series.data().length).toBeGreaterThan(line.length);
+
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(times(series)).toEqual(line.map((p) => toChartTime(p.x)));
   });
 
   // The chart only reports crosshair moves for real pointer events (setCrosshairPosition is silent),

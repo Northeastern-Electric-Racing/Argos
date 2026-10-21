@@ -123,12 +123,18 @@ const timeOfDay = (d: Date) => `${hourMinute(d)}:${pad(d.getUTCSeconds())}`;
 const preciseTimeOfDay = (d: Date) =>
   d.getUTCMilliseconds() === 0 ? timeOfDay(d) : `${timeOfDay(d)}.${pad(d.getUTCMilliseconds(), 3)}`;
 
+/** Wider views than this leave ticks off a whole second blank; narrower ones need them for labels. */
+const MS_TICKS_MAX_SPAN_MS = 5 * SECOND_MS;
+
 /**
  * Time axis labels, by the weight the library gives each tick: the date on a day change (and the
- * time too if the tick isn't on midnight), the time of day otherwise.
+ * time too if the tick isn't on midnight), the time of day otherwise. The library fills spare room
+ * near the axis' edges with any bar, often a raw data time such as 15:25:25.426; across a view of
+ * `visibleSpanMs` over a few seconds those are left blank, so labels stay on whole seconds.
  */
-export function formatTickMark(time: Time, type: TickMarkType): string {
-  const d = new Date((time as number) * 1000);
+export function formatTickMark(time: Time, type: TickMarkType, visibleSpanMs = 0): string {
+  const d = new Date(Math.round((time as number) * 1000));
+  if (d.getUTCMilliseconds() !== 0 && visibleSpanMs > MS_TICKS_MAX_SPAN_MS) return '';
   const onMinute = d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
   if (type <= TickMarkType.DayOfMonth) {
     const date = `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
@@ -139,9 +145,12 @@ export function formatTickMark(time: Time, type: TickMarkType): string {
 
 /** Crosshair label and hover legend time in the local zone, e.g. `3/14/26, 09:26:53.589`. */
 export function formatCrosshairTime(time: Time, offset: ZoneOffset = localZoneOffset): string {
-  // From the instant, so the repeated hour where the clock turns back reads true too.
-  const instant = fromChartTime(time, offset);
-  const d = new Date(instant + offset(instant));
+  // The chart time is the local wall-clock time, so it reads as the axis labels it, through the hour
+  // skipped where the clock springs forward too. Where it turns back, two hours share one hour of
+  // chart time, so read the instant instead.
+  const chartMs = Math.round((time as number) * 1000);
+  const instant = fromChartMs(chartMs, offset);
+  const d = new Date(fallBackNear(instant, HOUR_MS, offset) ? instant + offset(instant) : chartMs);
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${pad(d.getUTCFullYear() % 100)}, ${preciseTimeOfDay(d)}`;
 }
 
