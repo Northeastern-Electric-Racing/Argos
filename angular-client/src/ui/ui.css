@@ -318,6 +318,10 @@ textarea.ui-input {
 .ui-popover-panel {
   margin-top: 8px;
 }
+/* A popover with nothing tabbable focuses the panel itself; like the drawer, it needs no outline. */
+.ui-popover-panel:focus {
+  outline: none;
+}
 @keyframes ui-pop-in {
   from {
     opacity: 0;

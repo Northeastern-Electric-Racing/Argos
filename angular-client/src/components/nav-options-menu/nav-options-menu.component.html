@@ -18,7 +18,7 @@
   <div ngMenu class="ui-menu nav-options-menu" #appsMenu="ngMenu" (itemSelected)="select($event)">
     <ng-template ngMenuContent>
       @for (menuItem of items(); track menuItem.id) {
-        <div ngMenuItem class="menu-item" [value]="menuItem.id" [attr.data-id]="menuItem.id">
+        <div ngMenuItem class="menu-item" [value]="menuItem.id" [searchTerm]="menuItem.label" [attr.data-id]="menuItem.id">
           <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" aria-hidden="true" />
           <span class="menu-label">{{ menuItem.label }}</span>
         </div>
