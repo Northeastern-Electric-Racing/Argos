@@ -43,7 +43,7 @@
   </div>
 
   <div class="button-row">
-    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton type="submit" label="Add Rule"></button>
+    <button pButton type="button" [text]="true" (click)="onCancel()"><span pButtonLabel>Cancel</span></button>
+    <button pButton type="submit"><span pButtonLabel>Add Rule</span></button>
   </div>
 </form>

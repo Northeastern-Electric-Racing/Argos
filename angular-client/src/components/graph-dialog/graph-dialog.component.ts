@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, forwardRef } from '@angular/core';
 import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
@@ -8,7 +8,8 @@ import { GraphComponent } from '../graph/graph.component';
   templateUrl: './graph-dialog.component.html',
   providers: [DialogService],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [GraphComponent]
+  // forwardRef: GraphComponent imports this dialog to open it, so the two modules form a cycle
+  imports: [forwardRef(() => GraphComponent)]
 })
 export class GraphDialogComponent {
   public dialogService = inject(DialogService);

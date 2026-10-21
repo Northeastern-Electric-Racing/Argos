@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { ButtonDirective } from 'primeng/button';
+import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { RulePayload } from 'src/api/rules.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
@@ -14,7 +14,7 @@ import { filter, take } from 'rxjs';
 @Component({
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, AutoComplete, ButtonDirective],
+  imports: [ReactiveFormsModule, InputText, AutoComplete, ButtonDirective, ButtonLabel],
   templateUrl: './add-rule-dialog.component.html',
   styleUrls: ['./add-rule-dialog.component.css']
 })

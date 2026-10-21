@@ -43,14 +43,14 @@
                 size="sm"
                 additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
               />
-              <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
+              <label class="input-label" for="graph-x-range">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
               <p-inputnumber
                 [(ngModel)]="rangeValue"
                 mode="decimal"
                 [min]="1"
                 [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
+                class="time-range-input"
+                inputId="graph-x-range"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
                 (onInput)="onGraphConfigChange()"
               ></p-inputnumber>
@@ -58,26 +58,26 @@
           }
 
           <div class="toolbar-group config-group">
-            <label class="input-label">Y Min:</label>
+            <label class="input-label" for="graph-y-min">Y Min:</label>
             <p-inputnumber
               [(ngModel)]="yAxisMin"
               mode="decimal"
               [minFractionDigits]="0"
               [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+              class="y-axis-input"
+              inputId="graph-y-min"
               placeholder="Auto"
               (onInput)="onGraphConfigChange()"
             ></p-inputnumber>
 
-            <label class="input-label">Y Max:</label>
+            <label class="input-label" for="graph-y-max">Y Max:</label>
             <p-inputnumber
               [(ngModel)]="yAxisMax"
               mode="decimal"
               [minFractionDigits]="0"
               [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+              class="y-axis-input"
+              inputId="graph-y-max"
               placeholder="Auto"
               (onInput)="onGraphConfigChange()"
             ></p-inputnumber>

@@ -3,8 +3,7 @@ import { Component, effect, inject, input, output, untracked, ChangeDetectionStr
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
-import { NgClass } from '@angular/common';
-import { ButtonDirective } from 'primeng/button';
+import { ButtonDirective, ButtonLabel } from 'primeng/button';
 
 type anyType = string | number | boolean | undefined;
 
@@ -29,7 +28,7 @@ export interface DynamicFormField {
   templateUrl: './form-template.component.html',
   styleUrl: './form-template.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
+  imports: [ReactiveFormsModule, InputText, ButtonDirective, ButtonLabel]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
@@ -96,6 +95,11 @@ export class FormTemplateComponent {
       const control = this.form.get(field);
       control?.markAsTouched({ onlySelf: true });
     });
+  }
+
+  isInvalid(field: DynamicFormField): boolean {
+    const control = this.form.get(field.name);
+    return !!control?.invalid && (control.dirty || control.touched);
   }
 
   getErrorMessage(field: DynamicFormField) {

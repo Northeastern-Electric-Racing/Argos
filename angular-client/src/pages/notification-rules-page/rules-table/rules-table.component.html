@@ -12,7 +12,8 @@
   <ng-template #header>
     <tr>
       <th style="width: 3rem">
-        <p-tableheadercheckbox />
+        <!-- camelCase selector: PrimeNG 21 has no p-table-header-checkbox; keep on the fork -->
+        <p-tableHeaderCheckbox />
       </th>
       <th>Rule</th>
       <th>Applied To</th>
@@ -27,7 +28,8 @@
   <ng-template #body let-rule>
     <tr>
       <td>
-        <p-tablecheckbox [value]="rule" />
+        <!-- camelCase selector: PrimeNG 21 has no p-table-checkbox; keep on the fork -->
+        <p-tableCheckbox [value]="rule" />
       </td>
       <td>{{ rule.expr }}</td>
       <td>{{ rule.topic }}</td>
@@ -37,20 +39,12 @@
         <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
       </td>
       <td class="action-icons">
-        <button
-          pButton
-          class="p-button-text p-button-sm"
-          icon="pi pi-pencil"
-          (click)="onEdit(rule)"
-          aria-label="Edit rule"
-        ></button>
-        <button
-          pButton
-          class="p-button-text p-button-sm p-button-danger"
-          icon="pi pi-trash"
-          (click)="onDelete(rule)"
-          aria-label="Delete rule"
-        ></button>
+        <button pButton [text]="true" size="small" (click)="onEdit(rule)" aria-label="Edit rule">
+          <i class="pi pi-pencil" pButtonIcon></i>
+        </button>
+        <button pButton [text]="true" size="small" severity="danger" (click)="onDelete(rule)" aria-label="Delete rule">
+          <i class="pi pi-trash" pButtonIcon></i>
+        </button>
       </td>
     </tr>
   </ng-template>

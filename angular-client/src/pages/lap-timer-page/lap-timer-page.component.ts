@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
-import { Toast } from 'primeng/toast';
 import HalfGaugeComponent from 'src/components/half-gauge/half-gauge.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { GaugeStatComponent } from 'src/components/gauge-stat/gauge-stat.component';
@@ -19,12 +18,12 @@ import LapsTableComponent from './laps-table/laps-table.component';
   templateUrl: './lap-timer-page.component.html',
   styleUrl: './lap-timer-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService, MessageService],
+  // Toasts go to the root <p-toast> and MessageService; the confirm dialog is page-local
+  providers: [ConfirmationService],
   imports: [
     MatGridList,
     MatGridTile,
     ConfirmDialog,
-    Toast,
     HalfGaugeComponent,
     InfoBackgroundComponent,
     GaugeStatComponent,

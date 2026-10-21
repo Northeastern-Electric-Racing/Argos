@@ -6,7 +6,6 @@ import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
-import { Ripple } from 'primeng/ripple';
 import { TableModule } from 'primeng/table';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -16,7 +15,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
+  imports: [Accordion, AccordionPanel, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
 })
 export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

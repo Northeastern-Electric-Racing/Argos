@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
+import { PrimeTemplate, TreeNode } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { Drawer } from 'primeng/drawer';
@@ -44,7 +44,16 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Drawer, Tree, ButtonComponent, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [
+    Drawer,
+    Tree,
+    PrimeTemplate,
+    ButtonComponent,
+    TypographyComponent,
+    ToggleSwitch,
+    FormsModule,
+    SelectDropdownComponent
+  ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
   dataTypes = input.required<DataType[]>();
