@@ -25,6 +25,13 @@ export interface LayoutOptions {
   span: DataSpan | null;
   /** Kept while the topics stay the same, so a user's zoom survives updates. */
   uiRevision: number;
+  /** Bumped to drop a user's y zoom alone (on pause and resume), keeping legend toggles and x zoom. */
+  yRevision: number;
+  /**
+   * Live and unpaused: each frame moves the x window, which would undo an x zoom at once while
+   * keeping its y half, so x is fixed and a drag zooms y only. Pause to zoom x.
+   */
+  followLive?: boolean;
   /** Bumped every frame: the series arrays are mutated in place, so Plotly.react needs this to recalc them. */
   dataRevision: number;
 }
@@ -150,6 +157,11 @@ export function buildDayBoundaries(span: { minX: number; maxX: number }): {
   return { shapes, annotations };
 }
 
+/** An axis uirevision overrides the layout's, so it carries the topics' revision too. */
+function withUiRevision(axes: Record<string, YAxis>, uirevision: string): Record<string, YAxis> {
+  return Object.fromEntries(Object.entries(axes).map(([key, axis]) => [key, { ...axis, uirevision }]));
+}
+
 export function buildLayout(options: LayoutOptions): Partial<Layout> {
   const isMultiDay = !!options.span && options.span.spanMs > DAY_MS;
   const multi = options.multipleYAxes && options.seriesNames.length > 0 ? buildMultiYAxes(options.seriesNames) : null;
@@ -177,11 +189,15 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
       gridcolor: GRID_COLOR,
       tickformat: isMultiDay ? '%-m/%-d %H:%M' : '%H:%M:%S',
       hoverformat: '%-m/%-d/%y, %H:%M:%S',
+      fixedrange: !!options.followLive,
       ...(options.xRange ? { autorange: false, range: options.xRange } : { autorange: true })
     },
-    ...(multi ?? {
-      yaxis: { color: TEXT_COLOR, gridcolor: GRID_COLOR, automargin: true, ...boundedAxis(options.yMin, options.yMax) }
-    }),
+    ...withUiRevision(
+      multi ?? {
+        yaxis: { color: TEXT_COLOR, gridcolor: GRID_COLOR, automargin: true, ...boundedAxis(options.yMin, options.yMax) }
+      },
+      `${options.uiRevision}.${options.yRevision}`
+    ),
     shapes: boundaries.shapes,
     annotations: boundaries.annotations
   };

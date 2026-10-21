@@ -148,6 +148,45 @@ describe('CustomGraphComponent (Plotly)', () => {
     expect(yAxes()[0].title).toEqual(jasmine.objectContaining({ text: 'A ' }));
   });
 
+  it('hides the modebar button that uploads the chart to Plotly Cloud', () => {
+    setup();
+    expect(graph.config.showSendToCloud).toBeFalse();
+  });
+
+  it('fixes the x-axis only while following live data', () => {
+    setup({ realTime: true });
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    expect(graph.layout().xaxis?.fixedrange).toBeTrue();
+
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    flushFrames();
+    expect(graph.layout().xaxis?.fixedrange).toBeFalsy();
+  });
+
+  it('lets x zoom in historical mode', () => {
+    setup();
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    expect(graph.layout().xaxis?.fixedrange).toBeFalsy();
+  });
+
+  it('resets a live y zoom on pause, keeping legend toggles', () => {
+    setup({ realTime: true });
+    push('A', [{ x: 1, y: 1 }]);
+    flushFrames();
+    const { uirevision } = graph.layout();
+    const yRevision = graph.layout().yaxis?.uirevision;
+
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    flushFrames();
+
+    expect(graph.layout().yaxis?.uirevision).not.toBe(yRevision);
+    expect(graph.layout().uirevision).toBe(uirevision);
+  });
+
   it('starts a fresh zoom when the graph config changes, so new y bounds always apply', () => {
     setup();
     const before = graph.layout().uirevision;

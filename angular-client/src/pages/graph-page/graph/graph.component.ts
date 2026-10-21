@@ -58,12 +58,16 @@ export default class CustomGraphComponent implements OnDestroy {
   readonly traces = signal<Partial<PlotData>[]>([]);
   readonly layout = signal<Partial<Layout>>({});
   readonly revision = signal(0);
-  readonly config: Partial<Config> = { displaylogo: false, responsive: true };
+  // showSendToCloud defaults to true in plotly.js 4: its "Share chart" button uploads the plotted
+  // telemetry to Plotly Cloud.
+  readonly config: Partial<Config> = { displaylogo: false, responsive: true, showSendToCloud: false };
 
   private plotReady = false;
   private frame: number | undefined;
   private dataRevision = 0;
   private uiRevision = 0;
+  /** Bumped on pause and resume, dropping a user's y zoom alone (see LayoutOptions.yRevision). */
+  private yRevision = 0;
   /** Set by resetRange: the next frame autoranges x, and draws even while paused. */
   private autorangeNext = false;
   /** The next frame draws even while paused, for view changes (like the y-axis toggle) that need no new data. */
@@ -71,6 +75,7 @@ export default class CustomGraphComponent implements OnDestroy {
 
   constructor() {
     effect(() => {
+      this.yRevision++;
       if (this.isPaused()) {
         untracked(() => this.resetRange());
       }
@@ -181,6 +186,8 @@ export default class CustomGraphComponent implements OnDestroy {
         // Skip the O(series) span scan in real-time mode: live ranges are never multi-day.
         span: this.realTime() ? null : computeDataSpan(this.data),
         uiRevision: this.uiRevision,
+        yRevision: this.yRevision,
+        followLive: this.realTime() && !this.isPaused(),
         dataRevision: ++this.dataRevision
       })
     );

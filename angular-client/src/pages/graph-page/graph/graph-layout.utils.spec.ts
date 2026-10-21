@@ -7,6 +7,7 @@ const base: LayoutOptions = {
   yMax: null,
   span: null,
   uiRevision: 0,
+  yRevision: 0,
   dataRevision: 0
 };
 
@@ -43,6 +44,28 @@ describe('graph layout utils', () => {
     expect(axes['yaxis5'].position).toBe(0);
     // automargin grows the margins to fit the stacked axes' ticks and titles.
     expect(Object.values(axes).every((axis) => axis.automargin === true)).toBeTrue();
+  });
+
+  it('fixes the x-axis only while following live data, so a live drag zooms y alone', () => {
+    // Every live frame moves the x window, which would undo a user's x zoom at once.
+    expect(buildLayout({ ...base, followLive: true }).xaxis?.fixedrange).toBeTrue();
+    expect(buildLayout(base).xaxis?.fixedrange).toBeFalsy();
+  });
+
+  it('resets every y-axis zoom when the y revision or the topics change', () => {
+    const revisions = (options: LayoutOptions) => {
+      const layout = buildLayout(options) as Record<string, { uirevision?: unknown }>;
+      return Object.keys(layout)
+        .filter((key) => /^yaxis\d*$/.test(key))
+        .map((key) => layout[key].uirevision);
+    };
+    [base, { ...base, multipleYAxes: true, seriesNames: ['A 0', 'B 0'] }].forEach((options) => {
+      const [first, ...rest] = revisions(options);
+      expect(first).toBeDefined();
+      rest.forEach((revision) => expect(revision).toBe(first));
+      expect(revisions({ ...options, yRevision: 1 })[0]).not.toBe(first);
+      expect(revisions({ ...options, uiRevision: 1 })[0]).not.toBe(first);
+    });
   });
 
   it('shows full series names in hover labels', () => {
