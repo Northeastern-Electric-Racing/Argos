@@ -3,33 +3,39 @@
   min-width: 10rem;
 }
 
+/*
+ * Pages restyle the trigger through these custom properties, set on ui-select or any ancestor,
+ * instead of piercing encapsulation: --ui-select-height, -radius, -bg, -color, -font-size,
+ * -font-weight and -padding-left.
+ */
 .ui-select {
   position: relative;
   display: flex;
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  height: 2.25rem;
-  padding: 0 2.2rem 0 0.75rem;
+  height: var(--ui-select-height, 2.25rem);
+  padding: 0 2.2rem 0 var(--ui-select-padding-left, 0.75rem);
   border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius);
-  background: var(--ui-surface-3);
-  color: var(--ui-text);
-  font-size: 0.9rem;
+  border-radius: var(--ui-select-radius, var(--ui-radius));
+  background: var(--ui-select-bg, var(--ui-surface-3));
+  color: var(--ui-select-color, var(--ui-text));
+  font-size: var(--ui-select-font-size, 0.9rem);
+  font-weight: var(--ui-select-font-weight, inherit);
   cursor: pointer;
   user-select: none;
   outline: none;
 }
 
 .ui-select--sm {
-  height: 1.9rem;
-  font-size: 0.8rem;
-  padding-left: 0.55rem;
+  height: var(--ui-select-height, 1.9rem);
+  font-size: var(--ui-select-font-size, 0.8rem);
+  padding-left: var(--ui-select-padding-left, 0.55rem);
 }
 
 .ui-select:hover {
-  border-color: #5a5a5a;
-  background: color-mix(in srgb, var(--ui-text) 6%, var(--ui-surface-3));
+  border-color: var(--ui-border-strong);
+  background: color-mix(in srgb, var(--ui-text) 6%, var(--ui-select-bg, var(--ui-surface-3)));
 }
 
 .ui-select:focus-visible,

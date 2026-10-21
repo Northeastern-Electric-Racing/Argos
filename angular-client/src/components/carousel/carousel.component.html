@@ -4,7 +4,7 @@
   aria-label="Runs"
   (mouseenter)="setPaused(true)"
   (mouseleave)="setPaused(false)"
-  (focusin)="setPaused(true)"
+  (focusin)="onFocusIn($event)"
   (focusout)="setPaused(false)"
 >
   @if (currentRun(); as run) {
@@ -17,7 +17,7 @@
         role="group"
         aria-roledescription="slide"
         [attr.aria-label]="currentIndex() + 1 + ' of ' + runs.length"
-        aria-live="polite"
+        [attr.aria-live]="rotating() ? 'off' : 'polite'"
       >
         <div class="run-card">
           <mat-grid-list cols="2" rowHeight="40px">
@@ -43,21 +43,32 @@
         <mat-icon aria-hidden="true">chevron_right</mat-icon>
       </button>
     </div>
-    @if (runs.length <= 12) {
-      <div class="indicators">
-        @for (r of runs; track r.id; let i = $index) {
-          <button
-            type="button"
-            class="indicator"
-            [attr.aria-current]="i === currentIndex()"
-            [attr.aria-label]="'Show run ' + r.id"
-            (click)="goTo(i)"
-          ></button>
-        }
-      </div>
-    } @else {
-      <div class="counter">{{ currentIndex() + 1 }} / {{ runs.length }}</div>
-    }
+    <div class="carousel-footer">
+      <!-- WAI-ARIA carousel: auto-rotation needs a visible stop/start control. -->
+      <button
+        type="button"
+        class="ui-icon-button ui-icon-button--sm"
+        [attr.aria-label]="autoplay() ? 'Stop automatic slide show' : 'Start automatic slide show'"
+        (click)="autoplay.set(!autoplay())"
+      >
+        <mat-icon aria-hidden="true">{{ autoplay() ? 'pause' : 'play_arrow' }}</mat-icon>
+      </button>
+      @if (runs.length <= 12) {
+        <div class="indicators">
+          @for (r of runs; track r.id; let i = $index) {
+            <button
+              type="button"
+              class="indicator"
+              [attr.aria-current]="i === currentIndex()"
+              [attr.aria-label]="'Show run ' + r.id"
+              (click)="goTo(i)"
+            ></button>
+          }
+        </div>
+      } @else {
+        <div class="counter">{{ currentIndex() + 1 }} / {{ runs.length }}</div>
+      }
+    </div>
   } @else {
     <p class="empty">No runs yet</p>
   }

@@ -62,30 +62,3 @@
   font-weight: 700;
   margin-bottom: 0.15rem;
 }
-
-.toast-close {
-  display: inline-grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--ui-text-muted);
-  cursor: pointer;
-}
-
-.toast-close mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
-
-.toast-close:hover {
-  color: var(--ui-text);
-  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
-}
-
-.toast-close:focus-visible {
-  outline: var(--ui-focus-ring);
-}

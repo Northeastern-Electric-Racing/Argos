@@ -9,6 +9,12 @@
 }
 
 .ui-dialog-surface {
+  /* Header padding; the close button sits in the top-right corner of the same box. */
+  --ui-dialog-header-top: 0.9rem;
+  --ui-dialog-header-right: 1rem;
+  --ui-dialog-header-bottom: 0.5rem;
+  --ui-dialog-header-left: 1.25rem;
+  position: relative;
   display: flex;
   flex-direction: column;
   max-height: 90vh;
@@ -31,9 +37,10 @@
 .ui-dialog-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem 0.5rem 1.25rem;
+  /* Room for the 2rem close button (see .ui-dialog-close) plus a 1rem gap. */
+  min-height: calc(var(--ui-dialog-header-top) + 2rem + var(--ui-dialog-header-bottom));
+  padding: var(--ui-dialog-header-top) calc(var(--ui-dialog-header-right) + 3rem) var(--ui-dialog-header-bottom)
+    var(--ui-dialog-header-left);
 }
 
 .ui-dialog-header.draggable {
@@ -47,24 +54,9 @@
 }
 
 .ui-dialog-close {
-  display: inline-grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--ui-text-muted);
-  cursor: pointer;
-}
-
-.ui-dialog-close:hover {
-  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
-  color: var(--ui-text);
-}
-
-.ui-dialog-close:focus-visible {
-  outline: var(--ui-focus-ring);
+  position: absolute;
+  top: var(--ui-dialog-header-top);
+  right: var(--ui-dialog-header-right);
 }
 
 .ui-dialog-content {

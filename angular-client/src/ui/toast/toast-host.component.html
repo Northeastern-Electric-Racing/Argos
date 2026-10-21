@@ -1,11 +1,7 @@
 <div #stack class="toast-stack" popover="manual">
   @for (toast of toastService.toasts(); track toast.id) {
-    <div
-      class="toast"
-      [attr.data-severity]="toast.severity"
-      [attr.role]="toast.severity === 'error' ? 'alert' : 'status'"
-      [attr.aria-live]="toast.severity === 'error' ? 'assertive' : 'polite'"
-    >
+    <!-- Announced through LiveAnnouncer in ToastService, so this is visual only. -->
+    <div class="toast" [attr.data-severity]="toast.severity">
       <mat-icon class="toast-icon" aria-hidden="true">{{ icons[toast.severity] }}</mat-icon>
       <div class="toast-text">
         @if (toast.summary) {
@@ -15,7 +11,12 @@
           <div class="toast-detail">{{ toast.detail }}</div>
         }
       </div>
-      <button type="button" class="toast-close" aria-label="Dismiss notification" (click)="toastService.remove(toast.id)">
+      <button
+        type="button"
+        class="ui-icon-button ui-icon-button--sm"
+        aria-label="Dismiss notification"
+        (click)="toastService.remove(toast.id)"
+      >
         <mat-icon aria-hidden="true">close</mat-icon>
       </button>
     </div>

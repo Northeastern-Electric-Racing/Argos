@@ -30,7 +30,6 @@ export class InfoGraphComponent {
         subTitle: this.subTitle(),
         graphContainerId: this.graphContainerId() + 'big'
       },
-      modal: true, // makes the dialog modal
       dismissableMask: true // enables auto-close on outside click
     });
   };

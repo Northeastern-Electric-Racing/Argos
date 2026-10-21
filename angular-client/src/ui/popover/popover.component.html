@@ -8,9 +8,10 @@
     [cdkConnectedOverlayViewportMargin]="8"
     (overlayOutsideClick)="onOutsideClick($event)"
     (detach)="hide()"
-    (attach)="shown.emit()"
+    (attach)="onAttach()"
   >
-    <div class="ui-popover-panel" [class]="panelClass()" role="dialog" [attr.aria-label]="ariaLabel()">
+    <!-- The panel is outside the trigger's tab order: focus moves in on open (see onAttach). -->
+    <div #panel class="ui-popover-panel" [class]="panelClass()" role="dialog" [attr.aria-label]="ariaLabel()" cdkTrapFocus>
       <ng-content />
     </div>
   </ng-template>

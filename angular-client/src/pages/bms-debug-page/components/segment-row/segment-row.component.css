@@ -119,12 +119,12 @@
   min-width: 0;
 }
 
-.controls-zone ::ng-deep .ui-select {
-  height: clamp(18px, 2.3vw, 44px);
-  border-radius: clamp(8px, 1.25vw, 24px);
-  background-color: #555;
-  font-size: clamp(7px, 0.94vw, 18px);
-  font-weight: 600;
-  color: #c0c0c0;
-  padding-left: clamp(4px, 0.94vw, 20px);
+.controls-zone select-dropdown {
+  --ui-select-height: clamp(18px, 2.3vw, 44px);
+  --ui-select-radius: clamp(8px, 1.25vw, 24px);
+  --ui-select-bg: #555;
+  --ui-select-font-size: clamp(7px, 0.94vw, 18px);
+  --ui-select-font-weight: 600;
+  --ui-select-color: #c0c0c0;
+  --ui-select-padding-left: clamp(4px, 0.94vw, 20px);
 }

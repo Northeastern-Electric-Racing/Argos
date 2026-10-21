@@ -34,9 +34,9 @@
 }
 
 /* Quick Select dropdown, sized to line up with the sm "Custom" button (28px) */
-.historical-section select-dropdown ::ng-deep .ui-select {
-  height: 28px;
-  font-size: 12px;
+.historical-section select-dropdown {
+  --ui-select-height: 28px;
+  --ui-select-font-size: 12px;
 }
 
 .custom-stack {

@@ -8,7 +8,8 @@ import { UiDialogConfig } from './dialog.service';
 /**
  * Our dialog chrome around CDK dialog content: header with title and close button,
  * dragged by the header when the dialog is draggable. Extends CdkDialogContainer so it keeps
- * the CDK's focus trap and ARIA wiring, as the CDK dialog guide recommends.
+ * the CDK's focus trap, initial focus and ARIA wiring (role, aria-labelledby on the title,
+ * aria-describedby), as the CDK dialog guide recommends.
  */
 @Component({
   selector: 'ui-dialog-container',
@@ -22,6 +23,6 @@ export class UiDialogContainerComponent extends CdkDialogContainer<UiDialogConfi
   private ref = inject(DialogRef);
 
   close(): void {
-    this.ref.close();
+    this.ref.close(undefined, { focusOrigin: 'mouse' });
   }
 }

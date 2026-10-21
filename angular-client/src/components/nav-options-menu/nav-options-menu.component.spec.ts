@@ -1,4 +1,3 @@
-import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NavOptionsMenuComponent } from './nav-options-menu.component';
@@ -9,8 +8,7 @@ describe('NavOptionsMenuComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NavOptionsMenuComponent],
-      providers: [{ provide: DIALOG_DATA, useValue: { items: [] } }]
+      imports: [NavOptionsMenuComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NavOptionsMenuComponent);

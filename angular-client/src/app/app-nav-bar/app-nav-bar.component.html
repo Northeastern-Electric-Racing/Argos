@@ -50,6 +50,8 @@
         type="button"
         class="navbar-notification"
         [attr.aria-label]="'Notifications, ' + notificationLogService.unreadCount() + ' unread'"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="notificationPanel.isOpen()"
         (click)="notificationPanel.toggle($event)"
       >
         <mat-icon [svgIcon]="'notifications'" />
@@ -60,9 +62,7 @@
       <ui-popover #notificationPanel (shown)="onNotificationPanelShow()" ariaLabel="Notifications">
         <notification-list variant="popover" />
       </ui-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
-        <mat-icon [svgIcon]="'apps'" />
-      </div>
+      <app-nav-options-menu [items]="navMenuItems" />
     </hstack>
   </nav>
 }

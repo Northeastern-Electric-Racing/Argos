@@ -41,6 +41,7 @@
           type="button"
           class="mode-btn"
           [class.mode-btn--active]="customMode() === 'last-x'"
+          [attr.aria-pressed]="customMode() === 'last-x'"
           (click)="setCustomMode('last-x')"
         >
           Last X
@@ -49,6 +50,7 @@
           type="button"
           class="mode-btn"
           [class.mode-btn--active]="customMode() === 'date-range'"
+          [attr.aria-pressed]="customMode() === 'date-range'"
           (click)="setCustomMode('date-range')"
         >
           Date Range

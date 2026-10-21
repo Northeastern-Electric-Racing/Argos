@@ -1,7 +1,7 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { interval, map, Observable, startWith } from 'rxjs';
@@ -48,14 +48,15 @@ export interface NavItem {
     SidebarChipComponent,
     MatIcon,
     NotificationListComponent,
-    UiPopoverComponent
+    UiPopoverComponent,
+    NavOptionsMenuComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
 })
-export class AppNavBarComponent implements OnInit, OnDestroy {
+export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private messageService = inject(ToastService);
@@ -65,7 +66,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   protected notificationLogService = inject(NotificationLogService);
 
   ref: DialogRef | null | undefined;
-  menuRef: DialogRef | null | undefined;
   editRunRef: DialogRef | null | undefined;
 
   // Set selected route to current URL path
@@ -87,12 +87,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
       });
-  }
-
-  ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
   }
 
   // on resize, set the screen width
@@ -157,15 +151,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
 
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
-
   navMenuItems: NavItem[] = [
     {
       id: appRoutes.faultsRoute(),
@@ -212,23 +197,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
-
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      dismissableMask: true,
-      panelClass: 'nav-options-dialog',
-      position: { top: '70px', right: '10px' },
-      data: {
-        items: this.navMenuItems
-      }
-    });
-
-    this.menuRef?.closed.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
-  }
 
   navigateTo(route: string): void {
     this.selectedRoute = route;

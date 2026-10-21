@@ -28,7 +28,7 @@
 }
 
 .nav-button:hover {
-  background: color-mix(in srgb, var(--ui-text) 10%, transparent);
+  background: var(--ui-hover-strong);
 }
 
 .nav-button:focus-visible,
@@ -59,11 +59,18 @@
   border-radius: 10px;
 }
 
+.carousel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+
 .indicators {
   display: flex;
   justify-content: center;
   gap: 6px;
-  padding-bottom: 6px;
 }
 
 .indicator {
@@ -85,6 +92,9 @@
   text-align: center;
   color: var(--ui-text-muted);
   font-size: 0.85rem;
+}
+
+.empty {
   padding-bottom: 6px;
 }
 

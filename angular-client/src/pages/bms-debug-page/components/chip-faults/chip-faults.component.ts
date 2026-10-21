@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
@@ -29,7 +29,8 @@ export class ChipFaultsComponent implements OnInit {
   chip = input.required<Chip>();
   title!: string;
   segment = input.required<number>();
-  chipFaults: FaultData[] = [];
+  /** Newest first, capped at 50. A new array on each fault, since the CDK table only re-renders an array source when its reference changes. */
+  readonly chipFaults = signal<FaultData[]>([]);
   readonly columns = ['name', 'occurredAt'];
   private router = inject(Router);
   chipFaultPipe = inject(ChipFaultPipe);
@@ -43,7 +44,7 @@ export class ChipFaultsComponent implements OnInit {
   }
 
   resetFaults() {
-    this.chipFaults = [];
+    this.chipFaults.set([]);
   }
 
   subscribeToData(segment: number, chip: Chip = this.chip()) {
@@ -55,10 +56,7 @@ export class ChipFaultsComponent implements OnInit {
           if (parseInt(data.values[0]) === 0) return;
           const fault = this.chipFaultPipe.transform(data, chip, segment, faultName);
           if (!fault) return;
-          if (this.chipFaults.length >= 50) {
-            this.chipFaults.pop();
-          }
-          this.chipFaults.unshift(fault);
+          this.chipFaults.update((faults) => [fault, ...faults].slice(0, 50));
         });
     });
   }

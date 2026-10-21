@@ -1,4 +1,5 @@
 import { Dialog, DialogRef } from '@angular/cdk/dialog';
+import { hasModifierKey } from '@angular/cdk/keycodes';
 import { createGlobalPositionStrategy } from '@angular/cdk/overlay';
 import {
   ChangeDetectionStrategy,
@@ -60,6 +61,7 @@ export class UiDrawerComponent {
     const ref = this.dialog.open(this.panel(), {
       positionStrategy: strategy,
       width: this.width(),
+      maxWidth: '100vw',
       height: '100%',
       hasBackdrop: this.modal(),
       backdropClass: 'ui-dialog-backdrop',
@@ -71,9 +73,15 @@ export class UiDrawerComponent {
     this.ref = ref;
     // These streams complete when the drawer closes.
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
-    ref.keydownEvents.subscribe((event) => event.key === 'Escape' && ref.close());
+    ref.keydownEvents.subscribe((event) => {
+      // Mirrors the CDK's own Escape handling (it is off because the backdrop is configurable).
+      if (event.key === 'Escape' && !hasModifierKey(event)) {
+        event.preventDefault();
+        ref.close(undefined, { focusOrigin: 'keyboard' });
+      }
+    });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
-    ref.backdropClick.subscribe(() => this.dismissible() && ref.close());
+    ref.backdropClick.subscribe(() => this.dismissible() && ref.close(undefined, { focusOrigin: 'mouse' }));
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
     ref.closed.subscribe(() => {
       this.ref = undefined;

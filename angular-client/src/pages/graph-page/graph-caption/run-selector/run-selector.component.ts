@@ -47,7 +47,6 @@ export class RunSelectorComponent implements OnInit {
       width: '550px',
       data: { runs: this.runs, selectRun: this.selectRun() },
       header: 'Select a run to view',
-      modal: true, // makes the dialog modal
       dismissableMask: true // enables auto-close on outside click
     });
   };
