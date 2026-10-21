@@ -1,11 +1,15 @@
 <button type="button" class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
 <tui-drawer *tuiPopup="sidebarVisible" direction="end" class="topics-drawer" [overlay]="true">
-  <header class="drawer-header">
-    <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
-    <button appearance="flat-grayscale" iconStart="@tui.x" size="s" tuiIconButton type="button" (click)="toggleSidebar()">
-      Close topics
-    </button>
+  <header>
+    <div tuiHeader="h6">
+      <div tuiTitle>Topics</div>
+      <div tuiAccessories>
+        <button appearance="icon" iconStart="@tui.x" size="s" tuiIconButton type="button" (click)="toggleSidebar()">
+          Close topics
+        </button>
+      </div>
+    </div>
   </header>
   <div class="sidebar-content">
     <div class="presets-row">

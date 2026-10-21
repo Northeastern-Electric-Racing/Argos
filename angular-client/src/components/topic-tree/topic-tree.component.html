@@ -39,7 +39,7 @@
   >
     <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
     @if (isLeaf(node)) {
-      <typography [content]="node.data.displayValue()" variant="subheader" />
+      <typography additionalStyles="margin: 0px;" [content]="node.data.displayValue()" variant="subheader" />
     }
   </div>
 </ng-template>

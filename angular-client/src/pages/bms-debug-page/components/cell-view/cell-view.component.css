@@ -3,6 +3,8 @@
 }
 
 .cell-compare-drawer {
+  /* Taiga's drawer starts 3rem down; start it below the 60px navbar instead */
+  inset-block-start: 60px;
   inline-size: auto;
   min-inline-size: 18rem;
   max-inline-size: min(40rem, calc(100vw - 3rem));

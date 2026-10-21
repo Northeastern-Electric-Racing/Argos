@@ -1,3 +1,4 @@
-.btn {
-  font-weight: bold;
+/* Taiga's size m pads 1rem a side, which overflows the fixed 130-140px width */
+.btn[tuiButton] {
+  --t-padding: 0.375rem 0.5rem;
 }

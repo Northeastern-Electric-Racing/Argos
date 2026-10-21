@@ -12,7 +12,8 @@ import {
 } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiDialogService, TuiPopup } from '@taiga-ui/core';
+import { TuiButton, TuiDialogService, TuiPopup, TuiTitle } from '@taiga-ui/core';
+import { TuiHeader } from '@taiga-ui/layout';
 import { TuiDrawer, TuiSwitch } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import {
@@ -47,6 +48,8 @@ import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.compone
     TuiButton,
     TuiDrawer,
     TuiPopup,
+    TuiHeader,
+    TuiTitle,
     TopicTreeComponent,
     ButtonComponent,
     TypographyComponent,

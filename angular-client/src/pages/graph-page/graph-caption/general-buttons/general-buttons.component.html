@@ -65,7 +65,7 @@
         <div class="mode-body">
           <div class="field-row">
             <label class="popover-label">Hours</label>
-            <tui-textfield tuiTextfieldSize="s" class="number-field">
+            <tui-textfield tuiTextfieldSize="s" class="number-field" [tuiTextfieldCleaner]="false">
               <input
                 tuiInputNumber
                 aria-label="Hours"
@@ -79,7 +79,7 @@
           </div>
           <div class="field-row">
             <label class="popover-label">Minutes</label>
-            <tui-textfield tuiTextfieldSize="s" class="number-field">
+            <tui-textfield tuiTextfieldSize="s" class="number-field" [tuiTextfieldCleaner]="false">
               <input
                 tuiInputNumber
                 aria-label="Minutes"

@@ -74,12 +74,6 @@
   inline-size: 85vw;
 }
 
-.drawer-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .tree {
   height: calc(100vh - 220px);
 }

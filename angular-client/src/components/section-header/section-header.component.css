@@ -15,3 +15,8 @@
 .section-title-right {
   margin-left: auto;
 }
+
+/* "Set ALL Maps: C Volts" is longer than the default select width */
+.section-header ::ng-deep .small-select {
+  min-width: 13rem;
+}

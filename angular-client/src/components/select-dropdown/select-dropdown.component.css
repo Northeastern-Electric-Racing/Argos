@@ -1,3 +1,7 @@
 .small-select {
   min-width: max(10vw, 11rem);
 }
+
+.small-select input {
+  text-overflow: ellipsis;
+}

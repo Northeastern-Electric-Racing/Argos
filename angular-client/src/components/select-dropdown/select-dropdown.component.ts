@@ -1,5 +1,5 @@
 import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { TuiTextfield } from '@taiga-ui/core';
+import { TuiDropdown, TuiTextfield } from '@taiga-ui/core';
 import { TuiChevron, TuiDataListWrapper, TuiSelect } from '@taiga-ui/kit';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -18,7 +18,7 @@ export interface DropdownOption {
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [TuiTextfield, TuiChevron, TuiDataListWrapper, TuiSelect, ReactiveFormsModule, FormsModule]
+  imports: [TuiTextfield, TuiDropdown, TuiChevron, TuiDataListWrapper, TuiSelect, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([

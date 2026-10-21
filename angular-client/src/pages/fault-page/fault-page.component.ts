@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
@@ -21,7 +21,7 @@ export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private faultService = inject(FaultService);
   private router = inject(Router);
-  nodeArray: FaultNode[] = [];
+  readonly nodeArray = signal<FaultNode[]>([]);
 
   ngOnInit() {
     this.faultService
@@ -36,7 +36,7 @@ export default class FaultPageComponent implements OnInit {
             nodes.set(fault.node, { node: fault.node, data: [fault] });
           }
         });
-        this.nodeArray = Array.from(nodes.values()).sort((a, b) => a.node.localeCompare(b.node));
+        this.nodeArray.set(Array.from(nodes.values()).sort((a, b) => a.node.localeCompare(b.node)));
       });
   }
 
