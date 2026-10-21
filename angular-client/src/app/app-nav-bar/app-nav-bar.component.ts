@@ -1,14 +1,17 @@
 import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { TuiButton, TuiClose, TuiDialogService, TuiDropdown, TuiPopup, TuiTitle } from '@taiga-ui/core';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
+import { TuiHeader } from '@taiga-ui/layout';
+import { TuiBadgeNotification, TuiDrawer } from '@taiga-ui/kit';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -22,8 +25,6 @@ import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -37,7 +38,15 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    TuiAutoFocus,
+    TuiButton,
+    TuiClose,
+    TuiDrawer,
+    TuiHeader,
+    TuiPopup,
+    TuiTitle,
+    TuiDropdown,
+    TuiBadgeNotification,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -48,8 +57,7 @@ export interface NavItem {
     SidebarChipComponent,
     MatIcon,
     NotificationListComponent,
-    Popover,
-    Badge
+    NavOptionsMenuComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
@@ -59,15 +67,14 @@ export interface NavItem {
 export class AppNavBarComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private toasts = inject(ToastService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private dialogs = inject(TuiDialogService);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  menuOpen = false;
+  notificationsOpen = false;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -91,9 +98,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
+    this.menuOpen = false;
   }
 
   // on resize, set the screen width
@@ -114,17 +119,15 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       this.newRunIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.toasts.show(error.message, { label: 'Error', appearance: 'negative' });
     });
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    this.dialogs
+      .open(new PolymorpheusComponent(RunFormComponent), { label: 'Edit Run' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   };
 
   homeNavItem: NavItem = {
@@ -159,15 +162,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
-
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
 
   navMenuItems: NavItem[] = [
     {
@@ -216,24 +210,13 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
-      data: {
-        items: this.navMenuItems
-      }
-    });
+  onMenuItemClick(navItem: NavItem): void {
+    this.menuOpen = false;
+    navItem.onClick();
+  }
 
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
+  closeSidebar(): void {
+    this.sidebarVisible = false;
   }
 
   navigateTo(route: string): void {
@@ -241,8 +224,9 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     this.router.navigate([route]);
   }
 
-  onNotificationPanelShow(): void {
-    this.notificationLogService.markAllRead();
+  onNotificationPanelChange(open: boolean): void {
+    this.notificationsOpen = open;
+    if (open) this.notificationLogService.markAllRead();
   }
 
   isSelected(navItem: NavItem) {

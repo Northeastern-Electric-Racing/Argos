@@ -1,0 +1,42 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.topic-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  height: 100%;
+}
+
+.tree-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tree-node-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  min-height: 30px;
+  padding: 0 8px;
+  border-radius: var(--tui-radius-s);
+  cursor: pointer;
+}
+
+.tree-node-container:hover {
+  color: var(--tui-background-accent-1);
+}
+
+.tree-node-container:focus-visible {
+  outline: 2px solid var(--tui-border-focus);
+}
+
+.tree-node-container.selected {
+  background-color: color-mix(in srgb, var(--tui-background-accent-1) 33%, transparent);
+}

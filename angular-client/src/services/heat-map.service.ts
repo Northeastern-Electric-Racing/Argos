@@ -1,8 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { ComponentRef, inject, Injectable, Injector } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { CellReading } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { TuiPopupService } from '@taiga-ui/core';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
 
 export enum HeatMapView {
@@ -24,7 +25,8 @@ export interface SelectedCellInfo {
   providedIn: 'root'
 })
 export class HeatMapService {
-  private dialogService = inject(DialogService);
+  private popups = inject(TuiPopupService);
+  private injector = inject(Injector);
 
   private currentViewMap: Map<Segment, BehaviorSubject<HeatMapView>> = new Map();
 
@@ -33,7 +35,8 @@ export class HeatMapService {
 
   /** Multi-cell selection state, keyed by CellReading identity */
   private selectedCells = new Map<CellReading, SelectedCellInfo>();
-  dialogRef: DynamicDialogRef | null = null;
+  /** The open cell comparison panel (a non-modal Taiga drawer), if any */
+  dialogRef: ComponentRef<CellViewComponent> | null = null;
 
   /**
    * Toggle a group of readings as a unit. Uses the first reading's
@@ -64,19 +67,15 @@ export class HeatMapService {
   openDialogForSelectedCells(): void {
     // Open dialog if not already open, and the caller requested it.
     if (this.selectedCells.size > 0 && !this.dialogRef) {
-      this.dialogRef = this.dialogService.open(CellViewComponent, {
-        data: { cells: this.selectedCells },
-        header: 'Cell Comparison',
-        draggable: true,
-        closable: true,
-        modal: false,
-        closeAriaLabel: 'Close',
-        styleClass: 'cell-compare-dialog'
-      });
-      this.dialogRef?.onClose.subscribe(() => {
+      const ref = this.popups.add(new PolymorpheusComponent(CellViewComponent, this.injector));
+      ref.setInput('cellsMap', this.selectedCells);
+      // An output of a component this service owns: destroying the component ends the subscription
+      ref.instance.closed.subscribe(() => {
         this.clearSelection();
+        ref.destroy();
         this.dialogRef = null;
       });
+      this.dialogRef = ref;
     }
   }
 
@@ -96,7 +95,7 @@ export class HeatMapService {
   closeDialogIfNoSelection(): void {
     // close dialog if no cells remain selected and the caller requested it.
     if (this.selectedCells.size === 0 && this.dialogRef) {
-      this.dialogRef.close();
+      this.dialogRef.destroy();
       this.dialogRef = null;
     }
   }

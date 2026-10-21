@@ -37,3 +37,8 @@ mat-icon {
   flex-direction: row;
   align-items: center;
 }
+
+/* Room for "Set ALL Maps: C Volts" (BMS segment view) */
+hstack ::ng-deep .small-select {
+  min-width: 13rem;
+}

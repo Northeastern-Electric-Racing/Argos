@@ -1,5 +1,7 @@
-import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { ChangeDetectorRef, Component, inject, input, OnDestroy, output, ChangeDetectionStrategy } from '@angular/core';
+import { TuiButton, TuiTitle } from '@taiga-ui/core';
+import { TuiDrawer } from '@taiga-ui/kit';
+import { TuiHeader } from '@taiga-ui/layout';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
@@ -36,25 +38,25 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ConfigTableComponent]
+  imports: [ConfigTableComponent, TuiButton, TuiDrawer, TuiHeader, TuiTitle]
 })
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
-  public config = inject(DynamicDialogConfig);
 
   /** Shared Map reference — mutations by SegmentHeatmapComponent
    *  are visible here because it's the same Map object. */
-  private cellsMap: Map<CellReading, SelectedCellInfo>;
+  cellsMap = input<Map<CellReading, SelectedCellInfo>>(new Map());
+  /** The user closed the comparison panel */
+  closed = output<void>();
   rows = DEFAULT_ROW_CONFIG;
   columnConfig = COLUMN_CONFIG;
 
   get cells(): SelectedCellInfo[] {
-    return Array.from(this.cellsMap.values());
+    return Array.from(this.cellsMap().values());
   }
 
   constructor() {
-    this.cellsMap = this.config.data.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
   }

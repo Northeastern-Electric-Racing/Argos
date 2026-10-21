@@ -1,6 +1,5 @@
 import { Injector, Signal, runInInjectionContext, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { TreeNode } from 'primeng/api';
 import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -10,6 +9,31 @@ import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 export interface TreeNodeData extends Node {
   displayValue: Signal<string>;
+}
+
+/** A node of the topic tree: a topic segment (branch) or a DataType (leaf) */
+export interface TreeNode<T = unknown> {
+  label?: string;
+  data?: T;
+  key?: string;
+  children?: TreeNode<T>[];
+  selectable?: boolean;
+  expanded?: boolean;
+}
+
+/**
+ * Keeps nodes whose label contains `query` (case-insensitive) and the branches leading to them;
+ * a matching branch keeps all its children. Returns `nodes` itself for an empty query.
+ */
+export function filterTreeNodes<T>(nodes: TreeNode<T>[], query: string): TreeNode<T>[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return nodes;
+  const visit = (node: TreeNode<T>): TreeNode<T> | null => {
+    if (node.label?.toLowerCase().includes(needle)) return node;
+    const children = (node.children ?? []).map(visit).filter((child): child is TreeNode<T> => child !== null);
+    return children.length ? { ...node, children } : null;
+  };
+  return nodes.map(visit).filter((node): node is TreeNode<T> => node !== null);
 }
 
 // Shared sentinel for non-leaf nodes whose displayValue is never read.
@@ -93,8 +117,7 @@ export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLe
 
 /**
  * Filters a flat list of leaf TreeNodes to only those whose dataType is in
- * `selectedDataTypes`. Preserves the original node references so PrimeNG's
- * selection-by-reference matching keeps working.
+ * `selectedDataTypes`. Preserves the original node references.
  */
 export function filterSelectedNodes(
   flatNodes: TreeNode<TreeNodeData>[],

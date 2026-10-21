@@ -1,29 +1,29 @@
 <div class="confirm-content">
   <p>The following {{ rules.length }} rule(s) will be added:</p>
   <div class="rules-preview">
-    <table>
+    <table tuiTable size="s" class="preview-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Topic</th>
-          <th>Expression</th>
-          <th>Debounce (s)</th>
+          <th tuiTh>ID</th>
+          <th tuiTh>Topic</th>
+          <th tuiTh>Expression</th>
+          <th tuiTh>Debounce (s)</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody tuiTbody>
         @for (rule of rules; track rule.id) {
-          <tr>
-            <td>{{ rule.id }}</td>
-            <td>{{ rule.topic }}</td>
-            <td>{{ rule.expr }}</td>
-            <td>{{ rule.debounce_time }}</td>
+          <tr tuiTr>
+            <td tuiTd>{{ rule.id }}</td>
+            <td tuiTd>{{ rule.topic }}</td>
+            <td tuiTd>{{ rule.expr }}</td>
+            <td tuiTd>{{ rule.debounce_time }}</td>
           </tr>
         }
       </tbody>
     </table>
   </div>
   <div class="button-row">
-    <button pButton label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton label="Confirm Upload" (click)="onConfirm()"></button>
+    <button appearance="secondary" tuiButton type="button" (click)="onCancel()">Cancel</button>
+    <button tuiButton type="button" (click)="onConfirm()">Confirm Upload</button>
   </div>
 </div>

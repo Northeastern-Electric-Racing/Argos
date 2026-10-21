@@ -1,6 +1,5 @@
 .confirm-content p {
-  margin-bottom: 12px;
-  color: #ccc;
+  margin: 0 0 12px;
 }
 
 .rules-preview {
@@ -9,23 +8,8 @@
   margin-bottom: 16px;
 }
 
-table {
+.preview-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-th,
-td {
-  padding: 6px 8px;
-  text-align: left;
-  border-bottom: 1px solid #444;
-  color: #ddd;
-}
-
-th {
-  color: #e74c3c;
-  font-weight: 600;
 }
 
 .button-row {

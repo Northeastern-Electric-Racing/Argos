@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ToastService } from 'src/services/toast.service';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { partitionDataTypesByName } from 'src/utils/dataTypes.utils';
@@ -29,7 +29,7 @@ export const PRESET_SEEDS: PresetSeed[] = [];
 @Injectable({ providedIn: 'root' })
 export class GraphPresetService {
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
+  private toasts = inject(ToastService);
   private presets = new BehaviorSubject<Preset[]>([]);
   private presets$ = this.presets.asObservable();
 
@@ -56,12 +56,7 @@ export class GraphPresetService {
   resolvePresetTopics = (preset: Preset, dataTypes: DataType[]): DataType[] => {
     const { matched, unknown } = partitionDataTypesByName(dataTypes, preset.topicNames);
     if (unknown.length > 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Unknown Topics Skipped',
-        detail: unknown.join(', '),
-        life: 8000
-      });
+      this.toasts.show(unknown.join(', '), { label: 'Unknown Topics Skipped', appearance: 'warning', autoClose: 8000 });
     }
     return matched;
   };

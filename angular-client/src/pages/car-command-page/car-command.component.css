@@ -55,9 +55,7 @@
   font-family: var(--font-family);
 }
 
-.auth-input-group ::ng-deep p-password,
-.auth-input-group ::ng-deep .p-password,
-.auth-input-group ::ng-deep .p-inputtext {
+.auth-input-group tui-textfield {
   width: 100%;
 }
 

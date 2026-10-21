@@ -1,20 +1,33 @@
 @if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
-    </ng-template>
-  </p-drawer>
+  <tui-drawer *tuiPopup="sidebarVisible" direction="start" class="nav-drawer" [overlay]="true" (tuiClose)="closeSidebar()">
+    <header>
+      <div tuiHeader="h6">
+        <div tuiTitle><typography variant="large-header" content="Argos" /></div>
+        <div tuiAccessories>
+          <button
+            appearance="icon"
+            iconStart="@tui.x"
+            size="s"
+            tuiAutoFocus
+            tuiIconButton
+            type="button"
+            (click)="closeSidebar()"
+          >
+            Close navigation
+          </button>
+        </div>
+      </div>
+    </header>
+    @for (navItem of allNavItems; track navItem) {
+      <sidebar-chip
+        icon="{{ navItem.icon }}"
+        value="{{ navItem.label }}"
+        [active]="this.isSelected(navItem)"
+        (click)="navItem.onClick()"
+      >
+      </sidebar-chip>
+    }
+  </tui-drawer>
 } @else {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">
@@ -54,21 +67,35 @@
         type="button"
         class="navbar-notification"
         aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
+        tuiDropdownAlign="end"
+        [tuiDropdown]="notificationPanel"
+        [tuiDropdownOpen]="notificationsOpen"
+        (tuiDropdownOpenChange)="onNotificationPanelChange($event)"
       >
         <mat-icon [svgIcon]="'notifications'" />
         @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
+          <tui-badge-notification size="s" class="notification-badge">
+            {{ notificationLogService.unreadCount() }}
+          </tui-badge-notification>
         }
       </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
-          <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
+      <ng-template #notificationPanel>
+        <notification-list variant="popover" />
+      </ng-template>
+      <button
+        type="button"
+        class="navbar-menu"
+        aria-label="More pages"
+        tuiDropdownAlign="end"
+        [class.selected]="menuOpen"
+        [tuiDropdown]="menu"
+        [(tuiDropdownOpen)]="menuOpen"
+      >
         <mat-icon [svgIcon]="'apps'" />
-      </div>
+      </button>
+      <ng-template #menu>
+        <app-nav-options-menu [items]="navMenuItems" (itemClick)="onMenuItemClick($event)" />
+      </ng-template>
     </hstack>
   </nav>
 }

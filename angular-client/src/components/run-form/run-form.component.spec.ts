@@ -1,7 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Subject } from 'rxjs';
+import { POLYMORPHEUS_CONTEXT } from '@taiga-ui/polymorpheus';
 
 import { RunFormComponent } from './run-form.component';
 
@@ -12,7 +10,7 @@ describe('RunFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RunFormComponent],
-      providers: [MessageService, { provide: DynamicDialogRef, useValue: { close: () => {}, onClose: new Subject() } }]
+      providers: [{ provide: POLYMORPHEUS_CONTEXT, useValue: { completeWith: () => {} } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(RunFormComponent);

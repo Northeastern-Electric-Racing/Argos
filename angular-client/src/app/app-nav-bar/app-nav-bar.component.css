@@ -7,7 +7,7 @@
   padding: 10px;
   align-self: center;
   align-items: center;
-  background-color: #2c2c2c;
+  background-color: var(--color-background-info);
   margin-bottom: 1rem;
   padding-left: 10px;
   padding-right: 10px;
@@ -48,6 +48,9 @@
   justify-content: center;
   padding: 8px;
   border-radius: 4px;
+  background: none;
+  border: none;
+  color: inherit;
 }
 
 .navbar-menu mat-icon {
@@ -58,7 +61,7 @@
 
 .navbar-menu.selected,
 .navbar-menu:hover {
-  color: #ef4345;
+  color: var(--color-accent);
 }
 
 .navbar-notification {
@@ -82,7 +85,7 @@
 }
 
 .navbar-notification:hover {
-  color: #ef4345;
+  color: var(--color-accent);
 }
 
 .notification-badge {
@@ -91,23 +94,6 @@
   right: 2px;
 }
 
-:host {
-  --p-dialog-background: transparent !important;
-  --p-dialog-border-color: transparent !important;
-}
-
-:host ::ng-deep .notification-popover.p-popover {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  border-radius: var(--border-radius-panel) !important;
-}
-
-:host ::ng-deep .notification-popover .p-popover-content {
-  padding: 0 !important;
-  background: transparent !important;
-}
-
-:host ::ng-deep .notification-popover .p-popover-arrow {
-  display: none !important;
+.nav-drawer {
+  inline-size: 20rem;
 }

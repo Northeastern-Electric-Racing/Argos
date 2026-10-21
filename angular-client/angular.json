@@ -25,9 +25,18 @@
             },
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets",
+              {
+                "glob": "**/*",
+                "input": "node_modules/@taiga-ui/icons/src",
+                "output": "assets/taiga-ui/icons",
+                "ignore": ["flags/**", "**/*-filled.svg"]
+              }
+            ],
             "inlineStyleLanguage": "css",
-            "styles": ["src/styles.css", "node_modules/primeicons/primeicons.css", "primeicons/primeicons.css"],
+            "styles": ["@taiga-ui/styles/taiga-ui-theme.less", "src/styles.css"],
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules/"]
             },

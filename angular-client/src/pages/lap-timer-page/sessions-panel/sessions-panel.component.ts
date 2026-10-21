@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ToastService } from 'src/services/toast.service';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Popover } from 'primeng/popover';
-import { TableModule } from 'primeng/table';
+import { TuiTable } from '@taiga-ui/addon-table';
+import { TuiDataList, TuiDropdown } from '@taiga-ui/core';
+import { injectConfirm } from 'src/utils/confirm.utils';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -20,54 +22,58 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     DatePipe,
     FormsModule,
     MatIcon,
-    TableModule,
-    Popover,
+    TuiTable,
+    TuiDataList,
+    TuiDropdown,
     ButtonComponent,
     InfoBackgroundComponent,
     TypographyComponent
   ]
 })
 export default class SessionsPanelComponent {
+  private destroyRef = inject(DestroyRef);
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private confirm = injectConfirm();
+  private toasts = inject(ToastService);
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');
+  /** The session whose actions menu is open */
+  readonly menuSessionId = signal<string | null>(null);
 
   onClearAllSessions = () => {
     const count = this.timer.sessions().length;
     if (count === 0) return;
-    this.confirmationService.confirm({
-      message: `Delete all ${count} ${count === 1 ? 'session' : 'sessions'} and their laps? This cannot be undone.`,
-      header: 'Clear All Sessions',
-      acceptLabel: 'Clear All',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.confirm('Clear All Sessions', {
+      content: `Delete all ${count} ${count === 1 ? 'session' : 'sessions'} and their laps? This cannot be undone.`,
+      yes: 'Clear All',
+      no: 'Cancel'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
         this.timer.clearAllSessions();
-        this.toast('success', 'All sessions cleared', '');
-      }
-    });
+        this.toast('positive', 'All sessions cleared', '');
+      });
   };
 
   onNewSession = () => {
     if (!this.timer.activeSession() || this.timer.isIdle()) {
       this.timer.createSession();
       const s = this.timer.activeSession();
-      this.toast('success', 'Session created', s ? `"${s.name}"` : '');
+      this.toast('positive', 'Session created', s ? `"${s.name}"` : '');
       return;
     }
-    this.confirmationService.confirm({
-      message: 'Pause the current session and start a new one?',
-      header: 'New Session',
-      acceptLabel: 'New Session',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.confirm('New Session', {
+      content: 'Pause the current session and start a new one?',
+      yes: 'New Session',
+      no: 'Cancel'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
         this.timer.createSession();
         const s = this.timer.activeSession();
-        this.toast('success', 'Session created', s ? `"${s.name}"` : '');
-      }
-    });
+        this.toast('positive', 'Session created', s ? `"${s.name}"` : '');
+      });
   };
 
   onSelectSession = (id: string) => {
@@ -75,33 +81,33 @@ export default class SessionsPanelComponent {
     this.timer.selectSession(id);
   };
 
-  onDeleteSession = (session: LapSession, popover?: Popover) => {
-    popover?.hide();
+  onDeleteSession = (session: LapSession) => {
+    this.menuSessionId.set(null);
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
-      this.toast('success', 'Session deleted', `"${session.name}"`);
+      this.toast('positive', 'Session deleted', `"${session.name}"`);
       return;
     }
-    this.confirmationService.confirm({
-      message: `Delete "${session.name}" and its ${session.laps.length} laps?`,
-      header: 'Delete Session',
-      acceptLabel: 'Delete',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.confirm('Delete Session', {
+      content: `Delete "${session.name}" and its ${session.laps.length} laps?`,
+      yes: 'Delete',
+      no: 'Cancel'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
         this.timer.deleteSession(session.id);
-        this.toast('success', 'Session deleted', `"${session.name}"`);
-      }
-    });
+        this.toast('positive', 'Session deleted', `"${session.name}"`);
+      });
   };
 
-  onDownload = (sessionId: string, popover?: Popover) => {
-    popover?.hide();
+  onDownload = (sessionId: string) => {
+    this.menuSessionId.set(null);
     const filename = this.timer.downloadCsv(sessionId);
-    if (filename) this.toast('success', 'Downloaded', filename);
+    if (filename) this.toast('positive', 'Downloaded', filename);
   };
 
-  startEdit(session: LapSession, popover?: Popover): void {
-    popover?.hide();
+  startEdit(session: LapSession): void {
+    this.menuSessionId.set(null);
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
   }
@@ -136,7 +142,7 @@ export default class SessionsPanelComponent {
     return null;
   }
 
-  private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
-    this.messageService.add({ severity, summary, detail, life: 2000 });
+  private toast(appearance: 'positive' | 'warning' | 'negative' | 'info', label: string, detail: string): void {
+    this.toasts.show(detail, { label, appearance, autoClose: 2000 });
   }
 }

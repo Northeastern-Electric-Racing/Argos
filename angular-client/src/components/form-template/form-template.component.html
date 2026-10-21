@@ -1,31 +1,16 @@
 <!-- dynamic-form.component.html -->
-<form class="form" [formGroup]="form">
+<form tuiForm="m" [formGroup]="form" (submit.prevent)="onSubmit()">
   @for (field of fields(); track field) {
-    <div class="flex flex-column gap-1">
+    <tui-textfield>
       @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+        <label tuiLabel>{{ field.label }}</label>
       }
-      <input
-        [attr.placeholder]="field.placeholder"
-        [formControlName]="field.name"
-        [type]="field.type"
-        [value]="'boston'"
-        pInputText
-        class="form-control w-full"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
-        }"
-      />
-
-      <!-- Error Message -->
-      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
-        <div class="error-msg">
-          {{ getErrorMessage(field) }}
-        </div>
-      }
-    </div>
+      <input tuiInput [attr.placeholder]="field.placeholder" [formControlName]="field.name" [type]="field.type" />
+    </tui-textfield>
+    <tui-error [error]="form.get(field.name)?.touched ? getErrorMessage(field) || null : null" />
   }
 
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+  <footer>
+    <button tuiButton type="submit" [disabled]="!form.valid">Submit</button>
+  </footer>
 </form>

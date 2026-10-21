@@ -17,9 +17,16 @@
       [placeholder]="quickSelectConfig().placeholder"
       [defaultValue]="selectedPresetLabel()"
     />
-    <div class="custom-stack">
+    <div
+      class="custom-stack"
+      tuiDropdownAlign="end"
+      [tuiDropdown]="customPopover"
+      [tuiDropdownOpen]="customOpen()"
+      (tuiDropdownOpenChange)="onCustomOpenChange($event)"
+    >
+      <!-- tuiDropdownOpen toggles the popover on the button's click, Esc and outside clicks -->
       <argos-button
-        [onClick]="toggleCustomPopover"
+        [onClick]="noop"
         label="Custom"
         size="sm"
         [additionalStyles]="
@@ -34,100 +41,93 @@
     </div>
   </div>
 
-  <p-popover #customPopover styleClass="custom-range-popover" (onShow)="onCustomPopoverShow()">
-    <ng-template #content>
-      <div class="custom-popover-body">
-        <div class="mode-toggle">
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'last-x'"
-            (click)="setCustomMode('last-x')"
-          >
-            Last X
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'date-range'"
-            (click)="setCustomMode('date-range')"
-          >
-            Date Range
-          </button>
-        </div>
+  <ng-template #customPopover>
+    <div class="custom-popover-body">
+      <tui-segmented
+        size="s"
+        class="mode-toggle"
+        [activeItemIndex]="customMode() === 'last-x' ? 0 : 1"
+        (activeItemIndexChange)="setCustomMode($event === 0 ? 'last-x' : 'date-range')"
+      >
+        <button type="button">Last X</button>
+        <button type="button">Date Range</button>
+      </tui-segmented>
 
-        @if (customMode() === 'last-x') {
-          <div class="mode-body">
-            <div class="field-row">
-              <label class="popover-label">Hours</label>
-              <p-inputnumber
+      @if (customMode() === 'last-x') {
+        <div class="mode-body">
+          <div class="field-row">
+            <label class="popover-label">Hours</label>
+            <tui-textfield tuiTextfieldSize="s" class="number-field" [tuiTextfieldCleaner]="false">
+              <input
+                tuiInputNumber
+                aria-label="Hours"
+                placeholder="0"
+                [min]="0"
+                [step]="1"
                 [ngModel]="customHours()"
                 (ngModelChange)="customHours.set($event)"
-                mode="decimal"
+              />
+            </tui-textfield>
+          </div>
+          <div class="field-row">
+            <label class="popover-label">Minutes</label>
+            <tui-textfield tuiTextfieldSize="s" class="number-field" [tuiTextfieldCleaner]="false">
+              <input
+                tuiInputNumber
+                aria-label="Minutes"
+                placeholder="30"
                 [min]="0"
                 [step]="1"
-                inputStyleClass="text-xs p-1"
-                placeholder="0"
-              />
-            </div>
-            <div class="field-row">
-              <label class="popover-label">Minutes</label>
-              <p-inputnumber
                 [ngModel]="customMinutes()"
                 (ngModelChange)="customMinutes.set($event)"
-                mode="decimal"
-                [min]="0"
-                [step]="1"
-                inputStyleClass="text-xs p-1"
-                placeholder="30"
               />
-            </div>
-            <argos-button
-              [onClick]="applyCustomLastX"
-              label="Apply"
-              size="sm"
-              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-            />
+            </tui-textfield>
           </div>
-        } @else {
-          <div class="mode-body">
-            <div class="field-row">
-              <label class="popover-label">From</label>
-              <p-datepicker
-                [ngModel]="customFromDate()"
-                (ngModelChange)="customFromDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
+          <argos-button
+            [onClick]="applyCustomLastX"
+            label="Apply"
+            size="sm"
+            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+          />
+        </div>
+      } @else {
+        <div class="mode-body">
+          <div class="field-row">
+            <label class="popover-label">From</label>
+            <tui-textfield tuiTextfieldSize="s" class="date-field" [tuiTextfieldCleaner]="false">
+              <input
+                tuiInputDateTime
+                timeMode="HH:MM:SS"
+                aria-label="From"
+                [max]="maxDayTime()"
+                [ngModel]="customFromDayTime()"
+                (ngModelChange)="setCustomFrom($event)"
               />
-            </div>
-            <div class="field-row">
-              <label class="popover-label">To</label>
-              <p-datepicker
-                [ngModel]="customToDate()"
-                (ngModelChange)="customToDate.set($event)"
-                [showTime]="true"
-                [showSeconds]="true"
-                [showIcon]="true"
-                [maxDate]="maxDate()"
-                appendTo="body"
-                hourFormat="24"
-                dateFormat="yy-mm-dd"
-              />
-            </div>
-            <argos-button
-              [onClick]="applyCustomDateRange"
-              label="Apply"
-              size="sm"
-              additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-            />
+              <tui-calendar *tuiDropdown />
+            </tui-textfield>
           </div>
-        }
-      </div>
-    </ng-template>
-  </p-popover>
+          <div class="field-row">
+            <label class="popover-label">To</label>
+            <tui-textfield tuiTextfieldSize="s" class="date-field" [tuiTextfieldCleaner]="false">
+              <input
+                tuiInputDateTime
+                timeMode="HH:MM:SS"
+                aria-label="To"
+                [max]="maxDayTime()"
+                [ngModel]="customToDayTime()"
+                (ngModelChange)="setCustomTo($event)"
+              />
+              <tui-calendar *tuiDropdown />
+            </tui-textfield>
+          </div>
+          <argos-button
+            [onClick]="applyCustomDateRange"
+            label="Apply"
+            size="sm"
+            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
+          />
+        </div>
+      }
+    </div>
+  </ng-template>
 </div>

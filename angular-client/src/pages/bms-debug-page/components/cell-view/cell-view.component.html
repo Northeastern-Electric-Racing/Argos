@@ -1,1 +1,14 @@
-<config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
+<!-- Non-modal side panel, so cells stay clickable on the heatmap while it is open -->
+<tui-drawer direction="end" class="cell-compare-drawer" aria-label="Cell Comparison">
+  <header>
+    <div tuiHeader="h6">
+      <div tuiTitle>Cell Comparison</div>
+      <div tuiAccessories>
+        <button appearance="icon" iconStart="@tui.x" size="s" tuiIconButton type="button" (click)="closed.emit()">
+          Close cell comparison
+        </button>
+      </div>
+    </div>
+  </header>
+  <config-table [rows]="rows" [columns]="cells" [columnConfig]="columnConfig" />
+</tui-drawer>

@@ -28,6 +28,8 @@
   --color-text-subtitle: #cacaca;
   --color-background-info: #2c2c2c;
   --color-background-page: #101010;
+  --color-background-elevated: #262626;
+  --color-accent: #ef4345;
   --color-divider: #414141;
   --color-battery-shell: #efefed;
   --color-battery-low: #f50905;
@@ -46,6 +48,12 @@
 
   /* Spacing */
   --border-radius-panel: 8px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html,
@@ -80,115 +88,39 @@ body {
   border-radius: 50%;
 }
 
-.p-dialog-title {
-  --p-dialog-title-font-weight: bold;
+/* ---- Taiga UI theme ----
+ * Taiga's dark palette with a few tokens pointed at the app's own tokens above: near-black page,
+ * slightly lighter panels, the NER red as the accent, and the Roboto font the app already bundles
+ * (Taiga's optional Manrope font stylesheet loads from Google Fonts at runtime, so it is left out).
+ */
+[tuiTheme='dark'] {
+  --tui-background-base: var(--color-background-page);
+  --tui-background-elevation-1: var(--color-background-elevated);
+  --tui-background-elevation-2: var(--color-background-info);
+  --tui-background-accent-1: var(--color-accent);
+  --tui-background-accent-1-hover: #f26a6c;
+  --tui-background-accent-1-pressed: #c9383a;
+  --tui-text-primary-on-accent-1: #fff;
+  --tui-text-action: #f26a6c;
+  --tui-text-action-hover: var(--color-accent);
 }
 
-.p-dialog {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 20px !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-}
-.p-dialog-header {
-  background-color: #262626 !important;
-  color: white !important;
-  padding: 1rem !important;
-  font-size: 1.2rem;
-  padding: 1rem;
-  border-radius: 20px 20px 0px 0px !important;
-}
-.p-dialog-content {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 0px 0px 20px 20px !important;
+/* tui-root sets Taiga's 14px/20px body font; the app's own components are sized for the browser default
+   (body raises specificity over the tui-root component style, which loads later) */
+body tui-root {
+  font: var(--font-size-md) / normal var(--font-family);
 }
 
-/* Main select button */
-.p-select {
-  color: white !important;
-  background-color: #5a5a5a !important;
-
-  border: none !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+:root {
+  --tui-typography-family-text: 'Roboto', system-ui, sans-serif;
+  --tui-typography-family-display: 'Roboto', system-ui, sans-serif;
 }
 
-/* Dropdown panel */
-.p-select-panel {
-  background-color: #5a5a5a !important;
-  color: white !important;
-  border-radius: 0 0 5px 5px !important;
-  gap: 0px !important;
-}
-
-/* Dropdown items */
-.p-select-option {
-  color: white !important;
-  background-color: transparent !important;
-  padding: 8px 16px !important;
-  border-radius: 5px !important;
-}
-
-/* Hovered item */
-.p-select-option:hover {
-  background-color: #45454594 !important;
-  border-radius: 0px !important;
-}
-
-/* Selected item */
-.p-select-option.p-highlight {
-  background-color: rgba(0, 122, 255, 0.15) !important;
-  color: #007aff !important;
-}
-
-/* Dropdown list container */
-.p-select-list {
-  background-color: #5a5a5a !important;
-  border-radius: 0 0 5px 5px !important;
-  margin: 0px;
-}
-
-/* Navbar options dropdown */
-.nav-options-dialog.p-dialog {
-  position: fixed !important;
-  top: 70px !important;
-  right: 10px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-}
-
-.nav-options-dialog .p-dialog-content {
-  padding: 0 !important;
-}
-
-.p-dialog-mask:has(.nav-options-dialog) {
-  background: transparent !important;
-}
-
-/* Cell comparison dialog — compact, no backdrop */
-.cell-compare-dialog.p-dialog {
-  width: auto !important;
-  min-width: 0 !important;
-  border-radius: 12px !important;
-}
-
-.cell-compare-dialog .p-dialog-header {
-  padding: 8px 14px !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-.cell-compare-dialog .p-dialog-content {
-  padding: 0 14px 10px !important;
-  border-radius: 0 0 12px 12px !important;
-}
-
-.p-dialog-mask:has(.cell-compare-dialog) {
-  background: transparent !important;
-  pointer-events: none !important;
-}
-
-.cell-compare-dialog {
-  pointer-events: auto !important;
+/* Visually hidden, still read by screen readers (labels for icon-only table columns) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }

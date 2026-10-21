@@ -70,13 +70,13 @@
 }
 
 /* Body font shared by the table, rename input, and menu items. */
-.sessions-table-wrap :where(.p-datatable),
+.sessions-table-wrap :where(table),
 .session-rename-input,
 .session-menu-item {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
 }
-.sessions-table-wrap :where(.p-datatable) {
+.sessions-table-wrap :where(table) {
   color: var(--color-text-primary);
 }
 .sessions-table-wrap :where(th) {
@@ -108,7 +108,7 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
+/* !important: overrides Taiga's tuiTh/tuiTd defaults. */
 .sessions-table-wrap th.col-state,
 .sessions-table-wrap td.col-state {
   width: 32px;
@@ -227,4 +227,8 @@
 .session-state-icon {
   color: var(--color-battery-high);
   vertical-align: middle;
+}
+
+.sessions-table {
+  width: 100%;
 }

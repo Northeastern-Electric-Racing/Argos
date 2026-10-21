@@ -1,13 +1,16 @@
 @if (this.urlAvailable) {
   <div class="background">
     <div class="top-right">
-      <p-select
-        [options]="videoUrls"
-        [(ngModel)]="selectedVideoName"
-        placeholder="Select a Video"
-        (onChange)="onDropdownChange($event)"
-        [style]="{ padding: '5px' }"
-      />
+      <tui-textfield tuiChevron tuiTextfieldSize="m" class="video-select" [tuiTextfieldCleaner]="false">
+        <input
+          tuiSelect
+          aria-label="Select a Video"
+          placeholder="Select a Video"
+          [ngModel]="selectedVideoName"
+          (ngModelChange)="onDropdownChange($event)"
+        />
+        <tui-data-list-wrapper *tuiDropdown [items]="videoUrls" />
+      </tui-textfield>
     </div>
 
     <div class="video-container">
