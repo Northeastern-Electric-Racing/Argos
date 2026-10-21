@@ -65,6 +65,8 @@ export default class CustomGraphComponent implements OnDestroy {
   data = new Map<string, Point[]>();
   timeRangeMs: number | undefined = undefined;
   private frameId: number | undefined;
+  /** Where the mouse rests over the chart, in chart pixels; undefined when it is elsewhere. */
+  private hover: { x: number; y: number } | undefined;
 
   constructor() {
     effect(() => {
@@ -114,6 +116,12 @@ export default class CustomGraphComponent implements OnDestroy {
 
   onChartInit(chart: ECharts): void {
     this.chart = chart;
+    chart.getZr().on('mousemove', (e) => {
+      this.hover = { x: e.offsetX, y: e.offsetY };
+    });
+    chart.getZr().on('globalout', () => {
+      this.hover = undefined;
+    });
     // Deferred: ngx-echarts emits chartInit before applying [options] with notMerge, which would wipe a sync render
     this.requestRender();
   }
@@ -174,6 +182,9 @@ export default class CustomGraphComponent implements OnDestroy {
       });
       // Merges into the existing chart: series are matched by id and updated in place
       this.chart.setOption(update, { replaceMerge: ['series', 'yAxis'] });
+      // After a redraw ECharts re-shows the tooltip for the time it last showed, which a live window has slid
+      // away from under a still cursor; show it for the cursor's position instead
+      if (this.hover) this.chart.dispatchAction({ type: 'showTip', ...this.hover });
     });
   }
 
@@ -210,7 +221,7 @@ export default class CustomGraphComponent implements OnDestroy {
 
         if (config.rangeMode === 'time') {
           // Keep one point at or past the window's left edge, so the line runs off the edge instead of
-          // stopping short of it; anything older is off screen and would only stretch the y-axis
+          // stopping short of it (graphChartUpdate cuts the line at the edge); anything older is never drawn
           const windowStart = latestX - config.timeRangeMs;
           let offScreen = 0;
           while (offScreen + 1 < line.length && line[offScreen + 1][0] <= windowStart) offScreen++;

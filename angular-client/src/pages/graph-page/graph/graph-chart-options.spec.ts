@@ -1,5 +1,6 @@
 import {
   buildMultiYAxes,
+  DAY_BOUNDARIES_ID,
   DAY_MS,
   graphChartUpdate,
   GraphChartState,
@@ -63,6 +64,13 @@ describe('graph chart options', () => {
       expect(yAxis[0]['max']).toBe(10);
     });
 
+    it('gives each y-axis a stable id, so a redraw merges into the existing axes instead of rebuilding them', () => {
+      const ids = (update: ReturnType<typeof graphChartUpdate>) => (update.yAxis as AnyRecord[]).map((a) => a['id']);
+
+      expect(ids(graphChartUpdate(state({ data })))).toEqual(ids(graphChartUpdate(state({ data }))));
+      expect(ids(graphChartUpdate(state({ data, multipleYAxes: true })))).toEqual(['A 0', 'B 0']);
+    });
+
     it('gives each series its own axis with multiple y-axes on (#630)', () => {
       const update = graphChartUpdate(state({ data, multipleYAxes: true }));
 
@@ -80,6 +88,24 @@ describe('graph chart options', () => {
       const update = graphChartUpdate(state({ data, xRangeMs: 500 }));
 
       expect((update.xAxis as AnyRecord)['min']).toBe(1500);
+    });
+
+    it("cuts each series to a live window, starting it with a point on the window's left edge", () => {
+      const points: Point[] = [
+        [0, 1000],
+        [1000, 1],
+        [3000, 3],
+        [5000, 5]
+      ];
+
+      const update = graphChartUpdate(state({ data: new Map([['A 0', points]]), xRangeMs: 3000 }));
+
+      // The point at 0 s is gone, and the line from 1 s to 3 s is cut at the edge, 2 s
+      expect((update.series as AnyRecord[])[0]['data']).toEqual([
+        [2000, 2],
+        [3000, 3],
+        [5000, 5]
+      ]);
     });
 
     it('clears the window so the axis fits all data when there is no range', () => {
@@ -102,7 +128,13 @@ describe('graph chart options', () => {
 
       const update = graphChartUpdate(state({ data: multiDay, detectMultiDay: true }));
 
-      const markLine = (update.series as AnyRecord[])[0]['markLine'] as { data: { xAxis: number }[] };
+      // On a series of their own, so hiding a topic in the legend can't take them with it
+      const series = update.series as AnyRecord[];
+      const boundaries = series.find((s) => s['id'] === DAY_BOUNDARIES_ID)!;
+      expect(boundaries['data']).toEqual([]);
+      expect(boundaries['name']).toBeUndefined();
+      expect(series.find((s) => s['id'] === 'A 0')!['markLine']).toBeUndefined();
+      const markLine = boundaries['markLine'] as { data: { xAxis: number }[] };
       expect(markLine.data.map((d) => d.xAxis)).toEqual([new Date(2026, 0, 2).getTime(), new Date(2026, 0, 3).getTime()]);
       const axisLabel = (update.xAxis as AnyRecord)['axisLabel'] as AnyRecord;
       expect(axisLabel['formatter']).toBe(multiDayLabel);
@@ -121,8 +153,8 @@ describe('graph chart options', () => {
 
       const update = graphChartUpdate(state({ data: multiDay, detectMultiDay: false }));
 
-      // An empty markLine, not none: series merge by id, so lines from an earlier multi-day range must be cleared
-      expect((update.series as AnyRecord[])[0]['markLine']).toEqual({ data: [] });
+      // Left out, so replaceMerge removes the boundaries of an earlier multi-day range
+      expect((update.series as AnyRecord[]).map((s) => s['id'])).toEqual(['A 0']);
       expect(((update.xAxis as AnyRecord)['axisLabel'] as AnyRecord)['formatter']).toBe(singleDayLabel);
     });
   });

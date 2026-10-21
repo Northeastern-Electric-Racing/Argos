@@ -1,4 +1,5 @@
 import type { ComposeOption } from 'echarts/core';
+import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import type { LineSeriesOption } from 'echarts/charts';
 import type {
   DataZoomComponentOption,
@@ -25,8 +26,12 @@ type YAxisOption = Exclude<NonNullable<GraphChartOption['yAxis']>, unknown[]>;
 export type Point = [x: number, y: number];
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
+/** Id of the data-less series that carries the day-boundary mark lines. */
+export const DAY_BOUNDARIES_ID = '__day-boundaries';
 const TEXT_COLOR = '#fff';
 const DAY_BOUNDARY_COLOR = '#8fcadd';
+/** Id of the y-axis when all series share one. */
+const SHARED_Y_AXIS_ID = 'shared';
 /** Horizontal room each extra y-axis on the same side takes (labels + rotated name). */
 const Y_AXIS_OFFSET_PX = 80;
 
@@ -56,6 +61,9 @@ export function baseGraphChartOption(): GraphChartOption {
     legend: {
       type: 'scroll',
       top: 0,
+      // Leave the top-right corner to the toolbox
+      left: 16,
+      right: 140,
       textStyle: { color: TEXT_COLOR, fontSize: 15 },
       pageTextStyle: { color: TEXT_COLOR }
     },
@@ -75,7 +83,7 @@ export function baseGraphChartOption(): GraphChartOption {
       }
     },
     // Wheel/drag zoom on the time axis. 'filter' drops points outside the window, so the y-axis
-    // rescales to what is visible (ApexCharts' autoScaleYaxis); a live window turns it off (see graphChartUpdate).
+    // rescales to what is visible (ApexCharts' autoScaleYaxis).
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'filter' }],
     xAxis: {
       type: 'time',
@@ -100,31 +108,28 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
   const multipleYAxes = state.multipleYAxes && state.data.size > 0;
   const yAxis = multipleYAxes
     ? buildMultiYAxes([...state.data.keys()])
-    : [{ ...baseYAxis(), min: state.yMin ?? undefined, max: state.yMax ?? undefined }];
+    : [{ ...baseYAxis(), id: SHARED_Y_AXIS_ID, min: state.yMin ?? undefined, max: state.yMax ?? undefined }];
+  // Whole ms: ECharts rounds a time axis's zoom window to them, and a fractional edge would filter out the edge point
+  const windowStart = state.xRangeMs !== undefined && span ? Math.ceil(span.maxX - state.xRangeMs) : undefined;
 
   const series: LineSeriesOption[] = [...state.data].map(([name, points], index) => ({
     id: name,
     name,
     type: 'line',
-    data: points as Point[],
+    data: windowStart === undefined ? (points as Point[]) : clipToWindow(points, windowStart),
     yAxisIndex: multipleYAxes ? index : 0,
-    // Series merge into the existing ones by id, so a range that stops spanning days must clear old boundary lines
-    markLine: isMultiDay && index === 0 ? buildDayBoundaryMarkLine(span!) : { data: [] },
     showSymbol: false,
     lineStyle: { width: 3 },
     // Downsample to the canvas width, keeping peaks; matters for long historical ranges
     sampling: 'lttb',
     animation: false
   }));
-  const liveWindow = state.xRangeMs !== undefined && !!span;
+  // Left out otherwise, so replaceMerge removes the lines of a range that no longer spans days
+  if (isMultiDay) series.push(dayBoundarySeries(span!));
   return {
-    // A live window keeps its one point past the left edge (the graph trims the rest), so the line runs
-    // through it and is clipped at the edge. Filtering would drop that point, and with it the segment
-    // into the edge: the line would stop short of the edge and jump each time its oldest point left.
-    dataZoom: [{ filterMode: liveWindow ? 'none' : 'filter' }],
     xAxis: {
       // null clears a previous window so the axis fits all data again
-      min: liveWindow ? span!.maxX - state.xRangeMs! : null,
+      min: windowStart ?? null,
       axisLabel: { formatter: isMultiDay ? multiDayLabel : singleDayLabel }
     } as XAxisOption,
     yAxis,
@@ -136,6 +141,8 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
 export function buildMultiYAxes(labels: string[]): YAxisOption[] {
   return labels.map((label, index) => ({
     ...baseYAxis(),
+    // replaceMerge keeps an axis only when its id matches, so without one every redraw rebuilds every axis
+    id: label,
     name: label.replace('0', ''),
     nameLocation: 'middle',
     nameGap: 50,
@@ -145,6 +152,38 @@ export function buildMultiYAxes(labels: string[]): YAxisOption[] {
     // Only the first axis draws grid lines; one set per axis would cross-hatch the chart
     splitLine: { show: index === 0 }
   }));
+}
+
+/**
+ * A live window's part of a series: the points from `windowStart` on, led by one interpolated onto `windowStart`
+ * from the points either side of it. The zoom filter drops every point before the window, so the edge point is what
+ * runs the line out to the edge (sliding smoothly as data ages out) while the y-axis fits only what is on screen.
+ */
+export function clipToWindow(points: readonly Point[], windowStart: number): Point[] {
+  const first = binarySearchInsertIndex(points, windowStart, ([x]) => x);
+  const visible = points.slice(first);
+  if (first === 0 || first === points.length || points[first][0] === windowStart) return visible;
+  const [x0, y0] = points[first - 1];
+  const [x1, y1] = points[first];
+  // Rounded like incoming values, so the tooltip at the edge shows no float noise
+  const y = Math.round((y0 + ((y1 - y0) * (windowStart - x0)) / (x1 - x0)) * 10000) / 10000;
+  return [[windowStart, y], ...visible];
+}
+
+/**
+ * A data-less series carrying the day-boundary lines. A mark line belongs to its series, so on a topic's series
+ * hiding that topic in the legend would hide the boundaries too. Unnamed, so the legend leaves it out.
+ */
+function dayBoundarySeries(span: { minX: number; maxX: number }): LineSeriesOption {
+  return {
+    id: DAY_BOUNDARIES_ID,
+    type: 'line',
+    data: [],
+    markLine: buildDayBoundaryMarkLine(span),
+    silent: true,
+    tooltip: { show: false },
+    animation: false
+  };
 }
 
 export function computeDataSpan(

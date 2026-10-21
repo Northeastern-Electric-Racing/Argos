@@ -32,7 +32,8 @@ describe('CustomGraphComponent', () => {
     fixture.componentRef.setInput('graphConfig', config);
     fixture.componentRef.setInput('valuesSubject', []);
     setOption = jasmine.createSpy('setOption');
-    fixture.componentInstance.onChartInit({ setOption, isDisposed: () => false } as unknown as ECharts);
+    const zr = { on: () => undefined };
+    fixture.componentInstance.onChartInit({ setOption, isDisposed: () => false, getZr: () => zr } as unknown as ECharts);
     TestBed.tick();
   });
 
@@ -171,6 +172,61 @@ describe('CustomGraphComponent with ECharts', () => {
     expect((chart.getOption()['yAxis'] as unknown[]).length).toBe(1);
   });
 
+  it('updates the y-axes in place on a redraw instead of rebuilding them', async () => {
+    const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    const { chart } = await createChart({
+      showMultipleYAxes: true,
+      valuesSubject: [voltage, topic('BMS/Pack/Current', [{ x: 1000, y: 20 }])]
+    });
+    const axisModel = () => model(chart).getComponent('yAxis', 1);
+    const before = axisModel();
+
+    voltage.updates.next([[{ x: 2000, y: 401 }]]);
+    await nextFrame();
+
+    expect(axisModel()).toBe(before);
+  });
+
+  it('keeps the day boundaries when the first topic is hidden in the legend', async () => {
+    const start = new Date(2026, 9, 16, 12).getTime();
+    const hours = (h: number) => start + h * 60 * 60 * 1000;
+    const { chart } = await createChart({
+      valuesSubject: [
+        topic('A/topic', [
+          { x: hours(0), y: 1 },
+          { x: hours(50), y: 2 }
+        ]),
+        topic('B/topic', [
+          { x: hours(0), y: 3 },
+          { x: hours(50), y: 4 }
+        ])
+      ]
+    });
+    const label = new Date(2026, 9, 17).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    expect(drawnTexts(chart)).toContain(label);
+
+    chart.dispatchAction({ type: 'legendUnSelect', name: 'A/topic 0' });
+
+    expect(drawnTexts(chart)).toContain(label);
+  });
+
+  it('keeps the hover line under a still cursor as a live window slides', async () => {
+    const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    const { chart } = await createChart({ realTime: true, valuesSubject: [voltage] });
+    const dispatch = spyOn(chart, 'dispatchAction').and.callThrough();
+
+    chart.getZr().trigger('mousemove', { offsetX: 120, offsetY: 40 });
+    voltage.updates.next([[{ x: 2000, y: 401 }]]);
+    await nextFrame();
+    expect(dispatch).toHaveBeenCalledWith({ type: 'showTip', x: 120, y: 40 });
+
+    dispatch.calls.reset();
+    chart.getZr().trigger('globalout', {});
+    voltage.updates.next([[{ x: 3000, y: 402 }]]);
+    await nextFrame();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   describe('in a live window', () => {
     // The window is the last 60 s, so it starts at 40 s; the points at 0 s, 20 s and 38 s are off screen
     const live = () =>
@@ -182,6 +238,8 @@ describe('CustomGraphComponent with ECharts', () => {
             { x: 20_000, y: 1000 },
             { x: 38_000, y: 2 },
             { x: 50_000, y: 3 },
+            { x: 80_000, y: 3.8 },
+            { x: 90_000, y: 3.9 },
             { x: 100_000, y: 4 }
           ])
         ]
@@ -189,12 +247,11 @@ describe('CustomGraphComponent with ECharts', () => {
 
     /** What ECharts draws: the series' data after dataZoom filtering, and the axes' extents. */
     function drawn(chart: ECharts) {
-      const model = (chart as unknown as { getModel(): ChartModel }).getModel();
-      const data = model.getSeriesByIndex(0).getData();
+      const data = model(chart).getSeriesByIndex(0).getData();
       return {
         xs: Array.from({ length: data.count() }, (_, i) => data.get(data.dimensions[0], i)),
-        xExtent: model.getComponent('xAxis', 0).axis.scale.getExtent(),
-        yExtent: model.getComponent('yAxis', 0).axis.scale.getExtent()
+        xExtent: model(chart).getComponent('xAxis', 0).axis.scale.getExtent(),
+        yExtent: model(chart).getComponent('yAxis', 0).axis.scale.getExtent()
       };
     }
 
@@ -203,12 +260,48 @@ describe('CustomGraphComponent with ECharts', () => {
 
       const { xs, xExtent } = drawn(chart);
       expect(xExtent[0]).toBe(40_000);
-      expect(xs[0]).toBe(38_000);
+      expect(xs[0]).toBe(40_000);
     });
 
     it('scales the y-axis to what is on screen, not to points further off it', async () => {
       const { chart } = await live();
 
+      expect(drawn(chart).yExtent[1]).toBeLessThan(1000);
+    });
+
+    it('scales the y-axis to a zoomed-in part of the window', async () => {
+      const { chart } = await live();
+
+      // The second half of the window, 70 s to 100 s, holds only values 3.8 to 4
+      chart.dispatchAction({ type: 'dataZoom', start: 50, end: 100 });
+      await nextFrame();
+
+      expect(drawn(chart).yExtent[0]).toBeGreaterThan(3);
+    });
+
+    it("scales the y-axis to what is on screen when a slower topic keeps points older than the window's", async () => {
+      // Point Range: the window is as wide as the fast topic's last 3 points, 97 s to 100 s,
+      // while the slow topic still holds a point at 40 s
+      const { chart } = await createChart({
+        realTime: true,
+        graphConfig: { ...config, rangeMode: 'points', maxPoints: 2 },
+        valuesSubject: [
+          topic('Fast', [
+            { x: 97_000, y: 3 },
+            { x: 98_000, y: 3 },
+            { x: 99_000, y: 3.5 },
+            { x: 100_000, y: 4 }
+          ]),
+          topic('Slow', [
+            { x: 0, y: 1000 },
+            { x: 40_000, y: 1000 },
+            { x: 96_000, y: 3 },
+            { x: 100_000, y: 3.5 }
+          ])
+        ]
+      });
+
+      expect(drawn(chart).xExtent[0]).toBe(97_000);
       expect(drawn(chart).yExtent[1]).toBeLessThan(1000);
     });
   });
@@ -219,4 +312,28 @@ interface ChartModel {
     getData(): { count(): number; dimensions: string[]; get(dim: string, index: number): number };
   };
   getComponent(type: string, index: number): { axis: { scale: { getExtent(): [number, number] } } };
+}
+
+/** ECharts' internal model of what it draws. */
+function model(chart: ECharts): ChartModel {
+  return (chart as unknown as { getModel(): ChartModel }).getModel();
+}
+
+/** Every text the chart has painted, such as axis and mark line labels. */
+function drawnTexts(chart: ECharts): string[] {
+  type Element = {
+    ignore?: boolean;
+    style?: { text?: unknown };
+    childrenRef?(): Element[];
+    getTextContent?(): Element | undefined;
+  };
+  const texts: string[] = [];
+  const visit = (el: Element | undefined): void => {
+    if (!el || el.ignore) return;
+    if (typeof el.style?.text === 'string') texts.push(el.style.text);
+    el.childrenRef?.().forEach(visit);
+    visit(el.getTextContent?.());
+  };
+  (chart.getZr() as unknown as { storage: { getRoots(): Element[] } }).storage.getRoots().forEach(visit);
+  return texts;
 }
