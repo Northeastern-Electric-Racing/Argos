@@ -31,11 +31,6 @@
   outline: none;
 }
 
-.stream-toggle .pi {
-  font-size: 0.95rem;
-  transition: transform 0.25s ease;
-}
-
 .page-layout {
   display: flex;
   gap: 20px;
@@ -116,16 +111,6 @@
 
 .search-input {
   width: 200px;
-  background-color: #333;
-  border: 1px solid #555;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-}
-
-.search-input::placeholder {
-  color: #888;
 }
 
 .table-placeholder {

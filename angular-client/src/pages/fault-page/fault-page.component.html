@@ -1,42 +1,43 @@
-<div class="container">
+<div class="fault-container">
   <typography
     class="title-style"
     variant="x-large-title"
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
-  <p-accordion [value]="0" [multiple]="true">
-    @for (node of nodeArray; track node) {
-      <p-accordion-panel [value]="node.node">
-        <p-accordion-header>{{ node.node }}</p-accordion-header>
-        <p-accordion-content>
-          <p-table
-            selectionMode="single"
-            [(selection)]="selectedFault"
-            (onRowSelect)="onRowSelect()"
-            metaKeySelection
-            [value]="node.data"
-            stripedRows
-          >
-            <ng-template #header>
-              <tr>
-                <th>Name</th>
-                <th>Occurred At</th>
-                <th>Last Seen</th>
-                <th>Expired?</th>
+  <hlm-accordion type="multiple" class="gap-2">
+    @for (node of nodeArray; track node.node) {
+      <hlm-accordion-item class="bg-card rounded-md px-4">
+        <hlm-accordion-trigger triggerClass="text-base font-semibold">{{ node.node }}</hlm-accordion-trigger>
+        <hlm-accordion-content>
+          <table hlmTable>
+            <thead hlmTHead>
+              <tr hlmTr>
+                <th hlmTh>Name</th>
+                <th hlmTh>Occurred At</th>
+                <th hlmTh>Last Seen</th>
+                <th hlmTh>Expired?</th>
               </tr>
-            </ng-template>
-            <ng-template #body let-node>
-              <tr [pSelectableRow]="node">
-                <td>{{ node.name }}</td>
-                <td>{{ node.occurredAt | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.lastSeen | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.expired ? 'Yes' : 'No' }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </p-accordion-content>
-      </p-accordion-panel>
+            </thead>
+            <tbody hlmTBody>
+              @for (fault of node.data; track $index) {
+                <tr
+                  hlmTr
+                  class="cursor-pointer even:bg-muted/30"
+                  tabindex="0"
+                  (click)="onRowSelect(fault)"
+                  (keydown.enter)="onRowSelect(fault)"
+                >
+                  <td hlmTd>{{ fault.name }}</td>
+                  <td hlmTd>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+                  <td hlmTd>{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
+                  <td hlmTd>{{ fault.expired ? 'Yes' : 'No' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </hlm-accordion-content>
+      </hlm-accordion-item>
     }
-  </p-accordion>
+  </hlm-accordion>
 </div>

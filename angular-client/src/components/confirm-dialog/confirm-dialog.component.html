@@ -1,0 +1,10 @@
+<hlm-dialog-header>
+  <h2 hlmDialogTitle>{{ context.header }}</h2>
+  <p hlmDialogDescription>{{ context.message }}</p>
+</hlm-dialog-header>
+<hlm-dialog-footer>
+  <button hlmBtn variant="outline" type="button" (click)="reject()">{{ context.rejectLabel ?? 'Cancel' }}</button>
+  <button hlmBtn [variant]="context.destructive ? 'destructive' : 'default'" type="button" (click)="accept()">
+    {{ context.acceptLabel ?? 'Confirm' }}
+  </button>
+</hlm-dialog-footer>

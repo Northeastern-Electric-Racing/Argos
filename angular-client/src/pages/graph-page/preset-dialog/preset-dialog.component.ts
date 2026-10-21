@@ -1,11 +1,14 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { ConfirmService } from 'src/services/confirm.service';
+import { toast } from '@spartan-ng/brain/sonner';
+import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmDialogImports } from '@spartan-ng/helm/dialog';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
@@ -17,21 +20,20 @@ interface PresetDialogData {
 
 @Component({
   selector: 'preset-dialog',
+  // Lays out the dialog's header, body and footer the way the Dialog docs' dynamic component does.
+  host: { class: 'grid gap-6 min-w-0' },
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
+  imports: [FormsModule, HlmInput, HlmLabel, HlmButton, HlmDialogImports, HlmTableImports]
 })
 export class PresetDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject<BrnDialogRef<DataType[] | null>>(BrnDialogRef);
+  private data = injectBrnDialogContext<PresetDialogData>();
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmService = inject(ConfirmService);
 
-  private data = this.config.data as PresetDialogData;
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
     initialValue: [] as DataType[]
@@ -51,20 +53,12 @@ export class PresetDialogComponent {
     if (existing) {
       this.confirmReplace(name, () => {
         this.presetService.replacePreset(existing.id, { topicNames });
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Preset Replaced',
-          detail: `"${name}" now contains ${topicNames.length} topic(s)`
-        });
+        toast.success('Preset Replaced', { description: `"${name}" now contains ${topicNames.length} topic(s)` });
         this.newPresetName.set('');
       });
     } else {
       this.presetService.addPreset(name, topicNames);
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Preset Saved',
-        detail: `"${name}" with ${topicNames.length} topic(s)`
-      });
+      toast.success('Preset Saved', { description: `"${name}" with ${topicNames.length} topic(s)` });
       this.newPresetName.set('');
     }
   }
@@ -85,9 +79,9 @@ export class PresetDialogComponent {
       text = await readTextFile(file, '.json');
     } catch (err) {
       if (err instanceof FileReadError && err.kind === 'invalid-extension') {
-        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .json file' });
+        toast.error('Invalid File', { description: 'Please select a .json file' });
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+        toast.error('Read Error', { description: 'Failed to read file' });
       }
       return;
     }
@@ -125,20 +119,21 @@ export class PresetDialogComponent {
   }
 
   onDelete(preset: Preset): void {
-    this.confirmationService.confirm({
+    this.confirmService.confirm({
       message: `Delete preset "${preset.name}"?`,
       header: 'Delete Preset',
       acceptLabel: 'Delete',
+      destructive: true,
       rejectLabel: 'Cancel',
       accept: () => {
         this.presetService.deletePreset(preset.id);
-        this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
+        toast.success('Preset Deleted', { description: preset.name });
       }
     });
   }
 
   private confirmReplace(name: string, onAccept: () => void): void {
-    this.confirmationService.confirm({
+    this.confirmService.confirm({
       message: `A preset named "${name}" already exists. Replace its topics?`,
       header: 'Replace Preset',
       acceptLabel: 'Replace',
@@ -148,27 +143,15 @@ export class PresetDialogComponent {
   }
 
   private toastImported(name: string, count: number): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Preset Imported',
-      detail: `"${name}" with ${count} topic(s)`
-    });
+    toast.success('Preset Imported', { description: `"${name}" with ${count} topic(s)` });
   }
 
   onAddDefaultPresets(): void {
     const added = this.presetService.addDefaultPresets();
     if (added === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Defaults Already Present',
-        detail: 'All default presets are already in your list.'
-      });
+      toast.info('Defaults Already Present', { description: 'All default presets are already in your list.' });
     } else {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Defaults Added',
-        detail: `Added ${added} default preset${added === 1 ? '' : 's'}.`
-      });
+      toast.success('Defaults Added', { description: `Added ${added} default preset${added === 1 ? '' : 's'}.` });
     }
   }
 
@@ -181,14 +164,14 @@ export class PresetDialogComponent {
     try {
       parsed = JSON.parse(text);
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'File is not valid JSON' });
+      toast.error('Parse Error', { description: 'File is not valid JSON' });
       return null;
     }
 
     if (Array.isArray(parsed)) {
       const topics = parsed.filter((n): n is string => typeof n === 'string' && n.length > 0);
       if (topics.length === 0) {
-        this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'No topic names found' });
+        toast.error('Parse Error', { description: 'No topic names found' });
         return null;
       }
       return { topicNames: Array.from(new Set(topics)) };
@@ -208,10 +191,8 @@ export class PresetDialogComponent {
       }
     }
 
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Parse Error',
-      detail: 'Expected an object with a "topicNames" string array, or a bare array of topic names'
+    toast.error('Parse Error', {
+      description: 'Expected an object with a "topicNames" string array, or a bare array of topic names'
     });
     return null;
   }

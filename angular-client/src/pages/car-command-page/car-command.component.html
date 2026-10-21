@@ -12,8 +12,8 @@
           <p class="auth-description">Enter the command password to access car controls.</p>
           <div class="auth-form">
             <div class="auth-input-group">
-              <label for="password">Password</label>
-              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+              <label hlmLabel for="password">Password</label>
+              <input hlmInput id="password" type="password" autocomplete="current-password" [(ngModel)]="enteredPw" />
             </div>
             <argos-button label="Authenticate" [onClick]="authenticatePw" />
             @if (authError()) {
@@ -51,7 +51,5 @@
         </div>
       </info-background>
     </div>
-
-    <p-confirmdialog />
   }
 </div>

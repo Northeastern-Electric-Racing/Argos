@@ -1,14 +1,24 @@
-<div class="switch-group" [class.disabled]="disabled()">
+<div
+  class="switch-group"
+  brnToggleGroup
+  type="single"
+  aria-label="eFuse state"
+  [nullable]="false"
+  [disabled]="disabled()"
+  [value]="selected()"
+  (valueChange)="select($event)"
+  [class.disabled]="disabled()"
+>
   @for (option of orderedOptions(); track option) {
     <button
+      brnToggleGroupItem
       class="switch-button"
+      [value]="option"
       [class.active]="selected() === option"
       [class.state-on]="option === 'ON'"
       [class.state-auto]="option === 'AUTO'"
       [class.state-off]="option === 'OFF'"
       [style.font-size.px]="fontSize()"
-      [disabled]="disabled()"
-      (click)="select(option)"
     >
       <span class="switch-label">{{ option }}</span>
     </button>

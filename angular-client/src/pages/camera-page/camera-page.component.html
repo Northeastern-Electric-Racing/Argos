@@ -1,13 +1,16 @@
 @if (this.urlAvailable) {
   <div class="background">
     <div class="top-right">
-      <p-select
-        [options]="videoUrls"
-        [(ngModel)]="selectedVideoName"
-        placeholder="Select a Video"
-        (onChange)="onDropdownChange($event)"
-        [style]="{ padding: '5px' }"
-      />
+      <hlm-select [value]="selectedVideoName" (valueChange)="onDropdownChange($event)">
+        <hlm-select-trigger class="min-w-48">
+          <hlm-select-value placeholder="Select a Video" />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          @for (video of videoUrls; track video) {
+            <hlm-select-item [value]="video">{{ video }}</hlm-select-item>
+          }
+        </hlm-select-content>
+      </hlm-select>
     </div>
 
     <div class="video-container">

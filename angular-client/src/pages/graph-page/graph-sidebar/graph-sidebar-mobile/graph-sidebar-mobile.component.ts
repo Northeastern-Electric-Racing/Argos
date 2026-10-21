@@ -12,11 +12,11 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { Drawer } from 'primeng/drawer';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.component';
+import { HlmSheetImports } from '@spartan-ng/helm/sheet';
+import { HlmSwitch } from '@spartan-ng/helm/switch';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -31,6 +31,7 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
+  TreeNode,
   TreeNodeData
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
@@ -39,22 +40,34 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
+/** Gives each instance unique switch ids, since the graph page renders two sidebars. */
+let nextSwitchId = 0;
+
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Drawer, Tree, ButtonComponent, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [
+    HlmSheetImports,
+    TopicTreeComponent,
+    ButtonComponent,
+    TypographyComponent,
+    HlmSwitch,
+    FormsModule,
+    SelectDropdownComponent
+  ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
+  protected readonly switchId = `graph-sidebar-mobile-${nextSwitchId++}`;
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(HlmDialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
+  private presetDialogRef?: BrnDialogRef<DataType[] | null>;
 
   sidebarVisible = false;
   treeNodes = computed(() => {
@@ -112,18 +125,14 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
-      header: 'Topic Presets',
-      width: '90vw',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: {
+    this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
+      contentClass: 'w-[90vw] sm:max-w-[90vw]',
+      context: {
         dataTypes: this.dataTypes()
       }
     });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef?.closed$.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -136,23 +145,15 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
     }
   }
 
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
+  nodeSelect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.addDataType(dt);
     }
   }
 
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
+  onNodeUnselect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
     }

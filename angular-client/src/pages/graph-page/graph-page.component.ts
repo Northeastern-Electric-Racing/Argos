@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { toast } from '@spartan-ng/brain/sonner';
 import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
@@ -32,7 +32,7 @@ import LiveValueStripComponent from './live-value-strip/live-value-strip.compone
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { HlmInput } from '@spartan-ng/helm/input';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -50,7 +50,7 @@ import { FormsModule } from '@angular/forms';
     CustomGraphComponent,
     LiveValueStripComponent,
     TypographyComponent,
-    InputNumberModule,
+    HlmInput,
     FormsModule
   ]
 })
@@ -58,7 +58,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private toastService = inject(MessageService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
@@ -247,7 +246,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) {
-        this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+        toast.error('Error', { description: error.message });
       }
     });
     runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
@@ -554,11 +553,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     } else if (this.run !== undefined || this.selectedFault !== undefined || this.historicalRangeActive()) {
       this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
     } else {
-      this.toastService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No run selected. Please select a run or choose "Real Time".'
-      });
+      toast.error('Error', { description: 'No run selected. Please select a run or choose "Real Time".' });
     }
   };
 

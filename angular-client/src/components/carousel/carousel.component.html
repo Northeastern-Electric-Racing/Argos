@@ -1,34 +1,35 @@
+<hlm-dialog-header>
+  <h2 hlmDialogTitle>Select a run to view</h2>
+</hlm-dialog-header>
 <div class="modal-container">
-  <!-- Carousel Content -->
-  <p-carousel
-    [value]="runs"
-    [numVisible]="1"
-    [numScroll]="1"
-    [circular]="true"
-    [autoplayInterval]="3000"
-    (onPage)="handlePageChange($event)"
-  >
-    <ng-template let-run let-i="index" #item>
-      <div class="run-card">
-        <mat-grid-list cols="2" rowHeight="40px">
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-          </mat-grid-tile>
-        </mat-grid-list>
-      </div>
+  <hlm-carousel class="mx-12 block" [options]="carouselOptions" [plugins]="plugins">
+    <hlm-carousel-content>
+      @for (run of runs; track run.id) {
+        <hlm-carousel-item>
+          <div class="run-card">
+            <mat-grid-list cols="2" rowHeight="40px">
+              <mat-grid-tile>
+                <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
+              </mat-grid-tile>
+              <mat-grid-tile>
+                <typography class="right" variant="subheader" [content]="run.driverName"></typography>
+              </mat-grid-tile>
+              <mat-grid-tile>
+                <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="2">
+                <typography variant="subheader" class="right" [content]="run.locationName"></typography>
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
 
-      <div class="select-button-container">
-        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
-      </div>
-    </ng-template>
-  </p-carousel>
+          <div class="select-button-container">
+            <button hlmBtn variant="outline" (click)="selectRun(run)">Select this Run</button>
+          </div>
+        </hlm-carousel-item>
+      }
+    </hlm-carousel-content>
+    <button hlm-carousel-previous></button>
+    <button hlm-carousel-next></button>
+  </hlm-carousel>
 </div>

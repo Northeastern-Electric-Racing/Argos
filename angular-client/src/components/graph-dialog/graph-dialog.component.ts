@@ -1,28 +1,32 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { Component, ChangeDetectionStrategy, forwardRef } from '@angular/core';
+import { injectBrnDialogContext } from '@spartan-ng/brain/dialog';
+import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
 
-@Component({
-  selector: 'graph-dialog',
-  templateUrl: './graph-dialog.component.html',
-  providers: [DialogService],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [GraphComponent]
-})
-export class GraphDialogComponent {
-  public dialogService = inject(DialogService);
-  public config = inject(DynamicDialogConfig);
-  public ref = inject(DynamicDialogRef);
+export interface GraphDialogContext {
+  /** Dialog heading; falls back to the graph title. */
+  header?: string;
   data: GraphData[];
   color: string;
   title: string;
+  subTitle?: string;
   graphContainerId: string;
+}
 
-  constructor() {
-    this.data = this.config.data.data;
-    this.color = this.config.data.color;
-    this.title = this.config.data.title;
-    this.graphContainerId = this.config.data.graphContainerId;
-  }
+@Component({
+  selector: 'graph-dialog',
+  // Lays out the dialog's header, body and footer the way the Dialog docs' dynamic component does.
+  host: { class: 'grid gap-6 min-w-0' },
+  templateUrl: './graph-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [forwardRef(() => GraphComponent), HlmDialogImports]
+})
+export class GraphDialogComponent {
+  private context = injectBrnDialogContext<GraphDialogContext>();
+  data: GraphData[] = this.context.data;
+  color: string = this.context.color;
+  title: string = this.context.title;
+  header: string = this.context.header ?? this.context.title;
+  graphContainerId: string = this.context.graphContainerId;
 }

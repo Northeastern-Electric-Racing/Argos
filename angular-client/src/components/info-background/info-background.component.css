@@ -3,7 +3,7 @@ mat-icon {
   margin-right: 12px;
 }
 
-.container {
+.info-container {
   display: inline-block;
   padding: 12px;
   border-radius: 8px;
@@ -11,12 +11,12 @@ mat-icon {
   width: 100%;
 }
 
-.container.sliced-left-corner {
+.info-container.sliced-left-corner {
   padding: 15px 12px 12px 15px;
   clip-path: polygon(var(--slice-x, 125px) 0, 100% 0, 100% 100%, 0 100%, 0 var(--slice-y, 145px));
 }
 
-.container.fill {
+.info-container.fill {
   display: flex;
   flex-direction: column;
 }

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmService } from 'src/services/confirm.service';
+import { showToast } from 'src/utils/toast.utils';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -14,8 +15,7 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
 })
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private confirmService = inject(ConfirmService);
 
   readonly currentLapDeltaText = computed(() => formatDeltaMs(this.timer.currentLapDeltaToBestMs()));
   readonly currentLapDeltaClass = computed(() => {
@@ -35,10 +35,11 @@ export default class TimerHeroComponent {
       this.timer.reset();
       return;
     }
-    this.confirmationService.confirm({
+    this.confirmService.confirm({
       message: 'Discard all recorded laps in this session?',
       header: 'Reset Active Session',
       acceptLabel: 'Reset',
+      destructive: true,
       rejectLabel: 'Cancel',
       accept: () => this.timer.reset()
     });
@@ -60,6 +61,6 @@ export default class TimerHeroComponent {
   };
 
   private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
-    this.messageService.add({ severity, summary, detail, life: 2000 });
+    showToast(severity, summary, detail, 2000);
   }
 }
