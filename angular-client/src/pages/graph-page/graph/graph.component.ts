@@ -35,9 +35,7 @@ import {
   buildYScales,
   computeDataSpan,
   DAY_MS,
-  multiDayLabel,
   SERIES_COLORS,
-  singleDayLabel,
   yAxisIdFor
 } from './graph-chart.utils';
 
@@ -93,14 +91,10 @@ export default class CustomGraphComponent implements OnDestroy {
   data = new Map<string, GraphData[]>();
   timeRangeMs: number | undefined = undefined;
   private datasets = new Map<string, LineDataset>();
-  private isMultiDay = false;
   private frame: number | undefined;
 
   readonly chartData: { datasets: LineDataset[] } = { datasets: [] };
-  readonly chartOptions = buildBaseOptions({
-    onZoom: () => this.zoomed.set(true),
-    xLabel: (val) => (this.isMultiDay ? multiDayLabel(val) : singleDayLabel(val))
-  });
+  readonly chartOptions = buildBaseOptions({ onZoom: () => this.zoomed.set(true) });
 
   constructor() {
     afterNextRender(() => this.updateChart());
@@ -225,10 +219,10 @@ export default class CustomGraphComponent implements OnDestroy {
       }
     }
 
-    // Multi-day historical ranges get date-aware labels and per-day boundary annotations.
+    // Multi-day historical ranges get per-day boundary annotations (the x ticks date each midnight).
     // Realtime ranges are bounded and never multi-day.
-    this.isMultiDay = !this.realTime() && !!span && span.spanMs > DAY_MS;
-    options.plugins!.annotation!.annotations = this.isMultiDay ? buildDayBoundaryAnnotations(span!) : [];
+    const isMultiDay = !this.realTime() && !!span && span.spanMs > DAY_MS;
+    options.plugins!.annotation!.annotations = isMultiDay ? buildDayBoundaryAnnotations(span!) : [];
 
     chart.update('none');
   }

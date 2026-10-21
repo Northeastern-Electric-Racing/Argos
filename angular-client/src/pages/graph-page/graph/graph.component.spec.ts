@@ -139,6 +139,41 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(spanMs).toBeLessThan(60_000);
   });
 
+  it('puts x-axis ticks on whole hours across a multi-day run, midnights included', async () => {
+    const start = new Date(2026, 9, 16, 12, 7, 31, 250).getTime();
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: start, y: 1 },
+          { x: start + 50 * 60 * 60 * 1000, y: 2 }
+        ])
+      ]
+    });
+
+    const ticks = c.scales['x'].ticks.map((t) => t.value);
+    expect(ticks.length).toBeGreaterThan(1);
+    expect(ticks.filter((v) => v % 1000 !== 0 || new Date(v).getMinutes() !== 0)).toEqual([]);
+    expect(ticks).toContain(new Date(2026, 9, 17).getTime());
+  });
+
+  it('puts x-axis ticks on whole minutes in a five-minute live window', async () => {
+    const start = new Date(2026, 9, 16, 12, 7, 31, 250).getTime();
+    const c = await render({
+      valuesSubject: [
+        topic('V', [
+          { x: start, y: 1 },
+          { x: start + 10 * 60 * 1000, y: 2 }
+        ])
+      ],
+      realTime: true,
+      graphConfig: { ...BASE_CONFIG, timeRangeMs: 5 * 60 * 1000 }
+    });
+
+    const ticks = c.scales['x'].ticks.map((t) => t.value);
+    expect(ticks.length).toBeGreaterThan(1);
+    expect(ticks.filter((v) => v % 60_000 !== 0)).toEqual([]);
+  });
+
   it('applies the configured y-limits', async () => {
     const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
 
