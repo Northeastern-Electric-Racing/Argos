@@ -171,6 +171,30 @@ describe('CustomGraphComponent (uPlot)', () => {
     expect(resetButton()).toBeNull();
   });
 
+  it('drops Reset zoom when the graph is cleared while zoomed in', async () => {
+    await create({
+      valuesSubject: [
+        topic('A', [
+          { x: 1000, y: 1 },
+          { x: 2000, y: 2 },
+          { x: 3000, y: 3 }
+        ])
+      ]
+    });
+    const host = fixture.nativeElement as HTMLElement;
+    const chart = (fixture.debugElement.query(By.directive(UplotChartComponent)).componentInstance as UplotChartComponent)
+      .instance!;
+    chart.setScale('x', { min: 1500, max: 2500 });
+    await settle();
+    expect(host.querySelector('.reset-zoom')).not.toBeNull();
+
+    fixture.componentRef.setInput('clearGraph', 1);
+    await settle();
+
+    expect(component.chartData()).toEqual([[]]);
+    expect(host.querySelector('.reset-zoom')).toBeNull();
+  });
+
   it('never offers Reset zoom on the sliding live window', async () => {
     await create({
       valuesSubject: [

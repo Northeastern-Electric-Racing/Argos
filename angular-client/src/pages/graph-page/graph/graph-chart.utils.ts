@@ -80,9 +80,11 @@ export function dataSpan(series: SeriesColumns[]): { minX: number; maxX: number;
 /** Local midnights strictly after `minX` and before `maxX`. */
 export function dayBoundaries(minX: number, maxX: number): number[] {
   const boundaries: number[] = [];
+  // Step by calendar day, not 24 h: a DST change makes a day 23 or 25 h long.
   const cursor = new Date(minX);
-  cursor.setHours(24, 0, 0, 0);
-  for (let t = cursor.getTime(); t < maxX; t += DAY_MS) boundaries.push(t);
+  for (cursor.setHours(24, 0, 0, 0); cursor.getTime() < maxX; cursor.setHours(24, 0, 0, 0)) {
+    boundaries.push(cursor.getTime());
+  }
   return boundaries;
 }
 
@@ -392,6 +394,12 @@ export function zoomStatePlugin(onZoomChange: (zoomed: boolean) => void, autoFit
   let zoomed: boolean | null = null;
   return {
     hooks: {
+      // Each chart starts unzoomed. A rebuild to an empty chart never fires setScale('x') (its x scale stays
+      // null), so without this the previous chart's zoom would keep the Reset zoom button up.
+      init: () => {
+        zoomed = false;
+        onZoomChange(false);
+      },
       setScale: (u, key) => {
         if (key !== 'x') return;
         const [xs] = u.data;

@@ -72,6 +72,23 @@ describe('graph chart utils', () => {
     expect(dayBoundaries(start, start + 60_000)).toEqual([]);
   });
 
+  it('dayBoundaries stays on local midnight across DST changes, one line per date', () => {
+    // These ranges cross the 2026 US and EU clock changes. In a zone without DST every day is 24 h, so this
+    // only catches a fixed-length step when the browser runs in a DST zone (e.g. TZ=America/New_York).
+    const ranges: [Date, Date][] = [
+      [new Date(2026, 9, 20, 12), new Date(2026, 10, 5, 12)],
+      [new Date(2026, 2, 5, 12), new Date(2026, 2, 31, 12)]
+    ];
+    for (const [start, end] of ranges) {
+      const days = Math.round((end.getTime() - start.getTime()) / DAY_MS);
+      const midnights = Array.from({ length: days }, (_, i) =>
+        new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1 + i).getTime()
+      );
+
+      expect(dayBoundaries(start.getTime(), end.getTime())).toEqual(midnights);
+    }
+  });
+
   it('yRange lets fixed bounds override either side of the auto range', () => {
     const [autoMin, autoMax] = yRange(0, 10, null, null);
     expect(autoMin).toBeLessThanOrEqual(0);

@@ -102,6 +102,13 @@ export class UplotChartComponent {
       if (s.show) this.hiddenLabels.delete(s.label);
       else this.hiddenLabels.add(s.label);
     }
+    // A rebuild with series but without a hidden one means that topic was dropped, so re-adding it shows it.
+    // An empty rebuild (topics being re-subscribed) keeps every label.
+    if (options.series.length > 1) {
+      for (const label of this.hiddenLabels) {
+        if (!options.series.some((s) => s.label === label)) this.hiddenLabels.delete(label);
+      }
+    }
     this.chart?.destroy();
     const series = options.series.map((s, i) => (i > 0 && this.hiddenLabels.has(s.label) ? { ...s, show: false } : s));
     const el = this.target().nativeElement;

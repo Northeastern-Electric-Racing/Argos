@@ -99,6 +99,20 @@ describe('UplotChartComponent', () => {
     expect(chart.instance!.series.slice(1).map((s) => s.show)).toEqual([true, true]);
   });
 
+  it('forgets a hidden series once a rebuild with other series drops it, so re-adding it shows it', async () => {
+    const chart = await create(options(2), [[1000], [1], [2]]);
+    chart.instance!.setSeries(2, { show: false });
+
+    fixture.componentRef.setInput('options', options(1));
+    fixture.componentRef.setInput('data', [[1000], [1]]);
+    await settle();
+    fixture.componentRef.setInput('options', options(2));
+    fixture.componentRef.setInput('data', [[1000], [1], [2]]);
+    await settle();
+
+    expect(chart.instance!.series.slice(1).map((s) => s.show)).toEqual([true, true]);
+  });
+
   it('reruns the scales in place on rescale, keeping the chart and its x zoom', async () => {
     let yMin = 0;
     const chart = await create(
