@@ -215,13 +215,16 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
       decimation: { enabled: true, algorithm: 'min-max' },
       zoom: {
         zoom: {
-          drag: { enabled: true, backgroundColor: 'rgba(143, 202, 221, 0.25)' },
+          // The plugin's default drag threshold is 0 px, so a click with a little jitter zoomed to a sliver
+          drag: { enabled: true, threshold: 10, backgroundColor: 'rgba(143, 202, 221, 0.25)' },
           wheel: { enabled: true, modifierKey: 'ctrl' },
           pinch: { enabled: true },
           mode: 'x',
           onZoomComplete: callbacks.onZoom
         },
-        pan: { enabled: true, mode: 'x', modifierKey: 'shift', onPanComplete: callbacks.onZoom }
+        pan: { enabled: true, mode: 'x', modifierKey: 'shift', onPanComplete: callbacks.onZoom },
+        // Bounds drag, ctrl-wheel and pinch zoom alike
+        limits: { x: { minRange: 1000 } }
       },
       annotation: { annotations: [] }
     }

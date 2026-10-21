@@ -1,4 +1,5 @@
 import {
+  buildBaseOptions,
   buildDayBoundaryAnnotations,
   buildTimeTicks,
   buildYScales,
@@ -12,6 +13,18 @@ import {
 const NO_LIMITS = { yMin: null, yMax: null };
 
 describe('graph-chart utils', () => {
+  describe('buildBaseOptions', () => {
+    const options = buildBaseOptions({ onZoom: () => undefined });
+
+    it('treats a click with a few pixels of jitter as a click, not a drag-zoom', () => {
+      expect(options.plugins!.zoom!.zoom!.drag!.threshold).toBe(10);
+    });
+
+    it('never zooms the x-axis in past one second', () => {
+      expect(options.plugins!.zoom!.limits!['x']!.minRange).toBe(1000);
+    });
+  });
+
   describe('time ticks on the x-axis', () => {
     const at = (h: number, m = 0, s = 0, ms = 0) => new Date(2026, 9, 17, h, m, s, ms).getTime();
 
