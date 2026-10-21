@@ -41,6 +41,7 @@ export default class TimerHeroComponent {
       header: 'Reset Active Session',
       acceptLabel: 'Reset',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => this.timer.reset()
     });
   };

@@ -34,8 +34,8 @@
 
 .ui-select:focus-visible,
 .ui-select[aria-expanded='true'] {
-  border-color: var(--ui-accent);
-  box-shadow: 0 0 0 1px var(--ui-accent);
+  border-color: var(--ui-focus-color);
+  box-shadow: 0 0 0 1px var(--ui-focus-color);
 }
 
 .ui-select[aria-disabled='true'] {

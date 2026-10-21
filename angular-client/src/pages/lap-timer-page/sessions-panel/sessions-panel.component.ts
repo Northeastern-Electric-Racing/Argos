@@ -48,6 +48,7 @@ export default class SessionsPanelComponent {
       header: 'Clear All Sessions',
       acceptLabel: 'Clear All',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => {
         this.timer.clearAllSessions();
         this.toast('success', 'All sessions cleared', '');
@@ -91,6 +92,7 @@ export default class SessionsPanelComponent {
       header: 'Delete Session',
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => {
         this.timer.deleteSession(session.id);
         this.toast('success', 'Session deleted', `"${session.name}"`);

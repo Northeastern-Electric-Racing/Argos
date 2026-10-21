@@ -63,6 +63,11 @@
   color: var(--ui-accent);
 }
 
+/* On a selected (red-tinted) row the accent label would be red on red, so keep the plain text colour. */
+.tree-item[aria-selected='true']:hover .item-label {
+  color: var(--ui-text);
+}
+
 .tree-item:focus-visible {
   outline: var(--ui-focus-ring);
   outline-offset: -2px;
