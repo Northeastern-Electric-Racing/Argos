@@ -63,7 +63,8 @@
     }
   </div>
 
-  @if (variant() === 'popover' && hasEntries()) {
+  <!-- Shown even when empty, so the popover's focus trap always has a tabbable element. -->
+  @if (variant() === 'popover') {
     <footer class="list-footer">
       <button matButton type="button" class="view-all-button" (click)="viewAll()">
         View all notifications
