@@ -103,7 +103,7 @@ describe('CustomGraphComponent (uPlot)', () => {
     await settle();
 
     expect(component.chartOptions().series.length).toBe(2);
-    expect(component.chartOptions().axes!.map((axis) => axis.label)).toEqual([undefined, 'A ']);
+    expect(component.chartOptions().axes!.map((axis) => axis.label)).toEqual([undefined, 'A']);
   });
 
   it('applies Y Min/Max to the live chart without rebuilding it', async () => {
@@ -142,5 +142,56 @@ describe('CustomGraphComponent (uPlot)', () => {
 
     expect(component.chartXRange()).toBeNull();
     expect(component.chartData()[0]).toEqual([15_000, 20_000]);
+  });
+
+  it('shows a Reset zoom button while zoomed in, which zooms back out to all the data', async () => {
+    await create({
+      valuesSubject: [
+        topic('A', [
+          { x: 1000, y: 1 },
+          { x: 2000, y: 2 },
+          { x: 3000, y: 3 }
+        ])
+      ]
+    });
+    const host = fixture.nativeElement as HTMLElement;
+    const chart = (fixture.debugElement.query(By.directive(UplotChartComponent)).componentInstance as UplotChartComponent)
+      .instance!;
+    const resetButton = () => host.querySelector<HTMLButtonElement>('.reset-zoom button');
+    expect(resetButton()).toBeNull();
+
+    chart.setScale('x', { min: 1500, max: 2500 });
+    await settle();
+    expect(resetButton()?.textContent?.trim()).toBe('Reset zoom');
+
+    resetButton()!.click();
+    await settle();
+    expect(chart.scales['x'].min).toBe(1000);
+    expect(chart.scales['x'].max).toBe(3000);
+    expect(resetButton()).toBeNull();
+  });
+
+  it('never offers Reset zoom on the sliding live window', async () => {
+    await create({
+      valuesSubject: [
+        topic('A', [
+          { x: 1000, y: 1 },
+          { x: 20_000, y: 2 }
+        ])
+      ],
+      realTime: true
+    });
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.reset-zoom')).toBeNull();
+  });
+
+  it('hints to pick a topic while none is selected', async () => {
+    await create({ valuesSubject: [] });
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.empty-hint')?.textContent).toContain('Select a topic');
+
+    fixture.componentRef.setInput('valuesSubject', [topic('A', [{ x: 1000, y: 1 }])]);
+    await settle();
+    expect(host.querySelector('.empty-hint')).toBeNull();
   });
 });

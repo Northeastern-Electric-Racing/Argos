@@ -1,1 +1,13 @@
 <uplot-chart [options]="chartOptions()" [data]="chartData()" [xRange]="chartXRange()" />
+@if (valuesSubject().length === 0) {
+  <div class="empty-hint">Select a topic to graph</div>
+}
+@if (zoomed()) {
+  <argos-button
+    class="reset-zoom"
+    label="Reset zoom"
+    size="sm"
+    [onClick]="resetZoom"
+    additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+  />
+}

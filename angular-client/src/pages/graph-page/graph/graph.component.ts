@@ -16,6 +16,7 @@ import uPlot from 'uplot';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import { UplotChartComponent, UplotChartOptions, UplotXRange } from 'src/components/uplot-chart/uplot-chart.component';
+import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { alignSeries, buildGraphChartOptions, dataSpan, DAY_MS, SeriesColumns } from './graph-chart.utils';
 
 @Component({
@@ -23,7 +24,7 @@ import { alignSeries, buildGraphChartOptions, dataSpan, DAY_MS, SeriesColumns } 
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
   standalone: true,
-  imports: [UplotChartComponent],
+  imports: [UplotChartComponent, ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class CustomGraphComponent implements OnDestroy {
@@ -60,6 +61,8 @@ export default class CustomGraphComponent implements OnDestroy {
   );
   chartData = signal<uPlot.AlignedData>([[]]);
   chartXRange = signal<UplotXRange | null>(null);
+  /** Whether the user has zoomed in from the full data range, which shows the Reset zoom button. */
+  zoomed = signal(false);
   private chart = viewChild(UplotChartComponent);
 
   /** The series the current chartOptions were built for: a different set rebuilds the chart. */
@@ -148,7 +151,7 @@ export default class CustomGraphComponent implements OnDestroy {
     }
 
     const lines = Array.from(this.data.values());
-    // Multi-day historical ranges get date-aware labels and per-day boundary lines.
+    // Multi-day historical ranges get per-day boundary lines (x labels follow the visible span on their own).
     // Skip the O(series) span scan in real-time mode: realtime ranges are bounded and never multi-day.
     const span = untracked(this.realTime) ? null : dataSpan(lines);
     this.isMultiDay = !!span && span.spanMs > DAY_MS;
@@ -180,9 +183,19 @@ export default class CustomGraphComponent implements OnDestroy {
       keys,
       multipleYAxes: untracked(this.showMultipleYAxes),
       yBounds: () => untracked(this.graphConfig),
-      isMultiDay: () => this.isMultiDay
+      isMultiDay: () => this.isMultiDay,
+      onZoomChange: (zoomed) => this.zoomed.set(zoomed),
+      autoFitsX: () => untracked(this.chartXRange) === null
     });
   }
+
+  /** Zooms back out to all the data, as a double-click on the plot does. */
+  resetZoom = () => {
+    const chart = this.chart()?.instance;
+    const xs = chart?.data[0];
+    if (!chart || !xs?.length) return;
+    chart.setScale('x', { min: xs[0], max: xs[xs.length - 1] });
+  };
 
   graphInfoCallback = (info: GraphInfo) => {
     // Skip processing if paused

@@ -6,6 +6,9 @@ import {
   dataSpan,
   DAY_MS,
   dayBoundaries,
+  growingAxisSize,
+  placeTooltip,
+  showGridOnFirstVisibleAxis,
   yRange
 } from './graph-chart.utils';
 
@@ -98,8 +101,15 @@ describe('graph chart utils', () => {
       const axes = buildYAxes(['BMS/Pack/Voltage 0'], true);
 
       expect(axes.length).toBe(1);
-      expect(axes[0].label).toBe('BMS/Pack/Voltage ');
+      expect(axes[0].label).toBe('BMS/Pack/Voltage');
       expect(axes[0].scale).toBe('y0');
+    });
+
+    it('titles an axis with its topic, dropping only the trailing series index', () => {
+      expect(buildYAxes(['BMS/Segment_Total_Volt/0 0', 'A 10'], true).map((axis) => axis.label)).toEqual([
+        'BMS/Segment_Total_Volt/0',
+        'A 10'
+      ]);
     });
 
     it('alternates y-axis sides so stacked axes stay readable', () => {
@@ -142,16 +152,90 @@ describe('graph chart utils', () => {
       expect(range({} as uPlot, 0, 5, 'y')).toEqual([-10, 10]);
     });
 
-    it('formats x labels by whether the data spans several days, read at draw time', () => {
-      let multiDay = false;
-      const options = buildGraphChartOptions({ ...config, keys: [], multipleYAxes: false, isMultiDay: () => multiDay });
+    it('formats x labels by the visible span, so a zoomed multi-day run shows times, not repeated dates', () => {
+      const options = buildGraphChartOptions({ ...config, keys: [], multipleYAxes: false });
       const values = options.axes![0].values as (u: unknown, splits: number[]) => string[];
+      const visible = (spanMs: number) => ({ scales: { x: { min: 0, max: spanMs } } });
       const t = new Date(2026, 0, 2, 13, 5).getTime();
 
-      expect(values(null, [t])[0]).toBe('13:05:00');
-      expect(values(null, [new Date(2026, 0, 2, 0, 7, 9).getTime()])[0]).toBe('00:07:09');
-      multiDay = true;
-      expect(values(null, [t])[0]).toBe('1/2 13:05');
+      expect(values(visible(DAY_MS / 2), [t])[0]).toBe('13:05:00');
+      expect(values(visible(DAY_MS / 2), [new Date(2026, 0, 2, 0, 7, 9).getTime()])[0]).toBe('00:07:09');
+      expect(values(visible(2 * DAY_MS), [t])[0]).toBe('1/2 13:05');
+    });
+
+    it('steps x ticks by whole seconds, with a 2-minute step for 10-20 minute spans', () => {
+      const incrs = buildGraphChartOptions({ ...config, keys: [], multipleYAxes: false }).axes![0].incrs as number[];
+
+      expect(incrs[0]).toBe(1000);
+      expect(incrs).toContain(2 * 60_000);
+    });
+
+    it('leaves a scale unranged while none of its series is shown, so uPlot hides its axis', () => {
+      const options = buildGraphChartOptions({ ...config, keys: ['A 0', 'B 0'], multipleYAxes: true });
+      const range = options.scales!['y0'].range as uPlot.Range.Function;
+      const u = { series: [{}, { scale: 'y0', show: false }, { scale: 'y1', show: true }] } as unknown as uPlot;
+
+      expect(range(u, 0, 5, 'y0')).toEqual([null, null]);
+      u.series[1].show = true;
+      expect(range(u, 0, 5, 'y0')).not.toEqual([null, null]);
+    });
+
+    it('fills legend markers with the series color', () => {
+      const options = buildGraphChartOptions({ ...config, keys: ['A 0'], multipleYAxes: false });
+      const fill = options.legend!.markers!.fill as (u: uPlot, i: number) => string;
+
+      expect(fill({} as uPlot, 1)).toBe('#008FFB');
+    });
+  });
+
+  describe('growingAxisSize', () => {
+    const fakeChart = () => ({ axes: [{}, { font: ['12px sans-serif'], ticks: { size: 10 }, gap: 5 }] }) as unknown as uPlot;
+
+    it('widens a y-axis to fit its widest label, in 10 px steps', () => {
+      const size = growingAxisSize();
+      const u = fakeChart();
+
+      expect(size(u, ['1', '2'], 1, 1)).toBe(50);
+      const wide = size(u, ['43,267.5'], 1, 1);
+      expect(wide).toBeGreaterThan(50);
+      expect(wide % 10).toBe(0);
+    });
+
+    it('never shrinks within a chart, so live labels changing width do not shift the plot', () => {
+      const size = growingAxisSize();
+      const u = fakeChart();
+      const wide = size(u, ['43,267.5'], 1, 1);
+
+      expect(size(u, ['1'], 1, 2)).toBe(wide);
+      expect(size(u, null as unknown as string[], 1, 0)).toBe(wide);
+    });
+  });
+
+  describe('showGridOnFirstVisibleAxis', () => {
+    it('moves the grid to the first axis whose series is shown', () => {
+      const u = {
+        series: [{}, { show: false }, { show: true }, { show: true }],
+        axes: [{}, { grid: { show: true } }, { grid: { show: false } }, { grid: { show: false } }]
+      } as unknown as uPlot;
+
+      showGridOnFirstVisibleAxis(u);
+
+      expect(u.axes.slice(1).map((axis) => axis.grid!.show)).toEqual([false, true, false]);
+    });
+  });
+
+  describe('placeTooltip', () => {
+    it('sits below-right of the cursor when it fits', () => {
+      expect(placeTooltip(100, 100, 50, 20, 400, 300)).toEqual({ x: 112, y: 112 });
+    });
+
+    it("flips to the cursor's other side near the right and bottom edges", () => {
+      expect(placeTooltip(380, 290, 50, 20, 400, 300)).toEqual({ x: 318, y: 258 });
+    });
+
+    it('stays inside the plot when it fits on neither side of the cursor', () => {
+      expect(placeTooltip(150, 10, 240, 20, 340, 300)).toEqual({ x: 0, y: 22 });
+      expect(placeTooltip(10, 290, 30, 400, 340, 300)).toEqual({ x: 22, y: 0 });
     });
   });
 });
