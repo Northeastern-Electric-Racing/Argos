@@ -34,12 +34,9 @@
 }
 
 /* Compress the Quick Select dropdown so it lines up with the sm "Custom" button (28px).
-   The select-dropdown component sets padding-bottom: 10px and width: 10vw with !important
-   on .p-select-label globally, so we have to override with !important to win.
-
-   TODO: select-dropdown.component.css uses !important for sizing rules that should be
-   per-call-site, not global. Cleaning that up would let consumers (us) drop !important here
-   and let any other future caller pick its own dimensions without a CSS arms race. */
+   select-dropdown's default label sizing (width: 10vw, padding-bottom: 10px) is scoped to
+   :where(.small-grey-select) but still !important, so the label overrides here need
+   !important to win. */
 .historical-section ::ng-deep select-dropdown .p-select {
   height: 28px !important;
   min-height: 28px;

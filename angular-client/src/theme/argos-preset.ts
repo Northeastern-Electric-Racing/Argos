@@ -38,22 +38,37 @@ const ArgosPreset = definePreset(Aura, {
           900: '{neutral.900}',
           950: '{neutral.950}'
         },
+        // primary.600 keeps white button text above WCAG AA (about 4.8:1)
         primary: {
-          color: '{primary.500}',
+          color: '{primary.600}',
           contrastColor: '#ffffff',
-          hoverColor: '{primary.400}',
-          activeColor: '{primary.300}'
+          hoverColor: '{primary.500}',
+          activeColor: '{primary.400}'
         },
         highlight: {
           background: 'color-mix(in srgb, {primary.500}, transparent 84%)',
           focusBackground: 'color-mix(in srgb, {primary.500}, transparent 76%)',
           color: 'rgba(255,255,255,.87)',
           focusColor: 'rgba(255,255,255,.87)'
+        },
+        // A red primary would make a focused field look invalid, so focus uses the app's blue accent
+        formField: {
+          focusBorderColor: '#027bd7'
         }
       }
     }
   },
   components: {
+    // Text, outlined and link buttons put the primary on the dark surface, where primary.600 is too dim
+    button: {
+      colorScheme: {
+        dark: {
+          text: { primary: { color: '{primary.400}' } },
+          outlined: { primary: { color: '{primary.400}' } },
+          link: { color: '{primary.400}' }
+        }
+      }
+    },
     dialog: {
       root: {
         background: '{surface.800}',
