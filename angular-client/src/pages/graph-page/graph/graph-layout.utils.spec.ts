@@ -101,6 +101,18 @@ describe('graph layout utils', () => {
     expect(buildLayout(base).hovermode).toBe('x unified');
   });
 
+  it('draws the hover cursor line thin and dim, not as a bright rule over the data', () => {
+    const { xaxis } = buildLayout(base);
+    expect(xaxis?.spikecolor).toBe('rgba(255, 255, 255, 0.4)');
+    expect(xaxis?.spikethickness).toBe(1);
+    expect(xaxis?.spikedash).toBe('dot');
+  });
+
+  it('draws the plot background opaque like the page, which Plotly uses for the spike line halo', () => {
+    // A transparent background flattens to white, so the halo was a bright 3 px rule.
+    expect(buildLayout(base).plot_bgcolor).toBe('#101010');
+  });
+
   it('uses the app font for chart text', () => {
     expect(buildLayout(base).font?.family).toContain('Roboto');
   });

@@ -49,6 +49,8 @@ const TEXT_COLOR = '#fff';
 const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
 const BOUNDARY_COLOR = '#8fcadd';
 const FONT_FAMILY = 'Roboto, sans-serif';
+/** The page's --color-background-page, behind the plot. */
+const PAGE_BACKGROUND = '#101010';
 
 /** Plotly's default colorway, set explicitly so each per-topic y-axis can take its line's colour. */
 export const SERIES_COLORS = [
@@ -206,7 +208,9 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
   return {
     autosize: true,
     paper_bgcolor: 'rgba(0, 0, 0, 0)',
-    plot_bgcolor: 'rgba(0, 0, 0, 0)',
+    // Opaque, as the page: Plotly draws a halo under the hover spike line in the plot background
+    // colour, and flattens a transparent one to white, a bright 3 px rule over the data.
+    plot_bgcolor: PAGE_BACKGROUND,
     font: { color: TEXT_COLOR, family: FONT_FAMILY },
     colorway: SERIES_COLORS,
     margin: { l: 60, r: 30, t: 30, b: 40 },
@@ -229,6 +233,10 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
       showticklabels: !empty,
       tickformat: isMultiDay ? '%-m/%-d %H:%M' : '%H:%M:%S',
       hoverformat: '%-m/%-d/%y, %H:%M:%S',
+      // The unified hover's cursor line: thin, dim and dotted, not a 3 px rule in the axis colour.
+      spikecolor: 'rgba(255, 255, 255, 0.4)',
+      spikethickness: 1,
+      spikedash: 'dot',
       fixedrange: !!options.followLive,
       ...(options.xRange ? { autorange: false, range: options.xRange } : { autorange: true })
     },
