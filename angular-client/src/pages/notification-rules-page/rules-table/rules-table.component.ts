@@ -9,6 +9,7 @@ import { HlmSpinner } from '@spartan-ng/helm/spinner';
 import { HlmSwitch } from '@spartan-ng/helm/switch';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { take } from 'rxjs';
+import { ConfirmService } from 'src/services/confirm.service';
 import {
   ClientRule,
   deleteRule,
@@ -34,6 +35,7 @@ export class RulesTableComponent implements OnInit {
 
   selectionChanged = output<ClientRule[]>();
   private dialogService = inject(HlmDialogService);
+  private confirmService = inject(ConfirmService);
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
@@ -140,9 +142,18 @@ export class RulesTableComponent implements OnInit {
     });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.confirmService.confirm({
+      header: 'Delete Rule',
+      message: `Delete rule "${rule.id}"?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      destructive: true,
+      accept: () => void this.deleteRule(rule)
+    });
+  }
 
+  private async deleteRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {

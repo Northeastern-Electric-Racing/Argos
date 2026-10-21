@@ -20,8 +20,9 @@ type TopicTreeNode = TreeNode<TreeNodeData>;
 
 /**
  * Filterable, multi-select topic tree. Spartan has no tree component, so this is built on its
- * input group and lucide icons, following the WAI-ARIA tree pattern (roles, arrow-key navigation).
- * Branches expand on click; leaves toggle their selection.
+ * input group and lucide icons, following the WAI-ARIA tree pattern: one roving Tab stop on the
+ * active treeitem, arrow keys, Home/End and type-ahead. Branches expand on click; leaves toggle
+ * their selection.
  */
 @Component({
   selector: 'topic-tree',
@@ -45,6 +46,21 @@ export class TopicTreeComponent {
   nodeUnselect = output<TopicTreeNode>();
 
   filter = signal('');
+  /** The treeitem that holds the roving Tab stop. */
+  active = signal<TopicTreeNode | undefined>(undefined);
+  private typeahead = '';
+  private typeaheadTimer?: ReturnType<typeof setTimeout>;
+
+  private parents = computed(() => {
+    const map = new Map<TopicTreeNode, TopicTreeNode>();
+    const walk = (node: TopicTreeNode) =>
+      node.children?.forEach((child) => {
+        map.set(child, node);
+        walk(child);
+      });
+    this.nodes().forEach(walk);
+    return map;
+  });
 
   private selectedSet = computed(() => new Set(this.selection() ?? []));
 
@@ -87,6 +103,13 @@ export class TopicTreeComponent {
     return this.selectedSet().has(node);
   }
 
+  /** True for the one treeitem in the Tab order: the active one, or the first root if it isn't rendered. */
+  isTabStop(node: TopicTreeNode): boolean {
+    const active = this.active();
+    if (active && this.isRendered(active)) return node === active;
+    return node === this.nodes().find((root) => this.isShown(root));
+  }
+
   onFilterInput(event: Event) {
     this.filter.set((event.target as HTMLInputElement).value);
   }
@@ -108,32 +131,68 @@ export class TopicTreeComponent {
   }
 
   onKeydown(event: KeyboardEvent, node: TopicTreeNode) {
+    // Keydown bubbles from nested treeitems; only the focused one handles it.
+    if (event.target !== event.currentTarget) return;
+    const item = event.currentTarget as HTMLElement;
     switch (event.key) {
       case 'Enter':
       case ' ':
         this.activate(node);
         break;
       case 'ArrowRight':
-        if (this.isBranch(node)) node.expanded = true;
+        if (!this.isBranch(node)) break;
+        if (this.isExpanded(node)) item.querySelector<HTMLElement>('[role="treeitem"]')?.focus();
+        else node.expanded = true;
         break;
       case 'ArrowLeft':
-        if (this.isBranch(node)) node.expanded = false;
+        if (this.isBranch(node) && this.isExpanded(node) && this.visible() === null) node.expanded = false;
+        else item.parentElement?.closest<HTMLElement>('[role="treeitem"]')?.focus();
         break;
       case 'ArrowDown':
-        this.moveFocus(event, 1);
+        this.focusAt(item, (i) => i + 1);
         break;
       case 'ArrowUp':
-        this.moveFocus(event, -1);
+        this.focusAt(item, (i) => i - 1);
+        break;
+      case 'Home':
+        this.focusAt(item, () => 0);
+        break;
+      case 'End':
+        this.focusAt(item, (_, n) => n - 1);
         break;
       default:
-        return;
+        if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return;
+        this.typeAhead(item, event.key);
     }
     event.preventDefault();
   }
 
-  private moveFocus(event: KeyboardEvent, step: number) {
-    const rows = Array.from(this.host.nativeElement.querySelectorAll<HTMLElement>('.tree-row'));
-    const index = rows.indexOf(event.currentTarget as HTMLElement);
-    rows[index + step]?.focus();
+  private items(): HTMLElement[] {
+    return Array.from(this.host.nativeElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+  }
+
+  private focusAt(item: HTMLElement, next: (index: number, count: number) => number) {
+    const items = this.items();
+    items[next(items.indexOf(item), items.length)]?.focus();
+  }
+
+  /** Focuses the next treeitem whose label starts with the typed characters. */
+  private typeAhead(item: HTMLElement, char: string) {
+    clearTimeout(this.typeaheadTimer);
+    this.typeahead += char.toLowerCase();
+    this.typeaheadTimer = setTimeout(() => (this.typeahead = ''), 500);
+    const items = this.items();
+    const start = items.indexOf(item) + (this.typeahead.length === 1 ? 1 : 0);
+    const ordered = [...items.slice(start), ...items.slice(0, start)];
+    ordered.find((el) => (el.getAttribute('aria-label') ?? '').toLowerCase().startsWith(this.typeahead))?.focus();
+  }
+
+  /** Whether the node is in the DOM: shown by the filter, with every ancestor expanded. */
+  private isRendered(node: TopicTreeNode): boolean {
+    if (!this.isShown(node)) return false;
+    for (let parent = this.parents().get(node); parent; parent = this.parents().get(parent)) {
+      if (!this.isShown(parent) || !this.isExpanded(parent)) return false;
+    }
+    return true;
   }
 }

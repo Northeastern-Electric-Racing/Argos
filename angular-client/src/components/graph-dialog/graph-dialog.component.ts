@@ -16,6 +16,8 @@ export interface GraphDialogContext {
 
 @Component({
   selector: 'graph-dialog',
+  // Lays out the dialog's header, body and footer the way the Dialog docs' dynamic component does.
+  host: { class: 'grid gap-6 min-w-0' },
   templateUrl: './graph-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [forwardRef(() => GraphComponent), HlmDialogImports]

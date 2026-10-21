@@ -8,6 +8,7 @@ import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
+import { ConfirmService } from 'src/services/confirm.service';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
@@ -42,6 +43,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private dialogService = inject(HlmDialogService);
+  private confirmService = inject(ConfirmService);
   private router = inject(Router);
 
   clientId!: string;
@@ -101,11 +103,20 @@ export default class NotificationRulesPageComponent implements OnInit {
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.confirmService.confirm({
+      header: 'Delete Rules',
+      message: `Delete ${selected.length} selected rule(s)?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      destructive: true,
+      accept: () => void this.removeRules(selected)
+    });
+  };
 
+  private removeRules = async (selected: ClientRule[]) => {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {

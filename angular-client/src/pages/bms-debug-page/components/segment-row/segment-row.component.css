@@ -112,16 +112,3 @@
 .see-more-btn:hover {
   background-color: #1e9ad8;
 }
-
-/* ── PrimeNG Select overrides: force the dropdown to match the controls-zone styling ── */
-.controls-zone ::ng-deep .small-grey-select {
-  width: 100% !important;
-  min-width: 0 !important;
-  height: clamp(18px, 2.3vw, 44px) !important;
-  border-radius: clamp(8px, 1.25vw, 24px) !important;
-  background-color: #555 !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
-}

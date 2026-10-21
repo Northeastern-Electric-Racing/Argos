@@ -22,17 +22,19 @@
     @if (isShown(node)) {
       <li
         role="treeitem"
+        [attr.aria-label]="node.label"
         [attr.aria-level]="level"
         [attr.aria-expanded]="isBranch(node) ? isExpanded(node) : null"
         [attr.aria-selected]="node.selectable ? isSelected(node) : null"
+        [tabIndex]="isTabStop(node) ? 0 : -1"
+        (focus)="active.set(node)"
+        (keydown)="onKeydown($event, node)"
       >
         <div
           class="tree-row"
-          tabindex="0"
           [class.selected]="isSelected(node)"
           [style.padding-left.rem]="0.25 + (level - 1) * 1.25"
           (click)="activate(node)"
-          (keydown)="onKeydown($event, node)"
         >
           @if (isBranch(node)) {
             <ng-icon class="toggler" [name]="isExpanded(node) ? 'lucideChevronDown' : 'lucideChevronRight'" />

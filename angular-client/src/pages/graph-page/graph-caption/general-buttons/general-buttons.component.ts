@@ -5,6 +5,7 @@ import { HlmDatePickerImports } from '@spartan-ng/helm/date-picker';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
+import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -39,6 +40,7 @@ type CustomMode = 'last-x' | 'date-range';
     ButtonComponent,
     SelectDropdownComponent,
     HlmPopoverImports,
+    HlmToggleGroupImports,
     HlmDatePickerImports,
     HlmInput,
     HlmLabel,
@@ -69,6 +71,10 @@ export class GeneralButtonsComponent {
   customPopoverOpen = signal(false);
 
   customMode = signal<CustomMode>('last-x');
+  readonly customModes: { value: CustomMode; label: string }[] = [
+    { value: 'last-x', label: 'Last X' },
+    { value: 'date-range', label: 'Date Range' }
+  ];
   customHours = signal<number | null>(0);
   customMinutes = signal<number | null>(30);
   customFromDate = signal<Date>(new Date(Date.now() - 30 * 60 * 1000));
@@ -154,8 +160,8 @@ export class GeneralButtonsComponent {
     }
   };
 
-  setCustomMode = (mode: CustomMode) => {
-    this.customMode.set(mode);
+  setCustomMode = (mode: CustomMode | CustomMode[] | null | undefined) => {
+    if (typeof mode === 'string') this.customMode.set(mode);
   };
 
   applyCustomLastX = () => {

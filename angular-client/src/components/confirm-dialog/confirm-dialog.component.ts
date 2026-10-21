@@ -15,6 +15,8 @@ export interface ConfirmDialogContext {
 /** Yes/no confirmation, opened through ConfirmService; closes with true when accepted. */
 @Component({
   selector: 'confirm-dialog',
+  // Lays out the dialog's header, body and footer the way the Dialog docs' dynamic component does.
+  host: { class: 'grid gap-6 min-w-0' },
   templateUrl: './confirm-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HlmDialogImports, HlmButton]

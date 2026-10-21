@@ -93,24 +93,27 @@
                 <td hlmTd class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
                 <td hlmTd class="col-actions">
                   <button
-                    class="session-menu-btn"
+                    hlmBtn
+                    variant="ghost"
+                    size="icon-sm"
+                    class="text-muted-foreground"
                     [hlmDropdownMenuTrigger]="sessionMenu"
                     align="end"
                     (click)="$event.stopPropagation()"
                     aria-label="Session actions"
                   >
-                    <mat-icon>more_vert</mat-icon>
+                    <ng-icon name="lucideEllipsisVertical" />
                   </button>
                   <ng-template #sessionMenu>
                     <hlm-dropdown-menu class="w-44">
                       <button hlmDropdownMenuItem (triggered)="startEdit(s)">
-                        <mat-icon>edit</mat-icon><span>Rename</span>
+                        <ng-icon name="lucidePencil" /><span>Rename</span>
                       </button>
                       <button hlmDropdownMenuItem (triggered)="onDownload(s.id)">
-                        <mat-icon>download</mat-icon><span>Download CSV</span>
+                        <ng-icon name="lucideDownload" /><span>Download CSV</span>
                       </button>
                       <button hlmDropdownMenuItem variant="destructive" (triggered)="onDeleteSession(s)">
-                        <mat-icon>delete</mat-icon><span>Delete</span>
+                        <ng-icon name="lucideTrash2" /><span>Delete</span>
                       </button>
                     </hlm-dropdown-menu>
                   </ng-template>

@@ -55,29 +55,6 @@
   padding: 4px;
 }
 
-.mode-toggle {
-  display: flex;
-  flex-direction: row;
-  border: 1px solid #2a3a44;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.mode-btn {
-  flex: 1;
-  background-color: transparent;
-  color: #c9d6dc;
-  border: none;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.mode-btn--active {
-  background-color: #027bd7;
-  color: #fff;
-}
-
 .mode-body {
   display: flex;
   flex-direction: column;

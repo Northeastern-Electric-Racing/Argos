@@ -7,6 +7,8 @@ import { RulePayload } from 'src/api/rules.api';
 
 @Component({
   selector: 'upload-confirm-dialog',
+  // Lays out the dialog's header, body and footer the way the Dialog docs' dynamic component does.
+  host: { class: 'grid gap-6 min-w-0' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HlmButton, HlmDialogImports, HlmTableImports],
   templateUrl: './upload-confirm-dialog.component.html',

@@ -2,6 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideDownload, lucideEllipsisVertical, lucidePencil, lucideTrash2 } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { ConfirmService } from 'src/services/confirm.service';
 import { showToast } from 'src/utils/toast.utils';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
@@ -18,10 +21,13 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
   templateUrl: './sessions-panel.component.html',
   styleUrl: './sessions-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideIcons({ lucideDownload, lucideEllipsisVertical, lucidePencil, lucideTrash2 })],
   imports: [
     DatePipe,
     FormsModule,
     MatIcon,
+    NgIcon,
+    HlmButton,
     HlmTableImports,
     HlmDropdownMenuImports,
     HlmInput,

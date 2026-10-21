@@ -91,15 +91,6 @@
   margin-left: 8px;
 }
 
-/* PrimeNG InputNumber width customization */
-::ng-deep .time-range-input {
-  width: 80px !important;
-}
-
-::ng-deep .y-axis-input {
-  width: 60px !important;
-}
-
 /* ======================== Mobile ======================== */
 @media (max-width: 768px) {
   .toolbar {
@@ -155,13 +146,5 @@
 
   .graph-caption {
     flex: 0 0 auto;
-  }
-
-  ::ng-deep .time-range-input {
-    width: 70px !important;
-  }
-
-  ::ng-deep .y-axis-input {
-    width: 55px !important;
   }
 }

@@ -1,7 +1,3 @@
-:host {
-  display: block;
-}
-
 .cell-view {
   display: grid;
   gap: 12px;

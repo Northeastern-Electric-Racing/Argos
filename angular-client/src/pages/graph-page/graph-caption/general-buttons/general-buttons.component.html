@@ -43,24 +43,26 @@
   >
     <hlm-popover-content *hlmPopoverPortal="let ctx" class="w-auto">
       <div class="custom-popover-body">
-        <div class="mode-toggle">
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'last-x'"
-            (click)="setCustomMode('last-x')"
-          >
-            Last X
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            [class.mode-btn--active]="customMode() === 'date-range'"
-            (click)="setCustomMode('date-range')"
-          >
-            Date Range
-          </button>
-        </div>
+        <hlm-toggle-group
+          class="w-full"
+          type="single"
+          variant="outline"
+          size="sm"
+          aria-label="Custom range mode"
+          [nullable]="false"
+          [value]="customMode()"
+          (valueChange)="setCustomMode($event)"
+        >
+          @for (mode of customModes; track mode.value) {
+            <button
+              hlmToggleGroupItem
+              class="flex-1 text-xs aria-pressed:bg-[#027bd7] aria-pressed:text-white data-[state=on]:bg-[#027bd7]"
+              [value]="mode.value"
+            >
+              {{ mode.label }}
+            </button>
+          }
+        </hlm-toggle-group>
 
         @if (customMode() === 'last-x') {
           <div class="mode-body">
@@ -102,7 +104,7 @@
         } @else {
           <div class="mode-body">
             <div class="field-row">
-              <span class="popover-label">From</span>
+              <label hlmLabel class="popover-label" for="custom-from-date">From</label>
               <div class="date-time-row">
                 <hlm-date-picker
                   [date]="customFromDate()"
@@ -124,7 +126,7 @@
               </div>
             </div>
             <div class="field-row">
-              <span class="popover-label">To</span>
+              <label hlmLabel class="popover-label" for="custom-to-date">To</label>
               <div class="date-time-row">
                 <hlm-date-picker
                   [date]="customToDate()"

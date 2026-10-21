@@ -47,7 +47,7 @@
               <input
                 hlmInput
                 type="number"
-                class="time-range-input h-8 text-xs"
+                class="h-8 w-[70px] text-xs md:w-20"
                 [ngModel]="rangeValue"
                 (ngModelChange)="rangeValue = $event; onGraphConfigChange()"
                 min="1"
@@ -63,7 +63,7 @@
             <input
               hlmInput
               type="number"
-              class="y-axis-input h-8 px-1.5 text-xs"
+              class="h-8 w-[55px] px-1.5 text-xs md:w-[60px]"
               [ngModel]="yAxisMin"
               (ngModelChange)="yAxisMin = $event; onGraphConfigChange()"
               step="any"
@@ -75,7 +75,7 @@
             <input
               hlmInput
               type="number"
-              class="y-axis-input h-8 px-1.5 text-xs"
+              class="h-8 w-[55px] px-1.5 text-xs md:w-[60px]"
               [ngModel]="yAxisMax"
               (ngModelChange)="yAxisMax = $event; onGraphConfigChange()"
               step="any"

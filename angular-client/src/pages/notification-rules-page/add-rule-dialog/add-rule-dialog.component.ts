@@ -6,7 +6,7 @@ import { HlmAutocompleteImports } from '@spartan-ng/helm/autocomplete';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { RulePayload } from 'src/api/rules.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
@@ -16,9 +16,9 @@ import { filter, take } from 'rxjs';
 @Component({
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, HlmInput, HlmLabel, HlmAutocompleteImports, HlmButton, HlmDialogImports],
-  templateUrl: './add-rule-dialog.component.html',
-  styleUrls: ['./add-rule-dialog.component.css']
+  imports: [ReactiveFormsModule, HlmInput, HlmFieldImports, HlmAutocompleteImports, HlmButton, HlmDialogImports],
+  host: { class: 'grid gap-6 min-w-0' },
+  templateUrl: './add-rule-dialog.component.html'
 })
 export class AddRuleDialogComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

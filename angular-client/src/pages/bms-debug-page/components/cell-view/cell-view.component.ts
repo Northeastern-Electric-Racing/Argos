@@ -35,6 +35,8 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
 
 @Component({
   selector: 'cell-view',
+  // Lays out the dialog's header, body and footer the way the Dialog docs' dynamic component does.
+  host: { class: 'grid gap-6 min-w-0' },
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,

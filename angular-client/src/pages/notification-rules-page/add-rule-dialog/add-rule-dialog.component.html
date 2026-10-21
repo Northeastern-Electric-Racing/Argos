@@ -1,54 +1,46 @@
 <hlm-dialog-header>
   <h2 hlmDialogTitle>Add New Rule</h2>
 </hlm-dialog-header>
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="field">
-    <label hlmLabel for="rule-id">Rule ID</label>
-    <input id="rule-id" hlmInput formControlName="id" placeholder="e.g. high-voltage-alert" />
-    @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
-      <small class="error" role="alert">Rule ID is required</small>
-    }
+<form class="grid gap-6" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div hlmFieldGroup>
+    <div hlmField>
+      <label hlmFieldLabel for="rule-id">Rule ID</label>
+      <input id="rule-id" hlmInput formControlName="id" placeholder="e.g. high-voltage-alert" />
+      <hlm-field-error validator="required">Rule ID is required</hlm-field-error>
+    </div>
+
+    <div hlmField>
+      <label hlmFieldLabel for="rule-topic">Topic</label>
+      <hlm-autocomplete formControlName="topic" [(search)]="topicSearch">
+        <hlm-autocomplete-input inputId="rule-topic" placeholder="e.g. BMS/Pack/Voltage" />
+        <hlm-autocomplete-content *hlmAutocompletePortal>
+          <hlm-autocomplete-empty>No matching topics.</hlm-autocomplete-empty>
+          <div hlmAutocompleteList>
+            @for (topic of filteredTopics(); track topic) {
+              <hlm-autocomplete-item [value]="topic">{{ topic }}</hlm-autocomplete-item>
+            }
+          </div>
+        </hlm-autocomplete-content>
+      </hlm-autocomplete>
+      <hlm-field-error validator="required">Topic is required</hlm-field-error>
+    </div>
+
+    <div hlmField>
+      <label hlmFieldLabel for="rule-expr">Expression</label>
+      <input id="rule-expr" hlmInput formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
+      <hlm-field-error validator="required">Expression is required</hlm-field-error>
+    </div>
+
+    <div hlmField>
+      <label hlmFieldLabel for="rule-debounce">Debounce Time (seconds)</label>
+      <input id="rule-debounce" hlmInput formControlName="debounce_time" type="number" placeholder="e.g. 60" />
+      <hlm-field-error validator="required">Debounce time is required</hlm-field-error>
+      <hlm-field-error validator="min">Must be 0 or greater</hlm-field-error>
+    </div>
   </div>
 
-  <div class="field">
-    <label hlmLabel for="rule-topic">Topic</label>
-    <hlm-autocomplete formControlName="topic" [(search)]="topicSearch">
-      <hlm-autocomplete-input inputId="rule-topic" placeholder="e.g. BMS/Pack/Voltage" />
-      <hlm-autocomplete-content *hlmAutocompletePortal>
-        <hlm-autocomplete-empty>No matching topics.</hlm-autocomplete-empty>
-        <div hlmAutocompleteList>
-          @for (topic of filteredTopics(); track topic) {
-            <hlm-autocomplete-item [value]="topic">{{ topic }}</hlm-autocomplete-item>
-          }
-        </div>
-      </hlm-autocomplete-content>
-    </hlm-autocomplete>
-    @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
-      <small class="error" role="alert">Topic is required</small>
-    }
-  </div>
-
-  <div class="field">
-    <label hlmLabel for="rule-expr">Expression</label>
-    <input id="rule-expr" hlmInput formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
-    @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="error" role="alert">Expression is required</small>
-    }
-  </div>
-
-  <div class="field">
-    <label hlmLabel for="rule-debounce">Debounce Time (seconds)</label>
-    <input id="rule-debounce" hlmInput formControlName="debounce_time" type="number" placeholder="e.g. 60" />
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="error" role="alert">Debounce time is required</small>
-    }
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="error" role="alert">Must be 0 or greater</small>
-    }
-  </div>
-
-  <div class="button-row">
+  <hlm-dialog-footer>
     <button hlmBtn variant="ghost" type="button" (click)="onCancel()">Cancel</button>
     <button hlmBtn type="submit">Add Rule</button>
-  </div>
+  </hlm-dialog-footer>
 </form>

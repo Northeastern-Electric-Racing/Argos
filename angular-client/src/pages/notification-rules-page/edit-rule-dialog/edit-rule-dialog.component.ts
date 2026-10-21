@@ -4,7 +4,7 @@ import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 
 export interface EditRuleContext {
   header: string;
@@ -20,9 +20,9 @@ export interface EditRuleResult {
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, HlmInput, HlmLabel, HlmButton, HlmDialogImports],
-  templateUrl: './edit-rule-dialog.component.html',
-  styleUrls: ['./edit-rule-dialog.component.css']
+  imports: [ReactiveFormsModule, HlmInput, HlmFieldImports, HlmButton, HlmDialogImports],
+  host: { class: 'grid gap-6 min-w-0' },
+  templateUrl: './edit-rule-dialog.component.html'
 })
 export class EditRuleDialogComponent {
   private ref = inject(BrnDialogRef);

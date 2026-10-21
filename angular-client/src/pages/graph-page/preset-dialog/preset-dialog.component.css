@@ -89,10 +89,3 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
-}

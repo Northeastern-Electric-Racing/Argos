@@ -1,5 +1,6 @@
 import { Component, effect, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { HlmSelectImports } from '@spartan-ng/helm/select';
+import type { ClassValue } from 'clsx';
 
 export interface SelectorConfig {
   options: DropdownOption[];
@@ -29,6 +30,8 @@ export class SelectDropdownComponent {
   ]);
   placeholder = input<string>('placeholder');
   defaultValue = input<string | undefined>(undefined);
+  /** Extra classes for the trigger button, merged over helm's through tailwind-merge. */
+  triggerClass = input<ClassValue>('');
 
   /** Name of the shown option; option names double as the select's values. */
   selectedName = signal<string | null>(null);
