@@ -1,16 +1,70 @@
-import { GraphRenderer } from './graph-renderer';
+import { DrawSeries, GraphRenderer } from './graph-renderer';
+import { View } from './graph-scale';
+
+const HOUR = 60 * 60 * 1000;
 
 describe('GraphRenderer', () => {
-  it('asks for a WebGL2 drawing buffer without multisampling, depth or stencil', () => {
+  let glCanvas: HTMLCanvasElement;
+  let renderer: GraphRenderer;
+  let gl: WebGL2RenderingContext;
+
+  beforeEach(() => {
     if (!document.createElement('canvas').getContext('webgl2')) {
       pending('WebGL2 is unavailable in this browser');
     }
-    const glCanvas = document.createElement('canvas');
-    const renderer = new GraphRenderer(glCanvas, document.createElement('canvas'));
+    glCanvas = document.createElement('canvas');
+    renderer = new GraphRenderer(glCanvas, document.createElement('canvas'));
+    gl = glCanvas.getContext('webgl2') as WebGL2RenderingContext;
+  });
 
+  afterEach(() => renderer?.destroy());
+
+  const series = (name: string, points: [number, number][]): DrawSeries => ({
+    name,
+    color: '#ffffff',
+    visible: true,
+    points: points.map(([x, y]) => ({ x, y }))
+  });
+  const view = (min: number, max: number): View => ({
+    x: { min, max },
+    axes: [{ min: -2, max: 2 }],
+    seriesAxis: [0, 0],
+    multiDay: false
+  });
+
+  /** Columns of the GL canvas's middle row that the lines lit. */
+  function litColumns(width: number): number[] {
+    const px = new Uint8Array(width * 4);
+    gl.readPixels(0, 5, width, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    return Array.from({ length: width }, (_, i) => i).filter((i) => px[i * 4 + 3] > 0);
+  }
+
+  it('asks for a WebGL2 drawing buffer without multisampling, depth or stencil', () => {
     // 1px lines need none of these, and each multiplies the drawing buffer's GPU memory
-    const attrs = (glCanvas.getContext('webgl2') as WebGL2RenderingContext).getContextAttributes();
-    expect(attrs).toEqual(jasmine.objectContaining({ antialias: false, depth: false, stencil: false, alpha: true }));
-    renderer.destroy();
+    expect(gl.getContextAttributes()).toEqual(
+      jasmine.objectContaining({ antialias: false, depth: false, stencil: false, alpha: true })
+    );
+  });
+
+  it('draws a line where the axes put it when zoomed far from the start of the data', () => {
+    // A 7-day range zoomed to 1 s at its end: x relative to the data's start no longer fits Float32
+    renderer.resize(1000, 10, 1);
+    const area = { left: 0, top: 0, width: 1000, height: 10 };
+    let worst = 0;
+    for (let k = 0; k < 40; k++) {
+      const t = 168 * HOUR + k * 7.31;
+      const data = [
+        series('start', [[0, 0]]),
+        series('mark', [
+          [t, -1],
+          [t, 1]
+        ])
+      ];
+      renderer.upload(data);
+      renderer.draw(data, view(t - 500, t + 500), area, {});
+      const cols = litColumns(1000);
+      worst = Math.max(worst, cols.length ? Math.abs(cols[0] - 499.5) - 0.5 : Infinity);
+    }
+    expect(worst).toBeLessThanOrEqual(1);
   });
 });

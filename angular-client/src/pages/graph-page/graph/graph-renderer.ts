@@ -33,6 +33,12 @@ const AXIS_TEXT = '#fff';
 const GRID = 'rgba(255, 255, 255, 0.1)';
 const DAY_LINE = '#8fcadd';
 const FONT = '12px sans-serif';
+/**
+ * How many view widths the view may drift from `origin` before x is re-uploaded relative to
+ * the view. Float32 holds about 7 digits, so this keeps a visible point's position exact to
+ * well under a pixel however far into a long range the view is zoomed.
+ */
+const REBASE_SPANS = 100;
 
 const hexToRgba = (hex: string): [number, number, number, number] => {
   const n = parseInt(hex.slice(1), 16);
@@ -93,8 +99,6 @@ export class GraphRenderer {
       this.capacity = Math.max(series.length, this.capacity * 2);
       this.lines = new WebglLinePlot(this.gl, this.capacity);
     }
-    this.origin = Math.min(...series.map((s) => s.points[0]?.x ?? Infinity));
-    if (!isFinite(this.origin)) this.origin = 0;
     this.lines.initLines(
       series.map((s) => {
         const xy = new Float32Array(s.points.length * 2);
@@ -124,7 +128,13 @@ export class GraphRenderer {
       Math.round(area.width * this.dpr),
       Math.round(area.height * this.dpr)
     );
-    const sx = 2 / (view.x.max - view.x.min);
+    const span = view.x.max - view.x.min;
+    if (Math.abs(view.x.min - this.origin) > REBASE_SPANS * span) {
+      // A deep zoom, or a long live session: move the origin to the view and re-upload
+      this.origin = view.x.min;
+      this.upload(series);
+    }
+    const sx = 2 / span;
     this.lines.setGlobalTransform([sx, 1], [-1 - (view.x.min - this.origin) * sx, 0]);
     series.forEach((s, i) => {
       const y = view.axes[view.seriesAxis[i]];
