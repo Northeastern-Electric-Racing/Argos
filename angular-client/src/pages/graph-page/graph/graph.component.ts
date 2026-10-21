@@ -207,7 +207,8 @@ export default class CustomGraphComponent implements OnDestroy {
         // whatever is under the cursor, and a still cursor sends no mousemove to restore it; re-enter it
         const { handler } = this.chart.getZr();
         const { x, y } = this.hover;
-        // zrender reads only the position off the raw event
+        // zrender's handler API is undocumented, so the spec "keeps a toolbox icon's title showing…" guards it on
+        // upgrades. Of the raw event, hover needs only the position; an e.stop() in a mouseover listener would throw
         const event = { zrX: x, zrY: y } as unknown as Parameters<typeof handler.dispatchToElement>[2];
         handler.dispatchToElement(handler.findHover(x, y), 'mouseover', event);
       }
