@@ -24,6 +24,7 @@ import {
   MismatchDirection,
   MouseEventParams,
   Time,
+  WhitespaceData,
   createChart
 } from 'lightweight-charts';
 import { Subject, takeUntil } from 'rxjs';
@@ -37,6 +38,7 @@ import {
   formatTickMark,
   formatValue,
   fromChartTime,
+  gridStep,
   priceScaleIdFor,
   seriesColor,
   toChartTime,
@@ -79,8 +81,30 @@ const TOOLTIP_OFFSET = 12;
 const MIN_STALE_HEAD = 50;
 const STALE_HEAD_FRACTION = 0.1;
 
-/** Smallest bar spacing (px) the time scale allows, so fitContent() fits about 1000 bars per pixel. */
+/** Smallest bar spacing (px) the time scale allows, so a fit shows about 1000 bars per pixel. */
 const MIN_BAR_SPACING = 0.001;
+
+/**
+ * Most whitespace grid points across the span on screen. The time scale spaces bars by index, so a
+ * hidden series of time-only points on a round step spaces it by time; this bounds its size (a 7-day
+ * range gets a 10-minute step, not 604k one-second bars).
+ */
+const GRID_BARS = 2000;
+
+/**
+ * Live, the grid runs this many points past the latest data and is rebuilt (one setData) only once
+ * the data passes its end or its head is this many points stale, instead of an update() per point:
+ * every new time point makes the library re-send every series.
+ */
+const GRID_SLACK = 500;
+
+interface GridState {
+  /** Grid step, in ms. */
+  step: number;
+  /** First and last grid point, as multiples of the step. */
+  from: number;
+  to: number;
+}
 
 @Component({
   selector: 'graph',
@@ -119,6 +143,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   private dayBoundaries = new DayBoundariesPrimitive();
   private hoverMarkers = new HoverMarkersPrimitive();
   private multiDay = false;
+  /** Hidden whitespace series that spaces the time scale by time (see syncGrid). */
+  private grid: ISeriesApi<'Line'> | undefined;
+  private gridState: GridState | null = null;
 
   constructor() {
     // Beside the cursor, flipped to its other side where it would overflow the chart's right or bottom edge.
@@ -218,12 +245,20 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         // The default 0.5 px minimum lets fitContent() show only (width * 2) bars, so a long run
         // (a 50-hour run at 30 s is 6000 bars) showed just its last hours. Allow far denser bars.
         minBarSpacing: MIN_BAR_SPACING,
+        // Left false on purpose: the grid's points stay tick and crosshair stops, so ticks land on
+        // round times instead of raw data times, and the crosshair moves through gaps.
+        ignoreWhitespaceIndices: false,
         tickMarkFormatter: (time: Time) => formatTickMark(time, this.multiDay)
       },
       localization: {
         timeFormatter: formatCrosshairTime,
         priceFormatter: formatValue
       }
+    });
+    this.grid = this.chart.addSeries(LineSeries, {
+      lastValueVisible: false,
+      priceLineVisible: false,
+      crosshairMarkerVisible: false
     });
     this.chart.panes()[0].attachPrimitive(this.dayBoundaries);
     this.chart.panes()[0].attachPrimitive(this.hoverMarkers);
@@ -235,6 +270,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.chart?.unsubscribeCrosshairMove(this.onCrosshairMove);
     this.chart?.remove();
     this.chart = undefined;
+    this.grid = undefined;
     this.series.clear();
     this.data.clear();
   }
@@ -303,12 +339,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
   resetRange() {
     this.timeRangeMs = undefined;
-    this.chart?.timeScale().fitContent();
+    this.fitData();
   }
 
   /** Double-click: back to the whole range on both axes (stands in for ApexCharts' reset-zoom button). */
   resetZoom() {
-    this.chart?.timeScale().fitContent();
+    this.fitData();
     this.series.forEach((s) => s.priceScale().applyOptions({ autoScale: true }));
   }
 
@@ -396,6 +432,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.data = new Map();
     this.timeRangeMs = undefined;
     this.dayBoundaries.setBoundaries([]);
+    this.grid?.setData([]);
+    this.gridState = null;
   }
 
   /** Recreates every series from `data` (first render, or the y-axis layout changed). */
@@ -419,27 +457,72 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.chart.applyOptions({ rightPriceScale: { visible: this.series.size > 1 } });
     }
 
+    const extent = this.dataExtent();
+    if (!extent) return;
+    const { first, latest } = extent;
     const timeScale = this.chart.timeScale();
     if (untracked(this.realTime)) {
       this.setMultiDay(false);
       const config = untracked(this.graphConfig);
       const range = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
-      let latest = -Infinity;
-      this.data.forEach((line) => {
-        if (line.length > 0) latest = Math.max(latest, line[line.length - 1].x);
-      });
-      if (range !== undefined && isFinite(latest)) {
+      this.syncGrid(range ?? latest - first, first, latest, true);
+      if (range !== undefined) {
         timeScale.setVisibleRange({ from: toChartTime(latest - range), to: toChartTime(latest) });
       } else {
-        timeScale.fitContent();
+        this.fitData();
       }
       return;
     }
 
+    this.syncGrid(latest - first, first, latest, false);
     const boundaries = buildDayBoundaries(Array.from(this.data.values()));
     this.setMultiDay(boundaries.length > 0);
     this.dayBoundaries.setBoundaries(boundaries);
-    timeScale.fitContent();
+    this.fitData();
+  }
+
+  /**
+   * Keeps whitespace grid points every `gridStep(span)` ms across the data, so the index-spaced time
+   * scale is spaced by time and gaps keep their width. Live (`lookAhead`), the grid reaches back at
+   * most two spans from the latest point and GRID_SLACK points past it, and is rebuilt once the data
+   * passes its end, its head goes stale, or its step changes.
+   */
+  private syncGrid(spanMs: number, firstMs: number, lastMs: number, lookAhead: boolean) {
+    if (!this.grid) return;
+    const step = gridStep(spanMs, GRID_BARS);
+    const from = Math.ceil(Math.max(firstMs, lastMs - 2 * spanMs) / step);
+    const last = Math.floor(lastMs / step);
+    const current = this.gridState;
+    if (current?.step === step) {
+      const fresh = lookAhead
+        ? from >= current.from && from - current.from < GRID_SLACK && last <= current.to
+        : from === current.from && last === current.to;
+      if (fresh) return;
+    }
+    const to = lookAhead ? last + GRID_SLACK : last;
+    const points: WhitespaceData<Time>[] = [];
+    for (let k = from; k <= to; k++) points.push({ time: toChartTime(k * step) });
+    this.grid.setData(points);
+    this.gridState = { step, from, to };
+  }
+
+  /** Fits the data on screen; unlike fitContent(), leaves out the live grid's look-ahead. */
+  private fitData() {
+    const extent = this.dataExtent();
+    if (!this.chart || !extent) return;
+    this.chart.timeScale().setVisibleRange({ from: toChartTime(extent.first), to: toChartTime(extent.latest) });
+  }
+
+  /** Earliest and latest data time (ms) across the series; null with no data. */
+  private dataExtent(): { first: number; latest: number } | null {
+    let first = Infinity;
+    let latest = -Infinity;
+    this.data.forEach((line) => {
+      if (line.length === 0) return;
+      first = Math.min(first, line[0].x);
+      latest = Math.max(latest, line[line.length - 1].x);
+    });
+    return isFinite(latest) ? { first, latest } : null;
   }
 
   private setMultiDay(multiDay: boolean) {

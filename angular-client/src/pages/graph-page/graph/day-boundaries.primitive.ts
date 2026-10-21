@@ -47,12 +47,20 @@ export class DayBoundariesPrimitive implements IPanePrimitive<Time> {
     this.requestUpdate?.();
   }
 
-  /** x (media px) of each boundary: halfway between the new day's first bar and the bar before it. */
+  /**
+   * x (media px) of each boundary: its midnight's own bar, which the whitespace time grid usually
+   * has; otherwise halfway between the first bar after midnight and the bar before it.
+   */
   positions(): { x: number; label: string }[] {
     const timeScale = this.chart?.timeScale();
     if (!timeScale) return [];
     const out: { x: number; label: string }[] = [];
     for (const { timeMs, label } of this.boundaries) {
+      const exact = timeScale.timeToCoordinate(toChartTime(timeMs));
+      if (exact !== null) {
+        out.push({ x: exact, label });
+        continue;
+      }
       const found = timeScale.timeToIndex(toChartTime(timeMs), true);
       if (found === null) continue;
       const index = found as number as Logical;
@@ -72,7 +80,7 @@ export class DayBoundariesPrimitive implements IPanePrimitive<Time> {
       ctx.save();
       ctx.font = '11px sans-serif';
       ctx.textBaseline = 'top';
-      // Days squeezed together on the point-spaced axis would stack their labels; keep only the first.
+      // Days squeezed together where the axis is dense would stack their labels; keep only the first.
       let labelEnd = -Infinity;
       for (const { x, label } of positions) {
         if (x < 0 || x > mediaSize.width) continue;

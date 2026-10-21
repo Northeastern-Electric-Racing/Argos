@@ -11,7 +11,7 @@ import {
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent, { GraphConfig } from './graph.component';
-import { toChartTime } from './graph-chart.utils';
+import { fromChartTime, toChartTime } from './graph-chart.utils';
 import { DayBoundariesPrimitive } from './day-boundaries.primitive';
 import { HoverMarkersPrimitive } from './hover-markers.primitive';
 
@@ -62,7 +62,14 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     await fixture.whenStable();
   }
 
-  const allSeries = (): ISeriesApi<SeriesType, Time>[] => component.chart!.panes()[0].getSeries();
+  /** The hidden whitespace series that spaces the time scale by time. */
+  const grid = () => (component as unknown as { grid: ISeriesApi<'Line'> }).grid;
+  /** Topic series, leaving out the grid. */
+  const allSeries = (): ISeriesApi<SeriesType, Time>[] =>
+    component
+      .chart!.panes()[0]
+      .getSeries()
+      .filter((s) => s !== grid());
   const times = (s: ISeriesApi<SeriesType, Time>) => s.data().map((d) => d.time);
 
   afterEach(() => {
@@ -138,6 +145,44 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(series.data().at(-1)!.time).toBe(toChartTime(T0 + 2000));
   });
 
+  it('spaces the time axis by time, so a gap in the data keeps its width', async () => {
+    // 10 s of data at 1 Hz, a 50 s gap, then 10 s more.
+    const second = 1000;
+    const points = [
+      ...Array.from({ length: 11 }, (_, i) => ({ x: T0 + i * second, y: i })),
+      ...Array.from({ length: 11 }, (_, i) => ({ x: T0 + (60 + i) * second, y: i }))
+    ];
+    await render({ topics: [topic('A', [points])] });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    component.resetZoom();
+
+    const x = (ms: number) => component.chart!.timeScale().timeToCoordinate(toChartTime(ms))!;
+    const data = x(T0 + 10 * second) - x(T0);
+    const gap = x(T0 + 60 * second) - x(T0 + 10 * second);
+    expect(gap / data).toBeCloseTo(5, 0);
+  });
+
+  it('keeps the live whitespace grid bounded, rebuilding it only every few seconds', async () => {
+    const speed = topic('VCU/CarState/speed', [[{ x: T0, y: 0 }]]);
+    await render({ topics: [speed], realTime: true, graphConfig: config({ timeRangeMs: 30_000 }) });
+    // series.data() leaves whitespace out, so record what the grid is handed instead.
+    const setData = spyOn(grid(), 'setData').and.callThrough();
+
+    // A minute of 10 Hz data.
+    for (let i = 1; i <= 600; i++) {
+      speed.updates.next([[{ x: T0 + i * 100, y: i }]]);
+    }
+
+    // A 30 s window gets a 20 ms grid running 500 points (10 s) past the data: a rebuild every ~10 s.
+    expect(setData.calls.count()).toBeGreaterThan(0);
+    expect(setData.calls.count()).toBeLessThanOrEqual(8);
+    const times = setData.calls.mostRecent().args[0].map((d) => fromChartTime(d.time));
+    const latest = T0 + 60_000;
+    expect(times[0]).toBeGreaterThanOrEqual(latest - 2 * 30_000);
+    expect(times.at(-1)!).toBeGreaterThan(latest);
+    expect(times.length).toBeLessThanOrEqual(2 * 1500 + 500 + 1);
+  });
+
   it('labels the time axis with dates on multi-day historical ranges', async () => {
     const day = 24 * 60 * 60 * 1000;
     await render({
@@ -155,22 +200,38 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(format(toChartTime(T0), 0, 'en-US')).toBe('3/14 09:00');
   });
 
-  it('draws each day boundary between the last bar of one day and the first of the next', async () => {
+  it('draws each day boundary at local midnight', async () => {
     const hour = 60 * 60 * 1000;
-    const points = Array.from({ length: 60 }, (_, i) => ({ x: T0 + i * hour, y: i }));
+    const points = Array.from({ length: 60 }, (_, i) => ({ x: T0 + i * hour + 7 * 60_000, y: i }));
     await render({ topics: [topic('A', [points])] });
+    // The grid's ~2000 bars only fit once autoSize has measured the chart.
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    component.resetZoom();
 
     const { dayBoundaries } = component as unknown as { dayBoundaries: DayBoundariesPrimitive };
     const timeScale = component.chart!.timeScale();
     const midnights = [new Date(2026, 2, 15).getTime(), new Date(2026, 2, 16).getTime()];
-    const expected = midnights.map(
-      (ms) => (timeScale.timeToCoordinate(toChartTime(ms))! + timeScale.timeToCoordinate(toChartTime(ms - hour))!) / 2
-    );
+    const expected = midnights.map((ms) => timeScale.timeToCoordinate(toChartTime(ms))!);
 
     const xs = dayBoundaries.positions().map((p) => p.x);
     expect(xs.length).toBe(2);
     xs.forEach((x, i) => expect(x).toBeCloseTo(expected[i], 5));
     expect(xs[0]).toBeGreaterThan(0);
+  });
+
+  it('draws a day line on every midnight inside a data gap, a day apart', async () => {
+    const hour = 60 * 60 * 1000;
+    const day = 24 * hour;
+    const points = [T0, T0 + 3 * hour, T0 + 2 * day, T0 + 2 * day + 3 * hour].map((x, i) => ({ x, y: i }));
+    await render({ topics: [topic('A', [points])] });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    component.resetZoom();
+
+    const { dayBoundaries } = component as unknown as { dayBoundaries: DayBoundariesPrimitive };
+    const x = (ms: number) => component.chart!.timeScale().timeToCoordinate(toChartTime(ms))!;
+    const positions = dayBoundaries.positions();
+    expect(positions.map((p) => p.label)).toEqual(['Sun, Mar 15', 'Mon, Mar 16']);
+    expect((positions[1].x - positions[0].x) / (x(T0 + 2 * day) - x(T0))).toBeCloseTo(0.5, 2);
   });
 
   it('fits a whole long historical run, not just the bars the default minimum spacing allows', async () => {
@@ -191,11 +252,15 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(component.chart!.options().handleScale).toEqual(
       jasmine.objectContaining({ axisDoubleClickReset: { time: false, price: true } })
     );
-    const fitContent = spyOn(component.chart!.timeScale(), 'fitContent').and.callThrough();
+    const setVisibleRange = spyOn(component.chart!.timeScale(), 'setVisibleRange').and.callThrough();
 
     fixture.nativeElement.querySelector('.chart-container').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 
-    expect(fitContent).toHaveBeenCalled();
+    // The data's own range, not fitContent(), which would include a live grid's look-ahead.
+    expect(setVisibleRange).toHaveBeenCalledWith({
+      from: toChartTime(T0),
+      to: toChartTime(T0)
+    });
   });
 
   it('ends the shared y-axis exactly at a configured min and max', async () => {
@@ -377,6 +442,9 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     ]);
     const b = topic('B', [[{ x: T0 + 1000, y: 20 }]]);
     await render({ topics: [a, b], multi: true });
+    // Fit once autoSize has measured the chart, so both points are in view and on their scales.
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    component.resetZoom();
     expect(allSeries().map((s) => (s.options() as LineSeriesOptions).crosshairMarkerVisible)).toEqual([false, false]);
     const { hoverMarkers } = component as unknown as { hoverMarkers: HoverMarkersPrimitive };
     const timeScale = component.chart!.timeScale();

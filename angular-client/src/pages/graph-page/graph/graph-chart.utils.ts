@@ -1,5 +1,4 @@
 import { LineData, Time, UTCTimestamp } from 'lightweight-charts';
-import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
@@ -30,6 +29,28 @@ export function toLineData(points: GraphData[]): LineData<Time>[] {
     }
   }
   return out;
+}
+
+const SECOND_MS = 1000;
+const MINUTE_MS = 60 * SECOND_MS;
+const HOUR_MS = 60 * MINUTE_MS;
+
+/** Whitespace grid steps, each dividing the next clock unit up, so grid times land on round times. */
+const GRID_STEPS_MS = [
+  ...[1, 2, 5, 10, 20, 50, 100, 200, 500],
+  ...[1, 2, 5, 10, 15, 30].map((n) => n * SECOND_MS),
+  ...[1, 2, 5, 10, 15, 30].map((n) => n * MINUTE_MS),
+  ...[1, 2, 3, 6, 12].map((n) => n * HOUR_MS),
+  DAY_MS
+];
+
+/**
+ * Step (ms) of the whitespace grid that spaces the time scale by time: the smallest round step that
+ * puts at most `maxBars` grid points across `spanMs`.
+ */
+export function gridStep(spanMs: number, maxBars: number): number {
+  const wanted = spanMs / maxBars;
+  return GRID_STEPS_MS.find((step) => step >= wanted) ?? Math.ceil(wanted / DAY_MS) * DAY_MS;
 }
 
 const pad = (n: number, width = 2) => n.toString().padStart(width, '0');
@@ -70,16 +91,12 @@ export function priceScaleIdFor(index: number, multipleYAxes: boolean): string {
 }
 
 export interface DayBoundary {
-  /** The first plotted time on or after local midnight, in ms (the time scale only has data times). */
+  /** Local midnight, in ms. */
   timeMs: number;
   label: string;
 }
 
-/**
- * One boundary per local day change across the series, placed at the first point of the new day.
- * Returns nothing unless the data spans more than a day. Midnights inside a gap with no data
- * collapse onto the next day's first point, labelled with that day.
- */
+/** One boundary per local midnight across the series; nothing unless the data spans more than a day. */
 export function buildDayBoundaries(lines: GraphData[][]): DayBoundary[] {
   let minX = Infinity;
   let maxX = -Infinity;
@@ -94,21 +111,8 @@ export function buildDayBoundaries(lines: GraphData[][]): DayBoundary[] {
   const cursor = new Date(minX);
   cursor.setHours(24, 0, 0, 0);
   while (cursor.getTime() <= maxX) {
-    const midnight = cursor.getTime();
-    let first = Infinity;
-    for (const line of lines) {
-      const idx = binarySearchInsertIndex(line, midnight);
-      if (idx < line.length) first = Math.min(first, line[idx].x);
-    }
-    if (isFinite(first)) {
-      const label = new Date(first).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      if (boundaries.at(-1)?.timeMs === first) {
-        // Several midnights fell in one gap: label the day the data resumes on.
-        boundaries[boundaries.length - 1].label = label;
-      } else {
-        boundaries.push({ timeMs: first, label });
-      }
-    }
+    const label = cursor.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    boundaries.push({ timeMs: cursor.getTime(), label });
     cursor.setDate(cursor.getDate() + 1);
   }
   return boundaries;

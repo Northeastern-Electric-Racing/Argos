@@ -4,6 +4,7 @@ import {
   formatCrosshairTime,
   formatTickMark,
   formatValue,
+  gridStep,
   priceScaleIdFor,
   toChartTime,
   toLineData
@@ -53,6 +54,19 @@ describe('graph-chart utils', () => {
     expect([0, 1, 2].map((i) => priceScaleIdFor(i, true))).toEqual(['left', 'right', 'overlay-2']);
   });
 
+  describe('gridStep', () => {
+    it('picks the smallest round step that keeps the span within the bar budget', () => {
+      expect(gridStep(30_000, 2000)).toBe(20);
+      expect(gridStep(5 * 60_000, 2000)).toBe(200);
+      expect(gridStep(50 * 60 * 60_000, 2000)).toBe(2 * 60_000);
+      expect(gridStep(7 * DAY_MS, 2000)).toBe(10 * 60_000);
+    });
+
+    it('steps in whole days past the largest round step', () => {
+      expect(gridStep(5000 * DAY_MS, 2000)).toBe(3 * DAY_MS);
+    });
+  });
+
   describe('buildDayBoundaries', () => {
     it('returns nothing for a range within a day', () => {
       expect(
@@ -65,7 +79,7 @@ describe('graph-chart utils', () => {
       ).toEqual([]);
     });
 
-    it('marks the first point of each new day across series', () => {
+    it('marks each local midnight across the series', () => {
       const boundaries = buildDayBoundaries([
         [
           { x: t(20, 0, 0, 0, 14), y: 0 },
@@ -76,18 +90,22 @@ describe('graph-chart utils', () => {
           { x: t(23, 0, 0, 0, 15), y: 0 }
         ]
       ]);
-      expect(boundaries.map((b) => b.timeMs)).toEqual([t(7, 30, 0, 0, 15)]);
+      expect(boundaries.map((b) => b.timeMs)).toEqual([t(0, 0, 0, 0, 15)]);
       expect(boundaries[0].label).toBe('Sun, Mar 15');
     });
 
-    it('collapses midnights inside a data gap onto the day the data resumes', () => {
+    it('marks midnights inside a data gap too, since gaps keep their width', () => {
       const boundaries = buildDayBoundaries([
         [
           { x: t(10, 0, 0, 0, 14), y: 0 },
           { x: t(10, 0, 0, 0, 17), y: 0 }
         ]
       ]);
-      expect(boundaries).toEqual([{ timeMs: t(10, 0, 0, 0, 17), label: 'Tue, Mar 17' }]);
+      expect(boundaries).toEqual([
+        { timeMs: t(0, 0, 0, 0, 15), label: 'Sun, Mar 15' },
+        { timeMs: t(0, 0, 0, 0, 16), label: 'Mon, Mar 16' },
+        { timeMs: t(0, 0, 0, 0, 17), label: 'Tue, Mar 17' }
+      ]);
     });
   });
 });
