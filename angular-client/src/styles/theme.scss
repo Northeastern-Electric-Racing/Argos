@@ -58,6 +58,13 @@ html {
     )
   );
 
+  // Fault accordions read as panels on the page, like the app's other #2c2c2c info panels.
+  @include mat.expansion-overrides(
+    (
+      container-background-color: var(--color-background-info)
+    )
+  );
+
   // Drawers are full-viewport overlays over the page; keep their empty content area see-through.
   @include mat.sidenav-overrides(
     (
@@ -67,11 +74,19 @@ html {
   );
 }
 
-// Compact controls for dense toolbars (graph page axis inputs, quick selects).
+// Compact controls for dense toolbars (graph page axis inputs, quick selects). Density -4 makes
+// them 40px; the field height is brought down to 32px so they sit in line with the 28px buttons.
 .dense-controls {
   @include mat.theme(
     (
       density: -4
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      container-height: 32px,
+      container-vertical-padding: 4px
     )
   );
 }

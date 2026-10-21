@@ -110,5 +110,7 @@
 .notification-popover {
   display: block;
   box-shadow: var(--mat-sys-level3);
+  /* One surface step up (as the toasts are), so it stands apart from the #2c2c2c cards underneath */
+  --color-background-info: var(--mat-sys-surface-container-highest);
   border-radius: var(--border-radius-panel);
 }

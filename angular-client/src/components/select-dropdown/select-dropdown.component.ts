@@ -33,6 +33,8 @@ export class SelectDropdownComponent {
   /** Accessible name; the compact field has no floating label, so this falls back to the placeholder. */
   label = input<string | undefined>(undefined);
   defaultValue = input<string | undefined>(undefined);
+  /** mat-select's panelWidth: 'auto' matches the trigger; null grows the panel to the longest option. */
+  panelWidth = input<MatSelect['panelWidth']>('auto');
 
   selectedOption: DropdownOption | undefined;
 

@@ -1,4 +1,9 @@
-<h2 mat-dialog-title>Edit Run</h2>
+<h2 mat-dialog-title class="title-row">
+  Edit Run
+  <button mat-icon-button mat-dialog-close aria-label="Close">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
 <mat-dialog-content>
   @if (!this.templateReady()) {
     <loading-page />

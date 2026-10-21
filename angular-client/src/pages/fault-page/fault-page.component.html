@@ -6,7 +6,7 @@
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
   <mat-accordion multi>
-    @for (node of nodeArray; track node.node) {
+    @for (node of nodeArray(); track node.node) {
       <mat-expansion-panel>
         <mat-expansion-panel-header>
           <mat-panel-title>{{ node.node }}</mat-panel-title>

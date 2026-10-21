@@ -56,10 +56,14 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   treeNodes = computed(() => {
     const nodes = dataTypesToNodes(this.dataTypes());
     // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
-    return untracked(() => mapNodesToTreeNodes(nodes, this.storage, this.injector));
+    return untracked(() => {
+      const tree = mapNodesToTreeNodes(nodes, this.storage, this.injector);
+      findSelectedTreeNodes(tree, this.topicSelectionService); // open the branches of topics already selected
+      return tree;
+    });
   });
   flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
-  // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
+  // Re-derived when the tree is rebuilt; also reset when a preset, a toggle or Clear changes what's shown.
   selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>
     findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
   );

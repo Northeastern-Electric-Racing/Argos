@@ -4,10 +4,13 @@
     [compareWith]="compareOptions"
     [placeholder]="placeholder()"
     [aria-label]="label() ?? placeholder()"
+    [panelWidth]="panelWidth()"
     (selectionChange)="handleChangedOption($event)"
   >
     @for (option of options(); track option.name) {
       <mat-option [value]="option">{{ option.name }}</mat-option>
+    } @empty {
+      <mat-option disabled>No available options</mat-option>
     }
   </mat-select>
 </mat-form-field>

@@ -4,7 +4,9 @@ import { DynamicFormField, FormTemplateComponent } from '../form-template/form-t
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MatDialogClose, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import APIService from 'src/services/api.service';
 import { ToastService } from 'src/services/toast.service';
 import { FormGroup } from '@angular/forms';
@@ -17,7 +19,16 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
   templateUrl: './run-form.component.html',
   styleUrl: './run-form.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent, MatDialogTitle, MatDialogContent]
+  imports: [
+    SelectDropdownComponent,
+    FormTemplateComponent,
+    LoadingPageComponent,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogClose,
+    MatIconButton,
+    MatIcon
+  ]
 })
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

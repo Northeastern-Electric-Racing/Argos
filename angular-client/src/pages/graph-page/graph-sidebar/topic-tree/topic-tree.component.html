@@ -28,13 +28,12 @@
       [class.leaf]="!hasChildren(node)"
       [class.selected]="isSelected(node)"
       [isExpandable]="hasChildren(node)"
-      [isExpanded]="!!node.expanded"
       (expandedChange)="node.expanded = $event"
       (click)="activate(node, tree)"
       (activation)="activate($event, tree)"
     >
       @if (hasChildren(node)) {
-        <mat-icon class="chevron" [class.open]="node.expanded" aria-hidden="true">chevron_right</mat-icon>
+        <mat-icon class="chevron" [class.open]="tree.isExpanded(node)" aria-hidden="true">chevron_right</mat-icon>
       } @else {
         <mat-icon class="check" aria-hidden="true">{{
           isSelected(node) ? 'check_box' : 'check_box_outline_blank'
@@ -44,7 +43,7 @@
         <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
       </span>
       @if (!hasChildren(node)) {
-        <typography [content]="node.data.displayValue()" variant="subheader" />
+        <typography [content]="node.data.displayValue()" variant="subheader" additionalStyles="margin: 0;" />
       }
     </mat-tree-node>
   </mat-tree>
