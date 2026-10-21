@@ -6,14 +6,15 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * ApexCharts' default palette first, so series keep the colors users are used to, then five more that read on
- * the dark background, so a sixth topic doesn't repeat the first one's color.
+ * the dark background, so a sixth topic doesn't repeat the first one's color. ApexCharts' violet #775DD0 is
+ * lightened to #9B87F5: as multi-axis tick text it was 3.8:1 on the page background, under WCAG AA's 4.5:1.
  */
 export const SERIES_COLORS = [
   '#008FFB',
   '#00E396',
   '#FEB019',
   '#FF4560',
-  '#775DD0',
+  '#9B87F5',
   '#00D9E9',
   '#FF66C3',
   '#C7F464',
@@ -129,7 +130,8 @@ export function buildTimeTicks(min: number, max: number, maxTicks = MAX_X_TICKS)
   for (let local = Math.ceil((min - tzOffsetMs(min)) / step) * step; ; local += step) {
     const t = local + tzOffsetMs(local + tzOffsetMs(min));
     if (t > max) break;
-    if (t >= min) ticks.push(t);
+    // A grid time in a skipped spring-forward hour maps back onto an earlier tick; keep ticks strictly increasing
+    if (t >= min && t > (ticks.at(-1) ?? -Infinity)) ticks.push(t);
   }
   return ticks;
 }
@@ -183,10 +185,11 @@ function startOfLocalDay(t: number): number {
 /** One dashed vertical line, labelled with the date, at each local midnight inside the span. */
 export function buildDayBoundaryAnnotations(span: { minX: number; maxX: number }): AnnotationOptions<'line'>[] {
   const annotations: AnnotationOptions<'line'>[] = [];
-  // First local-midnight strictly after minX.
+  // First local midnight strictly after minX, then step by calendar day: a DST day is 23 or 25 hours long
   const cursor = new Date(span.minX);
   cursor.setHours(24, 0, 0, 0);
-  for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
+  for (; cursor.getTime() < span.maxX; cursor.setDate(cursor.getDate() + 1)) {
+    const t = cursor.getTime();
     annotations.push({
       type: 'line',
       xMin: t,
@@ -238,8 +241,8 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
       // Epoch-ms on a linear scale, with ticks replaced by clock-aligned ones (see buildTimeTicks)
       x: {
         type: 'linear',
-        // Hidden with no series, rather than labelled 00:00:00.000 to 00:00:00.001 (the empty state says why)
-        display: 'auto',
+        // Hidden until there is data, rather than labelled 00:00:00.000 to 00:00:00.001 (see syncChart)
+        display: false,
         afterBuildTicks: (scale) => {
           scale.ticks = buildTimeTicks(scale.min, scale.max).map((value) => ({ value }));
         },

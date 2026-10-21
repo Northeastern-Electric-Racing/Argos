@@ -286,8 +286,15 @@ describe('CustomGraphComponent (Chart.js)', () => {
     await settle();
 
     expect(fixture.componentInstance.zoomed()).toBeTrue();
-    expect(c.scales['x'].max - c.scales['x'].min).toBeLessThan(40_000);
+    expect(c.scales['x'].max - c.scales['x'].min).toBeCloseTo(32_000, 6);
     expect(toolbarButton('Reset Zoom').disabled).toBeFalse();
+
+    toolbarButton('Zoom Out').click();
+    await settle();
+
+    // Zoom Out undoes Zoom In exactly, but stays zoomed (live windowing still paused)
+    expect(c.scales['x'].max - c.scales['x'].min).toBeCloseTo(40_000, 6);
+    expect(fixture.componentInstance.zoomed()).toBeTrue();
 
     toolbarButton('Reset Zoom').click();
     await settle();
@@ -340,14 +347,70 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(fixture.componentInstance.zoomed()).toBeFalse();
   });
 
-  it('ignores incoming points while paused', async () => {
-    const voltage = topic('V', [{ x: 0, y: 1 }]);
+  it('ignores incoming points while paused, and holds the paused window still', async () => {
+    const voltage = topic('V', [
+      { x: 25_000, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
     const c = await render({ valuesSubject: [voltage], realTime: true });
 
     fixture.componentRef.setInput('isPaused', true);
-    voltage.updates.next([[{ x: 1000, y: 2 }]]);
+    await settle();
+    const { min, max } = c.scales['x'];
+    voltage.updates.next([[{ x: 31_000, y: 2 }]]);
+    fixture.componentRef.setInput('showMultipleYAxes', true);
     await settle();
 
-    expect(c.data.datasets[0].data.length).toBe(1);
+    expect(c.data.datasets[0].data.length).toBe(2);
+    expect(c.scales['x'].min).toBe(min);
+    expect(c.scales['x'].max).toBe(max);
+  });
+
+  it('empties the chart when the graph is cleared while paused', async () => {
+    const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])], realTime: true });
+    fixture.componentRef.setInput('isPaused', true);
+    await settle();
+
+    fixture.componentRef.setInput('clearGraph', 1);
+    await settle();
+
+    expect(c.data.datasets.length).toBe(0);
+    expect(emptyMessage()).toBe('Waiting for data');
+  });
+
+  it('drops the zoom on pause and shows the latest live window', async () => {
+    const voltage = topic('V', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
+    const c = await render({ valuesSubject: [voltage], realTime: true });
+    c.zoomScale('x', { min: 5_000, max: 6_000 }, 'none');
+    fixture.componentInstance.zoomed.set(true);
+    voltage.updates.next([[{ x: 40_000, y: 3 }]]);
+    await settle();
+
+    fixture.componentRef.setInput('isPaused', true);
+    await settle();
+
+    expect(fixture.componentInstance.zoomed()).toBeFalse();
+    expect(c.scales['x'].min).toBe(40_000 - BASE_CONFIG.timeRangeMs);
+    expect(c.scales['x'].max).toBe(40_000);
+  });
+
+  it('keeps the x-axis and shared y-axis when every series is hidden from the legend', async () => {
+    const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])], realTime: true });
+
+    c.setDatasetVisibility(0, false);
+    c.update('none');
+
+    expect(c.scales['x'].options.display).toBeTrue();
+    expect(c.scales['y'].options.display).toBeTrue();
+  });
+
+  it('hides the axes while there is no data', async () => {
+    const c = await render({ valuesSubject: [topic('V', [])], realTime: true });
+
+    expect(c.scales['x'].options.display).toBeFalse();
+    expect(c.scales['y'].options.display).toBeFalse();
   });
 });

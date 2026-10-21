@@ -160,10 +160,8 @@ export default class CustomGraphComponent implements OnDestroy {
    * high rates) collapse into one Chart.js update per frame instead of one per message.
    */
   updateChart = () => {
-    // Skip chart updates if paused
-    if (this.isPaused() && this.limitRange()) {
-      return;
-    }
+    // No pause guard: incoming points are already dropped while paused (graphInfoCallback, and the graph page),
+    // so a paused sync only redraws the frozen data, and resets (Clear Graph, pause while zoomed) still apply
     if (this.frame !== undefined) return;
     this.frame = requestAnimationFrame(() => {
       this.frame = undefined;
@@ -174,7 +172,7 @@ export default class CustomGraphComponent implements OnDestroy {
   /** Pushes the current series, axes, x-window and annotations into Chart.js and redraws without animation. */
   private syncChart(): void {
     const { chart } = this;
-    if (!chart || (this.isPaused() && this.limitRange())) return;
+    if (!chart) return;
     const multipleYAxes = this.showMultipleYAxes();
     const config = this.graphConfig();
     const keys = Array.from(this.data.keys());
@@ -201,6 +199,10 @@ export default class CustomGraphComponent implements OnDestroy {
 
     const span = computeDataSpan(this.data);
     this.hasData.set(!!span);
+    // Hidden with no data (the empty state says why), but kept when every series is hidden from the legend,
+    // which 'auto' would also blank. Per-series axes stay 'auto' so a hidden series takes its axis with it.
+    scales['x']!.display = !!span;
+    if (!multipleYAxes) scales['y']!.display = !!span;
 
     // Only constrain the x-axis range in real-time mode, and not while the user is zoomed in;
     // historical mode auto-fits all data

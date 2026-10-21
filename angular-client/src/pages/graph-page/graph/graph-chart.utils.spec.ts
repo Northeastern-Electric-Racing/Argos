@@ -45,8 +45,8 @@ describe('graph-chart utils', () => {
       expect(canvas.style.cursor).toBe('');
     });
 
-    it('hides the x-axis while no series is shown', () => {
-      expect(options.scales!['x']!.display).toBe('auto');
+    it('hides the x-axis until there is data', () => {
+      expect(options.scales!['x']!.display).toBeFalse();
     });
 
     it('draws text in the app font and the tooltip in the app theme', () => {
@@ -58,6 +58,21 @@ describe('graph-chart utils', () => {
 
   it('gives at least ten topics distinct colors', () => {
     expect(new Set(SERIES_COLORS.slice(0, 10)).size).toBe(10);
+  });
+
+  it('keeps every series color legible as axis text on the page background (WCAG AA, 4.5:1)', () => {
+    const luminance = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    // --color-background-page (styles.css)
+    const page = luminance('#101010');
+
+    const tooDark = SERIES_COLORS.filter((color) => (luminance(color) + 0.05) / (page + 0.05) < 4.5);
+    expect(tooDark).toEqual([]);
   });
 
   describe('time ticks on the x-axis', () => {
@@ -94,6 +109,23 @@ describe('graph-chart utils', () => {
 
       expect(after.filter((t) => t <= at(13, 50, 51))).toEqual(before.filter((t) => t >= at(13, 50, 22, 500)));
     });
+
+    // DST changes in America/New_York, where the team runs the client. In a zone without them (UTC CI) these
+    // hold trivially; run Karma with TZ=America/New_York to exercise them.
+    const dstRanges: [string, number, number][] = [
+      ['spring forward, 30 min steps', new Date(2026, 2, 8, 1).getTime(), new Date(2026, 2, 8, 4).getTime()],
+      ['spring forward, 1 h steps', new Date(2026, 2, 8, 0).getTime(), new Date(2026, 2, 8, 5).getTime()],
+      ['fall back, 30 min steps', new Date(2026, 10, 1, 0).getTime(), new Date(2026, 10, 1, 3).getTime()],
+      ['fall back, days', new Date(2026, 9, 30).getTime(), new Date(2026, 10, 3).getTime()]
+    ];
+    for (const [name, min, max] of dstRanges) {
+      it(`keeps ticks strictly increasing across a DST change (${name})`, () => {
+        const ticks = buildTimeTicks(min, max);
+
+        expect(ticks.length).toBeGreaterThan(1);
+        expect(ticks.filter((t, i) => i > 0 && t <= ticks[i - 1])).toEqual([]);
+      });
+    }
 
     it('labels ticks as precisely as the step needs, dating midnights on long ranges', () => {
       expect(formatTimeTick(at(13, 50, 24, 120), 200)).toBe('13:50:24.120');
@@ -229,6 +261,19 @@ describe('graph-chart utils', () => {
 
       expect(annotation.label!.position).toBe('end');
     });
+
+    for (const [name, minX, maxX] of [
+      ['spring forward', new Date(2026, 2, 6, 12).getTime(), new Date(2026, 2, 10, 12).getTime()],
+      ['fall back', new Date(2026, 9, 30, 12).getTime(), new Date(2026, 10, 3, 12).getTime()]
+    ] as const) {
+      it(`keeps each line on its own local midnight across a DST change (${name})`, () => {
+        const annotations = buildDayBoundaryAnnotations({ minX, maxX });
+
+        expect(annotations.length).toBe(4);
+        expect(annotations.map((a) => new Date(a.xMin as number).getHours())).toEqual([0, 0, 0, 0]);
+        expect(new Set(annotations.map((a) => a.label!.content)).size).toBe(4);
+      });
+    }
 
     it('draws nothing inside a single day', () => {
       const start = new Date(2026, 0, 1, 1).getTime();
