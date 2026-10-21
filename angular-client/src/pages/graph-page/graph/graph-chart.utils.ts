@@ -2,6 +2,12 @@ import { GraphData } from 'src/utils/types.utils';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Develop's series colours: ApexCharts 5's default palette (palette1). dygraphs' own default is a dark palette
+ * whose hues are spread by the series count, so every series changed colour whenever a topic was added.
+ */
+export const SERIES_COLORS = ['#008FFB', '#00A86F', '#CA8501', '#FF4560', '#846DD5'];
+
 /** One dygraphs row: the x value (ms since epoch) then one y per series, null where that series has no point at x. */
 export type DygraphRow = [number, ...(number | null)[]];
 

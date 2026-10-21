@@ -1,17 +1,48 @@
 :host {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
+/*
+ * dygraphs gives its own div a fixed pixel height, so a flex-basis of auto would keep the container at least as
+ * tall as the last draw: the chart could grow with the window but never shrink. A zero basis sizes it from the
+ * space left over instead.
+ */
 .chart-container {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
+  overflow: hidden;
   width: 100%;
 }
 
-.legend-container {
+.chart-container.empty {
+  visibility: hidden;
+}
+
+.empty-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: grey;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.footer {
   flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.legend-container {
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 4px 8px;
   font-size: 15px;
   color: #fff;
@@ -37,9 +68,28 @@
   transform: rotate(-90deg);
 }
 
-.legend-container ::ng-deep > span {
+/* A long multi-topic axis title is cut short rather than wrapping into the tick labels. */
+:host ::ng-deep .dygraph-label-rotate-left > .dygraph-label,
+:host ::ng-deep .dygraph-label-rotate-right > .dygraph-label {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * Each entry stays on one line, but as an inline-block the legend can wrap between entries; the space dygraphs
+ * puts at the start of each entry then collapses, so margin-left stands in for it.
+ */
+.legend-container ::ng-deep > span {
+  display: inline-block;
+  white-space: nowrap;
+  margin-left: 0.3em;
   margin-right: 12px;
+}
+
+.reset-zoom {
+  flex: 0 0 auto;
+  margin-top: 4px;
 }
 
 .legend-container ::ng-deep > span.highlight {

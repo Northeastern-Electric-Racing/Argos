@@ -8,6 +8,7 @@ import {
   effect,
   inject,
   input,
+  signal,
   viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,9 +16,11 @@ import { Subject, takeUntil } from 'rxjs';
 import Dygraph, { dygraphs } from 'dygraphs';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
   DAY_MS,
   DygraphRow,
+  SERIES_COLORS,
   dayBoundaries,
   dayBoundaryLabel,
   hoverTimeLabel,
@@ -44,6 +47,7 @@ const configuredYRange = (config: { yMin: number | null; yMax: number | null }):
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
   standalone: true,
+  imports: [ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
@@ -86,6 +90,10 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   private hover: { domX: number; seriesName: string } | undefined;
   private dayBoundaryTimes: number[] = [];
   private frame: number | undefined;
+  /** Whether the user has zoomed (x or y), which shows the Reset zoom button. */
+  readonly zoomed = signal(false);
+  /** Whether no series has data yet, which shows a hint in place of an empty axis. */
+  readonly empty = signal(true);
 
   constructor() {
     effect(() => {
@@ -97,6 +105,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       const config = this.graphConfig();
       if (this.chart) {
         this.userYRanges = null;
+        this.syncZoomed();
         this.chart.updateOptions({ axes: this.yAxesOptions(config) });
         this.resetRange();
       }
@@ -111,6 +120,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       // A zoom window from the previous mode or topics would hide the new data.
       this.userZoomed = false;
       this.userYRanges = null;
+      this.syncZoomed();
       this.updateChart();
     });
 
@@ -139,8 +149,10 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       labelsDiv: this.legendContainer().nativeElement,
       legend: 'always',
       connectSeparatedPoints: true,
-      strokeWidth: 2,
-      highlightSeriesOpts: { strokeWidth: 3, highlightCircleSize: 4 },
+      colors: SERIES_COLORS,
+      // develop's ApexCharts stroke.width
+      strokeWidth: 3,
+      highlightSeriesOpts: { strokeWidth: 4, highlightCircleSize: 4 },
       highlightSeriesBackgroundAlpha: 1,
       animatedZooms: false,
       // As many decimals as the data keeps (graphInfoCallback rounds to 4); dygraphs' default is 2.
@@ -157,8 +169,10 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
           // Wide enough for a multi-day label (M/D HH:MM) on one line; the default 60px wraps it.
           axisLabelWidth: 90
         },
-        y: { valueRange: configuredYRange(config), axisLabelWidth: 60 },
-        y2: { axisLabelWidth: 60 }
+        // dygraphs' 30px default crowds ~20 labels onto a tall chart.
+        y: { valueRange: configuredYRange(config), axisLabelWidth: 60, pixelsPerLabel: 50 },
+        // By default y2 puts its ticks on y1's grid lines, at values that aren't round numbers.
+        y2: { axisLabelWidth: 60, pixelsPerLabel: 50, independentTicks: true }
       },
       underlayCallback: this.drawDayBoundaries,
       zoomCallback: this.onZoom,
@@ -194,6 +208,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
 
     const labels = Array.from(this.data.keys());
     const rows = toDygraphRows(Array.from(this.data.values()));
+    this.empty.set(rows.length === 0);
 
     // Multi-day historical ranges get date-aware labels and per-day boundary lines.
     // Real-time ranges are bounded and never multi-day.
@@ -237,6 +252,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       // so redraw to put both back.
       this.userZoomed = false;
       this.userYRanges = null;
+      this.syncZoomed();
       this.updateChart();
       return;
     }
@@ -247,10 +263,21 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     const xUnchanged = before ? before[0] === minX && before[1] === maxX : !chart.isZoomed('x');
     if (xUnchanged) {
       this.userYRanges = yRanges.map(([low, high]): YRange => [low, high]);
+      this.syncZoomed();
       return;
     }
     this.userZoomed = chart.isZoomed('x');
     this.zoomedXWindow = [minX, maxX];
+    this.syncZoomed();
+  };
+
+  private syncZoomed(): void {
+    this.zoomed.set(this.userZoomed || this.userYRanges !== null);
+  }
+
+  /** The Reset zoom button: the same as a double-click on the chart. */
+  resetZoom = () => {
+    this.chart?.resetZoom();
   };
 
   private onHighlight = (event: MouseEvent, _x: number, _points: unknown, _row: number, seriesName: string) => {
@@ -376,6 +403,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   resetRange() {
     this.timeRangeMs = undefined;
     this.userZoomed = false;
+    this.syncZoomed();
     this.chart?.updateOptions({ dateWindow: null });
     this.updateChart();
   }

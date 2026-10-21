@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent from './graph.component';
-import { hoverTimeLabel } from './graph-chart.utils';
+import { SERIES_COLORS, hoverTimeLabel } from './graph-chart.utils';
 
 type GraphConfig = {
   maxPoints: number;
@@ -256,6 +256,67 @@ describe('CustomGraphComponent (dygraphs)', () => {
     await nextFrame();
 
     expect(component.data.get('VCU/CarState/speed 0')!.length).toBe(1);
+  });
+
+  it("colours series from develop's fixed ApexCharts palette, keeping a colour when a topic is added", async () => {
+    const a = topic('A', [{ x: 1, y: 1 }]);
+    const b = topic('B', [{ x: 1, y: 2 }]);
+    await setup({ values: [a, b] });
+    expect(component.chart!.getColors()).toEqual(SERIES_COLORS.slice(0, 2));
+    expect(component.chart!.getOption('strokeWidth')).toBe(3);
+
+    fixture.componentRef.setInput('valuesSubject', [a, b, topic('C', [{ x: 1, y: 3 }])]);
+    fixture.detectChanges();
+    await nextFrame();
+
+    expect(component.chart!.getColors()).toEqual(SERIES_COLORS.slice(0, 3));
+  });
+
+  it('gives the right-hand axis its own round ticks, and spaces y ticks out', async () => {
+    await setup({ values: [topic('A', [{ x: 1, y: 1 }]), topic('B', [{ x: 1, y: 100 }])] });
+    fixture.componentRef.setInput('showMultipleYAxes', true);
+    fixture.detectChanges();
+    await nextFrame();
+    // getOptionForAxis is public dygraphs API that @types/dygraphs leaves out.
+    const chart = component.chart! as unknown as { getOptionForAxis(name: string, axis: 'y' | 'y2'): unknown };
+    expect(chart.getOptionForAxis('independentTicks', 'y2')).toBeTrue();
+    expect(chart.getOptionForAxis('pixelsPerLabel', 'y')).toBe(50);
+    expect(chart.getOptionForAxis('pixelsPerLabel', 'y2')).toBe(50);
+  });
+
+  it('shows a Reset zoom button only while the user is zoomed, and resets on click', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
+    await setup({ values: [speed], realTime: true });
+    const chart = component.chart!;
+    const button = () => fixture.nativeElement.querySelector('.reset-zoom button') as HTMLButtonElement | null;
+    expect(button()).toBeNull();
+
+    chart.updateOptions({ dateWindow: [22_000, 24_000] });
+    chart.getOption('zoomCallback')(22_000, 24_000, chart.yAxisRanges());
+    fixture.detectChanges();
+    expect(button()).not.toBeNull();
+
+    button()!.click();
+    await nextFrame();
+    fixture.detectChanges();
+    expect(chart.xAxisRange()).toEqual([20_000, 30_000]);
+    expect(button()).toBeNull();
+  });
+
+  it('shows a hint instead of an empty axis until a topic has data', async () => {
+    await setup({ values: [] });
+    fixture.detectChanges();
+    const hint = () => fixture.nativeElement.querySelector('.empty-message') as HTMLElement | null;
+    expect(hint()?.textContent).toContain('Select a topic');
+
+    fixture.componentRef.setInput('valuesSubject', [topic('A', [{ x: 1, y: 1 }])]);
+    fixture.detectChanges();
+    await nextFrame();
+    fixture.detectChanges();
+    expect(hint()).toBeNull();
   });
 
   it('empties the chart when the graph is cleared', async () => {
