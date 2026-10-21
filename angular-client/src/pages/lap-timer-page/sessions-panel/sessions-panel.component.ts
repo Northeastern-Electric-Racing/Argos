@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
@@ -39,6 +48,8 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 export default class SessionsPanelComponent {
   readonly timer = inject(LapTimerService);
   private confirmService = inject(ConfirmService);
+  private injector = inject(Injector);
+  private renameInput = viewChild<ElementRef<HTMLInputElement>>('renameInput');
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');
@@ -111,6 +122,9 @@ export default class SessionsPanelComponent {
   startEdit(session: LapSession): void {
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
+    // The menu hands focus back to its trigger on close, and `autofocus` is ignored on inserted
+    // elements, so focus the rename input once it has rendered.
+    afterNextRender(() => this.renameInput()?.nativeElement.focus(), { injector: this.injector });
   }
 
   commitEdit(session: LapSession): void {

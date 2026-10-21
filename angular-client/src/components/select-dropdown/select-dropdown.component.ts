@@ -62,13 +62,4 @@ export class SelectDropdownComponent {
       .find((option) => option.name === name)
       ?.function();
   }
-
-  // Get display text for the dropdown
-  getDisplayText(): string {
-    const defaultValue = this.defaultValue();
-    if (defaultValue !== undefined) {
-      return defaultValue;
-    }
-    return this.selectedName() ?? this.placeholder();
-  }
 }

@@ -3,7 +3,7 @@
     @for (field of fields(); track field) {
       <div hlmField>
         @if (field.label) {
-          <label hlmFieldLabel [for]="'form-field-' + field.name" class="required">{{ field.label }}</label>
+          <label hlmFieldLabel [for]="'form-field-' + field.name" [class.required]="field.required">{{ field.label }}</label>
         }
         <input
           hlmInput

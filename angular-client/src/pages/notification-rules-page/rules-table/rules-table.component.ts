@@ -67,6 +67,10 @@ export class RulesTableComponent implements OnInit {
       if (response.ok) {
         const data: RulesResponse = await response.json();
         this.rules.set(data.client_rules);
+        // Re-point the selection at the fresh rules (dropping deleted ones) and tell the page,
+        // so a later bulk action doesn't act on stale or removed rules.
+        const fresh = new Map(data.client_rules.map((r) => [r.id, r]));
+        this.onSelectionChange(this.selectedRules().flatMap((r) => fresh.get(r.id) ?? []));
       } else {
         toast.error('Load Error', { description: 'Failed to fetch rules' });
       }

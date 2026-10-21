@@ -65,6 +65,7 @@
                 <td hlmTd class="col-name">
                   @if (editingSessionId() === s.id) {
                     <input
+                      #renameInput
                       hlmInput
                       class="session-rename-input h-8"
                       aria-label="Session name"
@@ -75,7 +76,6 @@
                       (keydown.escape)="cancelEdit(); $event.stopPropagation()"
                       (blur)="commitEdit(s)"
                       (click)="$event.stopPropagation()"
-                      autofocus
                     />
                   } @else {
                     <span class="session-name" [title]="s.name">{{ s.name }}</span>
