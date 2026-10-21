@@ -286,13 +286,20 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
   });
 
   // The chart only reports crosshair moves for real pointer events (setCrosshairPosition is silent),
-  // so hand the handler what the chart passes it when the pointer is at (x, y) over `timeMs`.
+  // so hand the handler what the chart passes it when the pointer is at (x, y) over `timeMs`'s bar.
   async function hoverAt(timeMs: number | undefined, x = 100, y = 100) {
     const { onCrosshairMove } = component as unknown as { onCrosshairMove: (p: MouseEventParams<Time>) => void };
+    const time = timeMs === undefined ? undefined : toChartTime(timeMs);
+    const logical = time === undefined ? null : component.chart!.timeScale().timeToIndex(time, true);
     onCrosshairMove(
-      (timeMs === undefined
+      (time === undefined
         ? { seriesData: new Map() }
-        : { time: toChartTime(timeMs), point: { x, y }, seriesData: new Map() }) as MouseEventParams<Time>
+        : {
+            time,
+            logical: logical ?? undefined,
+            point: { x, y },
+            seriesData: new Map()
+          }) as unknown as MouseEventParams<Time>
     );
     fixture.detectChanges();
     await fixture.whenStable();
@@ -338,6 +345,27 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     await hoverAt(undefined);
     expect(component.hover()).toBeNull();
     expect(tooltip()).toBeNull();
+  });
+
+  it('reports the value the line draws for a repeated timestamp, not the first one received', async () => {
+    // The chart keeps only the latest value for a repeated time, so the tooltip must too.
+    await render({
+      topics: [
+        topic('A', [
+          [
+            { x: T0, y: 1 },
+            { x: T0, y: 5 },
+            { x: T0 + 1000, y: 7 }
+          ]
+        ])
+      ]
+    });
+
+    await hoverAt(T0);
+
+    expect(tooltipRows()).toEqual([['A 0', '5']]);
+    const { hoverMarkers } = component as unknown as { hoverMarkers: HoverMarkersPrimitive };
+    expect(hoverMarkers.positions().map((p) => p.y)).toEqual([allSeries()[0].priceToCoordinate(5)!]);
   });
 
   it('marks each topic’s held point at the hovered time, in place of the exact-bar crosshair marker', async () => {

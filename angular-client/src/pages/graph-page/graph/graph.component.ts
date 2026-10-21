@@ -21,6 +21,7 @@ import {
   IChartApi,
   ISeriesApi,
   LineSeries,
+  MismatchDirection,
   MouseEventParams,
   Time,
   createChart
@@ -449,24 +450,28 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }
 
   private onCrosshairMove = (param: MouseEventParams<Time>) => {
-    if (param.time === undefined || param.point === undefined || param.point.x < 0 || param.point.y < 0) {
+    if (
+      param.time === undefined ||
+      param.logical === undefined ||
+      param.point === undefined ||
+      param.point.x < 0 ||
+      param.point.y < 0
+    ) {
       this.hover.set(null);
       this.hoverMarkers.setMarkers([]);
       return;
     }
-    // Hold each series' latest value at the hovered time, since topics rarely share timestamps.
-    const timeMs = fromChartTime(param.time);
+    // Hold each series' latest value at the hovered bar, since topics rarely share timestamps. Read
+    // from the chart's own data, so it's the value the line draws (a repeated time keeps its latest).
+    const { logical } = param;
     const rows: TooltipRow[] = [];
     const markers: HoverMarker[] = [];
     for (const item of this.legend()) {
-      const line = this.data.get(item.label) ?? [];
       const series = this.series.get(item.label);
-      let idx = binarySearchInsertIndex(line, timeMs);
-      if (line[idx]?.x !== timeMs) idx--;
-      if (idx < 0 || !series) continue;
-      const { x, y } = line[idx];
-      rows.push({ ...item, value: formatValue(y) });
-      markers.push({ series, timeMs: x, value: y, color: item.color });
+      const held = series?.dataByIndex(logical, MismatchDirection.NearestLeft);
+      if (!series || !held || !('value' in held)) continue;
+      rows.push({ ...item, value: formatValue(held.value) });
+      markers.push({ series, timeMs: fromChartTime(held.time), value: held.value, color: item.color });
     }
     this.hoverMarkers.setMarkers(markers);
     // The chart reports the cursor relative to the pane, which starts right of the left price axis.
