@@ -97,6 +97,8 @@ export default class CustomGraphComponent {
   private size = { width: 0, height: 0 };
   private frame?: number;
   private dataDirty = true;
+  /** Series whose points changed since the last upload, so only those are re-sent. */
+  private changed = new Set<string>();
   private cursor: { x: number; y: number } | null = null;
   private dragStart: number | null = null;
   private lastView: View | null = null;
@@ -156,6 +158,7 @@ export default class CustomGraphComponent {
         this.data.set(seriesLabel, []);
       }
       const line = this.data.get(seriesLabel)!;
+      this.changed.add(seriesLabel);
 
       value.forEach((val) => {
         const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
@@ -289,7 +292,8 @@ export default class CustomGraphComponent {
     if (!this.renderer) return;
     const series = this.drawSeries();
     if (this.dataDirty) {
-      this.renderer.upload(series);
+      this.renderer.upload(series, this.changed);
+      this.changed.clear();
       this.dataDirty = false;
     }
 

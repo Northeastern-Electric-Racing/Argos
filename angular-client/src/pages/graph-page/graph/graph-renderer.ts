@@ -39,6 +39,8 @@ const FONT = '12px sans-serif';
  * well under a pixel however far into a long range the view is zoomed.
  */
 const REBASE_SPANS = 100;
+/** Smallest per-line buffer, in points, so a new series doesn't re-create the buffers every point. */
+const MIN_ROOM = 64;
 
 const hexToRgba = (hex: string): [number, number, number, number] => {
   const n = parseInt(hex.slice(1), 16);
@@ -59,6 +61,10 @@ export class GraphRenderer {
   private width = 0;
   private height = 0;
   private dpr = 1;
+  /** Each series' x,y points, in a power-of-two buffer padded with its last point. */
+  private buffers: Float32Array[] = [];
+  /** The series the GPU buffers are laid out for, by name. */
+  private names: string[] = [];
 
   constructor(
     private readonly glCanvas: HTMLCanvasElement,
@@ -90,24 +96,40 @@ export class GraphRenderer {
   }
 
   /**
-   * Send every series' points to the GPU. webgl-plot can't grow a line in place
-   * (updateLinePoints needs the same length), so any new point re-uploads all lines.
+   * Send series' points to the GPU. webgl-plot can't grow a line in place (updateLinePoints
+   * needs the same length), so each series gets a buffer with room to spare, padded by
+   * repeating its last point (zero-length segments draw nothing). New points are then written
+   * in place; the buffers are only re-created when the series set changes or a series outgrows
+   * its buffer, which then doubles.
+   * @param changed the series whose points changed, by name; all of them when left out.
    */
-  upload(series: DrawSeries[]): void {
+  upload(series: DrawSeries[], changed?: ReadonlySet<string>): void {
+    const relayout =
+      series.length !== this.names.length ||
+      series.some((s, i) => s.name !== this.names[i] || s.points.length * 2 > this.buffers[i].length);
+    if (!relayout) {
+      series.forEach((s, i) => {
+        if (changed && !changed.has(s.name)) return;
+        this.fill(this.buffers[i], s.points);
+        this.lines.updateLinePoints(i, this.buffers[i]);
+      });
+      return;
+    }
     if (series.length > this.capacity) {
       this.lines.cleanup();
       this.capacity = Math.max(series.length, this.capacity * 2);
       this.lines = new WebglLinePlot(this.gl, this.capacity);
     }
+    this.names = series.map((s) => s.name);
+    this.buffers = series.map((s) => {
+      let room = MIN_ROOM;
+      while (room < s.points.length) room *= 2;
+      const buffer = new Float32Array(room * 2);
+      this.fill(buffer, s.points);
+      return buffer;
+    });
     this.lines.initLines(
-      series.map((s) => {
-        const xy = new Float32Array(s.points.length * 2);
-        s.points.forEach((p, i) => {
-          xy[2 * i] = p.x - this.origin;
-          xy[2 * i + 1] = p.y;
-        });
-        return { points: xy, color: hexToRgba(s.color), thickness: 1, enabled: s.visible };
-      })
+      series.map((s, i) => ({ points: this.buffers[i], color: hexToRgba(s.color), thickness: 1, enabled: s.visible }))
     );
   }
 
@@ -140,7 +162,7 @@ export class GraphRenderer {
       const y = view.axes[view.seriesAxis[i]];
       const sy = 2 / (y.max - y.min);
       this.lines.updateLineTransform(i, [1, sy], [0, -1 - y.min * sy]);
-      this.lines.setLineEnabled(i, s.visible);
+      this.lines.setLineEnabled(i, s.visible && s.points.length > 0);
     });
     this.lines.draw();
 
@@ -151,6 +173,19 @@ export class GraphRenderer {
   destroy(): void {
     this.lines.cleanup();
     this.gl.getExtension('WEBGL_lose_context')?.loseContext();
+  }
+
+  /** Write `points` into `buffer` relative to `origin`, repeating the last one to the end. */
+  private fill(buffer: Float32Array, points: DrawSeries['points']): void {
+    points.forEach((p, i) => {
+      buffer[2 * i] = p.x - this.origin;
+      buffer[2 * i + 1] = p.y;
+    });
+    const n = points.length;
+    for (let i = 2 * n; i < buffer.length; i += 2) {
+      buffer[i] = n > 0 ? buffer[2 * n - 2] : 0;
+      buffer[i + 1] = n > 0 ? buffer[2 * n - 1] : 0;
+    }
   }
 
   private drawAxes(series: DrawSeries[], view: View, area: Rect): void {

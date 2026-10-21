@@ -67,4 +67,44 @@ describe('GraphRenderer', () => {
     }
     expect(worst).toBeLessThanOrEqual(1);
   });
+
+  it('writes new points into the existing GPU buffer instead of reallocating it', () => {
+    const a = series('A', [
+      [0, 0],
+      [1000, 1]
+    ]);
+    const b = series('B', [
+      [0, 1],
+      [1000, 0]
+    ]);
+    renderer.upload([a, b]);
+    const createBuffer = spyOn(gl, 'createBuffer').and.callThrough();
+    const bufferSubData = spyOn(gl, 'bufferSubData').and.callThrough();
+
+    a.points.push({ x: 2000, y: 2 });
+    renderer.upload([a, b], new Set(['A']));
+
+    expect(createBuffer).not.toHaveBeenCalled();
+    expect(bufferSubData).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws a point added in place up to its end, and nothing past it', () => {
+    renderer.resize(100, 10, 1);
+    const area = { left: 0, top: 0, width: 100, height: 10 };
+    // y 0.2 is the middle of the row litColumns reads
+    const a = series('A', [
+      [0, 0.2],
+      [40, 0.2]
+    ]);
+    renderer.upload([a]);
+
+    a.points.push({ x: 70, y: 0.2 });
+    renderer.upload([a], new Set(['A']));
+    renderer.draw([a], view(0, 100), area, {});
+
+    const cols = litColumns(100);
+    expect(cols[0]).toBe(0);
+    expect(cols.at(-1)).toBeGreaterThanOrEqual(69);
+    expect(cols.at(-1)).toBeLessThanOrEqual(70);
+  });
 });
