@@ -1,0 +1,52 @@
+<div class="topic-tree" [style.height]="height()">
+  <mat-form-field class="filter dense-controls" subscriptSizing="dynamic">
+    <mat-icon matPrefix>search</mat-icon>
+    <input
+      matInput
+      type="search"
+      [placeholder]="filterPlaceholder()"
+      [attr.aria-label]="filterPlaceholder()"
+      [value]="filter()"
+      (input)="onFilterInput($event)"
+    />
+  </mat-form-field>
+
+  <mat-tree
+    #tree
+    class="tree"
+    [dataSource]="visibleNodes()"
+    [childrenAccessor]="childrenAccessor"
+    [expansionKey]="expansionKey"
+    [trackBy]="trackBy"
+    aria-label="Topics"
+    aria-multiselectable="true"
+  >
+    <mat-tree-node
+      *matTreeNodeDef="let node"
+      matTreeNodePadding
+      [matTreeNodePaddingIndent]="16"
+      class="tree-node"
+      [class.leaf]="!hasChildren(node)"
+      [class.selected]="isSelected(node)"
+      [attr.aria-selected]="hasChildren(node) ? null : isSelected(node)"
+      [isExpandable]="hasChildren(node)"
+      (expandedChange)="node.expanded = $event"
+      (click)="activate(node, tree)"
+      (activation)="activate($event, tree)"
+    >
+      @if (hasChildren(node)) {
+        <mat-icon class="chevron" [class.open]="tree.isExpanded(node)" aria-hidden="true">chevron_right</mat-icon>
+      } @else {
+        <mat-icon class="check" aria-hidden="true">{{
+          isSelected(node) ? 'check_box' : 'check_box_outline_blank'
+        }}</mat-icon>
+      }
+      <span class="node-label">
+        <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
+      </span>
+      @if (!hasChildren(node)) {
+        <typography [content]="node.data.displayValue()" variant="subheader" additionalStyles="margin: 0;" />
+      }
+    </mat-tree-node>
+  </mat-tree>
+</div>

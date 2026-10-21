@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, Signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
-import { TableModule } from 'primeng/table';
+import { MatTableModule } from '@angular/material/table';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -12,12 +12,13 @@ import { formatDeltaMs, formatMs, Lap } from 'src/utils/lap-timer.types';
   templateUrl: './laps-table.component.html',
   styleUrl: './laps-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, MatIcon, TableModule, InfoBackgroundComponent, TypographyComponent]
+  imports: [DatePipe, DecimalPipe, MatIcon, MatTableModule, InfoBackgroundComponent, TypographyComponent]
 })
 export default class LapsTableComponent {
   readonly timer = inject(LapTimerService);
 
   readonly lapsNewestFirst: Signal<Lap[]> = computed(() => this.timer.laps().slice().reverse());
+  readonly columns = ['num', 'dur', 'delta', 'endedAt', 'startedAt', 'run', 'avgSpeed', 'energy', 'maxTemp'];
 
   formatLapMs(ms: number): string {
     return formatMs(ms);

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmService } from 'src/services/confirm.service';
+import { ToastService } from 'src/services/toast.service';
 import {
   authenticatePw,
   getSettings,
@@ -17,7 +18,10 @@ import APIService from 'src/services/api.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
-import { Password } from 'primeng/password';
+import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
@@ -27,16 +31,13 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'car-command',
   templateUrl: './car-command.component.html',
   styleUrls: ['./car-command.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
   imports: [
-    Password,
     FormsModule,
     ButtonComponent,
     LoadingPageComponent,
@@ -46,13 +47,18 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
     SettingToggleComponent,
     SettingInputComponent,
     CommandCardComponent,
-    ConfirmDialog
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatIconButton,
+    MatIcon,
+    MatSuffix
   ]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
-  private toastService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private toastService = inject(ToastService);
+  private confirmationService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);
@@ -64,6 +70,7 @@ export default class CarCommandComponent implements OnInit {
 
   isAuthenticated = signal(false);
   enteredPw = '';
+  hidePw = signal(true);
   authError = signal<string | undefined>(undefined);
 
   uploadEnabled = signal<boolean | undefined>(undefined);

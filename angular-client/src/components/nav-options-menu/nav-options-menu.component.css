@@ -1,6 +1,10 @@
 .menu-container {
   padding: 16px;
   min-width: 300px;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  border-radius: var(--mat-sys-corner-large);
+  box-shadow: var(--mat-sys-level3);
 }
 
 .menu-grid {
@@ -10,6 +14,11 @@
 }
 
 .menu-item {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--mat-sys-corner-medium);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,6 +45,8 @@
   line-height: 1.2;
 }
 
-.menu-item:hover {
-  color: #ef4345;
+.menu-item:hover,
+.menu-item:focus-visible {
+  color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
 }

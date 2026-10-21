@@ -1,11 +1,21 @@
-@if (!this.templateReady) {
-  <loading-page />
-} @else {
-  <select-dropdown
-    [options]="this.selectorConfig.options"
-    [placeholder]="this.selectorConfig.placeholder"
-    [defaultValue]="this.selectorConfig.defaultValue"
-  >
-  </select-dropdown>
-  <form-template [fields]="this.inputFields" />
-}
+<h2 mat-dialog-title class="title-row">
+  Edit Run
+  <button matIconButton mat-dialog-close aria-label="Close">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+<mat-dialog-content>
+  @if (!this.templateReady()) {
+    <loading-page />
+  } @else {
+    <select-dropdown
+      class="run-select"
+      label="Run"
+      [options]="this.selectorConfig.options"
+      [placeholder]="this.selectorConfig.placeholder"
+      [defaultValue]="this.selectorConfig.defaultValue"
+    >
+    </select-dropdown>
+    <form-template [fields]="this.inputFields" />
+  }
+</mat-dialog-content>

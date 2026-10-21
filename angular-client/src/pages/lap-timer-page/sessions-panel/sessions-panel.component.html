@@ -34,84 +34,94 @@
       </div>
     } @else {
       <div class="sessions-table-wrap">
-        <p-table [value]="timer.sessions()">
-          <ng-template #header>
-            <tr>
-              <th class="col-state"></th>
-              <th class="col-name">Name</th>
-              <th class="col-started">Started</th>
-              <th class="col-laps">Laps</th>
-              <th class="col-best">Best</th>
-              <th class="col-run">Run</th>
-              <th class="col-actions"></th>
-            </tr>
-          </ng-template>
-          <ng-template #body let-s>
-            <tr
-              class="session-row"
-              [class.session-row-active]="timer.activeSession()?.id === s.id"
-              (click)="onSelectSession(s.id)"
-              role="button"
-              tabindex="0"
-              (keyup.enter)="onSelectSession(s.id)"
-            >
-              <td class="col-state">
-                @if (activeStateIcon(s); as icon) {
-                  <mat-icon class="session-state-icon">{{ icon }}</mat-icon>
-                }
-              </td>
-              <td class="col-name">
-                @if (editingSessionId() === s.id) {
-                  <input
-                    class="session-rename-input"
-                    type="text"
-                    [ngModel]="editingName()"
-                    (ngModelChange)="editingName.set($event)"
-                    (keydown.enter)="commitEdit(s); $event.stopPropagation()"
-                    (keydown.escape)="cancelEdit(); $event.stopPropagation()"
-                    (blur)="commitEdit(s)"
-                    (click)="$event.stopPropagation()"
-                    autofocus
-                  />
-                } @else {
-                  <span class="session-name" [title]="s.name">{{ s.name }}</span>
-                }
-              </td>
-              <td class="col-started monospace">{{ s.sessionStartEpochMs | date: 'yyyy-MM-dd HH:mm' }}</td>
-              <td class="col-laps">{{ s.laps.length }}</td>
-              <td class="col-best monospace">
-                @if (bestLapMsForSession(s.id) !== null) {
-                  {{ formatLapMs(bestLapMsForSession(s.id)!) }}
-                } @else {
-                  —
-                }
-              </td>
-              <td class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
-              <td class="col-actions">
-                <button
-                  class="session-menu-btn"
-                  (click)="$event.stopPropagation(); rowPopover.toggle($event)"
-                  aria-label="Session actions"
-                >
-                  <mat-icon>more_vert</mat-icon>
+        <table mat-table [dataSource]="timer.sessions()" class="sessions-table">
+          <ng-container matColumnDef="state">
+            <th mat-header-cell *matHeaderCellDef class="col-state"></th>
+            <td mat-cell *matCellDef="let s" class="col-state">
+              @if (activeStateIcon(s); as icon) {
+                <mat-icon class="session-state-icon">{{ icon }}</mat-icon>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef class="col-name">Name</th>
+            <td mat-cell *matCellDef="let s" class="col-name">
+              @if (editingSessionId() === s.id) {
+                <input
+                  class="session-rename-input"
+                  type="text"
+                  aria-label="Session name"
+                  [ngModel]="editingName()"
+                  (ngModelChange)="editingName.set($event)"
+                  (keydown.enter)="commitEdit(s); $event.stopPropagation()"
+                  (keydown.escape)="cancelEdit(); $event.stopPropagation()"
+                  (blur)="commitEdit(s)"
+                  (click)="$event.stopPropagation()"
+                  autofocus
+                />
+              } @else {
+                <span class="session-name" [title]="s.name">{{ s.name }}</span>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="started">
+            <th mat-header-cell *matHeaderCellDef class="col-started">Started</th>
+            <td mat-cell *matCellDef="let s" class="col-started monospace">
+              {{ s.sessionStartEpochMs | date: 'yyyy-MM-dd HH:mm' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="laps">
+            <th mat-header-cell *matHeaderCellDef class="col-laps">Laps</th>
+            <td mat-cell *matCellDef="let s" class="col-laps">{{ s.laps.length }}</td>
+          </ng-container>
+          <ng-container matColumnDef="best">
+            <th mat-header-cell *matHeaderCellDef class="col-best">Best</th>
+            <td mat-cell *matCellDef="let s" class="col-best monospace">
+              @if (bestLapMsForSession(s.id) !== null) {
+                {{ formatLapMs(bestLapMsForSession(s.id)!) }}
+              } @else {
+                —
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="run">
+            <th mat-header-cell *matHeaderCellDef class="col-run">Run</th>
+            <td mat-cell *matCellDef="let s" class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+            <td mat-cell *matCellDef="let s" class="col-actions">
+              <button
+                matIconButton
+                [matMenuTriggerFor]="rowMenu"
+                (click)="$event.stopPropagation()"
+                aria-label="Session actions"
+              >
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #rowMenu="matMenu" xPosition="before">
+                <button mat-menu-item (click)="startEdit(s)"><mat-icon>edit</mat-icon><span>Rename</span></button>
+                <button mat-menu-item (click)="onDownload(s.id)">
+                  <mat-icon>download</mat-icon><span>Download CSV</span>
                 </button>
-                <p-popover #rowPopover>
-                  <div class="session-menu-list">
-                    <button class="session-menu-item" (click)="startEdit(s, rowPopover)">
-                      <mat-icon>edit</mat-icon><span>Rename</span>
-                    </button>
-                    <button class="session-menu-item" (click)="onDownload(s.id, rowPopover)">
-                      <mat-icon>download</mat-icon><span>Download CSV</span>
-                    </button>
-                    <button class="session-menu-item destructive" (click)="onDeleteSession(s, rowPopover)">
-                      <mat-icon>delete</mat-icon><span>Delete</span>
-                    </button>
-                  </div>
-                </p-popover>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+                <button mat-menu-item class="danger-action" (click)="onDeleteSession(s)">
+                  <mat-icon>delete</mat-icon><span>Delete</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+          <tr
+            mat-row
+            *matRowDef="let s; columns: columns"
+            class="session-row"
+            [class.session-row-active]="timer.activeSession()?.id === s.id"
+            (click)="onSelectSession(s.id)"
+            role="button"
+            tabindex="0"
+            (keyup.enter)="onSelectSession(s.id)"
+          ></tr>
+        </table>
       </div>
     }
   </div>

@@ -1,8 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { ToastService } from 'src/services/toast.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormField, MatPrefix } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatIcon } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -34,11 +38,22 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
+  imports: [
+    TypographyComponent,
+    ButtonComponent,
+    MatFormField,
+    MatPrefix,
+    MatInput,
+    MatIcon,
+    MatTooltip,
+    MatIconButton,
+    RulesTableComponent,
+    NotificationListComponent
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private messageService = inject(ToastService);
+  private dialog = inject(MatDialog);
   private router = inject(Router);
 
   clientId!: string;
@@ -53,9 +68,6 @@ export default class NotificationRulesPageComponent implements OnInit {
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
-
-  private confirmRef: DynamicDialogRef | null | undefined;
-  private addRuleRef: DynamicDialogRef | null | undefined;
 
   ngOnInit(): void {
     // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
@@ -75,30 +87,28 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onAddRule = () => {
-    this.addRuleRef = this.dialogService.open(AddRuleDialogComponent, {
-      header: 'Add New Rule',
-      width: '500px',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    const addRuleRef = this.dialog.open(AddRuleDialogComponent, { width: '500px' });
 
-    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.addRuleRef?.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
-      if (!rule) return;
+    addRuleRef
+      .afterClosed()
+      .pipe(take(1))
+      // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+      .subscribe(async (rule: RulePayload | null) => {
+        if (!rule) return;
 
-      try {
-        const response = await addRule(this.clientId, rule);
-        if (response.ok) {
-          this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
-          this.rulesTable()?.loadRules();
-        } else {
-          const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
+        try {
+          const response = await addRule(this.clientId, rule);
+          if (response.ok) {
+            this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
+            this.rulesTable()?.loadRules();
+          } else {
+            const text = await response.text();
+            this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
+          }
+        } catch {
+          this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: 'Network error' });
         }
-      } catch {
-        this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: 'Network error' });
-      }
-    });
+      });
   };
 
   onRemoveSelected = async () => {
@@ -205,20 +215,20 @@ export default class NotificationRulesPageComponent implements OnInit {
     const result = this.parseCsv(csv);
     if (!result) return;
 
-    this.confirmRef = this.dialogService.open(UploadConfirmDialogComponent, {
-      header: 'Confirm Rule Upload',
+    const confirmRef = this.dialog.open(UploadConfirmDialogComponent, {
       width: '600px',
-      closable: true,
-      closeAriaLabel: 'Close',
       data: { rules: result }
     });
 
-    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.confirmRef?.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
-      if (confirmed) {
-        this.batchAddRules(result);
-      }
-    });
+    confirmRef
+      .afterClosed()
+      .pipe(take(1))
+      // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+      .subscribe((confirmed: boolean | undefined) => {
+        if (confirmed) {
+          this.batchAddRules(result);
+        }
+      });
   }
 
   private parseCsv(csv: string): RulePayload[] | null {

@@ -1,7 +1,13 @@
 import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { TreeNode } from 'primeng/api';
-import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNodeData } from './tree.utils';
+import {
+  compactTopicLabel,
+  filterSelectedNodes,
+  filterTreeNodes,
+  flattenTreeNodes,
+  TreeNode,
+  TreeNodeData
+} from './tree.utils';
 import { DataType, Node } from './types.utils';
 
 const EMPTY_DISPLAY = signal('');
@@ -119,7 +125,7 @@ describe('filterSelectedNodes', () => {
     expect(result).toEqual([voltage, speed]);
   });
 
-  it('preserves original node references so PrimeNG selection-by-ref works', () => {
+  it('preserves original node references so live display values stay wired', () => {
     const [match] = filterSelectedNodes(flat, [voltage.data!.dataType]);
     expect(match).toBe(voltage);
   });
@@ -132,5 +138,35 @@ describe('filterSelectedNodes', () => {
     const ghost: DataType = { name: 'Does/Not/Exist', unit: '' };
     const result = filterSelectedNodes(flat, [ghost, soc.data!.dataType]);
     expect(result).toEqual([soc]);
+  });
+});
+
+describe('filterTreeNodes', () => {
+  const voltage = leaf('BMS/Pack/Voltage', 'V');
+  const soc = leaf('BMS/Pack/SoC', '%');
+  const speed = leaf('MPU/State/Speed', 'mph');
+  const tree = [branch('BMS', [branch('Pack', [voltage, soc])]), branch('MPU', [branch('State', [speed])])];
+
+  it('returns the tree unchanged for an empty query', () => {
+    expect(filterTreeNodes(tree, '  ')).toBe(tree);
+  });
+
+  it('keeps matching leaves and the branches leading to them, expanded', () => {
+    const result = filterTreeNodes(tree, 'volt');
+    expect(result.map((n) => n.label)).toEqual(['BMS']);
+    expect(result[0].expanded).toBe(true);
+    expect(result[0].children![0].expanded).toBe(true);
+    expect(result[0].children![0].children!.map((n) => n.label)).toEqual(['Voltage']);
+  });
+
+  it('keeps every child of a matching branch', () => {
+    const result = filterTreeNodes(tree, 'pack');
+    expect(result[0].children![0].children!.map((n) => n.label)).toEqual(['Voltage', 'SoC']);
+  });
+
+  it('matches case-insensitively and leaves the source tree untouched', () => {
+    filterTreeNodes(tree, 'SPEED');
+    expect(tree[1].expanded).toBeUndefined();
+    expect(filterTreeNodes(tree, 'SPEED').map((n) => n.label)).toEqual(['MPU']);
   });
 });

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { NgClass } from '@angular/common';
-import { ButtonDirective } from 'primeng/button';
+import { MatDialogRef } from '@angular/material/dialog';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatButton } from '@angular/material/button';
 
 type anyType = string | number | boolean | undefined;
 
@@ -29,15 +29,14 @@ export interface DynamicFormField {
   templateUrl: './form-template.component.html',
   styleUrl: './form-template.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
+  imports: [ReactiveFormsModule, MatFormField, MatLabel, MatError, MatInput, MatButton]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
-  public config = inject(DynamicDialogConfig);
 
   fields = input.required<DynamicFormField[]>();
 
-  public ref = inject(DynamicDialogRef);
+  public ref = inject(MatDialogRef);
 
   formData = input<Map<string, anyType>>(new Map());
   submitForm = output<FormGroup>();

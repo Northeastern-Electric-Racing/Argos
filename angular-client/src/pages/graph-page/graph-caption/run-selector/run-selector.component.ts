@@ -4,8 +4,8 @@ import { Run } from 'src/utils/types.utils';
 import { CarouselComponent } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
+import { MatDialog } from '@angular/material/dialog';
+import { ToastService } from 'src/services/toast.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
@@ -17,13 +17,12 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  public dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   label!: string;
   runs!: Run[];
   runsIsLoading = true;
-  ref?: DynamicDialogRef | null;
   selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
@@ -42,14 +41,9 @@ export class RunSelectorComponent implements OnInit {
   }
 
   openDialog = () => {
-    this.ref = this.dialogService.open(CarouselComponent, {
+    this.dialog.open(CarouselComponent, {
       width: '550px',
-      data: { runs: this.runs, selectRun: this.selectRun() },
-      header: 'Select a run to view',
-      modal: true, // makes the dialog modal
-      dismissableMask: true, // enables auto-close on outside click
-      closable: true,
-      closeAriaLabel: 'Close'
+      data: { runs: this.runs, selectRun: this.selectRun() }
     });
   };
 }

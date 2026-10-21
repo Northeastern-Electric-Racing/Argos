@@ -1,62 +1,69 @@
-<p-table
-  #dt
-  [value]="rules()"
-  [globalFilterFields]="['expr', 'topic', 'id']"
-  [selection]="selectedRules()"
-  (selectionChange)="onSelectionChange($any($event))"
-  dataKey="id"
-  [scrollable]="true"
-  scrollHeight="600px"
-  [loading]="loading()"
->
-  <ng-template #header>
-    <tr>
-      <th style="width: 3rem">
-        <p-tableheadercheckbox />
+<div class="table-wrap">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading rules" />
+  }
+  <table mat-table [dataSource]="dataSource" class="rules-table">
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef class="col-select">
+        <mat-checkbox
+          (change)="toggleAllRows()"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          aria-label="Select all rules"
+        />
       </th>
-      <th>Rule</th>
-      <th>Applied To</th>
-      <!-- TODO: Uploaded By column once backend supports it -->
-      <th>Uploaded By</th>
-      <!-- TODO: Description column once backend supports it -->
-      <th>Description</th>
-      <th>Subscribed</th>
-      <th style="width: 5rem" aria-label="Actions"></th>
-    </tr>
-  </ng-template>
-  <ng-template #body let-rule>
-    <tr>
-      <td>
-        <p-tablecheckbox [value]="rule" />
+      <td mat-cell *matCellDef="let rule" class="col-select">
+        <mat-checkbox
+          (change)="toggleRow(rule)"
+          [checked]="selection.isSelected(rule)"
+          [aria-label]="'Select rule ' + rule.id"
+        />
       </td>
-      <td>{{ rule.expr }}</td>
-      <td>{{ rule.topic }}</td>
-      <td>-</td>
-      <td>-</td>
-      <td>
-        <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
+    </ng-container>
+    <ng-container matColumnDef="expr">
+      <th mat-header-cell *matHeaderCellDef>Rule</th>
+      <td mat-cell *matCellDef="let rule">{{ rule.expr }}</td>
+    </ng-container>
+    <ng-container matColumnDef="topic">
+      <th mat-header-cell *matHeaderCellDef>Applied To</th>
+      <td mat-cell *matCellDef="let rule">{{ rule.topic }}</td>
+    </ng-container>
+    <!-- TODO: Uploaded By column once backend supports it -->
+    <ng-container matColumnDef="uploadedBy">
+      <th mat-header-cell *matHeaderCellDef class="col-optional">Uploaded By</th>
+      <td mat-cell *matCellDef="let rule" class="col-optional">-</td>
+    </ng-container>
+    <!-- TODO: Description column once backend supports it -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef class="col-optional">Description</th>
+      <td mat-cell *matCellDef="let rule" class="col-optional">-</td>
+    </ng-container>
+    <ng-container matColumnDef="subscribed">
+      <th mat-header-cell *matHeaderCellDef>Subscribed</th>
+      <td mat-cell *matCellDef="let rule">
+        <mat-slide-toggle
+          [checked]="rule.is_subscribed"
+          (change)="onToggleSubscription(rule, $event.checked)"
+          [aria-label]="'Subscribe to ' + rule.id"
+        />
       </td>
-      <td class="action-icons">
-        <button
-          pButton
-          class="p-button-text p-button-sm"
-          icon="pi pi-pencil"
-          (click)="onEdit(rule)"
-          aria-label="Edit rule"
-        ></button>
-        <button
-          pButton
-          class="p-button-text p-button-sm p-button-danger"
-          icon="pi pi-trash"
-          (click)="onDelete(rule)"
-          aria-label="Delete rule"
-        ></button>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef class="col-actions" aria-label="Actions"></th>
+      <td mat-cell *matCellDef="let rule" class="col-actions">
+        <button matIconButton (click)="onEdit(rule)" aria-label="Edit rule">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button matIconButton class="danger-action" (click)="onDelete(rule)" aria-label="Delete rule">
+          <mat-icon>delete</mat-icon>
+        </button>
       </td>
-    </tr>
-  </ng-template>
-  <ng-template #emptymessage>
-    <tr>
-      <td colspan="7">
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let rule; columns: columns" [class.selected-row]="selection.isSelected(rule)"></tr>
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell" [attr.colspan]="columns.length">
         <div class="empty-state">
           @if (rules().length === 0) {
             No rules yet. Add a rule or upload a CSV to get started.
@@ -66,5 +73,5 @@
         </div>
       </td>
     </tr>
-  </ng-template>
-</p-table>
+  </table>
+</div>

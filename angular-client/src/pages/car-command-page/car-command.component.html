@@ -11,10 +11,26 @@
         <div class="auth-content">
           <p class="auth-description">Enter the command password to access car controls.</p>
           <div class="auth-form">
-            <div class="auth-input-group">
-              <label for="password">Password</label>
-              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
-            </div>
+            <mat-form-field class="auth-input">
+              <mat-label>Password</mat-label>
+              <input
+                matInput
+                [type]="hidePw() ? 'password' : 'text'"
+                [(ngModel)]="enteredPw"
+                (keyup.enter)="authenticatePw()"
+                autocomplete="current-password"
+              />
+              <button
+                matIconButton
+                matSuffix
+                type="button"
+                (click)="hidePw.set(!hidePw())"
+                [attr.aria-label]="hidePw() ? 'Show password' : 'Hide password'"
+                [attr.aria-pressed]="!hidePw()"
+              >
+                <mat-icon>{{ hidePw() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </mat-form-field>
             <argos-button label="Authenticate" [onClick]="authenticatePw" />
             @if (authError()) {
               <p class="auth-error">{{ authError() }}</p>
@@ -51,7 +67,5 @@
         </div>
       </info-background>
     </div>
-
-    <p-confirmdialog />
   }
 </div>
