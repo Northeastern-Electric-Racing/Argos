@@ -1,4 +1,4 @@
-<uplot-chart [options]="chartOptions()" [data]="chartData()" [xRange]="chartXRange()" />
+<uplot-chart [options]="chartOptions()" [data]="chartData()" [xRange]="chartXRange()" [keepHidden]="keepHiddenSeries" />
 @if (valuesSubject().length === 0) {
   <div class="empty-hint">Select a topic to graph</div>
 }

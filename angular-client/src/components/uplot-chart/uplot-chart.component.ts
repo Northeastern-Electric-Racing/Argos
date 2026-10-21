@@ -26,7 +26,8 @@ export interface UplotXRange {
  * Thin Angular wrapper around uPlot.
  *
  * - A new `options` object rebuilds the chart (series, axes, scales or plugins changed). A series hidden from the
- *   legend stays hidden, matched by label, until it is shown again: also through a rebuild without it.
+ *   legend stays hidden, matched by label, until it is shown again or `keepHidden` drops it: also through rebuilds
+ *   without it.
  * - `rescale()` reruns every scale's range in place, e.g. when a range function reads bounds that changed.
  * - A new `data` array is drawn in place with `setData`: the chart, its DOM and its plugins are kept.
  * - `xRange` pins the x scale after each data update (e.g. a sliding live window); `null` auto-fits x to the data.
@@ -44,6 +45,8 @@ export class UplotChartComponent {
   options = input.required<UplotChartOptions>();
   data = input.required<uPlot.AlignedData>();
   xRange = input<UplotXRange | null>(null);
+  /** Whether to keep remembering a hidden series' label, checked on each rebuild (e.g. false once its topic is dropped). */
+  keepHidden = input<(label: uPlot.Series['label']) => boolean>(() => true);
 
   private target = viewChild.required<ElementRef<HTMLElement>>('target');
   private rendered = signal(false);
@@ -102,13 +105,9 @@ export class UplotChartComponent {
       if (s.show) this.hiddenLabels.delete(s.label);
       else this.hiddenLabels.add(s.label);
     }
-    // A rebuild with series but without a hidden one means that topic was dropped, so re-adding it shows it.
-    // An empty rebuild (topics being re-subscribed) keeps every label.
-    if (options.series.length > 1) {
-      for (const label of this.hiddenLabels) {
-        if (!options.series.some((s) => s.label === label)) this.hiddenLabels.delete(label);
-      }
-    }
+    // Only the owner knows when a missing series is gone for good: series can come back one rebuild at a time.
+    const keep = this.keepHidden();
+    for (const label of this.hiddenLabels) if (!keep(label)) this.hiddenLabels.delete(label);
     this.chart?.destroy();
     const series = options.series.map((s, i) => (i > 0 && this.hiddenLabels.has(s.label) ? { ...s, show: false } : s));
     const el = this.target().nativeElement;

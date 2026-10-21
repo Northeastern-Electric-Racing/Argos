@@ -99,13 +99,30 @@ describe('UplotChartComponent', () => {
     expect(chart.instance!.series.slice(1).map((s) => s.show)).toEqual([true, true]);
   });
 
-  it('forgets a hidden series once a rebuild with other series drops it, so re-adding it shows it', async () => {
+  it('keeps a hidden series hidden while rebuilds bring the series back one at a time', async () => {
     const chart = await create(options(2), [[1000], [1], [2]]);
     chart.instance!.setSeries(2, { show: false });
 
+    // e.g. real time re-subscribing its topics, whose first messages land in different frames
+    for (const count of [0, 1, 2]) {
+      fixture.componentRef.setInput('options', options(count));
+      fixture.componentRef.setInput('data', [[1000], ...Array.from({ length: count }, (_, i) => [i])]);
+      await settle();
+    }
+
+    expect(chart.instance!.series.slice(1).map((s) => s.show)).toEqual([true, false]);
+  });
+
+  it('forgets a hidden series that keepHidden rejects, so re-adding it shows it', async () => {
+    const chart = await create(options(2), [[1000], [1], [2]]);
+    chart.instance!.setSeries(2, { show: false });
+
+    // e.g. its topic was deselected
+    fixture.componentRef.setInput('keepHidden', (label: uPlot.Series['label']) => label !== 's1');
     fixture.componentRef.setInput('options', options(1));
     fixture.componentRef.setInput('data', [[1000], [1]]);
     await settle();
+    fixture.componentRef.setInput('keepHidden', () => true);
     fixture.componentRef.setInput('options', options(2));
     fixture.componentRef.setInput('data', [[1000], [1], [2]]);
     await settle();

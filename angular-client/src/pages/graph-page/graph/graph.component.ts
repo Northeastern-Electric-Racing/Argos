@@ -189,6 +189,14 @@ export default class CustomGraphComponent implements OnDestroy {
     });
   }
 
+  /**
+   * Whether a series hidden from the legend stays hidden: while its topic is selected. Real time re-subscribes its
+   * topics on a config change, and they come back a frame or more apart, so a missing series alone means nothing.
+   */
+  keepHiddenSeries = (label: uPlot.Series['label']): boolean =>
+    typeof label === 'string' &&
+    untracked(this.valuesSubject).some((topic) => label.slice(0, label.lastIndexOf(' ')) === topic.label);
+
   /** Zooms back out to all the data, as a double-click on the plot does. */
   resetZoom = () => {
     const chart = this.chart()?.instance;

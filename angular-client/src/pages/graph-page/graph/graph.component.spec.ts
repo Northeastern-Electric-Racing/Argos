@@ -128,6 +128,33 @@ describe('CustomGraphComponent (uPlot)', () => {
     expect(chart!.scales['y'].max).toBe(10);
   });
 
+  it('keeps a topic hidden from the legend through a re-subscribe, but shows it once deselected and reselected', async () => {
+    const points = (y: number): GraphData[] => [{ x: 1000, y }];
+    await create({ valuesSubject: [topic('A', points(1)), topic('B', points(2))], realTime: true });
+    const wrapper = () =>
+      fixture.debugElement.query(By.directive(UplotChartComponent)).componentInstance as UplotChartComponent;
+    const shown = () =>
+      wrapper()
+        .instance!.series.slice(1)
+        .map((s) => `${s.label}${s.show ? '' : ' off'}`);
+    wrapper().instance!.setSeries(2, { show: false });
+
+    // Real time re-subscribes the same topics on a config change; here B's first message comes a frame after A's.
+    const lateB = { label: 'B', updates: new BehaviorSubject<GraphData[][]>([]) };
+    fixture.componentRef.setInput('valuesSubject', [topic('A', points(1)), lateB]);
+    await settle();
+    expect(shown()).toEqual(['A 0']);
+    lateB.updates.next([points(2)]);
+    await settle();
+    expect(shown()).toEqual(['A 0', 'B 0 off']);
+
+    fixture.componentRef.setInput('valuesSubject', [topic('A', points(1))]);
+    await settle();
+    fixture.componentRef.setInput('valuesSubject', [topic('A', points(1)), topic('B', points(2))]);
+    await settle();
+    expect(shown()).toEqual(['A 0', 'B 0']);
+  });
+
   it('ignores updates while paused and drops the live window to show the whole buffer', async () => {
     const a = topic('A', [
       { x: 15_000, y: 1 },
