@@ -115,7 +115,7 @@ export class RulesTableComponent implements OnInit {
 
   onEdit(rule: ClientRule): void {
     const editRef = this.dialogService.open<EditRuleResult | null>(EditRuleDialogComponent, {
-      contentClass: 'sm:max-w-[450px]',
+      contentClass: 'w-[450px] sm:max-w-[450px]',
       context: { header: `Edit Rule: ${rule.id}`, expr: rule.expr, debounce_time: rule.debounce_time }
     });
 

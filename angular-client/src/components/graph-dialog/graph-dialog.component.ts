@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, forwardRef } from '@angular/core';
 import { injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { GraphData } from 'src/utils/types.utils';
@@ -18,7 +18,7 @@ export interface GraphDialogContext {
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [GraphComponent, HlmDialogImports]
+  imports: [forwardRef(() => GraphComponent), HlmDialogImports]
 })
 export class GraphDialogComponent {
   private context = injectBrnDialogContext<GraphDialogContext>();

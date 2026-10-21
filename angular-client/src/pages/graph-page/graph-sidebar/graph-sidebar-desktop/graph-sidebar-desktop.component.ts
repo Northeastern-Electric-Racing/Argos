@@ -39,6 +39,9 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
+/** Gives each instance unique switch ids, since the graph page renders two sidebars. */
+let nextSwitchId = 0;
+
 @Component({
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
@@ -47,6 +50,7 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   imports: [ButtonComponent, TopicTreeComponent, TypographyComponent, HlmSwitch, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
+  protected readonly switchId = `graph-sidebar-desktop-${nextSwitchId++}`;
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
   private dialogService = inject(HlmDialogService);
@@ -107,7 +111,7 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
 
   openPresetsDialog = () => {
     this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
-      contentClass: 'sm:max-w-[640px]',
+      contentClass: 'w-[640px] sm:max-w-[640px]',
       context: {
         dataTypes: this.dataTypes()
       }

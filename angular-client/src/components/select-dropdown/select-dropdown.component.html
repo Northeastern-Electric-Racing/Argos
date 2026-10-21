@@ -2,9 +2,11 @@
   <hlm-select-trigger size="sm" class="small-grey-select w-full">
     <hlm-select-value [placeholder]="placeholder()" />
   </hlm-select-trigger>
-  <hlm-select-content *hlmSelectPortal class="max-h-80">
+  <hlm-select-content *hlmSelectPortal class="max-h-80 min-w-max">
     @for (option of options(); track option.name) {
       <hlm-select-item [value]="option.name">{{ option.name }}</hlm-select-item>
+    } @empty {
+      <div class="text-muted-foreground px-2 py-1.5 text-sm">No results found</div>
     }
   </hlm-select-content>
 </hlm-select>

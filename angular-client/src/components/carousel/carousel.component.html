@@ -2,7 +2,7 @@
   <h2 hlmDialogTitle>Select a run to view</h2>
 </hlm-dialog-header>
 <div class="modal-container">
-  <hlm-carousel class="mx-12" [options]="carouselOptions" [plugins]="plugins">
+  <hlm-carousel class="mx-12 block" [options]="carouselOptions" [plugins]="plugins">
     <hlm-carousel-content>
       @for (run of runs; track run.id) {
         <hlm-carousel-item>

@@ -13,9 +13,9 @@
         <th hlmTh>Rule</th>
         <th hlmTh>Applied To</th>
         <!-- TODO: Uploaded By column once backend supports it -->
-        <th hlmTh>Uploaded By</th>
+        <th hlmTh class="hidden md:table-cell">Uploaded By</th>
         <!-- TODO: Description column once backend supports it -->
-        <th hlmTh>Description</th>
+        <th hlmTh class="hidden md:table-cell">Description</th>
         <th hlmTh>Subscribed</th>
         <th hlmTh class="w-20"><span class="sr-only">Actions</span></th>
       </tr>
@@ -23,7 +23,7 @@
     <tbody hlmTBody>
       @if (loading()) {
         <tr hlmTr>
-          <td hlmTd colspan="7">
+          <td hlmTd colspan="7" class="whitespace-normal">
             <div class="empty-state" role="status"><hlm-spinner class="text-2xl" /> Loading rules…</div>
           </td>
         </tr>
@@ -37,10 +37,10 @@
                 [aria-label]="'Select rule ' + rule.id"
               />
             </td>
-            <td hlmTd>{{ rule.expr }}</td>
-            <td hlmTd>{{ rule.topic }}</td>
-            <td hlmTd>-</td>
-            <td hlmTd>-</td>
+            <td hlmTd class="whitespace-normal wrap-anywhere">{{ rule.expr }}</td>
+            <td hlmTd class="whitespace-normal wrap-anywhere">{{ rule.topic }}</td>
+            <td hlmTd class="hidden md:table-cell">-</td>
+            <td hlmTd class="hidden md:table-cell">-</td>
             <td hlmTd>
               <hlm-switch
                 [checked]="rule.is_subscribed"
@@ -68,7 +68,7 @@
           </tr>
         } @empty {
           <tr hlmTr>
-            <td hlmTd colspan="7">
+            <td hlmTd colspan="7" class="whitespace-normal">
               <div class="empty-state">
                 @if (rules().length === 0) {
                   No rules yet. Add a rule or upload a CSV to get started.

@@ -113,7 +113,7 @@ export class AppNavBarComponent implements OnInit {
   };
 
   openRunForm = () => {
-    this.dialogService.open(RunFormComponent, { contentClass: 'sm:max-w-[550px]' });
+    this.dialogService.open(RunFormComponent, { contentClass: 'w-[550px] sm:max-w-[550px]' });
   };
 
   homeNavItem: NavItem = {

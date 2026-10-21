@@ -40,6 +40,9 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
+/** Gives each instance unique switch ids, since the graph page renders two sidebars. */
+let nextSwitchId = 0;
+
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
@@ -56,6 +59,7 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
+  protected readonly switchId = `graph-sidebar-mobile-${nextSwitchId++}`;
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
@@ -122,7 +126,7 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
 
   openPresetsDialog = () => {
     this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
-      contentClass: 'sm:max-w-[90vw]',
+      contentClass: 'w-[90vw] sm:max-w-[90vw]',
       context: {
         dataTypes: this.dataTypes()
       }

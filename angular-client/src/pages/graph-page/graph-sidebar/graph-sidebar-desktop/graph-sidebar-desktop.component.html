@@ -26,12 +26,18 @@
         <hlm-switch
           [checked]="selectedOnly()"
           (checkedChange)="toggleSelectedOnly($event)"
+          [inputId]="switchId + '-selected'"
           aria-label="Show only selected topics"
         />
       </label>
       <label class="flatten-toggle">
         <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-        <hlm-switch [checked]="flattenMode()" (checkedChange)="toggleFlattenMode($event)" aria-label="Flatten topic tree" />
+        <hlm-switch
+          [checked]="flattenMode()"
+          (checkedChange)="toggleFlattenMode($event)"
+          [inputId]="switchId + '-flat'"
+          aria-label="Flatten topic tree"
+        />
       </label>
     </div>
   </div>

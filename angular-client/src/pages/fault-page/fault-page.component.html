@@ -1,14 +1,14 @@
-<div class="container">
+<div class="fault-container">
   <typography
     class="title-style"
     variant="x-large-title"
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
-  <hlm-accordion type="multiple">
+  <hlm-accordion type="multiple" class="gap-2">
     @for (node of nodeArray; track node.node) {
-      <hlm-accordion-item>
-        <hlm-accordion-trigger>{{ node.node }}</hlm-accordion-trigger>
+      <hlm-accordion-item class="bg-card rounded-md px-4">
+        <hlm-accordion-trigger triggerClass="text-base font-semibold">{{ node.node }}</hlm-accordion-trigger>
         <hlm-accordion-content>
           <table hlmTable>
             <thead hlmTHead>

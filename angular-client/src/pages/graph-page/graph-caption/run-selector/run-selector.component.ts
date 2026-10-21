@@ -43,7 +43,7 @@ export class RunSelectorComponent implements OnInit {
 
   openDialog = () => {
     this.ref = this.dialogService.open(CarouselComponent, {
-      contentClass: 'sm:max-w-[550px]',
+      contentClass: 'w-[550px] sm:max-w-[550px]',
       context: { runs: this.runs, selectRun: this.selectRun() }
     });
   };

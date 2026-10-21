@@ -7,7 +7,7 @@
         <typography variant="large-header" content="Topics" />
       </h2>
     </hlm-sheet-header>
-    <div class="sidebar-content">
+    <div class="sidebar-content px-4 pb-4">
       <div class="presets-row">
         <select-dropdown
           class="preset-select"
@@ -34,6 +34,7 @@
           <hlm-switch
             [checked]="selectedOnly()"
             (checkedChange)="toggleSelectedOnly($event)"
+            [inputId]="switchId + '-selected'"
             aria-label="Show only selected topics"
           />
         </label>
@@ -42,6 +43,7 @@
           <hlm-switch
             [checked]="flattenMode()"
             (checkedChange)="toggleFlattenMode($event)"
+            [inputId]="switchId + '-flat'"
             aria-label="Flatten topic tree"
           />
         </label>

@@ -79,7 +79,7 @@ export default class NotificationRulesPageComponent implements OnInit {
 
   onAddRule = () => {
     this.addRuleRef = this.dialogService.open<RulePayload | null>(AddRuleDialogComponent, {
-      contentClass: 'sm:max-w-[500px]'
+      contentClass: 'w-[500px] sm:max-w-[500px]'
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
@@ -202,7 +202,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     if (!result) return;
 
     this.confirmRef = this.dialogService.open<boolean>(UploadConfirmDialogComponent, {
-      contentClass: 'sm:max-w-[600px]',
+      contentClass: 'w-[600px] sm:max-w-[600px]',
       context: { rules: result }
     });
 

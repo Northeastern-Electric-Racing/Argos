@@ -6,15 +6,17 @@
           <typography variant="large-header" content="Argos" />
         </h2>
       </hlm-sheet-header>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
+      <nav class="px-4 pb-4">
+        @for (navItem of allNavItems; track navItem) {
+          <sidebar-chip
+            icon="{{ navItem.icon }}"
+            value="{{ navItem.label }}"
+            [active]="this.isSelected(navItem)"
+            (click)="navItem.onClick()"
+          >
+          </sidebar-chip>
+        }
+      </nav>
     </hlm-sheet-content>
   </hlm-sheet>
 } @else {
