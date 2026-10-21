@@ -1,4 +1,4 @@
-import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
@@ -25,17 +25,17 @@ export class RunFormComponent implements OnInit {
   public apiService = inject(APIService);
   private toasts = inject(ToastService);
   private readonly context = injectContext<TuiDialogContext>();
-  templateReady = false;
+  templateReady = signal(false);
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
   runsLoaded = false;
 
   // Run selector configuration
   selectorOptions: DropdownOption[] = [];
-  selectorConfig: SelectorConfig = {
+  selectorConfig = signal<SelectorConfig>({
     options: this.selectorOptions,
     placeholder: 'Select Run'
-  };
+  });
 
   locationName: DynamicFormField = {
     name: 'locationName',
@@ -66,7 +66,7 @@ export class RunFormComponent implements OnInit {
     disabled: false
   };
 
-  inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
+  inputFields = signal<DynamicFormField[]>([this.locationName, this.driverName, this.notes]);
 
   onSubmit(form: FormGroup) {
     if (this.selectedRun === undefined) {
@@ -90,11 +90,11 @@ export class RunFormComponent implements OnInit {
   loadAllRuns = () => {
     if (this.runsLoaded) return;
 
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runsQueryResponse = this.apiService.query<Run[]>(() => getAllRuns());
 
     runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
@@ -117,10 +117,10 @@ export class RunFormComponent implements OnInit {
           this.selectedRun = latestRun;
 
           // Update selector config with default value
-          this.selectorConfig = {
-            ...this.selectorConfig,
+          this.selectorConfig.update((config) => ({
+            ...config,
             defaultValue: this.formatRunInfo(latestRun)
-          };
+          }));
         }
       }
     });
@@ -141,11 +141,11 @@ export class RunFormComponent implements OnInit {
     });
 
     // Update the selector config with options and default value if selected run exists
-    this.selectorConfig = {
+    this.selectorConfig.set({
       options: this.selectorOptions,
       placeholder: 'Select Run',
       defaultValue: this.selectedRun ? this.formatRunInfo(this.selectedRun) : undefined
-    };
+    });
   };
 
   loadRunById = (runId: number) => {
@@ -156,19 +156,19 @@ export class RunFormComponent implements OnInit {
       this.selectedRun = existingRun;
 
       // Update selector config with new default value
-      this.selectorConfig = {
-        ...this.selectorConfig,
+      this.selectorConfig.update((config) => ({
+        ...config,
         defaultValue: this.formatRunInfo(existingRun)
-      };
+      }));
       return;
     }
 
     // If not found locally, fetch from API
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runQueryResponse = this.apiService.query<Run>(() => getRunById(runId));
 
     runQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
@@ -184,10 +184,10 @@ export class RunFormComponent implements OnInit {
         this.selectedRun = run;
 
         // Update selector config with new default value
-        this.selectorConfig = {
-          ...this.selectorConfig,
+        this.selectorConfig.update((config) => ({
+          ...config,
           defaultValue: this.formatRunInfo(run)
-        };
+        }));
       }
     });
   };
@@ -196,7 +196,7 @@ export class RunFormComponent implements OnInit {
     this.locationName.optionValue = run.locationName;
     this.driverName.optionValue = run.driverName;
     this.notes.optionValue = run.notes;
-    this.inputFields = [this.locationName, this.driverName, this.notes];
+    this.inputFields.set([this.locationName, this.driverName, this.notes]);
   };
 
   formatRunInfo = (run: Run) => {

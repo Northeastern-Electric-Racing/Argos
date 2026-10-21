@@ -26,6 +26,7 @@ import {
   unsubscribeFromRules
 } from 'src/api/rules.api';
 import { EditRuleData, EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
+import { injectConfirm } from 'src/utils/confirm.utils';
 
 @Component({
   selector: 'rules-table',
@@ -36,6 +37,7 @@ import { EditRuleData, EditRuleDialogComponent, EditRuleResult } from '../edit-r
 })
 export class RulesTableComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+  private confirm = injectConfirm();
   clientId = input.required<string>();
   searchTerm = input('');
 
@@ -139,9 +141,13 @@ export class RulesTableComponent implements OnInit {
       });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.confirm('Delete Rule', { content: `Delete rule "${rule.id}"?`, yes: 'Delete', no: 'Cancel' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.removeRule(rule));
+  }
 
+  private async removeRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {

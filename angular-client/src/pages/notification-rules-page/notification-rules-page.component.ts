@@ -32,6 +32,7 @@ import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.compon
 import { RulesTableComponent } from './rules-table/rules-table.component';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
+import { injectConfirm } from 'src/utils/confirm.utils';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -50,6 +51,7 @@ export default class NotificationRulesPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private toasts = inject(ToastService);
   private dialogs = inject(TuiDialogService);
+  private confirm = injectConfirm();
   private router = inject(Router);
 
   clientId!: string;
@@ -104,11 +106,15 @@ export default class NotificationRulesPageComponent implements OnInit {
       });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.confirm('Delete Rules', { content: `Delete ${selected.length} selected rule(s)?`, yes: 'Delete', no: 'Cancel' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.removeRules(selected));
+  };
 
+  private removeRules = async (selected: ClientRule[]) => {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
