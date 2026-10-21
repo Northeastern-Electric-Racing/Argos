@@ -101,6 +101,35 @@ describe('CustomGraphComponent', () => {
     expect(pixels.some((v) => v !== 0)).toBeTrue();
   });
 
+  it('redraws the lines after the browser restores a lost WebGL context', async () => {
+    if (!document.createElement('canvas').getContext('webgl2')) {
+      pending('WebGL2 is unavailable in this browser');
+    }
+    await render([topic('A', [0, 1], [1000, 5], [2000, 3]).info]);
+    fixture.nativeElement.style.cssText = 'display: flex; width: 400px; height: 300px';
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const glCanvas: HTMLCanvasElement = fixture.nativeElement.querySelector('canvas');
+    const gl = glCanvas.getContext('webgl2') as WebGL2RenderingContext;
+    const loseContext = gl.getExtension('WEBGL_lose_context')!;
+    const next = (type: string) => new Promise((resolve) => glCanvas.addEventListener(type, resolve, { once: true }));
+
+    const lost = next('webglcontextlost');
+    loseContext.loseContext();
+    await lost;
+    // Let the loss event finish dispatching before asking for the context back
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const drawArrays = spyOn(gl, 'drawArrays').and.callThrough();
+    // The browser only fires this when the loss was preventDefault-ed
+    const restored = next('webglcontextrestored');
+    loseContext.restoreContext();
+    await restored;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(gl.isContextLost()).toBeFalse();
+    expect(component.renderError()).toBeNull();
+    expect(drawArrays).toHaveBeenCalled();
+  });
+
   it('explains when WebGL2 is unavailable instead of failing silently', async () => {
     const { getContext } = HTMLCanvasElement.prototype;
     spyOn(HTMLCanvasElement.prototype, 'getContext').and.callFake(function (this: HTMLCanvasElement, id: string) {

@@ -91,6 +91,8 @@ export default class CustomGraphComponent {
   private overlayCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('overlayCanvas');
 
   private renderer?: GraphRenderer;
+  /** Removes the WebGL context-loss listeners. */
+  private glListeners?: AbortController;
   private resizeObserver?: ResizeObserver;
   private size = { width: 0, height: 0 };
   private frame?: number;
@@ -365,12 +367,8 @@ export default class CustomGraphComponent {
   }
 
   private setupRenderer() {
-    try {
-      this.renderer = new GraphRenderer(this.glCanvas().nativeElement, this.overlayCanvas().nativeElement);
-    } catch (e) {
-      this.renderError.set(`The graph needs WebGL2, which this browser can't provide (${(e as Error).message}).`);
-      return;
-    }
+    if (!this.createRenderer()) return;
+    this.watchContextLoss();
     const container = this.container().nativeElement;
     this.resizeObserver = new ResizeObserver(([entry]) => {
       this.size = { width: entry.contentRect.width, height: entry.contentRect.height };
@@ -382,7 +380,51 @@ export default class CustomGraphComponent {
     this.requestFrame();
   }
 
+  /** Returns false, and shows the fallback message, when WebGL2 is unavailable. */
+  private createRenderer(): boolean {
+    try {
+      this.renderer = new GraphRenderer(this.glCanvas().nativeElement, this.overlayCanvas().nativeElement);
+      return true;
+    } catch (e) {
+      this.renderError.set(`The graph needs WebGL2, which this browser can't provide (${(e as Error).message}).`);
+      return false;
+    }
+  }
+
+  /**
+   * The browser can drop the WebGL context at any time (GPU reset, driver update, sleep, too many
+   * contexts). Without preventDefault it never gives it back and the plot stays blank, so take
+   * the loss, and rebuild the renderer (its programs and buffers die with the old context) once
+   * the context is restored.
+   */
+  private watchContextLoss() {
+    const canvas = this.glCanvas().nativeElement;
+    this.glListeners = new AbortController();
+    const { signal } = this.glListeners;
+    canvas.addEventListener(
+      'webglcontextlost',
+      (event) => {
+        event.preventDefault();
+        if (this.frame !== undefined) cancelAnimationFrame(this.frame);
+        this.frame = undefined;
+        this.renderer = undefined;
+      },
+      { signal }
+    );
+    canvas.addEventListener(
+      'webglcontextrestored',
+      () => {
+        if (!this.createRenderer()) return;
+        this.renderer!.resize(this.size.width, this.size.height, window.devicePixelRatio || 1);
+        this.dataDirty = true;
+        this.requestFrame();
+      },
+      { signal }
+    );
+  }
+
   private teardown() {
+    this.glListeners?.abort();
     if (this.frame !== undefined) cancelAnimationFrame(this.frame);
     this.resizeObserver?.disconnect();
     this.renderer?.destroy();
