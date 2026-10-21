@@ -142,7 +142,7 @@ describe('graph chart options', () => {
 
       // The point at 0 s is gone, and the line from 1 s to 3 s is cut at the edge, 2 s
       expect((update.series as AnyRecord[])[0]['data']).toEqual([
-        [2000, 2],
+        { value: [2000, 2], interpolated: true },
         [3000, 3],
         [5000, 5]
       ]);
@@ -276,6 +276,19 @@ describe('graph chart options', () => {
 
       expect(html).toContain('A&#60;b&#62; 0: <b>1.5</b>');
       expect(html).toContain('B 0: <b>2</b>');
+    });
+
+    it("leaves out a live window's interpolated edge points, whose time and value no message carried", () => {
+      const edge = { value: [2000, 2], interpolated: true };
+
+      const html = tooltipFormatter([
+        { marker: '', seriesName: 'A 0', value: edge.value, data: edge },
+        { marker: '', seriesName: 'B 0', value: [2001, 5], data: [2001, 5] }
+      ]);
+
+      expect(html).not.toContain('A 0');
+      expect(html).toContain('B 0: <b>5</b>');
+      expect(tooltipFormatter([{ marker: '', seriesName: 'A 0', value: edge.value, data: edge }])).toBe('');
     });
   });
 });

@@ -24,6 +24,11 @@ type YAxisOption = Exclude<NonNullable<GraphChartOption['yAxis']>, unknown[]>;
 
 /** One datapoint as ECharts reads it: [time in ms, value]. */
 export type Point = [x: number, y: number];
+/** A point a live window puts on its left edge, interpolated rather than received; the tooltip leaves it out. */
+export interface EdgePoint {
+  value: Point;
+  interpolated: true;
+}
 
 const HOUR_MS = 60 * 60 * 1000;
 export const DAY_MS = 24 * HOUR_MS;
@@ -197,7 +202,7 @@ export function buildMultiYAxes(labels: string[]): YAxisOption[] {
  * from the points either side of it. The zoom filter drops every point before the window, so the edge point is what
  * runs the line out to the edge (sliding smoothly as data ages out) while the y-axis fits only what is on screen.
  */
-export function clipToWindow(points: readonly Point[], windowStart: number): Point[] {
+export function clipToWindow(points: readonly Point[], windowStart: number): (Point | EdgePoint)[] {
   const first = binarySearchInsertIndex(points, windowStart, ([x]) => x);
   const visible = points.slice(first);
   if (first === 0 || first === points.length || points[first][0] === windowStart) return visible;
@@ -205,7 +210,7 @@ export function clipToWindow(points: readonly Point[], windowStart: number): Poi
   const [x1, y1] = points[first];
   // Rounded like incoming values, so the tooltip at the edge shows no float noise
   const y = Math.round((y0 + ((y1 - y0) * (windowStart - x0)) / (x1 - x0)) * 10000) / 10000;
-  return [[windowStart, y], ...visible];
+  return [{ value: [windowStart, y], interpolated: true }, ...visible];
 }
 
 /**
@@ -286,14 +291,17 @@ interface TooltipParam {
   marker?: unknown;
   seriesName?: string;
   value?: unknown;
+  /** The series' data item: a {@link Point}, or an {@link EdgePoint}. */
+  data?: unknown;
 }
 
 /**
  * Hovered time, then the value of each series ECharts passes. On a time axis it passes only the series whose nearest
  * point is nearest the cursor, so a topic sampled at other times is left out, as in develop's `shared: false` tooltip.
+ * Edge points are left out too, as no message carried them; with nothing left, the empty string hides the tooltip.
  */
 export function tooltipFormatter(params: TooltipParam | TooltipParam[]): string {
-  const items = Array.isArray(params) ? params : [params];
+  const items = (Array.isArray(params) ? params : [params]).filter((item) => !(item.data as EdgePoint)?.interpolated);
   const first = items[0]?.value;
   if (!Array.isArray(first)) return '';
   const time = new Date(first[0] as number);
