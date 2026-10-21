@@ -53,6 +53,8 @@
 
 .content-div {
   flex: 1 1 auto;
+  /* Let it shrink below the chart's last drawn height when the toolbar above grows */
+  min-height: 0;
   display: flex;
   flex-flow: row;
   width: 100%;
@@ -69,7 +71,8 @@
   min-height: 0;
   overflow: hidden;
   padding-right: 16px;
-  padding-bottom: 40px; /* reserve space for ApexCharts legend when multiple topics are plotted */
+  /* The page starts 16 px below the 60 px nav bar its height allows for, so keep the x-axis labels above the fold */
+  padding-bottom: 24px;
 }
 
 .mobile-sidebar {

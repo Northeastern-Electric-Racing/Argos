@@ -227,6 +227,36 @@ describe('CustomGraphComponent with ECharts', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
+  it("keeps a toolbox icon's title showing under a still cursor as a live chart redraws", async () => {
+    const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
+    const { chart } = await createChart({ realTime: true, valuesSubject: [voltage] });
+    const icon = drawnElements(chart).find((el) => el.__title === 'Restore')!;
+    const rect = icon.getBoundingRect().clone();
+    rect.applyTransform(icon.getComputedTransform());
+    const [x, y] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+
+    chart.getZr().handler.dispatch('mousemove', { zrX: x, zrY: y });
+    expect(drawnTexts(chart)).toContain('Restore');
+    voltage.updates.next([[{ x: 2000, y: 401 }]]);
+    await nextFrame();
+
+    // Every redraw rebuilds the toolbox's icons, dropping the hover state that shows the title
+    expect(drawnElements(chart).find((el) => el.__title === 'Restore')).not.toBe(icon);
+    expect(drawnTexts(chart)).toContain('Restore');
+  });
+
+  it('fits the legend to a new chart width, even while paused', async () => {
+    const { fixture, chart } = await createChart({ realTime: true, isPaused: true });
+    const legendWidth = () => (chart.getOption()['legend'] as AnyRecord[])[0]['width'] as number;
+    expect(legendWidth()).toBeGreaterThan(500);
+
+    (fixture.nativeElement as HTMLElement).style.width = '500px';
+    for (let i = 0; i < 5; i++) await nextFrame();
+
+    expect(legendWidth()).toBeLessThan(500 - 100);
+    expect(legendWidth()).toBeGreaterThan(500 - 200);
+  });
+
   describe('in a live window', () => {
     // The window is the last 60 s, so it starts at 40 s; the points at 0 s, 20 s and 38 s are off screen
     const live = () =>
@@ -317,6 +347,32 @@ interface ChartModel {
 /** ECharts' internal model of what it draws. */
 function model(chart: ECharts): ChartModel {
   return (chart as unknown as { getModel(): ChartModel }).getModel();
+}
+
+interface DrawnElement {
+  __title?: string;
+  getBoundingRect(): { clone(): DrawnRect };
+  getComputedTransform(): unknown;
+}
+
+interface DrawnRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  applyTransform(transform: unknown): void;
+}
+
+/** Every element the chart has painted. */
+function drawnElements(chart: ECharts): DrawnElement[] {
+  type Node = DrawnElement & { childrenRef?(): Node[] };
+  const all: DrawnElement[] = [];
+  const visit = (el: Node): void => {
+    all.push(el);
+    el.childrenRef?.().forEach(visit);
+  };
+  (chart.getZr() as unknown as { storage: { getRoots(): Node[] } }).storage.getRoots().forEach(visit);
+  return all;
 }
 
 /** Every text the chart has painted, such as axis and mark line labels. */

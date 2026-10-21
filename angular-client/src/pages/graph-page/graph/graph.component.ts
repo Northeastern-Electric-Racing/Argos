@@ -1,4 +1,14 @@
-import { Component, effect, input, OnDestroy, ChangeDetectionStrategy, untracked, inject, DestroyRef } from '@angular/core';
+import {
+  Component,
+  effect,
+  input,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  untracked,
+  inject,
+  DestroyRef,
+  ElementRef
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import * as echarts from 'echarts/core';
@@ -41,6 +51,9 @@ echarts.use([
 })
 export default class CustomGraphComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** Redraws on a resize, so the legend's width follows the chart's, even while paused. */
+  private resizeObserver = new ResizeObserver(() => this.requestRender());
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
   showMultipleYAxes = input<boolean>(false);
@@ -69,6 +82,7 @@ export default class CustomGraphComponent implements OnDestroy {
   private hover: { x: number; y: number } | undefined;
 
   constructor() {
+    this.resizeObserver.observe(this.host.nativeElement);
     effect(() => {
       if (this.isPaused()) {
         this.resetRange();
@@ -106,6 +120,7 @@ export default class CustomGraphComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver.disconnect();
     if (this.frameId !== undefined) {
       cancelAnimationFrame(this.frameId);
     }
@@ -178,13 +193,24 @@ export default class CustomGraphComponent implements OnDestroy {
         yMin: config.yMin,
         yMax: config.yMax,
         xRangeMs,
-        detectMultiDay: !this.realTime()
+        detectMultiDay: !this.realTime(),
+        // The host's, not chart.getWidth(): ngx-echarts resizes the chart up to 100 ms after the host resizes
+        chartWidth: this.host.nativeElement.clientWidth
       });
       // Merges into the existing chart: series are matched by id and updated in place
       this.chart.setOption(update, { replaceMerge: ['series', 'yAxis'] });
       // After a redraw ECharts re-shows the tooltip for the time it last showed, which a live window has slid
       // away from under a still cursor; show it for the cursor's position instead
-      if (this.hover) this.chart.dispatchAction({ type: 'showTip', ...this.hover });
+      if (this.hover) {
+        this.chart.dispatchAction({ type: 'showTip', ...this.hover });
+        // A redraw also rebuilds the toolbox and legend, dropping the hover state (such as an icon's title) of
+        // whatever is under the cursor, and a still cursor sends no mousemove to restore it; re-enter it
+        const { handler } = this.chart.getZr();
+        const { x, y } = this.hover;
+        // zrender reads only the position off the raw event
+        const event = { zrX: x, zrY: y } as unknown as Parameters<typeof handler.dispatchToElement>[2];
+        handler.dispatchToElement(handler.findHover(x, y), 'mouseover', event);
+      }
     });
   }
 

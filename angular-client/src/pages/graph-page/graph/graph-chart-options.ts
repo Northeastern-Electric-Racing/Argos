@@ -29,11 +29,27 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 /** Id of the data-less series that carries the day-boundary mark lines. */
 export const DAY_BOUNDARIES_ID = '__day-boundaries';
 const TEXT_COLOR = '#fff';
+/** The app's font (`--font-family`); ECharts draws on a canvas, so it can't inherit it from the page. */
+const FONT_FAMILY = 'Roboto, sans-serif';
+/**
+ * Develop's ApexCharts series colours, each at least 3:1 against the page's #101010. ECharts' own palette has a
+ * dark slate (#505372, 2.6:1) that all but disappears there.
+ */
+export const SERIES_COLORS = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'];
 const DAY_BOUNDARY_COLOR = '#8fcadd';
 /** Id of the y-axis when all series share one. */
 const SHARED_Y_AXIS_ID = 'shared';
 /** Horizontal room each extra y-axis on the same side takes (labels + rotated name). */
 const Y_AXIS_OFFSET_PX = 80;
+const LEGEND_LEFT_PX = 16;
+const LEGEND_PADDING_PX = 5;
+const TOOLBOX_RIGHT_PX = 16;
+const TOOLBOX_ICON_PX = 15;
+const TOOLBOX_GAP_PX = 10;
+/** Zoom, zoom reset, restore and save as image. */
+const TOOLBOX_ICONS = 4;
+/** How far from the chart's right edge the toolbox's left edge is, plus a gap before it. */
+const TOOLBOX_RESERVE_PX = TOOLBOX_RIGHT_PX + TOOLBOX_ICONS * TOOLBOX_ICON_PX + (TOOLBOX_ICONS - 1) * TOOLBOX_GAP_PX + 24;
 
 /** What the graph page knows when it redraws; everything the chart shows derives from it. */
 export interface GraphChartState {
@@ -46,6 +62,8 @@ export interface GraphChartState {
   xRangeMs: number | undefined;
   /** Historical mode: date-aware labels and day-boundary lines when the data spans days. */
   detectMultiDay: boolean;
+  /** The chart's width in px, which bounds the legend. */
+  chartWidth: number;
 }
 
 /**
@@ -56,14 +74,16 @@ export function baseGraphChartOption(): GraphChartOption {
   return {
     animation: false,
     backgroundColor: 'transparent',
-    textStyle: { color: TEXT_COLOR },
+    color: SERIES_COLORS,
+    textStyle: { color: TEXT_COLOR, fontFamily: FONT_FAMILY },
     grid: { left: 16, right: 16, top: 56, bottom: 16 },
     legend: {
       type: 'scroll',
       top: 0,
-      // Leave the top-right corner to the toolbox
-      left: 16,
-      right: 140,
+      // Its width, which leaves the top-right corner to the toolbox, comes with each redraw: ECharts ignores a
+      // legend's `right` when `left` is set, and a width that tracks the toolbox has to be in px
+      left: LEGEND_LEFT_PX,
+      padding: LEGEND_PADDING_PX,
       textStyle: { color: TEXT_COLOR, fontSize: 15 },
       pageTextStyle: { color: TEXT_COLOR }
     },
@@ -72,10 +92,16 @@ export function baseGraphChartOption(): GraphChartOption {
       confine: true,
       transitionDuration: 0,
       axisPointer: { type: 'line', animation: false },
-      formatter: tooltipFormatter
+      formatter: tooltipFormatter,
+      // An HTML tooltip doesn't take the global textStyle's font
+      textStyle: { fontFamily: FONT_FAMILY }
     },
     toolbox: {
-      right: 16,
+      right: TOOLBOX_RIGHT_PX,
+      // Centres the icons on the legend's row, ending them at the plot's right edge
+      padding: [2, 0],
+      itemSize: TOOLBOX_ICON_PX,
+      itemGap: TOOLBOX_GAP_PX,
       feature: {
         dataZoom: { yAxisIndex: 'none' },
         restore: {},
@@ -127,9 +153,13 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
   // Left out otherwise, so replaceMerge removes the lines of a range that no longer spans days
   if (isMultiDay) series.push(dayBoundarySeries(span!));
   return {
+    legend: { width: Math.max(0, state.chartWidth - LEGEND_LEFT_PX - 2 * LEGEND_PADDING_PX - TOOLBOX_RESERVE_PX) },
     xAxis: {
       // null clears a previous window so the axis fits all data again
       min: windowStart ?? null,
+      // With a fixed min, ECharts' time scale puts about twice as many labels on the axis, so halve it to keep about
+      // 6 labels live, as paused and in historical mode
+      splitNumber: windowStart === undefined ? 6 : 3,
       axisLabel: { formatter: isMultiDay ? multiDayLabel : singleDayLabel }
     } as XAxisOption,
     yAxis,
@@ -149,8 +179,10 @@ export function buildMultiYAxes(labels: string[]): YAxisOption[] {
     nameTextStyle: { color: 'grey', fontSize: 20, fontWeight: 'bold' },
     position: index % 2 === 0 ? 'left' : 'right',
     offset: Math.floor(index / 2) * Y_AXIS_OFFSET_PX,
-    // Only the first axis draws grid lines; one set per axis would cross-hatch the chart
-    splitLine: { show: index === 0 }
+    // Only the first axis draws grid lines; one set per axis would cross-hatch the chart, so the others put their
+    // ticks on its lines
+    splitLine: { show: index === 0 },
+    alignTicks: index > 0
   }));
 }
 
@@ -252,7 +284,10 @@ interface TooltipParam {
   value?: unknown;
 }
 
-/** Hovered time, then each series' nearest value at it. */
+/**
+ * Hovered time, then the value of each series ECharts passes. On a time axis it passes only the series whose nearest
+ * point is nearest the cursor, so a topic sampled at other times is left out, as in develop's `shared: false` tooltip.
+ */
 export function tooltipFormatter(params: TooltipParam | TooltipParam[]): string {
   const items = Array.isArray(params) ? params : [params];
   const first = items[0]?.value;

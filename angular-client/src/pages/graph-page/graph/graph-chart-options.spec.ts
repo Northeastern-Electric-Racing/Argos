@@ -1,4 +1,5 @@
 import {
+  baseGraphChartOption,
   buildMultiYAxes,
   DAY_BOUNDARIES_ID,
   DAY_MS,
@@ -12,6 +13,20 @@ import {
 
 type AnyRecord = Record<string, unknown>;
 
+/** WCAG relative luminance of a #rrggbb colour. */
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 function state(overrides: Partial<GraphChartState> = {}): GraphChartState {
   return {
     data: new Map<string, Point[]>(),
@@ -20,11 +35,29 @@ function state(overrides: Partial<GraphChartState> = {}): GraphChartState {
     yMax: null,
     xRangeMs: undefined,
     detectMultiDay: false,
+    chartWidth: 1000,
     ...overrides
   };
 }
 
 describe('graph chart options', () => {
+  describe('baseGraphChartOption', () => {
+    it("draws every series in a colour that stands out (3:1, WCAG 1.4.11) on the page's #101010", () => {
+      const colors = baseGraphChartOption()['color'] as string[];
+
+      expect(colors.length).toBeGreaterThan(0);
+      colors.forEach((c) => expect(contrast(c, '#101010')).withContext(c).toBeGreaterThanOrEqual(3));
+    });
+
+    it("uses the app's Roboto for chart text and the tooltip", () => {
+      const option = baseGraphChartOption() as AnyRecord;
+
+      expect((option['textStyle'] as AnyRecord)['fontFamily']).toContain('Roboto');
+      const tooltip = option['tooltip'] as AnyRecord;
+      expect((tooltip['textStyle'] as AnyRecord)['fontFamily']).toContain('Roboto');
+    });
+  });
+
   describe('buildMultiYAxes', () => {
     it('builds one y-axis per topic, named without the value index', () => {
       const axes = buildMultiYAxes(['BMS/Pack/Voltage 0', 'BMS/Pack/Current 0']) as AnyRecord[];
@@ -38,6 +71,12 @@ describe('graph chart options', () => {
 
       expect(axes.map((a) => a['position'])).toEqual(['left', 'right', 'left', 'right']);
       expect(axes.map((a) => a['offset'])).toEqual([0, 0, 80, 80]);
+    });
+
+    it("lines every axis's ticks up with the first axis's grid lines", () => {
+      const axes = buildMultiYAxes(['A 0', 'B 0', 'C 0']) as AnyRecord[];
+
+      expect(axes.map((a) => a['alignTicks'])).toEqual([false, true, true]);
     });
   });
 
@@ -106,6 +145,28 @@ describe('graph chart options', () => {
         [3000, 3],
         [5000, 5]
       ]);
+    });
+
+    it('labels a live window as sparsely as a paused or historical one (about 6 labels)', () => {
+      // With a fixed min, ECharts' time scale puts about twice splitNumber labels on the axis
+      expect((graphChartUpdate(state({ data, xRangeMs: 500 })).xAxis as AnyRecord)['splitNumber']).toBe(3);
+      expect((graphChartUpdate(state({ data })).xAxis as AnyRecord)['splitNumber']).toBe(6);
+    });
+
+    it('bounds the legend by the chart width so its pager stops short of the toolbox', () => {
+      // ECharts drops a legend's `right` when `left` is set, so only a width bounds it
+      expect((baseGraphChartOption().legend as AnyRecord)['right']).toBeUndefined();
+      const legend = graphChartUpdate(state({ data, chartWidth: 1000 })).legend as AnyRecord;
+      const base = baseGraphChartOption();
+      const baseLegend = base.legend as AnyRecord;
+      const toolbox = base.toolbox as AnyRecord;
+      const toolboxLeft =
+        1000 - (toolbox['right'] as number) - 4 * (toolbox['itemSize'] as number) - 3 * (toolbox['itemGap'] as number);
+      const legendRight =
+        (baseLegend['left'] as number) + 2 * (baseLegend['padding'] as number) + (legend['width'] as number);
+
+      expect(legendRight).toBeLessThan(toolboxLeft);
+      expect(legendRight).toBeGreaterThan(toolboxLeft - 48);
     });
 
     it('clears the window so the axis fits all data when there is no range', () => {
