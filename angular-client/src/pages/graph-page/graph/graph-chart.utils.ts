@@ -82,26 +82,42 @@ export function seriesAxisOptions(
   };
 }
 
-export const singleDayLabel = (ms: number | Date): string => new Date(+ms).toLocaleTimeString('en-US', { hour12: false });
+// One cached formatter each: dygraphs formats every tick on every redraw, and toLocale*String builds a new
+// formatter per call. In the hour repeated when clocks fall back, dygraphs' date ticker generates an hour of
+// off-screen ticks per redraw, which made each redraw about 20x slower.
+const TIME_FMT = new Intl.DateTimeFormat('en-US', {
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
+const DAY_FMT = new Intl.DateTimeFormat('en-US', { month: 'numeric', day: 'numeric' });
+const HOUR_MINUTE_FMT = new Intl.DateTimeFormat('en-US', { hourCycle: 'h23', hour: '2-digit', minute: '2-digit' });
+const DAY_BOUNDARY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const HOVER_FMT = new Intl.DateTimeFormat('en-US', {
+  year: '2-digit',
+  month: 'numeric',
+  day: 'numeric',
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
 
-export const multiDayLabel = (ms: number | Date): string => {
-  const d = new Date(+ms);
-  const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-  const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-  return `${date} ${time}`;
+/**
+ * A tick within one day, e.g. 13:04:05. On a window of a few seconds dygraphs puts ticks 500 ms apart or closer,
+ * so a tick between whole seconds also shows its fraction (13:04:05.5); whole seconds alone would repeat.
+ */
+export const singleDayLabel = (ms: number | Date): string => {
+  const t = Math.round(+ms);
+  const time = TIME_FMT.format(t);
+  const fraction = t % 1000;
+  return fraction ? `${time}.${String(fraction).padStart(3, '0').replace(/0+$/, '')}` : time;
 };
 
-export const dayBoundaryLabel = (ms: number): string =>
-  new Date(ms).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+export const multiDayLabel = (ms: number | Date): string => `${DAY_FMT.format(+ms)} ${HOUR_MINUTE_FMT.format(+ms)}`;
+
+export const dayBoundaryLabel = (ms: number): string => DAY_BOUNDARY_FMT.format(ms);
 
 /** Hover value for the x-axis, e.g. 1/2/26, 13:04:05. */
-export const hoverTimeLabel = (ms: number): string =>
-  new Date(ms).toLocaleString('en-US', {
-    year: '2-digit',
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
+export const hoverTimeLabel = (ms: number): string => HOVER_FMT.format(ms);

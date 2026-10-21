@@ -1,4 +1,13 @@
-import { dayBoundaries, seriesAxisOptions, toDygraphRows, topicTitle } from './graph-chart.utils';
+import {
+  dayBoundaries,
+  dayBoundaryLabel,
+  hoverTimeLabel,
+  multiDayLabel,
+  seriesAxisOptions,
+  singleDayLabel,
+  toDygraphRows,
+  topicTitle
+} from './graph-chart.utils';
 
 describe('graph-chart utils', () => {
   describe('toDygraphRows', () => {
@@ -104,6 +113,37 @@ describe('graph-chart utils', () => {
 
     it('keeps the index of later values of a multi-value topic', () => {
       expect(topicTitle('BMS/Pack/Voltage 1')).toBe('BMS/Pack/Voltage 1');
+    });
+  });
+
+  describe('time labels', () => {
+    const afternoon = new Date(2026, 0, 2, 13, 4, 5);
+
+    it('labels a single-day tick with the 24-hour time, starting at 00 after midnight', () => {
+      expect(singleDayLabel(afternoon)).toBe('13:04:05');
+      expect(singleDayLabel(new Date(2026, 0, 2, 0, 0, 5).getTime())).toBe('00:00:05');
+    });
+
+    it('adds the fraction of a second only to a tick between whole seconds', () => {
+      // dygraphs puts ticks every 500 ms or less on a window of a few seconds; whole seconds alone would repeat.
+      expect(singleDayLabel(new Date(2026, 0, 1, 9, 0, 1, 500))).toBe('09:00:01.5');
+      expect(singleDayLabel(new Date(2026, 0, 1, 9, 0, 1, 250))).toBe('09:00:01.25');
+      expect(singleDayLabel(new Date(2026, 0, 1, 9, 0, 1, 5))).toBe('09:00:01.005');
+      expect(singleDayLabel(new Date(2026, 0, 1, 9, 0, 1))).toBe('09:00:01');
+    });
+
+    it('labels a multi-day tick with the date and the 24-hour time', () => {
+      expect(multiDayLabel(afternoon)).toBe('1/2 13:04');
+      expect(multiDayLabel(new Date(2026, 0, 2, 0, 30).getTime())).toBe('1/2 00:30');
+    });
+
+    it('labels a day boundary with the weekday and date', () => {
+      expect(dayBoundaryLabel(afternoon.getTime())).toBe('Fri, Jan 2');
+    });
+
+    it('shows the full date and time of a hovered point', () => {
+      expect(hoverTimeLabel(afternoon.getTime())).toBe('1/2/26, 13:04:05');
+      expect(hoverTimeLabel(new Date(2026, 0, 2, 0, 0, 5).getTime())).toBe('1/2/26, 00:00:05');
     });
   });
 });
