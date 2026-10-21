@@ -53,6 +53,9 @@
 
 .content-div {
   flex: 1 1 auto;
+  /* Without it the flex item can't shrink below the canvas's current height, so Chart.js never gets
+     a smaller box to resize into and the x-axis and legend end up below the fold */
+  min-height: 0;
   display: flex;
   flex-flow: row;
   width: 100%;
@@ -69,7 +72,7 @@
   min-height: 0;
   overflow: hidden;
   padding-right: 16px;
-  padding-bottom: 40px; /* reserve space for ApexCharts legend when multiple topics are plotted */
+  padding-bottom: 40px; /* bottom gutter under the chart (Chart.js draws its legend inside the canvas) */
 }
 
 .mobile-sidebar {
