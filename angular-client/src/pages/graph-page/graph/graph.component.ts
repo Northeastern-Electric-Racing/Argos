@@ -5,10 +5,12 @@ import {
   DestroyRef,
   ElementRef,
   OnDestroy,
+  computed,
   effect,
   inject,
   input,
   signal,
+  untracked,
   viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -31,6 +33,8 @@ import {
 } from './graph-chart.utils';
 
 const DAY_BOUNDARY_COLOR = '#8fcadd';
+/** Half the x window around data at a single instant, which dygraphs would draw with no x ticks. */
+const SINGLE_INSTANT_PAD_MS = 30_000;
 
 type YRange = [number, number];
 
@@ -77,7 +81,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   timeRangeMs: number | undefined = undefined;
   /** Set while the user is zoomed in; live updates then hold the x window until a double-click resets it. */
   private userZoomed = false;
-  /** The x window render last applied for live data (null when it fits all data). */
+  /** The x window render last applied (null when it fits all data, or while paused). */
   private appliedLiveWindow: [number, number] | null = null;
   /** The x window of the user's last x zoom, to tell a later vertical drag (x unchanged) from a new x zoom. */
   private zoomedXWindow: [number, number] | null = null;
@@ -94,6 +98,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   readonly zoomed = signal(false);
   /** Whether no series has data yet, which shows a hint in place of an empty axis. */
   readonly empty = signal(true);
+  /** Whether any topic is selected, which picks the empty hint's text. */
+  readonly hasTopics = computed(() => this.valuesSubject().length > 0);
 
   constructor() {
     effect(() => {
@@ -132,11 +138,17 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       // End the subscriptions made for the previous topics
       this.valuesChange$.next();
 
-      this.valuesSubject().forEach(({ label, updates }) => {
-        updates
-          .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
-          .subscribe((data) => this.graphInfoCallback({ label, data }));
-      });
+      const values = this.valuesSubject();
+      // A subject replays its last value on subscribe, which runs graphInfoCallback here and would make this effect
+      // track the signals it reads: pausing, or changing the mode or config, would then resubscribe and add that
+      // value again.
+      untracked(() =>
+        values.forEach(({ label, updates }) => {
+          updates
+            .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
+            .subscribe((data) => this.graphInfoCallback({ label, data }));
+        })
+      );
 
       this.updateChart();
     });
@@ -206,8 +218,9 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const labels = Array.from(this.data.keys());
     const rows = toDygraphRows(Array.from(this.data.values()));
+    // dygraphs draws no rows as one row holding only an x, and logs an error if there are series labels too.
+    const labels = rows.length > 0 ? Array.from(this.data.keys()) : [];
     this.empty.set(rows.length === 0);
 
     // Multi-day historical ranges get date-aware labels and per-day boundary lines.
@@ -248,21 +261,25 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     const { chart } = this;
     if (!chart) return;
     if (!chart.isZoomed()) {
-      // A double-click (resetZoom) clears the x window and also drops the configured y range,
-      // so redraw to put both back.
+      // A double-click (resetZoom) clears the x window and also drops the configured y range: put the y range back
+      // now (render is skipped while paused), and redraw for the live window.
       this.userZoomed = false;
       this.userYRanges = null;
       this.syncZoomed();
+      chart.updateOptions({ axes: this.yAxesOptions(this.graphConfig()) });
       this.updateChart();
       return;
     }
     // A vertical drag zooms y only and reports the x window it started from: the live window in real time, the
-    // user's x zoom while one is held, or none in historical mode. Keep its y ranges (dygraphs drops them on the
-    // next redraw) and keep following live data, rather than freeze as if the user had zoomed in on x.
+    // user's x zoom while one is held, or the data's extremes when fitting all data. Keep its y ranges (dygraphs
+    // drops them on the next redraw) and keep following live data, rather than freeze as if the user had zoomed in on x.
     const before = this.userZoomed ? this.zoomedXWindow : this.appliedLiveWindow;
     const xUnchanged = before ? before[0] === minX && before[1] === maxX : !chart.isZoomed('x');
     if (xUnchanged) {
       this.userYRanges = yRanges.map(([low, high]): YRange => [low, high]);
+      // Into the options at once, without a redraw: a resize (as when the Reset zoom button appears and the chart
+      // shrinks) re-reads the y ranges from there, which would undo the drag until the next render.
+      chart.updateOptions({ axes: this.yAxesOptions(this.graphConfig()) }, true);
       this.syncZoomed();
       return;
     }
@@ -310,14 +327,21 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     g.setSelection(row, this.hover.seriesName);
   };
 
-  /** Only real-time mode constrains the x window; historical mode fits all data (null). */
+  /**
+   * Real-time mode shows the latest range of data; otherwise the window fits all data (null). Data at a single
+   * instant has a zero-width range, which dygraphs draws with no x ticks, so it gets a minute around it instead.
+   */
   private liveWindow(rows: DygraphRow[]): [number, number] | null {
-    if (!this.realTime() || rows.length === 0) return null;
-    const config = this.graphConfig();
-    const range = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
-    if (range === undefined) return null;
+    if (rows.length === 0) return null;
+    const [[firstX]] = rows;
     const [latestX] = rows[rows.length - 1];
-    return [latestX - range, latestX];
+    if (this.realTime()) {
+      const config = this.graphConfig();
+      const range = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
+      if (range !== undefined) return [latestX - range, latestX];
+    }
+    if (firstX === latestX) return [latestX - SINGLE_INSTANT_PAD_MS, latestX + SINGLE_INSTANT_PAD_MS];
+    return null;
   }
 
   private drawDayBoundaries = (ctx: CanvasRenderingContext2D, area: Readonly<dygraphs.Area>, g: Readonly<Dygraph>) => {
@@ -403,6 +427,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   resetRange() {
     this.timeRangeMs = undefined;
     this.userZoomed = false;
+    // The chart now fits all data, so a vertical drag before the next render reports the data's extremes as x.
+    this.appliedLiveWindow = null;
     this.syncZoomed();
     this.chart?.updateOptions({ dateWindow: null });
     this.updateChart();

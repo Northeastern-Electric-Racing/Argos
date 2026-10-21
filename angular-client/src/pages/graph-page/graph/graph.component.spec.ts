@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
+import Dygraph from 'dygraphs';
 import CustomGraphComponent from './graph.component';
-import { SERIES_COLORS, hoverTimeLabel } from './graph-chart.utils';
+import { SERIES_COLORS, hoverTimeLabel, multiDayLabel, singleDayLabel } from './graph-chart.utils';
 
 type GraphConfig = {
   maxPoints: number;
@@ -15,6 +16,13 @@ type GraphConfig = {
 const baseConfig: GraphConfig = { maxPoints: 1000, yMin: null, yMax: null, rangeMode: 'time', timeRangeMs: 10_000 };
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+/** dygraphs' own handler for a vertical drag (pixel rows, top then bottom). */
+const dragY = (chart: Dygraph, top: number, bottom: number) =>
+  (chart as unknown as { doZoomY_(lowY: number, highY: number): void }).doZoomY_(
+    chart.toDomYCoord(top),
+    chart.toDomYCoord(bottom)
+  );
 
 function topic(label: string, points: GraphData[] = []): ObservableGraphInfo {
   return { label, updates: new BehaviorSubject<GraphData[][]>([points]) };
@@ -141,11 +149,7 @@ describe('CustomGraphComponent (dygraphs)', () => {
     const chart = component.chart!;
     expect(chart.isZoomed('y')).toBeFalse();
 
-    // dygraphs' own handler for a vertical drag (pixel rows, top then bottom).
-    (chart as unknown as { doZoomY_(lowY: number, highY: number): void }).doZoomY_(
-      chart.toDomYCoord(1.8),
-      chart.toDomYCoord(1.2)
-    );
+    dragY(chart, 1.8, 1.2);
     const zoomed = chart.yAxisRange();
     speed.updates.next([[{ x: 31_000, y: 3 }]]);
     await nextFrame();
@@ -156,6 +160,51 @@ describe('CustomGraphComponent (dygraphs)', () => {
     chart.resetZoom();
     await nextFrame();
     expect(chart.yAxisRange()).not.toEqual(zoomed);
+  });
+
+  it('keeps a vertical drag made while paused, through Play', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
+    await setup({ values: [speed], realTime: true, config: { timeRangeMs: 10_000 } });
+    const chart = component.chart!;
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+
+    dragY(chart, 1.8, 1.2);
+    const zoomed = chart.yAxisRange();
+    expect(component.zoomed()).toBeTrue();
+
+    fixture.componentRef.setInput('isPaused', false);
+    fixture.detectChanges();
+    speed.updates.next([[{ x: 31_000, y: 3 }]]);
+    await nextFrame();
+
+    expect(chart.xAxisRange()).toEqual([21_000, 31_000]);
+    expect(chart.yAxisRange()).toEqual(zoomed);
+  });
+
+  it('keeps a vertical drag through a resize, and drops it on reset', async () => {
+    // A resize (the Reset zoom button appearing shrinks the chart) makes dygraphs re-read its y ranges from the options.
+    await setup({
+      values: [
+        topic('VCU/CarState/speed', [
+          { x: 0, y: 1 },
+          { x: 30_000, y: 2 }
+        ])
+      ]
+    });
+    const chart = component.chart!;
+    dragY(chart, 1.8, 1.2);
+    const zoomed = chart.yAxisRange();
+
+    chart.resize(600, 350);
+    expect(chart.yAxisRange()).toEqual(zoomed);
+
+    component.resetZoom();
+    chart.resize(600, 400);
+    expect(chart.isZoomed('y')).toBeFalse();
   });
 
   it('keeps the hovered point in the legend, at full precision, across live redraws', async () => {
@@ -189,7 +238,7 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(legend.textContent).not.toContain('1.2345');
   });
 
-  it('drops a zoom window when the mode or topics change', async () => {
+  it('drops a zoom window when the mode changes', async () => {
     const speed = topic('VCU/CarState/speed', [
       { x: 0, y: 1 },
       { x: 30_000, y: 2 }
@@ -200,17 +249,41 @@ describe('CustomGraphComponent (dygraphs)', () => {
     chart.getOption('zoomCallback')(22_000, 24_000, chart.yAxisRanges());
 
     fixture.componentRef.setInput('realTime', false);
+    fixture.detectChanges();
+    speed.updates.next([
+      [
+        { x: 100_000, y: 1 },
+        { x: 200_000, y: 2 }
+      ]
+    ]);
+    await nextFrame();
+
+    expect(chart.isZoomed('x')).toBeFalse();
+    expect(chart.xAxisRange()).toEqual([100_000, 200_000]);
+    expect(component.zoomed()).toBeFalse();
+  });
+
+  it('drops a zoom window when the topics change', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: 0, y: 1 },
+      { x: 30_000, y: 2 }
+    ]);
+    await setup({ values: [speed], realTime: true, config: { timeRangeMs: 10_000 } });
+    const chart = component.chart!;
+    chart.updateOptions({ dateWindow: [22_000, 24_000] });
+    chart.getOption('zoomCallback')(22_000, 24_000, chart.yAxisRanges());
+
     fixture.componentRef.setInput('valuesSubject', [
       topic('VCU/CarState/speed', [
         { x: 100_000, y: 1 },
-        { x: 200_000, y: 2 }
+        { x: 130_000, y: 2 }
       ])
     ]);
     fixture.detectChanges();
     await nextFrame();
 
-    expect(chart.isZoomed('x')).toBeFalse();
-    expect(chart.xAxisRange()).toEqual([100_000, 200_000]);
+    expect(chart.xAxisRange()).toEqual([120_000, 130_000]);
+    expect(component.zoomed()).toBeFalse();
   });
 
   it('fits all data in historical mode', async () => {
@@ -224,6 +297,31 @@ describe('CustomGraphComponent (dygraphs)', () => {
     });
 
     expect(component.chart!.isZoomed('x')).toBeFalse();
+  });
+
+  it('switches to date labels and day boundary lines on a multi-day historical range', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: new Date(2026, 0, 1, 12).getTime(), y: 1 },
+      { x: new Date(2026, 0, 1, 18).getTime(), y: 2 }
+    ]);
+    await setup({ values: [speed] });
+    // getOptionForAxis is public dygraphs API that @types/dygraphs leaves out.
+    const chart = component.chart! as unknown as Dygraph & { getOptionForAxis(name: string, axis: 'x'): unknown };
+    const boundaries = () => (component as unknown as { dayBoundaryTimes: number[] }).dayBoundaryTimes;
+    expect(chart.getOptionForAxis('axisLabelFormatter', 'x')).toBe(singleDayLabel);
+    expect(boundaries()).toEqual([]);
+
+    speed.updates.next([[{ x: new Date(2026, 0, 3, 12).getTime(), y: 3 }]]);
+    await nextFrame();
+
+    expect(chart.getOptionForAxis('axisLabelFormatter', 'x')).toBe(multiDayLabel);
+    expect(boundaries()).toEqual([new Date(2026, 0, 2).getTime(), new Date(2026, 0, 3).getTime()]);
+  });
+
+  it('centres a single historical point in a one-minute window, so the x axis has labels', async () => {
+    await setup({ values: [topic('VCU/CarState/speed', [{ x: 100_000, y: 1 }])] });
+
+    expect(component.chart!.xAxisRange()).toEqual([70_000, 130_000]);
   });
 
   it('applies the configured y range, leaving an unset bound automatic', async () => {
@@ -312,6 +410,12 @@ describe('CustomGraphComponent (dygraphs)', () => {
     const hint = () => fixture.nativeElement.querySelector('.empty-message') as HTMLElement | null;
     expect(hint()?.textContent).toContain('Select a topic');
 
+    fixture.componentRef.setInput('valuesSubject', [topic('A')]);
+    fixture.detectChanges();
+    await nextFrame();
+    fixture.detectChanges();
+    expect(hint()?.textContent).toContain('No data for the selected topics');
+
     fixture.componentRef.setInput('valuesSubject', [topic('A', [{ x: 1, y: 1 }])]);
     fixture.detectChanges();
     await nextFrame();
@@ -323,12 +427,12 @@ describe('CustomGraphComponent (dygraphs)', () => {
     await setup({ values: [topic('VCU/CarState/speed', [{ x: 0, y: 1 }])] });
     expect(component.chart!.getLabels()!.length).toBe(2);
 
-    // Clearing drops the data; with the same BehaviorSubjects, resubscribing replays their last value.
-    fixture.componentRef.setInput('valuesSubject', []);
+    // Only clearGraph changes, so the topics' subscriptions stay and nothing replays their data.
     fixture.componentRef.setInput('clearGraph', 1);
     fixture.detectChanges();
     await nextFrame();
 
+    expect(component.empty()).toBeTrue();
     expect(component.chart!.getLabels()).toEqual(['Time']);
   });
 });

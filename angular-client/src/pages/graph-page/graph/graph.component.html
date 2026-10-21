@@ -6,7 +6,7 @@
   aria-label="Graph of the selected topics over time"
 ></div>
 @if (empty()) {
-  <p class="empty-message">Select a topic to graph</p>
+  <p class="empty-message">{{ hasTopics() ? 'No data for the selected topics' : 'Select a topic to graph' }}</p>
 }
 <div class="footer">
   <div #legendContainer class="legend-container" aria-live="off"></div>
