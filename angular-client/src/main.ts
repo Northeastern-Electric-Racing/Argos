@@ -21,13 +21,14 @@ import { appIcons } from './app/nz-icons';
 bootstrapApplication(AppContextComponent, {
   providers: [
     provideRouter(routes),
-    // NzModalService isn't providedIn root; one app-wide instance, as PrimeNG's DialogService was.
+    // NzModalService isn't providedIn root, so one app-wide instance is provided here.
     importProvidersFrom(BrowserModule, NzModalModule),
     ChipFaultPipe,
     provideHttpClient(withInterceptorsFromDi()),
     provideNzConfig(nzConfig),
     provideNzI18n(en_US),
-    provideNzDateFnsAdapter(),
+    // Weeks start on Sunday, as in the US locale (the adapter defaults to Monday without a date-fns locale).
+    provideNzDateFnsAdapter({ firstDayOfWeek: 0 }),
     provideNzIcons(appIcons),
     provideClientHydration(withNoIncrementalHydration()),
     provideZonelessChangeDetection()

@@ -68,8 +68,9 @@
       @if (customMode() === 'last-x') {
         <div class="mode-body">
           <div class="field-row">
-            <label class="popover-label">Hours</label>
+            <label class="popover-label" for="custom-range-hours">Hours</label>
             <nz-input-number
+              nzId="custom-range-hours"
               [ngModel]="customHours()"
               (ngModelChange)="customHours.set($event)"
               [nzMin]="0"
@@ -79,8 +80,9 @@
             />
           </div>
           <div class="field-row">
-            <label class="popover-label">Minutes</label>
+            <label class="popover-label" for="custom-range-minutes">Minutes</label>
             <nz-input-number
+              nzId="custom-range-minutes"
               [ngModel]="customMinutes()"
               (ngModelChange)="customMinutes.set($event)"
               [nzMin]="0"
@@ -99,8 +101,9 @@
       } @else {
         <div class="mode-body">
           <div class="field-row">
-            <label class="popover-label">From</label>
+            <label class="popover-label" for="custom-range-from">From</label>
             <nz-date-picker
+              nzId="custom-range-from"
               [ngModel]="customFromDate()"
               (ngModelChange)="customFromDate.set($event)"
               nzShowTime
@@ -110,8 +113,9 @@
             />
           </div>
           <div class="field-row">
-            <label class="popover-label">To</label>
+            <label class="popover-label" for="custom-range-to">To</label>
             <nz-date-picker
+              nzId="custom-range-to"
               [ngModel]="customToDate()"
               (ngModelChange)="customToDate.set($event)"
               nzShowTime

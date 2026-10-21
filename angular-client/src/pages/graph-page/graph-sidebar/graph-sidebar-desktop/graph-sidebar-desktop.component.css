@@ -54,28 +54,6 @@
   cursor: pointer;
 }
 
-.tree-node-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 28px;
-}
-
-/* One line per row: drop the typography paragraphs' default margins */
-.tree-node-container ::ng-deep p {
-  margin: 0;
-}
-
 .tree-scroll {
   overflow: auto;
-}
-
-/* Ant tree on the sidebar's own background, with the live value pushed to the right edge. */
-nz-tree {
-  background: transparent;
-}
-
-:host ::ng-deep .ant-tree-node-content-wrapper {
-  min-width: 0;
 }

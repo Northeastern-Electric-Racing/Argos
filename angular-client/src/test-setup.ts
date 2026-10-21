@@ -19,7 +19,7 @@ export default [
   provideZonelessChangeDetection(),
   provideNzConfig(nzConfig),
   provideNzI18n(en_US),
-  provideNzDateFnsAdapter(),
+  provideNzDateFnsAdapter({ firstDayOfWeek: 0 }),
   provideNzIcons(appIcons),
   importProvidersFrom(NzModalModule),
   ChipFaultPipe

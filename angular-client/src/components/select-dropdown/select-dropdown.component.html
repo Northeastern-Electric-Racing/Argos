@@ -1,5 +1,7 @@
+<label class="visually-hidden" [for]="inputId">{{ accessibleName() }}</label>
 <nz-select
   class="small-grey-select"
+  [nzId]="inputId"
   [ngModel]="selectedOption?.name"
   (ngModelChange)="handleChangedOption($event)"
   [nzPlaceHolder]="placeholder()"

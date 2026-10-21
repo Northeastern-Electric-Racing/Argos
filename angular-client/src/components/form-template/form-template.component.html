@@ -1,30 +1,21 @@
-<!-- dynamic-form.component.html -->
-<form class="form" [formGroup]="form">
+<form nz-form nzLayout="vertical" class="form" [formGroup]="form">
   @for (field of fields(); track field) {
-    <div class="flex flex-column gap-1">
+    <nz-form-item>
       @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+        <nz-form-label [nzFor]="'form-' + field.name" nzRequired>{{ field.label }}</nz-form-label>
       }
-      <input
-        [attr.placeholder]="field.placeholder"
-        [formControlName]="field.name"
-        [type]="field.type"
-        [value]="'boston'"
-        nz-input
-        class="form-control w-full"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
-        }"
-      />
-
-      <!-- Error Message -->
-      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
-        <div class="error-msg">
-          {{ getErrorMessage(field) }}
-        </div>
-      }
-    </div>
+      <nz-form-control [nzErrorTip]="errorTip">
+        <input
+          [id]="'form-' + field.name"
+          [attr.placeholder]="field.placeholder"
+          [formControlName]="field.name"
+          [type]="field.type"
+          [value]="'boston'"
+          nz-input
+        />
+        <ng-template #errorTip>{{ getErrorMessage(field) }}</ng-template>
+      </nz-form-control>
+    </nz-form-item>
   }
 
   <button nz-button nzType="primary" type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>

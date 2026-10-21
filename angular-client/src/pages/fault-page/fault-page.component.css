@@ -22,8 +22,3 @@
 .fault-row {
   cursor: pointer;
 }
-
-/* Striped rows, as before (nz-table has no striping option). :where keeps this below Ant's row hover. */
-:host ::ng-deep .ant-table-tbody > tr:where(.fault-row:nth-child(even)) > td {
-  background: var(--color-background-info);
-}

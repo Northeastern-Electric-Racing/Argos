@@ -16,11 +16,6 @@
   min-height: 44px;
 }
 
-/* One line per row: drop the typography paragraphs' default margins */
-.tree-node-container ::ng-deep p {
-  margin: 0;
-}
-
 .toggle-btn:active {
   background-color: #d63535;
 }
@@ -71,29 +66,11 @@
   cursor: pointer;
 }
 
-.tree-node-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 44px;
-}
-
 .tree-scroll {
   overflow: auto;
 }
 
-/* Ant tree on the sidebar's own background, with the live value pushed to the right edge. */
-nz-tree {
-  background: transparent;
-}
-
-/* The drawer renders outside :host, so these anchor on nz-tree (an element of this template) instead. */
-nz-tree ::ng-deep .ant-tree-node-content-wrapper {
-  min-width: 0;
-}
-
-/* Rows are taller than Ant's default here; centre the expand caret on the label instead of stretching it to the top. */
-nz-tree ::ng-deep .ant-tree-switcher {
-  align-self: center;
+/* Taller, touch-sized topic rows in the drawer */
+topic-tree {
+  --topic-row-height: 44px;
 }

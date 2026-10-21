@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
+import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { revalidateOnTouch } from 'src/utils/form.utils';
 
 export interface EditRuleResult {
   expr: string;
@@ -12,7 +14,7 @@ export interface EditRuleResult {
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, NzInputModule, NzButtonModule],
+  imports: [ReactiveFormsModule, NzFormModule, NzInputModule, NzButtonModule],
   templateUrl: './edit-rule-dialog.component.html',
   styleUrls: ['./edit-rule-dialog.component.css']
 })
@@ -20,11 +22,16 @@ export class EditRuleDialogComponent {
   private ref = inject(NzModalRef);
   private data = inject(NZ_MODAL_DATA);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   form = this.fb.group({
     expr: [this.data.expr as string, Validators.required],
     debounce_time: [this.data.debounce_time as number, [Validators.required, Validators.min(0)]]
   });
+
+  constructor() {
+    revalidateOnTouch(this.form, this.destroyRef);
+  }
 
   onSubmit(): void {
     if (this.form.invalid) {

@@ -44,7 +44,12 @@
           <td>-</td>
         }
         <td>
-          <nz-switch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
+          <label class="visually-hidden" [for]="'subscribe-rule-' + $index">Subscribed to rule {{ rule.id }}</label>
+          <nz-switch
+            [nzId]="'subscribe-rule-' + $index"
+            [ngModel]="rule.is_subscribed"
+            (ngModelChange)="onToggleSubscription(rule, $event)"
+          />
         </td>
         <td>
           <div class="action-icons">

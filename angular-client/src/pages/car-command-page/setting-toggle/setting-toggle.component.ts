@@ -4,6 +4,8 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { FormsModule } from '@angular/forms';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
+let nextId = 0;
+
 @Component({
   selector: 'setting-toggle',
   templateUrl: './setting-toggle.component.html',
@@ -14,4 +16,5 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 export default class SettingToggleComponent {
   label = input.required<string>();
   value = model<boolean | undefined>();
+  readonly switchId = `setting-toggle-${nextId++}`;
 }

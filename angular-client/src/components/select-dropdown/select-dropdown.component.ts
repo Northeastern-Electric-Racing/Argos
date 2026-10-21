@@ -1,4 +1,4 @@
-import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, input, ChangeDetectionStrategy } from '@angular/core';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -11,6 +11,8 @@ export interface DropdownOption {
   name: string;
   function: () => void;
 }
+
+let nextId = 0;
 
 @Component({
   selector: 'select-dropdown',
@@ -30,6 +32,10 @@ export class SelectDropdownComponent {
   ]);
   placeholder = input<string>('placeholder');
   defaultValue = input<string | undefined>(undefined);
+  /** Accessible name for the select; defaults to the placeholder, which callers use as its caption. */
+  label = input<string | undefined>(undefined);
+  accessibleName = computed(() => this.label() ?? this.placeholder());
+  readonly inputId = `select-dropdown-${nextId++}`;
 
   selectedOption: DropdownOption | undefined;
 
@@ -53,7 +59,7 @@ export class SelectDropdownComponent {
     });
   }
 
-  // Options are keyed by name; ngModelChange only fires on user picks, as PrimeNG's onChange did.
+  // Options are keyed by name; ngModelChange only fires on user picks, not when defaultValue sets the model.
   handleChangedOption(name: string) {
     const option = this.options().find((o) => o.name === name);
     this.selectedOption = option;

@@ -5,10 +5,17 @@
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
-  <nz-collapse>
+  <nz-collapse (keydown.enter)="onHeaderKey($event)" (keydown.space)="onHeaderKey($event)">
     @for (node of nodeArray; track node.node) {
       <nz-collapse-panel [nzHeader]="node.node">
-        <nz-table #faultTable nzSize="small" [nzData]="node.data" [nzFrontPagination]="false" [nzShowPagination]="false">
+        <nz-table
+          #faultTable
+          class="argos-striped"
+          nzSize="small"
+          [nzData]="node.data"
+          [nzFrontPagination]="false"
+          [nzShowPagination]="false"
+        >
           <thead>
             <tr>
               <th>Name</th>

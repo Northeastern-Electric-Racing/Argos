@@ -1,4 +1,5 @@
 <hstack>
-  <typography variant="info-subtitle" [content]="label()" />
-  <nz-switch [(ngModel)]="value" />
+  <typography variant="info-subtitle" [content]="label()" aria-hidden="true" />
+  <label class="visually-hidden" [for]="switchId">{{ label() }}</label>
+  <nz-switch [nzId]="switchId" [(ngModel)]="value" />
 </hstack>

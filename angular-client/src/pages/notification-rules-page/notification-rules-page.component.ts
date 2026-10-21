@@ -109,11 +109,20 @@ export default class NotificationRulesPageComponent implements OnInit {
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.modal.confirm({
+      nzTitle: 'Delete Rules',
+      nzContent: `Delete ${selected.length} selected rule(s)?`,
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.removeRules(selected)
+    });
+  };
 
+  private removeRules = async (selected: ClientRule[]) => {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {

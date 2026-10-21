@@ -1,0 +1,31 @@
+<nz-tree-view
+  nzBlockNode
+  aria-label="Topics"
+  aria-multiselectable="true"
+  [nzDataSource]="data()"
+  [nzChildrenAccessor]="childrenAccessor"
+>
+  <nz-tree-node
+    *nzTreeNodeDef="let node"
+    nzTreeNodePadding
+    [nzExpandable]="!node.isLeaf"
+    [attr.aria-selected]="node.isLeaf ? isSelected(node) : null"
+    (activation)="activate(node)"
+  >
+    @if (node.isLeaf) {
+      <nz-tree-node-toggle nzTreeNodeNoopToggle aria-hidden="true" />
+    } @else {
+      <nz-tree-node-toggle aria-hidden="true">
+        <nz-icon nzType="caret-down" nzTreeNodeToggleRotateIcon />
+      </nz-tree-node-toggle>
+    }
+    <nz-tree-node-option [nzSelected]="isSelected(node)" (nzClick)="activate(node)">
+      <div class="tree-node-container">
+        <typography additionalStyles="padding: 0px;" [content]="node.title" variant="sidebar-label" />
+        @if (node.isLeaf) {
+          <typography [content]="node.data.displayValue()" variant="subheader" />
+        }
+      </div>
+    </nz-tree-node-option>
+  </nz-tree-node>
+</nz-tree-view>

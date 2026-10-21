@@ -1,22 +1,20 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="field">
-    <label for="edit-expr">Expression</label>
-    <input id="edit-expr" nz-input formControlName="expr" />
-    @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="error" role="alert">Expression is required</small>
-    }
-  </div>
+<form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <nz-form-item>
+    <nz-form-label nzFor="edit-expr">Expression</nz-form-label>
+    <nz-form-control nzErrorTip="Expression is required">
+      <input id="edit-expr" nz-input formControlName="expr" />
+    </nz-form-control>
+  </nz-form-item>
 
-  <div class="field">
-    <label for="edit-debounce">Debounce Time (seconds)</label>
-    <input id="edit-debounce" nz-input formControlName="debounce_time" type="number" />
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="error" role="alert">Debounce time is required</small>
-    }
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="error" role="alert">Must be 0 or greater</small>
-    }
-  </div>
+  <nz-form-item>
+    <nz-form-label nzFor="edit-debounce">Debounce Time (seconds)</nz-form-label>
+    <nz-form-control [nzErrorTip]="debounceError">
+      <input id="edit-debounce" nz-input formControlName="debounce_time" type="number" />
+      <ng-template #debounceError let-control>
+        {{ control.hasError('min') ? 'Must be 0 or greater' : 'Debounce time is required' }}
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item>
 
   <div class="button-row">
     <button nz-button nzType="text" type="button" (click)="onCancel()">Cancel</button>

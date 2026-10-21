@@ -152,9 +152,18 @@ export class RulesTableComponent implements OnInit {
     });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.modal.confirm({
+      nzTitle: 'Delete Rule',
+      nzContent: `Delete rule "${rule.id}"?`,
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.deleteRule(rule)
+    });
+  }
 
+  private async deleteRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {

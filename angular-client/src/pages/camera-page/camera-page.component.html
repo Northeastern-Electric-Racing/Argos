@@ -1,8 +1,10 @@
 @if (this.urlAvailable) {
   <div class="background">
     <div class="top-right">
+      <label class="visually-hidden" for="camera-video-select">Video</label>
       <nz-select
         class="video-select"
+        nzId="camera-video-select"
         [(ngModel)]="selectedVideoName"
         nzPlaceHolder="Select a Video"
         (ngModelChange)="onDropdownChange($event)"

@@ -8,6 +8,7 @@ import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NotificationLogService } from 'src/services/notification-log.service';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -26,6 +27,7 @@ export default class AppContextComponent implements OnInit {
   socketService = inject(SocketService);
   private matIconRegistry = inject(MatIconRegistry);
   private domSanitizer = inject(DomSanitizer);
+  private notificationAnnouncer = inject(NotificationAnnouncerService);
 
   constructor() {
     this.matIconRegistry
@@ -89,6 +91,7 @@ export default class AppContextComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.notificationAnnouncer.start();
     this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
   }

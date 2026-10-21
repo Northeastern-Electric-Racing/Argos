@@ -1,19 +1,17 @@
 import { Injector, Signal, runInInjectionContext, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NzTreeNodeOptions } from 'ng-zorro-antd/core/tree';
 import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, Node } from 'src/utils/types.utils';
-import { TopicSelectionService } from 'src/services/topic-selection.service';
 
 export interface TreeNodeData extends Node {
   displayValue: Signal<string>;
 }
 
-/** An ng-zorro tree node for one topic-tree element; `data` carries the tree node and its live value. */
-export interface TopicTreeNode extends NzTreeNodeOptions {
+/** One topic-tree element for nz-tree-view; `data` carries the tree node and its live value. */
+export interface TopicTreeNode {
   title: string;
   key: string;
   data: TreeNodeData;
@@ -25,7 +23,7 @@ export interface TopicTreeNode extends NzTreeNodeOptions {
 // Shared sentinel for non-leaf nodes whose displayValue is never read.
 const EMPTY_DISPLAY: Signal<string> = signal('');
 
-/** Builds ng-zorro tree nodes from Nodes; leaf signals cleanup via the injector's DestroyRef. */
+/** Builds topic tree nodes from Nodes; leaf signals cleanup via the injector's DestroyRef. */
 export function mapNodesToTreeNodes(nodes: Node[], storage: Storage, injector: Injector, precision = 3): TopicTreeNode[] {
   const formatValue = (value: DataValue): string => {
     const num = value?.values?.length ? decimalPipe(value.values[0], precision) : NaN;
@@ -101,7 +99,7 @@ export function flattenTreeNodes(treeNodes: TopicTreeNode[], maxLabelLength = 30
 /**
  * Filters a flat list of leaf tree nodes to only those whose dataType is in
  * `selectedDataTypes`. Preserves the original node references, so each leaf keeps
- * its live `displayValue` and expanded/selected state.
+ * its live `displayValue`.
  */
 export function filterSelectedNodes(flatNodes: TopicTreeNode[], selectedDataTypes: DataType[]): TopicTreeNode[] {
   if (selectedDataTypes.length === 0) return [];
@@ -109,37 +107,45 @@ export function filterSelectedNodes(flatNodes: TopicTreeNode[], selectedDataType
   return flatNodes.filter((n) => n.data?.dataType && selectedNames.has(n.data.dataType.name));
 }
 
-/** Finds already-selected nodes and expands their parents. */
-export function findSelectedTreeNodes(treeNodes: TopicTreeNode[], selectionService: TopicSelectionService): TopicTreeNode[] {
-  const selected: TopicTreeNode[] = [];
-  const containsSelected = new Map<TopicTreeNode, boolean>();
-
-  const search = (nodes: TopicTreeNode[], parents: TopicTreeNode[] = []): void => {
-    for (const node of nodes) {
-      if (node.selectable && node.data?.dataType && selectionService.isSelected(node.data.dataType)) {
-        selected.push(node);
-        parents.forEach((p) => containsSelected.set(p, true));
-      }
-      if (node.children?.length) {
-        search(node.children, [...parents, node]);
-      }
+/**
+ * Branches that contain a selected leaf (by dataType name), so the tree can expand them.
+ * Only leaves count as selected: branches aren't selectable.
+ */
+export function findSelectedAncestors(treeNodes: TopicTreeNode[], selectedNames: ReadonlySet<string>): TopicTreeNode[] {
+  const ancestors: TopicTreeNode[] = [];
+  const walk = (node: TopicTreeNode): boolean => {
+    if (node.isLeaf) return selectedNames.has(node.data.dataType?.name);
+    let containsSelected = false;
+    for (const child of node.children) {
+      if (walk(child)) containsSelected = true;
     }
+    if (containsSelected) ancestors.push(node);
+    return containsSelected;
   };
-
-  search(treeNodes);
-  containsSelected.forEach((_, node) => (node.expanded = true));
-  return selected;
+  if (selectedNames.size) treeNodes.forEach(walk);
+  return ancestors;
 }
 
-/** Keys of every expanded node, for ng-zorro's `nzExpandedKeys`. */
-export function collectExpandedKeys(treeNodes: TopicTreeNode[]): string[] {
-  const keys: string[] = [];
-  const walk = (nodes: TopicTreeNode[]): void => {
-    for (const node of nodes) {
-      if (node.expanded) keys.push(node.key);
-      if (node.children.length) walk(node.children);
-    }
-  };
-  walk(treeNodes);
-  return keys;
+/**
+ * Filters the tree by a case-insensitive title match. A matching node keeps all its children;
+ * a branch with matching descendants keeps only those, and is returned in `expand` so its
+ * matches show. Leaves keep their identity, so their rows and live values aren't rebuilt.
+ */
+export function filterTopicTree(
+  treeNodes: TopicTreeNode[],
+  query: string
+): { nodes: TopicTreeNode[]; expand: TopicTreeNode[] } {
+  const q = query.trim().toLowerCase();
+  if (!q) return { nodes: treeNodes, expand: [] };
+  const expand: TopicTreeNode[] = [];
+  const walk = (nodes: TopicTreeNode[]): TopicTreeNode[] =>
+    nodes.flatMap((node) => {
+      if (node.title.toLowerCase().includes(q)) return [node];
+      const children = walk(node.children);
+      if (!children.length) return [];
+      const copy = { ...node, children };
+      expand.push(copy);
+      return [copy];
+    });
+  return { nodes: walk(treeNodes), expand };
 }

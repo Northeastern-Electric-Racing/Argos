@@ -41,6 +41,14 @@ export default class FaultPageComponent implements OnInit {
       });
   }
 
+  /** nz-collapse headers are focusable buttons that ignore Enter and Space, so forward those keys as a click. */
+  onHeaderKey(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.classList.contains('ant-collapse-header')) return;
+    event.preventDefault();
+    target.click();
+  }
+
   onRowSelect = (fault: FaultData) => {
     this.selectedFault = fault;
     if (this.selectedFault) {

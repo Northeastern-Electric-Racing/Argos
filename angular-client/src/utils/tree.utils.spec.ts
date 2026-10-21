@@ -1,6 +1,13 @@
 import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { collectExpandedKeys, compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TopicTreeNode } from './tree.utils';
+import {
+  compactTopicLabel,
+  filterSelectedNodes,
+  filterTopicTree,
+  findSelectedAncestors,
+  flattenTreeNodes,
+  TopicTreeNode
+} from './tree.utils';
 import { DataType, Node } from './types.utils';
 
 const EMPTY_DISPLAY = signal('');
@@ -136,12 +143,42 @@ describe('filterSelectedNodes', () => {
   });
 });
 
-describe('collectExpandedKeys', () => {
-  it('returns the keys of expanded nodes at any depth', () => {
-    const pack = branch('Pack', [leaf('BMS/Pack/Voltage')]);
+describe('findSelectedAncestors', () => {
+  it('returns every branch above a selected leaf', () => {
+    const pack = branch('Pack', [leaf('BMS/Pack/Voltage'), leaf('BMS/Pack/SoC')]);
     const bms = branch('BMS', [pack]);
-    bms.expanded = true;
-    pack.expanded = true;
-    expect(collectExpandedKeys([bms, branch('MPU', [])])).toEqual(['BMS/', 'Pack/']);
+    const mpu = branch('MPU', [leaf('MPU/Speed')]);
+    expect(findSelectedAncestors([bms, mpu], new Set(['BMS/Pack/SoC']))).toEqual([pack, bms]);
+  });
+
+  it('returns nothing when nothing is selected', () => {
+    expect(findSelectedAncestors([branch('BMS', [leaf('BMS/SoC')])], new Set())).toEqual([]);
+  });
+});
+
+describe('filterTopicTree', () => {
+  const voltage = leaf('BMS/Pack/Voltage');
+  const soc = leaf('BMS/Pack/SoC');
+  const pack = branch('Pack', [voltage, soc]);
+  const bms = branch('BMS', [pack]);
+  const mpu = branch('MPU', [leaf('MPU/Speed')]);
+
+  it('returns the tree unchanged for an empty query', () => {
+    const tree = [bms, mpu];
+    expect(filterTopicTree(tree, '  ').nodes).toBe(tree);
+  });
+
+  it('keeps matching leaves and their branches, case-insensitively, and expands those branches', () => {
+    const { nodes, expand } = filterTopicTree([bms, mpu], 'soc');
+    expect(nodes.map((n) => n.title)).toEqual(['BMS']);
+    expect(nodes[0].children[0].children).toEqual([soc]);
+    expect(nodes[0].children[0].children[0]).toBe(soc);
+    expect(expand.map((n) => n.key)).toEqual(['Pack/', 'BMS/']);
+    expect(expand).toContain(nodes[0]);
+  });
+
+  it('keeps all children of a matching branch', () => {
+    const { nodes } = filterTopicTree([bms, mpu], 'pack');
+    expect(nodes[0].children).toEqual([pack]);
   });
 });

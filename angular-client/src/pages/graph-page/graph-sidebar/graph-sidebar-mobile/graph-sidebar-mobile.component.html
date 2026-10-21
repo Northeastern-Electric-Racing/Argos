@@ -35,11 +35,13 @@
       />
       <div class="toggle-group">
         <label class="flatten-toggle">
-          <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
+          <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
+          <span class="visually-hidden">Show only selected topics</span>
           <nz-switch [ngModel]="selectedOnly()" (ngModelChange)="toggleSelectedOnly($event)" />
         </label>
         <label class="flatten-toggle">
-          <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
+          <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
+          <span class="visually-hidden">Flatten topic tree</span>
           <nz-switch [ngModel]="flattenMode()" (ngModelChange)="toggleFlattenMode($event)" />
         </label>
       </div>
@@ -47,26 +49,8 @@
         <input nz-input [(ngModel)]="searchValue" placeholder="Search topics..." aria-label="Search topics" />
       </nz-input-search>
       <div class="tree-scroll" style="height: calc(100vh - 220px)">
-        <nz-tree
-          nzBlockNode
-          nzMultiple
-          nzHideUnMatched
-          [nzData]="treeData()"
-          [nzSelectedKeys]="selectedKeys()"
-          [nzExpandedKeys]="expandedKeys()"
-          [nzSearchValue]="searchValue()"
-          [nzTreeTemplate]="topicNode"
-          (nzClick)="onNodeClick($event)"
-        />
+        <topic-tree [nodes]="activeNodes()" [searchValue]="searchValue()" />
       </div>
-      <ng-template #topicNode let-node let-origin="origin">
-        <div class="tree-node-container">
-          <typography additionalStyles="padding: 0px;" [content]="node.title" variant="sidebar-label" />
-          @if (node.isLeaf) {
-            <typography [content]="origin.data.displayValue()" variant="subheader" />
-          }
-        </div>
-      </ng-template>
     </div>
   </ng-container>
 </nz-drawer>

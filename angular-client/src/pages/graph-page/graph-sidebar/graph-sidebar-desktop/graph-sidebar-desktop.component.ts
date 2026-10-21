@@ -5,15 +5,14 @@ import {
   computed,
   inject,
   input,
-  linkedSignal,
   signal,
+  viewChild,
   untracked,
   ChangeDetectionStrategy
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
-import { NzFormatEmitEvent, NzTreeModule } from 'ng-zorro-antd/tree';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { take } from 'rxjs';
@@ -25,19 +24,13 @@ import {
 import { GraphPresetService, Preset } from 'src/services/graph-preset.service';
 import Storage from 'src/services/storage.service';
 import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
-import {
-  mapNodesToTreeNodes,
-  findSelectedTreeNodes,
-  flattenTreeNodes,
-  filterSelectedNodes,
-  collectExpandedKeys,
-  TopicTreeNode
-} from 'src/utils/tree.utils';
+import { mapNodesToTreeNodes, flattenTreeNodes, filterSelectedNodes } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
+import TopicTreeComponent from '../topic-tree/topic-tree.component';
 
 @Component({
   selector: 'graph-sidebar-desktop',
@@ -46,7 +39,7 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     ButtonComponent,
-    NzTreeModule,
+    TopicTreeComponent,
     NzInputModule,
     TypographyComponent,
     NzSwitchModule,
@@ -69,14 +62,8 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
     return untracked(() => mapNodesToTreeNodes(nodes, this.storage, this.injector));
   });
   flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
-  // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
-  selectedNodes = linkedSignal<TopicTreeNode[] | undefined>(() =>
-    findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
-  );
-  selectedKeys = computed(() => (this.selectedNodes() ?? []).map((n) => n.key));
   searchValue = signal('');
-  // Bumped to hand the tree a fresh nzData, so it re-reads each node's expanded state.
-  private treeVersion = signal(0);
+  private topicTree = viewChild(TopicTreeComponent);
   flattenMode = signal(false);
   selectedOnly = signal(false);
 
@@ -85,15 +72,6 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   activeNodes = computed(() => {
     if (this.selectedOnly()) return this.selectedFlatNodes();
     return this.flattenMode() ? this.flatNodes() : this.treeNodes();
-  });
-  treeData = computed(() => {
-    this.treeVersion();
-    return [...this.activeNodes()];
-  });
-  // Parents of selected topics, expanded by findSelectedTreeNodes.
-  expandedKeys = computed(() => {
-    this.selectedNodes();
-    return collectExpandedKeys(this.activeNodes());
   });
 
   private presets = toSignal(this.presetService.getPresets(), { initialValue: [] as Preset[] });
@@ -110,21 +88,15 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
 
   toggleFlattenMode(value: boolean) {
     this.flattenMode.set(value);
-    if (this.selectedOnly()) return;
-    const active = value ? this.flatNodes() : this.treeNodes();
-    this.selectedNodes.set(findSelectedTreeNodes(active, this.topicSelectionService));
   }
 
   toggleSelectedOnly(value: boolean) {
     this.selectedOnly.set(value);
-    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 
   clearSelections = () => {
-    this.treeNodes().forEach((n) => (n.expanded = false));
+    this.topicTree()?.collapseAll();
     this.topicSelectionService.clearSelection();
-    this.selectedNodes.set(undefined);
-    this.treeVersion.update((v) => v + 1);
   };
 
   openPresetsDialog = () => {
@@ -132,6 +104,7 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
       nzTitle: 'Topic Presets',
       nzContent: PresetDialogComponent,
       nzFooter: null,
+      nzDraggable: true,
       nzWidth: 640,
       nzData: {
         dataTypes: this.dataTypes()
@@ -151,23 +124,6 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
     }
   }
 
-  /** Branch rows toggle open; leaf rows toggle their topic (the tree has already flipped isSelected). */
-  onNodeClick(event: NzFormatEmitEvent) {
-    const { node } = event;
-    if (!node) return;
-    if (!node.isLeaf) {
-      node.isExpanded = !node.isExpanded;
-      return;
-    }
-    const dt = (node.origin as TopicTreeNode).data?.dataType;
-    if (!dt) return;
-    if (node.isSelected) {
-      this.topicSelectionService.addDataType(dt);
-    } else {
-      this.topicSelectionService.removeDataType(dt);
-    }
-  }
-
   private applyPreset(preset: Preset) {
     const matched = this.presetService.resolvePresetTopics(preset, this.dataTypes());
     this.applyMatched(matched);
@@ -176,6 +132,5 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   private applyMatched(matched: DataType[]) {
     if (matched.length === 0) return; // unknown topics warn toast
     this.topicSelectionService.setSelectedDataTypes(matched);
-    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 }
