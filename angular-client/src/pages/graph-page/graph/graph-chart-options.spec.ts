@@ -1,5 +1,6 @@
 import {
   baseGraphChartOption,
+  buildDayBoundaryMarkLine,
   buildMultiYAxes,
   DAY_BOUNDARIES_ID,
   DAY_MS,
@@ -199,6 +200,31 @@ describe('graph chart options', () => {
       expect(markLine.data.map((d) => d.xAxis)).toEqual([new Date(2026, 0, 2).getTime(), new Date(2026, 0, 3).getTime()]);
       const axisLabel = (update.xAxis as AnyRecord)['axisLabel'] as AnyRecord;
       expect(axisLabel['formatter']).toBe(multiDayLabel);
+    });
+
+    it('marks each local midnight across a daylight-saving change, once per date', () => {
+      // Only fails in a zone with DST, such as Boston's (clocks change on 2026-11-01 and 2026-03-08); in UTC every
+      // day is 24 h
+      const ranges: [from: Date, to: Date, midnights: Date[]][] = [
+        [
+          new Date(2026, 9, 30, 12),
+          new Date(2026, 10, 3, 12),
+          [new Date(2026, 9, 31), new Date(2026, 10, 1), new Date(2026, 10, 2), new Date(2026, 10, 3)]
+        ],
+        [
+          new Date(2026, 2, 7, 12),
+          new Date(2026, 2, 10, 12),
+          [new Date(2026, 2, 8), new Date(2026, 2, 9), new Date(2026, 2, 10)]
+        ]
+      ];
+      for (const [from, to, midnights] of ranges) {
+        const { data: lines } = buildDayBoundaryMarkLine({ minX: from.getTime(), maxX: to.getTime() }) as {
+          data: { xAxis: number; label: { formatter: string } }[];
+        };
+
+        expect(lines.map((l) => l.xAxis)).toEqual(midnights.map((d) => d.getTime()));
+        expect(new Set(lines.map((l) => l.label.formatter)).size).toBe(midnights.length);
+      }
     });
 
     it('skips day boundaries in live mode', () => {

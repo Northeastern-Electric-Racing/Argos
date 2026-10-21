@@ -238,15 +238,13 @@ export function computeDataSpan(
 /** Dashed vertical lines at each local midnight inside the span, labelled with the new day. */
 export function buildDayBoundaryMarkLine(span: { minX: number; maxX: number }): MarkLineComponentOption {
   const data: { xAxis: number; label: { formatter: string } }[] = [];
-  // First local-midnight strictly after minX.
-  const cursor = new Date(span.minX);
-  cursor.setHours(24, 0, 0, 0);
-  for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
+  // First local-midnight strictly after minX, then a calendar day at a time: a day with a DST change isn't 24 h long
+  const day = new Date(span.minX);
+  day.setHours(24, 0, 0, 0);
+  for (; day.getTime() < span.maxX; day.setDate(day.getDate() + 1)) {
     data.push({
-      xAxis: t,
-      label: {
-        formatter: new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-      }
+      xAxis: day.getTime(),
+      label: { formatter: day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }
     });
   }
   return {
