@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent from './graph.component';
+import { hoverTimeLabel } from './graph-chart.utils';
 
 type GraphConfig = {
   maxPoints: number;
@@ -131,22 +132,61 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(chart.xAxisRange()).toEqual([21_000, 31_000]);
   });
 
-  it('keeps following live data after a vertical (y-only) zoom', async () => {
+  it('keeps following live data, and keeps the y zoom, after a vertical (y-only) drag', async () => {
     const speed = topic('VCU/CarState/speed', [
       { x: 0, y: 1 },
       { x: 30_000, y: 2 }
     ]);
     await setup({ values: [speed], realTime: true, config: { timeRangeMs: 10_000 } });
     const chart = component.chart!;
+    expect(chart.isZoomed('y')).toBeFalse();
 
-    // What a vertical drag does: set a y range, then call zoomCallback with the x window unchanged.
-    const [minX, maxX] = chart.xAxisRange();
-    chart.updateOptions({ axes: { y: { valueRange: [1.2, 1.8] } } });
-    chart.getOption('zoomCallback')(minX, maxX, chart.yAxisRanges());
+    // dygraphs' own handler for a vertical drag (pixel rows, top then bottom).
+    (chart as unknown as { doZoomY_(lowY: number, highY: number): void }).doZoomY_(
+      chart.toDomYCoord(1.8),
+      chart.toDomYCoord(1.2)
+    );
+    const zoomed = chart.yAxisRange();
     speed.updates.next([[{ x: 31_000, y: 3 }]]);
     await nextFrame();
 
     expect(chart.xAxisRange()).toEqual([21_000, 31_000]);
+    expect(chart.yAxisRange()).toEqual(zoomed);
+
+    chart.resetZoom();
+    await nextFrame();
+    expect(chart.yAxisRange()).not.toEqual(zoomed);
+  });
+
+  it('keeps the hovered point in the legend, at full precision, across live redraws', async () => {
+    const speed = topic('VCU/CarState/speed', [
+      { x: 0, y: 1.2345 },
+      { x: 1000, y: 1.2345 },
+      { x: 2000, y: 1.2345 }
+    ]);
+    await setup({ values: [speed], realTime: true, config: { timeRangeMs: 10_000 } });
+    const chart = component.chart!;
+    const legend = fixture.nativeElement.querySelector('.legend-container') as HTMLElement;
+    const canvases = Array.from(fixture.nativeElement.querySelectorAll('canvas')) as HTMLCanvasElement[];
+    const at = (type: string, init: MouseEventInit) =>
+      canvases.forEach((canvas) => canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, ...init })));
+
+    const rect = canvases[0].getBoundingClientRect();
+    at('mousemove', { clientX: rect.left + chart.toDomXCoord(1000), clientY: rect.top + chart.toDomYCoord(1.2345) });
+    expect(legend.textContent).toContain(`${hoverTimeLabel(1000)}:`);
+    expect(legend.textContent).toContain('1.2345');
+
+    // getSelection() keeps its old row even after a redraw blanks the legend, so check the legend itself.
+    // The live window moves on a second, so the row under the still pointer is then the one at 2000.
+    speed.updates.next([[{ x: 3000, y: 1.2345 }]]);
+    await nextFrame();
+    expect(legend.textContent).toContain(`${hoverTimeLabel(2000)}:`);
+    expect(legend.textContent).toContain('1.2345');
+
+    at('mouseout', { relatedTarget: document.body });
+    speed.updates.next([[{ x: 4000, y: 1.2345 }]]);
+    await nextFrame();
+    expect(legend.textContent).not.toContain('1.2345');
   });
 
   it('drops a zoom window when the mode or topics change', async () => {

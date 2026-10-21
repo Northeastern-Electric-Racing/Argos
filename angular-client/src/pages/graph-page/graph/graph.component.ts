@@ -29,6 +29,12 @@ import {
 
 const DAY_BOUNDARY_COLOR = '#8fcadd';
 
+type YRange = [number, number];
+
+/** The configured Y Min/Max for dygraphs: null (fully automatic) when neither bound is set. */
+const configuredYRange = (config: { yMin: number | null; yMax: number | null }): [number | null, number | null] | null =>
+  config.yMin === null && config.yMax === null ? null : [config.yMin, config.yMax];
+
 /**
  * The graph page's chart: a thin wrapper over dygraphs. Points are kept per series, merged into dygraphs' row
  * format, and drawn at most once per animation frame, however many datapoints arrive in between.
@@ -69,6 +75,15 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   private userZoomed = false;
   /** The x window render last applied for live data (null when it fits all data). */
   private appliedLiveWindow: [number, number] | null = null;
+  /** The x window of the user's last x zoom, to tell a later vertical drag (x unchanged) from a new x zoom. */
+  private zoomedXWindow: [number, number] | null = null;
+  /**
+   * The y ranges of the user's vertical drag, one per axis (null when none). dygraphs keeps them only internally
+   * and drops them on the next updateOptions({ file }), so every render passes them back.
+   */
+  private userYRanges: YRange[] | null = null;
+  /** The pointer's x on the chart (graph div px) and its series, to re-select that point after each redraw. */
+  private hover: { domX: number; seriesName: string } | undefined;
   private dayBoundaryTimes: number[] = [];
   private frame: number | undefined;
 
@@ -81,7 +96,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const config = this.graphConfig();
       if (this.chart) {
-        this.chart.updateOptions({ axes: { y: { valueRange: [config.yMin, config.yMax] } } });
+        this.userYRanges = null;
+        this.chart.updateOptions({ axes: this.yAxesOptions(config) });
         this.resetRange();
       }
     });
@@ -94,6 +110,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       this.timeRangeMs = undefined;
       // A zoom window from the previous mode or topics would hide the new data.
       this.userZoomed = false;
+      this.userYRanges = null;
       this.updateChart();
     });
 
@@ -126,6 +143,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       highlightSeriesOpts: { strokeWidth: 3, highlightCircleSize: 4 },
       highlightSeriesBackgroundAlpha: 1,
       animatedZooms: false,
+      // As many decimals as the data keeps (graphInfoCallback rounds to 4); dygraphs' default is 2.
+      digitsAfterDecimal: 4,
       resizable: 'passive',
       gridLineColor: 'rgba(255, 255, 255, 0.12)',
       axisLineColor: '#888',
@@ -134,13 +153,18 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
           ticker: Dygraph.dateTicker,
           axisLabelFormatter: singleDayLabel,
           valueFormatter: hoverTimeLabel,
-          pixelsPerLabel: 100
+          pixelsPerLabel: 100,
+          // Wide enough for a multi-day label (M/D HH:MM) on one line; the default 60px wraps it.
+          axisLabelWidth: 90
         },
-        y: { valueRange: [config.yMin, config.yMax], axisLabelWidth: 60 },
+        y: { valueRange: configuredYRange(config), axisLabelWidth: 60 },
         y2: { axisLabelWidth: 60 }
       },
       underlayCallback: this.drawDayBoundaries,
-      zoomCallback: this.onZoom
+      zoomCallback: this.onZoom,
+      highlightCallback: this.onHighlight,
+      unhighlightCallback: this.onUnhighlight,
+      drawCallback: this.onDraw
     });
     this.render();
   }
@@ -182,7 +206,10 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       file: rows,
       labels: ['Time', ...labels],
       ...seriesAxisOptions(labels, this.showMultipleYAxes()),
-      axes: { x: { axisLabelFormatter: isMultiDay ? multiDayLabel : singleDayLabel } }
+      axes: {
+        x: { axisLabelFormatter: isMultiDay ? multiDayLabel : singleDayLabel },
+        ...this.yAxesOptions(this.graphConfig())
+      }
     };
     if (!this.userZoomed) {
       options.dateWindow = this.appliedLiveWindow = this.liveWindow(rows);
@@ -190,21 +217,70 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     this.chart.updateOptions(options);
   }
 
-  private onZoom = (minX: number, maxX: number) => {
+  /**
+   * The y and y2 value ranges: the user's vertical-drag zoom while there is one, else the configured Y Min/Max.
+   * dygraphs would otherwise lose a drag's y range on the next redraw.
+   */
+  private yAxesOptions(config: { yMin: number | null; yMax: number | null }): dygraphs.Options['axes'] {
+    const user = this.userYRanges;
+    return {
+      y: { valueRange: user ? user[0] : configuredYRange(config) },
+      y2: { valueRange: user?.[1] ?? null }
+    };
+  }
+
+  private onZoom = (minX: number, maxX: number, yRanges: ReadonlyArray<[number, number]>) => {
     const { chart } = this;
     if (!chart) return;
     if (!chart.isZoomed()) {
       // A double-click (resetZoom) clears the x window and also drops the configured y range,
       // so redraw to put both back.
       this.userZoomed = false;
+      this.userYRanges = null;
       this.updateChart();
       return;
     }
-    // A vertical drag zooms y only and reports the x window unchanged. In real time that is the live
-    // window, which must keep following new data rather than freeze as if the user had zoomed in on x.
-    const live = this.appliedLiveWindow;
-    if (live && live[0] === minX && live[1] === maxX) return;
+    // A vertical drag zooms y only and reports the x window it started from: the live window in real time, the
+    // user's x zoom while one is held, or none in historical mode. Keep its y ranges (dygraphs drops them on the
+    // next redraw) and keep following live data, rather than freeze as if the user had zoomed in on x.
+    const before = this.userZoomed ? this.zoomedXWindow : this.appliedLiveWindow;
+    const xUnchanged = before ? before[0] === minX && before[1] === maxX : !chart.isZoomed('x');
+    if (xUnchanged) {
+      this.userYRanges = yRanges.map(([low, high]): YRange => [low, high]);
+      return;
+    }
     this.userZoomed = chart.isZoomed('x');
+    this.zoomedXWindow = [minX, maxX];
+  };
+
+  private onHighlight = (event: MouseEvent, _x: number, _points: unknown, _row: number, seriesName: string) => {
+    if (!this.chart) return;
+    this.hover = { domX: this.chart.eventToDomCoords(event)[0], seriesName };
+  };
+
+  private onUnhighlight = () => {
+    this.hover = undefined;
+  };
+
+  /**
+   * Every redraw resets dygraphs' selection, which blanks the hover legend. While the pointer is over the chart,
+   * select the row nearest it again, so the legend keeps showing the hovered values through live updates.
+   */
+  private onDraw = (g: Readonly<Dygraph>) => {
+    const rows = g.numRows();
+    if (!this.hover || rows === 0) return;
+    const x = g.toDataXCoord(this.hover.domX);
+    const rowX = (row: number) => g.getValue(row, 0)!;
+    // Binary search for the first row at or after x, then take whichever neighbour is closer.
+    let lo = 0;
+    let hi = rows - 1;
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      if (rowX(mid) < x) lo = mid + 1;
+      else hi = mid;
+    }
+    const row = lo > 0 && x - rowX(lo - 1) < rowX(lo) - x ? lo - 1 : lo;
+    g.setSelection(row, this.hover.seriesName);
   };
 
   /** Only real-time mode constrains the x window; historical mode fits all data (null). */
