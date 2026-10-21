@@ -1,31 +1,68 @@
 import {
-  Component,
-  effect,
-  input,
-  OnDestroy,
-  OnInit,
+  afterNextRender,
   ChangeDetectionStrategy,
-  untracked,
+  Component,
+  DestroyRef,
+  effect,
+  ElementRef,
   inject,
-  DestroyRef
+  input,
+  signal,
+  untracked,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
-import ApexCharts from 'apexcharts';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
-import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
+import { DrawSeries, GraphRenderer, OverlayMarks } from './graph-renderer';
+import {
+  clampZoom,
+  computeView,
+  formatTooltipTime,
+  hoverPoint,
+  pixelMapping,
+  plotArea,
+  Range,
+  Rect,
+  snapX,
+  tooltipTop,
+  View
+} from './graph-scale';
 
-// Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
-type ApexOptions = Required<ApexCharts.ApexOptions>;
-type ChartOptions = Pick<
-  ApexOptions,
-  'chart' | 'xaxis' | 'dataLabels' | 'markers' | 'grid' | 'tooltip' | 'fill' | 'stroke'
-> &
-  Partial<Pick<ApexOptions, 'legend' | 'annotations'>> & {
-    yaxis: Extract<ApexOptions['yaxis'], unknown[]>;
-  };
+// ApexCharts' default palette, so series keep the colours people are used to.
+const PALETTE = [
+  '#008FFB',
+  '#00E396',
+  '#FEB019',
+  '#FF4560',
+  '#775DD0',
+  '#3F51B5',
+  '#26A69A',
+  '#D4526E',
+  '#F86624',
+  '#A5978B'
+];
+const DRAG_THRESHOLD_PX = 5;
+const WHEEL_ZOOM = 1.25;
+/** How far past a series' first or last point the cursor can be and still show its value. */
+const HOVER_TOLERANCE_PX = 12;
+/** Narrowest zoom, in ms: the finest tick step is 1 ms. */
+const MIN_ZOOM_MS = 10;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export interface LegendEntry {
+  name: string;
+  color: string;
+}
+
+export interface HoverInfo {
+  left: number;
+  top: number;
+  /** Show the tooltip left of the crosshair, past the middle of the plot. */
+  flip: boolean;
+  time: string;
+  rows: { name: string; color: string; value: number }[];
+}
 
 @Component({
   selector: 'graph',
@@ -34,7 +71,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export default class CustomGraphComponent implements OnInit, OnDestroy {
+export default class CustomGraphComponent {
   private destroyRef = inject(DestroyRef);
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
@@ -44,13 +81,6 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
   clearGraph = input<number>(0);
-  options!: ChartOptions;
-  chart!: ApexCharts;
-  // label -> x,y (topic, data point)
-  data!: Map<string, Array<{ x: number; y: number }>>;
-  isSliding: boolean = false;
-  timeRangeMs: number | undefined = undefined;
-  private timeOuts: NodeJS.Timeout[] = [];
   graphConfig = input.required<{
     maxPoints: number;
     yMin: number | null;
@@ -60,6 +90,43 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
   }>();
   range = input<number | undefined>(undefined);
 
+  // label -> x,y (topic, data point), kept sorted by x
+  data = new Map<string, GraphData[]>();
+  timeRangeMs: number | undefined = undefined;
+
+  readonly legend = signal<LegendEntry[]>([]);
+  readonly hidden = signal<ReadonlySet<string>>(new Set());
+  readonly hover = signal<HoverInfo | null>(null);
+  readonly zoom = signal<Range | null>(null);
+  readonly panning = signal(false);
+  readonly renderError = signal<string | null>(null);
+
+  private container = viewChild.required<ElementRef<HTMLDivElement>>('chartContainer');
+  private glCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('glCanvas');
+  private overlayCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('overlayCanvas');
+  private tooltip = viewChild<ElementRef<HTMLDivElement>>('tooltip');
+
+  private renderer?: GraphRenderer;
+  /** Removes the WebGL context-loss listeners. */
+  private glListeners?: AbortController;
+  private resizeObserver?: ResizeObserver;
+  /** Re-arms a device-pixel-ratio listener where ResizeObserver can't report device pixels. */
+  private dprListener?: AbortController;
+  private size = { width: 0, height: 0 };
+  private devicePx?: { width: number; height: number };
+  private frame?: number;
+  private dataDirty = true;
+  /** Series whose points changed since the last upload, so only those are re-sent. */
+  private changed = new Set<string>();
+  private cursor: { x: number; y: number } | null = null;
+  private dragStart: number | null = null;
+  /** Shift-drag pan: where it started and the x range it started from. */
+  private panStart: { px: number; x: Range } | null = null;
+  private lastView: View | null = null;
+  /** What `lastView` was computed from besides the data, so a hover-only frame can reuse it. */
+  private viewInputs: unknown[] = [];
+  private lastArea: Rect | null = null;
+
   constructor() {
     effect(() => {
       if (this.isPaused()) {
@@ -67,203 +134,40 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
-      const config = this.graphConfig();
-      if (this.chart && config) {
-        this.options.yaxis = [
-          {
-            ...this.options.yaxis,
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            },
-            max: config.yMax === null ? undefined : config.yMax,
-            min: config.yMin === null ? undefined : config.yMin
-          }
-        ];
-
-        this.chart.updateOptions(this.options);
-        this.resetRange();
-      }
+      this.graphConfig();
+      this.showMultipleYAxes();
+      this.resetRange();
     });
 
     effect(() => {
       this.realTime();
       this.clearGraph();
       this.valuesSubject();
-      if (this.chart) {
-        this.chart.updateSeries([]);
-      }
       this.data = new Map();
       this.timeRangeMs = undefined;
+      this.zoom.set(null);
+      this.hidden.set(new Set());
+      untracked(() => this.markDataChanged());
     });
 
-    effect(() => {
-      // Re-run whenever the toggle flips. Per-topic axes are also rebuilt in updateChart
-      // (see applyMultiYAxisConfigs) so they stay in sync as topics are selected/deselected.
-      if (this.showMultipleYAxes()) {
-        this.applyMultiYAxisConfigs();
-      } else {
-        this.options.yaxis = [
-          {
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            }
-          }
-        ];
-      }
-      if (this.chart) {
-        this.chart.updateOptions(this.options);
-      }
-    });
     effect(() => {
       // End the subscriptions made for the previous topics
       this.valuesChange$.next();
 
-      // Clean up existing timeouts
-      this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-      this.timeOuts = [];
-
-      this.valuesSubject().forEach(({ label, updates }) => {
-        updates
-          .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
-          .subscribe((data) => this.graphInfoCallback({ label, data }));
-      });
-
-      this.updateChart();
+      const values = this.valuesSubject();
+      // untracked: BehaviorSubjects replay synchronously, and the callback's signal reads
+      // (isPaused, graphConfig...) must not make this effect resubscribe when they change
+      untracked(() =>
+        values.forEach(({ label, updates }) => {
+          updates
+            .pipe(takeUntil(this.valuesChange$), takeUntilDestroyed(this.destroyRef))
+            .subscribe((data) => this.graphInfoCallback({ label, data }));
+        })
+      );
     });
-  }
 
-  ngOnDestroy(): void {
-    // Clean up timeouts
-    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
-    this.timeOuts = [];
-
-    // Destroy chart and clear data
-    if (this.chart) {
-      this.chart.destroy();
-    }
-    this.data.clear();
-  }
-
-  updateChart = () => {
-    // Skip chart updates if paused
-    if (this.isPaused() && this.limitRange()) {
-      return;
-    }
-
-    const series = Array.from(this.data).map(([key, points], index) => ({
-      name: key,
-      data: points,
-      yaxis: index
-    }));
-
-    // Keep the per-topic y-axes matched to the current series set: deselecting a topic
-    // drops its series here, so its y-axis must be pruned too (#630). untracked() so calling
-    // updateChart from an effect doesn't add showMultipleYAxes as a dependency.
-    if (untracked(this.showMultipleYAxes)) {
-      this.applyMultiYAxisConfigs();
-    }
-
-    // Only constrain the x-axis range in real-time mode; historical mode should auto-fit all data
-    let effectiveRange: number | undefined = undefined;
-    if (this.realTime()) {
-      effectiveRange = this.graphConfig().rangeMode === 'time' ? this.graphConfig().timeRangeMs : this.timeRangeMs;
-    }
-
-    // Multi-day historical ranges get date-aware labels and per-day boundary annotations.
-    // Skip the O(N) span scan in real-time mode — realtime ranges are bounded and never multi-day.
-    const span = this.realTime() ? null : this.computeDataSpan();
-    const isMultiDay = !!span && span.spanMs > DAY_MS;
-
-    // Single updateOptions call with series included — avoids two separate re-renders
-    // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
-    this.chart.updateOptions(
-      {
-        ...this.options,
-        series,
-        xaxis: {
-          ...this.options.xaxis,
-          range: effectiveRange,
-          labels: {
-            ...this.options.xaxis.labels,
-            formatter: isMultiDay ? this.multiDayLabelFormatter : this.singleDayLabelFormatter
-          }
-        },
-        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span!) : [] }
-      },
-      false, // redraw (default is false)
-      false // animate (default is true)
-    );
-  };
-
-  // Build one y-axis per current topic (order matches the series' `yaxis: index`).
-  private applyMultiYAxisConfigs(): void {
-    this.options.yaxis = Array.from(this.data.keys()).map((key, index) => ({
-      title: {
-        text: key.replace('0', ''),
-        style: {
-          color: 'grey',
-          fontSize: '20px',
-          fontWeight: 'bold'
-        }
-      },
-      labels: {
-        style: {
-          colors: '#fff'
-        }
-      },
-      opposite: index % 2 !== 0 // Alternate sides for each y-axis
-    }));
-  }
-
-  private computeDataSpan(): { minX: number; maxX: number; spanMs: number } | null {
-    let minX = Infinity;
-    let maxX = -Infinity;
-    for (const points of this.data.values()) {
-      if (points.length === 0) continue;
-      // Series data is kept sorted by x (see graphInfoCallback), so endpoints are the extrema.
-      if (points[0].x < minX) minX = points[0].x;
-      if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
-    }
-    if (!isFinite(minX) || !isFinite(maxX)) return null;
-    return { minX, maxX, spanMs: maxX - minX };
-  }
-
-  private singleDayLabelFormatter = (val: string | number): string =>
-    new Date(+val).toLocaleTimeString('en-US', { hour12: false });
-
-  private multiDayLabelFormatter = (val: string | number): string => {
-    const d = new Date(+val);
-    const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-    const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    return `${date} ${time}`;
-  };
-
-  private buildDayBoundaryAnnotations(span: { minX: number; maxX: number }) {
-    const annotations: { x: number; strokeDashArray: number; borderColor: string; label: object }[] = [];
-    // First local-midnight strictly after minX.
-    const cursor = new Date(span.minX);
-    cursor.setHours(24, 0, 0, 0);
-    for (let t = cursor.getTime(); t < span.maxX; t += DAY_MS) {
-      const date = new Date(t);
-      annotations.push({
-        x: t,
-        strokeDashArray: 4,
-        borderColor: '#8fcadd',
-        label: {
-          borderColor: '#8fcadd',
-          style: { color: '#fff', background: '#0c2026', fontSize: '11px' },
-          orientation: 'horizontal',
-          position: 'top',
-          offsetY: -4,
-          text: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-        }
-      });
-    }
-    return annotations;
+    afterNextRender(() => this.setupRenderer());
+    this.destroyRef.onDestroy(() => this.teardown());
   }
 
   graphInfoCallback = (info: GraphInfo) => {
@@ -277,6 +181,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         this.data.set(seriesLabel, []);
       }
       const line = this.data.get(seriesLabel)!;
+      this.changed.add(seriesLabel);
 
       value.forEach((val) => {
         const point = { x: val.x, y: Math.round(val.y * 10000) / 10000 };
@@ -314,110 +219,300 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.updateChart();
+    this.markDataChanged();
   };
-
-  ngOnInit(): void {
-    this.data = new Map();
-
-    const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) return;
-
-    this.options = {
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: false,
-          dynamicAnimation: {
-            speed: 1
-          }
-        }
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        width: 3
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 6,
-        labels: {
-          style: {
-            colors: '#fff'
-          },
-          formatter: (val: string | number) => new Date(+val).toLocaleTimeString('en-US', { hour12: false })
-        }
-      },
-      // fix to work like this for different graphs: `https://apexcharts.com/docs/chart-types/multiple-yaxis-scales/`
-      yaxis: [
-        {
-          labels: {
-            style: {
-              colors: '#fff'
-            }
-          }
-        }
-      ],
-      tooltip: {
-        enabled: true,
-        // Make the tooltip “follow” your cursor as you hover
-        followCursor: true,
-        // If you’d rather show a shared tooltip for multiple series, set shared: true
-        shared: false,
-        intersect: false,
-        x: {
-          //format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        },
-        theme: 'dark'
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 100]
-        }
-      },
-      grid: {
-        show: true
-      },
-      legend: {
-        labels: {
-          colors: '#fff'
-        },
-        fontSize: '15px'
-      }
-    };
-
-    this.chart = new ApexCharts(chartContainer, {
-      series: [],
-      ...this.options
-    });
-    this.chart.render().then(() => {
-      this.updateChart();
-    });
-  }
 
   resetRange() {
     this.timeRangeMs = undefined;
-    this.chart.updateOptions({
-      ...this.options,
-      xaxis: {
-        ...this.options.xaxis,
-        range: undefined
-      }
+    this.requestFrame();
+  }
+
+  resetZoom() {
+    this.zoom.set(null);
+    this.requestFrame();
+  }
+
+  toggleSeries(name: string) {
+    this.hidden.update((hidden) => {
+      const next = new Set(hidden);
+      if (!next.delete(name)) next.add(name);
+      return next;
     });
+    this.requestFrame();
+  }
+
+  onPointerMove(event: PointerEvent) {
+    this.cursor = this.localPoint(event);
+    if (this.panStart && this.lastView && this.lastArea) {
+      const { px, x } = this.panStart;
+      const shift = ((this.cursor.x - px) / this.lastArea.width) * (x.max - x.min);
+      this.setZoom({ min: x.min - shift, max: x.max - shift });
+    }
+    this.requestFrame();
+  }
+
+  onPointerLeave() {
+    this.cursor = null;
+    this.hover.set(null);
+    this.requestFrame();
+  }
+
+  onPointerDown(event: PointerEvent) {
+    const p = this.localPoint(event);
+    if (event.button !== 0 || !this.inPlot(p)) return;
+    if (event.shiftKey && this.lastView) {
+      this.panStart = { px: p.x, x: this.lastView.x };
+      this.panning.set(true);
+    } else {
+      this.dragStart = p.x;
+    }
+    (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
+  }
+
+  /** Drag across the plot to zoom into that time range; shift-drag pans instead. */
+  onPointerUp(event: PointerEvent) {
+    const start = this.dragStart;
+    this.dragStart = null;
+    this.panStart = null;
+    this.panning.set(false);
+    const end = this.localPoint(event).x;
+    if (start !== null && this.lastView && this.lastArea && Math.abs(end - start) > DRAG_THRESHOLD_PX) {
+      const { pxToX } = pixelMapping(this.lastView, this.lastArea);
+      this.setZoom({ min: pxToX(Math.min(start, end)), max: pxToX(Math.max(start, end)) });
+    }
+    this.requestFrame();
+  }
+
+  /** Wheel to zoom the time axis around the cursor. */
+  onWheel(event: WheelEvent) {
+    const p = this.localPoint(event);
+    if (!this.lastView || !this.lastArea || !this.inPlot(p)) return;
+    event.preventDefault();
+    const { x } = this.lastView;
+    const anchor = pixelMapping(this.lastView, this.lastArea).pxToX(p.x);
+    const factor = event.deltaY > 0 ? WHEEL_ZOOM : 1 / WHEEL_ZOOM;
+    this.setZoom({ min: anchor - (anchor - x.min) * factor, max: anchor + (x.max - anchor) * factor });
+    this.requestFrame();
+  }
+
+  /** Zoom to `range`, kept inside the data; zooming out past all of it ends the zoom. */
+  private setZoom(range: Range) {
+    this.zoom.set(this.lastView ? clampZoom(range, this.lastView.zoomBounds, MIN_ZOOM_MS) : range);
+  }
+
+  /** Current series in data-map order, with their colours and visibility. */
+  private drawSeries(): DrawSeries[] {
+    const hidden = this.hidden();
+    return Array.from(this.data, ([name, points], i) => ({
+      name,
+      points,
+      color: PALETTE[i % PALETTE.length],
+      visible: !hidden.has(name)
+    }));
+  }
+
+  private markDataChanged() {
+    this.dataDirty = true;
+    this.syncLegend();
+    // Skip chart updates if paused (live mode); the last frame stays on screen
+    if (this.isPaused() && this.limitRange()) return;
+    this.requestFrame();
+  }
+
+  /** Coalesce every update in a frame into one draw: data can arrive far faster than 60 Hz. */
+  private requestFrame() {
+    if (this.frame !== undefined || !this.renderer) return;
+    this.frame = requestAnimationFrame(() => {
+      this.frame = undefined;
+      this.renderFrame();
+    });
+  }
+
+  private renderFrame() {
+    if (!this.renderer) return;
+    const series = this.drawSeries();
+    const dataChanged = this.dataDirty;
+    if (this.dataDirty) {
+      this.renderer.upload(series, this.changed);
+      this.changed.clear();
+      this.dataDirty = false;
+    }
+
+    const config = this.graphConfig();
+    const realTime = this.realTime();
+    const multiAxis = this.showMultipleYAxes();
+    // Only constrain the x-axis range in real-time mode; historical mode auto-fits all data
+    const windowMs = realTime ? (config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs) : undefined;
+    const zoom = this.zoom();
+    const inputs = [config, realTime, multiAxis, windowMs, zoom, this.hidden()];
+    // computeView scans every visible point for the y ranges, so a frame that only moves the
+    // hover marks reuses the last view
+    let view = this.lastView;
+    if (dataChanged || inputs.some((v, i) => v !== this.viewInputs[i])) {
+      view = computeView({ series, multiAxis, realTime, windowMs, zoom, yOverride: { min: config.yMin, max: config.yMax } });
+      this.viewInputs = inputs;
+    }
+    const area = plotArea(this.size.width, this.size.height, view?.axes.length ?? 1);
+    this.lastView = view;
+    this.lastArea = area;
+
+    const marks: OverlayMarks = {};
+    if (view && this.cursor && this.inPlot(this.cursor)) {
+      Object.assign(marks, this.updateHover(series, view, area));
+      if (this.dragStart !== null) marks.selection = { from: this.dragStart, to: this.cursor.x };
+    } else if (this.hover()) {
+      this.hover.set(null);
+    }
+    this.renderer.draw(series, view, area, marks);
+  }
+
+  /**
+   * Snap the crosshair to the visible point nearest the cursor, and list each visible series'
+   * value at that point's time. Returns the crosshair and hover dots.
+   */
+  private updateHover(series: DrawSeries[], view: View, area: Rect): Pick<OverlayMarks, 'crosshairX' | 'dots'> {
+    const cursor = this.cursor!;
+    const { pxToX, xToPx, yToPx } = pixelMapping(view, area);
+    const tolerance = pxToX(cursor.x + HOVER_TOLERANCE_PX) - pxToX(cursor.x);
+    // Only points inside the view, so a zoom finer than the sample rate never snaps off the plot
+    const x = snapX(series, pxToX(cursor.x), tolerance, view.x);
+    if (x === undefined) {
+      if (this.hover()) this.hover.set(null);
+      return { crosshairX: cursor.x };
+    }
+    const rows: HoverInfo['rows'] = [];
+    const dots: NonNullable<OverlayMarks['dots']> = [];
+    series.forEach((s, i) => {
+      const point = s.visible ? hoverPoint(s.points, x, tolerance, view.x) : undefined;
+      if (!point) return;
+      rows.push({ name: s.name, color: s.color, value: point.y });
+      dots.push({ x: xToPx(point.x), y: yToPx(point.y, view.axes[view.seriesAxis[i]]), color: s.color });
+    });
+    // The tooltip as last rendered; a row-count estimate before it first shows
+    const height = this.tooltip()?.nativeElement.offsetHeight || 16 + 17 * (rows.length + 1);
+    // Beside the snapped crosshair rather than the cursor, which can be far from a sparse series' point
+    const crosshairX = xToPx(x);
+    this.hover.set({
+      left: crosshairX,
+      // Kept above the x tick labels, inside the plot
+      top: tooltipTop(cursor.y, height, area.top + area.height),
+      flip: crosshairX > area.left + area.width / 2,
+      time: formatTooltipTime(x),
+      rows
+    });
+    return { crosshairX, dots };
+  }
+
+  /** Keep the legend matched to the series set; a no-op while only points change. */
+  private syncLegend() {
+    const names = Array.from(this.data.keys());
+    const current = this.legend();
+    if (current.length === names.length && current.every((entry, i) => entry.name === names[i])) return;
+    this.legend.set(names.map((name, i) => ({ name, color: PALETTE[i % PALETTE.length] })));
+  }
+
+  private localPoint(event: MouseEvent): { x: number; y: number } {
+    const rect = this.container().nativeElement.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  private inPlot(p: { x: number; y: number }): boolean {
+    const a = this.lastArea;
+    return !!a && p.x >= a.left && p.x <= a.left + a.width && p.y >= a.top && p.y <= a.top + a.height;
+  }
+
+  private setupRenderer() {
+    if (!this.createRenderer()) return;
+    this.watchContextLoss();
+    const container = this.container().nativeElement;
+    this.resizeObserver = new ResizeObserver(([entry]) => {
+      this.size = { width: entry.contentRect.width, height: entry.contentRect.height };
+      const device = entry.devicePixelContentBoxSize?.[0];
+      this.devicePx = device ? { width: device.inlineSize, height: device.blockSize } : undefined;
+      this.applySize();
+    });
+    // The device-pixel box gives the exact canvas size, and fires when only the pixel ratio
+    // changes (a window moved to a HiDPI screen, browser zoom). Safari lacks it, and Chrome's
+    // device emulation doesn't fire it, so a pixel-ratio media query backs it up.
+    try {
+      this.resizeObserver.observe(container, { box: 'device-pixel-content-box' });
+    } catch {
+      this.resizeObserver.observe(container);
+    }
+    this.watchPixelRatio();
+    this.requestFrame();
+  }
+
+  private applySize() {
+    this.renderer?.resize(this.size.width, this.size.height, window.devicePixelRatio || 1, this.devicePx);
+    // Resizing a canvas clears it, so redraw right away rather than next frame
+    this.renderFrame();
+  }
+
+  /** Resize on a pixel-ratio change; each media query matches one ratio, so it re-arms itself. */
+  private watchPixelRatio() {
+    this.dprListener?.abort();
+    this.dprListener = new AbortController();
+    matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener(
+      'change',
+      () => {
+        this.applySize();
+        this.watchPixelRatio();
+      },
+      { once: true, signal: this.dprListener.signal }
+    );
+  }
+
+  /** Returns false, and shows the fallback message, when WebGL2 is unavailable. */
+  private createRenderer(): boolean {
+    try {
+      this.renderer = new GraphRenderer(this.glCanvas().nativeElement, this.overlayCanvas().nativeElement);
+      return true;
+    } catch (e) {
+      this.renderError.set(`The graph needs WebGL2, which this browser can't provide (${(e as Error).message}).`);
+      return false;
+    }
+  }
+
+  /**
+   * The browser can drop the WebGL context at any time (GPU reset, driver update, sleep, too many
+   * contexts). Without preventDefault it never gives it back and the plot stays blank, so take
+   * the loss, and rebuild the renderer (its programs and buffers die with the old context) once
+   * the context is restored.
+   */
+  private watchContextLoss() {
+    const canvas = this.glCanvas().nativeElement;
+    this.glListeners = new AbortController();
+    const { signal } = this.glListeners;
+    canvas.addEventListener(
+      'webglcontextlost',
+      (event) => {
+        event.preventDefault();
+        if (this.frame !== undefined) cancelAnimationFrame(this.frame);
+        this.frame = undefined;
+        this.renderer = undefined;
+      },
+      { signal }
+    );
+    canvas.addEventListener(
+      'webglcontextrestored',
+      () => {
+        if (!this.createRenderer()) return;
+        this.renderer!.resize(this.size.width, this.size.height, window.devicePixelRatio || 1, this.devicePx);
+        this.dataDirty = true;
+        this.requestFrame();
+      },
+      { signal }
+    );
+  }
+
+  private teardown() {
+    this.glListeners?.abort();
+    this.dprListener?.abort();
+    if (this.frame !== undefined) cancelAnimationFrame(this.frame);
+    this.resizeObserver?.disconnect();
+    this.renderer?.destroy();
+    this.renderer = undefined;
+    this.data.clear();
   }
 }

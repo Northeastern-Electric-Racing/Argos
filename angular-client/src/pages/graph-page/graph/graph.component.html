@@ -1,1 +1,49 @@
-<div id="chart-container"></div>
+<div
+  #chartContainer
+  class="chart-container"
+  [class.panning]="panning()"
+  (pointermove)="onPointerMove($event)"
+  (pointerleave)="onPointerLeave()"
+  (pointerdown)="onPointerDown($event)"
+  (pointerup)="onPointerUp($event)"
+  (wheel)="onWheel($event)"
+  (dblclick)="resetZoom()"
+>
+  <canvas #glCanvas class="layer" role="img" [attr.aria-label]="'Graph of ' + legend().length + ' series'"></canvas>
+  <canvas #overlayCanvas class="layer" aria-hidden="true"></canvas>
+  @if (hover(); as h) {
+    <div #tooltip class="tooltip" [class.flip]="h.flip" [style.left.px]="h.left" [style.top.px]="h.top" aria-hidden="true">
+      <div class="tooltip-time">{{ h.time }}</div>
+      @for (row of h.rows; track row.name) {
+        <div class="tooltip-row">
+          <span class="swatch" [style.background]="row.color"></span>{{ row.name }}: <strong>{{ row.value }}</strong>
+        </div>
+      }
+    </div>
+  }
+  @if (renderError(); as error) {
+    <p class="render-error" role="alert">{{ error }}</p>
+  }
+</div>
+@if (legend().length > 0 || zoom()) {
+  <div class="footer">
+    <ul class="legend" aria-label="Series">
+      @for (entry of legend(); track entry.name) {
+        <li>
+          <button
+            type="button"
+            class="legend-item"
+            [class.off]="hidden().has(entry.name)"
+            [attr.aria-pressed]="!hidden().has(entry.name)"
+            (click)="toggleSeries(entry.name)"
+          >
+            <span class="swatch" [style.background]="entry.color"></span>{{ entry.name }}
+          </button>
+        </li>
+      }
+    </ul>
+    @if (zoom()) {
+      <button type="button" class="reset-zoom" (click)="resetZoom()">Reset zoom</button>
+    }
+  </div>
+}
