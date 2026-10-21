@@ -1,0 +1,26 @@
+.session-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+.session-menu-btn:hover {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+}
+
+/* The list and its items are the shared .ui-menu styles in ui.css. */
+[ngMenuItem].destructive {
+  color: var(--color-battery-low);
+}
+
+.session-menu-btn mat-icon,
+[ngMenuItem] mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

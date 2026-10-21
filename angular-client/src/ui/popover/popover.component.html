@@ -1,0 +1,27 @@
+@if (origin(); as anchor) {
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="anchor"
+    [cdkConnectedOverlayOpen]="open()"
+    [cdkConnectedOverlayPositions]="positions"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayViewportMargin]="8"
+    (overlayOutsideClick)="onOutsideClick($event)"
+    (detach)="hide()"
+    (attach)="onAttach()"
+  >
+    <!-- The panel is outside the trigger's tab order: focus moves in on open (see onAttach).
+         tabindex="-1" lets the panel itself take focus when it has nothing tabbable. -->
+    <div
+      #panel
+      class="ui-popover-panel"
+      [class]="panelClass()"
+      role="dialog"
+      [attr.aria-label]="ariaLabel()"
+      tabindex="-1"
+      cdkTrapFocus
+    >
+      <ng-content />
+    </div>
+  </ng-template>
+}

@@ -1,0 +1,10 @@
+.message {
+  margin: 0 0 1.25rem;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

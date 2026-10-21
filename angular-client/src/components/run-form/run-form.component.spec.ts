@@ -1,6 +1,6 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { ToastService } from 'src/ui/toast/toast.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Subject } from 'rxjs';
 
 import { RunFormComponent } from './run-form.component';
@@ -12,7 +12,7 @@ describe('RunFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RunFormComponent],
-      providers: [MessageService, { provide: DynamicDialogRef, useValue: { close: () => {}, onClose: new Subject() } }]
+      providers: [ToastService, { provide: DialogRef, useValue: { close: () => {}, closed: new Subject() } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(RunFormComponent);

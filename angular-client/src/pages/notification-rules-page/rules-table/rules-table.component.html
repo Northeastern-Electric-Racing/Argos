@@ -1,70 +1,96 @@
-<p-table
-  #dt
-  [value]="rules()"
-  [globalFilterFields]="['expr', 'topic', 'id']"
-  [selection]="selectedRules()"
-  (selectionChange)="onSelectionChange($any($event))"
-  dataKey="id"
-  [scrollable]="true"
-  scrollHeight="600px"
-  [loading]="loading()"
->
-  <ng-template #header>
-    <tr>
-      <th style="width: 3rem">
-        <p-tableheadercheckbox />
+<div class="ui-table-wrapper rules-table-wrapper" [attr.aria-busy]="loading()">
+  <table cdk-table class="ui-table ui-table--striped" [dataSource]="filteredRules()" [trackBy]="trackById">
+    <ng-container cdkColumnDef="select">
+      <th cdk-header-cell *cdkHeaderCellDef class="col-select">
+        <input
+          type="checkbox"
+          class="ui-checkbox"
+          aria-label="Select all rules"
+          [checked]="allSelected()"
+          [indeterminate]="someSelected()"
+          (change)="toggleAll()"
+        />
       </th>
-      <th>Rule</th>
-      <th>Applied To</th>
-      <!-- TODO: Uploaded By column once backend supports it -->
-      <th>Uploaded By</th>
-      <!-- TODO: Description column once backend supports it -->
-      <th>Description</th>
-      <th>Subscribed</th>
-      <th style="width: 5rem" aria-label="Actions"></th>
-    </tr>
-  </ng-template>
-  <ng-template #body let-rule>
-    <tr>
-      <td>
-        <p-tablecheckbox [value]="rule" />
+      <td cdk-cell *cdkCellDef="let rule" class="col-select">
+        <input
+          type="checkbox"
+          class="ui-checkbox"
+          [attr.aria-label]="'Select rule ' + rule.id"
+          [checked]="isSelected(rule)"
+          (change)="toggleRow(rule)"
+        />
       </td>
-      <td>{{ rule.expr }}</td>
-      <td>{{ rule.topic }}</td>
-      <td>-</td>
-      <td>-</td>
-      <td>
-        <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
+    </ng-container>
+
+    <ng-container cdkColumnDef="expr">
+      <th cdk-header-cell *cdkHeaderCellDef>Rule</th>
+      <td cdk-cell *cdkCellDef="let rule">{{ rule.expr }}</td>
+    </ng-container>
+
+    <ng-container cdkColumnDef="topic">
+      <th cdk-header-cell *cdkHeaderCellDef>Applied To</th>
+      <td cdk-cell *cdkCellDef="let rule">{{ rule.topic }}</td>
+    </ng-container>
+
+    <!-- TODO: Uploaded By column once backend supports it -->
+    <ng-container cdkColumnDef="uploadedBy">
+      <th cdk-header-cell *cdkHeaderCellDef class="col-optional">Uploaded By</th>
+      <td cdk-cell *cdkCellDef="let rule" class="col-optional">-</td>
+    </ng-container>
+
+    <!-- TODO: Description column once backend supports it -->
+    <ng-container cdkColumnDef="description">
+      <th cdk-header-cell *cdkHeaderCellDef class="col-optional">Description</th>
+      <td cdk-cell *cdkCellDef="let rule" class="col-optional">-</td>
+    </ng-container>
+
+    <ng-container cdkColumnDef="subscribed">
+      <th cdk-header-cell *cdkHeaderCellDef>Subscribed</th>
+      <td cdk-cell *cdkCellDef="let rule">
+        <ui-switch
+          [checked]="rule.is_subscribed"
+          (checkedChange)="onToggleSubscription(rule, $event)"
+          [ariaLabel]="'Subscribed to ' + rule.id"
+        />
       </td>
-      <td class="action-icons">
-        <button
-          pButton
-          class="p-button-text p-button-sm"
-          icon="pi pi-pencil"
-          (click)="onEdit(rule)"
-          aria-label="Edit rule"
-        ></button>
-        <button
-          pButton
-          class="p-button-text p-button-sm p-button-danger"
-          icon="pi pi-trash"
-          (click)="onDelete(rule)"
-          aria-label="Delete rule"
-        ></button>
-      </td>
-    </tr>
-  </ng-template>
-  <ng-template #emptymessage>
-    <tr>
-      <td colspan="7">
-        <div class="empty-state">
-          @if (rules().length === 0) {
-            No rules yet. Add a rule or upload a CSV to get started.
-          } @else {
-            No rules match your search.
-          }
+    </ng-container>
+
+    <ng-container cdkColumnDef="actions">
+      <th cdk-header-cell *cdkHeaderCellDef class="col-actions"><span class="cdk-visually-hidden">Actions</span></th>
+      <td cdk-cell *cdkCellDef="let rule" class="col-actions">
+        <div class="action-icons">
+          <button
+            type="button"
+            class="ui-button ui-button--text ui-button--icon"
+            (click)="onEdit(rule)"
+            aria-label="Edit rule"
+          >
+            <mat-icon aria-hidden="true">edit</mat-icon>
+          </button>
+          <button
+            type="button"
+            class="ui-button ui-button--text ui-button--danger ui-button--icon"
+            (click)="onDelete(rule)"
+            aria-label="Delete rule"
+          >
+            <mat-icon aria-hidden="true">delete</mat-icon>
+          </button>
         </div>
       </td>
+    </ng-container>
+
+    <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
+    <tr cdk-row *cdkRowDef="let rule; columns: columns" [class.ui-row-selected]="isSelected(rule)"></tr>
+    <tr *cdkNoDataRow>
+      <td [attr.colspan]="columns.length" class="ui-table-empty">
+        @if (loading()) {
+          <div class="ui-spinner small-spinner" role="status" aria-label="Loading rules"></div>
+        } @else if (rules().length === 0) {
+          No rules yet. Add a rule or upload a CSV to get started.
+        } @else {
+          No rules match your search.
+        }
+      </td>
     </tr>
-  </ng-template>
-</p-table>
+  </table>
+</div>

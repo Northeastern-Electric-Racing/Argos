@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'setting-input',
   templateUrl: './setting-input.component.html',
   styleUrls: ['./setting-input.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputTextModule]
+  imports: [FormsModule]
 })
 export default class SettingInputComponent {
   label = input.required<string>();

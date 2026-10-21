@@ -1,0 +1,47 @@
+<div
+  ngCombobox
+  #combobox="ngCombobox"
+  class="ui-select"
+  [class.ui-select--sm]="size() === 'sm'"
+  [id]="inputId()"
+  [attr.aria-label]="ariaLabel() ?? placeholder()"
+  [disabled]="disabled()"
+  [(expanded)]="expanded"
+  [preserveContent]="true"
+>
+  <span class="ui-select-label" [class.placeholder]="display() === undefined">{{ display() ?? placeholder() }}</span>
+  <mat-icon class="ui-select-arrow" aria-hidden="true">expand_more</mat-icon>
+</div>
+
+<ng-template
+  [cdkConnectedOverlay]="{ origin: combobox.element, usePopover: 'inline', matchWidth: true }"
+  [cdkConnectedOverlayOpen]="expanded()"
+>
+  <ng-template ngComboboxPopup [combobox]="combobox">
+    <div class="ui-listbox-popup ui-listbox-popup--grow" [class.ui-listbox-popup--sm]="size() === 'sm'">
+      <div
+        #listbox="ngListbox"
+        ngListbox
+        ngComboboxWidget
+        [tabindex]="-1"
+        focusMode="activedescendant"
+        selectionMode="explicit"
+        [value]="selectedValues()"
+        (valueChange)="onValuesChange($event)"
+        [activeDescendant]="listbox.activeDescendant()"
+        (click)="commit()"
+        (keydown.enter)="commit()"
+        (keydown.space)="commit()"
+      >
+        @for (option of options(); track $index) {
+          <div ngOption [value]="option" [label]="labelOf(option)" [title]="labelOf(option)">
+            <span class="ui-option-text">{{ labelOf(option) }}</span>
+            <mat-icon class="ui-option-check" aria-hidden="true">check</mat-icon>
+          </div>
+        } @empty {
+          <div class="ui-listbox-empty">No options</div>
+        }
+      </div>
+    </div>
+  </ng-template>
+</ng-template>

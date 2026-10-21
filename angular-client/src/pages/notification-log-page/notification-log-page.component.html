@@ -7,60 +7,63 @@
       }
     </div>
     @if (hasEntries()) {
-      <p-button
-        label="Clear All"
-        icon="pi pi-trash"
-        severity="danger"
-        [text]="true"
-        (onClick)="notificationLogService.clearAll()"
-        ariaLabel="Clear all notifications"
-      />
+      <button
+        type="button"
+        class="ui-button ui-button--text ui-button--danger"
+        (click)="notificationLogService.clearAll()"
+        aria-label="Clear all notifications"
+      >
+        <mat-icon aria-hidden="true">delete</mat-icon>Clear All
+      </button>
     }
   </header>
 
   @if (!hasEntries()) {
     <div class="empty-state">
-      <i class="pi pi-bell-slash empty-icon"></i>
+      <mat-icon class="empty-icon" aria-hidden="true">notifications_off</mat-icon>
       <typography variant="subheader" content="No notifications have been triggered yet" />
       <span class="empty-hint">Triggered rules will appear here in real-time</span>
     </div>
   } @else {
     <div class="log-table-wrapper">
-      <p-table [value]="entries()" stripedRows [scrollable]="true" scrollHeight="flex">
-        <ng-template #header>
-          <tr>
-            <th class="col-rule">Rule ID</th>
-            <th class="col-topic">Topic</th>
-            <th class="col-values">Values</th>
-            <th class="col-time">Time</th>
-            <th class="col-actions"></th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-entry>
-          <tr [class.unread]="!entry.read">
-            <td class="col-rule">
-              <span class="rule-cell">
-                <span class="rule-dot" [class.unread-dot]="!entry.read" aria-hidden="true"></span>
-                {{ entry.notification.id }}
-              </span>
-            </td>
-            <td class="col-topic">{{ entry.notification.topic }}</td>
-            <td class="col-values">{{ entry.notification.values.join(', ') }}</td>
-            <td class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
-            <td class="col-actions">
-              <p-button
-                icon="pi pi-times"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                size="small"
-                (onClick)="notificationLogService.dismissEntry(entry.id)"
-                [ariaLabel]="'Dismiss notification ' + entry.notification.id"
-              />
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+      <table cdk-table class="ui-table log-table" [dataSource]="entries()" [trackBy]="trackById">
+        <ng-container cdkColumnDef="rule">
+          <th cdk-header-cell *cdkHeaderCellDef class="col-rule">Rule ID</th>
+          <td cdk-cell *cdkCellDef="let entry" class="col-rule">
+            <span class="rule-cell">
+              <span class="rule-dot" [class.unread-dot]="!entry.read" aria-hidden="true"></span>
+              {{ entry.notification.id }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container cdkColumnDef="topic">
+          <th cdk-header-cell *cdkHeaderCellDef class="col-topic">Topic</th>
+          <td cdk-cell *cdkCellDef="let entry" class="col-topic">{{ entry.notification.topic }}</td>
+        </ng-container>
+        <ng-container cdkColumnDef="values">
+          <th cdk-header-cell *cdkHeaderCellDef class="col-values">Values</th>
+          <td cdk-cell *cdkCellDef="let entry" class="col-values">{{ entry.notification.values.join(', ') }}</td>
+        </ng-container>
+        <ng-container cdkColumnDef="time">
+          <th cdk-header-cell *cdkHeaderCellDef class="col-time">Time</th>
+          <td cdk-cell *cdkCellDef="let entry" class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
+        </ng-container>
+        <ng-container cdkColumnDef="actions">
+          <th cdk-header-cell *cdkHeaderCellDef class="col-actions"><span class="cdk-visually-hidden">Actions</span></th>
+          <td cdk-cell *cdkCellDef="let entry" class="col-actions">
+            <button
+              type="button"
+              class="ui-button ui-button--text ui-button--icon dismiss-button"
+              (click)="notificationLogService.dismissEntry(entry.id)"
+              [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
+            >
+              <mat-icon aria-hidden="true">close</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
+        <tr cdk-row *cdkRowDef="let entry; columns: columns" [class.unread]="!entry.read"></tr>
+      </table>
     </div>
   }
 </div>

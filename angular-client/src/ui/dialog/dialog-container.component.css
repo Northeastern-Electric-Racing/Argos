@@ -1,0 +1,69 @@
+:host {
+  /* Fill the overlay pane, which carries the requested width (CdkDialogContainer's own host styles) */
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  max-height: inherit;
+  outline: none;
+}
+
+.ui-dialog-surface {
+  /* Header padding; the close button sits in the top-right corner of the same box. */
+  --ui-dialog-header-top: 0.9rem;
+  --ui-dialog-header-right: 1rem;
+  --ui-dialog-header-bottom: 0.5rem;
+  --ui-dialog-header-left: 1.25rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
+  animation: ui-dialog-in 140ms ease-out;
+}
+
+@keyframes ui-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.ui-dialog-header {
+  display: flex;
+  align-items: center;
+  /* Room for the 2rem close button (see .ui-dialog-close) plus a 1rem gap. */
+  min-height: calc(var(--ui-dialog-header-top) + 2rem + var(--ui-dialog-header-bottom));
+  padding: var(--ui-dialog-header-top) calc(var(--ui-dialog-header-right) + 3rem) var(--ui-dialog-header-bottom)
+    var(--ui-dialog-header-left);
+}
+
+.ui-dialog-header.draggable {
+  cursor: move;
+}
+
+.ui-dialog-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.ui-dialog-close {
+  position: absolute;
+  top: var(--ui-dialog-header-top);
+  right: var(--ui-dialog-header-right);
+}
+
+.ui-dialog-content {
+  padding: 0 1.25rem 1.25rem;
+  overflow: auto;
+}
+
+.ui-dialog-content.headerless {
+  padding: 0;
+}

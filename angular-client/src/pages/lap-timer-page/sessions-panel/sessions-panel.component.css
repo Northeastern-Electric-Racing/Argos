@@ -70,13 +70,14 @@
 }
 
 /* Body font shared by the table, rename input, and menu items. */
-.sessions-table-wrap :where(.p-datatable),
-.session-rename-input,
-.session-menu-item {
+.sessions-table,
+.session-rename-input {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
 }
-.sessions-table-wrap :where(.p-datatable) {
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
   color: var(--color-text-primary);
 }
 .sessions-table-wrap :where(th) {
@@ -108,34 +109,34 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
+/* Column rules; the base th/td rules above are :where()-wrapped, so these win without. */
 .sessions-table-wrap th.col-state,
 .sessions-table-wrap td.col-state {
   width: 32px;
-  text-align: center !important;
-  padding-left: 8px !important;
-  padding-right: 0 !important;
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 0;
 }
 .sessions-table-wrap th.col-name,
 .sessions-table-wrap td.col-name {
   min-width: 0;
-  text-align: left !important;
+  text-align: left;
 }
 .sessions-table-wrap th.col-started,
 .sessions-table-wrap td.col-started {
   width: 140px;
   white-space: nowrap;
-  text-align: left !important;
+  text-align: left;
 }
 .sessions-table-wrap th.col-laps,
 .sessions-table-wrap td.col-laps {
   width: 60px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap th.col-best,
 .sessions-table-wrap td.col-best {
   width: 90px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap td.col-best {
   color: var(--color-battery-high);
@@ -143,12 +144,12 @@
 .sessions-table-wrap th.col-run,
 .sessions-table-wrap td.col-run {
   width: 60px;
-  text-align: right !important;
+  text-align: right;
 }
 .sessions-table-wrap th.col-actions,
 .sessions-table-wrap td.col-actions {
   width: 40px;
-  text-align: right !important;
+  text-align: right;
 }
 
 .session-name {
@@ -178,48 +179,8 @@
   border-color: var(--color-battery-high);
 }
 
-.session-menu-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 2px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 4px;
-}
-.session-menu-btn:hover {
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.session-menu-list {
-  display: flex;
-  flex-direction: column;
-  min-width: 160px;
-}
-.session-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  text-align: left;
-}
-.session-menu-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-.session-menu-item.destructive {
-  color: var(--color-battery-low);
-}
-
 /* Shared 18px icon sizing for the state icon and menu icons. */
-.session-state-icon,
-.session-menu-btn mat-icon,
-.session-menu-item mat-icon {
+.session-state-icon {
   font-size: 18px;
   width: 18px;
   height: 18px;
