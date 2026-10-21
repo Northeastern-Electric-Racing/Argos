@@ -148,6 +148,27 @@ describe('graph chart options', () => {
       ]);
     });
 
+    it('places the ticks of views under an hour in UTC, which ECharts can tick through the hour repeated at DST end', () => {
+      // ECharts' local-time ticks skip a view inside or across that hour, leaving only its two ends
+      const hours = (h: number) => h * 60 * 60 * 1000;
+      const long = new Map<string, Point[]>([
+        [
+          'A 0',
+          [
+            [0, 1],
+            [hours(2), 2]
+          ]
+        ]
+      ]);
+
+      expect(graphChartUpdate(state({ data: long, xRangeMs: 30_000 }))['useUTC']).toBeTrue();
+      expect(graphChartUpdate(state({ data }))['useUTC']).toBeTrue();
+      // Hour and day ticks stay on local hours and midnights
+      expect(graphChartUpdate(state({ data: long }))['useUTC']).toBeFalse();
+      expect(graphChartUpdate(state({ data: long, xRangeMs: hours(1.5) }))['useUTC']).toBeFalse();
+      expect(graphChartUpdate(state())['useUTC']).toBeFalse();
+    });
+
     it('labels a live window as sparsely as a paused or historical one (about 6 labels)', () => {
       // With a fixed min, ECharts' time scale puts about twice splitNumber labels on the axis
       expect((graphChartUpdate(state({ data, xRangeMs: 500 })).xAxis as AnyRecord)['splitNumber']).toBe(3);

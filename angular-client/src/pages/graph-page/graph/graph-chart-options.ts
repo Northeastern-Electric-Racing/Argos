@@ -25,7 +25,8 @@ type YAxisOption = Exclude<NonNullable<GraphChartOption['yAxis']>, unknown[]>;
 /** One datapoint as ECharts reads it: [time in ms, value]. */
 export type Point = [x: number, y: number];
 
-export const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+export const DAY_MS = 24 * HOUR_MS;
 /** Id of the data-less series that carries the day-boundary mark lines. */
 export const DAY_BOUNDARIES_ID = '__day-boundaries';
 const TEXT_COLOR = '#fff';
@@ -152,7 +153,12 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
   }));
   // Left out otherwise, so replaceMerge removes the lines of a range that no longer spans days
   if (isMultiDay) series.push(dayBoundarySeries(span!));
+  const viewMs = span && (windowStart === undefined ? span.spanMs : span.maxX - windowStart);
   return {
+    // ECharts' local-time ticks skip the hour repeated when DST ends, leaving a view inside or across it with only its
+    // two end labels. UTC ticks don't; under an hour they still fall on the same local seconds and minutes, and the
+    // label formatters show local time either way. Longer views keep local ticks for local hours and midnights
+    useUTC: viewMs !== null && viewMs < HOUR_MS,
     legend: { width: Math.max(0, state.chartWidth - LEGEND_LEFT_PX - 2 * LEGEND_PADDING_PX - TOOLBOX_RESERVE_PX) },
     xAxis: {
       // null clears a previous window so the axis fits all data again
