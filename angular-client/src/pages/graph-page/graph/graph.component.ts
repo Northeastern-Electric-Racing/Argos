@@ -34,6 +34,7 @@ import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils
 import { DayBoundariesPrimitive } from './day-boundaries.primitive';
 import { HoverMarker, HoverMarkersPrimitive } from './hover-markers.primitive';
 import {
+  CHART_FONT_FAMILY,
   buildDayBoundaries,
   formatCrosshairTime,
   formatTickMark,
@@ -74,6 +75,11 @@ export interface HoverState {
 
 /** Gap between the cursor and the tooltip, in px. */
 const TOOLTIP_OFFSET = 12;
+
+const TEXT_COLOR = '#fff';
+
+/** More last-value labels than this on one axis get pushed apart over its ticks, so they're dropped. */
+const MAX_LAST_VALUE_LABELS = 3;
 
 /** Scale margin on a side pinned to a y min/max: just enough to draw the limit's own label whole. */
 const PINNED_MARGIN = 0.02;
@@ -140,6 +146,10 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
   readonly legend = signal<LegendItem[]>([]);
   readonly hover = signal<HoverState | null>(null);
+  /** Topics hidden from their legend entry. */
+  readonly hidden = signal<ReadonlySet<string>>(new Set());
+  /** The user has zoomed or panned away from the default view. */
+  readonly zoomed = signal(false);
 
   private series = new Map<string, ISeriesApi<'Line'>>();
   /** Points per series that were trimmed from `data` but are still in the chart's copy. */
@@ -160,8 +170,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         const area = this.container().nativeElement;
         const { x, y } = hover;
         const { offsetWidth: width, offsetHeight: height } = tooltip;
-        // The page can push the chart's bottom off screen, so flip against the visible part of it.
-        const bottom = Math.min(area.clientHeight, window.innerHeight - area.getBoundingClientRect().top);
+        // Flip against the plot (above the time axis), and the part of it on screen.
+        const plotHeight = area.clientHeight - (this.chart?.timeScale().height() ?? 0);
+        const bottom = Math.min(plotHeight, window.innerHeight - area.getBoundingClientRect().top);
         const flipX = x + TOOLTIP_OFFSET + width > area.clientWidth;
         const flipY = y + TOOLTIP_OFFSET + height > bottom;
         return {
@@ -226,8 +237,12 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#fff',
-        fontSize: 12
+        textColor: TEXT_COLOR,
+        fontSize: 12,
+        fontFamily: CHART_FONT_FAMILY,
+        // The licence's link to tradingview.com is in the template, beside the legend, rather than
+        // a logo link inside the plot.
+        attributionLogo: false
       },
       grid: {
         vertLines: { color: 'rgba(255, 255, 255, 0.08)' },
@@ -351,10 +366,29 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.fitData();
   }
 
-  /** Double-click: back to the whole range on both axes (stands in for ApexCharts' reset-zoom button). */
+  /** Reset zoom button or double-click: back to the whole range on both axes. */
   resetZoom() {
     this.fitData();
     this.series.forEach((s) => s.priceScale().applyOptions({ autoScale: true }));
+  }
+
+  /**
+   * After a wheel, or a drag on the chart (pan, or stretching an axis), checks whether the view left
+   * fitData()'s. Not while live and playing, where the next message puts the live window back anyway.
+   */
+  onUserZoom(event?: PointerEvent) {
+    if (this.realTime() && !this.isPaused()) return;
+    if (event && event.buttons === 0) return;
+    // The chart applies the wheel or drag on its next frame; read the view after it.
+    requestAnimationFrame(() => this.zoomed.set(this.awayFromFit()));
+  }
+
+  /** Legend click: hides or shows the topic, as ApexCharts' legend did. */
+  toggleTopic(label: string) {
+    const hidden = new Set(this.hidden());
+    if (!hidden.delete(label)) hidden.add(label);
+    this.hidden.set(hidden);
+    this.series.get(label)?.applyOptions({ visible: !hidden.has(label) });
   }
 
   /** Pushes one series' changes to the chart: appends when possible, a full setData otherwise. */
@@ -386,13 +420,14 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     // An overlay scale draws no axis, so its last-value label (and title) would land beside another
     // topic's ticks on the left or right axis; those topics show their values only in the tooltip.
     const ownAxis = priceScaleId === 'left' || priceScaleId === 'right';
+    const sameAxis = ownAxis ? [...this.series.values()].filter((s) => s.options().priceScaleId === priceScaleId) : [];
+    if (sameAxis.length === MAX_LAST_VALUE_LABELS) sameAxis.forEach((s) => s.applyOptions({ lastValueVisible: false }));
     const series = this.chart!.addSeries(LineSeries, {
       color,
       lineWidth: 3,
       priceScaleId,
-      // With an axis per topic, tag each axis' last-value label with its topic.
-      title: multipleYAxes && ownAxis ? label : '',
-      lastValueVisible: ownAxis,
+      visible: !untracked(this.hidden).has(label),
+      lastValueVisible: ownAxis && sameAxis.length < MAX_LAST_VALUE_LABELS,
       priceLineVisible: false,
       // hoverMarkers marks every series at its held value instead.
       crosshairMarkerVisible: false,
@@ -441,6 +476,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
   private clearChart() {
     this.removeAllSeries();
+    this.zoomed.set(false);
     this.data = new Map();
     this.timeRangeMs = undefined;
     this.dayBoundaries.setBoundaries([]);
@@ -454,6 +490,9 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     this.removeAllSeries();
     const multipleYAxes = untracked(this.showMultipleYAxes);
     this.chart.applyOptions({ rightPriceScale: { visible: multipleYAxes && this.data.size > 1 } });
+    // With an axis per topic, each axis' text takes its topic's color, which the legend names.
+    this.chart.priceScale('left').applyOptions({ textColor: multipleYAxes ? seriesColor(0) : TEXT_COLOR });
+    this.chart.priceScale('right').applyOptions({ textColor: seriesColor(1) });
     this.applyYScaleMargins();
     this.data.forEach((line, label) => this.syncSeries(label, line, [], true, 0));
     this.refreshView();
@@ -519,9 +558,22 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
   /** Fits the data on screen; unlike fitContent(), leaves out the live grid's look-ahead. */
   private fitData() {
+    this.zoomed.set(false);
     const extent = this.dataExtent();
     if (!this.chart || !extent) return;
     this.chart.timeScale().setVisibleRange({ from: toChartTime(extent.first), to: toChartTime(extent.latest) });
+  }
+
+  /** A price axis was stretched, or the time axis no longer runs from the data's first to its latest point. */
+  private awayFromFit(): boolean {
+    const timeScale = this.chart?.timeScale();
+    const range = timeScale?.getVisibleLogicalRange();
+    const extent = this.dataExtent();
+    if (!timeScale || !range || !extent) return false;
+    if ([...this.series.values()].some((s) => !s.priceScale().options().autoScale)) return true;
+    const from = timeScale.timeToIndex(toChartTime(extent.first), true);
+    const to = timeScale.timeToIndex(toChartTime(extent.latest), true);
+    return from === null || to === null || Math.abs(range.from - from) > 1 || Math.abs(range.to - to) > 1;
   }
 
   /** Earliest and latest data time (ms) across the series; null with no data. */
@@ -553,10 +605,16 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     const { logical } = param;
     const rows: TooltipRow[] = [];
     const markers: HoverMarker[] = [];
+    const hidden = this.hidden();
     for (const item of this.legend()) {
       const series = this.series.get(item.label);
-      const held = series?.dataByIndex(logical, MismatchDirection.NearestLeft);
-      if (!series || !held || !('value' in held)) continue;
+      if (!series || hidden.has(item.label)) continue;
+      const held = series.dataByIndex(logical, MismatchDirection.NearestLeft);
+      // No point yet at the hovered time: keep the row, so rows stay in legend order.
+      if (!held || !('value' in held)) {
+        rows.push({ ...item, value: '—' });
+        continue;
+      }
       rows.push({ ...item, value: formatValue(held.value) });
       markers.push({ series, time: held.time, value: held.value, color: item.color });
     }

@@ -27,6 +27,11 @@ const config = (overrides: Partial<GraphConfig> = {}): GraphConfig => ({
   ...overrides
 });
 
+/** The component's private series map, for checks on topic series only. */
+interface Internals {
+  series: Map<string, ISeriesApi<'Line'>>;
+}
+
 const topic = (label: string, points: GraphData[][] = []): ObservableGraphInfo => ({
   label,
   updates: new BehaviorSubject<GraphData[][]>(points)
@@ -302,13 +307,16 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     expect(component.chart!.options().rightPriceScale.visible).toBeFalse();
   });
 
-  it('gives each topic its own price scale with multiple y-axes, labelling only the two drawn axes', async () => {
+  it('gives each topic its own price scale with multiple y-axes, colouring the two drawn axes by topic', async () => {
     await render({
       topics: [topic('A', [[{ x: T0, y: 1 }]]), topic('B', [[{ x: T0, y: 2 }]]), topic('C', [[{ x: T0, y: 3 }]])],
       multi: true
     });
     expect(allSeries().map((s) => s.options().priceScaleId)).toEqual(['left', 'right', 'overlay-2']);
-    expect(allSeries().map((s) => s.options().title)).toEqual(['A 0', 'B 0', '']);
+    // No title badge in the plot: each axis' text takes its topic's colour instead.
+    expect(allSeries().map((s) => s.options().title)).toEqual(['', '', '']);
+    expect(component.chart!.priceScale('left').options().textColor).toBe(component.legend()[0].color);
+    expect(component.chart!.priceScale('right').options().textColor).toBe(component.legend()[1].color);
     // C's scale has no axis, so no last-value label of its own beside A's or B's ticks.
     expect(allSeries().map((s) => s.options().lastValueVisible)).toEqual([true, true, false]);
 
@@ -318,6 +326,7 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
 
     expect(allSeries().map((s) => s.options().priceScaleId)).toEqual(['left', 'left', 'left']);
     expect(allSeries()[2].data().length).toBe(1);
+    expect(component.chart!.priceScale('left').options().textColor).toBe('#fff');
   });
 
   it('pins the shared y-axis to the configured min and max', async () => {
@@ -400,18 +409,14 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
 
     expect(tooltip()).not.toBeNull();
     expect(tooltip()!.querySelector('.tooltip-time')!.textContent!.trim()).toBe('3/14/26, 09:00:01');
-    // C has no point at or before the hovered time, so it is left out.
+    // C has no point at or before the hovered time, so it keeps its row (in legend order) with no value.
     expect(tooltipRows()).toEqual([
       ['A 0', '1'],
-      ['B 0', '20']
+      ['B 0', '20'],
+      ['C 0', '—']
     ]);
     const swatches = Array.from(tooltip()!.querySelectorAll('.tooltip-row .swatch')) as HTMLElement[];
-    expect(swatches.map((s) => s.style.background)).toEqual(
-      component
-        .legend()
-        .slice(0, 2)
-        .map((l) => hexToRgb(l.color))
-    );
+    expect(swatches.map((s) => s.style.background)).toEqual(component.legend().map((l) => hexToRgb(l.color)));
     // The values live in the tooltip now, not the legend.
     expect(fixture.nativeElement.querySelectorAll('.legend-value').length).toBe(0);
 
@@ -498,5 +503,120 @@ describe('CustomGraphComponent (lightweight-charts)', () => {
     await hoverAt(T0, right, area.clientHeight - 5);
     expect(box().right).toBeCloseTo(paneLeft + right - 12, 0);
     expect(box().bottom).toBeCloseTo(area.clientHeight - 5 - 12, 0);
+  });
+
+  it('keeps the tooltip off the time axis near the bottom of the chart', async () => {
+    await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])] });
+    // Wholly on screen, so the flip is against the time axis, not the window's bottom.
+    Object.assign(fixture.nativeElement.style, { position: 'fixed', top: '0', left: '0', height: '300px' });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const area = fixture.nativeElement.querySelector('.chart-area') as HTMLElement;
+    expect(area.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
+    const axis = component.chart!.timeScale().height();
+    expect(axis).toBeGreaterThan(0);
+
+    await hoverAt(T0, 100, 100);
+    const height = tooltip()!.offsetHeight;
+    // Low enough that the tooltip fits in the chart only by hanging over the time axis, so it flips.
+    const y = area.clientHeight - axis / 2 - 12 - height;
+    await hoverAt(T0, 100, y);
+    const t = tooltip()!.getBoundingClientRect();
+    expect(t.bottom - area.getBoundingClientRect().top).toBeCloseTo(y - 12, 0);
+  });
+
+  it('shows last-value labels only while an axis has at most three topics', async () => {
+    const topics = (n: number) => Array.from({ length: n }, (_, i) => topic(`T${i}`, [[{ x: T0, y: i }]]));
+    await render({ topics: topics(3) });
+    expect(allSeries().map((s) => s.options().lastValueVisible)).toEqual([true, true, true]);
+
+    fixture.componentRef.setInput('valuesSubject', topics(4));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    // Four stacked labels pushed apart hide the axis' own ticks.
+    expect(allSeries().map((s) => s.options().lastValueVisible)).toEqual([false, false, false, false]);
+
+    fixture.componentRef.setInput('showMultipleYAxes', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(allSeries().map((s) => s.options().lastValueVisible)).toEqual([true, true, false, false]);
+  });
+
+  it('hides and shows a topic from its legend entry', async () => {
+    await render({ topics: [topic('A', [[{ x: T0, y: 1 }]]), topic('B', [[{ x: T0, y: 2 }]])] });
+    const topicSeries = () => component.legend().map((l) => (component as unknown as Internals).series.get(l.label)!);
+    const button = () => fixture.nativeElement.querySelectorAll('.legend-item')[1] as HTMLButtonElement;
+    expect(button().getAttribute('aria-pressed')).toBe('true');
+
+    button().click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(topicSeries().map((s) => s.options().visible)).toEqual([true, false]);
+    expect(button().getAttribute('aria-pressed')).toBe('false');
+    // A hidden topic leaves the tooltip and the hover markers.
+    await hoverAt(T0);
+    expect(tooltipRows()).toEqual([['A 0', '1']]);
+
+    button().click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(topicSeries().map((s) => s.options().visible)).toEqual([true, true]);
+  });
+
+  it('offers a reset zoom button once the user zooms or pans, and resets with it', async () => {
+    const points = Array.from({ length: 100 }, (_, i) => ({ x: T0 + i * 1000, y: i }));
+    await render({ topics: [topic('A', [points])] });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const reset = () => fixture.nativeElement.querySelector('.reset-zoom') as HTMLButtonElement | null;
+    expect(reset()).toBeNull();
+
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    const container = fixture.nativeElement.querySelector('.chart-container') as HTMLElement;
+    const wheel = async () => {
+      container.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true }));
+      await frame();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+    // A wheel or drag that leaves the whole range on screen (the edges are fixed) is no zoom.
+    await wheel();
+    expect(reset()).toBeNull();
+
+    // Stands in for the wheel's own zoom, which the synthetic event doesn't drive.
+    component.chart!.timeScale().setVisibleRange({ from: toChartTime(T0 + 10_000), to: toChartTime(T0 + 20_000) });
+    await frame();
+    await wheel();
+    expect(reset()).not.toBeNull();
+
+    reset()!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(reset()).toBeNull();
+    expect(component.chart!.timeScale().getVisibleRange()).toEqual({ from: toChartTime(T0), to: toChartTime(T0 + 99_000) });
+  });
+
+  it('says what to do while the chart is empty', async () => {
+    const hint = () => (fixture.nativeElement.querySelector('.empty-hint') as HTMLElement | null)?.textContent?.trim();
+    await render({ topics: [] });
+    expect(hint()).toBe('Select a topic to graph');
+
+    const speed = topic('VCU/CarState/speed');
+    fixture.componentRef.setInput('valuesSubject', [speed]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(hint()).toBe('No data yet');
+
+    speed.updates.next([[{ x: T0, y: 1 }]]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(hint()).toBeUndefined();
+  });
+
+  it('uses the app font and moves the TradingView attribution out of the plot', async () => {
+    await render({ topics: [topic('A', [[{ x: T0, y: 1 }]])] });
+    expect(component.chart!.options().layout.fontFamily).toContain('Roboto');
+    expect(component.chart!.options().layout.attributionLogo).toBeFalse();
+    const link = fixture.nativeElement.querySelector('a.attribution') as HTMLAnchorElement;
+    expect(link.href).toBe('https://www.tradingview.com/');
   });
 });

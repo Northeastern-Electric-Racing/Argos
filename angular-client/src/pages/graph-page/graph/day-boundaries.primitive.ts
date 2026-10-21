@@ -7,7 +7,7 @@ import {
   PaneAttachedParameter,
   Time
 } from 'lightweight-charts';
-import { DayBoundary, toChartTime } from './graph-chart.utils';
+import { CHART_FONT_FAMILY, DayBoundary, toChartTime } from './graph-chart.utils';
 
 type RenderTarget = Parameters<IPrimitivePaneRenderer['draw']>[0];
 
@@ -78,7 +78,7 @@ export class DayBoundariesPrimitive implements IPanePrimitive<Time> {
     if (positions.length === 0) return;
     target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
       ctx.save();
-      ctx.font = '11px sans-serif';
+      ctx.font = `11px ${CHART_FONT_FAMILY}`;
       ctx.textBaseline = 'top';
       // Days squeezed together where the axis is dense would stack their labels; keep only the first.
       let labelEnd = -Infinity;

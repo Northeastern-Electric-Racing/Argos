@@ -3,8 +3,14 @@ import { GraphData } from 'src/utils/types.utils';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
-// ApexCharts' default palette, so series keep the colors people are used to.
-export const SERIES_COLORS = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#3F51B5', '#03A9F4', '#4CAF50'];
+/**
+ * ApexCharts' five default colors (what develop draws), then three more picked to stay apart from them
+ * (CIEDE2000 > 20 for every pair) with at least 3:1 contrast on the page's #101010 background.
+ */
+export const SERIES_COLORS = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#F9A8D4', '#BDBDBD', '#26A69A'];
+
+/** The app's font (src/styles.css), for text the chart draws on its canvas. */
+export const CHART_FONT_FAMILY = 'Roboto, sans-serif';
 
 export const seriesColor = (index: number): string => SERIES_COLORS[index % SERIES_COLORS.length];
 

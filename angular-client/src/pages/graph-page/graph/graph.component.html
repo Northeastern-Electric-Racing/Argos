@@ -1,13 +1,39 @@
-<ul class="legend" aria-label="Graph legend">
-  @for (item of legend(); track item.label) {
-    <li class="legend-item">
-      <span class="swatch" [style.background]="item.color" aria-hidden="true"></span>
-      <span class="legend-label">{{ item.label }}</span>
-    </li>
+<div class="legend-row">
+  <ul class="legend" aria-label="Graph legend">
+    @for (item of legend(); track item.label) {
+      <li>
+        <button
+          type="button"
+          class="legend-item"
+          [class.topic-hidden]="hidden().has(item.label)"
+          [attr.aria-pressed]="!hidden().has(item.label)"
+          title="Show or hide this topic"
+          (click)="toggleTopic(item.label)"
+        >
+          <span class="swatch" [style.background]="item.color" aria-hidden="true"></span>
+          <span class="legend-label">{{ item.label }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+  @if (zoomed()) {
+    <button type="button" class="reset-zoom" (click)="resetZoom()">Reset zoom</button>
   }
-</ul>
+  <!-- TradingView Lightweight Charts™, Copyright (c) 2025 TradingView, Inc. https://www.tradingview.com/
+       (the library's NOTICE). Its licence asks for this link on the page; it stands in for the in-plot logo. -->
+  <a class="attribution" href="https://www.tradingview.com/" target="_blank" rel="noopener">Charts by TradingView</a>
+</div>
 <div class="chart-area">
-  <div #chartContainer class="chart-container" (dblclick)="resetZoom()"></div>
+  <div
+    #chartContainer
+    class="chart-container"
+    (dblclick)="resetZoom()"
+    (wheel)="onUserZoom()"
+    (pointermove)="onUserZoom($event)"
+  ></div>
+  @if (legend().length === 0) {
+    <p class="empty-hint">{{ valuesSubject().length === 0 ? 'Select a topic to graph' : 'No data yet' }}</p>
+  }
   @if (hover(); as h) {
     <!-- Hidden until placed after render, so it never flashes at the corner. -->
     <div #tooltip class="tooltip" role="tooltip">
