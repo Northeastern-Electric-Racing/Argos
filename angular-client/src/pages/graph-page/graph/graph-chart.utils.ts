@@ -79,14 +79,14 @@ export function dayBoundaries(minX: number, maxX: number): number[] {
   return boundaries;
 }
 
-export const singleDayLabel = (ms: number): string => new Date(ms).toLocaleTimeString('en-US', { hour12: false });
+// develop's x-axis label formats, as uPlot's precompiled date templates: cheaper per tick than Intl.
+// uPlot's own time-axis table only has 12 h formats, and picks a format by tick size rather than data span.
+const formatSingleDay = uPlot.fmtDate('{HH}:{mm}:{ss}');
+const formatMultiDay = uPlot.fmtDate('{M}/{D} {HH}:{mm}');
 
-export const multiDayLabel = (ms: number): string => {
-  const d = new Date(ms);
-  const date = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-  const time = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-  return `${date} ${time}`;
-};
+export const singleDayLabel = (ms: number): string => formatSingleDay(new Date(ms));
+
+export const multiDayLabel = (ms: number): string => formatMultiDay(new Date(ms));
 
 const tooltipTimeLabel = (ms: number): string =>
   new Date(ms).toLocaleString('en-US', {

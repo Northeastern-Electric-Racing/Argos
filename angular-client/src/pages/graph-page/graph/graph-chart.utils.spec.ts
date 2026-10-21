@@ -148,8 +148,8 @@ describe('graph chart utils', () => {
       const values = options.axes![0].values as (u: unknown, splits: number[]) => string[];
       const t = new Date(2026, 0, 2, 13, 5).getTime();
 
-      expect(values(null, [t])[0]).toContain('13:05');
-      expect(values(null, [t])[0]).not.toContain('1/2');
+      expect(values(null, [t])[0]).toBe('13:05:00');
+      expect(values(null, [new Date(2026, 0, 2, 0, 7, 9).getTime()])[0]).toBe('00:07:09');
       multiDay = true;
       expect(values(null, [t])[0]).toBe('1/2 13:05');
     });
