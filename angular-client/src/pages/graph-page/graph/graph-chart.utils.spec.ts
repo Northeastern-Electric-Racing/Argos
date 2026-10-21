@@ -1,3 +1,4 @@
+import uPlot from 'uplot';
 import {
   alignSeries,
   buildGraphChartOptions,
@@ -114,7 +115,7 @@ describe('graph chart utils', () => {
   });
 
   describe('buildGraphChartOptions', () => {
-    const config = { yMin: null, yMax: null, isMultiDay: () => false };
+    const config = { yBounds: () => ({ yMin: null, yMax: null }), isMultiDay: () => false };
 
     it('puts every topic on the shared y scale by default', () => {
       const options = buildGraphChartOptions({ ...config, keys: ['A 0', 'B 0'], multipleYAxes: false });
@@ -130,6 +131,15 @@ describe('graph chart utils', () => {
       expect(options.series.map((s) => s.scale)).toEqual([undefined, 'y0', 'y1']);
       expect(Object.keys(options.scales!)).toEqual(['x', 'y0', 'y1']);
       expect(options.axes!.length).toBe(3);
+    });
+
+    it('reads the Y Min/Max bounds when uPlot ranges a scale, so new bounds need no rebuild', () => {
+      let bounds: { yMin: number | null; yMax: number | null } = { yMin: null, yMax: null };
+      const options = buildGraphChartOptions({ ...config, keys: ['A 0'], multipleYAxes: false, yBounds: () => bounds });
+      const range = options.scales!['y'].range as uPlot.Range.Function;
+
+      bounds = { yMin: -10, yMax: 10 };
+      expect(range({} as uPlot, 0, 5, 'y')).toEqual([-10, 10]);
     });
 
     it('formats x labels by whether the data spans several days, read at draw time', () => {

@@ -7,7 +7,8 @@ import {
   untracked,
   inject,
   DestroyRef,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
@@ -50,10 +51,16 @@ export default class CustomGraphComponent implements OnDestroy {
 
   /** What the uPlot wrapper draws. Options change only when the chart's structure does; data changes every frame. */
   chartOptions = signal<UplotChartOptions>(
-    buildGraphChartOptions({ keys: [], multipleYAxes: false, yMin: null, yMax: null, isMultiDay: () => false })
+    buildGraphChartOptions({
+      keys: [],
+      multipleYAxes: false,
+      yBounds: () => ({ yMin: null, yMax: null }),
+      isMultiDay: () => false
+    })
   );
   chartData = signal<uPlot.AlignedData>([[]]);
   chartXRange = signal<UplotXRange | null>(null);
+  private chart = viewChild(UplotChartComponent);
 
   /** The series the current chartOptions were built for: a different set rebuilds the chart. */
   private seriesKeys: string[] = [];
@@ -68,12 +75,22 @@ export default class CustomGraphComponent implements OnDestroy {
       }
     });
 
+    // Multiple y-axes change the chart's scales and axes, so they rebuild it.
     effect(() => {
-      this.graphConfig();
       this.showMultipleYAxes();
       untracked(() => {
         this.rebuildOptions();
         this.resetRange();
+      });
+    });
+
+    // The rest of the config is read at range time (Y Min/Max) or per frame, so the chart is kept:
+    // rescaling in place keeps the user's zoom and the series hidden from the legend.
+    effect(() => {
+      this.graphConfig();
+      untracked(() => {
+        this.resetRange();
+        this.chart()?.rescale();
       });
     });
 
@@ -159,12 +176,10 @@ export default class CustomGraphComponent implements OnDestroy {
   }
 
   private buildOptions(keys: string[]): UplotChartOptions {
-    const { yMin, yMax } = untracked(this.graphConfig);
     return buildGraphChartOptions({
       keys,
       multipleYAxes: untracked(this.showMultipleYAxes),
-      yMin,
-      yMax,
+      yBounds: () => untracked(this.graphConfig),
       isMultiDay: () => this.isMultiDay
     });
   }

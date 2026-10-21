@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
+import { By } from '@angular/platform-browser';
+import { UplotChartComponent } from 'src/components/uplot-chart/uplot-chart.component';
 import CustomGraphComponent from './graph.component';
 
 describe('CustomGraphComponent (uPlot)', () => {
@@ -102,6 +104,28 @@ describe('CustomGraphComponent (uPlot)', () => {
 
     expect(component.chartOptions().series.length).toBe(2);
     expect(component.chartOptions().axes!.map((axis) => axis.label)).toEqual([undefined, 'A ']);
+  });
+
+  it('applies Y Min/Max to the live chart without rebuilding it', async () => {
+    await create({
+      valuesSubject: [
+        topic('A', [
+          { x: 1000, y: 1 },
+          { x: 2000, y: 2 }
+        ])
+      ]
+    });
+    const wrapper = fixture.debugElement.query(By.directive(UplotChartComponent)).componentInstance as UplotChartComponent;
+    const options = component.chartOptions();
+    const chart = wrapper.instance;
+
+    fixture.componentRef.setInput('graphConfig', { ...config, yMin: -10, yMax: 10 });
+    await settle();
+
+    expect(component.chartOptions()).toBe(options);
+    expect(wrapper.instance).toBe(chart);
+    expect(chart!.scales['y'].min).toBe(-10);
+    expect(chart!.scales['y'].max).toBe(10);
   });
 
   it('ignores updates while paused and drops the live window to show the whole buffer', async () => {

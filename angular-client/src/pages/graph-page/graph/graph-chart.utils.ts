@@ -253,20 +253,25 @@ export function tooltipPlugin(): uPlot.Plugin {
 export interface GraphChartConfig {
   keys: string[];
   multipleYAxes: boolean;
-  yMin: number | null;
-  yMax: number | null;
+  /** The user's Y Min/Max, read whenever uPlot ranges a y scale, so new bounds need a rescale, not a rebuild. */
+  yBounds: () => { yMin: number | null; yMax: number | null };
   /** Read on every axis redraw, so switching label formats needs no rebuild. */
   isMultiDay: () => boolean;
 }
 
 /** uPlot options for the graph page: drag-to-zoom on x (double-click resets), hover tooltip, toggleable legend. */
 export function buildGraphChartOptions(config: GraphChartConfig): UplotChartOptions {
-  const { keys, multipleYAxes, yMin, yMax, isMultiDay } = config;
+  const { keys, multipleYAxes, yBounds, isMultiDay } = config;
 
   const scales: uPlot.Scales = { x: { time: true } };
   const scaleKeys = multipleYAxes ? keys.map((_, i) => yScaleKey(i, true)) : ['y'];
   for (const key of scaleKeys) {
-    scales[key] = { range: (_u, dataMin, dataMax) => yRange(dataMin, dataMax, yMin, yMax) };
+    scales[key] = {
+      range: (_u, dataMin, dataMax) => {
+        const { yMin, yMax } = yBounds();
+        return yRange(dataMin, dataMax, yMin, yMax);
+      }
+    };
   }
 
   return {

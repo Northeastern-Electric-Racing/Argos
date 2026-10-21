@@ -25,7 +25,9 @@ export interface UplotXRange {
 /**
  * Thin Angular wrapper around uPlot.
  *
- * - A new `options` object rebuilds the chart (series, axes, scales or plugins changed).
+ * - A new `options` object rebuilds the chart (series, axes, scales or plugins changed). A series hidden from the
+ *   legend stays hidden, matched by label, until it is shown again: also through a rebuild without it.
+ * - `rescale()` reruns every scale's range in place, e.g. when a range function reads bounds that changed.
  * - A new `data` array is drawn in place with `setData`: the chart, its DOM and its plugins are kept.
  * - `xRange` pins the x scale after each data update (e.g. a sliding live window); `null` auto-fits x to the data.
  *
@@ -49,6 +51,8 @@ export class UplotChartComponent {
   /** The live chart's legend, observed alongside the host since it takes its height out of the plot's. */
   private legend: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  /** Labels of the series hidden from the legend, carried from each chart to the next. */
+  private hiddenLabels = new Set<uPlot.Series['label']>();
 
   constructor() {
     afterNextRender(() => {
@@ -83,10 +87,25 @@ export class UplotChartComponent {
     return this.chart;
   }
 
+  /** Reruns every scale's range without rebuilding the chart, keeping the current x window (and so any zoom). */
+  rescale(): void {
+    const { chart } = this;
+    if (!chart) return;
+    const { min, max } = chart.scales['x'];
+    // Setting x re-ranges every auto y scale, so their range functions run again.
+    if (min !== undefined && max !== undefined) chart.setScale('x', { min, max });
+  }
+
   private build(options: UplotChartOptions): void {
+    // The outgoing chart's legend toggles update the remembered labels; a series it lacked keeps its entry.
+    for (const s of this.chart?.series.slice(1) ?? []) {
+      if (s.show) this.hiddenLabels.delete(s.label);
+      else this.hiddenLabels.add(s.label);
+    }
     this.chart?.destroy();
+    const series = options.series.map((s, i) => (i > 0 && this.hiddenLabels.has(s.label) ? { ...s, show: false } : s));
     const el = this.target().nativeElement;
-    this.chart = new uPlot({ ...options, width: el.clientWidth, height: el.clientHeight }, this.data(), el);
+    this.chart = new uPlot({ ...options, series, width: el.clientWidth, height: el.clientHeight }, this.data(), el);
     // Fit once the legend is laid out, not now: uPlot sizes its canvas in a microtask, and until then its
     // min-content root collapses and the legend wraps into a tall column. Observing the legend also refits
     // when it re-wraps (more topics, a narrower host) while the host's own size stays the same.
