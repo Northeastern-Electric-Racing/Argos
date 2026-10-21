@@ -3,14 +3,12 @@ import type { Annotations, Layout, LayoutAxis, PlotData, Shape } from 'plotly.js
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * One line's points as columns, sorted by real time t. The plot's trace shares x and y, so nothing
- * is copied per frame. x is t shifted to wall-clock time (toWallClockMs) for plotting only: it jumps
- * back an hour when clocks fall back, so ordering, trimming and the live window use t.
+ * One line's points as columns, sorted by real time t. The plot's trace shares t (as x) and y, so
+ * nothing is copied per frame. Plotly shows t in local time itself (see toWallClockMs).
  */
 export interface Series {
   /** Epoch ms, ascending. */
   t: number[];
-  x: number[];
   y: number[];
 }
 
@@ -25,7 +23,7 @@ export interface LayoutOptions {
   multipleYAxes: boolean;
   yMin: number | null;
   yMax: number | null;
-  /** Visible x window; undefined autoranges to all data. */
+  /** Visible x window in wall-clock ms; undefined autoranges to all data. */
   xRange?: [number, number];
   /** Historical data span, for multi-day labels and day boundaries; null in real-time mode. */
   span: DataSpan | null;
@@ -67,10 +65,17 @@ export const SERIES_COLORS = [
 ];
 
 /**
- * Plotly date axes take epoch ms as UTC and have no time-zone setting, so x values are shifted
- * to local wall-clock time before plotting; ticks and hover labels then read as local time.
+ * Local wall-clock time as ms (its UTC fields are the local time), Plotly's own date coordinate:
+ * Plotly reads a number on a date axis as epoch ms and shows it in local time, and reads a date
+ * string as is. The traces plot raw epoch ms; the layout's x positions (live window, day lines)
+ * are worked out in wall-clock ms and handed over as strings (toPlotlyDate), so they're not
+ * shifted twice.
  */
 export const toWallClockMs = (ms: number): number => ms - new Date(ms).getTimezoneOffset() * 60_000;
+
+/** A wall-clock ms value as the date string Plotly reads literally ("2026-10-21 16:48:00.000"). */
+export const toPlotlyDate = (wallClockMs: number): string =>
+  new Date(wallClockMs).toISOString().slice(0, 23).replace('T', ' ');
 
 const axisRef = (index: number) => (index === 0 ? 'y' : `y${index + 1}`);
 const axisKey = (index: number) => (index === 0 ? 'yaxis' : `yaxis${index + 1}`);
@@ -80,7 +85,7 @@ export function buildTraces(data: Map<string, Series>, multipleYAxes: boolean): 
     type: 'scattergl',
     mode: 'lines',
     name,
-    x: series.x,
+    x: series.t,
     y: series.y,
     yaxis: multipleYAxes ? axisRef(index) : 'y',
     // The name in every hover row: unified hover leaves it out when only one series is drawn.
@@ -89,14 +94,15 @@ export function buildTraces(data: Map<string, Series>, multipleYAxes: boolean): 
   }));
 }
 
+/** The wall-clock span of all series (for day lines and multi-day ticks). */
 export function computeDataSpan(data: Map<string, Series>): DataSpan | null {
   let minX = Infinity;
   let maxX = -Infinity;
-  for (const { x } of data.values()) {
-    if (x.length === 0) continue;
+  for (const { t } of data.values()) {
+    if (t.length === 0) continue;
     // Series are kept sorted by time, so the endpoints are the extrema (up to the hour that repeats at a DST fall-back).
-    const [first] = x;
-    const last = x[x.length - 1];
+    const first = toWallClockMs(t[0]);
+    const last = toWallClockMs(t[t.length - 1]);
     if (first < minX) minX = first;
     if (last > maxX) maxX = last;
   }
@@ -167,18 +173,19 @@ export function buildDayBoundaries(span: { minX: number; maxX: number }): {
   const annotations: Partial<Annotations>[] = [];
   // Wall-clock ms puts local midnights on multiples of DAY_MS; start at the first one after minX.
   for (let t = Math.floor(span.minX / DAY_MS) * DAY_MS + DAY_MS; t < span.maxX; t += DAY_MS) {
+    const x = toPlotlyDate(t);
     shapes.push({
       type: 'line',
       xref: 'x',
       yref: 'paper',
-      x0: t,
-      x1: t,
+      x0: x,
+      x1: x,
       y0: 0,
       y1: 1,
       line: { color: BOUNDARY_COLOR, dash: 'dash', width: 1 }
     });
     annotations.push({
-      x: t,
+      x,
       xref: 'x',
       y: 1,
       yref: 'paper',
@@ -238,7 +245,7 @@ export function buildLayout(options: LayoutOptions): Partial<Layout> {
       spikethickness: 1,
       spikedash: 'dot',
       fixedrange: !!options.followLive,
-      ...(options.xRange ? { autorange: false, range: options.xRange } : { autorange: true })
+      ...(options.xRange ? { autorange: false, range: options.xRange.map(toPlotlyDate) } : { autorange: true })
     },
     ...withUiRevision(
       multi ?? {

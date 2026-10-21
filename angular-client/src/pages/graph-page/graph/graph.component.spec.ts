@@ -5,7 +5,7 @@ import type { LayoutAxis } from 'plotly.js';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent from './graph.component';
-import { toWallClockMs } from './graph-layout.utils';
+import { toPlotlyDate, toWallClockMs } from './graph-layout.utils';
 
 // Stands in for angular-plotly.js's <plotly-plot>, which needs WebGL; the tests check what the
 // graph hands the plot (traces, layout, revision), not Plotly's drawing.
@@ -84,7 +84,7 @@ describe('CustomGraphComponent (Plotly)', () => {
     push('VCU/CarState/speed', [{ x: 2000, y: 2 }]);
 
     const series = graph.data.get('VCU/CarState/speed 0')!;
-    expect(series.x).toEqual([1000, 2000, 3000].map(toWallClockMs));
+    expect(series.t).toEqual([1000, 2000, 3000]);
     expect(series.y).toEqual([1, 2, 3]);
   });
 
@@ -96,7 +96,20 @@ describe('CustomGraphComponent (Plotly)', () => {
     const [trace] = graph.traces();
     expect(trace.type).toBe('scattergl');
     expect(trace.mode).toBe('lines');
-    expect(trace.x).toBe(graph.data.get('BMS/Pack/Voltage 0')!.x);
+    expect(trace.x).toBe(graph.data.get('BMS/Pack/Voltage 0')!.t);
+  });
+
+  it('plots raw epoch times, which Plotly itself shows in local time', () => {
+    // Plotly reads numbers on a date axis as epoch ms in local time; shifting them first
+    // drew New York's 16:48 at 12:48. Layout positions are wall-clock strings, read as-is.
+    spyOn(Date.prototype, 'getTimezoneOffset').and.returnValue(240);
+    setup({ realTime: true, config: { timeRangeMs: 10_000 } });
+    const t = Date.UTC(2026, 9, 21, 20, 48);
+    push('A', [{ x: t, y: 1 }]);
+    flushFrames();
+
+    expect(graph.traces()[0].x).toEqual([t]);
+    expect(graph.layout().xaxis?.range).toEqual(['2026-10-21 16:47:50.000', '2026-10-21 16:48:00.000']);
   });
 
   it('names the series in its hover row, even when it is the only one', () => {
@@ -221,7 +234,7 @@ describe('CustomGraphComponent (Plotly)', () => {
     flushFrames();
 
     const end = toWallClockMs(120_000);
-    expect(graph.layout().xaxis?.range).toEqual([end - 10_000, end]);
+    expect(graph.layout().xaxis?.range).toEqual([end - 10_000, end].map(toPlotlyDate));
   });
 
   it('trims points that fall out of the live time window', () => {
@@ -251,7 +264,7 @@ describe('CustomGraphComponent (Plotly)', () => {
     expect(series.y[series.y.length - 1]).toBe(60);
     expect(series.y.every((s) => s >= 60 - 33)).toBeTrue();
     const end = toWallClockMs(last);
-    expect(graph.layout().xaxis?.range).toEqual([end - 30_000, end]);
+    expect(graph.layout().xaxis?.range).toEqual([end - 30_000, end].map(toPlotlyDate));
   });
 
   it('autoranges x in historical mode', () => {

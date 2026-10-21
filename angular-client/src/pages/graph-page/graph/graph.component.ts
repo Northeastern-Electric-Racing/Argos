@@ -16,7 +16,7 @@ import Plotly from 'plotly.js-gl2d-dist-min';
 import type { Config, Layout, PlotData } from 'plotly.js';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
-import { buildLayout, buildTraces, computeDataSpan, latestX, Series, toWallClockMs } from './graph-layout.utils';
+import { buildLayout, buildTraces, computeDataSpan, latestX, Series } from './graph-layout.utils';
 
 // The gl2d partial bundle (scatter + scattergl) instead of the full plotly.js build. Set statically
 // rather than through PlotlyModule.forRoot so the bundle stays in the graph page's lazy chunk.
@@ -49,7 +49,7 @@ export default class CustomGraphComponent implements OnDestroy {
   }>();
   range = input<number | undefined>(undefined);
 
-  /** label (topic + value index) -> its points; t is epoch ms, x is wall-clock ms (see toWallClockMs). */
+  /** label (topic + value index) -> its points, by epoch ms t. */
   data = new Map<string, Series>();
   timeRangeMs: number | undefined = undefined;
 
@@ -206,26 +206,23 @@ export default class CustomGraphComponent implements OnDestroy {
       const seriesLabel = info.label + ' ' + i;
       let line = this.data.get(seriesLabel);
       if (!line) {
-        line = { t: [], x: [], y: [] };
+        line = { t: [], y: [] };
         this.data.set(seriesLabel, line);
       }
 
       value.forEach((val) => {
         const t = val.x;
-        const x = toWallClockMs(t);
         const y = Math.round(val.y * 10000) / 10000;
 
         // if the point is in order according to it's timestamp, just push it to the end of the line
         if (line.t.length === 0 || t >= line.t[line.t.length - 1]) {
           line.t.push(t);
-          line.x.push(x);
           line.y.push(y);
         } else {
           // Out of order: binary search for correct sorted position
           // (very rare but it's nice to be able to assume sorted data for efficient trimming later)
           const idx = binarySearchInsertIndex(line.t, t);
           line.t.splice(idx, 0, t);
-          line.x.splice(idx, 0, x);
           line.y.splice(idx, 0, y);
         }
       });
@@ -241,12 +238,10 @@ export default class CustomGraphComponent implements OnDestroy {
           const cutoff = newestT - config.timeRangeMs - buffer;
           if (line.t[0] < cutoff) {
             line.t.shift();
-            line.x.shift();
             line.y.shift();
           }
         } else if (line.t.length > config.maxPoints * 1.1) {
           const shiftedT = line.t.shift();
-          line.x.shift();
           line.y.shift();
           // point based trim requires is to calculate the max time range we can show that
           // doesn't show points being deleted. So we default to smallest range.

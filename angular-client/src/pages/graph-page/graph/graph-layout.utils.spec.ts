@@ -5,6 +5,7 @@ import {
   DAY_MS,
   LayoutOptions,
   SERIES_COLORS,
+  toPlotlyDate,
   toWallClockMs
 } from './graph-layout.utils';
 
@@ -150,7 +151,7 @@ describe('graph layout utils', () => {
 
   it('places a boundary at each midnight between the ends', () => {
     const { shapes, annotations } = buildDayBoundaries({ minX: DAY_MS / 2, maxX: 2 * DAY_MS + 1 });
-    expect(shapes.map((s) => s.x0)).toEqual([DAY_MS, 2 * DAY_MS]);
+    expect(shapes.map((s) => s.x0)).toEqual([DAY_MS, 2 * DAY_MS].map(toPlotlyDate));
     expect(annotations[0].text).toBe('Fri, Jan 2');
   });
 
@@ -168,8 +169,15 @@ describe('graph layout utils', () => {
         minX: toWallClockMs(Date.UTC(2026, 9, 17, 0)),
         maxX: toWallClockMs(Date.UTC(2026, 9, 17, 8))
       });
-      expect(shapes.map((s) => s.x0)).toEqual([Date.UTC(2026, 9, 17)]);
+      expect(shapes.map((s) => s.x0)).toEqual(['2026-10-17 00:00:00.000']);
+      expect(annotations.map((a) => a.x)).toEqual(['2026-10-17 00:00:00.000']);
       expect(annotations.map((a) => a.text)).toEqual(['Sat, Oct 17']);
+    });
+
+    it('gives Plotly the live window as wall-clock strings, which it does not shift again', () => {
+      const end = toWallClockMs(Date.UTC(2026, 9, 21, 12));
+      const { xaxis } = buildLayout({ ...base, xRange: [end - 30_000, end] });
+      expect(xaxis?.range).toEqual(['2026-10-21 07:59:30.000', '2026-10-21 08:00:00.000']);
     });
   });
 });
