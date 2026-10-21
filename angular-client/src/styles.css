@@ -54,11 +54,13 @@ body {
   font-family: var(--font-family);
 }
 
-/* Ant Design's base reset drops the top margin of <p>; the typography component relies on the browser default. */
+/* Ant Design's base reset drops the top margin of <p> and sets body line-height to 1.5715; the typography
+   component relies on the browser defaults. Ant components set their own line-height, so they're unaffected. */
 p {
   margin-block: 1em;
 }
 body {
+  line-height: normal;
   margin: 0;
   background-color: var(--color-background-page);
 }

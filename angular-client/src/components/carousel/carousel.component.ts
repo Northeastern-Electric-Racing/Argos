@@ -1,6 +1,6 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { NzCarouselModule } from 'ng-zorro-antd/carousel';
+import { NzCarouselComponent, NzCarouselModule } from 'ng-zorro-antd/carousel';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 import { Run } from 'src/utils/types.utils';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
@@ -23,6 +23,7 @@ export class CarouselComponent {
   public dialogRef = inject(NzModalRef);
   public data = inject(NZ_MODAL_DATA);
   public router = inject(Router);
+  private carousel = viewChild.required(NzCarouselComponent);
   runs: Run[];
   currentIndex: number = 0;
   selectRun: (run: Run) => void = () => {
@@ -35,6 +36,9 @@ export class CarouselComponent {
       this.dialogRef.close();
       this.data.selectRun(run);
     };
+    // The carousel measures its slide width on first layout, mid-way through the modal's zoom-in; measure again once it's open.
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- afterOpen emits once and completes
+    this.dialogRef.afterOpen.subscribe(() => this.carousel().layout());
   }
 
   updateIndex(nexIndex: number) {

@@ -6,7 +6,9 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { FormsModule } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { take } from 'rxjs';
+import { map, take } from 'rxjs';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   ClientRule,
   deleteRule,
@@ -33,6 +35,16 @@ export class RulesTableComponent implements OnInit {
 
   private notification = inject(NzNotificationService);
   private modal = inject(NzModalService);
+
+  /** On narrow screens the Uploaded By and Description columns are left out, so nz-table sizes the rest to fit. */
+  isMobile = toSignal(
+    inject(BreakpointObserver)
+      .observe('(max-width: 768px)')
+      .pipe(map((state) => state.matches)),
+    {
+      initialValue: false
+    }
+  );
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);

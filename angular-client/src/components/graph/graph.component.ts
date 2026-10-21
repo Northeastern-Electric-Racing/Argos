@@ -1,7 +1,5 @@
-import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
-import { NzModalService } from 'ng-zorro-antd/modal';
-import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
 // Typed from apexcharts itself: these charts are built with new ApexCharts(), and ng-apexcharts' type copies drift from it
@@ -20,7 +18,6 @@ type ChartOptions = Pick<
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class GraphComponent implements OnInit, OnDestroy {
-  private modal = inject(NzModalService);
   data = input.required<GraphData[]>();
   color = input.required<string>(); // Must be hex
   title = input<string | undefined>(undefined);
@@ -115,21 +112,6 @@ export class GraphComponent implements OnInit, OnDestroy {
   isSliding: boolean = false;
   timeRangeMs = computed(() => (this.timeRangeSec() ?? 120) * 1000); // defaults to 2 minutes
   timeOuts: NodeJS.Timeout[] = [];
-  openDialog = () => {
-    this.modal.create({
-      nzContent: GraphDialogComponent,
-      nzWidth: '75vw',
-      nzFooter: null,
-      nzTitle: this.title(),
-      nzData: {
-        data: this.data(),
-        color: this.color(),
-        title: this.title(),
-        graphContainerId: this.graphContainerId() + 'big'
-      }
-    });
-  };
-
   updateChart = () => {
     // updateOptions, not updateSeries: apexcharts 5's updateSeries fast path replots the line without redrawing the axes
     this.chart.updateOptions({

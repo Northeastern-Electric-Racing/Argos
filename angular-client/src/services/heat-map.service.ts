@@ -71,7 +71,9 @@ export class HeatMapService {
         nzFooter: null,
         nzDraggable: true,
         nzMask: false,
-        nzWidth: 'auto',
+        // The modal always has a CDK backdrop, even unmasked; let clicks through it so more cells can be added.
+        nzMaskStyle: { pointerEvents: 'none' },
+        nzWidth: 'fit-content',
         nzWrapClassName: 'cell-compare-dialog'
       });
       this.dialogRef.afterClose.subscribe(() => {

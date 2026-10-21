@@ -4,3 +4,8 @@
   min-width: 140px;
   font-size: 0.8rem;
 }
+
+/* Callers pass the current choice (e.g. "Segment 1") as the placeholder, so show it at Ant's text colour, not its 30% placeholder grey. */
+:host ::ng-deep .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.85);
+}

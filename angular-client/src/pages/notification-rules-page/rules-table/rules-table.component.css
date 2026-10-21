@@ -18,14 +18,6 @@
 }
 
 @media (max-width: 768px) {
-  /* Hide "Uploaded By" (4th column) and "Description" (5th column) on mobile */
-  :host ::ng-deep .ant-table-thead > tr > th:nth-child(4),
-  :host ::ng-deep .ant-table-thead > tr > th:nth-child(5),
-  :host ::ng-deep .ant-table-tbody > tr > td:nth-child(4),
-  :host ::ng-deep .ant-table-tbody > tr > td:nth-child(5) {
-    display: none;
-  }
-
   :host ::ng-deep .ant-table-thead > tr > th {
     padding: 8px 6px;
     font-size: 0.8rem;

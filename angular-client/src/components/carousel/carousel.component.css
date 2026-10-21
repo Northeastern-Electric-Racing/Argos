@@ -70,3 +70,11 @@
 :host ::ng-deep .slick-arrow {
   color: #ffffff;
 }
+
+/* nz-carousel locks its slides to the height of its element when it lays out, which can be taken mid-way through
+   the modal's open animation and come out far too tall. Let the slides size to their content. */
+:host ::ng-deep .slick-list,
+:host ::ng-deep .slick-track,
+:host ::ng-deep [nz-carousel-content] {
+  height: auto !important;
+}

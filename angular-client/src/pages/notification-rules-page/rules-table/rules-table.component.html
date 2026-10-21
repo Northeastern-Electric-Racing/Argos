@@ -19,10 +19,12 @@
       ></th>
       <th>Rule</th>
       <th>Applied To</th>
-      <!-- TODO: Uploaded By column once backend supports it -->
-      <th>Uploaded By</th>
-      <!-- TODO: Description column once backend supports it -->
-      <th>Description</th>
+      @if (!isMobile()) {
+        <!-- TODO: Uploaded By column once backend supports it -->
+        <th>Uploaded By</th>
+        <!-- TODO: Description column once backend supports it -->
+        <th>Description</th>
+      }
       <th>Subscribed</th>
       <th nzWidth="5rem" aria-label="Actions"></th>
     </tr>
@@ -37,8 +39,10 @@
         ></td>
         <td>{{ rule.expr }}</td>
         <td>{{ rule.topic }}</td>
-        <td>-</td>
-        <td>-</td>
+        @if (!isMobile()) {
+          <td>-</td>
+          <td>-</td>
+        }
         <td>
           <nz-switch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
         </td>

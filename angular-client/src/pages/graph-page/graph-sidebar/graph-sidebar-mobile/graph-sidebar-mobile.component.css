@@ -88,6 +88,12 @@ nz-tree {
   background: transparent;
 }
 
-:host ::ng-deep .ant-tree-node-content-wrapper {
+/* The drawer renders outside :host, so these anchor on nz-tree (an element of this template) instead. */
+nz-tree ::ng-deep .ant-tree-node-content-wrapper {
   min-width: 0;
+}
+
+/* Rows are taller than Ant's default here; centre the expand caret on the label instead of stretching it to the top. */
+nz-tree ::ng-deep .ant-tree-switcher {
+  align-self: center;
 }
