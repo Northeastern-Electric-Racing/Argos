@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { NZ_MODAL_DATA, NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
@@ -26,7 +26,7 @@ export class PresetDialogComponent {
   private data = inject<PresetDialogData>(NZ_MODAL_DATA);
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private modal = inject(NzModalService);
 
   private dataTypes = this.data.dataTypes;

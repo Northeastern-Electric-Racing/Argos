@@ -1,40 +1,24 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { OverlayContainer } from '@angular/cdk/overlay';
-import { DestroyRef, Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { NzNotificationRef, NzNotificationService } from 'ng-zorro-antd/notification';
 
 /**
  * nz-notification renders its toasts without role="alert" or aria-live, so screen readers don't hear them.
- * This watches the CDK overlay container, where ng-zorro puts the toasts, and reads
- * each new one out through the CDK's LiveAnnouncer.
+ * Show toasts through this instead of NzNotificationService: it opens the same nz-notification and reads
+ * its title and text out through the CDK's LiveAnnouncer (assertive, like PrimeNG's p-toast).
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationAnnouncerService {
+  private notification = inject(NzNotificationService);
   private liveAnnouncer = inject(LiveAnnouncer);
-  private overlayContainer = inject(OverlayContainer);
-  private destroyRef = inject(DestroyRef);
-  private observer?: MutationObserver;
 
-  start() {
-    if (this.observer || typeof MutationObserver === 'undefined') return;
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof HTMLElement && node.matches('nz-notification')) this.announce(node);
-        });
-      }
-    });
-    this.observer.observe(this.overlayContainer.getContainerElement(), { childList: true, subtree: true });
-    this.destroyRef.onDestroy(() => this.observer?.disconnect());
-  }
-
-  /** The toast's title and text are bound after it's inserted, so read them on the next tick. */
-  private announce(notification: HTMLElement) {
-    setTimeout(() => {
-      const parts = ['.ant-notification-notice-message', '.ant-notification-notice-description'].map((selector) =>
-        notification.querySelector(selector)?.textContent?.trim()
-      );
-      const message = parts.filter(Boolean).join('. ');
-      if (message) this.liveAnnouncer.announce(message, 'polite');
-    });
+  create(...args: Parameters<NzNotificationService['create']>): NzNotificationRef {
+    const [, title, content] = args;
+    const ref = this.notification.create(...args);
+    const message = [title, content]
+      .filter((part): part is string => typeof part === 'string' && part.trim() !== '')
+      .join('. ');
+    if (message) this.liveAnnouncer.announce(message, 'assertive');
+    return ref;
   }
 }

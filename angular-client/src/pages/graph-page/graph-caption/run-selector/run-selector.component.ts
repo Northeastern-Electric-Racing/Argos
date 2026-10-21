@@ -5,7 +5,7 @@ import { CarouselComponent } from '../../../../components/carousel/carousel.comp
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
@@ -19,7 +19,7 @@ export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private modal = inject(NzModalService);
   private serverService = inject(APIService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   label!: string;
   runs!: Run[];
   runsIsLoading = true;

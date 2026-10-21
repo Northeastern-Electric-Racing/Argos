@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 
 export type toastSeverity = 'success' | 'info' | 'warning' | 'error';
 
@@ -10,7 +10,7 @@ export type toastSeverity = 'success' | 'info' | 'warning' | 'error';
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ToastButtonComponent implements OnInit {
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   buttonLabel = input.required<string>();
   popUpSeverity = input<toastSeverity>('success');
   popUpTitle = input<string>('Success!');

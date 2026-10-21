@@ -6,7 +6,7 @@ import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
 import { NzModalRef } from 'ng-zorro-antd/modal';
 import APIService from 'src/services/api.service';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -22,7 +22,7 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private ref = inject(NzModalRef);
   // Signals, since the modal's OnPush container doesn't re-check this content when a subscription sets a plain field.
   templateReady = signal(false);

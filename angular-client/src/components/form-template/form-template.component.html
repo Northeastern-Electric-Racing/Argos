@@ -2,7 +2,7 @@
   @for (field of fields(); track field) {
     <nz-form-item>
       @if (field.label) {
-        <nz-form-label [nzFor]="'form-' + field.name" nzRequired>{{ field.label }}</nz-form-label>
+        <nz-form-label [nzFor]="'form-' + field.name" [nzRequired]="!!field.required">{{ field.label }}</nz-form-label>
       }
       <nz-form-control [nzErrorTip]="errorTip">
         <input

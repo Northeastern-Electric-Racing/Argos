@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
@@ -60,7 +60,7 @@ export interface NavItem {
 export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private modal = inject(NzModalService);
@@ -107,7 +107,7 @@ export class AppNavBarComponent implements OnInit {
       this.newRunIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.notification.error('Error', error.message);
+      if (error) this.notification.create('error', 'Error', error.message);
     });
   };
 

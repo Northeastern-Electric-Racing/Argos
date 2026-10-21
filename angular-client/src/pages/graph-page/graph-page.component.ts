@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
@@ -58,7 +58,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation

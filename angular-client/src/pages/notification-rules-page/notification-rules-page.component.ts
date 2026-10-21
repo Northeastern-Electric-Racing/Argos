@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -45,7 +45,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private modal = inject(NzModalService);
   private router = inject(Router);
 

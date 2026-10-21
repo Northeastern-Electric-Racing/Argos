@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import {
   authenticatePw,
   getSettings,
@@ -49,7 +49,7 @@ import CommandCardComponent from './command-card/command-card.component';
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private modal = inject(NzModalService);
   private destroyRef = inject(DestroyRef);
 

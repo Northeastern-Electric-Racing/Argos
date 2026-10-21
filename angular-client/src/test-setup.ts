@@ -12,7 +12,7 @@ import { appIcons } from './app/nz-icons';
 // mirror the real bootstrap in main.ts and need no per-spec wiring:
 //   - provideZonelessChangeDetection: the app is zoneless, as in main.ts.
 //   - ng-zorro config, i18n, date adapter, icons and NzModalService: as in main.ts
-//     (NzNotificationService is providedIn root).
+//     (NzNotificationService is providedIn root; the app shows toasts through NotificationAnnouncerService).
 //   - ChipFaultPipe: provided at root in main.ts.
 // Per-spec configureTestingModule calls still apply on top.
 export default [

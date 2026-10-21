@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
@@ -31,7 +31,7 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 export default class SessionsPanelComponent {
   readonly timer = inject(LapTimerService);
   private modal = inject(NzModalService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');

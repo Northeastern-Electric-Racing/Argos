@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -16,7 +16,7 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);
   private modal = inject(NzModalService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
 
   readonly currentLapDeltaText = computed(() => formatDeltaMs(this.timer.currentLapDeltaToBestMs()));
   readonly currentLapDeltaClass = computed(() => {

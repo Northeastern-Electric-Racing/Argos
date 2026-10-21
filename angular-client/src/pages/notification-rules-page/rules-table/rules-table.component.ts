@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -33,7 +33,7 @@ export class RulesTableComponent implements OnInit {
 
   selectionChanged = output<ClientRule[]>();
 
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private modal = inject(NzModalService);
 
   /** On narrow screens the Uploaded By and Description columns are left out, so nz-table sizes the rest to fit. */

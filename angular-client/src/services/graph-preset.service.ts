@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { partitionDataTypesByName } from 'src/utils/dataTypes.utils';
@@ -29,7 +29,7 @@ export const PRESET_SEEDS: PresetSeed[] = [];
 @Injectable({ providedIn: 'root' })
 export class GraphPresetService {
   private topicSelectionService = inject(TopicSelectionService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
   private presets = new BehaviorSubject<Preset[]>([]);
   private presets$ = this.presets.asObservable();
 

@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
@@ -19,7 +19,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
 export class CameraPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
 
   url = 'http://192.168.100.11:8889/frontcam/';
   urlAvailable = false;

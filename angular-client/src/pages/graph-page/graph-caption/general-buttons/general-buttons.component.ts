@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
@@ -44,7 +44,7 @@ type CustomMode = 'last-x' | 'date-range';
   ]
 })
 export class GeneralButtonsComponent {
-  private notification = inject(NzNotificationService);
+  private notification = inject(NotificationAnnouncerService);
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
