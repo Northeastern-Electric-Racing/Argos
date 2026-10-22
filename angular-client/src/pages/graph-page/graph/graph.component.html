@@ -1,1 +1,9 @@
-<div id="chart-container"></div>
+<div
+  class="chart-container"
+  echarts
+  [options]="baseOptions"
+  theme="dark"
+  [autoResize]="true"
+  (chartInit)="onChartInit($event)"
+  (chartRestore)="onChartRestore()"
+></div>
