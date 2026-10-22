@@ -1,1 +1,22 @@
-<div id="chart-container"></div>
+<div
+  #chartContainer
+  class="chart-container"
+  [class.empty]="empty()"
+  role="img"
+  aria-label="Graph of the selected topics over time"
+></div>
+@if (empty()) {
+  <p class="empty-message">{{ hasTopics() ? 'No data for the selected topics' : 'Select a topic to graph' }}</p>
+}
+<div class="footer">
+  <div #legendContainer class="legend-container" aria-live="off"></div>
+  @if (zoomed()) {
+    <argos-button
+      class="reset-zoom"
+      label="Reset zoom"
+      size="sm"
+      [onClick]="resetZoom"
+      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+    />
+  }
+</div>
