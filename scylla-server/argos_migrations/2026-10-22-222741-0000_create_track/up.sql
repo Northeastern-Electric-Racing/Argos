@@ -1,4 +1,3 @@
--- CreateTable
 CREATE TABLE "track" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,

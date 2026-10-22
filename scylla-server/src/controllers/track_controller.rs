@@ -1,21 +1,17 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::StatusCode,
-};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
 
 use serde::Deserialize;
 
 use crate::{
-    PoolHandle, error::ScyllaError, lap_timing::TimingLine, models::TrackLines,
+    ArgosPoolHandle, error::ScyllaError, lap_timing::TimingLine, models::TrackLines,
     services::track_service, transformers::track_transformer::PublicTrack,
 };
 
 /// get every track
 pub async fn get_all_tracks(
-    State(pool): State<PoolHandle>,
+    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
 ) -> Result<Json<Vec<PublicTrack>>, ScyllaError> {
-    let mut db = pool.get().await?;
+    let mut db = argos_pool.get().await?;
     let tracks = track_service::get_all_tracks(&mut db).await?;
 
     Ok(Json::from(
@@ -33,10 +29,10 @@ pub struct AddTrackPayload {
 
 /// add a track with no lines
 pub async fn add_track(
-    State(pool): State<PoolHandle>,
+    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
     Json(AddTrackPayload { name }): Json<AddTrackPayload>,
 ) -> Result<Json<PublicTrack>, ScyllaError> {
-    let mut db = pool.get().await?;
+    let mut db = argos_pool.get().await?;
     let added = track_service::add_track(&mut db, name).await?;
 
     Ok(Json::from(PublicTrack::from(added)))
@@ -52,7 +48,7 @@ pub struct EditTrackPayload {
 
 /// replace both lines of the track with the given id
 pub async fn edit_track(
-    State(pool): State<PoolHandle>,
+    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
     Path(track_id): Path<i32>,
     Json(EditTrackPayload {
         start_line,
@@ -70,7 +66,7 @@ pub async fn edit_track(
         ));
     }
 
-    let mut db = pool.get().await?;
+    let mut db = argos_pool.get().await?;
     let edited =
         track_service::edit_track(&mut db, track_id, TrackLines::new(start_line, finish_line))
             .await?
@@ -81,10 +77,10 @@ pub async fn edit_track(
 
 /// delete a track given its id
 pub async fn delete_track(
-    State(pool): State<PoolHandle>,
+    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
     Path(track_id): Path<i32>,
 ) -> Result<Json<String>, ScyllaError> {
-    let mut db = pool.get().await?;
+    let mut db = argos_pool.get().await?;
     if !track_service::delete_track(&mut db, track_id).await? {
         return Err(ScyllaError::EmptyResult);
     }

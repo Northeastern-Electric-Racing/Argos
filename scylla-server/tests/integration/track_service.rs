@@ -1,9 +1,5 @@
 use crate::test_utils::cleanup_and_prepare;
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::StatusCode,
-};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
 use scylla_server::{
     controllers::track_controller::{self, EditTrackPayload},
     error::ScyllaError,
@@ -25,8 +21,8 @@ fn line(lat: f64, lon: f64) -> TimingLine {
 
 #[tokio::test]
 async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.0.get().await.unwrap();
 
     assert!(track_service::get_all_tracks(&mut db).await?.is_empty());
 
@@ -62,8 +58,8 @@ async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Er
 
 #[tokio::test]
 async fn test_edit_track_overwrites_both_lines() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.0.get().await.unwrap();
 
     let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
     track_service::edit_track(
@@ -103,8 +99,8 @@ async fn test_edit_track_overwrites_both_lines() -> Result<(), diesel::result::E
 
 #[tokio::test]
 async fn test_edit_unknown_track_saves_nothing() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.0.get().await.unwrap();
 
     let edited =
         track_service::edit_track(&mut db, 1, TrackLines::new(Some(line(42.1, -71.1)), None))
@@ -118,10 +114,10 @@ async fn test_edit_unknown_track_saves_nothing() -> Result<(), diesel::result::E
 
 #[tokio::test]
 async fn test_edit_unknown_track_is_empty_result() {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
 
     let edited = track_controller::edit_track(
-        State(pool),
+        Extension(argos_pool),
         Path(1),
         Json(EditTrackPayload {
             start_line: None,
@@ -135,17 +131,17 @@ async fn test_edit_unknown_track_is_empty_result() {
 
 #[tokio::test]
 async fn test_delete_unknown_track_is_empty_result() {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
 
-    let deleted = track_controller::delete_track(State(pool), Path(1)).await;
+    let deleted = track_controller::delete_track(Extension(argos_pool), Path(1)).await;
 
     assert!(matches!(deleted, Err(ScyllaError::EmptyResult)));
 }
 
 #[tokio::test]
 async fn test_edit_track_accepts_boundary_coordinates() -> Result<(), ScyllaError> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await?;
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.0.get().await?;
     let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
     drop(db);
     let corners = TimingLine {
@@ -160,7 +156,7 @@ async fn test_edit_track_accepts_boundary_coordinates() -> Result<(), ScyllaErro
     };
 
     let edited = track_controller::edit_track(
-        State(pool),
+        Extension(argos_pool),
         Path(added.id),
         Json(EditTrackPayload {
             start_line: Some(corners),
@@ -183,8 +179,8 @@ async fn test_edit_track_accepts_boundary_coordinates() -> Result<(), ScyllaErro
 
 #[tokio::test]
 async fn test_edit_track_rejects_out_of_range_coordinates() -> Result<(), ScyllaError> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await?;
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.0.get().await?;
     let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
 
     for (lat, lon) in [
@@ -203,7 +199,7 @@ async fn test_edit_track_rejects_out_of_range_coordinates() -> Result<(), Scylla
             b: GeoPoint { lat, lon },
         };
         let edited = track_controller::edit_track(
-            State(pool.clone()),
+            Extension(argos_pool.clone()),
             Path(added.id),
             Json(EditTrackPayload {
                 start_line: Some(line(42.1, -71.1)),
@@ -236,8 +232,8 @@ async fn test_edit_track_rejects_out_of_range_coordinates() -> Result<(), Scylla
 
 #[tokio::test]
 async fn test_delete_track() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.0.get().await.unwrap();
 
     let kept = track_service::add_track(&mut db, "Kept".to_owned()).await?;
     let deleted = track_service::add_track(&mut db, "Deleted".to_owned()).await?;

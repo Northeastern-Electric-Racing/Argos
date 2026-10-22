@@ -56,7 +56,7 @@ pub struct Run {
 }
 
 #[derive(Queryable, Debug, Identifiable, Selectable, PartialEq)]
-#[diesel(table_name = crate::schema::track)]
+#[diesel(table_name = crate::argos_schema::track)]
 #[diesel(primary_key(id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Track {
@@ -125,7 +125,7 @@ impl Track {
 ///
 /// None columns are written as NULL so an edit can clear a line.
 #[derive(AsChangeset)]
-#[diesel(table_name = crate::schema::track)]
+#[diesel(table_name = crate::argos_schema::track)]
 #[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct TrackLines {

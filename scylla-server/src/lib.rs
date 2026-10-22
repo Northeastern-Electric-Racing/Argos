@@ -1,5 +1,6 @@
 use chrono::serde::ts_milliseconds;
 
+pub mod argos_database;
 pub mod controllers;
 pub mod error;
 pub mod lap_timing;
@@ -15,6 +16,8 @@ pub mod rule_structs;
 pub mod socket_handler;
 
 #[allow(non_snake_case)]
+pub mod argos_schema;
+#[allow(non_snake_case)]
 pub mod models;
 #[allow(non_snake_case)]
 pub mod schema;
@@ -29,6 +32,10 @@ pub type Database<'a> =
     diesel_async::pooled_connection::bb8::PooledConnection<'a, diesel_async::AsyncPgConnection>;
 
 pub type PoolHandle = diesel_async::pooled_connection::bb8::Pool<diesel_async::AsyncPgConnection>;
+
+/// The `argos_experimental` pool, its own type so routes can take it as an extension beside the car pool state
+#[derive(Clone)]
+pub struct ArgosPoolHandle(pub PoolHandle);
 
 #[derive(clap::ValueEnum, Debug, PartialEq, Copy, Clone, Default)]
 #[repr(u8)]

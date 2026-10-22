@@ -1,7 +1,7 @@
 use crate::{
     Database,
+    argos_schema::track::dsl::{id, name, track},
     models::{Track, TrackLines},
-    schema::track::dsl::{id, name, track},
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

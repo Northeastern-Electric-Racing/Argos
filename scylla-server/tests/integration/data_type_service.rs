@@ -11,7 +11,7 @@ use scylla_server::{
 
 #[tokio::test]
 async fn test_get_all_datatypes() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // ensure datatypes is empty
@@ -29,7 +29,7 @@ async fn test_datatype_create() -> Result<(), diesel::result::Error> {
     let data_type_name: String = "test".to_owned();
     let unit: String = "testUnitCreation".to_owned();
 
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // make node

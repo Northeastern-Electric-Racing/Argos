@@ -1,0 +1,7 @@
+# For the argos_experimental database: pass `--config-file diesel.argos.toml` to the diesel CLI
+
+[print_schema]
+file = "src/argos_schema.rs"
+
+[migrations_directory]
+dir = "./argos_migrations"
