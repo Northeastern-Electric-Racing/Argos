@@ -175,7 +175,26 @@ describe('graph chart options', () => {
       expect((graphChartUpdate(state({ data })).xAxis as AnyRecord)['splitNumber']).toBe(6);
     });
 
-    it('bounds the legend by the chart width so its pager stops short of the toolbox', () => {
+    it('wraps the legend instead of paging it, so every topic shows at once', () => {
+      expect((baseGraphChartOption().legend as AnyRecord)['type']).toBe('plain');
+    });
+
+    it('moves the plot down a row for each row the legend wraps onto', () => {
+      // At this width each of these names takes a legend row of its own
+      const topics = (count: number) =>
+        new Map<string, Point[]>(
+          Array.from({ length: count }, (_, i) => [`BMS/Commands/Max_DC_Brake_Current_Target_${i} 0`, [[1000, i]]])
+        );
+      const gridTop = (count: number) =>
+        (graphChartUpdate(state({ data: topics(count), chartWidth: 600 })).grid as AnyRecord)['top'] as number;
+      const row = gridTop(2) - gridTop(1);
+
+      expect(gridTop(1)).toBe((baseGraphChartOption().grid as AnyRecord)['top'] as number);
+      expect(row).toBeGreaterThan(15);
+      expect(gridTop(4) - gridTop(1)).toBe(3 * row);
+    });
+
+    it('bounds the legend by the chart width so it wraps short of the toolbox', () => {
       // ECharts drops a legend's `right` when `left` is set, so only a width bounds it
       expect((baseGraphChartOption().legend as AnyRecord)['right']).toBeUndefined();
       const legend = graphChartUpdate(state({ data, chartWidth: 1000 })).legend as AnyRecord;

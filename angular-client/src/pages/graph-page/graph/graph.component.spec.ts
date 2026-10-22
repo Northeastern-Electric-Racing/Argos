@@ -3,6 +3,7 @@ import type { ECharts } from 'echarts/core';
 import { BehaviorSubject } from 'rxjs';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 import CustomGraphComponent from './graph.component';
+import { baseGraphChartOption } from './graph-chart-options';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -231,8 +232,7 @@ describe('CustomGraphComponent with ECharts', () => {
     const voltage = topic('BMS/Pack/Voltage', [{ x: 1000, y: 400 }]);
     const { chart } = await createChart({ realTime: true, valuesSubject: [voltage] });
     const icon = drawnElements(chart).find((el) => el.__title === 'Restore')!;
-    const rect = icon.getBoundingRect().clone();
-    rect.applyTransform(icon.getComputedTransform());
+    const rect = drawnRect(icon);
     const [x, y] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
 
     chart.getZr().handler.dispatch('mousemove', { zrX: x, zrY: y });
@@ -256,6 +256,48 @@ describe('CustomGraphComponent with ECharts', () => {
     expect(legendWidth()).toBeLessThan(500 - 100);
     expect(legendWidth()).toBeGreaterThan(500 - 200);
   });
+
+  for (const showMultipleYAxes of [false, true]) {
+    it(`shows every topic in the legend at once, above the plot and clear of the toolbox (multiple y-axes ${showMultipleYAxes ? 'on' : 'off'})`, async () => {
+      const labels = [
+        'BMS/Commands/Max_DC_Current_Target',
+        'BMS/Cells/Volts_Avg_Value',
+        'BMS/Cells/Temp_Avg_Value',
+        'BMS/Segment_Temp/1',
+        'BMS/Segment_Total_Volt/0',
+        'BMS/Commands/Max_DC_Brake_Current_Target'
+      ];
+      const { fixture, chart } = await createChart({
+        showMultipleYAxes,
+        valuesSubject: labels.map((label, i) => topic(label, [{ x: 1000, y: i }]))
+      });
+      // About the graph page's chart at 1440 px with the sidebar open
+      Object.assign((fixture.nativeElement as HTMLElement).style, { width: '1000px', height: '700px' });
+      // ngx-echarts resizes the chart up to 100 ms after the host resizes
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await nextFrame();
+
+      const elements = drawnElements(chart);
+      const toolboxLeft = Math.min(...elements.filter((el) => el.__title).map((el) => drawnRect(el).x));
+      const rects = labels.map((label) => {
+        const text = elements.find((el) => el.style?.text === `${label} 0`);
+        expect(text).withContext(label).toBeDefined();
+        return drawnRect(text!);
+      });
+      rects.forEach((rect, i) => {
+        expect(rect.x).withContext(labels[i]).toBeGreaterThanOrEqual(0);
+        expect(rect.x + rect.width)
+          .withContext(labels[i])
+          .toBeLessThan(toolboxLeft);
+      });
+      // Wrapped, and as clear of the plot (room for the top y-axis label and day-boundary labels) as one row is
+      const bottoms = rects.map((rect) => rect.y + rect.height);
+      expect(Math.max(...bottoms)).toBeGreaterThan(bottoms[0]);
+      const oneRowClearance = ((baseGraphChartOption().grid as AnyRecord)['top'] as number) - bottoms[0];
+      const gridTop = model(chart).getComponent('grid', 0).coordinateSystem.getRect().y;
+      expect(gridTop - Math.max(...bottoms)).toBeGreaterThanOrEqual(oneRowClearance - 1);
+    });
+  }
 
   describe('in a live window', () => {
     // The window is the last 60 s, so it starts at 40 s; the points at 0 s, 20 s and 38 s are off screen
@@ -341,7 +383,10 @@ interface ChartModel {
   getSeriesByIndex(index: number): {
     getData(): { count(): number; dimensions: string[]; get(dim: string, index: number): number };
   };
-  getComponent(type: string, index: number): { axis: { scale: { getExtent(): [number, number] } } };
+  getComponent(
+    type: string,
+    index: number
+  ): { axis: { scale: { getExtent(): [number, number] } }; coordinateSystem: { getRect(): DrawnRect } };
 }
 
 /** ECharts' internal model of what it draws. */
@@ -351,6 +396,7 @@ function model(chart: ECharts): ChartModel {
 
 interface DrawnElement {
   __title?: string;
+  style?: { text?: unknown };
   getBoundingRect(): { clone(): DrawnRect };
   getComputedTransform(): unknown;
 }
@@ -373,6 +419,13 @@ function drawnElements(chart: ECharts): DrawnElement[] {
   };
   (chart.getZr() as unknown as { storage: { getRoots(): Node[] } }).storage.getRoots().forEach(visit);
   return all;
+}
+
+/** Where an element is painted, in chart pixels. */
+function drawnRect(el: DrawnElement): DrawnRect {
+  const rect = el.getBoundingRect().clone();
+  rect.applyTransform(el.getComputedTransform());
+  return rect;
 }
 
 /** Every text the chart has painted, such as axis and mark line labels. */

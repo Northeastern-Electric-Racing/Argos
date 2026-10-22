@@ -1,4 +1,4 @@
-import type { ComposeOption } from 'echarts/core';
+import { format, type ComposeOption } from 'echarts/core';
 import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import type { LineSeriesOption } from 'echarts/charts';
 import type {
@@ -49,6 +49,14 @@ const SHARED_Y_AXIS_ID = 'shared';
 const Y_AXIS_OFFSET_PX = 80;
 const LEGEND_LEFT_PX = 16;
 const LEGEND_PADDING_PX = 5;
+const LEGEND_FONT_PX = 15;
+const LEGEND_FONT = `${LEGEND_FONT_PX}px ${FONT_FAMILY}`;
+/** ECharts' default legend icon width, plus the 5 px it puts between the icon and the name. */
+const LEGEND_ICON_PX = 25 + 5;
+const LEGEND_ICON_HEIGHT_PX = 14;
+const LEGEND_ITEM_GAP_PX = 8;
+/** Room above the plot for a one-row legend, plus a gap for the top y-axis label and the day-boundary labels. */
+const GRID_TOP_PX = 56;
 const TOOLBOX_RIGHT_PX = 16;
 const TOOLBOX_ICON_PX = 15;
 const TOOLBOX_GAP_PX = 10;
@@ -82,16 +90,18 @@ export function baseGraphChartOption(): GraphChartOption {
     backgroundColor: 'transparent',
     color: SERIES_COLORS,
     textStyle: { color: TEXT_COLOR, fontFamily: FONT_FAMILY },
-    grid: { left: 16, right: 16, top: 56, bottom: 16 },
+    grid: { left: 16, right: 16, top: GRID_TOP_PX, bottom: 16 },
     legend: {
-      type: 'scroll',
+      // Wraps onto more rows rather than paging, so every topic shows at once; each redraw moves the plot down to fit
+      type: 'plain',
       top: 0,
       // Its width, which leaves the top-right corner to the toolbox, comes with each redraw: ECharts ignores a
       // legend's `right` when `left` is set, and a width that tracks the toolbox has to be in px
       left: LEGEND_LEFT_PX,
       padding: LEGEND_PADDING_PX,
-      textStyle: { color: TEXT_COLOR, fontSize: 15 },
-      pageTextStyle: { color: TEXT_COLOR }
+      itemGap: LEGEND_ITEM_GAP_PX,
+      itemHeight: LEGEND_ICON_HEIGHT_PX,
+      textStyle: { color: TEXT_COLOR, fontSize: LEGEND_FONT_PX }
     },
     tooltip: {
       trigger: 'axis',
@@ -104,7 +114,7 @@ export function baseGraphChartOption(): GraphChartOption {
     },
     toolbox: {
       right: TOOLBOX_RIGHT_PX,
-      // Centres the icons on the legend's row, ending them at the plot's right edge
+      // Centres the icons on the legend's first row, ending them at the plot's right edge
       padding: [2, 0],
       itemSize: TOOLBOX_ICON_PX,
       itemGap: TOOLBOX_GAP_PX,
@@ -159,12 +169,14 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
   // Left out otherwise, so replaceMerge removes the lines of a range that no longer spans days
   if (isMultiDay) series.push(dayBoundarySeries(span!));
   const viewMs = span && (windowStart === undefined ? span.spanMs : span.maxX - windowStart);
+  const legendWidth = Math.max(0, state.chartWidth - LEGEND_LEFT_PX - 2 * LEGEND_PADDING_PX - TOOLBOX_RESERVE_PX);
   return {
     // ECharts' local-time ticks skip the hour repeated when DST ends, leaving a view inside or across it with only its
     // two end labels. UTC ticks don't; under an hour they still fall on the same local seconds and minutes, and the
     // label formatters show local time either way. Longer views keep local ticks for local hours and midnights
     useUTC: viewMs !== null && viewMs < HOUR_MS,
-    legend: { width: Math.max(0, state.chartWidth - LEGEND_LEFT_PX - 2 * LEGEND_PADDING_PX - TOOLBOX_RESERVE_PX) },
+    legend: { width: legendWidth },
+    grid: { top: GRID_TOP_PX + legendWrapHeight([...state.data.keys()], legendWidth) },
     xAxis: {
       // null clears a previous window so the axis fits all data again
       min: windowStart ?? null,
@@ -176,6 +188,30 @@ export function graphChartUpdate(state: GraphChartState): GraphChartOption {
     yAxis,
     series
   };
+}
+
+/**
+ * How far below its first row the legend's last row starts once it wraps `names` at `width`, laid out as ECharts' box
+ * layout does: left to right, starting a row when the next entry would cross `width`. Measured through ECharts, so it
+ * reads the same text widths the legend does.
+ */
+function legendWrapHeight(names: string[], width: number): number {
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  for (const name of names) {
+    const text = format.getTextRect(name, LEGEND_FONT);
+    const entryWidth = LEGEND_ICON_PX + text.width;
+    if (x + entryWidth > width) {
+      // Like ECharts, this also wraps a first entry too wide for the legend, below an empty row
+      y += rowHeight + LEGEND_ITEM_GAP_PX;
+      x = 0;
+      rowHeight = 0;
+    }
+    rowHeight = Math.max(rowHeight, LEGEND_ICON_HEIGHT_PX, text.height);
+    x += entryWidth + LEGEND_ITEM_GAP_PX;
+  }
+  return y;
 }
 
 /** One y-axis per topic, alternating sides and stepping outward so stacked axes don't overlap. */

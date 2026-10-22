@@ -17,7 +17,7 @@ import { LineChart } from 'echarts/charts';
 import {
   DataZoomInsideComponent,
   GridComponent,
-  LegendScrollComponent,
+  LegendPlainComponent,
   MarkLineComponent,
   ToolboxComponent,
   TooltipComponent
@@ -33,7 +33,7 @@ echarts.use([
   LineChart,
   GridComponent,
   TooltipComponent,
-  LegendScrollComponent,
+  LegendPlainComponent,
   DataZoomInsideComponent,
   ToolboxComponent,
   MarkLineComponent,
