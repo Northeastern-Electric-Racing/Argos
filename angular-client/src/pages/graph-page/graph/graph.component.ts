@@ -94,6 +94,8 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   private hover: { domX: number; seriesName: string } | undefined;
   private dayBoundaryTimes: number[] = [];
   private frame: number | undefined;
+  /** Set when the next render must draw even while paused: a clear, or a mode or topic change, empties the data. */
+  private drawNext = false;
   /** Whether the user has zoomed (x or y), which shows the Reset zoom button. */
   readonly zoomed = signal(false);
   /** Whether no series has data yet, which shows a hint in place of an empty axis. */
@@ -127,6 +129,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       this.userZoomed = false;
       this.userYRanges = null;
       this.syncZoomed();
+      this.drawNext = true;
       this.updateChart();
     });
 
@@ -213,8 +216,11 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
 
   /** Draws the current data now. updateChart is the usual entry point; this is the frame it schedules. */
   render(): void {
-    // Skip chart updates if paused
-    if (!this.chart || (this.isPaused() && this.limitRange())) {
+    if (!this.chart) return;
+    // Skip chart updates if paused, unless the data was just emptied: the old lines would otherwise stay drawn.
+    const force = this.drawNext;
+    this.drawNext = false;
+    if (this.isPaused() && this.limitRange() && !force) {
       return;
     }
 

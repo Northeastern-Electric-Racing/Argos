@@ -435,4 +435,35 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(component.empty()).toBeTrue();
     expect(component.chart!.getLabels()).toEqual(['Time']);
   });
+
+  it('empties the chart when the graph is cleared while paused, and still holds it for later redraws', async () => {
+    await setup({
+      values: [
+        topic('VCU/CarState/speed', [
+          { x: 0, y: 1 },
+          { x: 30_000, y: 2 }
+        ])
+      ],
+      realTime: true
+    });
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    await nextFrame();
+
+    // What Clear Graph does: drop the topics and bump clearGraph.
+    fixture.componentRef.setInput('valuesSubject', []);
+    fixture.componentRef.setInput('clearGraph', 1);
+    fixture.detectChanges();
+    await nextFrame();
+    fixture.detectChanges();
+
+    expect(component.chart!.getLabels()).toEqual(['Time']);
+    const hint = fixture.nativeElement.querySelector('.empty-message') as HTMLElement | null;
+    expect(hint?.textContent).toContain('Select a topic');
+
+    const update = spyOn(component.chart!, 'updateOptions').and.callThrough();
+    component.updateChart();
+    await nextFrame();
+    expect(update).not.toHaveBeenCalled();
+  });
 });
