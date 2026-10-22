@@ -238,6 +238,39 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(legend.textContent).not.toContain('1.2345');
   });
 
+  it('lists every series in the hover legend, with its latest value at or before the hovered time', async () => {
+    // Live topics rarely share a timestamp, so most rows hold a value for one series only.
+    await setup({
+      values: [
+        topic('A', [
+          { x: 0, y: 1.5 },
+          { x: 2000, y: 2.5 }
+        ]),
+        topic('B', [{ x: 1000, y: 7.25 }]),
+        topic('C', [{ x: 3000, y: 9.125 }])
+      ]
+    });
+    const chart = component.chart!;
+    const legend = fixture.nativeElement.querySelector('.legend-container') as HTMLElement;
+    const canvases = Array.from(fixture.nativeElement.querySelectorAll('canvas')) as HTMLCanvasElement[];
+    const rect = canvases[0].getBoundingClientRect();
+    canvases.forEach((canvas) =>
+      canvas.dispatchEvent(
+        new MouseEvent('mousemove', {
+          bubbles: true,
+          clientX: rect.left + chart.toDomXCoord(2000),
+          clientY: rect.top + chart.toDomYCoord(2.5)
+        })
+      )
+    );
+
+    expect(legend.textContent).toContain(`${hoverTimeLabel(2000)}:`);
+    expect(legend.textContent).toContain('A 0:\u00a02.5');
+    expect(legend.textContent).toContain('B 0:\u00a07.25');
+    // C has no sample at or before 2000, so it shows its first one.
+    expect(legend.textContent).toContain('C 0:\u00a09.125');
+  });
+
   it('drops a zoom window when the mode changes', async () => {
     const speed = topic('VCU/CarState/speed', [
       { x: 0, y: 1 },

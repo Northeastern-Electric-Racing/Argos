@@ -27,6 +27,7 @@ import {
   dayBoundaryLabel,
   hoverTimeLabel,
   multiDayLabel,
+  sampleAtOrBefore,
   seriesAxisOptions,
   singleDayLabel,
   toDygraphRows
@@ -37,6 +38,12 @@ const DAY_BOUNDARY_COLOR = '#8fcadd';
 const SINGLE_INSTANT_PAD_MS = 30_000;
 
 type YRange = [number, number];
+type ValueFormatter = NonNullable<dygraphs.Options['valueFormatter']>;
+/** dygraphs' option lookup and its stock legend, which @types/dygraphs leaves out (both are public dygraphs API). */
+type DygraphInternals = Readonly<Dygraph> & { getOptionForAxis(name: string, axis: 'y' | 'y2'): unknown };
+const defaultLegendFormatter = (
+  Dygraph as unknown as { Plugins: { Legend: { defaultFormatter(this: Dygraph, data: dygraphs.LegendData): string } } }
+).Plugins.Legend.defaultFormatter;
 
 /** The configured Y Min/Max for dygraphs: null (fully automatic) when neither bound is set. */
 const configuredYRange = (config: { yMin: number | null; yMax: number | null }): [number | null, number | null] | null =>
@@ -163,6 +170,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       labels: ['Time'],
       labelsDiv: this.legendContainer().nativeElement,
       legend: 'always',
+      legendFormatter: this.formatLegend,
       connectSeparatedPoints: true,
       colors: SERIES_COLORS,
       // develop's ApexCharts stroke.width
@@ -331,6 +339,30 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     }
     const row = lo > 0 && x - rowX(lo - 1) < rowX(lo) - x ? lo - 1 : lo;
     g.setSelection(row, this.hover.seriesName);
+  };
+
+  /**
+   * dygraphs lists only the series with a sample in the hovered row, and live topics rarely share a timestamp, so
+   * most rows hold one series. Fill in every other series with its latest sample at or before the hovered time (its
+   * first sample when all of them are later), formatted as dygraphs formats its own, then draw dygraphs' legend.
+   */
+  private formatLegend = (data: dygraphs.LegendData): string => {
+    const g = data.dygraph as DygraphInternals;
+    if (data.x !== undefined) {
+      const labels = g.getLabels() ?? [];
+      for (const series of data.series) {
+        if (series.yHTML !== undefined) continue;
+        const sample = sampleAtOrBefore(this.data.get(series.label) ?? [], data.x);
+        if (!sample) continue;
+        const axis = g.getPropertiesForSeries(series.label)?.axis === 2 ? 'y2' : 'y';
+        const format = g.getOptionForAxis('valueFormatter', axis) as ValueFormatter;
+        const opts = (name: string) => g.getOptionForAxis(name, axis);
+        const row = (data as dygraphs.LegendData & { i: number }).i;
+        series.y = sample.y;
+        series.yHTML = format.call(g, sample.y, opts, series.label, g, row, labels.indexOf(series.label));
+      }
+    }
+    return defaultLegendFormatter.call(g as Dygraph, data);
   };
 
   /**

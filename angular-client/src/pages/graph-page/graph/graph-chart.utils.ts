@@ -41,6 +41,22 @@ export function toDygraphRows(series: ReadonlyArray<ReadonlyArray<GraphData>>): 
   }
 }
 
+/**
+ * A series' sample to show at time x: the latest at or before x, or the first one when every sample is after x
+ * (then the nearest overall). The points must be sorted by x; undefined only when there are none.
+ */
+export function sampleAtOrBefore(points: readonly GraphData[], x: number): GraphData | undefined {
+  // First index at or after x
+  let lo = 0;
+  let hi = points.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (points[mid].x < x) lo = mid + 1;
+    else hi = mid;
+  }
+  return points[lo]?.x === x ? points[lo] : points[Math.max(lo - 1, 0)];
+}
+
 /** Local midnights strictly between minX and maxX, for per-day boundary lines on multi-day ranges. */
 export function dayBoundaries(minX: number, maxX: number): number[] {
   const boundaries: number[] = [];

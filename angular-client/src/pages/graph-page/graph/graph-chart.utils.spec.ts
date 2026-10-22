@@ -3,6 +3,7 @@ import {
   dayBoundaryLabel,
   hoverTimeLabel,
   multiDayLabel,
+  sampleAtOrBefore,
   seriesAxisOptions,
   singleDayLabel,
   toDygraphRows,
@@ -103,6 +104,25 @@ describe('graph-chart utils', () => {
       expect(opts.series).toEqual({ 'A 0': { axis: 'y1' }, 'B 0': { axis: 'y2' }, 'C 0': { axis: 'y1' } });
       expect(opts.ylabel).toBe('A, C');
       expect(opts.y2label).toBe('B');
+    });
+  });
+
+  describe('sampleAtOrBefore', () => {
+    const points = [
+      { x: 1000, y: 1 },
+      { x: 2000, y: 2 },
+      { x: 3000, y: 3 }
+    ];
+
+    it('takes the sample at x, or the latest one before it', () => {
+      expect(sampleAtOrBefore(points, 2000)).toEqual({ x: 2000, y: 2 });
+      expect(sampleAtOrBefore(points, 2999)).toEqual({ x: 2000, y: 2 });
+      expect(sampleAtOrBefore(points, 9000)).toEqual({ x: 3000, y: 3 });
+    });
+
+    it('takes the first sample when every sample is after x, and none from an empty series', () => {
+      expect(sampleAtOrBefore(points, 500)).toEqual({ x: 1000, y: 1 });
+      expect(sampleAtOrBefore([], 500)).toBeUndefined();
     });
   });
 
