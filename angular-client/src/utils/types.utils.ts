@@ -103,6 +103,10 @@ export interface Timing {
 }
 
 export interface RuleNotification {
+  /** The server's numbering for this client; a new stream restarts seq at 1 */
+  stream: string;
+  /** Position in the stream, from 1, with no gaps */
+  seq: number;
   id: string;
   topic: string;
   values: number[];
