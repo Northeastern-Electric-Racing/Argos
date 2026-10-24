@@ -105,6 +105,14 @@ describe('graph-chart utils', () => {
       expect(opts.ylabel).toBe('A, C');
       expect(opts.y2label).toBe('B');
     });
+
+    it('leaves hidden series out of the axis titles, without moving the others to another axis', () => {
+      const opts = seriesAxisOptions(['A 0', 'B 0', 'C 0'], true, new Set(['A 0']));
+
+      expect(opts.series).toEqual({ 'A 0': { axis: 'y1' }, 'B 0': { axis: 'y2' }, 'C 0': { axis: 'y1' } });
+      expect(opts.ylabel).toBe('C');
+      expect(opts.y2label).toBe('B');
+    });
   });
 
   describe('sampleAtOrBefore', () => {

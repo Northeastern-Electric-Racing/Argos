@@ -207,7 +207,7 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(chart.isZoomed('y')).toBeFalse();
   });
 
-  it('keeps the hovered point in the legend, at full precision, across live redraws', async () => {
+  it('keeps the hovered point in the tooltip, at full precision, across live redraws', async () => {
     const speed = topic('VCU/CarState/speed', [
       { x: 0, y: 1.2345 },
       { x: 1000, y: 1.2345 },
@@ -215,7 +215,7 @@ describe('CustomGraphComponent (dygraphs)', () => {
     ]);
     await setup({ values: [speed], realTime: true, config: { timeRangeMs: 10_000 } });
     const chart = component.chart!;
-    const legend = fixture.nativeElement.querySelector('.legend-container') as HTMLElement;
+    const legend = fixture.nativeElement.querySelector('.tooltip') as HTMLElement;
     const canvases = Array.from(fixture.nativeElement.querySelectorAll('canvas')) as HTMLCanvasElement[];
     const at = (type: string, init: MouseEventInit) =>
       canvases.forEach((canvas) => canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, ...init })));
@@ -238,7 +238,7 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(legend.textContent).not.toContain('1.2345');
   });
 
-  it('lists every series in the hover legend, with its latest value at or before the hovered time', async () => {
+  it('lists every series in the hover tooltip, with its latest value at or before the hovered time', async () => {
     // Live topics rarely share a timestamp, so most rows hold a value for one series only.
     await setup({
       values: [
@@ -251,7 +251,7 @@ describe('CustomGraphComponent (dygraphs)', () => {
       ]
     });
     const chart = component.chart!;
-    const legend = fixture.nativeElement.querySelector('.legend-container') as HTMLElement;
+    const legend = fixture.nativeElement.querySelector('.tooltip') as HTMLElement;
     const canvases = Array.from(fixture.nativeElement.querySelectorAll('canvas')) as HTMLCanvasElement[];
     const rect = canvases[0].getBoundingClientRect();
     canvases.forEach((canvas) =>
@@ -269,6 +269,129 @@ describe('CustomGraphComponent (dygraphs)', () => {
     expect(legend.textContent).toContain('B 0:\u00a07.25');
     // C has no sample at or before 2000, so it shows its first one.
     expect(legend.textContent).toContain('C 0:\u00a09.125');
+  });
+
+  it('floats the tooltip beside the pointer, flipping to stay on the chart, and hides it when the pointer leaves', async () => {
+    await setup({
+      values: [
+        topic('A', [
+          { x: 0, y: 0 },
+          { x: 1000, y: 10 }
+        ])
+      ]
+    });
+    const chart = component.chart!;
+    const tooltip = fixture.nativeElement.querySelector('.tooltip') as HTMLElement;
+    const canvases = Array.from(fixture.nativeElement.querySelectorAll('canvas')) as HTMLCanvasElement[];
+    const rect = canvases[0].getBoundingClientRect();
+    const host = (fixture.nativeElement as HTMLElement).getBoundingClientRect();
+    const at = (type: string, init: MouseEventInit) =>
+      canvases.forEach((canvas) => canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, ...init })));
+    const box = () => {
+      const r = tooltip.getBoundingClientRect();
+      return { left: r.left - host.left, right: r.right - host.left, top: r.top - host.top, bottom: r.bottom - host.top };
+    };
+
+    // Near the top left: below and to the right of the pointer.
+    const x0 = chart.toDomXCoord(0);
+    const y0 = chart.toDomYCoord(9);
+    at('mousemove', { clientX: rect.left + x0, clientY: rect.top + y0 });
+    expect(getComputedStyle(tooltip).display).not.toBe('none');
+    expect(box().left).toBeGreaterThan(x0);
+    expect(box().top).toBeGreaterThan(y0);
+
+    // Near the bottom right: flipped above and to the left of the pointer, inside the host.
+    const x1 = chart.toDomXCoord(1000);
+    const y1 = chart.toDomYCoord(1);
+    at('mousemove', { clientX: rect.left + x1, clientY: rect.top + y1 });
+    expect(box().right).toBeLessThan(x1);
+    expect(box().bottom).toBeLessThan(y1);
+    expect(box().left).toBeGreaterThanOrEqual(0);
+
+    at('mouseout', { relatedTarget: document.body });
+    expect(getComputedStyle(tooltip).display).toBe('none');
+  });
+
+  it('lists each series under the chart in its line colour', async () => {
+    await setup({ values: [topic('A', [{ x: 1, y: 1 }]), topic('B', [{ x: 1, y: 2 }])] });
+    fixture.detectChanges();
+
+    const entries = Array.from(fixture.nativeElement.querySelectorAll('.legend-entry')) as HTMLElement[];
+    expect(entries.map((e) => e.textContent!.trim())).toEqual(['A', 'B']);
+    const swatch = (e: HTMLElement) => getComputedStyle(e.querySelector('.legend-swatch')!).borderBottomColor;
+    const probe = document.createElement('div');
+    document.body.appendChild(probe);
+    const rgb = (color: string) => {
+      probe.style.color = color;
+      return getComputedStyle(probe).color;
+    };
+    expect(entries.map(swatch)).toEqual(SERIES_COLORS.slice(0, 2).map(rgb));
+    probe.remove();
+  });
+
+  it('hides a line when its legend entry is clicked, and shows it again on a second click', async () => {
+    const a = topic('A', [{ x: 1000, y: 1 }]);
+    const b = topic('B', [{ x: 1000, y: 100 }]);
+    await setup({ values: [a, b], realTime: true });
+    fixture.componentRef.setInput('showMultipleYAxes', true);
+    fixture.detectChanges();
+    await nextFrame();
+    fixture.detectChanges();
+    const chart = component.chart!;
+    const entryB = () => fixture.nativeElement.querySelectorAll('.legend-entry')[1] as HTMLButtonElement;
+
+    entryB().click();
+    fixture.detectChanges();
+    expect(chart.visibility()).toEqual([true, false]);
+    expect(chart.getOption('y2label')).toBe('');
+    expect(entryB().getAttribute('aria-pressed')).toBe('false');
+    expect(entryB().classList).toContain('hidden-series');
+
+    // Stays hidden through live redraws.
+    b.updates.next([[{ x: 2000, y: 100 }]]);
+    await nextFrame();
+    expect(chart.visibility()).toEqual([true, false]);
+
+    entryB().click();
+    fixture.detectChanges();
+    expect(chart.visibility()).toEqual([true, true]);
+    expect(chart.getOption('y2label')).toBe('B');
+    expect(entryB().getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('hides and shows lines while paused, without moving the x window', async () => {
+    const a = topic('A', [{ x: 1000, y: 1 }]);
+    await setup({ values: [a, topic('B', [{ x: 1000, y: 100 }])] });
+    fixture.componentRef.setInput('isPaused', true);
+    fixture.detectChanges();
+    await nextFrame();
+    fixture.detectChanges();
+    const chart = component.chart!;
+    const before = chart.xAxisRange();
+
+    (fixture.nativeElement.querySelectorAll('.legend-entry')[1] as HTMLButtonElement).click();
+
+    expect(chart.visibility()).toEqual([true, false]);
+    expect(chart.xAxisRange()).toEqual(before);
+    // The y axis fits the lines still shown.
+    expect(chart.yAxisRange()[1]).toBeLessThan(100);
+  });
+
+  it('forgets a hidden line once its topic is deselected', async () => {
+    const a = topic('A', [{ x: 1, y: 1 }]);
+    const b = topic('B', [{ x: 1, y: 2 }]);
+    await setup({ values: [a, b] });
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelectorAll('.legend-entry')[1] as HTMLButtonElement).click();
+
+    fixture.componentRef.setInput('valuesSubject', [a]);
+    fixture.detectChanges();
+    await nextFrame();
+    fixture.componentRef.setInput('valuesSubject', [a, topic('B', [{ x: 1, y: 2 }])]);
+    fixture.detectChanges();
+    await nextFrame();
+
+    expect(component.chart!.visibility()).toEqual([true, true]);
   });
 
   it('drops a zoom window when the mode changes', async () => {

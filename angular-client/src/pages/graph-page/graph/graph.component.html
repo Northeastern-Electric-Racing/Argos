@@ -8,8 +8,21 @@
 @if (empty()) {
   <p class="empty-message">{{ hasTopics() ? 'No data for the selected topics' : 'Select a topic to graph' }}</p>
 }
+<div #tooltip class="tooltip" aria-live="off"></div>
 <div class="footer">
-  <div #legendContainer class="legend-container" aria-live="off"></div>
+  <div class="legend" role="group" aria-label="Show or hide lines">
+    @for (entry of legendEntries(); track entry.label) {
+      <button
+        type="button"
+        class="legend-entry"
+        [class.hidden-series]="!entry.visible"
+        [attr.aria-pressed]="entry.visible"
+        (click)="toggleSeries(entry.label)"
+      >
+        <span class="legend-swatch" [style.border-bottom-color]="entry.color"></span>{{ entry.title }}
+      </button>
+    }
+  </div>
   @if (zoomed()) {
     <argos-button
       class="reset-zoom"

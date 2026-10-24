@@ -40,12 +40,60 @@
   gap: 8px;
 }
 
-.legend-container {
+.legend {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 4px 8px;
-  font-size: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.legend-entry {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
   color: #fff;
+  font: inherit;
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.legend-entry:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.legend-entry.hidden-series {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.legend-swatch {
+  width: 1.5em;
+  margin-right: 6px;
+  border-bottom: 3px solid;
+}
+
+/* dygraphs writes the hover values in here and shows or hides it; graph.component.ts places it by the pointer. */
+.tooltip {
+  position: absolute;
+  z-index: 1;
+  padding: 6px 8px;
+  border: 1px solid #8fcadd;
+  border-radius: 4px;
+  background-color: rgba(12, 32, 38, 0.95);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tooltip:empty {
+  visibility: hidden;
 }
 
 /* dygraphs renders axis labels, titles and legend entries as plain DOM; these replace its stock stylesheet. */
@@ -76,23 +124,13 @@
   text-overflow: ellipsis;
 }
 
-/*
- * Each entry stays on one line, but as an inline-block the legend can wrap between entries; the space dygraphs
- * puts at the start of each entry then collapses, so margin-left stands in for it.
- */
-.legend-container ::ng-deep > span {
-  display: inline-block;
-  white-space: nowrap;
-  margin-left: 0.3em;
-  margin-right: 12px;
-}
-
 .reset-zoom {
   flex: 0 0 auto;
   margin-top: 4px;
 }
 
-.legend-container ::ng-deep > span.highlight {
+/* The hovered series' line in the tooltip. */
+.tooltip ::ng-deep > span.highlight {
   font-weight: bold;
 }
 

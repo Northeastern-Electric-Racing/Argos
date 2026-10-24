@@ -30,12 +30,15 @@ import {
   sampleAtOrBefore,
   seriesAxisOptions,
   singleDayLabel,
-  toDygraphRows
+  toDygraphRows,
+  topicTitle
 } from './graph-chart.utils';
 
 const DAY_BOUNDARY_COLOR = '#8fcadd';
 /** Half the x window around data at a single instant, which dygraphs would draw with no x ticks. */
 const SINGLE_INSTANT_PAD_MS = 30_000;
+/** The tooltip's gap from the pointer. */
+const TOOLTIP_OFFSET_PX = 16;
 
 type YRange = [number, number];
 type ValueFormatter = NonNullable<dygraphs.Options['valueFormatter']>;
@@ -66,7 +69,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
   private chartContainer = viewChild.required<ElementRef<HTMLDivElement>>('chartContainer');
-  private legendContainer = viewChild.required<ElementRef<HTMLDivElement>>('legendContainer');
+  private tooltip = viewChild.required<ElementRef<HTMLDivElement>>('tooltip');
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<ObservableGraphInfo[]>();
   limitRange = input(true);
@@ -97,8 +100,11 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
    * and drops them on the next updateOptions({ file }), so every render passes them back.
    */
   private userYRanges: YRange[] | null = null;
-  /** The pointer's x on the chart (graph div px) and its series, to re-select that point after each redraw. */
-  private hover: { domX: number; seriesName: string } | undefined;
+  /**
+   * The pointer on the chart (graph div px) and its series: to re-select that point after each redraw, and to place
+   * the tooltip beside the pointer.
+   */
+  private hover: { domX: number; domY: number; seriesName: string } | undefined;
   private dayBoundaryTimes: number[] = [];
   private frame: number | undefined;
   /** Set when the next render must draw even while paused: a clear, or a mode or topic change, empties the data. */
@@ -109,6 +115,20 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
   readonly empty = signal(true);
   /** Whether any topic is selected, which picks the empty hint's text. */
   readonly hasTopics = computed(() => this.valuesSubject().length > 0);
+  /** The chart's series labels, in dygraphs' order, as of the last render. */
+  private readonly seriesLabels = signal<readonly string[]>([]);
+  /** Series hidden from the chart by a click on their legend entry. */
+  private readonly hiddenSeries = signal<ReadonlySet<string>>(new Set());
+  /** The legend under the chart: each series in its line colour, which dygraphs picks by series index. */
+  readonly legendEntries = computed(() => {
+    const hidden = this.hiddenSeries();
+    return this.seriesLabels().map((label, i) => ({
+      label,
+      title: topicTitle(label),
+      color: SERIES_COLORS[i % SERIES_COLORS.length],
+      visible: !hidden.has(label)
+    }));
+  });
 
   constructor() {
     effect(() => {
@@ -149,6 +169,12 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
       this.valuesChange$.next();
 
       const values = this.valuesSubject();
+      // A deselected topic's lines are forgotten, so it comes back shown if it is selected again.
+      untracked(() =>
+        this.hiddenSeries.update(
+          (hidden) => new Set([...hidden].filter((series) => values.some(({ label }) => series.startsWith(label + ' '))))
+        )
+      );
       // A subject replays its last value on subscribe, which runs graphInfoCallback here and would make this effect
       // track the signals it reads: pausing, or changing the mode or config, would then resubscribe and add that
       // value again.
@@ -168,8 +194,10 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     const config = this.graphConfig();
     this.chart = new Dygraph(this.chartContainer().nativeElement, [], {
       labels: ['Time'],
-      labelsDiv: this.legendContainer().nativeElement,
-      legend: 'always',
+      // dygraphs fills the tooltip and shows it only while the pointer is on the chart; onHighlight places it.
+      labelsDiv: this.tooltip().nativeElement,
+      legend: 'onmouseover',
+      labelsSeparateLines: true,
       legendFormatter: this.formatLegend,
       connectSeparatedPoints: true,
       colors: SERIES_COLORS,
@@ -236,6 +264,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     // dygraphs draws no rows as one row holding only an x, and logs an error if there are series labels too.
     const labels = rows.length > 0 ? Array.from(this.data.keys()) : [];
     this.empty.set(rows.length === 0);
+    if (labels.join('\n') !== this.seriesLabels().join('\n')) this.seriesLabels.set(labels);
 
     // Multi-day historical ranges get date-aware labels and per-day boundary lines.
     // Real-time ranges are bounded and never multi-day.
@@ -247,7 +276,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     const options: dygraphs.Options = {
       file: rows,
       labels: ['Time', ...labels],
-      ...seriesAxisOptions(labels, this.showMultipleYAxes()),
+      ...this.seriesOptions(labels),
       axes: {
         x: { axisLabelFormatter: isMultiDay ? multiDayLabel : singleDayLabel },
         ...this.yAxesOptions(this.graphConfig())
@@ -258,6 +287,26 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     }
     this.chart.updateOptions(options);
   }
+
+  /** Which series are drawn, and which axis each is on. */
+  private seriesOptions(labels: readonly string[]): dygraphs.Options {
+    const hidden = this.hiddenSeries();
+    return {
+      visibility: labels.map((label) => !hidden.has(label)),
+      ...seriesAxisOptions(labels, this.showMultipleYAxes(), hidden)
+    };
+  }
+
+  /** A legend entry's click: hides its line, or shows it again. */
+  toggleSeries = (label: string) => {
+    this.hiddenSeries.update((hidden) => {
+      const next = new Set(hidden);
+      if (!next.delete(label)) next.add(label);
+      return next;
+    });
+    // Straight to the chart: render is skipped while paused, and would move the x window to the latest data.
+    this.chart?.updateOptions(this.seriesOptions(this.seriesLabels()));
+  };
 
   /**
    * The y and y2 value ranges: the user's vertical-drag zoom while there is one, else the configured Y Min/Max.
@@ -313,7 +362,9 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
 
   private onHighlight = (event: MouseEvent, _x: number, _points: unknown, _row: number, seriesName: string) => {
     if (!this.chart) return;
-    this.hover = { domX: this.chart.eventToDomCoords(event)[0], seriesName };
+    const [domX, domY] = this.chart.eventToDomCoords(event);
+    this.hover = { domX, domY, seriesName };
+    this.placeTooltip();
   };
 
   private onUnhighlight = () => {
@@ -339,7 +390,26 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     }
     const row = lo > 0 && x - rowX(lo - 1) < rowX(lo) - x ? lo - 1 : lo;
     g.setSelection(row, this.hover.seriesName);
+    this.placeTooltip();
   };
+
+  /**
+   * Puts the tooltip below and to the right of the pointer, or above or to its left where it would otherwise run
+   * off the chart. The graph div sits at the host's top left, so its coordinates place the tooltip directly.
+   */
+  private placeTooltip(): void {
+    const tooltip = this.tooltip().nativeElement;
+    const chart = this.chartContainer().nativeElement;
+    if (!this.hover) return;
+    const { domX, domY } = this.hover;
+    const { offsetWidth: width, offsetHeight: height } = tooltip;
+    let left = domX + TOOLTIP_OFFSET_PX;
+    if (left + width > chart.clientWidth) left = domX - TOOLTIP_OFFSET_PX - width;
+    let top = domY + TOOLTIP_OFFSET_PX;
+    if (top + height > chart.clientHeight) top = domY - TOOLTIP_OFFSET_PX - height;
+    tooltip.style.left = `${Math.max(0, left)}px`;
+    tooltip.style.top = `${Math.max(0, top)}px`;
+  }
 
   /**
    * dygraphs lists only the series with a sample in the hovered row, and live topics rarely share a timestamp, so
@@ -351,7 +421,7 @@ export default class CustomGraphComponent implements AfterViewInit, OnDestroy {
     if (data.x !== undefined) {
       const labels = g.getLabels() ?? [];
       for (const series of data.series) {
-        if (series.yHTML !== undefined) continue;
+        if (series.yHTML !== undefined || !series.isVisible) continue;
         const sample = sampleAtOrBefore(this.data.get(series.label) ?? [], data.x);
         if (!sample) continue;
         const axis = g.getPropertiesForSeries(series.label)?.axis === 2 ? 'y2' : 'y';

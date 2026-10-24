@@ -77,11 +77,13 @@ export function topicTitle(seriesLabel: string): string {
 
 /**
  * Per-series axis assignment. dygraphs draws at most two y-axes, so with multiple y-axes on, series alternate
- * between the left (y1) and right (y2) axis, and each axis is titled by the topics on it.
+ * between the left (y1) and right (y2) axis, and each axis is titled by the topics shown on it. A hidden series
+ * keeps its axis, so hiding one doesn't move the others.
  */
 export function seriesAxisOptions(
   labels: readonly string[],
-  multipleYAxes: boolean
+  multipleYAxes: boolean,
+  hidden: ReadonlySet<string> = new Set()
 ): { series: Record<string, { axis: 'y1' | 'y2' }>; ylabel: string; y2label: string } {
   const series: Record<string, { axis: 'y1' | 'y2' }> = {};
   const left: string[] = [];
@@ -89,7 +91,7 @@ export function seriesAxisOptions(
   labels.forEach((label, index) => {
     const axis = multipleYAxes && index % 2 !== 0 ? 'y2' : 'y1';
     series[label] = { axis };
-    (axis === 'y1' ? left : right).push(topicTitle(label));
+    if (!hidden.has(label)) (axis === 'y1' ? left : right).push(topicTitle(label));
   });
   return {
     series,
