@@ -1,6 +1,6 @@
 <button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
-<p-sidebar [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
+<p-drawer [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
   <ng-template pTemplate="header">
     <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
   </ng-template>
@@ -67,4 +67,4 @@
       </p-tree>
     </div>
   </ng-template>
-</p-sidebar>
+</p-drawer>

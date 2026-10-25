@@ -1,5 +1,4 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { io } from 'socket.io-client';
 import { CellService } from 'src/services/cell.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
@@ -9,21 +8,7 @@ import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { EnvService } from 'src/services/env.service';
 import { NotificationLogService } from 'src/services/notification-log.service';
-import { v4 as uuidv4 } from 'uuid';
-
-// crypto.randomUUID is only defined in secure contexts (https or loopback);
-// uuidv4 falls back to crypto.getRandomValues so it works on insecure origins.
-function getOrCreateClientId(): string {
-  const key = 'notification_rules_client_id';
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = uuidv4();
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -36,21 +21,14 @@ function getOrCreateClientId(): string {
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
-  private cellService = new CellService(this.storage);
+  private cellService = inject(CellService);
   private faultService = inject(FaultService);
   private notificationLogService = inject(NotificationLogService);
-  private envService = inject(EnvService);
-  socket = io(this.envService.backendUrl, {
-    query: {
-      clientId: getOrCreateClientId()
-    }
-  });
-  socketService = new SocketService(this.socket);
+  socketService = inject(SocketService);
+  private matIconRegistry = inject(MatIconRegistry);
+  private domSanitizer = inject(DomSanitizer);
 
-  constructor(
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer
-  ) {
+  constructor() {
     this.matIconRegistry
       .addSvgIcon(
         'steering_wheel',

@@ -1,4 +1,4 @@
-import { Component, Injector, OnDestroy, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, Injector, OnDestroy, computed, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { TreeNode, PrimeTemplate } from 'primeng/api';
@@ -33,26 +33,33 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
 })
-export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
+export default class GraphSidebarDesktopComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
   private dialogService = inject(DialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef;
+  private presetDialogRef?: DynamicDialogRef | null;
 
   dataTypes = input<DataType[]>([]);
-  treeNodes: TreeNode<TreeNodeData>[] = [];
-  flatNodes: TreeNode<TreeNodeData>[] = [];
-  selectedNodes?: TreeNode<TreeNodeData>[];
+  treeNodes = computed(() => {
+    const nodes = dataTypesToNodes(this.dataTypes());
+    // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
+    return untracked(() => mapNodesToTreeNodes(nodes, this.storage, this.injector));
+  });
+  flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
+  // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
+  selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>
+    findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
+  );
   flattenMode = signal(false);
   selectedOnly = signal(false);
 
   private selectedDataTypesSig = toSignal(this.topicSelectionService.getSelectedDataTypes(), { initialValue: [] });
-  private selectedFlatNodes = computed(() => filterSelectedNodes(this.flatNodes, this.selectedDataTypesSig()));
+  private selectedFlatNodes = computed(() => filterSelectedNodes(this.flatNodes(), this.selectedDataTypesSig()));
   activeNodes = computed(() => {
     if (this.selectedOnly()) return this.selectedFlatNodes();
-    return this.flattenMode() ? this.flatNodes : this.treeNodes;
+    return this.flattenMode() ? this.flatNodes() : this.treeNodes();
   });
 
   private presets = toSignal(this.presetService.getPresets(), { initialValue: [] as Preset[] });
@@ -67,29 +74,22 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }));
   activePresetName = toSignal(this.presetService.getActivePresetName(), { initialValue: undefined });
 
-  ngOnInit(): void {
-    const nodes = dataTypesToNodes(this.dataTypes());
-    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.injector);
-    this.flatNodes = flattenTreeNodes(this.treeNodes);
-    this.selectedNodes = findSelectedTreeNodes(this.treeNodes, this.topicSelectionService);
-  }
-
   toggleFlattenMode(value: boolean) {
     this.flattenMode.set(value);
     if (this.selectedOnly()) return;
-    const active = value ? this.flatNodes : this.treeNodes;
-    this.selectedNodes = findSelectedTreeNodes(active, this.topicSelectionService);
+    const active = value ? this.flatNodes() : this.treeNodes();
+    this.selectedNodes.set(findSelectedTreeNodes(active, this.topicSelectionService));
   }
 
   toggleSelectedOnly(value: boolean) {
     this.selectedOnly.set(value);
-    this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
+    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 
   clearSelections = () => {
-    this.treeNodes.forEach((n) => (n.expanded = false));
+    this.treeNodes().forEach((n) => (n.expanded = false));
     this.topicSelectionService.clearSelection();
-    this.selectedNodes = undefined;
+    this.selectedNodes.set(undefined);
   };
 
   openPresetsDialog = () => {
@@ -103,8 +103,8 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
         dataTypes: this.dataTypes()
       }
     });
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -147,6 +147,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private applyMatched(matched: DataType[]) {
     if (matched.length === 0) return; // unknown topics warn toast
     this.topicSelectionService.setSelectedDataTypes(matched);
-    this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
+    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 }

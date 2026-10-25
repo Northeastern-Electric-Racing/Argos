@@ -1,5 +1,5 @@
 @if (isMobile || this.sidebarVisible) {
-  <p-sidebar [(visible)]="sidebarVisible">
+  <p-drawer [(visible)]="sidebarVisible">
     <ng-template pTemplate="header">
       <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
     </ng-template>
@@ -14,7 +14,7 @@
         </sidebar-chip>
       }
     </ng-template>
-  </p-sidebar>
+  </p-drawer>
 } @else {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">

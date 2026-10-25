@@ -23,7 +23,7 @@ export class RunSelectorComponent implements OnInit {
   label!: string;
   runs!: Run[];
   runsIsLoading = true;
-  ref?: DynamicDialogRef;
+  ref?: DynamicDialogRef | null;
   selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
@@ -32,7 +32,7 @@ export class RunSelectorComponent implements OnInit {
       this.runsIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
     runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) this.runs = data;

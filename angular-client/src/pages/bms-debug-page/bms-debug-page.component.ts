@@ -70,8 +70,6 @@ export class BmsDebugPageComponent implements OnInit {
     placeholder: 'Set ALL Maps'
   };
 
-  constructor() {}
-
   ngOnInit(): void {
     this.heatMapService.globalView$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
       this.allSegSelectorConfig = {

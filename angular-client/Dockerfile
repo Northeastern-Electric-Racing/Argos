@@ -1,5 +1,5 @@
 # ---------- Build Phase ----------
-FROM node:alpine AS Build
+FROM node:24-alpine AS Build
 WORKDIR /usr/src/app
 
 COPY package.json package-lock.json ./

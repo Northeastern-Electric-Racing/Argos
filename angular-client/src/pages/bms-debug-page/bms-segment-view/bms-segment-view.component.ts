@@ -138,7 +138,11 @@ export class BmsSegmentViewComponent implements OnInit {
     ) {
       this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         const possibleSegId = Number(params.get('id')) - 1;
-        allSegments.indexOf(possibleSegId) !== -1 ? (this.segmentId = possibleSegId) : this.router.navigate(['bms']);
+        if (allSegments.indexOf(possibleSegId) !== -1) {
+          this.segmentId = possibleSegId;
+        } else {
+          this.router.navigate(['bms']);
+        }
         this.subscribeToView();
       });
     } else {

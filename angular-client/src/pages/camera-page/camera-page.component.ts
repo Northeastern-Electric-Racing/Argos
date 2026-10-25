@@ -48,7 +48,7 @@ export class CameraPageComponent implements OnInit {
 
     const videosQueryResponse = this.serverService.query<string[]>(() => getAllVideos(), { queryKey: ['videos'] });
     videosQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
     videosQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading) => {
       this.videoUrlsIsLoading = isLoading;

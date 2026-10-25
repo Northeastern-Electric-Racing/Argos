@@ -1,6 +1,6 @@
 # Argos — Claude Code Instructions
 
-Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). Angular 19 frontend (`angular-client/`) and Rust backend (`scylla-server/`), with schema tooling in `charybdis/` and MQTT broker config in `siren-base/`.
+Argos is a real-time telemetry platform for Northeastern Electric Racing (NER). Angular 21 frontend (`angular-client/`) and Rust backend (`scylla-server/`), with schema tooling in `charybdis/` and MQTT broker config in `siren-base/`.
 
 ## Local Development
 

@@ -45,7 +45,7 @@ export class RulesTableComponent implements OnInit {
     });
   }
 
-  private editRef: DynamicDialogRef | undefined;
+  private editRef: DynamicDialogRef | null | undefined;
 
   ngOnInit(): void {
     this.loadRules();
@@ -100,8 +100,8 @@ export class RulesTableComponent implements OnInit {
       data: { expr: rule.expr, debounce_time: rule.debounce_time }
     });
 
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.editRef.onClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.editRef?.onClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
       if (!result) return;
 
       try {

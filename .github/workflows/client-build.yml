@@ -21,7 +21,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 20.17.0
+          node-version-file: angular-client/.nvmrc
 
       - name: Install deps
         run: npm ci

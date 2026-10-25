@@ -3,7 +3,7 @@ import { Component, effect, inject, input, output, untracked } from '@angular/co
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
-import { NgClass, NgIf } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { ButtonDirective } from 'primeng/button';
 
 type anyType = string | number | boolean | undefined;
@@ -29,9 +29,10 @@ export interface DynamicFormField {
   templateUrl: './form-template.component.html',
   styleUrl: './form-template.component.css',
   standalone: true,
-  imports: [ReactiveFormsModule, InputText, NgClass, NgIf, ButtonDirective]
+  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
 })
 export class FormTemplateComponent {
+  private fb = inject(FormBuilder);
   public config = inject(DynamicDialogConfig);
 
   fields = input.required<DynamicFormField[]>();
@@ -43,7 +44,7 @@ export class FormTemplateComponent {
 
   form: FormGroup = this.fb.group({});
 
-  constructor(private fb: FormBuilder) {
+  constructor() {
     effect(() => {
       const fields = this.fields();
       const formData = this.formData();

@@ -1,7 +1,7 @@
 <div class="card" [id]="title()" [style]="'marginBottom: 0px; width: 100%'" (click)="selectCard()">
   @if (dropDown()) {
     <mat-icon
-      [id]="iconId"
+      [id]="iconId()"
       class="icon"
       [ngStyle]="{ transform: open() ? 'rotate(90deg)' : undefined }"
       svgIcon="arrow_right"

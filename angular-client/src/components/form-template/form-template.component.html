@@ -19,12 +19,11 @@
       />
 
       <!-- Error Message -->
-      <div
-        class="error-msg"
-        *ngIf="form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)"
-      >
-        {{ getErrorMessage(field) }}
-      </div>
+      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
+        <div class="error-msg">
+          {{ getErrorMessage(field) }}
+        </div>
+      }
     </div>
   }
 

@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, effect, inject, linkedSignal, signal } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -74,7 +74,11 @@ type Cursor = { point: Coordinate; fix: Fix | null; target: Coordinate };
     InputText,
     Select,
     TableModule
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()',
+    '(document:keydown.escape)': 'cancelPlacing()'
+  }
 })
 export default class MapComponent {
   private storage = inject(Storage);
@@ -182,12 +186,10 @@ export default class MapComponent {
     });
   }
 
-  @HostListener('window:resize')
   onResize() {
     this.isMobile.set(window.innerWidth <= 768);
   }
 
-  @HostListener('document:keydown.escape')
   cancelPlacing() {
     this.placing.set(null);
   }

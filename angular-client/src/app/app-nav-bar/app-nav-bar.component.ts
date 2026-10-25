@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnDestroy, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { MessageService, PrimeTemplate } from 'primeng/api';
@@ -8,7 +8,7 @@ import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Sidebar } from 'primeng/sidebar';
+import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -38,7 +38,7 @@ export interface NavItem {
   styleUrls: ['./app-nav-bar.component.css'],
   standalone: true,
   imports: [
-    Sidebar,
+    Drawer,
     PrimeTemplate,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
@@ -52,7 +52,10 @@ export interface NavItem {
     NotificationListComponent,
     Popover,
     Badge
-  ]
+  ],
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export class AppNavBarComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
@@ -63,9 +66,9 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   private dialogService = inject(DialogService);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | undefined;
-  menuRef: DynamicDialogRef | undefined;
-  editRunRef: DynamicDialogRef | undefined;
+  ref: DynamicDialogRef | null | undefined;
+  menuRef: DynamicDialogRef | null | undefined;
+  editRunRef: DynamicDialogRef | null | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -95,7 +98,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   }
 
   // on resize, set the screen width
-  @HostListener('window:resize')
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
@@ -113,7 +115,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       this.newRunIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
   };
 
@@ -219,6 +221,8 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
       showHeader: false,
       modal: true,
+      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
+      closable: true,
       dismissableMask: true,
       styleClass: 'nav-options-dialog',
       baseZIndex: 10000,
@@ -228,7 +232,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.menuRef.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.menuRef = undefined;
     });
   }

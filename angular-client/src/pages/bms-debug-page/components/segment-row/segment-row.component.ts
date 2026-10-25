@@ -53,8 +53,6 @@ export class SegmentRowComponent implements OnInit {
     }
   ];
 
-  constructor() {}
-
   ngOnInit(): void {
     this.viewSelectorConfig = { options: this.viewOptions, placeholder: HeatMapView.Voltage.toString() };
     const viewSub = this.heatMapService.getCurrentView(this.segment());
