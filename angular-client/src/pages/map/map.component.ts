@@ -44,6 +44,8 @@ import MapCanvasComponent from './map-canvas/map-canvas.component';
 import { RunSelectorComponent } from '../graph-page/graph-caption/run-selector/run-selector.component';
 
 const LAP_POLL_MS = 3000;
+// scylla writes GPS in batches that can land out of order, so recent laps are re-timed until their fixes settle
+const REWIND_MS = 60_000;
 const FIT_PADDING_PX = 60;
 const MAX_FIT_ZOOM = 19;
 
@@ -286,15 +288,17 @@ export default class MapComponent {
 
   private pollLaps(runId: number, trackId: number, isLive: boolean) {
     let lastError: string | null = null;
+    let since = 0;
     return (isLive ? timer(0, LAP_POLL_MS) : of(0)).pipe(
-      exhaustMap(() => this.fetchLaps(runId, trackId, this.laps().at(-1)?.endMs)),
+      exhaustMap(() => {
+        const lastLap = this.laps().at(-1);
+        since = lastLap ? lastLap.endMs - REWIND_MS : 0;
+        return this.fetchLaps(runId, trackId, since);
+      }),
       tap((result) => {
         if (!(result instanceof Error)) {
           lastError = null;
-          this.laps.update((laps) => [
-            ...laps,
-            ...result.map((lap, index) => ({ ...lap, number: laps.length + index + 1 }))
-          ]);
+          this.laps.update((laps) => [...laps.filter((lap) => lap.startMs < since), ...result]);
         } else if (result.message !== lastError) {
           lastError = result.message;
           this.messageService.add({ severity: 'error', summary: 'Laps unavailable', detail: result.message });
@@ -303,8 +307,7 @@ export default class MapComponent {
     );
   }
 
-  /** With `since`, only the laps starting at or after it, numbered from 1 */
-  private fetchLaps(runId: number, trackId: number, since?: number): Observable<TimedLap[] | Error> {
+  private fetchLaps(runId: number, trackId: number, since: number): Observable<TimedLap[] | Error> {
     const query = this.apiService.query<TimedLap[]>(() => getLaps(runId, trackId, since));
     return merge(query.error, query.data).pipe(first((result): result is TimedLap[] | Error => result !== null));
   }

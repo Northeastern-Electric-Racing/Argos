@@ -1,5 +1,5 @@
 use scylla_server::lap_timing::{
-    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps, laps_since,
+    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps,
 };
 
 const REFERENCE: GeoPoint = GeoPoint {
@@ -37,9 +37,8 @@ fn finish_line() -> TimingLine {
     }
 }
 
-fn lap(number: u32, start_ms: f64, end_ms: f64) -> Lap {
+fn lap(start_ms: f64, end_ms: f64) -> Lap {
     Lap {
-        number,
         start_ms,
         end_ms,
         duration_ms: end_ms - start_ms,
@@ -190,9 +189,9 @@ fn start_line_only_times_a_lap_between_each_pair_of_crossings() {
     assert_eq!(
         laps(&fixes, start_line(), None),
         vec![
-            lap(1, 1000.0, 5000.0),
-            lap(2, 5000.0, 9000.0),
-            lap(3, 9000.0, 20000.0)
+            lap(1000.0, 5000.0),
+            lap(5000.0, 9000.0),
+            lap(9000.0, 20000.0)
         ]
     );
 }
@@ -215,7 +214,7 @@ fn separate_finish_line_closes_the_run_opened_at_the_start_line() {
 
     assert_eq!(
         laps(&fixes, start_line(), Some(finish_line())),
-        vec![lap(1, 1000.0, 4000.0)]
+        vec![lap(1000.0, 4000.0)]
     );
 }
 
@@ -237,7 +236,7 @@ fn start_crossing_while_a_run_is_open_restarts_it() {
 
     assert_eq!(
         laps(&fixes, start_line(), Some(finish_line())),
-        vec![lap(1, 3000.0, 6000.0)]
+        vec![lap(3000.0, 6000.0)]
     );
 }
 
@@ -252,7 +251,7 @@ fn finish_line_equal_to_the_start_line_chains_laps() {
 
     assert_eq!(
         laps(&fixes, start_line(), Some(start_line())),
-        vec![lap(1, 1000.0, 9000.0), lap(2, 9000.0, 20000.0)]
+        vec![lap(1000.0, 9000.0), lap(9000.0, 20000.0)]
     );
 }
 
@@ -278,27 +277,6 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
 
     assert_eq!(
         laps(&fixes, start_line(), Some(finish_line())),
-        vec![lap(1, 1000.0, 5000.0), lap(2, 5000.0, 9000.0)]
+        vec![lap(1000.0, 5000.0), lap(5000.0, 9000.0)]
     );
-}
-
-#[test]
-fn laps_since_keeps_laps_starting_at_or_after_it_numbered_from_one() {
-    let timed = vec![
-        lap(1, 1000.0, 9000.0),
-        lap(2, 9000.0, 20000.0),
-        lap(3, 20000.0, 31000.0),
-    ];
-
-    assert_eq!(
-        laps_since(timed, 9000.0),
-        vec![lap(1, 9000.0, 20000.0), lap(2, 20000.0, 31000.0)]
-    );
-}
-
-#[test]
-fn laps_since_after_the_last_start_is_empty() {
-    let timed = vec![lap(1, 1000.0, 9000.0), lap(2, 9000.0, 20000.0)];
-
-    assert_eq!(laps_since(timed, 9000.5), vec![]);
 }

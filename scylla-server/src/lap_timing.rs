@@ -34,7 +34,6 @@ pub struct GpsFix {
 
 #[derive(Serialize, Debug, PartialEq)]
 pub struct Lap {
-    pub number: u32,
     #[serde(rename = "startMs")]
     pub start_ms: f64,
     #[serde(rename = "endMs")]
@@ -164,8 +163,7 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
     let Some(finish) = finish else {
         return start_crossings
             .windows(2)
-            .zip(1..)
-            .map(|(pair, number)| lap(number, pair[0], pair[1]))
+            .map(|pair| lap(pair[0], pair[1]))
             .collect();
     };
 
@@ -193,7 +191,7 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
             LineKind::Start => open_start = Some(time),
             LineKind::Finish => {
                 if let Some(start_ms) = open_start.take() {
-                    timed.push(lap(timed.len() as u32 + 1, start_ms, time));
+                    timed.push(lap(start_ms, time));
                 }
             }
         }
@@ -201,19 +199,8 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
     timed
 }
 
-/// The `laps` starting at or after `since_ms`, numbered from 1
-#[must_use]
-pub fn laps_since(laps: Vec<Lap>, since_ms: f64) -> Vec<Lap> {
-    laps.into_iter()
-        .filter(|timed| timed.start_ms >= since_ms)
-        .zip(1..)
-        .map(|(timed, number)| Lap { number, ..timed })
-        .collect()
-}
-
-fn lap(number: u32, start_ms: f64, end_ms: f64) -> Lap {
+fn lap(start_ms: f64, end_ms: f64) -> Lap {
     Lap {
-        number,
         start_ms,
         end_ms,
         duration_ms: end_ms - start_ms,

@@ -3,9 +3,9 @@ import { lapTable } from './lap-timer.types';
 describe('lapTable', () => {
   it('formats each lap against the best lap', () => {
     const table = lapTable([
-      { number: 1, startMs: 0, endMs: 72500, durationMs: 72500 },
-      { number: 2, startMs: 72500, endMs: 143000, durationMs: 70500 },
-      { number: 3, startMs: 143000, endMs: 214750, durationMs: 71750 }
+      { startMs: 0, endMs: 72500, durationMs: 72500 },
+      { startMs: 72500, endMs: 143000, durationMs: 70500 },
+      { startMs: 143000, endMs: 214750, durationMs: 71750 }
     ]);
 
     expect(table).toEqual({

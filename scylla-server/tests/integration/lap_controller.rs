@@ -20,7 +20,7 @@ async fn test_laps_for_unknown_track_is_empty_result() {
         State(pool),
         Extension(argos_pool),
         Path((1, 1)),
-        Query(LapsQuery { since: None }),
+        Query(LapsQuery { since: 0.0 }),
     )
     .await;
 
@@ -30,13 +30,13 @@ async fn test_laps_for_unknown_track_is_empty_result() {
 #[tokio::test]
 async fn test_laps_for_track_without_start_line_is_empty() {
     let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
-    let mut argos_db = argos_pool.0.get().await.unwrap();
+    let mut argos_db = argos_pool.get().await.unwrap();
     let track = track_service::add_track(&mut argos_db, "Skidpad".to_owned())
         .await
         .unwrap();
     drop(argos_db);
 
-    let laps = get_laps(&pool, &argos_pool, 1, track.id, None)
+    let laps = get_laps(&pool, &argos_pool, 1, track.id, 0.0)
         .await
         .unwrap();
 
@@ -105,9 +105,8 @@ async fn track_with_lines(
     Ok(track.id)
 }
 
-fn lap(number: u32, start_offset_ms: f64, end_offset_ms: f64) -> Lap {
+fn lap(start_offset_ms: f64, end_offset_ms: f64) -> Lap {
     Lap {
-        number,
         start_ms: RUN_START_MS as f64 + start_offset_ms,
         end_ms: RUN_START_MS as f64 + end_offset_ms,
         duration_ms: end_offset_ms - start_offset_ms,
@@ -194,7 +193,7 @@ async fn get_laps(
     argos_pool: &ArgosPoolHandle,
     run_id: i32,
     track_id: i32,
-    since: Option<f64>,
+    since: f64,
 ) -> Result<Vec<Lap>, ScyllaError> {
     let laps = lap_controller::get_laps(
         State(pool.clone()),
@@ -206,26 +205,22 @@ async fn get_laps(
     Ok(laps.0)
 }
 
-/// Polling with `since` = each lap's end, renumbered after the laps before it, rebuilds the full laps
-async fn assert_since_continues_full_laps(
+/// With each lap's start or end as `since`, the full laps starting before it followed by the laps since it are the full laps
+async fn assert_since_laps_rebuild_full_laps(
     pool: &PoolHandle,
     argos_pool: &ArgosPoolHandle,
     run_id: i32,
     track_id: i32,
 ) -> Result<(), ScyllaError> {
-    let full = get_laps(pool, argos_pool, run_id, track_id, None).await?;
+    let full = get_laps(pool, argos_pool, run_id, track_id, 0.0).await?;
     assert_eq!(full.len(), 2);
-    for known in 1..=full.len() {
-        let since = full[known - 1].end_ms;
-        let continued: Vec<Lap> = get_laps(pool, argos_pool, run_id, track_id, Some(since))
-            .await?
-            .into_iter()
-            .map(|timed| Lap {
-                number: known as u32 + timed.number,
-                ..timed
-            })
+    for since in full.iter().flat_map(|timed| [timed.start_ms, timed.end_ms]) {
+        let since_laps = get_laps(pool, argos_pool, run_id, track_id, since).await?;
+        let rebuilt: Vec<&Lap> = full
+            .iter()
+            .filter(|timed| timed.start_ms < since)
+            .chain(&since_laps)
             .collect();
-        let rebuilt: Vec<&Lap> = full[..known].iter().chain(&continued).collect();
         assert_eq!(rebuilt, full.iter().collect::<Vec<_>>(), "since {since}");
     }
     Ok(())
@@ -235,17 +230,14 @@ async fn assert_since_continues_full_laps(
 async fn test_laps_between_consecutive_start_crossings() -> Result<(), ScyllaError> {
     let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
-    let mut argos_db = argos_pool.0.get().await.unwrap();
+    let mut argos_db = argos_pool.get().await.unwrap();
     let (run_id, track_id) = start_only_run(&mut db, &mut argos_db).await?;
     drop(db);
     drop(argos_db);
 
-    let laps = get_laps(&pool, &argos_pool, run_id, track_id, None).await?;
+    let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0).await?;
 
-    assert_eq!(
-        laps,
-        vec![lap(1, 1_500.5, 11_501.5), lap(2, 11_501.5, 21_503.5)]
-    );
+    assert_eq!(laps, vec![lap(1_500.5, 11_501.5), lap(11_501.5, 21_503.5)]);
     Ok(())
 }
 
@@ -253,62 +245,37 @@ async fn test_laps_between_consecutive_start_crossings() -> Result<(), ScyllaErr
 async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
     let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
-    let mut argos_db = argos_pool.0.get().await.unwrap();
+    let mut argos_db = argos_pool.get().await.unwrap();
     let (run_id, track_id) = start_finish_run(&mut db, &mut argos_db).await?;
     drop(db);
     drop(argos_db);
 
-    let laps = get_laps(&pool, &argos_pool, run_id, track_id, None).await?;
+    let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0).await?;
 
-    assert_eq!(
-        laps,
-        vec![lap(1, 1_500.5, 3_500.5), lap(2, 11_501.5, 13_502.5)]
-    );
+    assert_eq!(laps, vec![lap(1_500.5, 3_500.5), lap(11_501.5, 13_502.5)]);
     Ok(())
 }
 
 #[tokio::test]
-async fn test_laps_since_continue_start_only_laps() -> Result<(), ScyllaError> {
+async fn test_laps_since_rebuild_start_only_laps() -> Result<(), ScyllaError> {
     let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
-    let mut argos_db = argos_pool.0.get().await.unwrap();
+    let mut argos_db = argos_pool.get().await.unwrap();
     let (run_id, track_id) = start_only_run(&mut db, &mut argos_db).await?;
     drop(db);
     drop(argos_db);
 
-    assert_since_continues_full_laps(&pool, &argos_pool, run_id, track_id).await
+    assert_since_laps_rebuild_full_laps(&pool, &argos_pool, run_id, track_id).await
 }
 
 #[tokio::test]
-async fn test_laps_since_continue_start_finish_laps() -> Result<(), ScyllaError> {
+async fn test_laps_since_rebuild_start_finish_laps() -> Result<(), ScyllaError> {
     let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
-    let mut argos_db = argos_pool.0.get().await.unwrap();
+    let mut argos_db = argos_pool.get().await.unwrap();
     let (run_id, track_id) = start_finish_run(&mut db, &mut argos_db).await?;
     drop(db);
     drop(argos_db);
 
-    assert_since_continues_full_laps(&pool, &argos_pool, run_id, track_id).await
-}
-
-#[tokio::test]
-async fn test_laps_since_the_last_lap_is_empty() -> Result<(), ScyllaError> {
-    let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
-    let mut db = pool.get().await.unwrap();
-    let mut argos_db = argos_pool.0.get().await.unwrap();
-    let (run_id, track_id) = start_only_run(&mut db, &mut argos_db).await?;
-    drop(db);
-    drop(argos_db);
-
-    let laps = get_laps(
-        &pool,
-        &argos_pool,
-        run_id,
-        track_id,
-        Some(RUN_START_MS as f64 + 21_503.5),
-    )
-    .await?;
-
-    assert_eq!(laps, vec![]);
-    Ok(())
+    assert_since_laps_rebuild_full_laps(&pool, &argos_pool, run_id, track_id).await
 }

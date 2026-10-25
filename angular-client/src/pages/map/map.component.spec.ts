@@ -60,9 +60,9 @@ describe('MapComponent run', () => {
   });
 
   it('clears the trace and laps when the run changes', async () => {
-    const laps: TimedLap[] = [{ number: 1, startMs: 0, endMs: 72500, durationMs: 72500 }];
+    const laps: TimedLap[] = [{ startMs: 0, endMs: 72500, durationMs: 72500 }];
     fetchSpy.and.callFake((url: RequestInfo | URL) =>
-      String(url).endsWith('/laps/1/7') ? Promise.resolve(json(laps)) : pending
+      String(url).endsWith('/laps/1/7?since=0') ? Promise.resolve(json(laps)) : pending
     );
     storage.setCurrentRunId(1);
     map.selectedTrack.set(track(7));
@@ -83,12 +83,24 @@ describe('MapComponent run', () => {
     expect(map.lapTable()).toBeNull();
   });
 
-  it('polls a live run for the laps since its last lap and numbers them after it', async () => {
+  it('polls a live run from a minute before its last lap ended and replaces the laps it re-times', async () => {
     const realSetTimeout = window.setTimeout.bind(window);
     const flush = () => new Promise((resolve) => realSetTimeout(resolve));
     const lapsByUrl = new Map<string, TimedLap[]>([
-      ['/laps/1/7', [{ number: 1, startMs: 0, endMs: 72500, durationMs: 72500 }]],
-      ['/laps/1/7?since=72500', [{ number: 1, startMs: 72500, endMs: 143500, durationMs: 71000 }]]
+      [
+        '/laps/1/7?since=0',
+        [
+          { startMs: 0, endMs: 72500, durationMs: 72500 },
+          { startMs: 72500, endMs: 120000, durationMs: 47500 }
+        ]
+      ],
+      [
+        '/laps/1/7?since=60000',
+        [
+          { startMs: 72500, endMs: 119000, durationMs: 46500 },
+          { startMs: 119000, endMs: 190000, durationMs: 71000 }
+        ]
+      ]
     ]);
     fetchSpy.and.callFake((url: RequestInfo | URL) => {
       const laps = lapsByUrl.get(String(url).replace(/.*(?=\/laps\/)/, ''));
@@ -108,12 +120,13 @@ describe('MapComponent run', () => {
       .allArgs()
       .map(([url]) => String(url))
       .filter((url) => url.includes('/laps/'));
-    expect(lapUrls.map((url) => url.replace(/.*(?=\/laps\/)/, ''))).toEqual(['/laps/1/7', '/laps/1/7?since=72500']);
+    expect(lapUrls.map((url) => url.replace(/.*(?=\/laps\/)/, ''))).toEqual(['/laps/1/7?since=0', '/laps/1/7?since=60000']);
     expect(map.lapTable()).toEqual({
-      best: '01:11.00',
+      best: '00:46.50',
       rows: [
-        { number: 1, time: '01:12.50', deltaToBest: '+00:01.50', isBest: false },
-        { number: 2, time: '01:11.00', deltaToBest: '±00:00.00', isBest: true }
+        { number: 1, time: '01:12.50', deltaToBest: '+00:26.00', isBest: false },
+        { number: 2, time: '00:46.50', deltaToBest: '±00:00.00', isBest: true },
+        { number: 3, time: '01:11.00', deltaToBest: '+00:24.50', isBest: false }
       ]
     });
   });

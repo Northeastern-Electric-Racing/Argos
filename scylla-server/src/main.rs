@@ -21,9 +21,9 @@ use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
-    ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, PoolHandle, RATE_LIMIT_MODE,
-    RateLimitMode, SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
-    argos_database::{self, ARGOS_DATABASE_NAME, ARGOS_MIGRATIONS},
+    ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
+    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
+    argos_database::{self, ARGOS_DATABASE_NAME},
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -160,50 +160,6 @@ struct ScyllaArgs {
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
-async fn run_migrations(
-    database_url: &str,
-    migrations: EmbeddedMigrations,
-) -> Result<(), Box<dyn std::error::Error>> {
-    // it is best to create a temporary unmanaged connection to run the migrations
-    // a completely new set of connections is created by the pool manager because it cannot understand an already established connection
-    let conn: AsyncPgConnection = AsyncPgConnection::establish(database_url).await?;
-    let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
-        AsyncConnectionWrapper::from(conn);
-    tokio::task::spawn_blocking(
-        move || match async_wrapper.run_pending_migrations(migrations) {
-            Ok(_res) => info!("Successfully migrated DB!"),
-            Err(e) => warn!("Encountered Error: {}", e),
-        },
-    )
-    .await?;
-    Ok(())
-}
-
-async fn prepare_argos_database(
-    database_url: &str,
-    argos_database_url: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    argos_database::create_database_if_missing(
-        &mut AsyncPgConnection::establish(database_url).await?,
-        ARGOS_DATABASE_NAME,
-    )
-    .await?;
-    run_migrations(argos_database_url, ARGOS_MIGRATIONS).await
-}
-
-async fn build_pool(
-    database_url: String,
-) -> Result<PoolHandle, diesel_async::pooled_connection::PoolError> {
-    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
-    Pool::builder()
-        .max_size(10)
-        .min_idle(Some(2))
-        .max_lifetime(Some(Duration::from_hours(24)))
-        .idle_timeout(Some(Duration::from_mins(2)))
-        .build(manager)
-        .await
-}
-
 fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
     let dir_path = Path::new(path);
     if dir_path.exists() {
@@ -273,21 +229,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
 
     info!("Beginning DB migration w/ temporary connection...");
-    run_migrations(&db_url, MIGRATIONS).await?;
+    // it is best to create a temporary unmanaged connection to run the migrations
+    // a completely new set of connections is created by the pool manager because it cannot understand an already established connection
+    let conn: AsyncPgConnection = AsyncPgConnection::establish(&db_url).await?;
+    let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
+        AsyncConnectionWrapper::from(conn);
+    tokio::task::spawn_blocking(
+        move || match async_wrapper.run_pending_migrations(MIGRATIONS) {
+            Ok(_res) => info!("Successfully migrated DB!"),
+            Err(e) => warn!("Encountered Error: {}", e),
+        },
+    )
+    .await?;
 
-    let argos_db_url = argos_database::database_url_with_name(&db_url, ARGOS_DATABASE_NAME)?;
-    info!("Preparing the {ARGOS_DATABASE_NAME} DB...");
-    // Argos-only data must never stop telemetry, so a failure here only breaks the track and lap routes
-    if let Err(e) = prepare_argos_database(&db_url, &argos_db_url).await {
-        warn!("{ARGOS_DATABASE_NAME} DB unavailable, track and lap routes will fail: {e}");
-    }
+    // Argos-only data must never stop telemetry; without its DB only the track and lap routes fail
+    let argos_pool = match argos_database::connect(&db_url, ARGOS_DATABASE_NAME).await {
+        Ok(pool) => Some(pool),
+        Err(e) => {
+            warn!("{ARGOS_DATABASE_NAME} DB unavailable, track and lap routes will fail: {e}");
+            None
+        }
+    };
 
     info!("Initializing database connections...");
-    let pool = build_pool(db_url).await?;
-    let argos_pool = Pool::builder()
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
+    let pool: Pool<AsyncPgConnection> = Pool::builder()
         .max_size(10)
-        .connection_timeout(Duration::from_secs(5)) // fail track requests fast if the DB is unavailable
-        .build_unchecked(AsyncDieselConnectionManager::new(argos_db_url));
+        .min_idle(Some(2))
+        .max_lifetime(Some(Duration::from_hours(24)))
+        .idle_timeout(Some(Duration::from_mins(2)))
+        .build(manager)
+        .await?;
 
     // create the socket stuff
     let (socket_layer, io) = SocketIo::builder()

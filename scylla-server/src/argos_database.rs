@@ -1,11 +1,19 @@
+use std::time::Duration;
+
 use diesel::sql_types::{Bool, Text};
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use diesel_migrations::{EmbeddedMigrations, embed_migrations};
+use diesel_async::{
+    AsyncConnection, AsyncPgConnection, RunQueryDsl,
+    async_connection_wrapper::AsyncConnectionWrapper,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
+};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+
+use crate::PoolHandle;
 
 /// Holds Argos-only data such as tracks, beside the car database on the same server
 pub const ARGOS_DATABASE_NAME: &str = "argos_experimental";
 
-pub const ARGOS_MIGRATIONS: EmbeddedMigrations = embed_migrations!("argos_migrations");
+const ARGOS_MIGRATIONS: EmbeddedMigrations = embed_migrations!("argos_migrations");
 
 /// The URL of the database `database_name` on the server of `database_url`, with the same credentials and options
 pub fn database_url_with_name(
@@ -17,33 +25,52 @@ pub fn database_url_with_name(
     Ok(url.into())
 }
 
-/// Creates the database `database_name` on the server `connection` is connected to, unless it exists
-pub async fn create_database_if_missing(
+/// A pool for the database `database_name` on the server of `database_url`, which is created and migrated first if needed
+pub async fn connect(
+    database_url: &str,
+    database_name: &str,
+) -> Result<PoolHandle, Box<dyn std::error::Error + Send + Sync>> {
+    let argos_database_url = database_url_with_name(database_url, database_name)?;
+    create_database_if_missing(
+        &mut AsyncPgConnection::establish(database_url).await?,
+        database_name,
+    )
+    .await?;
+
+    let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
+        AsyncConnectionWrapper::from(AsyncPgConnection::establish(&argos_database_url).await?);
+    tokio::task::spawn_blocking(move || {
+        async_wrapper
+            .run_pending_migrations(ARGOS_MIGRATIONS)
+            .map(|_| ())
+    })
+    .await??;
+
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(argos_database_url);
+    Ok(Pool::builder()
+        .max_size(10)
+        .min_idle(Some(2))
+        .max_lifetime(Some(Duration::from_hours(24)))
+        .idle_timeout(Some(Duration::from_mins(2)))
+        .build(manager)
+        .await?)
+}
+
+async fn create_database_if_missing(
     connection: &mut AsyncPgConnection,
     database_name: &str,
 ) -> Result<(), diesel::result::Error> {
-    if database_exists(connection, database_name).await? {
-        return Ok(());
-    }
-    let created = diesel::sql_query(format!("CREATE DATABASE \"{database_name}\""))
-        .execute(connection)
-        .await;
-    match created {
-        // another scylla can create it between the check and the create
-        Err(_) if database_exists(connection, database_name).await? => Ok(()),
-        created => created.map(|_| ()),
-    }
-}
-
-async fn database_exists(
-    connection: &mut AsyncPgConnection,
-    database_name: &str,
-) -> Result<bool, diesel::result::Error> {
-    diesel::select(
+    let exists: bool = diesel::select(
         diesel::dsl::sql::<Bool>("EXISTS (SELECT FROM pg_database WHERE datname = ")
             .bind::<Text, _>(database_name)
             .sql(")"),
     )
     .get_result(connection)
-    .await
+    .await?;
+    if !exists {
+        diesel::sql_query(format!("CREATE DATABASE \"{database_name}\""))
+            .execute(connection)
+            .await?;
+    }
+    Ok(())
 }

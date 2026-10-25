@@ -9,7 +9,7 @@ use crate::{
 
 /// get every track
 pub async fn get_all_tracks(
-    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
+    Extension(argos_pool): Extension<ArgosPoolHandle>,
 ) -> Result<Json<Vec<PublicTrack>>, ScyllaError> {
     let mut db = argos_pool.get().await?;
     let tracks = track_service::get_all_tracks(&mut db).await?;
@@ -29,7 +29,7 @@ pub struct AddTrackPayload {
 
 /// add a track with no lines
 pub async fn add_track(
-    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
+    Extension(argos_pool): Extension<ArgosPoolHandle>,
     Json(AddTrackPayload { name }): Json<AddTrackPayload>,
 ) -> Result<Json<PublicTrack>, ScyllaError> {
     let mut db = argos_pool.get().await?;
@@ -48,7 +48,7 @@ pub struct EditTrackPayload {
 
 /// replace both lines of the track with the given id
 pub async fn edit_track(
-    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
+    Extension(argos_pool): Extension<ArgosPoolHandle>,
     Path(track_id): Path<i32>,
     Json(EditTrackPayload {
         start_line,
@@ -77,7 +77,7 @@ pub async fn edit_track(
 
 /// delete a track given its id
 pub async fn delete_track(
-    Extension(ArgosPoolHandle(argos_pool)): Extension<ArgosPoolHandle>,
+    Extension(argos_pool): Extension<ArgosPoolHandle>,
     Path(track_id): Path<i32>,
 ) -> Result<Json<String>, ScyllaError> {
     let mut db = argos_pool.get().await?;

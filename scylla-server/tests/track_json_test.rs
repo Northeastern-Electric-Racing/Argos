@@ -99,7 +99,6 @@ fn edit_body_deserializes_null_lines_as_no_lines() {
 #[test]
 fn lap_serializes_with_millisecond_field_names() {
     let lap = Lap {
-        number: 1,
         start_ms: 1_712_345_678_901.25,
         end_ms: 1_712_345_751_005.5,
         duration_ms: 72_104.25,
@@ -107,6 +106,6 @@ fn lap_serializes_with_millisecond_field_names() {
 
     assert_eq!(
         serde_json::to_value(&lap).unwrap(),
-        json!({ "number": 1, "startMs": 1_712_345_678_901.25, "endMs": 1_712_345_751_005.5, "durationMs": 72_104.25 })
+        json!({ "startMs": 1_712_345_678_901.25, "endMs": 1_712_345_751_005.5, "durationMs": 72_104.25 })
     );
 }

@@ -62,7 +62,7 @@ However, when creating schema changes to the car database please use charybdis, 
 
 `argos_experimental` holds Argos-only data, such as tracks, on the same Postgres server as the car database. It is not car telemetry: it is not uploaded to the cloud, not in Grafana, and not managed by charybdis.
 
-Scylla creates it on startup if it is missing (its URL is `DATABASE_URL` with the database name swapped) and runs its migrations from `argos_migrations/`, so a deploy needs no manual SQL. If that fails (for example, the DB user can't create databases), scylla logs a warning and keeps running; only the track and lap routes fail.
+Scylla creates it on startup if it is missing (its URL is `DATABASE_URL` with the database name swapped) and runs its migrations from `argos_migrations/`, so a deploy needs no manual SQL. If that fails (for example, the DB user can't create databases), scylla logs a warning and keeps running; only the track and lap routes fail. `docker compose down -v` deletes the whole Postgres volume, `argos_experimental` included.
 
 To change its schema, add a Diesel migration instead of a charybdis one:
 

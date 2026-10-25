@@ -71,7 +71,6 @@ export type Track = {
 };
 
 export type TimedLap = {
-  number: number;
   startMs: number;
   endMs: number;
   durationMs: number;
