@@ -64,14 +64,17 @@ pub async fn get_laps(
         .collect();
 
     let mut laps = lap_timing::laps(&fixes, start_line, finish_line);
-    laps.retain(|lap| lap.start_ms >= since_ms);
     let resume_ms = fixes.last().map_or(since_ms, |last_fix| {
-        lap_timing::resume_ms(
-            &fixes,
-            start_line,
-            finish_line,
-            last_fix.time_ms - SETTLE_MS,
-        )
+        let cutoff_ms = last_fix.time_ms - SETTLE_MS;
+        // a crossing timed from a fix after the cutoff can still move, so only up to the fix before it has settled
+        let settled_ms = fixes
+            .iter()
+            .rev()
+            .map(|fix| fix.time_ms)
+            .find(|&time_ms| time_ms <= cutoff_ms)
+            .unwrap_or(cutoff_ms);
+        lap_timing::resume_ms(&fixes, start_line, finish_line, &laps, settled_ms)
     });
+    laps.retain(|lap| lap.start_ms >= since_ms);
     Ok(LapsSince { laps, resume_ms })
 }

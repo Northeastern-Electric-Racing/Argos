@@ -232,6 +232,21 @@ fn start_line_only_drops_the_short_laps_of_gps_jitter_on_the_line() {
 }
 
 #[test]
+fn start_line_only_drops_a_lap_spanning_a_stop() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_start(400_000.0),
+        cross_start(420_000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        laps(&fixes, start_line(), None),
+        vec![lap(400_000.0, 420_000.0)]
+    );
+}
+
+#[test]
 fn a_single_start_crossing_times_no_laps() {
     assert_eq!(laps(&cross_start(1000.0), start_line(), None), vec![]);
 }
@@ -327,19 +342,20 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
 }
 
 #[test]
-fn start_line_only_resumes_at_the_start_of_the_lap_holding_the_settled_time() {
+fn start_line_only_resumes_at_the_lap_holding_the_settled_time_unless_it_spans_a_stop() {
     let fixes: Vec<GpsFix> = [
         cross_start(1000.0),
         cross_start(5000.0),
         cross_start(9000.0),
     ]
     .concat();
-    let resumes: Vec<f64> = [500.0, 6000.0, 9500.0]
+    let timed = laps(&fixes, start_line(), None);
+    let resumes: Vec<f64> = [500.0, 6000.0, 9500.0, 400_000.0]
         .iter()
-        .map(|&settled_ms| resume_ms(&fixes, start_line(), None, settled_ms))
+        .map(|&settled_ms| resume_ms(&fixes, start_line(), None, &timed, settled_ms))
         .collect();
 
-    assert_eq!(resumes, vec![500.0, 5000.0, 9000.0]);
+    assert_eq!(resumes, vec![500.0, 5000.0, 9000.0, 400_000.0]);
 }
 
 #[test]
@@ -350,9 +366,18 @@ fn separate_finish_line_resumes_at_the_start_of_the_run_holding_the_settled_time
         cross_start(9000.0),
     ]
     .concat();
+    let timed = laps(&fixes, start_line(), Some(finish_line()));
     let resumes: Vec<f64> = [500.0, 2000.0, 6000.0, 9500.0]
         .iter()
-        .map(|&settled_ms| resume_ms(&fixes, start_line(), Some(finish_line()), settled_ms))
+        .map(|&settled_ms| {
+            resume_ms(
+                &fixes,
+                start_line(),
+                Some(finish_line()),
+                &timed,
+                settled_ms,
+            )
+        })
         .collect();
 
     assert_eq!(resumes, vec![500.0, 1000.0, 6000.0, 9000.0]);

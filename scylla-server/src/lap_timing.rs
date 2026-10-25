@@ -8,6 +8,8 @@ pub const METRES_PER_DEGREE: f64 = 6_371_000.0 * std::f64::consts::PI / 180.0;
 
 /// Shorter laps are dropped, as GPS noise while the car sits on a start line crosses it repeatedly
 const MIN_LAP_MS: f64 = 2_000.0;
+/// Longer laps are dropped, as they span a stop, such as a break, rather than a lap
+const MAX_LAP_MS: f64 = 5.0 * 60_000.0;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct GeoPoint {
@@ -200,19 +202,20 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
     timed
 }
 
-/// Where to time laps from so every lap not yet settled is timed again: the start of the lap, or lap in progress,
-/// holding `settled_ms`, else `settled_ms` itself
+/// Where to time laps from so every lap not yet settled is timed again: the start of the `laps` lap, or lap still in
+/// progress, holding `settled_ms`, else `settled_ms` itself
 #[must_use]
 pub fn resume_ms(
     fixes: &[GpsFix],
     start: TimingLine,
     finish: Option<TimingLine>,
+    laps: &[Lap],
     settled_ms: f64,
 ) -> f64 {
-    let in_progress =
-        open_lap_start_ms(fixes, start, finish).map(|start_ms| (start_ms, f64::INFINITY));
-    laps(fixes, start, finish)
-        .into_iter()
+    let in_progress = open_lap_start_ms(fixes, start, finish)
+        .filter(|&start_ms| settled_ms - start_ms < MAX_LAP_MS)
+        .map(|start_ms| (start_ms, f64::INFINITY));
+    laps.iter()
         .map(|lap| (lap.start_ms, lap.end_ms))
         .chain(in_progress)
         .find(|&(start_ms, end_ms)| start_ms <= settled_ms && settled_ms < end_ms)
@@ -236,9 +239,11 @@ fn open_lap_start_ms(
 
 fn lap(start_ms: f64, end_ms: f64) -> Option<Lap> {
     let duration_ms = end_ms - start_ms;
-    (duration_ms >= MIN_LAP_MS).then_some(Lap {
-        start_ms,
-        end_ms,
-        duration_ms,
-    })
+    (MIN_LAP_MS..=MAX_LAP_MS)
+        .contains(&duration_ms)
+        .then_some(Lap {
+            start_ms,
+            end_ms,
+            duration_ms,
+        })
 }
