@@ -15,13 +15,6 @@ pub struct GeoPoint {
     pub lon: f64,
 }
 
-/// A timing line from A to B, crossed in either direction
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
-pub struct TimingLine {
-    pub a: GeoPoint,
-    pub b: GeoPoint,
-}
-
 impl GeoPoint {
     #[must_use]
     pub fn is_in_range(&self) -> bool {
@@ -29,7 +22,14 @@ impl GeoPoint {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// A timing line from A to B, crossed in either direction
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+pub struct TimingLine {
+    pub a: GeoPoint,
+    pub b: GeoPoint,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct GpsFix {
     pub point: GeoPoint,
     pub time_ms: f64,
@@ -198,6 +198,40 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
         }
     }
     timed
+}
+
+/// Where to time laps from so every lap not yet settled is timed again: the start of the lap, or lap in progress,
+/// holding `settled_ms`, else `settled_ms` itself
+#[must_use]
+pub fn resume_ms(
+    fixes: &[GpsFix],
+    start: TimingLine,
+    finish: Option<TimingLine>,
+    settled_ms: f64,
+) -> f64 {
+    let in_progress =
+        open_lap_start_ms(fixes, start, finish).map(|start_ms| (start_ms, f64::INFINITY));
+    laps(fixes, start, finish)
+        .into_iter()
+        .map(|lap| (lap.start_ms, lap.end_ms))
+        .chain(in_progress)
+        .find(|&(start_ms, end_ms)| start_ms <= settled_ms && settled_ms < end_ms)
+        .map_or(settled_ms, |(start_ms, _)| start_ms)
+}
+
+/// When the lap still in progress started, if one is: the last start crossing, unless a later finish crossing closed it
+fn open_lap_start_ms(
+    fixes: &[GpsFix],
+    start: TimingLine,
+    finish: Option<TimingLine>,
+) -> Option<f64> {
+    let last_start_ms = *crossing_times_ms(fixes, start).last()?;
+    let closed = finish.is_some_and(|finish| {
+        crossing_times_ms(fixes, finish)
+            .last()
+            .is_some_and(|&last_finish_ms| last_finish_ms > last_start_ms)
+    });
+    (!closed).then_some(last_start_ms)
 }
 
 fn lap(start_ms: f64, end_ms: f64) -> Option<Lap> {

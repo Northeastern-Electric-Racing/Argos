@@ -200,7 +200,6 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--line-end-color);
 }
 /* No scale: MapLibre positions markers with transform, which scale would multiply, moving the marker off the cursor. */
 .line-end-marker:hover {

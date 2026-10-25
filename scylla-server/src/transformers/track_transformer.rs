@@ -2,6 +2,7 @@ use serde::Serialize;
 
 use crate::{lap_timing::TimingLine, models::Track};
 
+/// The struct defining the track format sent to the client
 #[derive(Serialize, Debug, PartialEq)]
 pub struct PublicTrack {
     pub id: i32,

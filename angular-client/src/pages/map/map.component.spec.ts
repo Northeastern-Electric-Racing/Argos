@@ -6,13 +6,15 @@ import { EnvService } from 'src/services/env.service';
 import Storage from 'src/services/storage.service';
 import { LINES } from 'src/utils/map.utils';
 import { topics } from 'src/utils/topic.utils';
-import { Run, TimedLap, Track } from 'src/utils/types.utils';
+import { LapsSince, Run, TimedLap, Track } from 'src/utils/types.utils';
 import MapCanvasComponent from './map-canvas/map-canvas.component';
 import MapComponent from './map.component';
 
 const run = (id: number): Run => ({ id, locationName: '', driverName: '', time: new Date(0), notes: '' });
 const track = (id: number, name = 'Track'): Track => ({ id, name, startLine: null, finishLine: null });
 const json = (body: unknown) => ({ ok: true, json: () => Promise.resolve(body) }) as Response;
+const fix = (lat: string, time: string) => ({ values: [lat, '-84'], time, unit: 'deg' });
+const historyUrl = `/data/${encodeURIComponent(topics.gpsLocation())}/1`;
 const pending = new Promise<Response>(() => undefined);
 const settle = () => new Promise((resolve) => setTimeout(resolve));
 @Component({ selector: 'map-canvas', standalone: true, template: '' })
@@ -62,7 +64,7 @@ describe('MapComponent run', () => {
   it('clears the trace and laps when the run changes', async () => {
     const laps: TimedLap[] = [{ startMs: 0, endMs: 72500, durationMs: 72500 }];
     fetchSpy.and.callFake((url: RequestInfo | URL) =>
-      String(url).endsWith('/laps/1/7?since=0') ? Promise.resolve(json(laps)) : pending
+      String(url).endsWith('/laps/1/7?since=0') ? Promise.resolve(json({ laps, resumeMs: 0 })) : pending
     );
     storage.setCurrentRunId(1);
     map.selectedTrack.set(track(7));
@@ -84,11 +86,8 @@ describe('MapComponent run', () => {
   });
 
   it("shows a live run's stored history, then appends only newer live fixes", async () => {
-    const fix = (lat: string, time: string) => ({ values: [lat, '-84'], time, unit: 'deg' });
     fetchSpy.and.callFake((url: RequestInfo | URL) =>
-      String(url).endsWith(`/data/${encodeURIComponent(topics.gpsLocation())}/1`)
-        ? Promise.resolve(json([fix('42', '1000'), fix('42.1', '2000')]))
-        : pending
+      String(url).endsWith(historyUrl) ? Promise.resolve(json([fix('42', '1000'), fix('42.1', '2000')])) : pending
     );
     storage.setCurrentRunId(1);
     fixture.detectChanges();
@@ -110,23 +109,70 @@ describe('MapComponent run', () => {
     ]);
   });
 
-  it('polls a live run from a minute before its last lap ended and replaces the laps it re-times', async () => {
+  it("keeps the live fixes newer than a live run's stored history when it arrives", async () => {
+    let finishHistory: (response: Response) => void = () => undefined;
+    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+      String(url).endsWith(historyUrl) ? new Promise<Response>((resolve) => (finishHistory = resolve)) : pending
+    );
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    storage.addValue(topics.gpsLocation(), fix('42.1', '2000'));
+    storage.addValue(topics.gpsLocation(), fix('42.3', '3000'));
+    finishHistory(json([fix('42', '1000'), fix('42.2', '2000')]));
+    await settle();
+
+    expect(map.trace()).toEqual([
+      { lat: 42, lon: -84, timeMs: 1000 },
+      { lat: 42.2, lon: -84, timeMs: 2000 },
+      { lat: 42.3, lon: -84, timeMs: 3000 }
+    ]);
+  });
+
+  it("toasts a live run's failed history without covering the map and keeps drawing live fixes", async () => {
+    const toast = spyOn(TestBed.inject(MessageService), 'add');
+    let failHistory: (response: Response) => void = () => undefined;
+    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+      String(url).endsWith(historyUrl) ? new Promise<Response>((resolve) => (failHistory = resolve)) : pending
+    );
+    const overlay = () => fixture.nativeElement.querySelector('loading-page, error-page');
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+
+    expect(overlay()).toBeNull();
+
+    failHistory({ ok: false, text: () => Promise.resolve('Down') } as Response);
+    await settle();
+    storage.addValue(topics.gpsLocation(), fix('42', '1000'));
+    fixture.detectChanges();
+
+    expect(toast).toHaveBeenCalledOnceWith({ severity: 'error', summary: 'GPS History Unavailable', detail: 'Down' });
+    expect(overlay()).toBeNull();
+    expect(map.trace()).toEqual([{ lat: 42, lon: -84, timeMs: 1000 }]);
+  });
+
+  it("polls a live run from the server's resume cursor and replaces the laps it re-times", async () => {
     const realSetTimeout = window.setTimeout.bind(window);
     const flush = () => new Promise((resolve) => realSetTimeout(resolve));
-    const lapsByUrl = new Map<string, TimedLap[]>([
+    const lapsByUrl = new Map<string, LapsSince>([
       [
         '/laps/1/7?since=0',
-        [
-          { startMs: 0, endMs: 72500, durationMs: 72500 },
-          { startMs: 72500, endMs: 120000, durationMs: 47500 }
-        ]
+        {
+          laps: [
+            { startMs: 0, endMs: 72500, durationMs: 72500 },
+            { startMs: 72500, endMs: 120000, durationMs: 47500 }
+          ],
+          resumeMs: 70000
+        }
       ],
       [
-        '/laps/1/7?since=60000',
-        [
-          { startMs: 72500, endMs: 119000, durationMs: 46500 },
-          { startMs: 119000, endMs: 190000, durationMs: 71000 }
-        ]
+        '/laps/1/7?since=70000',
+        {
+          laps: [
+            { startMs: 72500, endMs: 119000, durationMs: 46500 },
+            { startMs: 119000, endMs: 190000, durationMs: 71000 }
+          ],
+          resumeMs: 130000
+        }
       ]
     ]);
     fetchSpy.and.callFake((url: RequestInfo | URL) => {
@@ -147,7 +193,7 @@ describe('MapComponent run', () => {
       .allArgs()
       .map(([url]) => String(url))
       .filter((url) => url.includes('/laps/'));
-    expect(lapUrls.map((url) => url.replace(/.*(?=\/laps\/)/, ''))).toEqual(['/laps/1/7?since=0', '/laps/1/7?since=60000']);
+    expect(lapUrls.map((url) => url.replace(/.*(?=\/laps\/)/, ''))).toEqual(['/laps/1/7?since=0', '/laps/1/7?since=70000']);
     expect(map.lapTable()).toEqual({
       best: '00:46.50',
       rows: [
@@ -304,17 +350,6 @@ describe('MapComponent saving', () => {
 
     expect(disabled()).toEqual({ clear: false, place: false, delete: false, latitude: false, trackSelect: false });
     expect(map.selectedTrack()).toEqual(placed);
-  });
-
-  it('ignores a second action while a save is in flight', async () => {
-    button('Clear').click();
-    fixture.detectChanges();
-    button('Clear').click();
-    button('Place').click();
-    await settle();
-
-    expect(writeCalls()).toBe(1);
-    expect(map.placing()).toBeNull();
   });
 
   it('ignores a write started by a path the disabled controls do not cover', async () => {

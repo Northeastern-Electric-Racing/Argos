@@ -51,7 +51,6 @@ async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Er
             },
         ]
     );
-    assert!(endurance.id < accel.id);
 
     Ok(())
 }

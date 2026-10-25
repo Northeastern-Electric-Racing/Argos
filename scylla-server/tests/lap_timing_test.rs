@@ -1,5 +1,5 @@
 use scylla_server::lap_timing::{
-    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps,
+    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps, resume_ms,
 };
 
 const REFERENCE: GeoPoint = GeoPoint {
@@ -324,4 +324,36 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
         laps(&fixes, start_line(), Some(finish_line())),
         vec![lap(1000.0, 5000.0), lap(5000.0, 9000.0)]
     );
+}
+
+#[test]
+fn start_line_only_resumes_at_the_start_of_the_lap_holding_the_settled_time() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_start(5000.0),
+        cross_start(9000.0),
+    ]
+    .concat();
+    let resumes: Vec<f64> = [500.0, 6000.0, 9500.0]
+        .iter()
+        .map(|&settled_ms| resume_ms(&fixes, start_line(), None, settled_ms))
+        .collect();
+
+    assert_eq!(resumes, vec![500.0, 5000.0, 9000.0]);
+}
+
+#[test]
+fn separate_finish_line_resumes_at_the_start_of_the_run_holding_the_settled_time() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_finish(4000.0),
+        cross_start(9000.0),
+    ]
+    .concat();
+    let resumes: Vec<f64> = [500.0, 2000.0, 6000.0, 9500.0]
+        .iter()
+        .map(|&settled_ms| resume_ms(&fixes, start_line(), Some(finish_line()), settled_ms))
+        .collect();
+
+    assert_eq!(resumes, vec![500.0, 1000.0, 6000.0, 9000.0]);
 }

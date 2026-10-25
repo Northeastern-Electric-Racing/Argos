@@ -96,8 +96,7 @@ export const brakePressureBack = () => `VCU/Pedals/Voltages/brake_2`; // was VCU
 export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
 
 // TPU
-// NOTE: TPU/* topics come from Odysseus-Daemon on the car (OnBoard, GPS and HaLow
-// collectors, each behind its own flag); gps_mock publishes TPU/GPS/Location in dev.
+// NOTE: TPU/* topics come from Odysseus-Daemon on the car; gps_mock publishes TPU/GPS/Location in dev.
 export const cpuUsage = () => `TPU/OnBoard/CpuUsage`;
 export const cpuTemp = () => `TPU/OnBoard/CpuTemp`;
 export const ramUsage = () => `TPU/OnBoard/MemAvailable`;

@@ -3,6 +3,8 @@ import { Map as MapLibreMap, NavigationControl, StyleSpecification, addProtocol,
 import { Protocol } from 'pmtiles';
 
 addProtocol('pmtiles', new Protocol().tile);
+// The bundler moves maplibre away from its worker file; angular.json copies the worker to the site root.
+setWorkerUrl('maplibre-gl-worker.mjs');
 
 // Its own component so tests can swap it for a stub instead of needing WebGL.
 @Component({
@@ -18,9 +20,7 @@ export default class MapCanvasComponent {
     const container = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
-      // The bundler moves maplibre away from its worker file; angular.json copies the worker to the site root.
-      setWorkerUrl('maplibre-gl-worker.mjs');
-      const map = new MapLibreMap({ container, style: this.mapStyle(), center: [0, 0], zoom: 1, attributionControl: false });
+      const map = new MapLibreMap({ container, style: this.mapStyle(), zoom: 1, attributionControl: false });
       destroyRef.onDestroy(() => map.remove());
       map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
       map.on('load', () => this.loaded.emit(map));

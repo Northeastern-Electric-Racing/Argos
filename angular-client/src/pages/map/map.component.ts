@@ -9,7 +9,20 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { EMPTY, Observable, asyncScheduler, exhaustMap, first, merge, of, switchMap, tap, throttleTime, timer } from 'rxjs';
+import {
+  EMPTY,
+  Observable,
+  asyncScheduler,
+  exhaustMap,
+  first,
+  from,
+  merge,
+  of,
+  switchMap,
+  tap,
+  throttleTime,
+  timer
+} from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getLaps } from 'src/api/lap.api';
 import { addTrack, deleteTrack, editTrack, getAllTracks } from 'src/api/track.api';
@@ -39,13 +52,11 @@ import { lapTable } from 'src/utils/lap-timer.types';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 import { isValidCoordinate, lineLengthMetres, snapFix } from 'src/utils/track.utils';
-import { Coordinate, Fix, Run, TimedLap, TimingLine, Track } from 'src/utils/types.utils';
+import { Coordinate, Fix, LapsSince, Run, TimedLap, TimingLine, Track } from 'src/utils/types.utils';
 import MapCanvasComponent from './map-canvas/map-canvas.component';
 import { RunSelectorComponent } from '../graph-page/graph-caption/run-selector/run-selector.component';
 
 const LAP_POLL_MS = 3000;
-// scylla writes GPS in batches that can land out of order, so recent laps are re-timed until their fixes settle
-const REWIND_MS = 60_000;
 const FIT_PADDING_PX = 60;
 const MAX_FIT_ZOOM = 19;
 // MapLibre re-tiles the whole trace on each redraw, too costly at the 10 Hz GPS rate.
@@ -126,7 +137,7 @@ export default class MapComponent {
   private lineEndMarkers = new Map<string, Marker>();
 
   constructor() {
-    this.request<Track[]>('Tracks unavailable', getAllTracks).then((tracks) => tracks && this.tracks.set(tracks));
+    this.request<Track[]>('Tracks Unavailable', getAllTracks).then((tracks) => tracks && this.tracks.set(tracks));
 
     toObservable(computed(() => ({ runId: this.runId(), isLive: this.isLive() })))
       .pipe(
@@ -136,7 +147,7 @@ export default class MapComponent {
           this.isLoading.set(false);
           this.historyError.set(null);
           if (runId === undefined) return EMPTY;
-          return isLive ? merge(this.recordedTrace(runId), this.liveTrace()) : this.recordedTrace(runId);
+          return isLive ? merge(this.liveHistory(runId), this.liveTrace()) : this.recordedTrace(runId);
         }),
         takeUntilDestroyed()
       )
@@ -273,6 +284,21 @@ export default class MapComponent {
     );
   }
 
+  // The live trace draws while this loads, so a failure toasts instead of covering the map.
+  private liveHistory(runId: number) {
+    return from(
+      this.request<DataValue[]>('GPS History Unavailable', () => getDataByDataTypeNameAndRunId(topics.gpsLocation(), runId))
+    ).pipe(
+      tap((points) => {
+        if (!points) return;
+        const history = traceFromPoints(points);
+        const lastTimeMs = history.at(-1)?.timeMs ?? -Infinity;
+        this.traceFixes.update((live) => [...history, ...live.filter((fix) => fix.timeMs > lastTimeMs)]);
+        this.fitTrace();
+      })
+    );
+  }
+
   private recordedTrace(runId: number) {
     const history = this.apiService.query<DataValue[]>(() => getDataByDataTypeNameAndRunId(topics.gpsLocation(), runId));
     return merge(
@@ -292,26 +318,23 @@ export default class MapComponent {
     let lastError: string | null = null;
     let since = 0;
     return (isLive ? timer(0, LAP_POLL_MS) : of(0)).pipe(
-      exhaustMap(() => {
-        const lastLap = this.laps().at(-1);
-        since = lastLap ? lastLap.endMs - REWIND_MS : 0;
-        return this.fetchLaps(runId, trackId, since);
-      }),
+      exhaustMap(() => this.fetchLaps(runId, trackId, since)),
       tap((result) => {
         if (!(result instanceof Error)) {
           lastError = null;
-          this.laps.update((laps) => [...laps.filter((lap) => lap.startMs < since), ...result]);
+          this.laps.update((laps) => [...laps.filter((lap) => lap.startMs < since), ...result.laps]);
+          since = result.resumeMs;
         } else if (result.message !== lastError) {
           lastError = result.message;
-          this.messageService.add({ severity: 'error', summary: 'Laps unavailable', detail: result.message });
+          this.messageService.add({ severity: 'error', summary: 'Laps Unavailable', detail: result.message });
         }
       })
     );
   }
 
-  private fetchLaps(runId: number, trackId: number, since: number): Observable<TimedLap[] | Error> {
-    const query = this.apiService.query<TimedLap[]>(() => getLaps(runId, trackId, since));
-    return merge(query.error, query.data).pipe(first((result): result is TimedLap[] | Error => result !== null));
+  private fetchLaps(runId: number, trackId: number, since: number): Observable<LapsSince | Error> {
+    const query = this.apiService.query<LapsSince>(() => getLaps(runId, trackId, since));
+    return merge(query.error, query.data).pipe(first((result): result is LapsSince | Error => result !== null));
   }
 
   private placeEnd(end: Coordinate) {
@@ -325,7 +348,7 @@ export default class MapComponent {
   private lineEndMarker(map: MapLibreMap, spec: LineSpec, end: keyof TimingLine) {
     const element = document.createElement('div');
     element.className = 'line-end-marker';
-    element.style.setProperty('--line-end-color', `var(${spec.colorVar})`);
+    element.style.background = `var(${spec.colorVar})`;
     const marker = new Marker({ element, draggable: true });
     const markerCursor = () => this.cursorAt(map, fromLngLat(marker.getLngLat()));
     marker.on('dragstart', () => {

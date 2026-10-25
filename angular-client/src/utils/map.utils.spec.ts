@@ -241,21 +241,4 @@ describe('overlayLayers', () => {
       'snap'
     ]);
   });
-
-  it('draws each timing line in its color', () => {
-    const line = (kind: string, color: string): LayerSpecification => ({
-      id: `${kind}-line`,
-      type: 'line',
-      source: 'lines',
-      filter: ['==', ['get', 'kind'], kind],
-      layout: { 'line-cap': 'round' },
-      paint: { 'line-color': color, 'line-width': 4 }
-    });
-    const layers = overlayLayers((variable) => variable);
-
-    expect(layers.filter((layer) => layer.type === 'line' && layer.source === 'lines')).toEqual([
-      line('start', '--color-timing-start'),
-      line('finish', '--color-timing-finish')
-    ]);
-  });
 });

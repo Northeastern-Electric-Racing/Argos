@@ -7,8 +7,10 @@ use serde::Deserialize;
 use crate::{
     ArgosPoolHandle, PoolHandle,
     error::ScyllaError,
-    lap_timing::Lap,
-    services::{lap_service, track_service},
+    services::{
+        lap_service::{self, LapsSince},
+        track_service,
+    },
 };
 
 #[derive(Deserialize)]
@@ -24,7 +26,7 @@ pub async fn get_laps(
     Extension(argos_pool): Extension<ArgosPoolHandle>,
     Path((run_id, track_id)): Path<(i32, i32)>,
     Query(query): Query<LapsQuery>,
-) -> Result<Json<Vec<Lap>>, ScyllaError> {
+) -> Result<Json<LapsSince>, ScyllaError> {
     let mut argos_db = argos_pool.get().await?;
     let track = track_service::get_track_by_id(&mut argos_db, track_id)
         .await?

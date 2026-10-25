@@ -1,7 +1,7 @@
 @if (isMobile()) {
   <sidebar-toggle style="width: 100%" />
 }
-<p-confirmdialog />
+<p-confirmDialog />
 <div class="map-page">
   <div class="map-area">
     <map-canvas class="map-container" [mapStyle]="baseStyle" (loaded)="onMapLoaded($event)" />
@@ -49,7 +49,7 @@
       placeholder="Select a track"
       [disabled]="saving()"
       appendTo="body"
-      [style]="{ width: '100%' }"
+      [fluid]="true"
     />
     <div class="row">
       <input

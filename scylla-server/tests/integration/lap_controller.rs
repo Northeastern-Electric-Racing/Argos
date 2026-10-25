@@ -9,7 +9,9 @@ use scylla_server::{
     error::ScyllaError,
     lap_timing::{GPS_LOCATION_TOPIC, GeoPoint, Lap, TimingLine},
     models::TrackLines,
-    services::{data_service, data_type_service, run_service, track_service},
+    services::{
+        data_service, data_type_service, lap_service::LapsSince, run_service, track_service,
+    },
 };
 
 #[tokio::test]
@@ -38,7 +40,8 @@ async fn test_laps_for_track_without_start_line_is_empty() {
 
     let laps = get_laps(&pool, &argos_pool, 1, track.id, 0.0)
         .await
-        .unwrap();
+        .unwrap()
+        .laps;
 
     assert_eq!(laps, vec![]);
 }
@@ -194,7 +197,7 @@ async fn get_laps(
     run_id: i32,
     track_id: i32,
     since: f64,
-) -> Result<Vec<Lap>, ScyllaError> {
+) -> Result<LapsSince, ScyllaError> {
     let laps = lap_controller::get_laps(
         State(pool.clone()),
         Extension(argos_pool.clone()),
@@ -205,17 +208,24 @@ async fn get_laps(
     Ok(laps.0)
 }
 
-/// With each lap's start or end as `since`, the full laps starting before it followed by the laps since it are the full laps
+/// With each lap's start or end, or the resume cursor, as `since`, the full laps starting before it followed by the
+/// laps since it are the full laps
 async fn assert_since_laps_rebuild_full_laps(
     pool: &PoolHandle,
     argos_pool: &ArgosPoolHandle,
     run_id: i32,
     track_id: i32,
 ) -> Result<(), ScyllaError> {
-    let full = get_laps(pool, argos_pool, run_id, track_id, 0.0).await?;
+    let LapsSince {
+        laps: full,
+        resume_ms,
+    } = get_laps(pool, argos_pool, run_id, track_id, 0.0).await?;
     assert_eq!(full.len(), 2);
-    for since in full.iter().flat_map(|timed| [timed.start_ms, timed.end_ms]) {
-        let since_laps = get_laps(pool, argos_pool, run_id, track_id, since).await?;
+    let lap_bounds = full.iter().flat_map(|timed| [timed.start_ms, timed.end_ms]);
+    for since in lap_bounds.chain([resume_ms]) {
+        let since_laps = get_laps(pool, argos_pool, run_id, track_id, since)
+            .await?
+            .laps;
         let rebuilt: Vec<&Lap> = full
             .iter()
             .filter(|timed| timed.start_ms < since)
@@ -235,7 +245,9 @@ async fn test_laps_between_consecutive_start_crossings() -> Result<(), ScyllaErr
     drop(db);
     drop(argos_db);
 
-    let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0).await?;
+    let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0)
+        .await?
+        .laps;
 
     assert_eq!(laps, vec![lap(1_500.5, 11_501.5), lap(11_501.5, 21_503.5)]);
     Ok(())
@@ -250,9 +262,35 @@ async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
     drop(db);
     drop(argos_db);
 
-    let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0).await?;
+    let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0)
+        .await?
+        .laps;
 
     assert_eq!(laps, vec![lap(1_500.5, 4_500.5), lap(11_501.5, 14_502.5)]);
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_laps_without_crossings_resume_a_minute_before_the_last_fix() -> Result<(), ScyllaError>
+{
+    let (pool, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = pool.get().await.unwrap();
+    let mut argos_db = argos_pool.get().await.unwrap();
+    let (run_id, _) = start_only_run(&mut db, &mut argos_db).await?;
+    let uncrossed_track_id =
+        track_with_lines(&mut argos_db, vertical_line(START_LON + 1.0), None).await?;
+    drop(db);
+    drop(argos_db);
+
+    let laps = get_laps(&pool, &argos_pool, run_id, uncrossed_track_id, 0.0).await?;
+
+    assert_eq!(
+        laps,
+        LapsSince {
+            laps: vec![],
+            resume_ms: (RUN_START_MS + 22_007 - 60_000) as f64
+        }
+    );
     Ok(())
 }
 

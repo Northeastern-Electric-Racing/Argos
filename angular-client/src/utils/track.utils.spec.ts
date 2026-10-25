@@ -11,29 +11,20 @@ const fixes = [
 ];
 
 describe('isValidCoordinate', () => {
-  it('accepts latitudes up to 90 degrees either side', () => {
+  it('accepts latitudes up to 90 and longitudes up to 180 degrees either side', () => {
     expect(isValidCoordinate('lat', 90)).toBeTrue();
     expect(isValidCoordinate('lat', -90)).toBeTrue();
     expect(isValidCoordinate('lat', 0)).toBeTrue();
-  });
-
-  it('rejects latitudes beyond 90 degrees', () => {
-    expect(isValidCoordinate('lat', 90.000001)).toBeFalse();
-    expect(isValidCoordinate('lat', -90.000001)).toBeFalse();
-    expect(isValidCoordinate('lat', 120)).toBeFalse();
-  });
-
-  it('accepts longitudes up to 180 degrees either side', () => {
     expect(isValidCoordinate('lon', 180)).toBeTrue();
     expect(isValidCoordinate('lon', -180)).toBeTrue();
   });
 
-  it('rejects longitudes beyond 180 degrees', () => {
+  it('rejects coordinates beyond those bounds and missing or non-finite values', () => {
+    expect(isValidCoordinate('lat', 90.000001)).toBeFalse();
+    expect(isValidCoordinate('lat', -90.000001)).toBeFalse();
+    expect(isValidCoordinate('lat', 120)).toBeFalse();
     expect(isValidCoordinate('lon', 180.000001)).toBeFalse();
     expect(isValidCoordinate('lon', -180.000001)).toBeFalse();
-  });
-
-  it('rejects a missing or non-finite value', () => {
     expect(isValidCoordinate('lat', NaN)).toBeFalse();
     expect(isValidCoordinate('lon', NaN)).toBeFalse();
     expect(isValidCoordinate('lon', Infinity)).toBeFalse();

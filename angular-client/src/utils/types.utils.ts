@@ -76,6 +76,8 @@ export type TimedLap = {
   durationMs: number;
 };
 
+export type LapsSince = { laps: TimedLap[]; resumeMs: number };
+
 export type GraphData = {
   x: number;
   y: number;

@@ -55,7 +55,7 @@ pub struct Run {
     pub time: DateTime<Utc>,
 }
 
-#[derive(Queryable, Debug, Identifiable, Selectable, PartialEq)]
+#[derive(Queryable, Debug, Identifiable, Selectable)]
 #[diesel(table_name = crate::argos_schema::track)]
 #[diesel(primary_key(id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
