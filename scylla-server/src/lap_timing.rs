@@ -6,6 +6,9 @@ pub const GPS_LOCATION_TOPIC: &str = "TPU/GPS/Location";
 /// Metres along a meridian per degree of latitude, on a spherical Earth of radius 6371 km
 pub const METRES_PER_DEGREE: f64 = 6_371_000.0 * std::f64::consts::PI / 180.0;
 
+/// Shorter laps are dropped, as GPS noise while the car sits on a start line crosses it repeatedly
+const MIN_LAP_MS: f64 = 2_000.0;
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct GeoPoint {
     pub lat: f64,
@@ -102,7 +105,7 @@ impl ProjectedLine {
         }
     }
 
-    /// The interpolated time the car crossed the line going from P0 to P1, if it did
+    /// The interpolated time the car crossed the line going from `from` to `to`, if it did
     fn crossing_time_ms(&self, from: GpsFix, to: GpsFix) -> Option<f64> {
         let p0 = self.projection.project(from.point);
         let p1 = self.projection.project(to.point);
@@ -118,9 +121,7 @@ impl ProjectedLine {
         let denominator = travel.cross(line_direction);
         let fraction_along_travel = self.a.minus(p0).cross(line_direction) / denominator;
         let fraction_along_line = self.a.minus(p0).cross(travel) / denominator;
-        if !(0.0..=1.0).contains(&fraction_along_travel)
-            || !(0.0..=1.0).contains(&fraction_along_line)
-        {
+        if !(0.0..=1.0).contains(&fraction_along_line) {
             return None;
         }
 
@@ -163,7 +164,7 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
     let Some(finish) = finish else {
         return start_crossings
             .windows(2)
-            .map(|pair| lap(pair[0], pair[1]))
+            .filter_map(|pair| lap(pair[0], pair[1]))
             .collect();
     };
 
@@ -191,7 +192,7 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
             LineKind::Start => open_start = Some(time),
             LineKind::Finish => {
                 if let Some(start_ms) = open_start.take() {
-                    timed.push(lap(start_ms, time));
+                    timed.extend(lap(start_ms, time));
                 }
             }
         }
@@ -199,10 +200,11 @@ pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> 
     timed
 }
 
-fn lap(start_ms: f64, end_ms: f64) -> Lap {
-    Lap {
+fn lap(start_ms: f64, end_ms: f64) -> Option<Lap> {
+    let duration_ms = end_ms - start_ms;
+    (duration_ms >= MIN_LAP_MS).then_some(Lap {
         start_ms,
         end_ms,
-        duration_ms: end_ms - start_ms,
-    }
+        duration_ms,
+    })
 }

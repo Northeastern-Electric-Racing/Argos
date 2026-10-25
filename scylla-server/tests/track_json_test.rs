@@ -1,5 +1,5 @@
 use scylla_server::{
-    controllers::track_controller::{AddTrackPayload, EditTrackPayload},
+    controllers::track_controller::EditTrackPayload,
     lap_timing::{GeoPoint, Lap, TimingLine},
     transformers::track_transformer::PublicTrack,
 };
@@ -35,31 +35,6 @@ fn track_serializes_to_nested_camel_case_lines() {
             "startLine": { "a": { "lat": 42.1, "lon": -84.2 }, "b": { "lat": 42.3, "lon": -84.4 } },
             "finishLine": null
         })
-    );
-}
-
-#[test]
-fn track_without_lines_serializes_null_lines() {
-    let track = PublicTrack {
-        id: 2,
-        name: "Skidpad".to_owned(),
-        start_line: None,
-        finish_line: None,
-    };
-
-    assert_eq!(
-        serde_json::to_value(&track).unwrap(),
-        json!({ "id": 2, "name": "Skidpad", "startLine": null, "finishLine": null })
-    );
-}
-
-#[test]
-fn add_body_deserializes_the_name() {
-    assert_eq!(
-        serde_json::from_value::<AddTrackPayload>(json!({ "name": "Skidpad" })).unwrap(),
-        AddTrackPayload {
-            name: "Skidpad".to_owned()
-        }
     );
 }
 

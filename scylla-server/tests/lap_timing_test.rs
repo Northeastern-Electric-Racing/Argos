@@ -110,6 +110,18 @@ fn cross_finish_backwards(time_ms: f64) -> Vec<GpsFix> {
     )
 }
 
+/// GPS noise while parked on the start line, crossing it at 1100, 1300, 1500, 1700 and 1900 ms
+fn jitter_on_start_line() -> Vec<GpsFix> {
+    vec![
+        fix(0.5, -3.0, 1000.0),
+        fix(-0.5, -3.0, 1200.0),
+        fix(0.5, -3.0, 1400.0),
+        fix(-0.5, -3.0, 1600.0),
+        fix(0.5, -3.0, 1800.0),
+        fix(-0.5, -3.0, 2000.0),
+    ]
+}
+
 #[test]
 fn crossing_halfway_between_fixes_interpolates_to_the_midpoint_time() {
     let fixes = [fix(-1.0, 0.0, 1000.0), fix(1.0, 0.0, 1100.0)];
@@ -157,6 +169,22 @@ fn touching_the_line_and_turning_back_counts_once() {
 }
 
 #[test]
+fn a_fix_exactly_on_a_diagonal_line_counts_once() {
+    let diagonal = TimingLine {
+        a: offset(-6.0, -6.0),
+        b: offset(6.0, 6.0),
+    };
+    // on a diagonal, rounding puts this crossing a hair past the end of the first segment
+    let fixes = [
+        fix(-1.0, 0.0, 1000.0),
+        fix(0.0, 0.0, 1100.0),
+        fix(1.0, 0.0, 1200.0),
+    ];
+
+    assert_eq!(crossing_times_ms(&fixes, diagonal), vec![1100.0]);
+}
+
+#[test]
 fn passing_beyond_the_line_end_is_a_near_miss() {
     let fixes = [fix(-1.0, 7.0, 1000.0), fix(1.0, 7.0, 1100.0)];
 
@@ -194,6 +222,13 @@ fn start_line_only_times_a_lap_between_each_pair_of_crossings() {
             lap(9000.0, 20000.0)
         ]
     );
+}
+
+#[test]
+fn start_line_only_drops_the_short_laps_of_gps_jitter_on_the_line() {
+    let fixes: Vec<GpsFix> = [jitter_on_start_line(), cross_start(21900.0)].concat();
+
+    assert_eq!(laps(&fixes, start_line(), None), vec![lap(1900.0, 21900.0)]);
 }
 
 #[test]
@@ -237,6 +272,16 @@ fn start_crossing_while_a_run_is_open_restarts_it() {
     assert_eq!(
         laps(&fixes, start_line(), Some(finish_line())),
         vec![lap(3000.0, 6000.0)]
+    );
+}
+
+#[test]
+fn gps_jitter_on_the_start_line_restarts_the_lap_until_the_finish() {
+    let fixes: Vec<GpsFix> = [jitter_on_start_line(), cross_finish(21900.0)].concat();
+
+    assert_eq!(
+        laps(&fixes, start_line(), Some(finish_line())),
+        vec![lap(1900.0, 21900.0)]
     );
 }
 

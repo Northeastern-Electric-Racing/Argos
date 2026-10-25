@@ -9,7 +9,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { EMPTY, Observable, exhaustMap, first, merge, of, switchMap, tap, timer } from 'rxjs';
+import { EMPTY, Observable, asyncScheduler, exhaustMap, first, merge, of, switchMap, tap, throttleTime, timer } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getLaps } from 'src/api/lap.api';
 import { addTrack, deleteTrack, editTrack, getAllTracks } from 'src/api/track.api';
@@ -48,6 +48,8 @@ const LAP_POLL_MS = 3000;
 const REWIND_MS = 60_000;
 const FIT_PADDING_PX = 60;
 const MAX_FIT_ZOOM = 19;
+// MapLibre re-tiles the whole trace on each redraw, too costly at the 10 Hz GPS rate.
+const TRACE_REDRAW_MS = 1_000;
 
 type Cursor = { point: Coordinate; fix: Fix | null; target: Coordinate };
 
@@ -100,10 +102,7 @@ export default class MapComponent {
   private newTrackNameValue = toSignal(this.newTrackName.valueChanges, { initialValue: '' });
   saving = signal(false);
   canCreateTrack = computed(() => !this.saving() && !!this.newTrackNameValue().trim());
-  placing = linkedSignal<number | undefined, LineSpec | null>({
-    source: computed(() => this.selectedTrack()?.id),
-    computation: () => null
-  });
+  placing = linkedSignal<Track | null, LineSpec | null>({ source: this.selectedTrack, computation: () => null });
   pendingEnd = linkedSignal<LineSpec | null, Coordinate | null>({ source: this.placing, computation: () => null });
   cursor = signal<Cursor | null>(null);
   private dragging = signal(false);
@@ -133,7 +132,7 @@ export default class MapComponent {
           this.isLoading.set(false);
           this.historyError.set(null);
           if (runId === undefined) return EMPTY;
-          return isLive ? this.liveTrace() : this.recordedTrace(runId);
+          return isLive ? merge(this.recordedTrace(runId), this.liveTrace()) : this.recordedTrace(runId);
         }),
         takeUntilDestroyed()
       )
@@ -149,12 +148,10 @@ export default class MapComponent {
       )
       .subscribe();
 
-    effect(() => {
-      const map = this.map();
-      const trace = this.trace();
-      setOverlay(map, 'trace', traceGeoJson(trace));
-      setOverlay(map, 'car', carGeoJson(trace));
-    });
+    toObservable(computed(() => ({ map: this.map(), trace: this.trace() })))
+      .pipe(throttleTime(TRACE_REDRAW_MS, asyncScheduler, { leading: true, trailing: true }), takeUntilDestroyed())
+      .subscribe(({ map, trace }) => setOverlay(map, 'trace', traceGeoJson(trace)));
+    effect(() => setOverlay(this.map(), 'car', carGeoJson(this.trace())));
     effect(() => {
       const map = this.map();
       const track = this.selectedTrack();
@@ -265,6 +262,9 @@ export default class MapComponent {
     return this.storage.get(topics.gpsLocation()).pipe(
       tap((value) => {
         const point = toFix(value);
+        const last = this.trace().at(-1);
+        // The stored history may already hold this fix.
+        if (last && point.timeMs <= last.timeMs) return;
         this.traceFixes.update((trace) => [...trace, point]);
         if (this.trace().length === 1 || (this.followCar && !this.map()?.getBounds().contains(point))) this.fitTrace();
       })

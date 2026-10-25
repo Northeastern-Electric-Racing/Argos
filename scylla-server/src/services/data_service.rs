@@ -23,7 +23,7 @@ pub async fn get_data_by_run_id(
         .await
 }
 
-/// Get datapoints of a run at or after a time
+/// Get datapoints of a run at or after a time, oldest first
 /// * `db` - The database connection to use
 /// * `data_type_name` - The data type name to filter the data by
 /// * `run_id` - The run id to filter the data
@@ -41,6 +41,7 @@ pub async fn get_data_by_run_id_since(
             .and(dataTypeName.eq(data_type_name))
             .and(time.ge(since_us)),
     )
+    .order(time.asc())
     .load(db)
     .await
 }

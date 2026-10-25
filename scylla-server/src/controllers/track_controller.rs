@@ -22,7 +22,7 @@ pub async fn get_all_tracks(
     ))
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize)]
 pub struct AddTrackPayload {
     pub name: String,
 }

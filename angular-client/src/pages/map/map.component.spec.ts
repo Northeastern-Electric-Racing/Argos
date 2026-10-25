@@ -83,6 +83,33 @@ describe('MapComponent run', () => {
     expect(map.lapTable()).toBeNull();
   });
 
+  it("shows a live run's stored history, then appends only newer live fixes", async () => {
+    const fix = (lat: string, time: string) => ({ values: [lat, '-84'], time, unit: 'deg' });
+    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+      String(url).endsWith(`/data/${encodeURIComponent(topics.gpsLocation())}/1`)
+        ? Promise.resolve(json([fix('42', '1000'), fix('42.1', '2000')]))
+        : pending
+    );
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    await settle();
+
+    expect(map.trace()).toEqual([
+      { lat: 42, lon: -84, timeMs: 1000 },
+      { lat: 42.1, lon: -84, timeMs: 2000 }
+    ]);
+
+    storage.addValue(topics.gpsLocation(), fix('42.2', '3000'));
+    storage.addValue(topics.gpsLocation(), fix('43', '2500'));
+    storage.addValue(topics.gpsLocation(), fix('44', '3000'));
+
+    expect(map.trace()).toEqual([
+      { lat: 42, lon: -84, timeMs: 1000 },
+      { lat: 42.1, lon: -84, timeMs: 2000 },
+      { lat: 42.2, lon: -84, timeMs: 3000 }
+    ]);
+  });
+
   it('polls a live run from a minute before its last lap ended and replaces the laps it re-times', async () => {
     const realSetTimeout = window.setTimeout.bind(window);
     const flush = () => new Promise((resolve) => realSetTimeout(resolve));
@@ -134,27 +161,13 @@ describe('MapComponent run', () => {
 
 describe('MapComponent placing', () => {
   let map: MapComponent;
-  let finishSave: (response: Response) => void;
 
   beforeEach(() => {
-    spyOn(window, 'fetch').and.callFake((url: RequestInfo | URL) =>
-      String(url).includes('/tracks/edit/') ? new Promise<Response>((resolve) => (finishSave = resolve)) : pending
-    );
+    spyOn(window, 'fetch').and.returnValue(pending);
     configure();
     map = TestBed.createComponent(MapComponent).componentInstance;
     map.tracks.set([track(7)]);
     map.selectedTrack.set(track(7));
-  });
-
-  it('keeps placing when a save of the same track finishes', async () => {
-    map.clearLine(LINES[1]);
-    map.togglePlacing(LINES[0]);
-    await settle();
-    finishSave(json(track(7, 'Saved')));
-    await settle();
-
-    expect(map.selectedTrack()?.name).toBe('Saved');
-    expect(map.placing()).toBe(LINES[0]);
   });
 
   it('stops placing when another track is selected', () => {

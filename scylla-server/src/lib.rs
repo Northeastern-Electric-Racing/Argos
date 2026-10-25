@@ -1,5 +1,8 @@
+use std::time::Duration;
+
 use axum::http::StatusCode;
 use chrono::serde::ts_milliseconds;
+use diesel_async::pooled_connection::{AsyncDieselConnectionManager, PoolError};
 
 use crate::{argos_database::ARGOS_DATABASE_NAME, error::ScyllaError};
 
@@ -35,6 +38,17 @@ pub type Database<'a> =
     diesel_async::pooled_connection::bb8::PooledConnection<'a, diesel_async::AsyncPgConnection>;
 
 pub type PoolHandle = diesel_async::pooled_connection::bb8::Pool<diesel_async::AsyncPgConnection>;
+
+/// A pool of connections to `database_url`, as scylla uses for each of its databases
+pub async fn build_pool(database_url: &str) -> Result<PoolHandle, PoolError> {
+    PoolHandle::builder()
+        .max_size(10)
+        .min_idle(Some(2))
+        .max_lifetime(Some(Duration::from_hours(24)))
+        .idle_timeout(Some(Duration::from_mins(2)))
+        .build(AsyncDieselConnectionManager::new(database_url))
+        .await
+}
 
 /// The `argos_experimental` pool, `None` if scylla could not connect to it on startup.
 /// Its own type so routes can take it as an extension beside the car pool state.

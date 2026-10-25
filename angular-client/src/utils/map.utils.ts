@@ -22,11 +22,17 @@ export const toFix = (point: DataValue): Fix => ({
 // The DB returns a run's points in no particular order.
 export const traceFromPoints = (points: DataValue[]): Fix[] => points.map(toFix).sort((a, b) => a.timeMs - b.timeMs);
 
-export const traceGeoJson = (trace: Coordinate[]) => ({
-  type: 'Feature' as const,
-  properties: {},
-  geometry: { type: 'LineString' as const, coordinates: trace.map(toLngLat) }
-});
+// Don't draw a straight line across missing GPS, e.g. a dropout or the hole left by batched DB writes.
+const MAX_FIX_GAP_MS = 2_000;
+
+export const traceGeoJson = (trace: Fix[]) => {
+  const lines: [number, number][][] = [];
+  trace.forEach((fix, index) => {
+    if (index === 0 || fix.timeMs - trace[index - 1].timeMs > MAX_FIX_GAP_MS) lines.push([]);
+    lines.at(-1)?.push(toLngLat(fix));
+  });
+  return { type: 'Feature' as const, properties: {}, geometry: { type: 'MultiLineString' as const, coordinates: lines } };
+};
 
 export const pointGeoJson = (point: Coordinate | null) => ({
   type: 'FeatureCollection' as const,

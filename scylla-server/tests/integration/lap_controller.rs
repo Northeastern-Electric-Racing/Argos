@@ -147,7 +147,7 @@ async fn start_only_run(
     Ok((run.runId, track_id))
 }
 
-/// A run that times laps (1 500.5, 3 500.5) and (11 501.5, 13 502.5) on a start and finish track
+/// A run that times laps (1 500.5, 4 500.5) and (11 501.5, 14 502.5) on a start and finish track
 async fn start_finish_run(
     db: &mut Database<'_>,
     argos_db: &mut Database<'_>,
@@ -165,15 +165,15 @@ async fn start_finish_run(
         db,
         run.runId,
         &[
-            (13_000, vec![LINE_LAT, west_of_finish]),
+            (14_000, vec![LINE_LAT, west_of_finish]),
             (1_000, vec![LINE_LAT, west_of_start]),
-            (4_001, vec![LINE_LAT, east_of_finish]),
+            (5_001, vec![LINE_LAT, east_of_finish]),
             (9_000, vec![LINE_LAT]),
             (2_001, vec![LINE_LAT, east_of_start]),
             (12_003, vec![LINE_LAT, east_of_start]),
-            (3_000, vec![LINE_LAT, west_of_finish]),
+            (4_000, vec![LINE_LAT, west_of_finish]),
             (6_000, vec![NORTH_OF_LINES, east_of_finish]),
-            (14_005, vec![LINE_LAT, east_of_finish]),
+            (15_005, vec![LINE_LAT, east_of_finish]),
             (8_000, vec![NORTH_OF_LINES, west_of_start]),
             (11_000, vec![LINE_LAT, west_of_start]),
         ],
@@ -252,7 +252,7 @@ async fn test_laps_from_start_to_finish_crossing() -> Result<(), ScyllaError> {
 
     let laps = get_laps(&pool, &argos_pool, run_id, track_id, 0.0).await?;
 
-    assert_eq!(laps, vec![lap(1_500.5, 3_500.5), lap(11_501.5, 13_502.5)]);
+    assert_eq!(laps, vec![lap(1_500.5, 4_500.5), lap(11_501.5, 14_502.5)]);
     Ok(())
 }
 

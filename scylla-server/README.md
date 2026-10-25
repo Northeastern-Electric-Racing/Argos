@@ -78,6 +78,10 @@ Write its `up.sql` and `down.sql`, then `diesel migration run --config-file dies
 - Integration tests (`tests/integration/`) need Postgres. They wait for it, set up the car and `argos_experimental` databases as scylla does on startup, and share them, so they run one at a time: `cargo test --test integration -- --test-threads=1`. Plain `cargo test` skips them.
 - `./integration_test.sh` starts a throwaway database and runs both.
 
+#### Mock GPS:
+
+`SCYLLA_SIREN_HOST_URL=localhost:1883 cargo run --bin gps_mock` publishes mock fixes on `TPU/GPS/Location` every 100 ms, driving laps of a loop then a straight out and back, so the map and lap timing work without the car. It is a dev tool: the Docker image ships only `scylla-server`.
+
 <!-- #### Test it yourself!
 
 You can send your own messages to the app running in production mode, and test how the client, database, etc. reacts!

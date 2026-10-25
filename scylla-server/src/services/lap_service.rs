@@ -30,9 +30,8 @@ pub async fn get_laps(
     )
     .await?
     .unwrap_or(i64::MIN);
-    let mut locations =
+    let locations =
         data_service::get_data_by_run_id_since(db, GPS_LOCATION_TOPIC, run_id, earliest_us).await?;
-    locations.sort_by_key(|location| location.time);
 
     let fixes: Vec<GpsFix> = locations
         .into_iter()

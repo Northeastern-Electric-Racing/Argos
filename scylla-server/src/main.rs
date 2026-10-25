@@ -13,10 +13,7 @@ use axum::{
 };
 use clap::Parser;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use diesel_async::{
-    AsyncConnection, AsyncPgConnection,
-    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
-};
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
@@ -24,6 +21,7 @@ use scylla_server::{
     ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
     SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
     argos_database::{self, ARGOS_DATABASE_NAME},
+    build_pool,
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -252,14 +250,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     info!("Initializing database connections...");
-    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
-    let pool: Pool<AsyncPgConnection> = Pool::builder()
-        .max_size(10)
-        .min_idle(Some(2))
-        .max_lifetime(Some(Duration::from_hours(24)))
-        .idle_timeout(Some(Duration::from_mins(2)))
-        .build(manager)
-        .await?;
+    let pool = build_pool(&db_url).await?;
 
     // create the socket stuff
     let (socket_layer, io) = SocketIo::builder()

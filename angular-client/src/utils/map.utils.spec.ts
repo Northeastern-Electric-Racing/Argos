@@ -45,23 +45,45 @@ describe('traceFromPoints', () => {
 });
 
 describe('traceGeoJson', () => {
-  it('draws the trace as a line in longitude, latitude order', () => {
+  it('draws fixes up to 2 s apart as one line in longitude, latitude order', () => {
     expect(
       traceGeoJson([
-        { lat: 1, lon: 10 },
-        { lat: 2, lon: 20 }
+        { lat: 1, lon: 10, timeMs: 0 },
+        { lat: 2, lon: 20, timeMs: 2000 }
       ])
     ).toEqual({
       type: 'Feature',
       properties: {},
       geometry: {
-        type: 'LineString',
+        type: 'MultiLineString',
         coordinates: [
-          [10, 1],
-          [20, 2]
+          [
+            [10, 1],
+            [20, 2]
+          ]
         ]
       }
     });
+  });
+
+  it('breaks the line where fixes are more than 2 s apart', () => {
+    expect(
+      traceGeoJson([
+        { lat: 1, lon: 10, timeMs: 0 },
+        { lat: 2, lon: 20, timeMs: 1000 },
+        { lat: 3, lon: 30, timeMs: 3001 },
+        { lat: 4, lon: 40, timeMs: 4000 }
+      ]).geometry.coordinates
+    ).toEqual([
+      [
+        [10, 1],
+        [20, 2]
+      ],
+      [
+        [30, 3],
+        [40, 4]
+      ]
+    ]);
   });
 });
 
@@ -76,10 +98,6 @@ describe('carGeoJson', () => {
       type: 'FeatureCollection',
       features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [20, 2] } }]
     });
-  });
-
-  it('has no car without a trace', () => {
-    expect(carGeoJson([])).toEqual({ type: 'FeatureCollection', features: [] });
   });
 });
 

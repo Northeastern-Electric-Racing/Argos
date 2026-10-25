@@ -1,14 +1,11 @@
-use std::time::Duration;
-
 use diesel::sql_types::{Bool, Text};
 use diesel_async::{
     AsyncConnection, AsyncPgConnection, RunQueryDsl,
     async_connection_wrapper::AsyncConnectionWrapper,
-    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 
-use crate::PoolHandle;
+use crate::{PoolHandle, build_pool};
 
 /// Holds Argos-only data such as tracks, beside the car database on the same server
 pub const ARGOS_DATABASE_NAME: &str = "argos_experimental";
@@ -46,14 +43,7 @@ pub async fn connect(
     })
     .await??;
 
-    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(argos_database_url);
-    Ok(Pool::builder()
-        .max_size(10)
-        .min_idle(Some(2))
-        .max_lifetime(Some(Duration::from_hours(24)))
-        .idle_timeout(Some(Duration::from_mins(2)))
-        .build(manager)
-        .await?)
+    Ok(build_pool(&argos_database_url).await?)
 }
 
 async fn create_database_if_missing(

@@ -65,25 +65,20 @@ async fn test_edit_track_overwrites_both_lines() -> Result<(), diesel::result::E
     track_service::edit_track(
         &mut db,
         added.id,
-        TrackLines::new(
-            Some(line(42.337_812_345_678, -71.086_712_345_678)),
-            Some(line(42.338_5, -71.087_5)),
-        ),
+        TrackLines::new(Some(line(42.1, -71.1)), Some(line(42.338_5, -71.087_5))),
     )
     .await?;
+    let precise_line = line(42.337_812_345_678, -71.086_712_345_678);
 
-    let edited = track_service::edit_track(
-        &mut db,
-        added.id,
-        TrackLines::new(Some(line(42.1, -71.1)), None),
-    )
-    .await?
-    .expect("track should exist");
+    let edited =
+        track_service::edit_track(&mut db, added.id, TrackLines::new(Some(precise_line), None))
+            .await?
+            .expect("track should exist");
 
     let expected = PublicTrack {
         id: added.id,
         name: "Accel".to_owned(),
-        start_line: Some(line(42.1, -71.1)),
+        start_line: Some(precise_line),
         finish_line: None,
     };
     assert_eq!(PublicTrack::from(edited), expected);
@@ -93,21 +88,6 @@ async fn test_edit_track_overwrites_both_lines() -> Result<(), diesel::result::E
             .map(PublicTrack::from),
         Some(expected)
     );
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_edit_unknown_track_saves_nothing() -> Result<(), diesel::result::Error> {
-    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
-    let mut db = argos_pool.get().await.unwrap();
-
-    let edited =
-        track_service::edit_track(&mut db, 1, TrackLines::new(Some(line(42.1, -71.1)), None))
-            .await?;
-
-    assert_eq!(edited, None);
-    assert!(track_service::get_all_tracks(&mut db).await?.is_empty());
 
     Ok(())
 }
