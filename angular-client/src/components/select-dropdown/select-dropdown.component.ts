@@ -1,4 +1,4 @@
-import { Component, effect, input } from '@angular/core';
+import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
 import { SelectChangeEvent, Select } from 'primeng/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -16,7 +16,7 @@ export interface DropdownOption {
   selector: 'select-dropdown',
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [Select, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {

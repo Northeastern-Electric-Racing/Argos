@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
 import { DropdownOption } from 'src/components/select-dropdown/select-dropdown.component';
@@ -13,7 +13,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'segment-selector',
   templateUrl: './segment-selector.component.html',
   styleUrl: './segment-selector.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, SelectDropdownComponent, TypographyComponent, VStackComponent]
 })
 export class SegmentSelectorComponent implements OnInit {

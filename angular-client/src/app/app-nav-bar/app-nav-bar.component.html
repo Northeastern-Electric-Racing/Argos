@@ -1,9 +1,9 @@
 @if (isMobile || this.sidebarVisible) {
   <p-drawer [(visible)]="sidebarVisible">
-    <ng-template pTemplate="header">
+    <ng-template #header>
       <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
     </ng-template>
-    <ng-template pTemplate="content">
+    <ng-template #content>
       @for (navItem of allNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"

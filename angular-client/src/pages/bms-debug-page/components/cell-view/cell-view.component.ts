@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
@@ -35,6 +35,7 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
   styleUrl: './cell-view.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ConfigTableComponent]
 })
 export class CellViewComponent implements OnDestroy {

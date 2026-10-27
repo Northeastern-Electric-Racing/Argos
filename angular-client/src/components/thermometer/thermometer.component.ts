@@ -1,10 +1,10 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'thermometer',
   templateUrl: './thermometer.component.html',
   styleUrls: ['./thermometer.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class ThermometerComponent {
   temperature = input<number>(0);

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input } from '@angular/core';
+import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
 export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
@@ -7,7 +7,7 @@ export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
   selector: 'toast-button',
   templateUrl: './toast-button.component.html',
   styleUrls: ['./toast-button.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ToastButtonComponent implements OnInit {
   private messageService = inject(MessageService);

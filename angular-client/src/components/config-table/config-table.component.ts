@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 /** Defines a row in the table: a label and a function to extract the display value from a data item. */
 export interface TableRowConfig<T> {
@@ -17,7 +17,7 @@ export interface TableColumnConfig<T> {
   selector: 'config-table',
   templateUrl: './config-table.component.html',
   styleUrl: './config-table.component.css',
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ConfigTableComponent<T> {
   rows = input.required<TableRowConfig<T>[]>();

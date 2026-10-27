@@ -1,11 +1,11 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
   selector: 'fault-buttons',
   templateUrl: './fault-buttons.component.html',
   styleUrl: './fault-buttons.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ButtonComponent]
 })
 export class FaultButtonsComponent {

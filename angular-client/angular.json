@@ -81,7 +81,7 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "setupFiles": ["src/test-setup.ts"]
+            "providersFile": "src/test-setup.ts"
           }
         },
         "lint": {

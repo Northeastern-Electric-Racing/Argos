@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import StatusBarComponent from './status-bar.component';
 
@@ -7,6 +7,7 @@ import StatusBarComponent from './status-bar.component';
 // Zoneless change detection is registered globally in src/test-setup.ts.
 @Component({
   template: `<status-bar [title]="title()"><span class="projected">chip</span></status-bar>`,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [StatusBarComponent]
 })
 class HostComponent {

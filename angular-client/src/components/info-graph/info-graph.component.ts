@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
@@ -10,7 +10,7 @@ import { GraphComponent } from '../graph/graph.component';
   templateUrl: './info-graph.component.html',
   styleUrls: ['./info-graph.component.css'],
   providers: [DialogService],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, GraphComponent]
 })
 export class InfoGraphComponent {

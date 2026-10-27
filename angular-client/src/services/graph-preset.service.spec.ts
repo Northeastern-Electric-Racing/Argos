@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { GraphPresetService, PRESET_SEEDS, Preset } from './graph-preset.service';
 
@@ -30,11 +29,12 @@ describe('GraphPresetService', () => {
 
     const service = build();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets.map((p) => p.name)).toEqual(PRESET_SEEDS.map((s) => s.name));
-    expect(presets.every((p) => p.id.length > 0)).toBe(true);
-    expect(presets.every((p) => p.createdAt > 0)).toBe(true);
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(presets);
+    service.getPresets().subscribe((presets) => {
+      expect(presets.map((p) => p.name)).toEqual(PRESET_SEEDS.map((s) => s.name));
+      expect(presets.every((p) => p.id.length > 0)).toBe(true);
+      expect(presets.every((p) => p.createdAt > 0)).toBe(true);
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(presets);
+    });
   });
 
   it('does not seed when localStorage holds an empty array', async () => {
@@ -42,8 +42,9 @@ describe('GraphPresetService', () => {
 
     const service = build();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([]);
+    });
   });
 
   it('does not seed when localStorage already has user presets', async () => {
@@ -52,8 +53,9 @@ describe('GraphPresetService', () => {
 
     const service = build();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([stored]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([stored]);
+    });
   });
 
   it('addPreset appends a preset and persists it', async () => {
@@ -67,8 +69,9 @@ describe('GraphPresetService', () => {
     expect(preset.id).toBeTruthy();
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([preset]);
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([preset]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([preset]);
+    });
   });
 
   it('addPreset trims whitespace from the name', () => {
@@ -94,11 +97,12 @@ describe('GraphPresetService', () => {
 
     service.replacePreset(original.id, { name: 'Vitals v2', topicNames: ['A', 'B'] });
 
-    const [updated] = await firstValueFrom(service.getPresets());
-    expect(updated.id).toBe(original.id);
-    expect(updated.createdAt).toBe(original.createdAt);
-    expect(updated.name).toBe('Vitals v2');
-    expect(updated.topicNames).toEqual(['A', 'B']);
+    service.getPresets().subscribe(([updated]) => {
+      expect(updated.id).toBe(original.id);
+      expect(updated.createdAt).toBe(original.createdAt);
+      expect(updated.name).toBe('Vitals v2');
+      expect(updated.topicNames).toEqual(['A', 'B']);
+    });
   });
 
   it('deletePreset removes the entry by id', async () => {
@@ -110,8 +114,9 @@ describe('GraphPresetService', () => {
     service.deletePreset(a.id);
 
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([b]);
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([b]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([b]);
+    });
   });
 
   it('findByName matches case-sensitively', () => {
@@ -132,8 +137,9 @@ describe('GraphPresetService', () => {
     service.clearAll();
 
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([]);
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([]);
+    });
   });
 
   it('addDefaultPresets adds only seed entries whose names are missing', async () => {
@@ -155,9 +161,9 @@ describe('GraphPresetService', () => {
     const kept = service.findByName(firstSeed.name);
     expect(kept!.topicNames).toEqual(['existing-topic']);
 
-    const presets = await firstValueFrom(service.getPresets());
-    // Same names in any order (Jasmine's arrayWithExactContents).
-    expect(presets.map((p) => p.name).sort()).toEqual(PRESET_SEEDS.map((s) => s.name).sort());
+    service.getPresets().subscribe((presets) => {
+      expect(presets.map((p) => p.name).sort()).toEqual(PRESET_SEEDS.map((s) => s.name).sort());
+    });
   });
 
   it('addDefaultPresets assigns fresh ids and createdAt to new seeded entries', async () => {
@@ -174,12 +180,13 @@ describe('GraphPresetService', () => {
     service.addDefaultPresets();
     const after = Date.now();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets.length).toBe(PRESET_SEEDS.length);
-    presets.forEach((p) => {
-      expect(p.id).toBeTruthy();
-      expect(p.createdAt).toBeGreaterThanOrEqual(before);
-      expect(p.createdAt).toBeLessThanOrEqual(after);
+    service.getPresets().subscribe((presets) => {
+      expect(presets.length).toBe(PRESET_SEEDS.length);
+      presets.forEach((p) => {
+        expect(p.id).toBeTruthy();
+        expect(p.createdAt).toBeGreaterThanOrEqual(before);
+        expect(p.createdAt).toBeLessThanOrEqual(after);
+      });
     });
   });
 
@@ -198,8 +205,9 @@ describe('GraphPresetService', () => {
 
     const service = build();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([]);
+    });
   });
 
   it('drops malformed entries but keeps valid ones', async () => {
@@ -215,8 +223,9 @@ describe('GraphPresetService', () => {
 
     const service = build();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([valid]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([valid]);
+    });
   });
 
   it('falls back to an empty list when stored value is not an array', async () => {
@@ -224,7 +233,8 @@ describe('GraphPresetService', () => {
 
     const service = build();
 
-    const presets = await firstValueFrom(service.getPresets());
-    expect(presets).toEqual([]);
+    service.getPresets().subscribe((presets) => {
+      expect(presets).toEqual([]);
+    });
   });
 });

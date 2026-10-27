@@ -6,7 +6,7 @@ import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './gener
 describe('GeneralButtonsComponent — custom range validation', () => {
   let fixture: ComponentFixture<GeneralButtonsComponent>;
   let component: GeneralButtonsComponent;
-  let toastSpy: { add: Mock<MessageService['add']> };
+  let toastSpy: { add: Mock };
   let onSelectPresetSpy: Mock;
   let onApplyCustomLastXSpy: Mock;
   let onApplyCustomDateRangeSpy: Mock;
@@ -20,14 +20,15 @@ describe('GeneralButtonsComponent — custom range validation', () => {
   ];
 
   beforeEach(async () => {
-    // The run selector inside fetches the run list on init. Under Karma that request was still in
-    // flight when these specs finished; Node's fetch rejects at once, and its error toast would land
-    // in these assertions. Keep it pending, as it effectively was in the browser.
+    // The run selector inside fetches the run list on init; keep it off the network so its
+    // failure toast does not land in these assertions.
     vi.stubGlobal(
       'fetch',
       vi.fn(() => new Promise(() => {}))
     );
-    toastSpy = { add: vi.fn().mockName('MessageService.add') };
+    toastSpy = {
+      add: vi.fn().mockName('MessageService.add')
+    };
     onSelectPresetSpy = vi.fn().mockName('onSelectPreset');
     onApplyCustomLastXSpy = vi.fn().mockName('onApplyCustomLastX');
     onApplyCustomDateRangeSpy = vi.fn().mockName('onApplyCustomDateRange');
@@ -52,9 +53,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  afterEach(() => vi.unstubAllGlobals());
 
   describe('applyCustomLastX', () => {
     it('rejects 0 hours / 0 minutes with a toast and no callback', () => {
@@ -62,9 +61,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ severity: 'warn', summary: 'Invalid Range' })
-      );
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'warn', summary: 'Invalid Range' }));
     });
 
     it('rejects total exceeding MAX_RANGE_MINUTES with a toast', () => {
@@ -72,14 +70,16 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
     });
 
     it('emits the total minutes when valid', () => {
       component.customHours.set(2);
       component.customMinutes.set(15);
       component.applyCustomLastX();
-      expect(onApplyCustomLastXSpy).toHaveBeenCalledExactlyOnceWith(135);
+      expect(onApplyCustomLastXSpy).toHaveBeenCalledTimes(1);
+      expect(onApplyCustomLastXSpy).toHaveBeenCalledWith(135);
       expect(toastSpy.add).not.toHaveBeenCalled();
     });
 
@@ -88,7 +88,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(null);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
   });
 
@@ -100,7 +101,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
 
     it('rejects an end time more than 1 minute in the future', () => {
@@ -108,7 +110,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now + 5 * 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
 
     it('rejects a span exceeding MAX_RANGE_MINUTES', () => {
@@ -117,7 +120,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - oneMinuteMs));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
     });
 
     it('emits start and end ms when valid', () => {
@@ -126,7 +130,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customFromDate.set(start);
       component.customToDate.set(end);
       component.applyCustomDateRange();
-      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledExactlyOnceWith(start.getTime(), end.getTime());
+      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledTimes(1);
+      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledWith(start.getTime(), end.getTime());
       expect(toastSpy.add).not.toHaveBeenCalled();
     });
   });
@@ -142,7 +147,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     });
 
     it('seeds Date Range mode + From/To when activeDateRange is set', () => {
-      const range = { startMs: 1_700_000_000_000, endMs: 1_700_000_900_000 };
+      const range = { startMs: 1700000000000, endMs: 1700000900000 };
       fixture.componentRef.setInput('activeDateRange', range);
       fixture.detectChanges();
       component.onCustomPopoverShow();

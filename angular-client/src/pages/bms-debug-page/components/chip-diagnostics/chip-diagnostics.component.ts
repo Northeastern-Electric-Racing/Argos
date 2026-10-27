@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import Storage from 'src/services/storage.service';
@@ -14,7 +14,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'chip-diagnostics',
   templateUrl: './chip-diagnostics.component.html',
   styleUrl: './chip-diagnostics.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
 })
 export class ChipDiagnosticsComponent implements OnInit {

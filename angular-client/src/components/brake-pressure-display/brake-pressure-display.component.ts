@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -12,7 +12,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'brake-pressure-display',
   templateUrl: './brake-pressure-display.component.html',
   styleUrls: ['./brake-pressure-display.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent, VStackComponent, DividerComponent]
 })
 export default class BrakePressureDisplayComponent implements OnInit {

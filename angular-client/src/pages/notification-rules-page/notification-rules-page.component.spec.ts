@@ -44,7 +44,7 @@ describe('NotificationRulesPageComponent', () => {
 
   describe('CSV parsing', () => {
     it('should reject files without .csv extension', async () => {
-      const addSpy = vi.spyOn(messageService, 'add').mockImplementation(() => undefined);
+      const addSpy = vi.spyOn(messageService, 'add').mockReturnValue(undefined);
       const event = {
         target: {
           files: [new File(['test'], 'rules.txt', { type: 'text/plain' })],

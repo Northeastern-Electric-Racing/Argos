@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { getLatestRun } from 'src/api/run.api';
@@ -16,8 +16,8 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   selector: 'date-location',
   templateUrl: './date-location.component.html',
   styleUrl: './date-location.component.css',
-  standalone: true,
   imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

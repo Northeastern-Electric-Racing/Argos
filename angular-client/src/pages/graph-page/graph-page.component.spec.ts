@@ -60,7 +60,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
         }
       }
     };
-    routerNavigate = vi.fn().mockName('navigate').mockReturnValue(Promise.resolve(true));
+    routerNavigate = vi.fn().mockName('navigate').mockResolvedValue(true);
     const routerMock = {
       url: '/graph',
       navigate: routerNavigate
