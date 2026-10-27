@@ -17,6 +17,7 @@ import {
   Chart,
   ChartDataset,
   Decimation,
+  Interaction,
   Legend,
   LinearScale,
   LineController,
@@ -35,10 +36,17 @@ import {
   buildDayBoundaryAnnotations,
   buildYScales,
   computeDataSpan,
+  cursorPlugin,
+  cursorPositioner,
   DAY_MS,
+  nearestPerSeries,
   SERIES_COLORS,
   yAxisIdFor
 } from './graph-chart.utils';
+
+// The uPlot-style hover: every series at the cursor's time, in a tooltip beside the cursor (see chartOptions)
+Interaction.modes.nearestPerSeries = nearestPerSeries;
+Tooltip.positioners.cursor = cursorPositioner;
 
 type LineDataset = ChartDataset<'line', GraphData[]>;
 
@@ -99,6 +107,7 @@ export default class CustomGraphComponent implements OnDestroy {
   readonly chartData: { datasets: LineDataset[] } = { datasets: [] };
   // A drag on an empty chart zooms its placeholder 0..1 axis; ignore it, or data arriving next would stay hidden
   readonly chartOptions = buildBaseOptions({ onZoom: () => this.zoomed.set(this.hasData()) });
+  readonly chartPlugins = [cursorPlugin];
 
   constructor() {
     afterNextRender(() => this.updateChart());

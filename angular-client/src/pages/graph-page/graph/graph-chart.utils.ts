@@ -1,4 +1,16 @@
-import type { ChartEvent, ChartOptions } from 'chart.js';
+import type {
+  Chart,
+  ChartArea,
+  ChartEvent,
+  ChartOptions,
+  ChartType,
+  InteractionModeFunction,
+  Plugin,
+  PointElement,
+  TooltipPosition,
+  TooltipPositionerFunction
+} from 'chart.js';
+import { getRelativePosition } from 'chart.js/helpers';
 import type { AnnotationOptions } from 'chartjs-plugin-annotation';
 import { GraphData } from 'src/utils/types.utils';
 
@@ -213,6 +225,135 @@ export function buildDayBoundaryAnnotations(span: { minX: number; maxX: number }
   return annotations;
 }
 
+declare module 'chart.js' {
+  interface InteractionModeMap {
+    nearestPerSeries: InteractionModeFunction;
+  }
+  interface TooltipPositionerMap {
+    cursor: TooltipPositionerFunction<ChartType>;
+  }
+}
+
+/** Index of the sample nearest `x` in points sorted by x (the earlier one on a tie), or -1 when there are none. */
+export function nearestIndex(points: readonly { x: number }[], x: number): number {
+  if (points.length === 0) return -1;
+  let lo = 0;
+  let hi = points.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (points[mid].x < x) lo = mid + 1;
+    else hi = mid;
+  }
+  // lo is the first sample at or after x; the one before it may be closer
+  return lo > 0 && x - points[lo - 1].x <= points[lo].x - x ? lo - 1 : lo;
+}
+
+/**
+ * Interaction mode (registered as `nearestPerSeries`): each visible series' sample nearest the cursor's time,
+ * as uPlot's cursor does. Built-in `index` mode assumes every series shares timestamps, which topics don't.
+ */
+export const nearestPerSeries: InteractionModeFunction = (chart, event) => {
+  const position = getRelativePosition(event, chart);
+  if (!chart.isPointInArea(position)) return [];
+  const time = chart.scales['x'].getValueForPixel(position.x) ?? 0;
+  return chart.getSortedVisibleDatasetMetas().flatMap(({ index: datasetIndex, data: elements }) => {
+    // Decimation swaps a dataset's data for the decimated points, which is what its elements are built from
+    const index = nearestIndex(chart.data.datasets[datasetIndex].data as { x: number }[], time);
+    const element = elements[index];
+    return element ? [{ element, datasetIndex, index }] : [];
+  });
+};
+
+const TOOLTIP_OFFSET = 12;
+
+/** A pointer position in canvas pixels. */
+type Cursor = { x: number; y: number };
+
+/** Below-right of the cursor, flipped to its other side where the tooltip would cross the plot's right/bottom. */
+export function placeTooltip(
+  cursor: Cursor,
+  size: { width: number; height: number },
+  area: Pick<ChartArea, 'right' | 'bottom'>
+): TooltipPosition {
+  const right = cursor.x + TOOLTIP_OFFSET + size.width <= area.right;
+  const below = cursor.y + TOOLTIP_OFFSET + size.height <= area.bottom;
+  return {
+    x: cursor.x + (right ? TOOLTIP_OFFSET : -TOOLTIP_OFFSET),
+    y: cursor.y + (below ? TOOLTIP_OFFSET : -TOOLTIP_OFFSET),
+    xAlign: right ? 'left' : 'right',
+    yAlign: below ? 'top' : 'bottom'
+  };
+}
+
+/** Tooltip positioner (registered as `cursor`). It runs before the tooltip is measured, so it flips on last frame's size. */
+export const cursorPositioner: TooltipPositionerFunction<ChartType> = function (items, eventPosition) {
+  const { x, y } = eventPosition;
+  return items.length > 0 && x !== null && y !== null && placeTooltip({ x, y }, this, this.chart.chartArea);
+};
+
+/** uPlot's cursor line color. */
+const CURSOR_COLOR = '#607D8B';
+/** The pointer's position over each chart's plot area; null once it leaves. */
+const cursors = new WeakMap<Chart, Cursor | null>();
+/** The cursor each chart last drew, so pointer moves off the plot don't redraw it for nothing. */
+const drawnCursors = new WeakMap<Chart, Cursor | null>();
+
+/** Hides the cursor lines, dots and tooltip until the pointer next moves, e.g. after a zoom moved the data under it. */
+export function hideCursor(chart: Chart): void {
+  cursors.set(chart, null);
+  chart.setActiveElements([]);
+  chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+  chart.render();
+}
+
+/**
+ * Dashed crosshair lines at the pointer, as in uPlot, with the hovered dots redrawn over them. The dots and the
+ * tooltip come from the `nearestPerSeries` hover; this also clears them when the pointer leaves the plot area,
+ * where Chart.js would otherwise keep the last hover.
+ */
+export const cursorPlugin: Plugin<'line'> = {
+  id: 'cursor',
+  // Runs before the tooltip handles the event, so its title reads this event's position
+  beforeEvent(chart, { event, inChartArea }) {
+    const { type, x, y } = event;
+    cursors.set(chart, type !== 'mouseout' && inChartArea && x !== null && y !== null ? { x, y } : null);
+  },
+  afterEvent(chart, args) {
+    if (!cursors.get(chart) && (chart.getActiveElements().length || chart.tooltip?.getActiveElements().length)) {
+      hideCursor(chart);
+    }
+    if (cursors.get(chart) !== drawnCursors.get(chart)) args.changed = true;
+  },
+  afterDatasetsDraw(chart) {
+    const cursor = cursors.get(chart) ?? null;
+    drawnCursors.set(chart, cursor);
+    // The zoom plugin swallows events mid-drag, so the cursor would be stuck where the drag began
+    if (!cursor || chart.isZoomingOrPanning() || chart.data.datasets.every(({ data }) => !data.length)) return;
+    const { ctx, chartArea } = chart;
+    const x = Math.round(cursor.x) + 0.5;
+    const y = Math.round(cursor.y) + 0.5;
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = CURSOR_COLOR;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    // The horizontal line is fainter, as in uPlot, so it doesn't read as a value threshold
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, y);
+    ctx.lineTo(chartArea.right, y);
+    ctx.stroke();
+    ctx.restore();
+    chart.getActiveElements().forEach(({ element }) => (element as PointElement).draw(ctx, chartArea));
+  },
+  beforeTooltipDraw: (chart) => !chart.isZoomingOrPanning()
+};
+
+const tooltipNumber = new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 });
+
 function setCanvasCursor(event: ChartEvent, cursor: string): void {
   const target = event.native?.target;
   if (target instanceof HTMLElement) target.style.cursor = cursor;
@@ -229,12 +370,20 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
     normalized: true,
     spanGaps: true,
     font: { family: "'Roboto', sans-serif" },
-    // Nearest by distance in x and y: nearest in x alone always picks the fastest topic's point
-    interaction: { mode: 'nearest', intersect: false, axis: 'xy' },
+    // Every series at the cursor's time (see nearestPerSeries), drawn with cursorPlugin's crosshair
+    interaction: { mode: 'nearestPerSeries', intersect: false },
     // The x-axis reserves half of an edge tick's label as it arrives; fixed room keeps the plot from jumping
     layout: { padding: { right: 32, left: 8 } },
     elements: {
-      point: { radius: 0, hoverRadius: 4 },
+      // Hover dots in their series' color (Chart.js darkens it by default), ringed in the page background so a
+      // dot stays visible on its own dense line
+      point: {
+        radius: 0,
+        hoverRadius: 4,
+        hoverBackgroundColor: (context) => context.dataset.borderColor as string,
+        hoverBorderColor: '#101010',
+        hoverBorderWidth: 2
+      },
       line: { borderWidth: 3, tension: 0 }
     },
     scales: {
@@ -266,17 +415,42 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
         onHover: (event) => setCanvasCursor(event, 'pointer'),
         onLeave: (event) => setCanvasCursor(event, '')
       },
+      // Styled like uPlot's: dark grey, small type, a round swatch per series, below-right of the cursor
       tooltip: {
         enabled: true,
-        backgroundColor: THEME_SURFACE,
-        borderColor: THEME_OUTLINE,
+        position: 'cursor',
+        backgroundColor: 'rgba(30, 30, 30, 0.92)',
+        borderColor: '#555',
         borderWidth: 1,
+        cornerRadius: 4,
+        caretSize: 0,
+        caretPadding: 0,
+        padding: { x: 8, y: 6 },
+        titleFont: { size: 12, weight: 'normal' },
+        titleMarginBottom: 2,
+        bodyFont: { size: 12 },
+        bodySpacing: 2,
+        usePointStyle: true,
+        boxWidth: 8,
+        boxHeight: 8,
+        boxPadding: 4,
         callbacks: {
+          // The time under the cursor, which each row's sample is nearest
           title: (items) => {
-            if (!items.length) return '';
-            const { min, max } = items[0].chart.scales['x'];
-            return formatTooltipTime(items[0].parsed.x ?? 0, max - min);
-          }
+            const [first] = items;
+            if (!first) return '';
+            const { chart } = first;
+            const { min, max } = chart.scales['x'];
+            const cursor = cursors.get(chart);
+            const time = cursor ? chart.scales['x'].getValueForPixel(cursor.x) : first.parsed.x;
+            return formatTooltipTime(time ?? 0, max - min);
+          },
+          label: (item) => `${item.dataset.label}: ${tooltipNumber.format(item.parsed.y ?? NaN)}`,
+          labelPointStyle: () => ({ pointStyle: 'circle', rotation: 0 }),
+          labelColor: ({ dataset }) => ({
+            borderColor: dataset.borderColor as string,
+            backgroundColor: dataset.borderColor as string
+          })
         }
       },
       // Min-max decimation keeps peaks visible when a series has more points than pixels (long historical ranges)
@@ -288,9 +462,21 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
           wheel: { enabled: true, modifierKey: 'ctrl' },
           pinch: { enabled: true },
           mode: 'x',
-          onZoomComplete: callbacks.onZoom
+          // The data under the cursor moved, so the hover is stale until the pointer moves again
+          onZoomComplete: ({ chart }) => {
+            hideCursor(chart);
+            callbacks.onZoom();
+          }
         },
-        pan: { enabled: true, mode: 'x', modifierKey: 'shift', onPanComplete: callbacks.onZoom },
+        pan: {
+          enabled: true,
+          mode: 'x',
+          modifierKey: 'shift',
+          onPanComplete: ({ chart }) => {
+            hideCursor(chart);
+            callbacks.onZoom();
+          }
+        },
         // Bounds drag, ctrl-wheel and pinch zoom alike
         limits: { x: { minRange: 1000 } }
       },

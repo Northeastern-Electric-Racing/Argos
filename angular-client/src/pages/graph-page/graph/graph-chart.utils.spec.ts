@@ -7,7 +7,10 @@ import {
   DAY_MS,
   formatTimeTick,
   formatTooltipTime,
+  nearestIndex,
+  nearestPerSeries,
   pickTimeStep,
+  placeTooltip,
   SERIES_COLORS,
   yAxisIdFor
 } from './graph-chart.utils';
@@ -26,8 +29,9 @@ describe('graph-chart utils', () => {
       expect(options.plugins!.zoom!.limits!['x']!.minRange).toBe(1000);
     });
 
-    it('hovers the point nearest the cursor in both x and y, not only the fastest topic', () => {
-      expect(options.interaction!.axis).toBe('xy');
+    it("hovers every series at the cursor's time, with one tooltip that follows the cursor", () => {
+      expect(options.interaction!.mode).toBe('nearestPerSeries');
+      expect(options.plugins!.tooltip!.position).toBe('cursor');
     });
 
     it('reserves room for the last x label so the plot does not jump sideways as ticks slide in', () => {
@@ -49,10 +53,10 @@ describe('graph-chart utils', () => {
       expect(options.scales!['x']!.display).toBeFalse();
     });
 
-    it('draws text in the app font and the tooltip in the app theme', () => {
+    it('draws text in the app font and a dark grey tooltip with round series swatches', () => {
       expect(options.font!.family).toContain('Roboto');
-      expect(options.plugins!.tooltip!.backgroundColor).toBe('#0c2026');
-      expect(options.plugins!.tooltip!.borderColor).toBe('#8fcadd');
+      expect(options.plugins!.tooltip!.backgroundColor).toBe('rgba(30, 30, 30, 0.92)');
+      expect(options.plugins!.tooltip!.usePointStyle).toBeTrue();
     });
   });
 
@@ -279,6 +283,86 @@ describe('graph-chart utils', () => {
       const start = new Date(2026, 0, 1, 1).getTime();
 
       expect(buildDayBoundaryAnnotations({ minX: start, maxX: start + 60 * 60 * 1000 })).toEqual([]);
+    });
+  });
+
+  describe('nearestIndex', () => {
+    const points = [{ x: 10 }, { x: 20 }, { x: 30 }];
+
+    it('finds an exact match', () => {
+      expect(nearestIndex(points, 20)).toBe(1);
+    });
+
+    it('picks the closer neighbour between two samples, the earlier one on a tie', () => {
+      expect(nearestIndex(points, 24)).toBe(1);
+      expect(nearestIndex(points, 26)).toBe(2);
+      expect(nearestIndex(points, 25)).toBe(1);
+    });
+
+    it('clamps to the first or last sample outside the data', () => {
+      expect(nearestIndex(points, -5)).toBe(0);
+      expect(nearestIndex(points, 99)).toBe(2);
+    });
+
+    it('is -1 for an empty series', () => {
+      expect(nearestIndex([], 5)).toBe(-1);
+    });
+  });
+
+  describe('nearestPerSeries', () => {
+    // Two series on unaligned timestamps; the x scale maps pixel p to time 10 * p
+    const series = [
+      [{ x: 100 }, { x: 200 }, { x: 300 }],
+      [{ x: 150 }, { x: 260 }]
+    ];
+    const fakeChart = (visible = [0, 1]) =>
+      ({
+        isPointInArea: ({ x, y }: { x: number; y: number }) => x >= 0 && x <= 40 && y >= 0 && y <= 40,
+        scales: { x: { getValueForPixel: (px: number) => px * 10 } },
+        data: { datasets: series.map((data) => ({ data })) },
+        getSortedVisibleDatasetMetas: () =>
+          visible.map((index) => ({ index, data: series[index].map((point) => ({ point })) }))
+      }) as never;
+    const at = (x: number, y = 20) => ({ native: null, type: 'mousemove', x, y }) as never;
+
+    it("takes each visible series' sample nearest the cursor's time", () => {
+      const items = nearestPerSeries(fakeChart(), at(25), {} as never);
+
+      expect(items.map(({ datasetIndex, index }) => [datasetIndex, index])).toEqual([
+        [0, 1],
+        [1, 1]
+      ]);
+      expect(items[0].element).toEqual({ point: series[0][1] } as never);
+    });
+
+    it('skips series hidden from the legend', () => {
+      expect(nearestPerSeries(fakeChart([1]), at(25), {} as never).map((item) => item.datasetIndex)).toEqual([1]);
+    });
+
+    it('hovers nothing outside the plot area', () => {
+      expect(nearestPerSeries(fakeChart(), at(25, 60), {} as never)).toEqual([]);
+    });
+  });
+
+  describe('placeTooltip', () => {
+    const area = { left: 0, top: 0, right: 400, bottom: 300 };
+
+    it('sits below-right of the cursor when it fits', () => {
+      expect(placeTooltip({ x: 100, y: 100 }, { width: 50, height: 20 }, area)).toEqual({
+        x: 112,
+        y: 112,
+        xAlign: 'left',
+        yAlign: 'top'
+      });
+    });
+
+    it("flips to the cursor's other side near the right and bottom edges", () => {
+      expect(placeTooltip({ x: 380, y: 290 }, { width: 50, height: 20 }, area)).toEqual({
+        x: 368,
+        y: 278,
+        xAlign: 'right',
+        yAlign: 'bottom'
+      });
     });
   });
 });
