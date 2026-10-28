@@ -69,18 +69,19 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
     effect(() => {
       const config = this.graphConfig();
       if (this.chart && config) {
-        this.options.yaxis = [
-          {
-            ...this.options.yaxis,
-            labels: {
-              style: {
-                colors: '#fff'
-              }
-            },
-            max: config.yMax === null ? undefined : config.yMax,
-            min: config.yMin === null ? undefined : config.yMin
-          }
-        ];
+        // Apply the range to every current axis; spreading the axis array into one object
+        // collapsed the per-topic axes into a single axis keyed '0', '1', ...
+        const axes = this.options.yaxis.length ? this.options.yaxis : [{}];
+        this.options.yaxis = axes.map((axis) => ({
+          ...axis,
+          labels: {
+            style: {
+              colors: '#fff'
+            }
+          },
+          max: config.yMax === null ? undefined : config.yMax,
+          min: config.yMin === null ? undefined : config.yMin
+        }));
 
         this.chart.updateOptions(this.options);
         this.resetRange();

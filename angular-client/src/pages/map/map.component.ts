@@ -64,7 +64,7 @@ export default class MapComponent implements OnInit {
         if (points) {
           setTimeout(() => {
             this.map.buildMap('map');
-            this.map.addPolyline(points.map(this.map.transformDataToCoordinate));
+            this.map.addPolyline(points.map((point) => this.map.transformDataToCoordinate(point)));
           }, 100);
         }
       });
