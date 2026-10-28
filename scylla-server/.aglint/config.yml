@@ -13,7 +13,7 @@ capabilities:
   layering: {}
   blind-spots: {}
   purity: {}
-  runtime-trace: {}
+  # runtime-trace is off: the unit tests make no DB or network calls, and symbolizing takes ~75 min (bracyw/AGLint#2).
   behaviour: {}
   perf: {}
   tests: {}
