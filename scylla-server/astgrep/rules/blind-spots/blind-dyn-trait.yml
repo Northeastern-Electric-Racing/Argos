@@ -1,0 +1,15 @@
+id: blind-dyn-trait
+language: rust
+severity: warning
+message: "`$T`: a dynamic dispatch whose callee static analysis can only over-approximate"
+note: "Calls on a `dyn Trait` value resolve to every impl of the trait (CodeQL over-approximates), so effects of the real target are attributed to all of them."
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  pattern: $T
+  kind: dynamic_type
+  not:                                   # a `dyn Fn*` field is blind-callback-field's finding
+    regex: "^dyn\\s+(Fn|FnMut|FnOnce)\\b"
+    inside: {kind: field_declaration, stopBy: end}

@@ -1,0 +1,4 @@
+# ast-grep native project config: Boundaries inside a crate (module layering, DB calls in loops) and the blind-spot
+# rules (blind-*, metadata aglint: blind-spot): forms that static analysis, CodeQL included, cannot follow.
+ruleDirs:
+  - astgrep/rules

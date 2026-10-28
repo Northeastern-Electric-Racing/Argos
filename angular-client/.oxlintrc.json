@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "import",
+    "unicorn",
+    "oxc",
+    "promise"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "out-tsc/**",
+    "coverage/**",
+    "tools/**",
+    ".angular/**"
+  ],
+  "rules": {
+    "typescript/no-require-imports": "error",
+    "no-eval": "error",
+    "promise/no-return-wrap": "error"
+  },
+  "overrides": []
+}

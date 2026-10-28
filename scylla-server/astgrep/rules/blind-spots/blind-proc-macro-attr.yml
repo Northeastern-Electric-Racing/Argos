@@ -1,0 +1,14 @@
+id: blind-proc-macro-attr
+language: rust
+severity: warning
+message: "attribute `$A` may be a procedural macro: the code it generates is not in the source"
+note: "Any attribute outside the built-in and test attributes; a proc macro rewrites the item it is attached to."
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  kind: attribute_item
+  pattern: $A
+  not:
+    regex: "^#!?\\[\\s*(derive|cfg|cfg_attr|test|ignore|should_panic|allow|warn|deny|forbid|expect|must_use|inline|cold|doc|repr|non_exhaustive|deprecated|path|track_caller|automatically_derived|macro_export|macro_use|no_mangle|export_name|link|link_name|used|unsafe|rustfmt|clippy|diagnostic)\\b"

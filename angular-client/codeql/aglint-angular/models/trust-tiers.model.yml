@@ -1,0 +1,13 @@
+# Trust tiers as CodeQL models-as-data (G6), written by `aglint init`.
+#  LOW  (none detected): everything a guarded package RETURNS is an untrusted source ("aglint-low-trust");
+#       everything we PASS to it is an outcome sink ("aglint-auth-sdk": credentials/identity leave our code).
+#  HIGH (@angular/core, @angular/common/http): not re-analysed; AglintAngular.qll summaries describe their semantics.
+# Add one row per member of a guarded package, for example
+#   - ["@vendor/sdk", "Member[Client].Instance.Member[signIn].ReturnValue.Awaited", "aglint-low-trust"]      (sourceModel)
+#   - ["@vendor/sdk", "Member[Client].Instance.Member[signIn].Argument[0,1]", "aglint-auth-sdk"]             (sinkModel)
+# Workspace packages under (none: no workspace package) are also labelled by path in Purity.ql (every call into them is an `auth-sdk` effect).
+extensions:
+  - addsTo: { pack: codeql/javascript-all, extensible: sourceModel }
+    data: []
+  - addsTo: { pack: codeql/javascript-all, extensible: sinkModel }
+    data: []

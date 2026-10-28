@@ -1,0 +1,14 @@
+# AGLint banned-apis for clippy (the runner enables only the disallowed_* lints). Paths are resolved, so a renamed
+# import or a re-export alias does not hide a call. DB queries go through src/services/ only: lib.rs allows these
+# lints on that module, so a query anywhere else (controllers, processors, socket handler) is a new finding.
+disallowed-methods = [
+  { path = "diesel_async::RunQueryDsl::load", reason = "DB queries go through src/services/" },
+  { path = "diesel_async::RunQueryDsl::execute", reason = "DB queries go through src/services/" },
+  { path = "diesel_async::RunQueryDsl::get_result", reason = "DB queries go through src/services/" },
+  { path = "diesel_async::RunQueryDsl::get_results", reason = "DB queries go through src/services/" },
+  { path = "diesel_async::RunQueryDsl::first", reason = "DB queries go through src/services/" },
+  { path = "diesel::insert_into", reason = "DB queries go through src/services/" },
+  { path = "diesel::update", reason = "DB queries go through src/services/" },
+  { path = "diesel::delete", reason = "DB queries go through src/services/" },
+  { path = "diesel::sql_query", reason = "DB queries go through src/services/" },
+]

@@ -2,6 +2,7 @@ use chrono::serde::ts_milliseconds;
 
 pub mod controllers;
 pub mod error;
+#[allow(clippy::disallowed_methods)]
 pub mod services;
 
 pub mod argos_inserter;

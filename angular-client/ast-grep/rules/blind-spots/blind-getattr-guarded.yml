@@ -1,0 +1,60 @@
+id: blind-getattr-guarded
+language: TypeScript
+severity: warning
+message: >-
+  Computed member access on a guarded module: the auth SDK namespace (none detected), the auth wrapper
+  (AuthService, AUTH_CLIENT) or an instance of them. Which member runs is chosen at run time, so the chokepoint rules,
+  CodeQL call graph and sink models cannot see it.
+note: >-
+  AGLint v2 blind spot (SPEC-v2 section 12). ast-grep has no data flow: the guarded object is recognised syntactically
+  (namespace import, `const x = inject(AuthService | AUTH_CLIENT)`, `new AuthClient()`, or a class field
+  initialised by one of those). A guarded object that is passed around or re-assigned is not followed (documented limit).
+files: ['src/**/*.ts']
+ignores: ['src/**/*.spec.ts']
+metadata:
+  aglint: blind-spot
+rule:
+  all:
+    - any:
+        # import * as ns from <guarded module>;  ns[expr]
+        - all:
+            - pattern: $NS[$KEY]
+            - inside:
+                kind: program
+                stopBy: end
+                has:
+                  stopBy: end
+                  pattern: import * as $NS from $SRC
+        # const c = inject(<guard>) | new AuthClient(...);  c[expr]
+        - all:
+            - pattern: $VAR[$KEY]
+            - inside:
+                kind: program
+                stopBy: end
+                has:
+                  stopBy: end
+                  any:
+                    - pattern: const $VAR = inject($GUARD)
+                    - pattern: let $VAR = inject($GUARD)
+                    - pattern: const $VAR = new AuthClient($$$)
+                    - pattern: let $VAR = new AuthClient($$$)
+        # class field  auth = inject(AuthService);  this.auth[expr]
+        - all:
+            - pattern: this.$FIELD[$KEY]
+            - inside:
+                kind: program
+                stopBy: end
+                has:
+                  stopBy: end
+                  kind: public_field_definition
+                  all:
+                    - has: { field: name, pattern: $FIELD }
+                    - has: { field: value, pattern: inject($GUARD) }
+constraints:
+  SRC: { regex: '^\x00$' }
+  GUARD: { regex: '^(AuthService|AUTH_CLIENT)$' }
+  KEY:
+    not:
+      any:
+        - kind: string
+        - kind: number

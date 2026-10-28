@@ -1,0 +1,4 @@
+# AGLint crate layering (checked against `cargo metadata` by the runner). scylla-server is a single crate, so there
+# is nothing to order; the DB chokepoint lives in clippy.toml instead. Dev-dependencies are not checked.
+[layers]
+order = [["scylla-server"]]

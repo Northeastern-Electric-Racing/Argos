@@ -1,0 +1,28 @@
+# aglint perf capability (written by `aglint init` / `aglint capabilities enable perf`; edit freely): a call on a
+# repository module inside a loop is one DB round trip per iteration (N+1). The repository modules are matched by name:
+# adjust the regex of R to your naming (Argos: `data_service::add_data` and the other `*_service` modules).
+id: db-call-in-loop
+language: rust
+severity: warning
+message: "repository call `$R::$F` inside a loop: one DB round trip per iteration (N+1)"
+files: ["**/*.rs"]
+ignores: ["**/tests/**", "target/**", "vendor/**"]
+metadata:
+  goal: G5
+rule:
+  kind: call_expression
+  has:
+    field: function
+    kind: scoped_identifier
+    all:
+      - has: {field: path, pattern: $R}
+      - has: {field: name, pattern: $F}
+  inside:
+    stopBy: end
+    any:
+      - kind: for_expression
+      - kind: while_expression
+      - kind: loop_expression
+constraints:
+  R:
+    regex: "_service$"

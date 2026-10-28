@@ -1,0 +1,86 @@
+# AGLint project config for rust, written by `aglint init` (SPEC-v3 section 3.2).
+# Commit .aglint/; the cache/ and out/ directories are ignored.
+# capabilities: what AGLint checks besides the core (the diff and tool health); a capability not listed
+# is off. `aglint capabilities list` shows them all, docs/capabilities/<id>.md explains each.
+version: 1
+stack: rust
+root: scylla-server
+base:
+  ref: origin/develop
+  mode: merge-base
+capabilities:
+  banned-apis: {}
+  layering: {}
+  blind-spots: {}
+  purity: {}
+  runtime-trace: {}
+  behaviour: {}
+  perf: {}
+  tests: {}
+package_manager: cargo
+test_runner: cargo-test
+app:
+  roots:
+  - .
+  vendor_roots: []
+  test_dirs:
+  - tests
+  crates:
+  - scylla-server
+  guarded: []
+tools:
+  cargo:
+    path: /root/.cargo/bin/cargo
+    version: 1.97.0
+    group: core
+  clippy:
+    path: /root/.cargo/bin/cargo-clippy
+    version: 0.1.97
+    group: lint
+  python3:
+    path: /usr/bin/python3
+    version: 3.13.17
+    group: core
+  ast-grep:
+    path: /opt/node22/bin/ast-grep
+    version: 0.51.0
+    group: astgrep
+  codeql:
+    path: /root/.local/bin/codeql
+    version: 2.27.3
+    group: codeql
+  strace:
+    path: /usr/bin/strace
+    version: '6.8'
+    group: trace
+  addr2line:
+    path: /usr/bin/addr2line
+    version: '2.42'
+    group: trace
+  readelf:
+    path: /usr/bin/readelf
+    version: '2.42'
+    group: trace
+native:
+  clippy: clippy.toml
+  layers: layers.toml
+  ast_grep: sgconfig.yml
+  codeql_purity: codeql/purity
+profiles:
+  fast:
+    skip_groups:
+    - codeql
+    required_tools: []
+  full:
+    skip_groups: []
+    required_tools: []
+default_profile: full
+outputs:
+  dir: .aglint/out
+  formats:
+  - md
+  - html
+  - sarif
+cache_dir: .aglint/cache
+warn_exit: 4
+parallel: true

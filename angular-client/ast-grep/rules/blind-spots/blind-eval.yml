@@ -1,0 +1,34 @@
+id: blind-eval
+language: TypeScript
+severity: warning
+message: >-
+  eval / new Function / Function() / setTimeout or setInterval with a string run code that no static tool can analyse.
+note: AGLint v2 blind spot. Only the I/O trace (exec hook) sees what such code does.
+files: ['src/**/*.ts']
+ignores: ['src/**/*.spec.ts']
+metadata:
+  aglint: blind-spot
+rule:
+  any:
+    - pattern: eval($$$)
+    - pattern: window.eval($$$)
+    - pattern: globalThis.eval($$$)
+    - pattern: new Function($$$)
+    - pattern: Function($$$)
+    - pattern: new window.Function($$$)
+    - pattern: new globalThis.Function($$$)
+    - all:
+        - any:
+            - pattern: setTimeout($CODE, $$$)
+            - pattern: setInterval($CODE, $$$)
+            - pattern: window.setTimeout($CODE, $$$)
+            - pattern: window.setInterval($CODE, $$$)
+            - pattern: globalThis.setTimeout($CODE, $$$)
+            - pattern: globalThis.setInterval($CODE, $$$)
+        - has:
+            field: arguments
+            has:
+              nthChild: 1
+              any:
+                - kind: string
+                - kind: template_string

@@ -1,0 +1,19 @@
+id: blind-fn-pointer-call
+language: rust
+severity: warning
+message: "a call through the fn pointer or closure in field `$F` is invisible to the call graph"
+note: "`(x.f)(...)`: CodeQL's Rust call graph drops calls through a function value stored in a struct field, so the callee's effects are not attributed to this function. Call the target directly, or pass a trait object the call graph can resolve."
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  kind: call_expression
+  has:
+    field: function
+    kind: parenthesized_expression
+    has:
+      kind: field_expression
+      has:
+        field: field
+        pattern: $F

@@ -1,0 +1,172 @@
+# AGLint core gate: angular stack (docs/design/SPEC.md section 8, docs/design/SPEC-v2.md section 8).
+# run.sh ALWAYS exits 0 and CodeQL never gates there (angular.md 5.1). This file IS the Angular gate:
+# pass/fail comes from the SUMMARY.txt exit column (manifest adapter, SPEC 13 task E) plus findings and
+# trust propagation.
+version: 1
+stack: angular
+# SUMMARY.txt steps with an adapter; OK in all 7 folders except ng-build in 05 (FAILED = real budget failure).
+# Not required: vitest/pytest/testmon (no adapter), tools that only some runs write.
+# v2: io-trace (ng test recorder), codeql-purity (always with codeql) and behavior-auto (coverage glue) are required too.
+required_tools: [codeql, codeql-purity, oxlint-new, eslint, sheriff, depcruise-new, ast-grep, semgrep-baseline, tsc, ngc, ng-build,
+                 io-trace, behavior-auto]
+on_missing_tool: fail
+rules:
+  # v2: purity-label-changed goes BEFORE v2-inventory, which must stay the FIRST catch-all finding rule for io-trace /
+  # codeql-purity rows (they are claimed here, so the v1 finding rules below never see them).
+  - id: purity-label-changed     # a function's purity label, effect set or unresolved set changed (codeql-purity)
+    category: blind-spots
+    title: "Purity label changed"
+    hint: "check that {fn} is meant to change; static analysis can no longer vouch for it as before"
+    kind: finding
+    capability: purity
+    when: {tool: [codeql-purity], state: [changed]}
+    verdict: warn
+  - id: v2-inventory
+    category: outcomes
+    title: "Runtime and purity inventory"
+    hint: "inventory only: every traced event and purity row; it never fails"
+    kind: finding
+    capability: core
+    when: {tool: [io-trace, codeql-purity]}
+    verdict: pass
+  - id: new-error-finding
+    category: boundaries
+    title: "New error"
+    hint: "fix the finding, or suppress it with a reason in the tool's own config"
+    kind: finding
+    capability: core
+    when: {state: [new], level: [error]}
+    verdict: fail
+  - id: new-semgrep-finding      # 18-semgrep --baseline-commit --error: any new finding exits 1, INFO included
+    category: boundaries
+    title: "New Semgrep finding"
+    hint: "fix the Semgrep finding, or suppress it with a reason"
+    kind: finding
+    capability: core
+    when: {state: [new], tool: [semgrep, semgrep-baseline]}
+    verdict: fail
+  - id: unverified-error-finding # v1 folders had no base SARIF (influence findings were 'unverified'); v2 re-runs write one. Kept as a guard.
+    category: boundaries
+    title: "Error that cannot be compared with base"
+    hint: "re-run with a base analysis so this error can be compared, or fix it"
+    kind: finding
+    capability: core
+    when: {state: [unknown, unverified], level: [error]}
+    verdict: fail
+  - id: new-blind-spot           # v2 blind-* ast-grep rules (dynamic import, eval, computed access on a guarded module); warnings.
+    category: blind-spots
+    title: "New blind spot"
+    hint: "use a literal instead of {form}, or route the load through one reviewed loader module"
+    kind: finding                # Angular had no warning rule, so without this a new blind spot would not reach the verdict.
+    capability: blind-spots
+    when: {state: [new], level: [warning], rule: ["blind-*"]}
+    verdict: warn
+  # v2 trace rules (kind `trace`, SPEC-v2 section 8), before the outcome rules
+  - id: runtime-guarded-import   # @acme/auth-sdk loaded at runtime by an importer outside src/app/auth/client (no import hook here: dormant)
+    category: boundaries
+    title: "Guarded module loaded outside its allow-list"
+    hint: "load {module} only from {allowed}, or add this importer to runtime.guarded in trust.yml"
+    kind: trace
+    capability: runtime-trace
+    when: {check: guarded-import}
+    verdict: fail
+  - id: unexplained-runtime-effect   # a recorded HttpClient write / network / auth / storage effect that codeql-purity cannot explain
+    category: outcomes
+    title: "Runtime effect the code does not explain"
+    hint: "call {sink_symbol} directly, where static tools can follow it (no dynamic import, getattr or callback in between)"
+    kind: trace
+    capability: runtime-trace
+    when: {check: unexplained, category: [db-write, network, auth, storage]}
+    on_unknown: warn
+    verdict: fail
+  - id: new-runtime-effect
+    category: outcomes
+    title: "New runtime effect"
+    hint: "check that the new {noun} is intended, and cover it with a test that asserts it"
+    kind: trace
+    capability: runtime-trace
+    when: {check: effect, category: [db-write, network, auth, storage]}
+    verdict: warn
+  - id: runtime-exec
+    category: blind-spots
+    title: "Runtime-built code"
+    hint: "replace the runtime-built code with a fixed call, or review it by hand"
+    kind: trace
+    capability: runtime-trace
+    when: {check: effect, category: [exec], state: [new]}
+    verdict: warn
+  - id: trace-incomplete
+    category: tool-health
+    title: "Runtime trace is incomplete"
+    hint: "fix the trace recorder setup (aglint doctor shows what is missing)"
+    kind: trace
+    capability: runtime-trace
+    when: {check: coverage}
+    verdict: warn
+  - id: pure-function-unchecked
+    category: behaviour
+    title: "Pure function not behaviour-tested"
+    hint: "add a test for {fn}, or give it plain argument types so a generator can exercise it"
+    kind: finding
+    capability: behaviour
+    when: {tool: [behavior-auto], rule: [behavior-unchecked], state: [new, unknown]}
+    verdict: warn
+  - id: new-weak-path-sink
+    category: outcomes
+    title: "New low-trust path to a sink"
+    hint: "route this {category} path through a reviewed wrapper, or raise the trust tier of {node} in trust.yml"
+    kind: outcome
+    capability: outcomes-static
+    when: {category: [db-write, network, storage, auth], worst_below: medium, new: true}
+    on_unknown: warn
+    verdict: fail
+  - id: new-weak-path-other
+    category: outcomes
+    title: "New low-trust path"
+    hint: "route this {category} path through a reviewed wrapper, or raise the trust tier of {node} in trust.yml"
+    kind: outcome
+    capability: outcomes-static
+    when: {category: [dom, perf], worst_below: medium, new: true}
+    verdict: warn
+  - id: behavior-diff
+    category: behaviour
+    title: "Behaviour changed"
+    hint: "confirm the new behaviour is intended and update the tests; the counterexample above is a ready test case"
+    kind: change
+    capability: behaviour
+    when: {change_kind: [behavior]}
+    verdict: warn
+  - id: gating-step-failed       # every SUMMARY step except 14, 15, 21, 21b, 22 and 23 (manifest_steps.ANGULAR_NON_GATING: 14 CHANGED is expected, 15 is the differential, 21 has no exit, 21b-23 are the v2 steps)
+    category: tool-health
+    title: "Gating step failed"
+    hint: "fix the failing step ({step}); its log is in the results folder"
+    kind: step
+    capability: core
+    when: {gating: true, exit_nonzero: true}
+    verdict: fail
+  - id: empty-analysis
+    category: tool-health
+    title: "Tool analysed nothing"
+    hint: "{tool} analysed no files; check its paths and config (aglint doctor)"
+    kind: run
+    capability: core
+    # diff-scoped tools legitimately analyse 0 files when nothing applicable changed
+    # (semgrep --baseline-commit on an unchanged tree, crosshair with no changed function)
+    when: {files_analyzed: 0, exclude_tool: [semgrep-baseline, crosshair, differential, "*-new", changed-lines, behavior-auto, diff-hunks]}
+    verdict: fail
+  - id: broken-run
+    category: tool-health
+    title: "Tool run is broken"
+    hint: "re-run {tool}; its output could not be read"
+    kind: run
+    capability: core
+    when: {status: [ERROR, FAILED, STALE]}
+    verdict: warn
+  - id: trust-disagreement
+    category: tool-health
+    title: "trust.yml disagrees with a tool"
+    hint: "update trust.yml to what {tool} reports, or fix the tool's config"
+    kind: trust
+    capability: core
+    when: {status: [disagree]}
+    verdict: warn

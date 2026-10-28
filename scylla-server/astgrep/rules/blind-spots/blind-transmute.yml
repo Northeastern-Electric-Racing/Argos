@@ -1,0 +1,13 @@
+id: blind-transmute
+language: rust
+severity: warning
+message: "`transmute` reinterprets memory; types, and therefore call targets, cannot be trusted past it"
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: "(^|::)transmute(_copy)?(::<.*>)?$"

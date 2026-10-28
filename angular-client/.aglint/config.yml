@@ -1,0 +1,106 @@
+# AGLint project config for angular, written by `aglint init` (SPEC-v3 section 3.2).
+# Commit .aglint/; the cache/ and out/ directories are ignored.
+# capabilities: what AGLint checks besides the core (the diff and tool health); a capability not listed
+# is off. `aglint capabilities list` shows them all, docs/capabilities/<id>.md explains each.
+version: 1
+stack: angular
+root: angular-client
+base:
+  ref: origin/develop
+  mode: merge-base
+capabilities:
+  banned-apis: {}
+  layering:
+    tools: [depcruise]
+  lint: {}
+  types: {}
+  blind-spots: {}
+  purity: {}
+  runtime-trace: {}
+  tests: {}
+package_manager: npm
+test_runner: ng-test
+app:
+  roots:
+  - src
+  vendor_roots: []
+  test_dirs:
+  - src/components/argos-button
+  - src/components/battery-percentage
+  - src/components/circular-percentage
+  - src/components/connection-dot-with-message
+  - src/components/double-line-graph
+  - src/components/form-template
+  - src/components/graph
+  - src/components/info-value-dispaly
+  guarded: []
+tools:
+  codeql:
+    path: /root/.local/bin/codeql
+    version: 2.27.3
+    group: codeql
+  ast-grep:
+    path: /opt/node22/bin/ast-grep
+    version: 0.51.0
+    group: astgrep
+  node:
+    path: /home/user/aglint-tools/node-v24/bin/node
+    version: 24.22.1
+    group: core
+  jq:
+    path: /usr/bin/jq
+    version: '1.7'
+    group: core
+  bc:
+    path: /usr/bin/bc
+    version: 1.07.1
+    group: core
+  tsc:
+    path: node_modules/.bin/tsc
+    version: 5.9.3
+    group: tsc
+  ngc:
+    path: node_modules/.bin/ngc
+    group: tsc
+  oxlint:
+    path: node_modules/.bin/oxlint
+    version: 1.90.0
+    group: oxlint
+  eslint:
+    path: node_modules/.bin/eslint
+    version: 9.39.5
+    group: eslint
+  sheriff:
+    path: sheriff
+    group: sheriff
+  depcruise:
+    path: node_modules/.bin/depcruise
+    version: 18.7.0
+    group: depcruise
+native:
+  oxlint: .oxlintrc.json
+  eslint: eslint.config.js
+  sheriff: sheriff.config.ts
+  dependency_cruiser: .dependency-cruiser.cjs
+  ast_grep: sgconfig.yml
+  tsconfig: tsconfig.app.json
+  codeql_purity: codeql/aglint-angular/purity/Purity.ql
+  codeql_config: codeql/codeql-config.yml
+profiles:
+  fast:
+    skip_groups:
+    - codeql
+    required_tools: []
+  full:
+    skip_groups: []
+    required_tools: []
+default_profile: full
+outputs:
+  dir: .aglint/out
+  formats:
+  - md
+  - html
+  - sarif
+cache_dir: .aglint/cache
+warn_exit: 4
+parallel: true

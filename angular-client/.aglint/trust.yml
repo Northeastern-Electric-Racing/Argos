@@ -1,0 +1,175 @@
+# AGLint trust table for angular: written by `aglint init` (SPEC-v3 section 3.3). First match wins.
+# Every rule carries the basis it was proposed from. Edit freely; init never overwrites this file.
+version: 1
+stack: angular
+default_tier: high
+rules:
+- id: low-trust-source
+  tier: low
+  match:
+    source_kind:
+    - low-trust
+    - aglint-low-trust
+  basis: trust-tiers.model.yml sourceModel kind aglint-low-trust; LowTrustToOutcome.ql message 'LOW-trust value' (angular
+    template)
+- id: route-params
+  tier: low
+  match:
+    label:
+    - '*paramMap.get(*'
+    - '*queryParamMap.get(*'
+    - '*input.required(*'
+  basis: 'semgrep taint sources: route params are LOW (angular template)'
+- id: primeuix-themes
+  tier: medium
+  match:
+    package:
+    - '@primeuix/themes'
+  basis: third-party dependency, no evidence (package.json)
+- id: apexcharts
+  tier: medium
+  match:
+    package:
+    - apexcharts
+  basis: third-party dependency, no evidence (package.json)
+- id: mapbox-gl
+  tier: medium
+  match:
+    package:
+    - mapbox-gl
+  basis: third-party dependency, no evidence (package.json)
+- id: material-design-icons
+  tier: medium
+  match:
+    package:
+    - material-design-icons
+  basis: third-party dependency, no evidence (package.json)
+- id: ng-apexcharts
+  tier: medium
+  match:
+    package:
+    - ng-apexcharts
+  basis: third-party dependency, no evidence (package.json)
+- id: primeflex
+  tier: medium
+  match:
+    package:
+    - primeflex
+  basis: third-party dependency, no evidence (package.json)
+- id: primeicons
+  tier: medium
+  match:
+    package:
+    - primeicons
+  basis: third-party dependency, no evidence (package.json)
+- id: primeng
+  tier: medium
+  match:
+    package:
+    - primeng
+  basis: third-party dependency, no evidence (package.json)
+- id: select
+  tier: medium
+  match:
+    package:
+    - select
+  basis: third-party dependency, no evidence (package.json)
+- id: socket-io-client
+  tier: medium
+  match:
+    package:
+    - socket.io-client
+  basis: third-party dependency, no evidence (package.json)
+- id: uuid
+  tier: medium
+  match:
+    package:
+    - uuid
+  basis: third-party dependency, no evidence (package.json)
+- id: framework-core
+  tier: high
+  match:
+    package:
+    - '@angular/animations'
+    - '@angular/build'
+    - '@angular/cdk'
+    - '@angular/cli'
+    - '@angular/common'
+    - '@angular/compiler'
+    - '@angular/compiler-cli'
+    - '@angular/core'
+    - '@angular/forms'
+    - '@angular/material'
+    - '@angular/platform-browser'
+    - '@angular/platform-browser-dynamic'
+    - '@angular/router'
+    - '@types/mapbox-gl'
+    - rxjs
+    - tslib
+    - zone.js
+  basis: framework allow-list (package.json)
+sanitizers:
+- id: encoders
+  match:
+    label:
+    - encodeURIComponent(*
+    - Number(*
+  basis: semgrep taint sanitizers (angular template)
+outcomes:
+  db-write:
+    aliases:
+    - db-write
+    - db-write *
+    - runtime:http POST /api/*
+    - runtime:http PUT /api/*
+    - runtime:http PATCH /api/*
+    - runtime:http DELETE /api/*
+    - runtime:db INSERT *
+    - runtime:db UPDATE *
+    - runtime:db DELETE *
+    - runtime:db MERGE *
+    - runtime:db REPLACE *
+  db-read:
+    aliases:
+    - runtime:db SELECT *
+  network:
+    aliases:
+    - network
+    - network *
+    - network-read
+    - network-read *
+    - runtime:http *
+  storage:
+    aliases:
+    - client-storage
+    - storage
+    - runtime:storage *
+  auth:
+    aliases:
+    - auth-sdk
+    - auth-sdk *
+    - auth
+    - runtime:auth *
+    sink_tier: low
+  dom:
+    aliases:
+    - dom
+    - dom-html
+  perf:
+    aliases:
+    - perf
+    - performance
+  exec:
+    aliases:
+    - runtime:exec *
+runtime:
+  expect_hooks:
+  - http
+  - auth
+  - storage
+  - exec
+  allowed_modules: null
+  guarded: []
+ignore_change_kinds:
+- format-only
+- rename-only

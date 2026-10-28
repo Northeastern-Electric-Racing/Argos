@@ -1,0 +1,192 @@
+# AGLint trust table for rust: written by `aglint init` (SPEC-v3 section 3.3). First match wins.
+# Every rule carries the basis it was proposed from. Edit freely; init never overwrites this file.
+version: 1
+stack: rust
+default_tier: high
+rules:
+- id: tower-http
+  tier: low
+  match:
+    package:
+    - tower-http
+  basis: name heuristic (http) (Cargo.toml)
+- id: axum-extra
+  tier: medium
+  match:
+    package:
+    - axum-extra
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: axum-macros
+  tier: medium
+  match:
+    package:
+    - axum-macros
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: console-subscriber
+  tier: medium
+  match:
+    package:
+    - console-subscriber
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: derive-more
+  tier: medium
+  match:
+    package:
+    - derive_more
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: diesel
+  tier: medium
+  match:
+    package:
+    - diesel
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: diesel-async
+  tier: medium
+  match:
+    package:
+    - diesel-async
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: diesel-migrations
+  tier: medium
+  match:
+    package:
+    - diesel_migrations
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: dotenvy
+  tier: medium
+  match:
+    package:
+    - dotenvy
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: evalexpr
+  tier: medium
+  match:
+    package:
+    - evalexpr
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: protobuf
+  tier: medium
+  match:
+    package:
+    - protobuf
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: protobuf-codegen
+  tier: medium
+  match:
+    package:
+    - protobuf-codegen
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: rangemap
+  tier: medium
+  match:
+    package:
+    - rangemap
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: ringbuffer
+  tier: medium
+  match:
+    package:
+    - ringbuffer
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: rumqttc
+  tier: medium
+  match:
+    package:
+    - rumqttc
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: rustc-hash
+  tier: medium
+  match:
+    package:
+    - rustc-hash
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: serde-with
+  tier: medium
+  match:
+    package:
+    - serde_with
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: socketioxide
+  tier: medium
+  match:
+    package:
+    - socketioxide
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: tokio-util
+  tier: medium
+  match:
+    package:
+    - tokio-util
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: zenoh
+  tier: medium
+  match:
+    package:
+    - zenoh
+  basis: third-party dependency, no evidence (Cargo.toml)
+- id: framework-core
+  tier: high
+  match:
+    package:
+    - axum
+    - chrono
+    - clap
+    - regex
+    - serde
+    - serde_json
+    - tokio
+    - tower
+    - tracing
+    - tracing-subscriber
+  basis: crate allow-list (Cargo.toml)
+outcomes:
+  db-write:
+    aliases:
+    - aglint-db-write
+    - db-write
+    - runtime:db INSERT *
+    - runtime:db UPDATE *
+    - runtime:db DELETE *
+    - runtime:db MERGE *
+    - runtime:db REPLACE *
+    sink_tier: low
+  db-read:
+    aliases:
+    - aglint-db-read
+    - runtime:db SELECT *
+  network:
+    aliases:
+    - aglint-network
+    - network
+    - runtime:http *
+    sink_tier: low
+  auth:
+    aliases:
+    - aglint-auth
+    - auth
+    - runtime:auth *
+  storage:
+    aliases:
+    - aglint-storage
+    - storage
+    - runtime:storage *
+  exec:
+    aliases:
+    - aglint-exec
+    - runtime:exec *
+  perf:
+    aliases:
+    - perf
+    - performance
+runtime:
+  expect_hooks:
+  - db
+  - http
+  - auth
+  - storage
+  - exec
+  allowed_modules: null
+  guarded: []
+ignore_change_kinds:
+- format-only
+- rename-only

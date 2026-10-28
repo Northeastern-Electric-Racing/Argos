@@ -1,0 +1,2 @@
+# ast-grep: the blind-spot rules written by `aglint init`; add your own call-shape rules here
+ruleDirs: [ast-grep/rules]

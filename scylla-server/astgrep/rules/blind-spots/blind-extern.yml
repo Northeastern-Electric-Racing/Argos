@@ -1,0 +1,13 @@
+id: blind-extern
+language: rust
+severity: warning
+message: "foreign function interface: the code on the other side is not analysed"
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  any:
+    - kind: foreign_mod_item
+    - kind: function_item
+      has: {kind: function_modifiers, has: {kind: extern_modifier}}
