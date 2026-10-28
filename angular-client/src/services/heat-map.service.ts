@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { CellReading } from './cell.service';
+import { CellReading, SelectedCellInfo } from './cell.service';
 import { Segment } from 'src/utils/bms.utils';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { CellViewComponent } from 'src/pages/bms-debug-page/components/cell-view/cell-view.component';
@@ -12,12 +12,6 @@ export enum HeatMapView {
   Balancing = 'Balancing',
   CvsFailure = 'CvS Failure',
   OpenWire = 'Open Wire'
-}
-
-export interface SelectedCellInfo {
-  reading: CellReading;
-  cellNum: number;
-  segment: Segment;
 }
 
 @Injectable({

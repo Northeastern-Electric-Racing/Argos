@@ -24,13 +24,7 @@ import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { Popover } from 'primeng/popover';
 import { Badge } from 'primeng/badge';
-
-export interface NavItem {
-  id: string;
-  label: string;
-  onClick: () => void;
-  icon: string;
-}
+import { NavItem } from 'src/utils/types.utils';
 
 @Component({
   selector: 'app-nav-bar',
