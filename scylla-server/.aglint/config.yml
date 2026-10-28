@@ -83,4 +83,4 @@ outputs:
   - sarif
 cache_dir: .aglint/cache
 warn_exit: 4
-parallel: true
+parallel: false
