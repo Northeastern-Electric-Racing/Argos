@@ -1,0 +1,31 @@
+# Outcome sinks (AGLint kinds), written by `aglint init` from the rust template. The guarded crates (tower-http)
+# get one row per public function of their lib.rs, with a kind from the crate name (auth, db, http); check the kinds.
+# Rows: [function path, input, kind, provenance].
+extensions:
+  - addsTo:
+      pack: codeql/rust-all
+      extensible: sinkModel
+    data:
+      # Argos: Postgres through diesel / diesel-async (paths from CodeQL's call targets in this crate)
+      - ["diesel::query_builder::functions::insert_into", "Argument[0]", "aglint-db-write", "manual"]
+      - ["diesel::query_builder::functions::update", "Argument[0]", "aglint-db-write", "manual"]
+      - ["diesel::query_builder::functions::delete", "Argument[0]", "aglint-db-write", "manual"]
+      - ["diesel::query_builder::functions::sql_query", "Argument[0]", "aglint-db-write", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::execute", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::get_result", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::get_results", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::load", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::first", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel_migrations::migration_harness::MigrationHarness>::run_pending_migrations", "Argument[self]", "aglint-db-write", "manual"]
+      # Argos: MQTT (Siren) through rumqttc, and socket.io to the client through socketioxide
+      - ["<rumqttc::v5::client::AsyncClient>::publish", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::v5::client::AsyncClient>::subscribe", "Argument[0]", "aglint-network", "manual"]
+      - ["<socketioxide::io::SocketIo>::emit", "Argument[0]", "aglint-network", "manual"]
+      - ["<socketioxide::socket::Socket>::emit", "Argument[0]", "aglint-network", "manual"]
+      - ["std::fs::write", "Argument[1]", "aglint-storage", "manual"]
+      - ["<std::fs::OpenOptions>::open", "Argument[0]", "aglint-storage", "manual"]
+      - ["std::fs::remove_file", "Argument[0]", "aglint-storage", "manual"]
+      - ["std::fs::rename", "Argument[0]", "aglint-storage", "manual"]
+      - ["<std::net::udp::UdpSocket>::send_to", "Argument[0]", "aglint-network", "manual"]
+      - ["<std::net::tcp::TcpStream>::connect", "Argument[0]", "aglint-network", "manual"]
+      - ["<std::process::Command>::new", "Argument[0]", "aglint-exec", "manual"]

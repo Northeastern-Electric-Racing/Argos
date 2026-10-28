@@ -16,6 +16,7 @@ capabilities:
   types: {}
   blind-spots: {}
   purity: {}
+  outcomes-static: {}
   runtime-trace: {}
   tests: {}
 package_manager: npm
@@ -77,6 +78,10 @@ tools:
     path: node_modules/.bin/depcruise
     version: 18.7.0
     group: depcruise
+  semgrep:
+    path: /root/.local/bin/semgrep
+    version: 1.182.1
+    group: semgrep
 native:
   oxlint: .oxlintrc.json
   eslint: eslint.config.js
@@ -86,6 +91,8 @@ native:
   tsconfig: tsconfig.app.json
   codeql_purity: codeql/aglint-angular/purity/Purity.ql
   codeql_config: codeql/codeql-config.yml
+  semgrep: semgrep
+  codeql_pack: codeql/aglint-angular
 profiles:
   fast:
     skip_groups:

@@ -13,7 +13,8 @@ capabilities:
   layering: {}
   blind-spots: {}
   purity: {}
-  # runtime-trace is off: the unit tests make no DB or network calls, and symbolizing takes ~75 min (bracyw/AGLint#2).
+  outcomes-static: {}
+  # runtime-trace is off: the unit tests make no DB or network calls, and symbolizing takes ~75 min (bracyw/AGLint#2, #5).
   behaviour: {}
   perf: {}
   tests: {}
@@ -66,6 +67,8 @@ native:
   layers: layers.toml
   ast_grep: sgconfig.yml
   codeql_purity: codeql/purity
+  codeql_queries: codeql/queries
+  codeql_models: codeql/models
 profiles:
   fast:
     skip_groups:

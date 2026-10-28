@@ -1,0 +1,5 @@
+# GENERATED per run by scripts/run.sh from `git diff -U0 base head` (head-side line numbers). Placeholder row:
+extensions:
+  - addsTo: { pack: aglint/angular-queries, extensible: aglintChangedLine }
+    data:
+      - ["<none>", 0]

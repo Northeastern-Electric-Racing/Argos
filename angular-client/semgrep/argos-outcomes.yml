@@ -1,0 +1,66 @@
+# Semgrep rules for AGLint outcomes-static (run new-vs-base, so only findings a change adds are reported).
+# Outcomes in the client: HTTP through fetch in src/api/, socket.io through SocketService, and localStorage.
+# Taint is intra-file only; CodeQL (codeql/aglint-angular) follows flow across files and through DI.
+rules:
+  - id: route-param-to-network
+    mode: taint
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: WARNING
+    message: Route/query parameter (LOW trust) reaches a network call ($SINK) without encoding or parsing.
+    metadata: { outcome: network, trust: low }
+    pattern-sources:
+      - pattern: $ROUTE.snapshot.paramMap.get(...)
+      - pattern: $ROUTE.snapshot.queryParamMap.get(...)
+      - pattern: $ROUTE.snapshot.queryParamMap.getAll(...)
+      - patterns:
+          - pattern-inside: $ROUTE.$MAP.pipe(...).subscribe(($P) => {...})
+          - metavariable-regex: { metavariable: $MAP, regex: '^(paramMap|queryParamMap)$' }
+          - pattern-either:
+              - pattern: $P.get(...)
+              - pattern: $P.getAll(...)
+    pattern-sanitizers:
+      - pattern: encodeURIComponent(...)
+      - pattern: Number(...)
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: fetch($SINK, ...)
+              - pattern: 'fetch($URL, {..., body: $SINK, ...})'
+              - patterns:
+                  - pattern: $SOCKET.emit($EVENT, $SINK, ...)
+                  - metavariable-regex: { metavariable: $SOCKET, regex: '(?i).*socket$' }
+          - focus-metavariable: $SINK
+
+  - id: network-write-call-site
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: New HTTP write ($METHOD) to the backend; check it is meant and goes through src/api/.
+    metadata: { outcome: network-write }
+    patterns:
+      - pattern: 'fetch($URL, {..., method: $METHOD, ...})'
+      - metavariable-regex: { metavariable: $METHOD, regex: "^['\"](POST|PUT|PATCH|DELETE)['\"]$" }
+
+  - id: socket-emit-call-site
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: New socket.io emit ($EVENT); it is sent to the backend.
+    metadata: { outcome: network-write }
+    patterns:
+      - pattern: $SOCKET.emit($EVENT, ...)
+      # component outputs also have emit(); only socket.io sockets count
+      - metavariable-regex: { metavariable: $SOCKET, regex: '(?i).*socket$' }
+
+  - id: client-storage-write
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: New persistent client storage write ($KEY); it survives reloads and is shared across tabs.
+    metadata: { outcome: client-storage }
+    pattern-either:
+      - pattern: localStorage.setItem($KEY, ...)
+      - pattern: sessionStorage.setItem($KEY, ...)

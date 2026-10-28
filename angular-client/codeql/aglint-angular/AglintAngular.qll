@@ -131,6 +131,23 @@ module Aglint {
     )
   }
 
+  private API::Node socketIo() {
+    result = API::moduleImport("socket.io-client").getMember(["io", "connect", "default"])
+  }
+
+  private DataFlow::SourceNode socketTracked(DataFlow::TypeTracker t) {
+    t.start() and result = socketIo().getACall()
+    or
+    exists(DataFlow::TypeTracker t2 | result = socketTracked(t2).track(t2, t))
+  }
+
+  /** `socket.emit(...)` on a socket.io-client socket (tracked through class fields like `this.socket`). */
+  DataFlow::MethodCallNode socketEmit() {
+    result = socketTracked(DataFlow::TypeTracker::end()).getAMethodCall("emit")
+    or
+    result = socketIo().getReturn().getMember("emit").getACall()
+  }
+
   /** Outcome sinks, labelled by outcome kind. */
   predicate outcome(DataFlow::Node sink, string kind) {
     exists(DataFlow::MethodCallNode c, string m | c = httpCall(m) |
@@ -160,6 +177,11 @@ module Aglint {
     )
     or
     sink instanceof WebStorageWrite and kind = "client-storage"
+    or
+    // socket.io-client: the connection options (io(url, {query})) and every emitted payload leave the browser
+    sink = socketIo().getACall().getAnArgument() and kind = "network (socket.io)"
+    or
+    sink = socketEmit().getAnArgument() and kind = "network (socket.emit)"
     or
     ModelOutput::sinkNode(sink, "aglint-auth-sdk") and kind = "auth-sdk (LOW trust)"
   }
