@@ -10,6 +10,7 @@ pub mod mqtt_processor;
 pub mod zenoh_processor;
 
 pub mod metadata_structs;
+pub mod notification_outbox;
 pub mod rule_structs;
 pub mod socket_handler;
 

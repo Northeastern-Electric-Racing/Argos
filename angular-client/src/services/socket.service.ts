@@ -21,6 +21,28 @@ function getOrCreateClientId(): string {
   return id;
 }
 
+// More than the server holds unacked per client, so a resend is always recognised
+const MAX_SEEN_NOTIFICATION_IDS = 500;
+
+/**
+ * Builds the rule_notify handler: skips notifications already received (the server resends
+ * unacked ones on reconnect), logs new ones, then acks. Throws without acking if logging fails,
+ * so the server keeps it pending and resends it.
+ */
+export function createRuleNotifyHandler(addNotification: (notification: RuleNotification) => void) {
+  const seen = new Set<string>();
+  return (message: RuleNotification, ack: () => void) => {
+    if (!seen.has(message.notification_id)) {
+      addNotification(message);
+      seen.add(message.notification_id);
+      if (seen.size > MAX_SEEN_NOTIFICATION_IDS) {
+        seen.delete(seen.values().next().value!);
+      }
+    }
+    ack();
+  };
+}
+
 /**
  * Service for interacting with the socket
  */
@@ -95,9 +117,10 @@ export default class SocketService {
       }
     });
 
-    this.socket.on('rule_notify', (message: RuleNotification) => {
+    const handleRuleNotify = createRuleNotifyHandler((notification) => notificationLogService.addNotification(notification));
+    this.socket.on('rule_notify', (message: RuleNotification, ack: () => void) => {
       try {
-        notificationLogService.addNotification(message);
+        handleRuleNotify(message, ack);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
