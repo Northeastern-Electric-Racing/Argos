@@ -63,7 +63,7 @@ export default class NotificationRulesPageComponent implements OnInit {
   }
 
   onViewLog = () => {
-    this.router.navigateByUrl(appRoutes.notificationLogRoute());
+    void this.router.navigateByUrl(appRoutes.notificationLogRoute());
   };
 
   onUpload = () => {
@@ -71,7 +71,7 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onDownload = () => {
-    this.downloadRulesAsCsv();
+    void this.downloadRulesAsCsv();
   };
 
   onAddRule = () => {
@@ -90,7 +90,7 @@ export default class NotificationRulesPageComponent implements OnInit {
         const response = await addRule(this.clientId, rule);
         if (response.ok) {
           this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
-          this.rulesTable()?.loadRules();
+          void this.rulesTable()?.loadRules();
         } else {
           const text = await response.text();
           this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
@@ -131,7 +131,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       this.selectedRules.set([]);
     }
 
-    this.rulesTable()?.loadRules();
+    void this.rulesTable()?.loadRules();
   };
 
   onToggleSubscription = async () => {
@@ -158,10 +158,10 @@ export default class NotificationRulesPageComponent implements OnInit {
         if (toSubscribe.length > 0) parts.push(`subscribed to ${toSubscribe.length}`);
         if (toUnsubscribe.length > 0) parts.push(`unsubscribed from ${toUnsubscribe.length}`);
         this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Toggled: ${parts.join(', ')}` });
-        this.rulesTable()?.loadRules();
+        void this.rulesTable()?.loadRules();
       } else {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update some subscriptions' });
-        this.rulesTable()?.loadRules();
+        void this.rulesTable()?.loadRules();
       }
     } catch {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
@@ -216,7 +216,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
     this.confirmRef?.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
       if (confirmed) {
-        this.batchAddRules(result);
+        void this.batchAddRules(result);
       }
     });
   }
@@ -354,7 +354,7 @@ export default class NotificationRulesPageComponent implements OnInit {
         summary: 'Upload Complete',
         detail: `${successCount} of ${rules.length} rule(s) added successfully`
       });
-      this.rulesTable()?.loadRules();
+      void this.rulesTable()?.loadRules();
     }
 
     if (errors.length > 0) {

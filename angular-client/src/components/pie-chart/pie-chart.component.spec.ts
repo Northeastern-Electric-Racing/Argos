@@ -22,7 +22,7 @@ describe('PieChartComponent', () => {
   it('derives series and options from data', () => {
     expect(component.series()).toEqual([1, 2]);
     expect(component.chartOptions().labels).toEqual(['Pumps', 'Fans']);
-    expect(component.chartOptions().title.text).toBe('Pie Chart');
+    expect(component.chartOptions().title?.text).toBe('Pie Chart');
   });
 
   it('updates only the series when values change', () => {
@@ -41,7 +41,7 @@ describe('PieChartComponent', () => {
     fixture.componentRef.setInput('title', 'Usage');
 
     expect(component.chartOptions().labels).toEqual(['LV Boards']);
-    expect(component.chartOptions().title.text).toBe('Usage');
+    expect(component.chartOptions().title?.text).toBe('Usage');
   });
 
   it('returns empty options when there is no data', () => {

@@ -10,8 +10,8 @@ export default class APIService {
   private cache = new Map<
     string,
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: BehaviorSubject<any | null>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the cache holds every query's T
+      data: BehaviorSubject<any>;
       isLoading: BehaviorSubject<boolean>;
       isError: BehaviorSubject<boolean>;
       error: BehaviorSubject<Error | null>;

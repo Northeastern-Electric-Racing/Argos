@@ -70,7 +70,8 @@ export class CameraPageComponent implements OnInit {
       const videoEl = this.playbackVideoRef()?.nativeElement;
       if (!videoEl) return;
       videoEl.load(); // This reloads the new <source> inside the <video>
-      videoEl.play();
+      // play() rejects when the browser blocks autoplay; the video's own controls can still start it
+      videoEl.play().catch(() => undefined);
     });
   };
 

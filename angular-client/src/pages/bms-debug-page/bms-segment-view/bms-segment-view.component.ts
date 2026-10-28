@@ -141,12 +141,12 @@ export class BmsSegmentViewComponent implements OnInit {
         if (allSegments.indexOf(possibleSegId) !== -1) {
           this.segmentId = possibleSegId;
         } else {
-          this.router.navigate(['bms']);
+          void this.router.navigate(['bms']);
         }
         this.subscribeToView();
       });
     } else {
-      this.router.navigate(['bms']);
+      void this.router.navigate(['bms']);
     }
   };
 }

@@ -65,7 +65,7 @@ export class SegmentSummaryComponent implements OnInit {
    * Opens the segment page for the current segment.
    */
   openSegmentPage = () => {
-    this.router.navigate([appRoutes.bmsSegmentViewRoute(this.segmentNumber())]);
+    void this.router.navigate([appRoutes.bmsSegmentViewRoute(this.segmentNumber())]);
   };
 
   getRelevantKeys = (): SegmentInfo => {

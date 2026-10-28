@@ -83,7 +83,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
           min: config.yMin === null ? undefined : config.yMin
         }));
 
-        this.chart.updateOptions(this.options);
+        void this.chart.updateOptions(this.options);
         this.resetRange();
       }
     });
@@ -93,7 +93,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       this.clearGraph();
       this.valuesSubject();
       if (this.chart) {
-        this.chart.updateSeries([]);
+        void this.chart.updateSeries([]);
       }
       this.data = new Map();
       this.timeRangeMs = undefined;
@@ -116,7 +116,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         ];
       }
       if (this.chart) {
-        this.chart.updateOptions(this.options);
+        void this.chart.updateOptions(this.options);
       }
     });
     effect(() => {
@@ -181,7 +181,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
 
     // Single updateOptions call with series included — avoids two separate re-renders
     // Pass false, false to skip animation bookkeeping (getPreviousPaths) and animate flag
-    this.chart.updateOptions(
+    void this.chart.updateOptions(
       {
         ...this.options,
         series,
@@ -406,14 +406,14 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
       series: [],
       ...this.options
     });
-    this.chart.render().then(() => {
+    void this.chart.render().then(() => {
       this.updateChart();
     });
   }
 
   resetRange() {
     this.timeRangeMs = undefined;
-    this.chart.updateOptions({
+    void this.chart.updateOptions({
       ...this.options,
       xaxis: {
         ...this.options.xaxis,

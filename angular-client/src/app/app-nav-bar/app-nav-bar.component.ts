@@ -233,7 +233,7 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   navigateTo(route: string): void {
     this.selectedRoute = route;
-    this.router.navigate([route]);
+    void this.router.navigate([route]);
   }
 
   onNotificationPanelShow(): void {

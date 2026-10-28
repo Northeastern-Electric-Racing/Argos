@@ -77,6 +77,6 @@ export class ChipFaultsComponent implements OnInit {
   };
 
   navigateTo(route: string): void {
-    this.router.navigate([route]);
+    void this.router.navigate([route]);
   }
 }
