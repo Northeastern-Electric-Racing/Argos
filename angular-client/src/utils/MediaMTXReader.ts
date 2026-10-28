@@ -1,3 +1,5 @@
+import { sendWhepOffer } from 'src/api/mediamtx.api';
+
 export interface Conf {
   url: URL;
   onError: (message: string) => void;
@@ -38,28 +40,7 @@ export default class MediaMTXWebRTCReader {
     });
   };
 
-  private sendOffer = (offer: string | undefined) => {
-    return fetch(this.conf.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/sdp' },
-      body: offer
-    }).then((res) => {
-      switch (res.status) {
-        case 201:
-          break;
-        case 404:
-          throw new Error('stream not found');
-        case 400:
-          return res.json().then((e) => {
-            throw new Error(e.error);
-          });
-        default:
-          throw new Error(`bad status code ${res.status}`);
-      }
-
-      return res.text();
-    });
-  };
+  private sendOffer = (offer: string | undefined) => sendWhepOffer(this.conf.url, offer);
 
   private setAnswer = (answer: string) => {
     if (this.state !== 'running') {

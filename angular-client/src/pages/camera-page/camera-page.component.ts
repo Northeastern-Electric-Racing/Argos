@@ -2,6 +2,7 @@ import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MessageService } from 'primeng/api';
 import { SelectChangeEvent, Select } from 'primeng/select';
+import { checkStreamAvailable } from 'src/api/mediamtx.api';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
@@ -58,10 +59,7 @@ export class CameraPageComponent implements OnInit {
     });
   }
 
-  checkConnection = (): Promise<boolean> =>
-    fetch(this.url, { method: 'HEAD' })
-      .then(() => true)
-      .catch(() => false);
+  checkConnection = (): Promise<boolean> => checkStreamAvailable(this.url);
 
   onVideoSelected = (videoName: string) => {
     this.playbackVideoUrl = urls.getVideo(videoName);
