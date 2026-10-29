@@ -31,7 +31,6 @@
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules/"]
             },
-            "scripts": ["node_modules/apexcharts/dist/apexcharts.min.js"],
             "browser": "src/main.ts"
           },
           "configurations": {
