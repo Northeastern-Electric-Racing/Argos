@@ -1,4 +1,5 @@
 import {
+  Chart,
   ChartOptions,
   Legend,
   LinearScale,
@@ -61,6 +62,17 @@ export function liveWindow(lines: GraphData[][], rangeMs: number): { min: number
  */
 export function windowPoints(line: GraphData[], min: number): GraphData[] {
   return line.slice(Math.max(0, binarySearchInsertIndex(line, min) - 1));
+}
+
+/**
+ * Points the chart's x-axis at `window`. With no points, Chart.js would label an empty axis from epoch zero, so
+ * both axes drop their labels until there's data.
+ */
+export function applyLiveWindow(chart: Chart<'line', GraphData[]>, window: { min: number; max: number } | undefined): void {
+  const { x, y } = chart.config.options!.scales!;
+  x!.min = window?.min;
+  x!.max = window?.max;
+  x!.ticks!.display = y!.ticks!.display = window !== undefined;
 }
 
 /** Options for a live line chart on the dark info background: clock-time x-axis, no grid, few ticks. */

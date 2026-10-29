@@ -11,13 +11,12 @@ import {
 } from '@angular/core';
 import { Chart, ChartDataset } from 'chart.js';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
-import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 import {
   DEFAULT_TIME_RANGE_SEC,
   LIVE_LINE_REGISTERABLES,
   LIVE_REFRESH_MS,
+  applyLiveWindow,
   buildLiveLineOptions,
   liveWindow,
   windowPoints
@@ -30,12 +29,11 @@ type LineDataset = ChartDataset<'line', GraphData[]>;
   selector: 'double-line-graph',
   templateUrl: './double-line-graph.component.html',
   styleUrls: ['./double-line-graph.component.css'],
-  providers: [DialogService, provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
+  providers: [provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
   standalone: true,
   imports: [BaseChartDirective]
 })
 export class DoubleLineGraphComponent {
-  public dialogService = inject(DialogService);
   private chartDirective = viewChild(BaseChartDirective);
   data1 = input.required<GraphData[]>();
   color1 = input.required<string>(); // Must be hex
@@ -50,18 +48,6 @@ export class DoubleLineGraphComponent {
 
   readonly chartData: { datasets: LineDataset[] } = { datasets: [{ data: [] }, { data: [] }] };
   readonly chartOptions = buildLiveLineOptions({ legend: true });
-
-  openDialog = () => {
-    this.dialogService.open(GraphDialogComponent, {
-      header: this.header(),
-      data: {
-        data: this.data1(),
-        color: this.color1(),
-        title: this.title1(),
-        graphContainerId: this.graphContainerId() + 'big'
-      }
-    });
-  };
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -109,10 +95,7 @@ export class DoubleLineGraphComponent {
       dataset.data = window ? windowPoints(line.data, window.min) : [];
     });
 
-    const x = chart.config.options!.scales!['x']!;
-    x.min = window?.min;
-    x.max = window?.max;
-
+    applyLiveWindow(chart, window);
     chart.update('none');
   }
 }

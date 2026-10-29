@@ -11,13 +11,12 @@ import {
 } from '@angular/core';
 import { Chart, ChartDataset } from 'chart.js';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
-import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 import {
   DEFAULT_TIME_RANGE_SEC,
   LIVE_LINE_REGISTERABLES,
   LIVE_REFRESH_MS,
+  applyLiveWindow,
   buildLiveLineOptions,
   liveWindow,
   windowPoints
@@ -30,12 +29,11 @@ type LineDataset = ChartDataset<'line', GraphData[]>;
   selector: 'graph-component',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  providers: [DialogService, provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
+  providers: [provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
   standalone: true,
   imports: [BaseChartDirective]
 })
 export class GraphComponent {
-  public dialogService = inject(DialogService);
   private chartDirective = viewChild(BaseChartDirective);
   data = input.required<GraphData[]>();
   color = input.required<string>(); // Must be hex
@@ -46,18 +44,6 @@ export class GraphComponent {
 
   readonly chartData: { datasets: LineDataset[] } = { datasets: [{ data: [] }] };
   readonly chartOptions = buildLiveLineOptions({ legend: false });
-
-  openDialog = () => {
-    this.dialogService.open(GraphDialogComponent, {
-      header: this.title(),
-      data: {
-        data: this.data(),
-        color: this.color(),
-        title: this.title(),
-        graphContainerId: this.graphContainerId() + 'big'
-      }
-    });
-  };
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -93,10 +79,7 @@ export class GraphComponent {
     dataset.backgroundColor = this.color();
     dataset.data = window ? windowPoints(data, window.min) : [];
 
-    const x = chart.config.options!.scales!['x']!;
-    x.min = window?.min;
-    x.max = window?.max;
-
+    applyLiveWindow(chart, window);
     chart.update('none');
   }
 }
