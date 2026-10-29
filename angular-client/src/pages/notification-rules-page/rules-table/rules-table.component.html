@@ -1,7 +1,7 @@
 <p-table
   #dt
   [value]="rules()"
-  [globalFilterFields]="['expr', 'topic', 'id']"
+  [globalFilterFields]="['expr', 'topic', 'id', 'description', 'uploaded_by']"
   [selection]="selectedRules()"
   (selectionChange)="onSelectionChange($any($event))"
   dataKey="id"
@@ -16,9 +16,7 @@
       </th>
       <th>Rule</th>
       <th>Applied To</th>
-      <!-- TODO: Uploaded By column once backend supports it -->
       <th>Uploaded By</th>
-      <!-- TODO: Description column once backend supports it -->
       <th>Description</th>
       <th>Subscribed</th>
       <th style="width: 5rem" aria-label="Actions"></th>
@@ -31,8 +29,8 @@
       </td>
       <td>{{ rule.expr }}</td>
       <td>{{ rule.topic }}</td>
-      <td>-</td>
-      <td>-</td>
+      <td>{{ rule.uploaded_by || '-' }}</td>
+      <td>{{ rule.description || '-' }}</td>
       <td>
         <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
       </td>

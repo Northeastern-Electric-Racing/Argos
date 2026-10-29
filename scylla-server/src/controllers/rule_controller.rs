@@ -112,6 +112,7 @@ pub struct EditRulePayload {
     pub expr: String,
     #[serde_as(as = "DurationSeconds<u64>")]
     pub debounce_time: Duration,
+    pub description: Option<String>,
 }
 
 #[debug_handler]
@@ -121,11 +122,12 @@ pub async fn edit_rule(
     Json(EditRulePayload {
         expr,
         debounce_time,
+        description,
     }): Json<EditRulePayload>,
 ) -> Result<(), ScyllaError> {
     info!("Incoming rules edit: {}", rule_id);
     rules_manager
-        .edit_rule(RuleId(rule_id), expr, debounce_time)
+        .edit_rule(RuleId(rule_id), expr, debounce_time, description)
         .await
         .map_err(ScyllaError::RuleError)
 }
