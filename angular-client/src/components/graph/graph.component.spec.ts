@@ -139,6 +139,20 @@ describe('GraphComponent (Chart.js)', () => {
     expect(c.data.datasets[0].data).toEqual([{ x: 5_000, y: 1 }]);
   });
 
+  it('hides the axis labels until there is data, instead of showing epoch zero', async () => {
+    const data: GraphData[] = [];
+    const c = await render({ data });
+
+    expect(c.options.scales!['x']!.ticks!.display).toBe(false);
+    expect(c.options.scales!['y']!.ticks!.display).toBe(false);
+
+    data.push({ x: 1_000, y: 10 });
+    vi.advanceTimersByTime(LIVE_REFRESH_MS);
+
+    expect(c.options.scales!['x']!.ticks!.display).toBe(true);
+    expect(c.options.scales!['y']!.ticks!.display).toBe(true);
+  });
+
   it('stops refreshing once destroyed', async () => {
     await render({ data: [] });
     expect(vi.getTimerCount()).toBe(1);
