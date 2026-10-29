@@ -28,7 +28,7 @@
   width: 100%;
 }
 
-/* A crosshair over the zoomable plot, as with ApexCharts; the legend sets a pointer over its items */
+/* A crosshair over the zoomable plot; the legend sets a pointer over its items */
 canvas {
   cursor: crosshair;
 }
