@@ -1,12 +1,10 @@
-<apx-chart
-  [series]="series()"
-  [colors]="chartOptions().colors"
-  [stroke]="chartOptions().stroke"
-  [chart]="chartOptions().chart"
-  [plotOptions]="chartOptions().plotOptions"
-  [labels]="chartOptions().labels"
-  [legend]="chartOptions().legend"
-  [dataLabels]="chartOptions().dataLabels"
-  [fill]="chartOptions().fill"
-  [title]="chartOptions().title"
-/>
+<div class="chart-container" [style.background-color]="backgroundColor()">
+  <canvas
+    baseChart
+    type="pie"
+    [data]="chartData()"
+    [options]="chartOptions()"
+    role="img"
+    [attr.aria-label]="title()"
+  ></canvas>
+</div>
