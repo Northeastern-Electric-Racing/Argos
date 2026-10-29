@@ -8,6 +8,7 @@ import { FaultService } from './fault.service';
 import { NotificationLogService } from './notification-log.service';
 import { EnvService } from './env.service';
 import { v4 as uuidv4 } from 'uuid';
+import { MessageService } from 'primeng/api';
 
 // crypto.randomUUID is only defined in secure contexts (https or loopback);
 // uuidv4 falls back to crypto.getRandomValues so it works on insecure origins.
@@ -22,6 +23,54 @@ function getOrCreateClientId(): string {
 }
 
 /**
+ * A set of the most recently added ids, capped at `capacity`. Past it, the oldest `batch` are
+ * forgotten at once rather than one per add.
+ */
+export class RecentIds {
+  // a Set iterates in insertion order, so its first entries are the oldest
+  private ids = new Set<string>();
+
+  constructor(
+    private capacity: number,
+    private batch = Math.max(1, Math.floor(capacity / 10))
+  ) {}
+
+  get size(): number {
+    return this.ids.size;
+  }
+
+  has(id: string): boolean {
+    return this.ids.has(id);
+  }
+
+  add(id: string): void {
+    this.ids.add(id);
+    if (this.ids.size <= this.capacity) return;
+    const oldest = [...this.ids].slice(0, this.batch);
+    oldest.forEach((old) => this.ids.delete(old));
+  }
+}
+
+// More than the server's store holds by default, so a resend is always recognised
+const SEEN_NOTIFICATION_IDS = 2000;
+
+/**
+ * Builds the rule_notify handler: skips notifications already received (the server resends
+ * unacked ones on reconnect), logs new ones, then acks. Throws without acking if logging fails,
+ * so the server keeps it and resends it.
+ */
+export function createRuleNotifyHandler(addNotification: (notification: RuleNotification) => void) {
+  const seen = new RecentIds(SEEN_NOTIFICATION_IDS);
+  return (message: RuleNotification, ack: () => void) => {
+    if (!seen.has(message.notification_id)) {
+      addNotification(message);
+      seen.add(message.notification_id);
+    }
+    ack();
+  };
+}
+
+/**
  * Service for interacting with the socket
  */
 @Injectable({
@@ -29,6 +78,7 @@ function getOrCreateClientId(): string {
 })
 export default class SocketService {
   private envService = inject(EnvService);
+  private messageService = inject(MessageService);
   // Opens the connection on construction; specs that inject SocketService (or render AppContext) should provide a mock.
   private socket = io(this.envService.backendUrl, {
     query: {
@@ -95,12 +145,23 @@ export default class SocketService {
       }
     });
 
-    this.socket.on('rule_notify', (message: RuleNotification) => {
+    const handleRuleNotify = createRuleNotifyHandler((notification) => notificationLogService.addNotification(notification));
+    this.socket.on('rule_notify', (message: RuleNotification, ack: () => void) => {
       try {
-        notificationLogService.addNotification(message);
+        handleRuleNotify(message, ack);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
+    });
+
+    // the server gave up on this client: missed notifications and its subscriptions are gone
+    this.socket.on('rule_subscriptions_dropped', () => {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Notification rules dropped',
+        detail: 'This browser fell too far behind on rule notifications. Re-subscribe on the Notification Rules page.',
+        sticky: true
+      });
     });
 
     this.socket.on('disconnect', () => {

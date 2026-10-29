@@ -35,6 +35,8 @@ use scylla_server::{
         video_streamer_controller::{self},
     },
     mqtt_processor::pub_handle,
+    notification_delivery::notification_delivery,
+    notification_store::NotificationStore,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
     zenoh_processor::ZenohProcessor,
@@ -131,6 +133,16 @@ struct ScyllaArgs {
         default_value = "files" // Do not use absolute file path unless you mean to
     )]
     output_directory: String,
+
+    /// Most Rule notifications held for clients that have not acked them; past this the oldest is
+    /// dropped and the clients still waiting on it are given up on
+    #[arg(long, env = "SCYLLA_NOTIFICATION_MAX_STORED", default_value = "1000")]
+    notification_max_stored: usize,
+
+    /// Seconds an unacked Rule notification is held before the clients still waiting on it are
+    /// given up on
+    #[arg(long, env = "SCYLLA_NOTIFICATION_MAX_AGE_SECS", default_value = "600")]
+    notification_max_age_secs: u64,
 
     /// The suffix to find video files by
     #[arg(short = 's', long, env = "SCYLLA_VIDEO_SUFFIX", default_value = ".mp4")]
@@ -291,10 +303,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             warn!(task = "socket_handler", "task ended: {:?}", res);
         });
     } else {
+        let (notification_send, notification_receive) = mpsc::unbounded_channel();
+        let delivery_fut = notification_delivery(
+            token.clone(),
+            notification_receive,
+            rules_manager.clone(),
+            NotificationStore::new(
+                cli.notification_max_stored,
+                Duration::from_secs(cli.notification_max_age_secs),
+            ),
+        );
+        task_tracker.spawn(async move {
+            let res = tokio::spawn(delivery_fut).await;
+            warn!(task = "notification_delivery", "task ended: {:?}", res);
+        });
         let fut = socket_handler_with_metadata(
             token.clone(),
             mqtt_receive_socket,
             rules_manager.clone(),
+            notification_send,
             argos_inserter.clone(),
             io,
         );
