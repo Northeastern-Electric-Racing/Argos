@@ -418,6 +418,98 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(c.scales['y'].options.display).toBe(true);
   });
 
+  describe('hover', () => {
+    /** Moves the pointer to a time and y pixel on the plot; Chart.js handles pointer moves once per frame. */
+    async function hover(c: Chart, time: number, y = 100): Promise<void> {
+      const x = c.scales['x'].getPixelForValue(time);
+      c.canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: x, clientY: y, bubbles: true }));
+      await settle();
+    }
+
+    const tooltipRows = (c: Chart) => c.tooltip!.body.flatMap(({ lines }) => lines);
+
+    /** Centres of the filled circles of the hover dot's radius drawn since the last clear (tooltip swatches too). */
+    function hoverDots(c: Chart): { x: number; y: number }[] {
+      const ctx = c.ctx as unknown as { __getDrawCalls(): { type: string; props: { path?: DrawEvent[] } }[] };
+      type DrawEvent = { type: string; props: { x: number; y: number; radius: number } };
+      return ctx
+        .__getDrawCalls()
+        .filter(({ type }) => type === 'fill')
+        .flatMap(({ props }) => props.path ?? [])
+        .filter(({ type, props }) => type === 'arc' && props.radius === 4)
+        .map(({ props: { x, y } }) => ({ x: Math.round(x), y: Math.round(y) }));
+    }
+
+    it("shows each line's value at the pointer's time, with its dot on the line", async () => {
+      const c = await render({
+        valuesSubject: [
+          topic('V', [
+            { x: 0, y: 0 },
+            { x: 10_000, y: 10 },
+            { x: 20_000, y: 0 }
+          ])
+        ]
+      });
+      (c.ctx as unknown as { __clearDrawCalls(): void }).__clearDrawCalls();
+
+      await hover(c, 2_500);
+
+      expect(tooltipRows(c)).toEqual(['V 0: 2.5']);
+      const x = c.scales['x'].getPixelForValue(2_500);
+      expect(hoverDots(c)).toContainEqual({ x: Math.round(x), y: Math.round(c.scales['y'].getPixelForValue(2.5)) });
+    });
+
+    it("leaves out a series with no data near the pointer's time, instead of its first or last sample", async () => {
+      const c = await render({
+        valuesSubject: [
+          topic('Long', [
+            { x: 0, y: 1 },
+            { x: 20_000, y: 1 }
+          ]),
+          topic('Early', [
+            { x: 0, y: 2 },
+            { x: 5_000, y: 2 }
+          ]),
+          topic('Late', [
+            { x: 15_000, y: 3 },
+            { x: 20_000, y: 3 }
+          ])
+        ]
+      });
+
+      await hover(c, 10_000);
+
+      expect(tooltipRows(c)).toEqual(['Long 0: 1']);
+    });
+
+    it('flips the tooltip at the right edge by the size of what it now shows', async () => {
+      const wide = 'W'.repeat(120);
+      const c = await render({
+        valuesSubject: [
+          topic('V', [
+            { x: 0, y: 1 },
+            { x: 20_000, y: 1 }
+          ]),
+          topic(wide, [
+            { x: 15_000, y: 2 },
+            { x: 20_000, y: 2 }
+          ])
+        ]
+      });
+      await hover(c, 2_000);
+      expect(tooltipRows(c)).toEqual(['V 0: 1']);
+
+      // Room for the narrow tooltip on the cursor's right, but not for the wide one that now shows
+      const time = c.scales['x'].getValueForPixel(c.chartArea.right - 60)!;
+      await hover(c, time);
+
+      const tooltip = c.tooltip!;
+      expect(tooltipRows(c).length).toBe(2);
+      expect(tooltip.xAlign).toBe('right');
+      expect(tooltip.x + tooltip.width).toBeLessThanOrEqual(c.chartArea.right);
+    });
+  });
+
   it('hides the axes while there is no data', async () => {
     const c = await render({ valuesSubject: [topic('V', [])], realTime: true });
 

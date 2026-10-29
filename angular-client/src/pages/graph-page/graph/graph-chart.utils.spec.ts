@@ -7,6 +7,8 @@ import {
   DAY_MS,
   formatTimeTick,
   formatTooltipTime,
+  HOVER_SNAP_PX,
+  lineValueAt,
   nearestIndex,
   nearestPerSeries,
   pickTimeStep,
@@ -309,23 +311,68 @@ describe('graph-chart utils', () => {
     });
   });
 
+  describe('lineValueAt', () => {
+    const points = [
+      { x: 10, y: 0 },
+      { x: 20, y: 10 },
+      { x: 30, y: 4 }
+    ];
+
+    it('is a sample at its own time', () => {
+      expect(lineValueAt(points, 20)).toEqual({ x: 20, y: 10 });
+    });
+
+    it('is on the straight line between the samples either side, as the line is drawn', () => {
+      expect(lineValueAt(points, 12.5)).toEqual({ x: 12.5, y: 2.5 });
+      expect(lineValueAt(points, 25)).toEqual({ x: 25, y: 7 });
+    });
+
+    it('snaps to the end sample just past either end, and is null further out', () => {
+      expect(lineValueAt(points, 8, 2)).toEqual({ x: 10, y: 0 });
+      expect(lineValueAt(points, 33, 2)).toBeNull();
+      expect(lineValueAt(points, 31, 2)).toEqual({ x: 30, y: 4 });
+      expect(lineValueAt(points, 5, 2)).toBeNull();
+    });
+
+    it('is null for an empty series', () => {
+      expect(lineValueAt([], 5)).toBeNull();
+    });
+  });
+
   describe('nearestPerSeries', () => {
-    // Two series on unaligned timestamps; the x scale maps pixel p to time 10 * p
+    // Two series on unaligned timestamps; the x scale maps pixel p to time 10 * p across a 40 px plot
     const series = [
-      [{ x: 100 }, { x: 200 }, { x: 300 }],
-      [{ x: 150 }, { x: 260 }]
+      [
+        { x: 100, y: 1 },
+        { x: 200, y: 2 },
+        { x: 300, y: 3 }
+      ],
+      [
+        { x: 150, y: 4 },
+        { x: 260, y: 5 }
+      ]
     ];
     const fakeChart = (visible = [0, 1]) =>
       ({
         isPointInArea: ({ x, y }: { x: number; y: number }) => x >= 0 && x <= 40 && y >= 0 && y <= 40,
-        scales: { x: { getValueForPixel: (px: number) => px * 10 } },
+        scales: {
+          x: {
+            min: 0,
+            max: 400,
+            width: 40,
+            getValueForPixel: (px: number) => px * 10,
+            getPixelForValue: (t: number) => t / 10
+          },
+          y: { getPixelForValue: (v: number) => 40 - v }
+        },
         data: { datasets: series.map((data) => ({ data })) },
+        getDatasetMeta: () => ({ yAxisID: 'y' }),
         getSortedVisibleDatasetMetas: () =>
           visible.map((index) => ({ index, data: series[index].map((point) => ({ point })) }))
       }) as never;
     const at = (x: number, y = 20) => ({ native: null, type: 'mousemove', x, y }) as never;
 
-    it("takes each visible series' sample nearest the cursor's time", () => {
+    it("takes each visible series with data at the cursor's time, with its nearest sample's element", () => {
       const items = nearestPerSeries(fakeChart(), at(25), {} as never);
 
       expect(items.map(({ datasetIndex, index }) => [datasetIndex, index])).toEqual([
@@ -333,6 +380,11 @@ describe('graph-chart utils', () => {
         [1, 1]
       ]);
       expect(items[0].element).toEqual({ point: series[0][1] } as never);
+    });
+
+    it(`leaves out a series with no data within ${HOVER_SNAP_PX} px of the cursor's time`, () => {
+      // Time 50: series 0 starts 5 px later, series 1 10 px later
+      expect(nearestPerSeries(fakeChart(), at(5), {} as never).map((item) => item.datasetIndex)).toEqual([0]);
     });
 
     it('skips series hidden from the legend', () => {

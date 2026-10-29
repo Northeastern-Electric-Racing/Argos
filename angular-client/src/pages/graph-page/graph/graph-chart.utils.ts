@@ -6,12 +6,12 @@ import type {
   ChartType,
   InteractionModeFunction,
   Plugin,
-  PointElement,
   TooltipPosition,
   TooltipPositionerFunction
 } from 'chart.js';
 import { getRelativePosition } from 'chart.js/helpers';
 import type { AnnotationOptions } from 'chartjs-plugin-annotation';
+import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
@@ -248,16 +248,51 @@ export function nearestIndex(points: readonly { x: number }[], x: number): numbe
   return lo > 0 && x - points[lo - 1].x <= points[lo].x - x ? lo - 1 : lo;
 }
 
+/** How far, in pixels, past a series' first or last sample the pointer still hovers that end sample. */
+export const HOVER_SNAP_PX = 8;
+
 /**
- * Interaction mode (registered as `nearestPerSeries`): each visible series' sample nearest the cursor's time,
- * as uPlot's cursor does. Built-in `index` mode assumes every series shares timestamps, which topics don't.
+ * Where a series' line crosses time `x`: linear between the samples either side, as the line is drawn, or the end
+ * sample when `x` is within `snap` of it. Null where the series has no data near `x`, so hover leaves it out.
+ */
+export function lineValueAt(points: readonly GraphData[], x: number, snap = 0): GraphData | null {
+  const [first] = points;
+  const last = points.at(-1);
+  if (!first || !last) return null;
+  if (x <= first.x) return first.x - x <= snap ? first : null;
+  if (x >= last.x) return x - last.x <= snap ? last : null;
+  // first.x < x < last.x, so there is a sample before x and one at or after it
+  const after = binarySearchInsertIndex(points, x);
+  const a = points[after - 1];
+  const b = points[after];
+  return b.x === x ? b : { x, y: a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x) };
+}
+
+/** The point on a dataset's drawn line at a canvas x, in data and canvas units; null where it has no data near. */
+function lineAtPixel(chart: Chart, datasetIndex: number, px: number): { value: GraphData; x: number; y: number } | null {
+  const xScale = chart.scales['x'];
+  const time = xScale.getValueForPixel(px);
+  if (time === undefined) return null;
+  const snap = (HOVER_SNAP_PX * (xScale.max - xScale.min)) / (xScale.width || 1);
+  // Decimation swaps a dataset's data for the decimated points, which is what its line is drawn through
+  const value = lineValueAt(chart.data.datasets[datasetIndex].data as GraphData[], time, snap);
+  if (!value) return null;
+  const yScale = chart.scales[chart.getDatasetMeta(datasetIndex).yAxisID ?? 'y'];
+  return { value, x: xScale.getPixelForValue(value.x), y: yScale.getPixelForValue(value.y) };
+}
+
+/**
+ * Interaction mode (registered as `nearestPerSeries`): every visible series with data at the cursor's time, as
+ * uPlot's cursor does. Built-in `index` mode assumes every series shares timestamps, which topics don't. Each item
+ * carries its nearest sample's element, which Chart.js needs; the hover dot and the tooltip's value come from the
+ * line at the cursor's time instead (see cursorPlugin and the tooltip's label callback).
  */
 export const nearestPerSeries: InteractionModeFunction = (chart, event) => {
   const position = getRelativePosition(event, chart);
   if (!chart.isPointInArea(position)) return [];
   const time = chart.scales['x'].getValueForPixel(position.x) ?? 0;
   return chart.getSortedVisibleDatasetMetas().flatMap(({ index: datasetIndex, data: elements }) => {
-    // Decimation swaps a dataset's data for the decimated points, which is what its elements are built from
+    if (!lineAtPixel(chart, datasetIndex, position.x)) return [];
     const index = nearestIndex(chart.data.datasets[datasetIndex].data as { x: number }[], time);
     const element = elements[index];
     return element ? [{ element, datasetIndex, index }] : [];
@@ -285,18 +320,29 @@ export function placeTooltip(
   };
 }
 
-/** Tooltip positioner (registered as `cursor`). It runs before the tooltip is measured, so it flips on last frame's size. */
+/**
+ * Tooltip positioner (registered as `cursor`). It runs before the tooltip measures what it now shows, so it flips on
+ * the last size; cursorPlugin re-places the tooltip when the new size flips it differently.
+ */
 export const cursorPositioner: TooltipPositionerFunction<ChartType> = function (items, eventPosition) {
   const { x, y } = eventPosition;
   return items.length > 0 && x !== null && y !== null && placeTooltip({ x, y }, this, this.chart.chartArea);
 };
 
+/** The hover dot drawn on each line at the cursor's time. */
+const HOVER_DOT = { radius: 4, borderColor: '#101010', borderWidth: 2 };
 /** uPlot's cursor line color. */
 const CURSOR_COLOR = '#607D8B';
 /** The pointer's position over each chart's plot area; null once it leaves. */
 const cursors = new WeakMap<Chart, Cursor | null>();
 /** The cursor each chart last drew, so pointer moves off the plot don't redraw it for nothing. */
 const drawnCursors = new WeakMap<Chart, Cursor | null>();
+
+/** Where the pointer's time crosses a dataset's line, in data and canvas units; null off the plot or away from data. */
+export function lineAtCursor(chart: Chart, datasetIndex: number): { value: GraphData; x: number; y: number } | null {
+  const cursor = cursors.get(chart);
+  return cursor ? lineAtPixel(chart, datasetIndex, cursor.x) : null;
+}
 
 /** Hides the cursor lines, dots and tooltip until the pointer next moves, e.g. after a zoom moved the data under it. */
 export function hideCursor(chart: Chart): void {
@@ -319,10 +365,21 @@ export const cursorPlugin: Plugin<'line'> = {
     cursors.set(chart, type !== 'mouseout' && inChartArea && x !== null && y !== null ? { x, y } : null);
   },
   afterEvent(chart, args) {
-    if (!cursors.get(chart) && (chart.getActiveElements().length || chart.tooltip?.getActiveElements().length)) {
+    const cursor = cursors.get(chart);
+    if (!cursor && (chart.getActiveElements().length || chart.tooltip?.getActiveElements().length)) {
       hideCursor(chart);
     }
-    if (cursors.get(chart) !== drawnCursors.get(chart)) args.changed = true;
+    // The tooltip was placed before it measured its new rows; place it again if their size flips it
+    const { tooltip } = chart;
+    if (cursor && tooltip?.getActiveElements().length) {
+      const { xAlign, yAlign } = placeTooltip(cursor, tooltip, chart.chartArea);
+      if (xAlign !== tooltip.xAlign || yAlign !== tooltip.yAlign) {
+        // Tooltip#update isn't in the TooltipModel type; setActiveElements would also stop live replays updating it
+        (tooltip as unknown as { update(changed: boolean, replay: boolean): void }).update(true, true);
+        args.changed = true;
+      }
+    }
+    if (cursor !== drawnCursors.get(chart)) args.changed = true;
   },
   afterDatasetsDraw(chart) {
     const cursor = cursors.get(chart) ?? null;
@@ -346,8 +403,22 @@ export const cursorPlugin: Plugin<'line'> = {
     ctx.moveTo(chartArea.left, y);
     ctx.lineTo(chartArea.right, y);
     ctx.stroke();
+    // A dot where each hovered line crosses the cursor's time, in its series' color, ringed in the page background
+    // so it stays visible on its own dense line
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = HOVER_DOT.borderWidth;
+    ctx.strokeStyle = HOVER_DOT.borderColor;
+    for (const { datasetIndex } of chart.getActiveElements()) {
+      const point = lineAtPixel(chart, datasetIndex, cursor.x);
+      if (!point) continue;
+      ctx.fillStyle = chart.data.datasets[datasetIndex].borderColor as string;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, HOVER_DOT.radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+    }
     ctx.restore();
-    chart.getActiveElements().forEach(({ element }) => (element as PointElement).draw(ctx, chartArea));
   },
   beforeTooltipDraw: (chart) => !chart.isZoomingOrPanning()
 };
@@ -375,15 +446,9 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
     // The x-axis reserves half of an edge tick's label as it arrives; fixed room keeps the plot from jumping
     layout: { padding: { right: 32, left: 8 } },
     elements: {
-      // Hover dots in their series' color (Chart.js darkens it by default), ringed in the page background so a
-      // dot stays visible on its own dense line
-      point: {
-        radius: 0,
-        hoverRadius: 4,
-        hoverBackgroundColor: (context) => context.dataset.borderColor as string,
-        hoverBorderColor: '#101010',
-        hoverBorderWidth: 2
-      },
+      // No sample dots, hovered or not: cursorPlugin draws the hover dot where the line crosses the cursor's time,
+      // which is off the nearest sample between samples
+      point: { radius: 0, hoverRadius: 0 },
       line: { borderWidth: 3, tension: 0 }
     },
     scales: {
@@ -445,7 +510,11 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
             const time = cursor ? chart.scales['x'].getValueForPixel(cursor.x) : first.parsed.x;
             return formatTooltipTime(time ?? 0, max - min);
           },
-          label: (item) => `${item.dataset.label}: ${tooltipNumber.format(item.parsed.y ?? NaN)}`,
+          // The line's value at the cursor's time, where its hover dot sits
+          label: (item) => {
+            const value = lineAtCursor(item.chart, item.datasetIndex)?.value.y ?? item.parsed.y;
+            return `${item.dataset.label}: ${tooltipNumber.format(value ?? NaN)}`;
+          },
           labelPointStyle: () => ({ pointStyle: 'circle', rotation: 0 }),
           labelColor: ({ dataset }) => ({
             borderColor: dataset.borderColor as string,
