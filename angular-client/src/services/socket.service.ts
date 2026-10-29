@@ -21,6 +21,45 @@ function getOrCreateClientId(): string {
   return id;
 }
 
+// The server gives up on a client after three missed check-ins (15s)
+const CHECK_IN_INTERVAL_MS = 5000;
+
+export interface RuleCheckIn {
+  stream: string | null;
+  last_seq: number;
+}
+
+/**
+ * Tracks which numbered rule notifications have been received, so resends are skipped and the
+ * client can check in with the last one it got with no gaps before it.
+ */
+export class RuleNotificationTracker {
+  private stream: string | null = null;
+  private lastSeq = 0;
+  // received past a gap, waiting for the gap to fill
+  private ahead = new Set<number>();
+
+  constructor(private addNotification: (notification: RuleNotification) => void) {}
+
+  /** Adds a notification not seen before. Throws without counting it if adding fails. */
+  receive(message: RuleNotification): void {
+    if (message.stream !== this.stream) {
+      this.stream = message.stream;
+      this.lastSeq = 0;
+      this.ahead.clear();
+    }
+    if (message.seq <= this.lastSeq || this.ahead.has(message.seq)) return;
+
+    this.addNotification(message);
+    this.ahead.add(message.seq);
+    while (this.ahead.delete(this.lastSeq + 1)) this.lastSeq++;
+  }
+
+  checkIn(): RuleCheckIn {
+    return { stream: this.stream, last_seq: this.lastSeq };
+  }
+}
+
 /**
  * Service for interacting with the socket
  */
@@ -95,13 +134,20 @@ export default class SocketService {
       }
     });
 
+    const tracker = new RuleNotificationTracker((notification) => notificationLogService.addNotification(notification));
     this.socket.on('rule_notify', (message: RuleNotification) => {
       try {
-        notificationLogService.addNotification(message);
+        tracker.receive(message);
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
     });
+    // check in on every (re)connect and regularly after, so the server resends what was missed
+    const checkIn = () => {
+      if (this.socket.connected) this.socket.emit('rule_checkin', tracker.checkIn());
+    };
+    this.socket.on('connect', checkIn);
+    setInterval(checkIn, CHECK_IN_INTERVAL_MS);
 
     this.socket.on('disconnect', () => {
       storage.setCurrentRunId(undefined);
