@@ -33,28 +33,28 @@ export class SegmentSummaryComponent implements OnInit {
   }
 
   subscribeAndUpdateTemperature = () => {
-    const segmentInfo = this.getRelevantKeys();
+    const keys = this.getRelevantKeys();
 
     this.storage
-      .get(segmentInfo.segmentTempKey)
+      .get(keys.segmentTempKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
         this.temperature = parseFloat(value.values[0]);
       });
     this.storage
-      .get(segmentInfo.alphaChipTempKey)
+      .get(keys.alphaChipTempKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
         this.alphaChipTemp = parseFloat(value.values[0]);
       });
     this.storage
-      .get(segmentInfo.betaChipTempKey)
+      .get(keys.betaChipTempKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
         this.betaChipTemp = parseFloat(value.values[0]);
       });
     this.storage
-      .get(segmentInfo.voltageKey)
+      .get(keys.voltageKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
         this.voltage = parseFloat(value.values[0]);

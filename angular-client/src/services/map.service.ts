@@ -23,6 +23,8 @@ export class MapService {
   };
 
   addCoordinateToPolyline = (coordinate: Coordinate) => {
+    // the build's TypeScript types getSource() as a union without _data/setData; the TS 7 lint engine disagrees
+    // oxlint-disable-next-line typescript/no-unnecessary-type-assertion
     const source = this.map.getSource('route') as any;
 
     const data = source._data;
@@ -77,8 +79,8 @@ export class MapService {
       if (coordinates.length === 0) return;
 
       const bounds = coordinates.reduce(
-        (bounds, coord) => {
-          return bounds.extend(coord);
+        (acc, coord) => {
+          return acc.extend(coord);
         },
         new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
       );

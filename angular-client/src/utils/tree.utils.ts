@@ -75,7 +75,7 @@ export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLe
   const collect = (nodes: TreeNode<TreeNodeData>[]): void => {
     for (const node of nodes) {
       if (node.children?.length) {
-        collect(node.children as TreeNode<TreeNodeData>[]);
+        collect(node.children);
       } else if (node.selectable && node.data?.dataType) {
         leaves.push({
           ...node,
@@ -120,7 +120,7 @@ export function findSelectedTreeNodes(
         parents.forEach((p) => containsSelected.set(p, true));
       }
       if (node.children?.length) {
-        search(node.children as TreeNode<TreeNodeData>[], [...parents, node]);
+        search(node.children, [...parents, node]);
       }
     }
   };

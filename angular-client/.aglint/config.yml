@@ -13,7 +13,7 @@ capabilities:
   layering:
     tools: [depcruise]
   # the whole-repo oxlint step fails above this many warnings; today's backlog, so it can only go down
-  lint: {max_warnings: 73}
+  lint: {max_warnings: 6}
   types: {}
   blind-spots: {}
   purity: {}

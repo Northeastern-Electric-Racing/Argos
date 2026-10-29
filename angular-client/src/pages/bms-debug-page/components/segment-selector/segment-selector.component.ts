@@ -44,7 +44,9 @@ export class SegmentSelectorComponent implements OnInit {
 
   ngOnInit() {
     this.placeholder = this.router.url.includes('bms')
-      ? `${this.router.url.split('/').pop() === 'bms' ? 'Accumulator' : 'Segment ' + this.router.url.split('/').pop()}`
+      ? this.router.url.split('/').pop() === 'bms'
+        ? 'Accumulator'
+        : 'Segment ' + this.router.url.split('/').pop()
       : 'Select Segment';
   }
 }

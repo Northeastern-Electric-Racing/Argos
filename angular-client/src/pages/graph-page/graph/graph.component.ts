@@ -195,7 +195,7 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
             formatter: isMultiDay ? this.multiDayLabelFormatter : this.singleDayLabelFormatter
           }
         },
-        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span!) : [] }
+        annotations: { xaxis: isMultiDay ? this.buildDayBoundaryAnnotations(span) : [] }
       },
       false, // redraw (default is false)
       false // animate (default is true)
