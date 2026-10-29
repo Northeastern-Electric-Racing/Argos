@@ -3400,6 +3400,7 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "evalexpr",
+ "futures-util",
  "protobuf",
  "protobuf-codegen",
  "rangemap",

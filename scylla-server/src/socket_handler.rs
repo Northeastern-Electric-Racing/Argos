@@ -7,11 +7,11 @@ use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::SocketRef;
 use socketioxide::handler::{FromConnectParts, Value};
-use socketioxide::socket::{Sid, Socket};
+use socketioxide::socket::Socket;
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
-use tokio::sync::{RwLock, broadcast};
+use tokio::sync::{broadcast, mpsc};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
@@ -21,7 +21,8 @@ use crate::metadata_structs::{
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
     map_dti_flt,
 };
-use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::notification_delivery::NotificationEvent;
+use crate::rule_structs::{ClientId, RuleManager};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -109,6 +110,7 @@ pub async fn socket_handler_with_metadata(
     cancel_token: CancellationToken,
     mut data_channel: broadcast::Receiver<ClientData>,
     rules_manager: Arc<RuleManager>,
+    notification_events: mpsc::UnboundedSender<NotificationEvent>,
     argos_inserter: ArgosInserter,
     io: SocketIo,
 ) {
@@ -149,16 +151,11 @@ pub async fn socket_handler_with_metadata(
     // END METADATA
 
     // BEGIN rules
-    // socket_map must not be written outside of these closures.
-    // a map of client_ids to their respective socket IDs for identifying where notifications go
-    let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
-        Arc::new(RwLock::new(FxHashMap::default()));
-    let writable_socket_map = client_socket_map.clone();
+    // connections are handed to the notification delivery task, which owns which client is where
+    let connect_events = notification_events.clone();
     io.ns(
         "/",
         |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
-            // unfortunate locking and ref counting due to the async closures
-            let mut owned = writable_socket_map.write().await;
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
                 return;
@@ -168,11 +165,13 @@ pub async fn socket_handler_with_metadata(
                 "Establishing client connection with {} on socket_id {}",
                 client_id, socket.id
             );
-            owned.insert(client_id.clone(), socket.id);
-            drop(owned);
+            let client = ClientId(client_id);
+            let _ =
+                connect_events.send(NotificationEvent::Connected(client.clone(), socket.clone()));
 
+            let sid = socket.id;
             socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id);
+                let _ = connect_events.send(NotificationEvent::Disconnected(client, sid));
             });
         },
     );
@@ -216,7 +215,7 @@ pub async fn socket_handler_with_metadata(
                         //     );
                         // }
                         handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                        handle_rule_processing(&data, &rules_manager, &notification_events).await;
                     }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
@@ -301,51 +300,20 @@ pub async fn socket_handler_with_metadata(
     }
 }
 
-/// Handles triggering rules based on a recieved datapoint
+/// Handles triggering rules based on a recieved datapoint, handing notifications to the delivery task
 async fn handle_rule_processing(
     data: &ClientData,
     rule_manager: &Arc<RuleManager>,
-    client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
-    io: &SocketIo,
+    notification_events: &mpsc::UnboundedSender<NotificationEvent>,
 ) {
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
-
-    for notification in notifs {
-        // Copy the sid and drop the read lock before any async work
-        let sid_opt = {
-            let read_clients = client_socket_map.read().await;
-            read_clients.get(&notification.0.0).copied()
-        };
-        let Some(sid) = sid_opt else {
-            warn!(
-                "Could not find client to deliver notification, deleting client {}",
-                notification.0.0
-            );
-            let _ = rule_manager.delete_client(notification.0).await;
-            continue;
-        };
-        debug!(
-            "Sending notification of {} to {}",
-            notification.1.topic, notification.0
-        );
-        let Some(socket) = io.get_socket(sid) else {
-            warn!(
-                "Could not find client socket, deleting client {}",
-                notification.0.0
-            );
-            let _ = rule_manager.delete_client(notification.0).await;
-            continue;
-        };
-        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
-            warn!(
-                "Could not send rule notification to {}, err {}",
-                notification.0, err
-            );
-        } else {
-            debug!("Successfully sent notification to {}", notification.0);
-        }
+    if notification_events
+        .send(NotificationEvent::Fired(notifs))
+        .is_err()
+    {
+        warn!("Notification delivery task is gone, dropping notifications");
     }
 }
 
