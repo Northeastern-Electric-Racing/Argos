@@ -17,15 +17,26 @@ const topic = (label: string, points: GraphData[]): ObservableGraphInfo => ({
   updates: new BehaviorSubject<GraphData[][]>([points])
 });
 
+/** The chart box's size; jsdom does no layout, so the spec supplies it (see beforeEach). */
+const CHART_SIZE = { width: 600, height: 300 };
+
 describe('CustomGraphComponent (Chart.js)', () => {
   let fixture: ComponentFixture<CustomGraphComponent>;
 
+  beforeEach(() => {
+    // Chart.js sizes the canvas to its container's getBoundingClientRect(), which is 0 x 0 in jsdom. A 0 px wide
+    // chart has no room for x ticks, and decimates any series of more than 4 x 0 points down to its first one.
+    const layout = Element.prototype.getBoundingClientRect;
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      return this.classList.contains('chart-container')
+        ? new DOMRect(0, 0, CHART_SIZE.width, CHART_SIZE.height)
+        : layout.call(this);
+    });
+  });
+
   async function render(inputs: Partial<Record<string, unknown>>): Promise<Chart> {
     fixture = TestBed.createComponent(CustomGraphComponent);
-    const host = fixture.nativeElement as HTMLElement;
-    host.style.width = '600px';
-    host.style.height = '300px';
-    document.body.appendChild(host);
+    document.body.appendChild(fixture.nativeElement as HTMLElement);
     fixture.componentRef.setInput('graphConfig', BASE_CONFIG);
     for (const [name, value] of Object.entries(inputs)) {
       fixture.componentRef.setInput(name, value);
