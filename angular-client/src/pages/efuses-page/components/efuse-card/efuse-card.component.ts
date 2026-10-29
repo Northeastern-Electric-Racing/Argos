@@ -144,6 +144,20 @@ export default class EfuseCardComponent implements OnInit {
   private resolvedFaultedDataType = computed(() => this.faultedDataType() ?? this.efuseTopicBundle().Faulted);
   private resolvedEnabledDataType = computed(() => this.enabledDataType() ?? this.efuseTopicBundle().Enabled);
 
+  /** The VCU telemetry this card shows, opened on the graph page from the card's title bar */
+  graphTopics = computed(() => {
+    const autoDataType = this.autoDataType();
+    return [
+      this.resolvedCurrentDataType(),
+      this.resolvedVoltageDataType(),
+      this.resolvedAdcDataType(),
+      this.resolvedFaultedDataType(),
+      this.resolvedEnabledDataType(),
+      this.resolvedControlStateDataType(),
+      ...(autoDataType ? [autoDataType] : [])
+    ];
+  });
+
   /** The command key to send to Calypso (falls back to efuseName) */
   resolvedCommandKey = computed(() => this.commandKey() ?? this.efuseName());
 

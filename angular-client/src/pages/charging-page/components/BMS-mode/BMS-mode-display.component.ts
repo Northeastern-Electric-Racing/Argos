@@ -23,6 +23,7 @@ enum BMSMODE {
 export default class BMSModeDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.bmsMode()];
   bmsMode: BMSMODE = 1;
 
   private colorMap: { [key in BMSMODE]: string } = {

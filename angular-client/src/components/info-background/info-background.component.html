@@ -17,6 +17,19 @@
           <ui-icon class="mr-3" [svg]="svgIcon" />
         }
         <typography variant="info-title" content="{{ title }}" />
+        @if (this.graphTopics().length > 0) {
+          <button
+            type="button"
+            uiIconButton
+            size="sm"
+            class="ml-2"
+            aria-label="Open in graph"
+            title="Open in graph"
+            (click)="openGraph($event)"
+          >
+            <ui-icon name="show_chart" />
+          </button>
+        }
       </div>
       @if (button(); as btn) {
         <button

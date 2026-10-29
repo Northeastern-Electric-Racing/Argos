@@ -18,4 +18,5 @@ export default class PackVoltageMobileDisplayComponent {
   voltage = input<number>(0);
   packVoltData = input<GraphData[]>([]);
   resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
+  graphTopics = input<string[]>([]);
 }
