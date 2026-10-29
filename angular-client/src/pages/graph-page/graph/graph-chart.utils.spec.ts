@@ -1,5 +1,6 @@
 import {
   buildBaseOptions,
+  buildCsv,
   buildDayBoundaryAnnotations,
   buildTimeTicks,
   buildYScales,
@@ -393,6 +394,58 @@ describe('graph-chart utils', () => {
 
     it('hovers nothing outside the plot area', () => {
       expect(nearestPerSeries(fakeChart(), at(25, 60), {} as never)).toEqual([]);
+    });
+  });
+
+  describe('buildCsv', () => {
+    const iso = (t: number) => new Date(t).toISOString();
+
+    it('writes a time column, then one column per series, in series order', () => {
+      const csv = buildCsv(
+        new Map([
+          ['V 0', [{ x: 1000, y: 400 }]],
+          ['I 0', [{ x: 1000, y: 20 }]]
+        ])
+      );
+
+      expect(csv).toBe(`time,V 0,I 0\r\n${iso(1000)},400,20\r\n`);
+    });
+
+    it('merges series on their own timestamps, leaving a cell blank where a series has no sample', () => {
+      const csv = buildCsv(
+        new Map([
+          [
+            'A',
+            [
+              { x: 1000, y: 1 },
+              { x: 3000, y: 3 }
+            ]
+          ],
+          ['B', [{ x: 2000, y: 2 }]]
+        ])
+      );
+
+      expect(csv.split('\r\n')).toEqual(['time,A,B', `${iso(1000)},1,`, `${iso(2000)},,2`, `${iso(3000)},3,`, '']);
+    });
+
+    it('keeps every sample, even two of one series at the same time', () => {
+      const csv = buildCsv(
+        new Map([
+          [
+            'A',
+            [
+              { x: 1000, y: 1 },
+              { x: 1000, y: 2 }
+            ]
+          ]
+        ])
+      );
+
+      expect(csv.split('\r\n').slice(1, 3)).toEqual([`${iso(1000)},1`, `${iso(1000)},2`]);
+    });
+
+    it('quotes a series name holding a comma or a quote', () => {
+      expect(buildCsv(new Map([['a,"b"', []]]))).toBe('time,"a,""b"""\r\n');
     });
   });
 

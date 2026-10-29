@@ -108,6 +108,28 @@ export function computeDataSpan(data: Map<string, GraphData[]>): DataSpan | null
   return { minX, maxX, spanMs: maxX - minX };
 }
 
+/** A CSV field, quoted when it holds a comma, a quote or a line break. */
+const csvField = (value: string): string => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+
+/**
+ * The graph's data as CSV: an ISO 8601 UTC `time` column, then one column per series. Topics sample on their own
+ * clocks, so rows are the series' timestamps merged in order, with a blank cell where a series has no sample.
+ */
+export function buildCsv(data: ReadonlyMap<string, readonly GraphData[]>): string {
+  const series = Array.from(data.values());
+  const lines = [['time', ...data.keys()].map(csvField).join(',')];
+  // A k-way merge of the sorted series: each row takes the next sample of every series at the earliest time left
+  const next = series.map(() => 0);
+  for (;;) {
+    let time = Infinity;
+    series.forEach((points, i) => (time = Math.min(time, points[next[i]]?.x ?? Infinity)));
+    if (time === Infinity) break;
+    const cells = series.map((points, i) => (points[next[i]]?.x === time ? String(points[next[i]++].y) : ''));
+    lines.push([new Date(time).toISOString(), ...cells].join(','));
+  }
+  return lines.join('\r\n') + '\r\n';
+}
+
 const SECOND_MS = 1000;
 const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;

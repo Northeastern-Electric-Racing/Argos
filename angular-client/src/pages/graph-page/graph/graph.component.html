@@ -28,6 +28,13 @@
       [disabled]="!hasData()"
       additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
     />
+    <argos-button
+      label="Save CSV"
+      size="sm"
+      [onClick]="saveCsv"
+      [disabled]="!hasData()"
+      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+    />
   </div>
   <div class="chart-container">
     <canvas

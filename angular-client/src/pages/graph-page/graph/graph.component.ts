@@ -33,6 +33,7 @@ import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils';
 import {
   buildBaseOptions,
+  buildCsv,
   buildDayBoundaryAnnotations,
   buildYScales,
   computeDataSpan,
@@ -49,6 +50,14 @@ Interaction.modes.nearestPerSeries = nearestPerSeries;
 Tooltip.positioners.cursor = cursorPositioner;
 
 type LineDataset = ChartDataset<'line', GraphData[]>;
+
+/** Saves a URL's content as argos-graph-<time>.<extension>. */
+function download(href: string, extension: string): void {
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = `argos-graph-${new Date().toISOString().replace(/[:.]/g, '-')}.${extension}`;
+  link.click();
+}
 
 @Component({
   selector: 'graph',
@@ -314,6 +323,14 @@ export default class CustomGraphComponent implements OnDestroy {
     this.zoomed.set(true);
   }
 
+  /** Downloads every series the graph holds as CSV, at full resolution (not the decimated points drawn). */
+  saveCsv = () => {
+    const url = URL.createObjectURL(new Blob([buildCsv(this.data)], { type: 'text/csv' }));
+    download(url, 'csv');
+    // Released once the click has handed the file to the browser's download
+    setTimeout(() => URL.revokeObjectURL(url));
+  };
+
   /** Downloads the chart as a PNG, on the page's background (the canvas itself is transparent). */
   savePng = () => {
     const { chart } = this;
@@ -325,10 +342,7 @@ export default class CustomGraphComponent implements OnDestroy {
     context.fillStyle = getComputedStyle(document.body).backgroundColor;
     context.fillRect(0, 0, image.width, image.height);
     context.drawImage(chart.canvas, 0, 0);
-    const link = document.createElement('a');
-    link.href = image.toDataURL('image/png');
-    link.download = `argos-graph-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-    link.click();
+    download(image.toDataURL('image/png'), 'png');
   };
 
   resetRange() {

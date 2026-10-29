@@ -58,7 +58,10 @@ describe('CustomGraphComponent (Chart.js)', () => {
     return fixture.debugElement.query(By.directive(BaseChartDirective)).injector.get(BaseChartDirective).chart!;
   }
 
-  afterEach(() => fixture?.destroy());
+  afterEach(() => {
+    fixture?.destroy();
+    vi.unstubAllGlobals();
+  });
 
   it('draws one line per topic value with its points', async () => {
     const c = await render({
@@ -326,6 +329,36 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(saved.href).toMatch(/^data:image\/png/);
   });
 
+  it('downloads the graph data as CSV from the toolbar', async () => {
+    await render({
+      valuesSubject: [
+        topic('V', [
+          { x: 0, y: 1 },
+          { x: 1000, y: 2 }
+        ])
+      ]
+    });
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      'URL',
+      class extends URL {
+        static override createObjectURL = (blob: Blob) => (blobs.push(blob), 'blob:graph');
+        static override revokeObjectURL = vi.fn();
+      }
+    );
+    const download = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+    toolbarButton('Save CSV').click();
+
+    expect(download).toHaveBeenCalledTimes(1);
+    const saved = download.mock.contexts.at(-1) as unknown as HTMLAnchorElement;
+    expect(saved.download).toMatch(/\.csv$/);
+    expect(blobs[0].type).toBe('text/csv');
+    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V 0');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:graph');
+  });
+
   const emptyMessage = () => (fixture.nativeElement as HTMLElement).querySelector('.empty-state')?.textContent?.trim();
 
   it('asks for a topic, instead of drawing epoch-zero axes, when none is selected', async () => {
@@ -334,6 +367,7 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(emptyMessage()).toBe('Select a topic to graph');
     expect(toolbarButton('Zoom In').disabled).toBe(true);
     expect(toolbarButton('Save PNG').disabled).toBe(true);
+    expect(toolbarButton('Save CSV').disabled).toBe(true);
   });
 
   it('says it is waiting until a selected topic has points, then draws them', async () => {
