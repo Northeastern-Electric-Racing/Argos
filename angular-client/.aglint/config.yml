@@ -12,12 +12,14 @@ capabilities:
   banned-apis: {}
   layering:
     tools: [depcruise]
-  lint: {}
+  # the whole-repo oxlint step fails above this many warnings; today's backlog, so it can only go down
+  lint: {max_warnings: 73}
   types: {}
   blind-spots: {}
   purity: {}
   outcomes-static: {}
-  runtime-trace: {}
+  # no auth SDK in Argos, so no auth hook to expect
+  runtime-trace: {hooks: [http, storage, exec]}
   tests: {}
 package_manager: npm
 test_runner: ng-test

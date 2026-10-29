@@ -26,7 +26,7 @@
  *    Intl.* (locale dependent, treated as pure), non-mutating data methods on any receiver (trim, map, filter, ...;
  *    a non-literal callback argument to a higher-order one is reported as unresolved), Angular signal reads and
  *    set/update (and reads of fields initialised by an @angular/core creator, matched by field name), free functions of @angular/core, @angular/core/rxjs-interop and rxjs, and Observable
- *    pipe/subscribe/then (their callbacks are lexically inside the function). Everything else that does not resolve to
+ *    pipe/subscribe/then/catch/finally (their callbacks are lexically inside the function). Everything else that does not resolve to
  *    app code (router.navigateByUrl, next(req), localStorage.getItem, Date.now, console.log, ...) is unresolved.
  */
 import javascript
@@ -111,7 +111,7 @@ private string pureMethod() {
       "startsWith", "endsWith", "includes", "indexOf", "lastIndexOf", "slice", "substring", "substr", "split", "join",
       "concat", "at", "keys", "values", "entries", "toFixed", "toString", "localeCompare", "replace", "replaceAll",
       "padStart", "padEnd", "repeat", "charAt", "charCodeAt", "normalize", "match", "test", "format", "clone"
-    ] or result = higherOrderMethod() or result = ["pipe", "subscribe", "then"]
+    ] or result = higherOrderMethod() or result = ["pipe", "subscribe", "then", "catch", "finally"]
 }
 
 private string higherOrderMethod() {

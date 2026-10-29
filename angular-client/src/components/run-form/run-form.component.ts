@@ -81,6 +81,7 @@ export class RunFormComponent implements OnInit {
       )
         .then((response) => {
           if (!response.ok) throw new Error(`Run update failed (${response.status})`);
+          return response;
         })
         .catch((error: Error) => {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });

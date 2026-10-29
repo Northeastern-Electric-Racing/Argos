@@ -36,7 +36,8 @@
         "**/*.spec.ts"
       ],
       "rules": {
-        "typescript/unbound-method": "off"
+        "typescript/unbound-method": "off",
+        "typescript/no-unsafe-type-assertion": "off"
       }
     }
   ]

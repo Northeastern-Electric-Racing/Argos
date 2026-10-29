@@ -1,2 +1,10 @@
 version: 1
-accepted: []
+accepted:
+  - id: AG-6404e144
+    rule: new-semgrep-finding
+    evidence_key: f:8856f0414f1467cc4bba4f377494b6cb00452d21
+    summary: 'semgrep-baseline: New HTTP write (''POST'') to the backend; check it is meant and goes through src/api/. (src/api/mediamtx.api.ts:18)'
+    reason: MediaMTX WHEP offer moved from MediaMTXReader into src/api/mediamtx.api.ts on purpose (all fetch calls go through src/api)
+    expires: 2027-01-29
+    by: Claude
+    created: 2026-10-29

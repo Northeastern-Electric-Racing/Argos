@@ -72,6 +72,8 @@ export default class CustomGraphComponent implements OnInit, OnDestroy {
         // Apply the range to every current axis; spreading the axis array into one object
         // collapsed the per-topic axes into a single axis keyed '0', '1', ...
         const axes = this.options.yaxis.length ? this.options.yaxis : [{}];
+        // a handful of axes; copying (not mutating) leaves the options apexcharts already holds untouched
+        // oxlint-disable-next-line oxc/no-map-spread
         this.options.yaxis = axes.map((axis) => ({
           ...axis,
           labels: {
