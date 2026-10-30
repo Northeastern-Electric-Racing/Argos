@@ -131,7 +131,7 @@
   justify-content: center;
   gap: var(--ui-space-2);
   min-height: var(--ui-control-height);
-  padding: 0 var(--ui-space-4);
+  padding: 0 var(--ui-button-padding-x, var(--ui-space-4));
   border: 1px solid var(--ui-button-border);
   border-radius: var(--ui-radius);
   background: var(--ui-button-bg);
@@ -223,13 +223,14 @@
 }
 .ui-button--sm {
   min-height: var(--ui-control-height-sm);
-  padding: 0 var(--ui-space-3);
+  padding: 0 var(--ui-button-padding-x, var(--ui-space-3));
   border-radius: var(--ui-radius-sm);
   font-size: var(--ui-font-xs);
 }
+/* The legacy 140x45 footprint; a page can shrink it with --ui-button-lg-min-width / -min-height. */
 .ui-button--lg {
-  min-width: 140px;
-  min-height: 45px;
+  min-width: var(--ui-button-lg-min-width, 140px);
+  min-height: var(--ui-button-lg-min-height, 45px);
   font-size: var(--ui-font-md);
 }
 .ui-button--block {
