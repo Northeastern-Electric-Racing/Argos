@@ -44,6 +44,11 @@ export type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
 
 export type DataSpan = { minX: number; maxX: number; spanMs: number };
 
+/** A series' name for people: a single-value topic's series is "<topic> 0", so it goes by the topic alone. */
+export function seriesTitle(key: string): string {
+  return key.replace(/ 0$/, '');
+}
+
 /** Chart.js scale id of a series' y-axis: the shared `y` axis, or one axis per series when multi-axis is on. */
 export function yAxisIdFor(index: number, multipleYAxes: boolean): string {
   return multipleYAxes && index > 0 ? `y${index}` : 'y';
@@ -85,8 +90,7 @@ export function buildYScales(
       ticks: { color: colors[index] ?? TICK_COLOR },
       title: {
         display: true,
-        // A single-value topic's series is "<topic> 0"; title it by the topic alone
-        text: key.replace(/ 0$/, ''),
+        text: seriesTitle(key),
         color: colors[index] ?? 'grey',
         font: { size: 20, weight: 'bold' }
       }
@@ -112,12 +116,19 @@ export function computeDataSpan(data: Map<string, GraphData[]>): DataSpan | null
 const csvField = (value: string): string => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
 
 /**
- * The graph's data as CSV: an ISO 8601 UTC `time` column, then one column per series. Topics sample on their own
- * clocks, so rows are the series' timestamps merged in order, with a blank cell where a series has no sample.
+ * A text CSV field, with a leading ' when it starts like a spreadsheet formula (OWASP's CSV injection advice).
+ * Values are numbers, written as they are, so negative ones stay numbers.
+ */
+const csvText = (value: string): string => csvField(/^[=+\-@\t\r]/.test(value) ? `'${value}` : value);
+
+/**
+ * The graph's data as CSV: an ISO 8601 UTC `time` column, then one column per series, headed by its seriesTitle.
+ * Topics sample on their own clocks, so rows are the series' timestamps merged in order, with a blank cell where a
+ * series has no sample.
  */
 export function buildCsv(data: ReadonlyMap<string, readonly GraphData[]>): string {
   const series = Array.from(data.values());
-  const lines = [['time', ...data.keys()].map(csvField).join(',')];
+  const lines = [['time', ...Array.from(data.keys(), seriesTitle)].map(csvText).join(',')];
   // A k-way merge of the sorted series: each row takes the next sample of every series at the earliest time left
   const next = series.map(() => 0);
   for (;;) {

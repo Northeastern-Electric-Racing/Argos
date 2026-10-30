@@ -320,9 +320,13 @@ export default class CustomGraphComponent implements OnDestroy {
     this.chart?.zoom({ x: factor }, 'none');
   }
 
-  /** Downloads every series the graph holds as CSV, at full resolution (not the decimated points drawn). */
+  /** Downloads the series shown (not hidden from the legend) as CSV, at full resolution, not the decimated points drawn. */
   saveCsv = () => {
-    const url = URL.createObjectURL(new Blob([buildCsv(this.data)], { type: 'text/csv' }));
+    const { chart } = this;
+    // Datasets follow the data's order; a series added since the last frame has none yet, and isn't hidden
+    const datasets = chart?.data.datasets.length ?? 0;
+    const shown = new Map(Array.from(this.data).filter((_, i) => i >= datasets || chart!.isDatasetVisible(i)));
+    const url = URL.createObjectURL(new Blob([buildCsv(shown)], { type: 'text/csv' }));
     download(url, 'csv');
     // Released once the click has handed the file to the browser's download
     setTimeout(() => URL.revokeObjectURL(url));

@@ -444,7 +444,7 @@ describe('graph-chart utils', () => {
         ])
       );
 
-      expect(csv).toBe(`time,V 0,I 0\r\n${iso(1000)},400,20\r\n`);
+      expect(csv).toBe(`time,V,I\r\n${iso(1000)},400,20\r\n`);
     });
 
     it('merges series on their own timestamps, leaving a cell blank where a series has no sample', () => {
@@ -482,6 +482,30 @@ describe('graph-chart utils', () => {
 
     it('quotes a series name holding a comma or a quote', () => {
       expect(buildCsv(new Map([['a,"b"', []]]))).toBe('time,"a,""b"""\r\n');
+    });
+
+    it("heads a single-value topic's column with the topic alone, as its axis title does", () => {
+      expect(
+        buildCsv(
+          new Map([
+            ['BMS/Segment_Temp/0 0', []],
+            ['Motor/Phase 1', []]
+          ])
+        )
+      ).toBe('time,BMS/Segment_Temp/0,Motor/Phase 1\r\n');
+    });
+
+    it('keeps a spreadsheet from running a series name as a formula, but leaves negative values numbers', () => {
+      const csv = buildCsv(
+        new Map([
+          ['=HYPERLINK("x") 0', [{ x: 1000, y: -1.5 }]],
+          ['+A 0', []],
+          ['-B 0', []],
+          ['@C 0', []]
+        ])
+      );
+
+      expect(csv.split('\r\n').slice(0, 2)).toEqual([`time,"'=HYPERLINK(""x"")",'+A,'-B,'@C`, `${iso(1000)},-1.5,,,`]);
     });
   });
 

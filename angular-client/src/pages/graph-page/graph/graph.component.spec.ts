@@ -423,9 +423,30 @@ describe('CustomGraphComponent (Chart.js)', () => {
     const saved = download.mock.contexts.at(-1) as unknown as HTMLAnchorElement;
     expect(saved.download).toMatch(/\.csv$/);
     expect(blobs[0].type).toBe('text/csv');
-    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V 0');
+    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V');
     await new Promise((resolve) => setTimeout(resolve));
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:graph');
+  });
+
+  it('leaves series hidden from the legend out of the CSV', async () => {
+    const c = await render({
+      valuesSubject: [topic('V', [{ x: 0, y: 1 }]), topic('I', [{ x: 0, y: 2 }]), topic('T', [{ x: 0, y: 3 }])]
+    });
+    c.setDatasetVisibility(1, false);
+    c.update('none');
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      'URL',
+      class extends URL {
+        static override createObjectURL = (blob: Blob) => (blobs.push(blob), 'blob:graph');
+        static override revokeObjectURL = vi.fn();
+      }
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+    toolbarButton('Save CSV').click();
+
+    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V,T');
   });
 
   const emptyMessage = () => (fixture.nativeElement as HTMLElement).querySelector('.empty-state')?.textContent?.trim();
