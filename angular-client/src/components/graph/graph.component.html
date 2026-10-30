@@ -1,1 +1,10 @@
-<div style="height: 100%; width: 100%" [id]="this.graphContainerId()"></div>
+<div class="chart-container">
+  <canvas
+    baseChart
+    type="line"
+    [data]="chartData"
+    [options]="chartOptions"
+    role="img"
+    [attr.aria-label]="title() ?? 'Live graph'"
+  ></canvas>
+</div>
