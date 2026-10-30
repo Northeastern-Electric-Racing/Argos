@@ -6,20 +6,16 @@
       [placeholder]="presetSelectorConfig().placeholder"
       [defaultValue]="activePresetName()"
     />
-    <argos-button
-      [onClick]="openPresetsDialog"
+    <p-button
       label="Manage Presets"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+      icon="pi pi-sliders-h"
+      severity="secondary"
+      size="small"
+      (onClick)="openPresetsDialog()"
     />
   </div>
   <div class="header-row">
-    <argos-button
-      [onClick]="clearSelections"
-      label="Clear Topics"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <p-button label="Clear Topics" icon="pi pi-times" severity="secondary" size="small" (onClick)="clearSelections()" />
     <div class="toggle-group">
       <label class="flatten-toggle">
         <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />

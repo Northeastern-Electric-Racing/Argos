@@ -3,9 +3,8 @@ import Aura from '@primeuix/themes/aura';
 
 /**
  * Aura with NER red as the primary and the app's neutral dark greys as surfaces.
- * Component looks that used to be global `.p-*` overrides in styles.css (dialog, select)
- * live here as design tokens instead. The app always runs in dark mode, so only the
- * dark color scheme is customized.
+ * Component looks live here as design tokens rather than `.p-*` overrides in component CSS.
+ * The app always runs in dark mode, so only the dark color scheme is customized.
  */
 const ArgosPreset = definePreset(Aura, {
   semantic: {
@@ -54,6 +53,24 @@ const ArgosPreset = definePreset(Aura, {
         // A red primary would make a focused field look invalid, so focus uses the app's blue accent
         formField: {
           focusBorderColor: '#027bd7'
+        },
+        // Panels, tables and overlays use the shade of the app's info cards (surface.800) instead of
+        // Aura's near-black surface.900, so PrimeNG pieces sit in the same layer as Argos cards.
+        content: {
+          background: '{surface.800}',
+          hoverBackground: '{surface.700}',
+          borderColor: '{surface.700}'
+        },
+        overlay: {
+          select: { background: '{surface.800}', borderColor: '{surface.700}' },
+          popover: { background: '{surface.800}', borderColor: '{surface.700}' },
+          modal: { background: '{surface.800}', borderColor: '{surface.700}' }
+        },
+        list: {
+          option: { focusBackground: '{surface.700}' }
+        },
+        navigation: {
+          item: { focusBackground: '{surface.700}', activeBackground: '{surface.700}' }
         }
       }
     }
@@ -71,10 +88,7 @@ const ArgosPreset = definePreset(Aura, {
     },
     dialog: {
       root: {
-        background: '{surface.800}',
-        color: '#ffffff',
-        borderRadius: '20px',
-        shadow: '0 1px 4px rgba(0, 0, 0, 0.1)'
+        borderRadius: '20px'
       },
       header: {
         padding: '1rem'
@@ -83,35 +97,55 @@ const ArgosPreset = definePreset(Aura, {
         fontWeight: '700'
       }
     },
-    select: {
+    // Tables sit on cards or the page, so rows are see-through and stripes are a faint lift
+    datatable: {
+      headerCell: {
+        background: 'transparent',
+        color: '{text.muted.color}'
+      },
+      row: {
+        background: 'transparent',
+        hoverBackground: 'rgba(255, 255, 255, 0.04)'
+      },
+      colorScheme: {
+        dark: {
+          root: { borderColor: '{surface.700}' },
+          row: { stripedBackground: 'rgba(255, 255, 255, 0.02)' }
+        }
+      }
+    },
+    // Toggle and select buttons look like secondary buttons, with the pressed option in the selection tint,
+    // so on and off read apart at a glance (SelectButton shares these tokens)
+    togglebutton: {
+      colorScheme: {
+        dark: {
+          root: {
+            background: '{surface.800}',
+            checkedBackground: '{surface.800}',
+            hoverBackground: '{surface.700}',
+            borderColor: '{surface.800}',
+            checkedBorderColor: '{surface.800}',
+            color: '{surface.300}',
+            hoverColor: '{surface.0}'
+          },
+          content: { checkedBackground: '{highlight.focus.background}' },
+          icon: { color: '{surface.300}', hoverColor: '{surface.0}', checkedColor: '{primary.400}' }
+        }
+      }
+    },
+    // Sidebar topic trees sit on the page background
+    tree: {
       root: {
-        background: '#5a5a5a',
-        color: '#ffffff',
-        placeholderColor: '#ffffff',
-        borderColor: 'transparent',
-        hoverBorderColor: 'transparent',
-        focusBorderColor: 'transparent',
-        shadow: '0 1px 4px rgba(0, 0, 0, 0.1)'
-      },
-      overlay: {
-        background: '#5a5a5a',
-        borderColor: 'transparent',
-        color: '#ffffff',
-        borderRadius: '0 0 5px 5px'
-      },
+        background: 'transparent'
+      }
+    },
+    // The option list is flush, without Aura's rounded, spaced options
+    select: {
       list: {
         gap: '0'
       },
       option: {
-        padding: '8px 16px',
-        borderRadius: '0',
-        color: '#ffffff',
-        focusBackground: '#45454594',
-        focusColor: '#ffffff',
-        selectedBackground: 'rgba(0, 122, 255, 0.4)',
-        selectedColor: '#ffffff',
-        selectedFocusBackground: 'rgba(0, 122, 255, 0.55)',
-        selectedFocusColor: '#ffffff'
+        borderRadius: '0'
       }
     }
   }

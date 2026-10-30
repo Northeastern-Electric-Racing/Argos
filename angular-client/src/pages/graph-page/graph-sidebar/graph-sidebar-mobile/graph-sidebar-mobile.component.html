@@ -1,4 +1,11 @@
-<button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
+<p-button
+  class="toggle-btn"
+  label="Select Topics"
+  icon="pi pi-list"
+  [rounded]="true"
+  [raised]="true"
+  (onClick)="toggleSidebar()"
+/>
 
 <p-drawer [(visible)]="sidebarVisible" position="right" [style]="{ width: '85vw' }" [dismissible]="false" [modal]="true">
   <ng-template #header>
@@ -13,18 +20,15 @@
           [placeholder]="presetSelectorConfig().placeholder"
           [defaultValue]="activePresetName()"
         />
-        <argos-button
-          [onClick]="openPresetsDialog"
-          label="Manage"
-          size="sm"
-          additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-        />
+        <p-button label="Manage" icon="pi pi-sliders-h" severity="secondary" size="small" (onClick)="openPresetsDialog()" />
       </div>
-      <argos-button
-        [onClick]="clearSelections"
+      <p-button
         label="Clear Topics"
-        size="sm"
-        additionalStyles="background-color: #323232; border: 1.4px solid #027bd7; width: 100%;"
+        icon="pi pi-times"
+        severity="secondary"
+        size="small"
+        [fluid]="true"
+        (onClick)="clearSelections()"
       />
       <div class="toggle-group">
         <label class="flatten-toggle">

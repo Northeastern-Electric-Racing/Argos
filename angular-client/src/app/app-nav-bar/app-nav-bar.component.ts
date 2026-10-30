@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -10,7 +10,6 @@ import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
-import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
@@ -24,6 +23,7 @@ import { NotificationListComponent } from 'src/components/notification-list/noti
 import { Popover } from 'primeng/popover';
 import { Badge } from 'primeng/badge';
 import { Menu } from 'primeng/menu';
+import { Button } from 'primeng/button';
 import { MenuItem } from 'primeng/api';
 
 export interface NavItem {
@@ -40,7 +40,7 @@ export interface NavItem {
   imports: [
     Drawer,
     CurrentRunDisplayComponent,
-    ToastButtonComponent,
+    Button,
     MessagesPerSecondComponent,
     AsyncPipe,
     DatePipe,
@@ -97,19 +97,29 @@ export class AppNavBarComponent implements OnInit {
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
   }
 
-  newRunIsLoading = false;
+  readonly newRunIsLoading = signal(false);
   time$: Observable<Date> = interval(1000).pipe(
     startWith(0),
     map(() => new Date())
   );
 
+  // The query service leaves isLoading set when a request fails, so the button tracks its own request
   onStartNewRun = () => {
+    this.newRunIsLoading.set(true);
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
-    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.newRunIsLoading = isLoading;
-    });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (!error) return;
+      this.newRunIsLoading.set(false);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((run) => {
+      if (!run) return;
+      this.newRunIsLoading.set(false);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'New Run Started',
+        detail: 'Your new run has started successfully.'
+      });
     });
   };
 

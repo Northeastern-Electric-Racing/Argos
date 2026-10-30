@@ -10,23 +10,30 @@
       <info-background title="Car Commands" icon="lock">
         <div class="auth-content">
           <p class="auth-description">Enter the command password to access car controls.</p>
-          <div class="auth-form">
+          <form class="auth-form" (ngSubmit)="authenticatePw()">
             <div class="auth-input-group">
               <label for="password">Password</label>
-              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+              <p-password
+                [feedback]="false"
+                [toggleMask]="true"
+                [fluid]="true"
+                inputId="password"
+                name="password"
+                [(ngModel)]="enteredPw"
+              />
             </div>
-            <argos-button label="Authenticate" [onClick]="authenticatePw" />
+            <p-button type="submit" label="Authenticate" icon="pi pi-lock-open" />
             @if (authError()) {
-              <p class="auth-error">{{ authError() }}</p>
+              <p-message severity="error" icon="pi pi-times-circle">{{ authError() }}</p-message>
             }
-          </div>
+          </form>
         </div>
       </info-background>
     </div>
   } @else {
     <div class="page-header">
       <typography variant="large-header" content="Car Commands" />
-      <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
+      <p-button label="Update Videos" icon="pi pi-video" severity="secondary" (onClick)="onUpdateVideosPressed()" />
     </div>
 
     <div class="commands-grid">
@@ -46,7 +53,7 @@
           </div>
           <div class="settings-footer">
             <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
-            <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
+            <p-button label="Save Settings" icon="pi pi-save" (onClick)="confirmSaveSettings()" />
           </div>
         </div>
       </info-background>

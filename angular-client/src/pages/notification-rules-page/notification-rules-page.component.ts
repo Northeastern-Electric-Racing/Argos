@@ -3,10 +3,13 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { Tooltip } from 'primeng/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 import {
   addRule,
   ClientRule,
@@ -34,7 +37,16 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
+  imports: [
+    TypographyComponent,
+    Button,
+    InputText,
+    IconField,
+    InputIcon,
+    Tooltip,
+    RulesTableComponent,
+    NotificationListComponent
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(MessageService);

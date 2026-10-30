@@ -1,36 +1,8 @@
-/* Base colors for every p-select are select tokens in src/theme/argos-preset.ts.
-   Everything here is scoped to this component's select (.small-grey-select) and its overlay
-   (.small-grey-select-panel), so other p-selects in the app are untouched. */
-::ng-deep .small-grey-select {
-  font-size: 0.8rem; /* Smaller font size */
-  height: 30px; /* Reduced height */
-  background-color: grey !important; /* Grey background */
-  color: #d5d5d5 !important;
-  border: none; /* Remove default border */
-  outline: none; /* Remove any outline */
-}
-
-/* :where() keeps the specificity of the old unscoped rule, so call sites that resize the label still win */
-::ng-deep :where(.small-grey-select) .p-select-label {
-  width: 10vw !important;
-  padding-bottom: 10px !important;
-}
-
-/* Override focus and hover states to keep the grey background and remove highlight */
-::ng-deep .small-grey-select:focus,
-::ng-deep .small-grey-select:hover {
-  background-color: #b4b4b4 !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-::ng-deep .small-grey-select-panel .p-select-option,
-::ng-deep .small-grey-select-panel .p-select-empty-message {
-  font-size: 0.8rem;
-}
-
-::ng-deep .small-grey-select-panel .p-select-option-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Colors, radius and sizing come from the select tokens in src/theme/argos-preset.ts and size="small".
+   The select fills this host, so callers size it by styling the select-dropdown element. */
+:host {
+  display: inline-block;
+  min-width: 9rem;
+  max-width: 100%;
+  vertical-align: middle;
 }

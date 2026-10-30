@@ -5,6 +5,8 @@
   [selection]="selectedRules()"
   (selectionChange)="onSelectionChange($any($event))"
   dataKey="id"
+  [stripedRows]="true"
+  [rowHover]="true"
   [scrollable]="true"
   scrollHeight="600px"
   [loading]="loading()"
@@ -18,9 +20,9 @@
       <th>Rule</th>
       <th>Applied To</th>
       <!-- TODO: Uploaded By column once backend supports it -->
-      <th>Uploaded By</th>
+      <th class="hide-mobile">Uploaded By</th>
       <!-- TODO: Description column once backend supports it -->
-      <th>Description</th>
+      <th class="hide-mobile">Description</th>
       <th>Subscribed</th>
       <th style="width: 5rem" aria-label="Actions"></th>
     </tr>
@@ -33,18 +35,34 @@
       </td>
       <td>{{ rule.expr }}</td>
       <td>{{ rule.topic }}</td>
-      <td>-</td>
-      <td>-</td>
+      <td class="hide-mobile">-</td>
+      <td class="hide-mobile">-</td>
       <td>
-        <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
+        <p-toggleswitch
+          [ngModel]="rule.is_subscribed"
+          (ngModelChange)="onToggleSubscription(rule, $event)"
+          [ariaLabel]="'Subscribe to ' + rule.expr + ' on ' + rule.topic"
+        />
       </td>
       <td class="action-icons">
-        <button pButton [text]="true" size="small" (click)="onEdit(rule)" aria-label="Edit rule">
-          <i class="pi pi-pencil" pButtonIcon></i>
-        </button>
-        <button pButton [text]="true" size="small" severity="danger" (click)="onDelete(rule)" aria-label="Delete rule">
-          <i class="pi pi-trash" pButtonIcon></i>
-        </button>
+        <p-button
+          icon="pi pi-pencil"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          ariaLabel="Edit rule"
+          (onClick)="onEdit(rule)"
+        />
+        <p-button
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          ariaLabel="Delete rule"
+          (onClick)="onDelete(rule)"
+        />
       </td>
     </tr>
   </ng-template>

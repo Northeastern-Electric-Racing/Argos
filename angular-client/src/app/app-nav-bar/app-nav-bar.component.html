@@ -35,13 +35,12 @@
     </div>
 
     <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 130px"
+      <p-button
+        label="Start New Run"
+        icon="pi pi-plus"
+        size="small"
+        [loading]="newRunIsLoading()"
+        (onClick)="onStartNewRun()"
       />
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography

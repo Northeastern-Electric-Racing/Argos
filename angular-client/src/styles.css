@@ -138,3 +138,9 @@ body {
   font-weight: 500;
   line-height: 1.2;
 }
+
+/* Destructive entries in popup menus (MenuItem styleClass); menus are appended to body, so this is global */
+.p-menu .menu-item-danger .p-menu-item-label,
+.p-menu .menu-item-danger .p-menu-item-icon {
+  color: var(--p-red-400);
+}

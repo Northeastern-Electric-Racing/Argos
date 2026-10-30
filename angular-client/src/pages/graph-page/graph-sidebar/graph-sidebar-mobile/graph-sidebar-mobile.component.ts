@@ -35,7 +35,7 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
@@ -44,16 +44,7 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Drawer,
-    Tree,
-    PrimeTemplate,
-    ButtonComponent,
-    TypographyComponent,
-    ToggleSwitch,
-    FormsModule,
-    SelectDropdownComponent
-  ]
+  imports: [Drawer, Tree, PrimeTemplate, Button, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
   dataTypes = input.required<DataType[]>();

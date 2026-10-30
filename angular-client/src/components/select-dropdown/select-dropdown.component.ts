@@ -30,6 +30,8 @@ export class SelectDropdownComponent {
   ]);
   placeholder = input<string>('placeholder');
   defaultValue = input<string | undefined>(undefined);
+  // Small fits toolbars and card headers; forms turn it off to match their full-size inputs
+  compact = input<boolean>(true);
 
   selectedOption: DropdownOption | undefined;
 

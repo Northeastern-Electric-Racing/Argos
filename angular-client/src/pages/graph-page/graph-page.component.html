@@ -12,24 +12,32 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+            <p-togglebutton
+              [(ngModel)]="showSideBar"
+              onLabel="Topics"
+              offLabel="Topics"
+              onIcon="pi pi-list"
+              offIcon="pi pi-list"
+              size="small"
+              ariaLabel="Show topic sidebar"
+              class="desktop-only"
             />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+            <p-togglebutton
+              [(ngModel)]="showMultiYaxis"
+              onLabel="Multi Y-axis"
+              offLabel="Multi Y-axis"
+              onIcon="pi pi-sort-alt"
+              offIcon="pi pi-sort-alt"
+              size="small"
+              ariaLabel="Use one Y-axis per topic"
             />
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
+              <p-button
                 [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+                [icon]="isPaused ? 'pi pi-play' : 'pi pi-pause'"
+                severity="secondary"
+                size="small"
+                (onClick)="togglePause()"
               />
             }
           </div>
@@ -37,19 +45,23 @@
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+              <p-selectbutton
+                [options]="rangeModeOptions"
+                [ngModel]="rangeMode"
+                (ngModelChange)="setRangeMode($event)"
+                optionLabel="label"
+                optionValue="value"
+                [allowEmpty]="false"
+                size="small"
               />
-              <label class="input-label" for="graph-x-range">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
+              <label class="input-label" for="graph-x-range">{{ rangeMode === 'time' ? 'X (sec)' : 'X (points)' }}</label>
               <p-inputnumber
                 [(ngModel)]="rangeValue"
                 mode="decimal"
                 [min]="1"
                 [step]="1"
-                class="time-range-input"
+                size="small"
+                [inputStyle]="{ width: '4.5rem' }"
                 inputId="graph-x-range"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
                 (onInput)="onGraphConfigChange()"
@@ -58,25 +70,27 @@
           }
 
           <div class="toolbar-group config-group">
-            <label class="input-label" for="graph-y-min">Y Min:</label>
+            <label class="input-label" for="graph-y-min">Y min</label>
             <p-inputnumber
               [(ngModel)]="yAxisMin"
               mode="decimal"
               [minFractionDigits]="0"
               [maxFractionDigits]="4"
-              class="y-axis-input"
+              size="small"
+              [inputStyle]="{ width: '4.5rem' }"
               inputId="graph-y-min"
               placeholder="Auto"
               (onInput)="onGraphConfigChange()"
             ></p-inputnumber>
 
-            <label class="input-label" for="graph-y-max">Y Max:</label>
+            <label class="input-label" for="graph-y-max">Y max</label>
             <p-inputnumber
               [(ngModel)]="yAxisMax"
               mode="decimal"
               [minFractionDigits]="0"
               [maxFractionDigits]="4"
-              class="y-axis-input"
+              size="small"
+              [inputStyle]="{ width: '4.5rem' }"
               inputId="graph-y-max"
               placeholder="Auto"
               (onInput)="onGraphConfigChange()"

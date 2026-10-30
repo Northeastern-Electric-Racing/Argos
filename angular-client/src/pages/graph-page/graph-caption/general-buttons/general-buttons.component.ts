@@ -4,11 +4,12 @@ import { MessageService } from 'primeng/api';
 import { DatePicker } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { Popover } from 'primeng/popover';
+import { SelectButton } from 'primeng/selectbutton';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
 
 export interface RangePreset {
@@ -35,9 +36,10 @@ type CustomMode = 'last-x' | 'date-range';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RunSelectorComponent,
-    ButtonComponent,
+    Button,
     SelectDropdownComponent,
     Popover,
+    SelectButton,
     DatePicker,
     InputNumberModule,
     FormsModule
@@ -68,6 +70,10 @@ export class GeneralButtonsComponent {
 
   customPopover = viewChild.required<Popover>('customPopover');
 
+  readonly customModeOptions: { label: string; value: CustomMode }[] = [
+    { label: 'Last X', value: 'last-x' },
+    { label: 'Date Range', value: 'date-range' }
+  ];
   customMode = signal<CustomMode>('last-x');
   customHours = signal<number | null>(0);
   customMinutes = signal<number | null>(30);

@@ -6,12 +6,14 @@
     <info-value-display style="margin-top: -5px" [value]="this.voltage" unit="V" [precision]="2" subtitle="Avg Voltage" />
     <divider style="width: 100px; margin-top: 25px" />
     <info-value-display style="margin-top: -5px" [value]="this.alphaChipTemp" unit="C" subtitle="Chip Temp" />
-    <toast-button
-      buttonLabel="See More ➜"
-      additionalStyles="background-color: #2aaeee; color: black; border-radius: 20px"
-      style="margin-top: 20px"
-      [disableToast]="true"
-      [onClick]="this.openSegmentPage"
+    <p-button
+      label="See More"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      severity="info"
+      [rounded]="true"
+      [style]="{ marginTop: '20px' }"
+      (onClick)="openSegmentPage()"
     />
   </vstack>
 </info-background>

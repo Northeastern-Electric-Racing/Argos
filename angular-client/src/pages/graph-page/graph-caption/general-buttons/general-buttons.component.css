@@ -33,32 +33,6 @@
   letter-spacing: 0.04em;
 }
 
-/* Compress the Quick Select dropdown so it lines up with the sm "Custom" button (28px).
-   select-dropdown's default label sizing (width: 10vw, padding-bottom: 10px) is scoped to
-   :where(.small-grey-select) but still !important, so the label overrides here need
-   !important to win. */
-.historical-section ::ng-deep select-dropdown .p-select {
-  height: 28px !important;
-  min-height: 28px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.historical-section ::ng-deep select-dropdown .p-select-label,
-.historical-section ::ng-deep select-dropdown .p-select-label.p-placeholder {
-  width: auto !important;
-  min-width: 100px;
-  padding: 0 0.5rem !important;
-  font-size: 12px;
-  line-height: 28px;
-  height: 28px;
-}
-
-.historical-section ::ng-deep select-dropdown .p-select-dropdown {
-  width: 1.75rem;
-}
-
 .custom-stack {
   display: flex;
   flex-direction: column;
@@ -79,29 +53,6 @@
   gap: 12px;
   min-width: 260px;
   padding: 4px;
-}
-
-.mode-toggle {
-  display: flex;
-  flex-direction: row;
-  border: 1px solid #2a3a44;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.mode-btn {
-  flex: 1;
-  background-color: transparent;
-  color: #c9d6dc;
-  border: none;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.mode-btn--active {
-  background-color: #027bd7;
-  color: #fff;
 }
 
 .mode-body {
@@ -139,13 +90,5 @@
     border-left: none;
     flex-wrap: wrap;
     gap: 6px;
-  }
-
-  :host ::ng-deep select-dropdown {
-    min-width: 130px;
-  }
-
-  :host ::ng-deep select-dropdown .p-select {
-    min-width: 130px;
   }
 }

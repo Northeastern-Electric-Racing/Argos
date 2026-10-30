@@ -13,30 +13,44 @@
       <div class="header-row">
         <typography variant="x-large-title" content="Notification Rules" />
         <div class="header-buttons">
-          <argos-button label="View Log" [onClick]="onViewLog" additionalStyles="background-color: #ef4345;" />
-          <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
-          <argos-button label="Download" [onClick]="onDownload" additionalStyles="background-color: #555;" />
+          <p-button label="View Log" icon="pi pi-list" (onClick)="onViewLog()" />
+          <p-button label="Upload" icon="pi pi-upload" severity="secondary" (onClick)="onUpload()" />
+          <p-button label="Download" icon="pi pi-download" severity="secondary" (onClick)="onDownload()" />
         </div>
       </div>
 
       <div class="rules-bar">
         <typography variant="header" content="Rules" />
         <div class="rules-bar-actions">
-          <argos-button label="Add" [onClick]="onAddRule" />
-          <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
-          <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+          <p-button label="Add" icon="pi pi-plus" (onClick)="onAddRule()" />
+          <p-button
+            label="Remove"
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            [disabled]="!hasSelection()"
+            (onClick)="onRemoveSelected()"
+          />
+          <p-button
+            label="Toggle Subscription"
+            icon="pi pi-bell"
+            severity="secondary"
+            [disabled]="!hasSelection()"
+            (onClick)="onToggleSubscription()"
+          />
         </div>
-        <div class="search-container">
+        <p-iconfield class="search-container">
+          <p-inputicon class="pi pi-search" />
           <input
             pInputText
             type="text"
-            placeholder="Search..."
+            placeholder="Search rules"
             [value]="searchTerm()"
             (input)="onSearchInput($event)"
             aria-label="Search rules"
             class="search-input"
           />
-        </div>
+        </p-iconfield>
       </div>
 
       <rules-table
@@ -47,15 +61,17 @@
       />
     </div>
 
-    <button
-      type="button"
+    <p-button
       class="stream-toggle"
-      (click)="toggleStreamRail()"
-      [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
-      [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
-    >
-      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
-    </button>
+      [icon]="streamRailOpen() ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+      severity="secondary"
+      [outlined]="true"
+      size="small"
+      [ariaLabel]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
+      [pTooltip]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
+      tooltipPosition="left"
+      (onClick)="toggleStreamRail()"
+    />
 
     <aside
       class="stream-rail"

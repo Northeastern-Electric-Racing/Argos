@@ -12,7 +12,16 @@
         [placeholder]="viewSelectorConfig.placeholder"
         [defaultValue]="viewSelectorConfig.defaultValue"
       />
-      <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
+      <p-button
+        label="See more"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        severity="info"
+        size="small"
+        [rounded]="true"
+        [fluid]="true"
+        (onClick)="openSegmentPage()"
+      />
     </div>
   </div>
 
