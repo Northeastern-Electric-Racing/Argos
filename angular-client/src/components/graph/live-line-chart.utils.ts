@@ -28,8 +28,7 @@ const LEGEND_COLOR = '#fffff4';
 
 const pad = (n: number) => (n < 10 ? '0' : '') + n;
 
-/** A timestamp as a local clock time, e.g. 9:05:07 */
-export function formatClock(ms: number): string {
+function formatClock(ms: number): string {
   const date = new Date(ms);
   return `${date.getHours()}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
@@ -43,7 +42,6 @@ function clockTickLabel(value: number | string, index: number, ticks: Tick[]): s
   return index > 0 && formatClock(ticks[index - 1].value) === label ? '' : label;
 }
 
-/** A timestamp as a local date and time, e.g. 1/31/26, 9:05:07 */
 function formatTimestamp(ms: number): string {
   const date = new Date(ms);
   return `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)}, ${formatClock(ms)}`;
@@ -85,7 +83,6 @@ export function applyLiveWindow(chart: Chart<'line', GraphData[]>, window: { min
   x!.ticks!.display = y!.ticks!.display = window !== undefined;
 }
 
-/** Options for a live line chart on the dark info background: clock-time x-axis, no grid, few ticks. */
 export function buildLiveLineOptions({ legend }: { legend: boolean }): ChartOptions<'line'> {
   return {
     responsive: true,

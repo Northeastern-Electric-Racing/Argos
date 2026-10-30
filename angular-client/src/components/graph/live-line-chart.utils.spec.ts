@@ -1,5 +1,5 @@
 import { Scale, Tick } from 'chart.js';
-import { buildLiveLineOptions, formatClock, liveWindow, windowPoints } from './live-line-chart.utils';
+import { buildLiveLineOptions, liveWindow, windowPoints } from './live-line-chart.utils';
 
 describe('live line chart utils', () => {
   describe('liveWindow', () => {
@@ -56,10 +56,6 @@ describe('live line chart utils', () => {
       expect(points).toEqual(line);
       expect(points).not.toBe(line);
     });
-  });
-
-  it('formats a timestamp as a local clock time', () => {
-    expect(formatClock(new Date(2026, 0, 1, 9, 5, 7).getTime())).toBe('9:05:07');
   });
 
   it('labels each second on the time axis once, even when ticks are under a second apart', () => {

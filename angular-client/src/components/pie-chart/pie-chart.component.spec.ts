@@ -4,7 +4,7 @@ import { Chart } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import PieChartComponent from './pie-chart.component';
 
-describe('PieChartComponent (Chart.js)', () => {
+describe('PieChartComponent', () => {
   let fixture: ComponentFixture<PieChartComponent>;
 
   afterEach(() => fixture?.destroy());
@@ -39,7 +39,7 @@ describe('PieChartComponent (Chart.js)', () => {
       ]
     });
 
-    expect((c.config as { type: string }).type).toBe('pie');
+    expect(c.config).toMatchObject({ type: 'pie' });
     expect(c.data.labels).toEqual(['Pumps', 'Fans']);
     expect(c.data.datasets[0].data).toEqual([1, 2]);
     expect(c.options.plugins?.legend?.display).toBe(true);
