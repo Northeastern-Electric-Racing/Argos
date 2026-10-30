@@ -3,7 +3,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { toast } from '@spartan-ng/brain/sonner';
 import { BrnPopover } from '@spartan-ng/brain/popover';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideMenu } from '@ng-icons/lucide';
 import { HlmBadge } from '@spartan-ng/helm/badge';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
@@ -53,8 +56,11 @@ export interface NavItem {
     NavOptionsMenuComponent,
     HlmPopoverImports,
     HlmBadge,
-    HlmTooltip
+    HlmButton,
+    HlmTooltip,
+    NgIcon
   ],
+  providers: [provideIcons({ lucideMenu })],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'

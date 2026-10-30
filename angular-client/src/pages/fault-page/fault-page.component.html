@@ -5,6 +5,17 @@
     content="Faults"
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
+  @if (nodeArray.length === 0) {
+    <div hlmEmpty class="border bg-card" role="status">
+      <div hlmEmptyHeader>
+        <div hlmEmptyMedia variant="icon">
+          <ng-icon name="lucideShieldCheck" />
+        </div>
+        <h2 hlmEmptyTitle>No faults</h2>
+        <p hlmEmptyDescription>Faults raised by the BMS, DTI, MPU or charger will appear here.</p>
+      </div>
+    </div>
+  }
   <hlm-accordion type="multiple" class="gap-2">
     @for (node of nodeArray; track node.node) {
       <hlm-accordion-item class="bg-card rounded-md px-4">

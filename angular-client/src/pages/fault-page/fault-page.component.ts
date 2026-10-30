@@ -1,3 +1,6 @@
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideShieldCheck } from '@ng-icons/lucide';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -15,7 +18,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [HlmAccordionImports, HlmTableImports, DatePipe, TypographyComponent]
+  imports: [HlmAccordionImports, HlmEmptyImports, HlmTableImports, DatePipe, NgIcon, TypographyComponent],
+  providers: [provideIcons({ lucideShieldCheck })]
 })
 export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

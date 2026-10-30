@@ -1,20 +1,23 @@
 import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { toast } from '@spartan-ng/brain/sonner';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideVideoOff } from '@ng-icons/lucide';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
 import MediaMTXWebRTCReader from 'src/utils/MediaMTXReader';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
   selector: 'camera-page',
   templateUrl: './camera-page.component.html',
   styleUrl: './camera-page.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [HlmSelectImports, ReactiveFormsModule, FormsModule, TypographyComponent]
+  imports: [HlmEmptyImports, HlmSelectImports, NgIcon, ReactiveFormsModule, FormsModule],
+  providers: [provideIcons({ lucideVideoOff })]
 })
 export class CameraPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

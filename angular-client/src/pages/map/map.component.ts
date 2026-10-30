@@ -11,13 +11,12 @@ import { Run } from 'src/utils/types.utils';
 import { RunSelectorComponent } from '../graph-page/graph-caption/run-selector/run-selector.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
-import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 
 @Component({
   selector: 'map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css'],
-  imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent],
+  imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'

@@ -102,3 +102,43 @@
   overflow: hidden;
   border-radius: var(--border-radius-panel);
 }
+
+/* Mobile: one slim bar on every page holds the navigation sheet's trigger. */
+.mobile-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 52px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  background-color: var(--color-background-info);
+}
+
+.mobile-home {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.mobile-home .mat-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.mobile-home:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.mobile-clock {
+  margin-left: auto;
+  padding-right: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}

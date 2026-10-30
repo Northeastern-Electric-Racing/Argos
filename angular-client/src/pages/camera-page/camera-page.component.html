@@ -25,7 +25,15 @@
     </div>
   </div>
 } @else {
-  <div style="display: flex; justify-content: center; align-items: center; height: 100%">
-    <typography content="Camera Not Reachable" variant="xx-large-title" additionalStyles="color: red" />
+  <div hlmEmpty class="min-h-[60vh]" role="status">
+    <div hlmEmptyHeader>
+      <div hlmEmptyMedia variant="icon" class="text-destructive">
+        <ng-icon name="lucideVideoOff" />
+      </div>
+      <h2 hlmEmptyTitle>Camera Not Reachable</h2>
+      <p hlmEmptyDescription>
+        The car's camera stream isn't responding. Check that the camera is powered and on the network.
+      </p>
+    </div>
   </div>
 }

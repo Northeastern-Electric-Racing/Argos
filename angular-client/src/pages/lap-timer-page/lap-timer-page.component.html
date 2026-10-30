@@ -1,18 +1,18 @@
 <div class="page-grid">
-  <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem">
-    <mat-grid-tile [colspan]="6" [rowspan]="8">
+  <mat-grid-list [cols]="compact() ? 2 : 6" gutterSize="15px" rowHeight="1.5rem">
+    <mat-grid-tile [colspan]="compact() ? 2 : 6" [rowspan]="compact() ? 10 : 8">
       <sessions-panel />
     </mat-grid-tile>
 
-    <mat-grid-tile [colspan]="3" [rowspan]="9">
+    <mat-grid-tile [colspan]="compact() ? 2 : 3" [rowspan]="compact() ? 12 : 9">
       <timer-hero />
     </mat-grid-tile>
 
-    <mat-grid-tile [colspan]="1" [rowspan]="9">
+    <mat-grid-tile [colspan]="compact() ? 2 : 1" [rowspan]="compact() ? 8 : 9">
       <session-summary />
     </mat-grid-tile>
 
-    <mat-grid-tile [colspan]="2" [rowspan]="5">
+    <mat-grid-tile [colspan]="2" [rowspan]="compact() ? 7 : 5">
       <info-background svgIcon="speed" title="Speed" style="width: 100%; height: 100%">
         <div class="gauge-wrap">
           <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" [color]="speedGaugeColor()" [size]="320" />
@@ -32,7 +32,7 @@
       </info-background>
     </mat-grid-tile>
 
-    <mat-grid-tile [colspan]="6" [rowspan]="22">
+    <mat-grid-tile [colspan]="compact() ? 2 : 6" [rowspan]="22">
       <laps-table />
     </mat-grid-tile>
   </mat-grid-list>

@@ -1,4 +1,23 @@
 @if (isMobile || this.sidebarVisible) {
+  <header class="mobile-bar">
+    <button
+      hlmBtn
+      variant="ghost"
+      size="icon-lg"
+      type="button"
+      aria-label="Open navigation"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="sidebarVisible"
+      (click)="sidebarVisible = true"
+    >
+      <ng-icon name="lucideMenu" />
+    </button>
+    <button type="button" class="mobile-home" aria-label="Home" (click)="this.homeNavItem.onClick()">
+      <mat-icon [svgIcon]="this.homeNavItem.icon" />
+      <span>Argos</span>
+    </button>
+    <span class="mobile-clock">{{ time$ | async | date: 'HH:mm' }}</span>
+  </header>
   <hlm-sheet side="left" [state]="sidebarVisible ? 'open' : 'closed'" (stateChanged)="onSidebarStateChanged($event)">
     <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-80 overflow-y-auto">
       <hlm-sheet-header>

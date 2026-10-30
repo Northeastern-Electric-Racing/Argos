@@ -17,7 +17,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 import LatencyDisplayComponent from 'src/components/latency-display/latency-display';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
-import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 
 @Component({
   selector: 'charging-page-mobile',
@@ -37,8 +36,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
     VStackComponent,
     LatencyDisplayComponent,
     TypographyComponent,
-    HStackComponent,
-    SidebarToggleComponent
+    HStackComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
