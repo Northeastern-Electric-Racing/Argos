@@ -172,4 +172,42 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(component.maxDate().getTime()).toBeGreaterThanOrEqual(before);
     });
   });
+
+  describe('custom range tabs', () => {
+    const openPopover = async () => {
+      const trigger: HTMLButtonElement = fixture.nativeElement.querySelector('.custom-stack button');
+      trigger.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return trigger;
+    };
+    const tab = (label: string) =>
+      Array.from(document.querySelectorAll<HTMLElement>('[role="tab"]')).find((t) => t.textContent?.trim() === label)!;
+
+    it('marks the Custom trigger as a dialog popup and reports when it is open', async () => {
+      const trigger = await openPopover();
+      expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('switches between Last X and Date Range through the Aria tab list', async () => {
+      await openPopover();
+      expect(tab('Last X').getAttribute('aria-selected')).toBe('true');
+      expect(document.getElementById('custom-hours')).not.toBeNull();
+
+      tab('Date Range').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(component.customMode()).toBe('date-range');
+      expect(tab('Date Range').getAttribute('aria-selected')).toBe('true');
+      expect(document.getElementById('custom-from')).not.toBeNull();
+    });
+
+    it('ignores tab values that are not a custom mode', () => {
+      component.setCustomMode(undefined);
+      component.setCustomMode('something-else');
+      expect(component.customMode()).toBe('last-x');
+    });
+  });
 });

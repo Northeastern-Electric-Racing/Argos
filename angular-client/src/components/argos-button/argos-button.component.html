@@ -1,5 +1,11 @@
-<div id="button">
-  <button type="button" [class]="cssClass()" (click)="onClick()($event)" [style]="style()" [disabled]="disabled()">
-    {{ label() }}
-  </button>
-</div>
+<button
+  type="button"
+  [class]="cssClass()"
+  [style]="additionalStyles()"
+  [disabled]="disabled()"
+  [attr.aria-haspopup]="ariaHaspopup()"
+  [attr.aria-expanded]="ariaExpanded()"
+  (click)="onClick()($event)"
+>
+  {{ label() }}
+</button>

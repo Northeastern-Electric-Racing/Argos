@@ -1,14 +1,9 @@
 <div class="general-buttons-row">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
-    <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" additionalStyles="border: 1.4px solid #000" />
+    <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" />
   }
-  <argos-button
-    [onClick]="onClearDataType()"
-    label="Clear Graph"
-    size="sm"
-    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-  />
+  <argos-button [onClick]="onClearDataType()" label="Clear Graph" size="sm" variant="tonal" />
 
   <div class="historical-section">
     <span class="historical-label">Historical:</span>
@@ -22,11 +17,9 @@
         [onClick]="toggleCustomPopover"
         label="Custom"
         size="sm"
-        [additionalStyles]="
-          customActive()
-            ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
-            : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
-        "
+        [variant]="customActive() ? 'secondary' : 'tonal'"
+        ariaHaspopup="dialog"
+        [ariaExpanded]="customPopover.isOpen()"
       />
       @if (customActive() && customCaption()) {
         <span class="custom-caption">{{ customCaption() }}</span>
@@ -35,33 +28,24 @@
   </div>
 
   <ui-popover #customPopover panelClass="custom-range-popover" ariaLabel="Custom time range" (shown)="onCustomPopoverShow()">
-    <div class="custom-popover-body">
-      <div class="mode-toggle">
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="customMode() === 'last-x'"
-          [attr.aria-pressed]="customMode() === 'last-x'"
-          (click)="setCustomMode('last-x')"
-        >
-          Last X
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="customMode() === 'date-range'"
-          [attr.aria-pressed]="customMode() === 'date-range'"
-          (click)="setCustomMode('date-range')"
-        >
-          Date Range
-        </button>
+    <div class="custom-popover-body" ngTabs>
+      <div
+        ngTabList
+        class="ui-segmented"
+        aria-label="Range type"
+        [selectedTab]="customMode()"
+        (selectedTabChange)="setCustomMode($event)"
+      >
+        <div ngTab value="last-x">Last X</div>
+        <div ngTab value="date-range">Date Range</div>
       </div>
 
-      @if (customMode() === 'last-x') {
-        <div class="mode-body">
-          <div class="field-row">
-            <label class="popover-label">Hours</label>
+      <div ngTabPanel value="last-x" class="mode-body">
+        <ng-template ngTabContent>
+          <div class="ui-field">
+            <label class="ui-label" for="custom-hours">Hours</label>
             <input
+              id="custom-hours"
               type="number"
               class="ui-input ui-input--sm"
               [ngModel]="customHours()"
@@ -69,12 +53,12 @@
               min="0"
               step="1"
               placeholder="0"
-              [attr.aria-label]="'Hours'"
             />
           </div>
-          <div class="field-row">
-            <label class="popover-label">Minutes</label>
+          <div class="ui-field">
+            <label class="ui-label" for="custom-minutes">Minutes</label>
             <input
+              id="custom-minutes"
               type="number"
               class="ui-input ui-input--sm"
               [ngModel]="customMinutes()"
@@ -82,44 +66,35 @@
               min="0"
               step="1"
               placeholder="30"
-              [attr.aria-label]="'Minutes'"
             />
           </div>
-          <argos-button
-            [onClick]="applyCustomLastX"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
-        </div>
-      } @else {
-        <div class="mode-body">
-          <div class="field-row">
-            <label class="popover-label">From</label>
+          <argos-button [onClick]="applyCustomLastX" label="Apply" size="sm" variant="secondary" />
+        </ng-template>
+      </div>
+
+      <div ngTabPanel value="date-range" class="mode-body">
+        <ng-template ngTabContent>
+          <div class="ui-field">
+            <label class="ui-label" for="custom-from">From</label>
             <ui-datetime-input
+              inputId="custom-from"
               [ngModel]="customFromDate()"
               (ngModelChange)="customFromDate.set($event)"
               [maxDate]="maxDate()"
-              ariaLabel="From"
             />
           </div>
-          <div class="field-row">
-            <label class="popover-label">To</label>
+          <div class="ui-field">
+            <label class="ui-label" for="custom-to">To</label>
             <ui-datetime-input
+              inputId="custom-to"
               [ngModel]="customToDate()"
               (ngModelChange)="customToDate.set($event)"
               [maxDate]="maxDate()"
-              ariaLabel="To"
             />
           </div>
-          <argos-button
-            [onClick]="applyCustomDateRange"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
-        </div>
-      }
+          <argos-button [onClick]="applyCustomDateRange" label="Apply" size="sm" variant="secondary" />
+        </ng-template>
+      </div>
     </div>
   </ui-popover>
 </div>

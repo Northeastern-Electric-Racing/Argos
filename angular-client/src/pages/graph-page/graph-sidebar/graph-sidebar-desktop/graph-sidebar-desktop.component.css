@@ -25,10 +25,6 @@
   flex-shrink: 0;
 }
 
-.presets-row argos-button ::ng-deep .btn {
-  white-space: nowrap;
-}
-
 .header-row {
   display: flex;
   align-items: center;

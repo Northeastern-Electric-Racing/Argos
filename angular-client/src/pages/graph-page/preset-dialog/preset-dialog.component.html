@@ -10,8 +10,8 @@
 
   <section class="save-section">
     <div class="actions-row">
-      <div class="save-form">
-        <label for="preset-name">Save current selection</label>
+      <div class="ui-field save-form">
+        <label class="ui-label" for="preset-name">Save current selection</label>
         <div class="save-form-controls">
           <input
             class="ui-input"
@@ -32,10 +32,10 @@
         </div>
       </div>
 
-      <button class="ui-button ui-button--outlined" type="button" (click)="onUploadClick()">Upload JSON</button>
+      <button class="ui-button ui-button--neutral" type="button" (click)="onUploadClick()">Upload JSON</button>
     </div>
     @if (!hasSelection()) {
-      <small class="hint">Select a topic to save a preset</small>
+      <small class="ui-field-hint">Select a topic to save a preset</small>
     }
   </section>
 
@@ -46,7 +46,7 @@
         <small> Save your current topic selection or upload a JSON of your preset </small>
       </div>
     } @else {
-      <table class="preset-table">
+      <table class="ui-table preset-table">
         <thead>
           <tr>
             <th class="name">Name</th>
@@ -62,9 +62,15 @@
               </td>
               <td class="topic-count">{{ preset.topicNames.length }}</td>
               <td class="actions">
-                <button class="ui-button" type="button" (click)="onApply(preset)">Apply</button>
-                <button class="ui-button ui-button--outlined" type="button" (click)="onDownload(preset)">Download</button>
-                <button class="ui-button ui-button--text ui-button--danger" type="button" (click)="onDelete(preset)">
+                <button class="ui-button ui-button--sm" type="button" (click)="onApply(preset)">Apply</button>
+                <button class="ui-button ui-button--sm ui-button--neutral" type="button" (click)="onDownload(preset)">
+                  Download
+                </button>
+                <button
+                  class="ui-button ui-button--sm ui-button--text ui-button--danger"
+                  type="button"
+                  (click)="onDelete(preset)"
+                >
                   Delete
                 </button>
               </td>

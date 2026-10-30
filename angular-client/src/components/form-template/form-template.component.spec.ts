@@ -26,4 +26,24 @@ describe('FormTemplateComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('labels each input and links its error message', () => {
+    fixture.componentRef.setInput('fields', [
+      { type: 'text', name: 'driver', label: 'Driver', disabled: false, required: true }
+    ]);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const input = el.querySelector<HTMLInputElement>('#form-field-driver')!;
+    expect(el.querySelector('label')!.getAttribute('for')).toBe('form-field-driver');
+    expect(input.getAttribute('aria-required')).toBe('true');
+    expect(input.hasAttribute('aria-describedby')).toBe(false);
+
+    component.form.get('driver')!.setValue('');
+    component.form.get('driver')!.markAsTouched();
+    fixture.detectChanges();
+
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    const error = el.querySelector('#' + input.getAttribute('aria-describedby'))!;
+    expect(error.textContent).toContain('Driver is required');
+  });
 });

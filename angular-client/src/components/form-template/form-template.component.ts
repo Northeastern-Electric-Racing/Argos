@@ -2,7 +2,6 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
-import { NgClass } from '@angular/common';
 
 type anyType = string | number | boolean | undefined;
 
@@ -25,9 +24,8 @@ export interface DynamicFormField {
 @Component({
   selector: 'form-template',
   templateUrl: './form-template.component.html',
-  styleUrl: './form-template.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule, NgClass]
+  imports: [ReactiveFormsModule]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
@@ -94,6 +92,12 @@ export class FormTemplateComponent {
       const control = this.form.get(field);
       control?.markAsTouched({ onlySelf: true });
     });
+  }
+
+  /** A field shows its error once the user has edited or left it. */
+  isInvalid(name: string): boolean {
+    const control = this.form.get(name);
+    return !!control?.invalid && (control.dirty || control.touched);
   }
 
   getErrorMessage(field: DynamicFormField) {

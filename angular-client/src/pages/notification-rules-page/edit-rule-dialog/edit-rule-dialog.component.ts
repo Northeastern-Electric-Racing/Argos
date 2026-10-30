@@ -11,8 +11,7 @@ export interface EditRuleResult {
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  templateUrl: './edit-rule-dialog.component.html',
-  styleUrls: ['./edit-rule-dialog.component.css']
+  templateUrl: './edit-rule-dialog.component.html'
 })
 export class EditRuleDialogComponent {
   private ref = inject(DialogRef);

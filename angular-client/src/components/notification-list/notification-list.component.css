@@ -22,7 +22,7 @@
 
 .list-header,
 .list-footer {
-  background-color: #252525;
+  background-color: var(--ui-surface-2);
 }
 
 .list-header {
@@ -52,7 +52,7 @@
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 10px;
-  background-color: #3a3a3a;
+  background-color: var(--ui-surface-3);
   color: var(--color-text-subtitle);
 }
 
@@ -89,7 +89,7 @@
   align-items: start;
   gap: 10px;
   padding: 10px 14px 10px 11px;
-  border-bottom: 1px solid #41414180;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 50%, transparent);
   transition: background-color 0.15s ease;
 }
 
@@ -98,17 +98,17 @@
 }
 
 .entry:hover {
-  background-color: #ffffff06;
+  background-color: var(--ui-stripe);
 }
 
 .entry-accent {
   width: 3px;
   align-self: stretch;
-  background-color: #3a3a3a;
+  background-color: var(--ui-surface-3);
 }
 
 .entry.unread .entry-accent {
-  background-color: #ef4345;
+  background-color: var(--ui-accent);
 }
 
 .entry-body {
@@ -140,7 +140,7 @@
 }
 
 .entry.unread .entry-rule {
-  color: #fff;
+  color: var(--ui-text);
 }
 
 .entry-time {
@@ -171,7 +171,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: #ef4345;
+  color: var(--ui-accent);
   flex-shrink: 0;
   opacity: 0.85;
 }
@@ -213,8 +213,8 @@
 
 .entry-dismiss:hover,
 .entry-dismiss:focus-visible {
-  color: #ef4345;
-  background-color: #ef43451a;
+  color: var(--ui-accent);
+  background-color: var(--ui-accent-soft);
   outline: none;
 }
 
@@ -236,7 +236,7 @@
   font-size: 1.75rem;
   width: 1.75rem;
   height: 1.75rem;
-  color: #444;
+  color: var(--ui-border-strong);
 }
 
 .empty-text {
@@ -282,8 +282,8 @@
 
 .view-all-button:hover,
 .view-all-button:focus-visible {
-  color: #ef4345;
-  background-color: #ef434514;
+  color: var(--ui-accent);
+  background-color: var(--ui-accent-soft);
   outline: none;
 }
 

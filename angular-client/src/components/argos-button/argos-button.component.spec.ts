@@ -22,25 +22,35 @@ describe('ButtonComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('defaults to btn btn--default class and includes legacy width/height', () => {
-    expect(component.cssClass()).toBe('btn btn--default');
-    expect(component.style()).toContain('width: 140px');
-    expect(component.style()).toContain('height: 45px');
+  const button = (): HTMLButtonElement => fixture.nativeElement.querySelector('button');
+
+  it('renders a primary design-system button at the legacy 140x45 footprint by default', () => {
+    expect(button().className).toBe('ui-button ui-button--lg');
   });
 
-  it('omits legacy width/height when size is sm', () => {
+  it('renders the compact size without the legacy footprint', () => {
     fixture.componentRef.setInput('size', 'sm');
     fixture.detectChanges();
-    expect(component.cssClass()).toBe('btn btn--sm');
-    expect(component.style()).not.toContain('width: 140px');
-    expect(component.style()).not.toContain('height: 45px');
+    expect(button().className).toBe('ui-button ui-button--sm');
   });
 
-  it('appends additionalStyles after the size-driven base', () => {
+  it('maps each variant to its design-system modifier', () => {
+    fixture.componentRef.setInput('variant', 'tonal');
     fixture.componentRef.setInput('size', 'sm');
-    fixture.componentRef.setInput('additionalStyles', 'background-color: red;');
     fixture.detectChanges();
-    expect(component.style()).toContain('background-color: red;');
+    expect(button().className).toBe('ui-button ui-button--sm ui-button--tonal');
+  });
+
+  it('applies additionalStyles for layout tweaks', () => {
+    fixture.componentRef.setInput('additionalStyles', 'width: 100%;');
+    fixture.detectChanges();
+    expect(button().style.width).toBe('100%');
+  });
+
+  it('disables the native button', () => {
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(button().disabled).toBe(true);
   });
 
   it('passes the click event to the onClick handler (popover triggers depend on this)', () => {

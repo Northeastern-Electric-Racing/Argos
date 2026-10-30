@@ -10,17 +10,9 @@
       </span>
       <span class="sessions-toolbar-actions">
         @if (timer.sessions().length > 0) {
-          <argos-button
-            label="Clear All"
-            [onClick]="onClearAllSessions"
-            additionalStyles="height: 32px; width: 110px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-battery-low);"
-          />
+          <argos-button label="Clear All" [onClick]="onClearAllSessions" size="sm" variant="danger" />
         }
-        <argos-button
-          label="+ New Session"
-          [onClick]="onNewSession"
-          additionalStyles="height: 32px; width: 140px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <argos-button label="+ New Session" [onClick]="onNewSession" size="sm" variant="neutral" />
       </span>
     </div>
 

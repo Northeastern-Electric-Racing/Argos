@@ -8,10 +8,10 @@
   height: 1.5rem;
   padding: 0;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full);
   background: var(--ui-control-off);
   cursor: pointer;
-  transition: background-color 150ms ease;
+  transition: background-color var(--ui-duration-fast) ease;
 }
 
 .ui-switch:hover:not(:disabled) {
@@ -44,7 +44,7 @@
   height: 1rem;
   border-radius: 50%;
   background: var(--ui-on-accent);
-  transition: transform 150ms ease;
+  transition: transform var(--ui-duration) var(--ui-ease-out);
 }
 
 .ui-switch[aria-checked='true'] .ui-switch-thumb {

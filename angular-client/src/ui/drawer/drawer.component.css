@@ -6,7 +6,7 @@
   background: var(--ui-surface-2);
   color: var(--ui-text);
   box-shadow: var(--ui-shadow);
-  animation: ui-drawer-in-right 200ms ease-out;
+  animation: ui-drawer-in-right var(--ui-duration) var(--ui-ease-out);
 }
 
 .ui-drawer[data-position='left'] {
@@ -28,8 +28,8 @@
 .ui-drawer-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 0.75rem 0.5rem 1rem;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-3) var(--ui-space-2) var(--ui-space-4);
 }
 
 .ui-drawer-title {
@@ -41,5 +41,5 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0 1rem 1rem;
+  padding: 0 var(--ui-space-4) var(--ui-space-4);
 }

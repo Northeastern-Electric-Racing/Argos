@@ -12,25 +12,10 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+            <argos-button [onClick]="this.toggleSideBar" label="Tog Sidebar" size="sm" variant="tonal" />
+            <argos-button [onClick]="this.toggleMultiYaxis" label="Tog Mult Yaxis" size="sm" variant="tonal" />
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <argos-button [onClick]="this.togglePause" [label]="isPaused ? 'Play' : 'Pause'" size="sm" variant="tonal" />
             }
           </div>
 
@@ -41,16 +26,18 @@
                 [onClick]="this.toggleRangeMode"
                 [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
                 size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+                variant="tonal"
               />
-              <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
+              <label class="input-label" for="graph-range-value">{{
+                rangeMode === 'time' ? 'X (sec):' : 'X (points):'
+              }}</label>
               <input
+                id="graph-range-value"
                 type="number"
                 class="ui-input ui-input--sm time-range-input"
                 [(ngModel)]="rangeValue"
                 min="1"
                 step="1"
-                [attr.aria-label]="rangeMode === 'time' ? 'X seconds' : 'X points'"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
                 (ngModelChange)="onGraphConfigChange()"
               />
@@ -58,24 +45,24 @@
           }
 
           <div class="toolbar-group config-group">
-            <label class="input-label">Y Min:</label>
+            <label class="input-label" for="graph-y-min">Y Min:</label>
             <input
+              id="graph-y-min"
               type="number"
               class="ui-input ui-input--sm y-axis-input"
               [(ngModel)]="yAxisMin"
               step="any"
-              aria-label="Y min"
               placeholder="Auto"
               (ngModelChange)="onGraphConfigChange()"
             />
 
-            <label class="input-label">Y Max:</label>
+            <label class="input-label" for="graph-y-max">Y Max:</label>
             <input
+              id="graph-y-max"
               type="number"
               class="ui-input ui-input--sm y-axis-input"
               [(ngModel)]="yAxisMax"
               step="any"
-              aria-label="Y max"
               placeholder="Auto"
               (ngModelChange)="onGraphConfigChange()"
             />

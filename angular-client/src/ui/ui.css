@@ -11,8 +11,11 @@
 :root {
   /*
    * One token set: the --ui-* names alias the app's design tokens in styles.css where both exist,
-   * and add the ones the primitives need. Components use these instead of literal colours.
+   * and add the ones the primitives need. Components use these instead of literal values.
+   * The client is dark-only (it always was), so there is one palette; color-scheme is set in styles.css.
    */
+
+  /* Colour: brand and status */
   --ui-accent: #ef4343;
   --ui-accent-hover: #f26b6b;
   --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 18%, transparent);
@@ -20,12 +23,22 @@
   --ui-accent-text: #ffb4b4;
   /* Text and marks on a filled accent, such as a primary button or a checked checkbox. */
   --ui-on-accent: #fff;
+  /* The telemetry blue the graph page has always used for its controls. */
+  --ui-secondary: #027bd7;
+  --ui-secondary-hover: #1f8fe6;
+  --ui-secondary-border: #8fcadd;
+  --ui-secondary-soft: color-mix(in srgb, var(--ui-secondary) 16%, var(--ui-surface-1));
   /* NER red is the accent, so danger takes a separate orange hue and destructive buttons are never filled. */
   --ui-danger: #fb923c;
   --ui-danger-soft: color-mix(in srgb, var(--ui-danger) 16%, transparent);
   --ui-success: #4ade80;
   --ui-warn: #fbbf24;
   --ui-info: #60a5fa;
+  /* Dark text on the bright success and warn fills. */
+  --ui-on-status: #0b0b0b;
+
+  /* Colour: surfaces, lines and text */
+  --ui-surface-0: var(--color-background-page);
   --ui-surface-1: #1c1c1c;
   --ui-surface-2: #262626;
   --ui-surface-3: #333333;
@@ -38,41 +51,108 @@
   --ui-control-off-hover: #666;
   --ui-text: var(--color-text-primary);
   --ui-text-muted: #a3a3a3;
+  --ui-label: var(--color-text-subtitle);
   /* Hover fills on transparent controls: rows, options, menu items, icon buttons. */
   --ui-hover: color-mix(in srgb, var(--ui-text) 8%, transparent);
   --ui-hover-strong: color-mix(in srgb, var(--ui-text) 10%, transparent);
   --ui-stripe: color-mix(in srgb, var(--ui-text) 4%, transparent);
+
+  /* Spacing: a 4px grid */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.25rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
+
+  /* Type scale for controls and chrome (page headings keep the --font-size-* scale in styles.css) */
+  --ui-font: var(--font-family);
+  --ui-font-xs: 0.75rem;
+  --ui-font-sm: 0.8125rem;
+  --ui-font-md: 0.9rem;
+  --ui-font-lg: 1.15rem;
+  --ui-weight-medium: 500;
+  --ui-weight-bold: 600;
+
+  /* Control sizes, shared by buttons, inputs and selects so they line up in a row */
+  --ui-control-height: 2.25rem;
+  --ui-control-height-sm: 1.75rem;
+
+  /* Shape and depth */
+  --ui-radius-sm: 6px;
   --ui-radius: var(--border-radius-panel);
   --ui-radius-lg: 16px;
-  /* Neutral focus colour, so a focused field never reads as a red validation error. */
+  --ui-radius-full: 999px;
+  --ui-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --ui-scrim: rgba(0, 0, 0, 0.55);
+
+  /* Focus: neutral, so a focused field never reads as a red validation error */
   --ui-focus-color: #d4d4d4;
   --ui-focus-ring: 2px solid color-mix(in srgb, var(--ui-focus-color) 80%, transparent);
-  --ui-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+
+  /* Motion */
+  --ui-duration-fast: 120ms;
+  --ui-duration: 180ms;
+  --ui-ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Users who ask for less motion get state changes without the slides and fades (spinners keep turning). */
+@media (prefers-reduced-motion: reduce) {
+  :not(.ui-spinner),
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 /* ---------- Buttons ---------- */
+/*
+ * One button, several variants. Each variant sets the same four custom properties, so hover,
+ * focus and disabled behave identically everywhere:
+ *   (default) primary: filled NER red, the page's main action
+ *   --secondary: filled telemetry blue, applying a setting
+ *   --tonal: blue-tinted surface with a blue edge, the graph page's toggles and tools
+ *   --neutral: raised grey, secondary actions such as upload or download
+ *   --outlined: accent edge only
+ *   --text: no fill or edge, such as Cancel
+ *   --success / --warn: filled status colours, the lap timer's start and pause
+ *   --danger: orange edge, never filled, for destructive actions
+ */
 .ui-button {
+  --ui-button-bg: var(--ui-accent);
+  --ui-button-bg-hover: var(--ui-accent-hover);
+  --ui-button-border: var(--ui-accent);
+  --ui-button-color: var(--ui-on-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  min-height: 2.25rem;
-  padding: 0 1rem;
-  border: 1px solid var(--ui-accent);
+  gap: var(--ui-space-2);
+  min-height: var(--ui-control-height);
+  padding: 0 var(--ui-space-4);
+  border: 1px solid var(--ui-button-border);
   border-radius: var(--ui-radius);
-  background: var(--ui-accent);
-  color: var(--ui-on-accent);
+  background: var(--ui-button-bg);
+  color: var(--ui-button-color);
   font: inherit;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-family: var(--ui-font);
+  font-weight: var(--ui-weight-bold);
+  font-size: var(--ui-font-md);
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
   cursor: pointer;
+  user-select: none;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color var(--ui-duration-fast) ease,
+    border-color var(--ui-duration-fast) ease,
+    color var(--ui-duration-fast) ease;
 }
 .ui-button:hover:not(:disabled) {
-  background: var(--ui-accent-hover);
-  border-color: var(--ui-accent-hover);
+  background: var(--ui-button-bg-hover);
+  border-color: var(--ui-button-border-hover, var(--ui-button-bg-hover));
 }
 .ui-button:focus-visible {
   outline: var(--ui-focus-ring);
@@ -82,42 +162,78 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.ui-button--secondary {
+  --ui-button-bg: var(--ui-secondary);
+  --ui-button-bg-hover: var(--ui-secondary-hover);
+  --ui-button-border: var(--ui-secondary-border);
+  --ui-button-border-hover: var(--ui-secondary-border);
+}
+.ui-button--tonal {
+  --ui-button-bg: var(--ui-secondary-soft);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-secondary) 30%, var(--ui-surface-1));
+  --ui-button-border: color-mix(in srgb, var(--ui-secondary-border) 70%, transparent);
+  --ui-button-border-hover: var(--ui-secondary-border);
+  --ui-button-color: var(--ui-text);
+}
+.ui-button--neutral {
+  --ui-button-bg: var(--ui-surface-3);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-text) 12%, var(--ui-surface-3));
+  --ui-button-border: var(--ui-border);
+  --ui-button-border-hover: var(--ui-border-strong);
+  --ui-button-color: var(--ui-text);
+}
 .ui-button--outlined {
-  background: transparent;
-  color: var(--ui-accent);
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--ui-accent-soft);
+  --ui-button-border-hover: var(--ui-accent-hover);
+  --ui-button-color: var(--ui-accent);
 }
 .ui-button--outlined:hover:not(:disabled) {
-  background: var(--ui-accent-soft);
   color: var(--ui-accent-hover);
 }
 .ui-button--text {
-  background: transparent;
-  border-color: transparent;
-  color: var(--ui-text);
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--ui-hover);
+  --ui-button-border: transparent;
+  --ui-button-border-hover: transparent;
+  --ui-button-color: var(--ui-text);
 }
-.ui-button--text:hover:not(:disabled) {
-  background: var(--ui-hover);
-  border-color: transparent;
+.ui-button--success {
+  --ui-button-bg: var(--ui-success);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-success) 82%, #fff);
+  --ui-button-border: var(--ui-success);
+  --ui-button-color: var(--ui-on-status);
+}
+.ui-button--warn {
+  --ui-button-bg: var(--ui-warn);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-warn) 82%, #fff);
+  --ui-button-border: var(--ui-warn);
+  --ui-button-color: var(--ui-on-status);
 }
 .ui-button--danger {
-  background: transparent;
-  border-color: var(--ui-danger);
-  color: var(--ui-danger);
-}
-.ui-button--danger:hover:not(:disabled) {
-  background: var(--ui-danger-soft);
-  border-color: var(--ui-danger);
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--ui-danger-soft);
+  --ui-button-border: var(--ui-danger);
+  --ui-button-border-hover: var(--ui-danger);
+  --ui-button-color: var(--ui-danger);
 }
 .ui-button--danger.ui-button--text {
-  border-color: transparent;
-}
-.ui-button--danger.ui-button--text:hover:not(:disabled) {
-  border-color: transparent;
+  --ui-button-border: transparent;
+  --ui-button-border-hover: transparent;
 }
 .ui-button--sm {
-  min-height: 1.9rem;
-  padding: 0 0.6rem;
-  font-size: 0.8rem;
+  min-height: var(--ui-control-height-sm);
+  padding: 0 var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-font-xs);
+}
+.ui-button--lg {
+  min-width: 140px;
+  min-height: 45px;
+  font-size: var(--ui-font-md);
+}
+.ui-button--block {
+  width: 100%;
 }
 .ui-button--icon {
   padding: 0;
@@ -131,15 +247,19 @@
 /* ---------- Text / number / date inputs ---------- */
 .ui-input {
   box-sizing: border-box;
-  height: 2.25rem;
-  padding: 0 0.7rem;
+  height: var(--ui-control-height);
+  padding: 0 var(--ui-space-3);
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
   background: var(--ui-surface-1);
   color: var(--ui-text);
   font: inherit;
-  font-size: 0.9rem;
+  font-family: var(--ui-font);
+  font-size: var(--ui-font-md);
   color-scheme: dark;
+  transition:
+    border-color var(--ui-duration-fast) ease,
+    box-shadow var(--ui-duration-fast) ease;
 }
 .ui-input::placeholder {
   color: var(--ui-text-muted);
@@ -152,21 +272,120 @@
   border-color: var(--ui-focus-color);
   box-shadow: 0 0 0 1px var(--ui-focus-color);
 }
+.ui-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .ui-input[aria-invalid='true'],
 .ui-input.ng-invalid.ng-touched {
   border-color: var(--ui-danger);
 }
+.ui-input[aria-invalid='true']:focus,
+.ui-input.ng-invalid.ng-touched:focus {
+  box-shadow: 0 0 0 1px var(--ui-danger);
+}
 .ui-input--sm {
-  height: 1.9rem;
-  font-size: 0.8rem;
-  padding: 0 0.5rem;
+  height: var(--ui-control-height-sm);
+  padding: 0 var(--ui-space-2);
+  border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-font-sm);
 }
 .ui-input--fluid {
   width: 100%;
 }
 textarea.ui-input {
   height: auto;
-  padding: 0.5rem 0.7rem;
+  padding: var(--ui-space-2) var(--ui-space-3);
+}
+
+/* ---------- Form fields: label, control, hint/error, and the action row ---------- */
+.ui-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+}
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  min-width: 0;
+}
+.ui-field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.ui-label {
+  color: var(--ui-label);
+  font-size: var(--ui-font-sm);
+  font-weight: var(--ui-weight-bold);
+}
+.ui-field--inline .ui-label {
+  white-space: nowrap;
+}
+/* Marks a required field, with the word for assistive tech in a visually hidden span. */
+.ui-label .ui-required {
+  color: var(--ui-danger);
+  margin-left: 0.15em;
+}
+.ui-field-error {
+  color: var(--ui-danger);
+  font-size: var(--ui-font-xs);
+}
+.ui-field-hint {
+  color: var(--ui-text-muted);
+  font-size: var(--ui-font-xs);
+}
+.ui-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-2);
+}
+
+/* ---------- Segmented tabs (Angular Aria ngTabList / ngTab) ---------- */
+.ui-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface-1);
+}
+.ui-segmented [ngTab] {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--ui-control-height-sm) - 4px);
+  padding: 0 var(--ui-space-3);
+  border-radius: calc(var(--ui-radius) - 2px);
+  color: var(--ui-text-muted);
+  font-size: var(--ui-font-sm);
+  font-weight: var(--ui-weight-bold);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--ui-duration-fast) ease,
+    color var(--ui-duration-fast) ease;
+}
+.ui-segmented [ngTab]:hover {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+}
+.ui-segmented [ngTab][aria-selected='true'] {
+  background: var(--ui-secondary);
+  color: var(--ui-on-accent);
+}
+.ui-segmented [ngTab]:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 1px;
+}
+/* Aria marks hidden tab panels inert; they also leave the layout. */
+[ngTabPanel][inert] {
+  display: none;
 }
 
 /* ---------- Checkbox ---------- */
@@ -190,7 +409,7 @@ textarea.ui-input {
   border-left: 2px solid var(--ui-on-accent);
   border-bottom: 2px solid var(--ui-on-accent);
   transform: translateY(-1px) rotate(-45deg) scale(0);
-  transition: transform 100ms ease;
+  transition: transform var(--ui-duration-fast) ease;
 }
 .ui-checkbox:checked,
 .ui-checkbox:indeterminate {
@@ -219,18 +438,18 @@ textarea.ui-input {
   width: 100%;
   border-collapse: collapse;
   color: var(--ui-text);
-  font-size: 0.9rem;
+  font-size: var(--ui-font-md);
 }
 /* Headers stick through the CDK's own option: *cdkHeaderRowDef="columns; sticky: true". */
 .ui-table th {
   text-align: left;
-  font-weight: 600;
-  padding: 0.7rem 0.8rem;
+  font-weight: var(--ui-weight-bold);
+  padding: var(--ui-space-3);
   background: var(--ui-surface-3);
   border-bottom: 1px solid var(--ui-border);
 }
 .ui-table td {
-  padding: 0.55rem 0.8rem;
+  padding: var(--ui-space-2) var(--ui-space-3);
   border-bottom: 1px solid var(--ui-border);
 }
 .ui-table--striped tbody tr:nth-child(even) {
@@ -250,7 +469,7 @@ textarea.ui-input {
 .ui-table .ui-table-empty {
   text-align: center;
   color: var(--ui-text-muted);
-  padding: 2rem;
+  padding: var(--ui-space-8);
 }
 
 /* ---------- Spinner ---------- */
@@ -277,16 +496,16 @@ textarea.ui-input {
   height: 1.25rem;
   padding: 0 0.3rem;
   box-sizing: border-box;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-full);
   background: var(--ui-accent);
   color: var(--ui-on-accent);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--ui-weight-bold);
 }
 
 /* ---------- Dialog (CDK dialog + our container) ---------- */
 .ui-dialog-backdrop {
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--ui-scrim);
 }
 .ui-dialog-pane {
   /* The 16px gutter each side on phones comes from the maxWidth the dialog service passes. */
@@ -311,12 +530,12 @@ textarea.ui-input {
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
   box-shadow: var(--ui-shadow);
-  animation: ui-pop-in 120ms ease-out;
+  animation: ui-pop-in var(--ui-duration-fast) var(--ui-ease-out);
 }
 
 /* ---------- Popover (CDK connected overlay) ---------- */
 .ui-popover-panel {
-  margin-top: 8px;
+  margin-top: var(--ui-space-2);
 }
 /* A popover with nothing tabbable focuses the panel itself; like the drawer, it needs no outline. */
 .ui-popover-panel:focus {
@@ -333,11 +552,11 @@ textarea.ui-input {
 .ui-listbox-popup {
   box-sizing: border-box;
   width: 100%;
-  margin-top: 4px;
-  padding: 0.3rem;
+  margin-top: var(--ui-space-1);
+  padding: var(--ui-space-1);
   max-height: 16rem;
   overflow: auto;
-  font-size: 0.85rem;
+  font-size: var(--ui-font-sm);
 }
 /* Select popups: at least the trigger's width, wider when an option needs it. */
 .ui-listbox-popup--grow {
@@ -347,7 +566,7 @@ textarea.ui-input {
   max-width: calc(100vw - 32px);
 }
 .ui-listbox-popup--sm {
-  font-size: 0.8rem;
+  font-size: var(--ui-font-xs);
 }
 .ui-listbox-popup [ngListbox] {
   display: flex;
@@ -358,10 +577,10 @@ textarea.ui-input {
 .ui-listbox-popup [ngOption] {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--ui-space-2);
   min-height: 2rem;
-  padding: 0 0.7rem;
-  border-radius: 6px;
+  padding: 0 var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
   cursor: pointer;
   outline: none;
   white-space: nowrap;
@@ -387,7 +606,7 @@ textarea.ui-input {
   visibility: hidden;
 }
 .ui-listbox-empty {
-  padding: 0.5rem 0.7rem;
+  padding: var(--ui-space-2) var(--ui-space-3);
   color: var(--ui-text-muted);
 }
 
@@ -396,7 +615,7 @@ textarea.ui-input {
   display: flex;
   flex-direction: column;
   min-width: 160px;
-  padding: 4px;
+  padding: var(--ui-space-1);
 }
 .ui-menu[data-visible='false'] {
   display: none;
@@ -404,13 +623,13 @@ textarea.ui-input {
 .ui-menu [ngMenuItem] {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 4px;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
   outline: none;
   color: var(--ui-text);
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
+  font-family: var(--ui-font);
+  font-size: var(--ui-font-md);
   cursor: pointer;
 }
 .ui-menu [ngMenuItem]:hover,

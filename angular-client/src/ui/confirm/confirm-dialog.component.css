@@ -1,10 +1,10 @@
 .message {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--ui-space-5);
   line-height: 1.4;
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--ui-space-2);
 }
