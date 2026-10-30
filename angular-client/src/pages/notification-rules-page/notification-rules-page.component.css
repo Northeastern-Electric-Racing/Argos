@@ -11,8 +11,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3a3a3a;
-  border: 1px solid #555;
+  background-color: var(--ui-surface-3);
+  border: 1px solid var(--ui-border-strong);
   border-radius: 6px;
   color: var(--color-text-subtitle);
   cursor: pointer;
@@ -25,9 +25,9 @@
 
 .stream-toggle:hover,
 .stream-toggle:focus-visible {
-  background-color: #4a4a4a;
-  border-color: #666;
-  color: #fff;
+  background-color: color-mix(in srgb, var(--ui-text) 12%, var(--ui-surface-3));
+  border-color: var(--ui-control-border);
+  color: var(--ui-text);
   outline: none;
 }
 
@@ -118,16 +118,6 @@
 
 .search-input {
   width: 200px;
-  background-color: #333;
-  border: 1px solid #555;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-}
-
-.search-input::placeholder {
-  color: #888;
 }
 
 .table-placeholder {
@@ -173,10 +163,9 @@
     flex-wrap: wrap;
   }
 
-  .header-buttons ::ng-deep argos-button .btn {
-    width: 100px !important;
-    height: 38px !important;
-    font-size: 14px;
+  .header-buttons ::ng-deep argos-button .ui-button {
+    min-width: 100px;
+    min-height: 38px;
   }
 
   .rules-bar {
@@ -190,12 +179,10 @@
     gap: 6px;
   }
 
-  .rules-bar-actions ::ng-deep argos-button .btn {
-    width: auto !important;
+  .rules-bar-actions ::ng-deep argos-button .ui-button {
     min-width: 70px;
-    height: 36px !important;
-    font-size: 13px;
-    padding: 2px 10px;
+    min-height: 36px;
+    padding: 0 var(--ui-space-3);
   }
 
   .search-container {

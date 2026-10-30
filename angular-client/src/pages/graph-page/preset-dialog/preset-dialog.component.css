@@ -1,7 +1,7 @@
 .dialog-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--ui-space-4);
 }
 
 .hidden-file-input {
@@ -11,33 +11,24 @@
 .save-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--ui-space-1);
 }
 
 .actions-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--ui-space-4);
   flex-wrap: wrap;
 }
 
 .save-form {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   flex: 1 1 280px;
-}
-
-.save-form label {
-  color: #ccc;
-  font-size: 0.85rem;
-  font-weight: 600;
 }
 
 .save-form-controls {
   display: flex;
-  gap: 8px;
+  gap: var(--ui-space-2);
 }
 
 .save-form-controls input {
@@ -45,47 +36,26 @@
   min-width: 0;
 }
 
-.hint {
-  color: #888;
-  font-size: 0.8rem;
-}
-
 .presets-list {
-  border-top: 1px solid #2a2a2a;
-  padding-top: 12px;
+  border-top: 1px solid var(--ui-border);
+  padding-top: var(--ui-space-3);
 }
 
 .empty-state {
   text-align: center;
-  padding: 24px 12px;
-  border: 1px dashed #444;
-  border-radius: 6px;
-  color: #aaa;
+  padding: var(--ui-space-6) var(--ui-space-3);
+  border: 1px dashed var(--ui-border);
+  border-radius: var(--ui-radius);
+  color: var(--ui-text-muted);
 }
 
 .empty-state p {
-  margin: 0 0 4px;
-  color: #ddd;
+  margin: 0 0 var(--ui-space-1);
+  color: var(--ui-text);
 }
 
 .preset-table {
-  width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
-  color: #eee;
-}
-
-.preset-table th,
-.preset-table td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #2a2a2a;
-  font-size: 0.9rem;
-}
-
-.preset-table th {
-  color: #aaa;
-  font-weight: 600;
 }
 
 .preset-table td.topic-count,
@@ -97,12 +67,12 @@
 .preset-table td.actions,
 .preset-table th.actions {
   text-align: right;
-  width: 16rem;
+  width: 15rem;
   white-space: nowrap;
 }
 
-.preset-table td.actions button {
-  margin-left: 6px;
+.preset-table td.actions button + button {
+  margin-left: var(--ui-space-1);
 }
 
 .preset-table .name-text {
@@ -116,5 +86,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 4px;
+  margin-top: var(--ui-space-1);
+}
+
+@media (max-width: 600px) {
+  .preset-table td.actions,
+  .preset-table th.actions {
+    width: auto;
+    white-space: normal;
+  }
+
+  .preset-table td.actions button {
+    margin: 2px 0 2px var(--ui-space-1);
+  }
 }

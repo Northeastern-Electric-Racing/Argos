@@ -1,35 +1,21 @@
 .confirm-content p {
-  margin-bottom: 12px;
-  color: #ccc;
+  margin: 0 0 var(--ui-space-3);
+  color: var(--ui-label);
 }
 
 .rules-preview {
   max-height: 300px;
   overflow-y: auto;
-  margin-bottom: 16px;
+  margin-bottom: var(--ui-space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
+.rules-preview .ui-table {
+  font-size: var(--ui-font-sm);
 }
 
-th,
-td {
-  padding: 6px 8px;
-  text-align: left;
-  border-bottom: 1px solid #444;
-  color: #ddd;
-}
-
-th {
-  color: #e74c3c;
-  font-weight: 600;
-}
-
-.button-row {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+.rules-preview th {
+  position: sticky;
+  top: 0;
 }

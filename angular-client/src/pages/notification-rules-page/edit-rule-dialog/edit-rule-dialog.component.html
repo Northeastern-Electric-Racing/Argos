@@ -1,24 +1,24 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="field">
-    <label for="edit-expr">Expression</label>
-    <input class="ui-input" id="edit-expr" formControlName="expr" />
+<form class="ui-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="ui-field">
+    <label class="ui-label" for="edit-expr">Expression</label>
+    <input class="ui-input ui-input--fluid" id="edit-expr" formControlName="expr" />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="error" role="alert">Expression is required</small>
+      <small class="ui-field-error" role="alert">Expression is required</small>
     }
   </div>
 
-  <div class="field">
-    <label for="edit-debounce">Debounce Time (seconds)</label>
-    <input class="ui-input" id="edit-debounce" formControlName="debounce_time" type="number" />
+  <div class="ui-field">
+    <label class="ui-label" for="edit-debounce">Debounce Time (seconds)</label>
+    <input class="ui-input ui-input--fluid" id="edit-debounce" formControlName="debounce_time" type="number" />
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="error" role="alert">Debounce time is required</small>
+      <small class="ui-field-error" role="alert">Debounce time is required</small>
     }
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="error" role="alert">Must be 0 or greater</small>
+      <small class="ui-field-error" role="alert">Must be 0 or greater</small>
     }
   </div>
 
-  <div class="button-row">
+  <div class="ui-form-actions">
     <button class="ui-button ui-button--text" type="button" (click)="onCancel()">Cancel</button>
     <button class="ui-button" type="submit">Save</button>
   </div>

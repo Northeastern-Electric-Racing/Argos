@@ -14,23 +14,27 @@
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  height: var(--ui-select-height, 2.25rem);
-  padding: 0 2.2rem 0 var(--ui-select-padding-left, 0.75rem);
+  height: var(--ui-select-height, var(--ui-control-height));
+  padding: 0 2.2rem 0 var(--ui-select-padding-left, var(--ui-space-3));
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-select-radius, var(--ui-radius));
   background: var(--ui-select-bg, var(--ui-surface-3));
   color: var(--ui-select-color, var(--ui-text));
-  font-size: var(--ui-select-font-size, 0.9rem);
+  font-size: var(--ui-select-font-size, var(--ui-font-md));
   font-weight: var(--ui-select-font-weight, inherit);
   cursor: pointer;
   user-select: none;
   outline: none;
+  transition:
+    border-color var(--ui-duration-fast) ease,
+    box-shadow var(--ui-duration-fast) ease;
 }
 
 .ui-select--sm {
-  height: var(--ui-select-height, 1.9rem);
-  font-size: var(--ui-select-font-size, 0.8rem);
-  padding-left: var(--ui-select-padding-left, 0.55rem);
+  height: var(--ui-select-height, var(--ui-control-height-sm));
+  border-radius: var(--ui-select-radius, var(--ui-radius-sm));
+  font-size: var(--ui-select-font-size, var(--ui-font-sm));
+  padding-left: var(--ui-select-padding-left, var(--ui-space-2));
 }
 
 .ui-select:hover {
@@ -68,7 +72,7 @@
   height: 1.25rem;
   color: var(--ui-text-muted);
   pointer-events: none;
-  transition: transform 150ms ease;
+  transition: transform var(--ui-duration) var(--ui-ease-out);
 }
 
 .ui-select[aria-expanded='true'] .ui-select-arrow {

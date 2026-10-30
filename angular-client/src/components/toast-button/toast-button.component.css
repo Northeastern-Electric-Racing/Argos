@@ -1,19 +1,3 @@
-.btn {
-  background-color: var(--ui-accent);
-  border: none;
-  color: white;
-  border-radius: 4px;
-  padding: 2px 0px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-  cursor: pointer;
-  display: inline-block;
-  font-weight: bold;
-}
-
-.btn:hover {
-  transition: ease;
-  transition-duration: 0.2s;
-  background-color: color-mix(in srgb, var(--ui-accent) 70%, transparent);
+:host {
+  display: inline-flex;
 }

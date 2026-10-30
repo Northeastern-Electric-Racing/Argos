@@ -1,9 +1,11 @@
-<div class="chip" [class.active]="active()">
+<!-- A native button, so every nav item is reachable and operable from the keyboard; the host's (click) handles it. -->
+<button type="button" class="chip" [class.active]="active()" [attr.aria-current]="active() ? 'page' : null">
   <mat-icon
-    style="margin-right: 10px"
+    class="chip-icon"
+    aria-hidden="true"
     [svgIcon]="icon()"
     [style.width]="small() ? '24px' : '36px'"
     [style.height]="small() ? '24px' : '36px'"
   />
   <typography class="label" [variant]="small() ? 'sidebar-label' : 'header'" [content]="value()" />
-</div>
+</button>

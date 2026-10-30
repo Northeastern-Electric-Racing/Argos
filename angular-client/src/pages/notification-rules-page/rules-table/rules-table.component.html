@@ -63,7 +63,7 @@
             type="button"
             class="ui-button ui-button--text ui-button--icon"
             (click)="onEdit(rule)"
-            aria-label="Edit rule"
+            [attr.aria-label]="'Edit rule ' + rule.id"
           >
             <mat-icon aria-hidden="true">edit</mat-icon>
           </button>
@@ -71,7 +71,7 @@
             type="button"
             class="ui-button ui-button--text ui-button--danger ui-button--icon"
             (click)="onDelete(rule)"
-            aria-label="Delete rule"
+            [attr.aria-label]="'Delete rule ' + rule.id"
           >
             <mat-icon aria-hidden="true">delete</mat-icon>
           </button>

@@ -33,10 +33,10 @@
   letter-spacing: 0.04em;
 }
 
-/* Quick Select dropdown, sized to line up with the sm "Custom" button (28px) */
+/* Quick Select dropdown, at the sm "Custom" button's size */
 .historical-section select-dropdown {
-  --ui-select-height: 28px;
-  --ui-select-font-size: 12px;
+  --ui-select-height: var(--ui-control-height-sm);
+  --ui-select-font-size: var(--ui-font-xs);
 }
 
 .custom-stack {
@@ -56,51 +56,15 @@
 .custom-popover-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--ui-space-3);
   min-width: 260px;
-  padding: 14px;
-}
-
-.mode-toggle {
-  display: flex;
-  flex-direction: row;
-  border: 1px solid #2a3a44;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.mode-btn {
-  flex: 1;
-  background-color: transparent;
-  color: #c9d6dc;
-  border: none;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.mode-btn--active {
-  background-color: #027bd7;
-  color: #fff;
+  padding: var(--ui-space-4);
 }
 
 .mode-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.field-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.popover-label {
-  color: #c9d6dc;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  gap: var(--ui-space-3);
 }
 
 @media (max-width: 768px) {

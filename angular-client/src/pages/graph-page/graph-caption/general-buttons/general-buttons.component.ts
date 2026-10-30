@@ -1,6 +1,7 @@
 import { ToastService } from 'src/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { UiDateTimeInputComponent } from 'src/ui/datetime/datetime-input.component';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
@@ -38,7 +39,12 @@ type CustomMode = 'last-x' | 'date-range';
     SelectDropdownComponent,
     UiPopoverComponent,
     UiDateTimeInputComponent,
-    FormsModule
+    FormsModule,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanel,
+    TabContent
   ]
 })
 export class GeneralButtonsComponent {
@@ -121,8 +127,9 @@ export class GeneralButtonsComponent {
     }
   };
 
-  setCustomMode = (mode: CustomMode) => {
-    this.customMode.set(mode);
+  // Driven by the Aria tab list, which reports the selected tab's value as a string.
+  setCustomMode = (mode: string | undefined) => {
+    if (mode === 'last-x' || mode === 'date-range') this.customMode.set(mode);
   };
 
   applyCustomLastX = () => {

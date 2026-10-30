@@ -1,53 +1,14 @@
-.btn {
-  background-color: var(--ui-accent);
-  border: none;
-  color: white;
-  border-radius: 12px;
-  padding: 2px 0px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-  cursor: pointer;
-  display: inline-block;
-  font-weight: bold;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+:host {
+  display: inline-flex;
 }
 
-.btn--sm {
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-size: 12px;
-  height: 28px;
-  line-height: 1;
-}
-
-.btn:hover:not(:disabled) {
-  transition: ease;
-  transition-duration: 0.2s;
-  background-color: color-mix(in srgb, var(--ui-accent) 70%, transparent);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
+/* Narrow screens get a touch-sized target. */
 @media (max-width: 768px) {
-  .btn {
-    padding: 6px 8px;
-    font-size: 13px;
+  .ui-button--lg {
     min-height: 44px;
   }
 
-  .btn--sm {
-    padding: 4px 8px;
-    font-size: 12px;
+  .ui-button--sm {
     min-height: 32px;
-    height: auto;
   }
 }

@@ -25,8 +25,7 @@ import { filter, take } from 'rxjs';
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, Combobox, ComboboxPopup, ComboboxWidget, Listbox, Option, OverlayModule],
-  templateUrl: './add-rule-dialog.component.html',
-  styleUrls: ['./add-rule-dialog.component.css']
+  templateUrl: './add-rule-dialog.component.html'
 })
 export class AddRuleDialogComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

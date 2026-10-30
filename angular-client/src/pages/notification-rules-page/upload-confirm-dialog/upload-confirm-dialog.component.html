@@ -1,7 +1,7 @@
 <div class="confirm-content">
   <p>The following {{ rules.length }} rule(s) will be added:</p>
   <div class="rules-preview">
-    <table>
+    <table class="ui-table ui-table--striped">
       <thead>
         <tr>
           <th>ID</th>
@@ -22,7 +22,7 @@
       </tbody>
     </table>
   </div>
-  <div class="button-row">
+  <div class="ui-form-actions">
     <button type="button" class="ui-button ui-button--text" (click)="onCancel()">Cancel</button>
     <button type="button" class="ui-button" (click)="onConfirm()">Confirm Upload</button>
   </div>

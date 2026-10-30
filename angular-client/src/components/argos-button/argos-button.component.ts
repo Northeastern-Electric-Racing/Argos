@@ -2,10 +2,22 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 
 export type ButtonSize = 'default' | 'sm';
 
+/** The design-system button variants in src/ui/ui.css; 'primary' is the plain .ui-button. */
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'tonal'
+  | 'neutral'
+  | 'outlined'
+  | 'text'
+  | 'success'
+  | 'warn'
+  | 'danger';
+
 /**
- * Simple custom button component that does something on click
- * Takes label and onClick function as inputs
- * Currently has one set button style but can be expanded to have more customizable styles
+ * The app's labelled button: a native button styled by the design system's .ui-button.
+ * Pick the look with `variant` and `size`; `additionalStyles` is for layout only (width, margins).
+ * The default size keeps the legacy 140x45 footprint; `sm` is the compact toolbar size.
  */
 @Component({
   selector: 'argos-button',
@@ -21,12 +33,13 @@ export class ButtonComponent {
   additionalStyles = input<string>();
   disabled = input<boolean>(false);
   size = input<ButtonSize>('default');
-  cssClass = computed(() => `btn btn--${this.size()}`);
-  style = computed(() => {
-    // The default size keeps the legacy fixed footprint; sm lets CSS drive sizing
-    // so callers don't need to override width/height per-button.
-    const base = this.size() === 'sm' ? '' : 'width: 140px; height: 45px; ';
-    const extra = this.additionalStyles();
-    return extra ? base + extra : base;
+  variant = input<ButtonVariant>('primary');
+  /** For buttons that open a popup: its kind, and whether it is open. */
+  ariaHaspopup = input<'dialog' | 'menu' | 'listbox' | undefined>(undefined);
+  ariaExpanded = input<boolean | undefined>(undefined);
+  cssClass = computed(() => {
+    const variant = this.variant();
+    const size = this.size() === 'sm' ? 'ui-button--sm' : 'ui-button--lg';
+    return variant === 'primary' ? `ui-button ${size}` : `ui-button ${size} ui-button--${variant}`;
   });
 }

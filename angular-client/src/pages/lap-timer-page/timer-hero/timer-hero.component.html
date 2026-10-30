@@ -15,59 +15,19 @@
     </div>
     <div class="hero-actions">
       @if (!timer.activeSession()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
+        <argos-button label="Start" [onClick]="onStart" variant="success" />
       } @else if (timer.isIdle()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Delete"
-          [onClick]="onDeleteActiveButton"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <argos-button label="Start" [onClick]="onStart" variant="success" />
+        <argos-button label="Delete" [onClick]="onDeleteActiveButton" variant="danger" />
       } @else if (timer.isRunning()) {
-        <argos-button
-          label="Pause"
-          [onClick]="onPause"
-          additionalStyles="background-color: var(--color-battery-med); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Lap"
-          [onClick]="onLap"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Stop"
-          [onClick]="onStop"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <argos-button label="Pause" [onClick]="onPause" variant="warn" />
+        <argos-button label="Lap" [onClick]="onLap" variant="success" />
+        <argos-button label="Stop" [onClick]="onStop" />
       } @else if (timer.isPaused()) {
-        <argos-button
-          label="Resume"
-          [onClick]="onResume"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Reset"
-          [onClick]="onReset"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
-        <argos-button
-          label="Download"
-          [onClick]="onDownloadActiveButton"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
-        <argos-button
-          label="End Session"
-          [onClick]="onEndActiveSession"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <argos-button label="Resume" [onClick]="onResume" variant="success" />
+        <argos-button label="Reset" [onClick]="onReset" variant="danger" />
+        <argos-button label="Download" [onClick]="onDownloadActiveButton" variant="neutral" />
+        <argos-button label="End Session" [onClick]="onEndActiveSession" variant="neutral" />
       }
     </div>
   </div>

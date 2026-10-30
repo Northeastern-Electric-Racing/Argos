@@ -13,9 +13,9 @@
       <div class="header-row">
         <typography variant="x-large-title" content="Notification Rules" />
         <div class="header-buttons">
-          <argos-button label="View Log" [onClick]="onViewLog" additionalStyles="background-color: #ef4345;" />
-          <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
-          <argos-button label="Download" [onClick]="onDownload" additionalStyles="background-color: #555;" />
+          <argos-button label="View Log" [onClick]="onViewLog" variant="outlined" />
+          <argos-button label="Upload" [onClick]="onUpload" variant="neutral" />
+          <argos-button label="Download" [onClick]="onDownload" variant="neutral" />
         </div>
       </div>
 
@@ -23,8 +23,13 @@
         <typography variant="header" content="Rules" />
         <div class="rules-bar-actions">
           <argos-button label="Add" [onClick]="onAddRule" />
-          <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
-          <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+          <argos-button label="Remove" variant="danger" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
+          <argos-button
+            label="Toggle Subscription"
+            variant="neutral"
+            [onClick]="onToggleSubscription"
+            [disabled]="!hasSelection()"
+          />
         </div>
         <div class="search-container">
           <input

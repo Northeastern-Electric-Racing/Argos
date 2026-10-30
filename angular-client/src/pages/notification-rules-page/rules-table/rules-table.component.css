@@ -34,6 +34,11 @@
     font-size: 0.85rem;
   }
 
+  /* Long topics wrap instead of pushing the row actions off a phone screen. */
+  .ui-table td {
+    overflow-wrap: anywhere;
+  }
+
   .col-select {
     width: 2.5rem;
   }

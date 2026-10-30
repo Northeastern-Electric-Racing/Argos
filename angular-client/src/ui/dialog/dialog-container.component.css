@@ -10,10 +10,10 @@
 
 .ui-dialog-surface {
   /* Header padding; the close button sits in the top-right corner of the same box. */
-  --ui-dialog-header-top: 0.9rem;
-  --ui-dialog-header-right: 1rem;
-  --ui-dialog-header-bottom: 0.5rem;
-  --ui-dialog-header-left: 1.25rem;
+  --ui-dialog-header-top: var(--ui-space-4);
+  --ui-dialog-header-right: var(--ui-space-4);
+  --ui-dialog-header-bottom: var(--ui-space-2);
+  --ui-dialog-header-left: var(--ui-space-5);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -24,7 +24,7 @@
   border-radius: var(--ui-radius-lg);
   box-shadow: var(--ui-shadow);
   overflow: hidden;
-  animation: ui-dialog-in 140ms ease-out;
+  animation: ui-dialog-in var(--ui-duration) var(--ui-ease-out);
 }
 
 @keyframes ui-dialog-in {
@@ -49,8 +49,8 @@
 
 .ui-dialog-title {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: var(--ui-font-lg);
+  font-weight: var(--ui-weight-bold);
 }
 
 .ui-dialog-close {
@@ -60,7 +60,7 @@
 }
 
 .ui-dialog-content {
-  padding: 0 1.25rem 1.25rem;
+  padding: 0 var(--ui-space-5) var(--ui-space-5);
   overflow: auto;
 }
 

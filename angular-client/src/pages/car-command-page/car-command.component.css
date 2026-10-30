@@ -56,7 +56,7 @@
 }
 
 .auth-error {
-  color: #f04346;
+  color: var(--ui-danger);
   font-size: var(--font-size-sm);
   text-align: center;
   margin: 0;

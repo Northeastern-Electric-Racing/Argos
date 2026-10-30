@@ -97,7 +97,7 @@
 }
 
 .y-axis-input {
-  width: 60px;
+  width: 64px;
 }
 
 /* ======================== Mobile ======================== */
@@ -162,6 +162,6 @@
   }
 
   .y-axis-input {
-    width: 55px;
+    width: 64px;
   }
 }
