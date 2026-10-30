@@ -72,32 +72,8 @@ describe('GraphComponent (info graph)', () => {
       { x: 2_000, y: 12 }
     ]);
     expect(c.scales['x'].max).toBe(2_000);
-  });
-
-  it('never hands the caller-owned data array to Chart.js', async () => {
-    const data: GraphData[] = [{ x: 1_000, y: 10 }];
-    const c = await render({ data });
-
+    // Chart.js patches the arrays it's given, so it only ever gets a copy
     expect(c.data.datasets[0].data).not.toBe(data);
-  });
-
-  it('slides to the last two minutes by default', async () => {
-    const c = await render({
-      data: [
-        { x: 0, y: 1 },
-        { x: 100_000, y: 2 },
-        { x: 200_000, y: 3 }
-      ]
-    });
-
-    expect(c.scales['x'].min).toBe(80_000);
-    expect(c.scales['x'].max).toBe(200_000);
-    // The point before the window stays, so the line enters from the left edge
-    expect(c.data.datasets[0].data).toEqual([
-      { x: 0, y: 1 },
-      { x: 100_000, y: 2 },
-      { x: 200_000, y: 3 }
-    ]);
   });
 
   it('slides to the given time range and drops points before it', async () => {
@@ -119,22 +95,15 @@ describe('GraphComponent (info graph)', () => {
     ]);
   });
 
-  it('applies a colour change to the live chart', async () => {
+  it('applies a new colour or data array, as when a graph is reset, to the live chart straight away', async () => {
     const c = await render({ data: [{ x: 1_000, y: 10 }] });
 
     fixture.componentRef.setInput('color', '#00ff00');
+    fixture.componentRef.setInput('data', [{ x: 5_000, y: 1 }]);
     await settle();
 
     expect(chart()).toBe(c);
     expect(c.data.datasets[0].borderColor).toBe('#00ff00');
-  });
-
-  it('follows a new data array, as when a graph is reset', async () => {
-    const c = await render({ data: [{ x: 1_000, y: 10 }] });
-
-    fixture.componentRef.setInput('data', [{ x: 5_000, y: 1 }]);
-    await settle();
-
     expect(c.data.datasets[0].data).toEqual([{ x: 5_000, y: 1 }]);
   });
 

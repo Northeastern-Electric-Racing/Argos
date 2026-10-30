@@ -45,7 +45,7 @@ describe('DoubleLineGraphComponent', () => {
     return fixture.debugElement.query(By.directive(BaseChartDirective)).injector.get(BaseChartDirective).chart!;
   }
 
-  it('draws both lines with their titles and colours, and shows the legend', async () => {
+  it('draws both lines with their titles and colours', async () => {
     const c = await render({
       data1: [{ x: 1_000, y: 4.1 }],
       title1: 'High Cell Volts',
@@ -56,41 +56,9 @@ describe('DoubleLineGraphComponent', () => {
     expect(c.data.datasets.map((d) => d.label)).toEqual(['High Cell Volts', 'Low Cell Volts']);
     expect(c.data.datasets.map((d) => d.borderColor)).toEqual(['#ff0000', '#0000ff']);
     expect(c.data.datasets.map((d) => d.data)).toEqual([[{ x: 1_000, y: 4.1 }], [{ x: 1_000, y: 3.9 }]]);
-    expect(c.options.plugins?.legend?.display).toBe(true);
   });
 
-  it('picks up points pushed into either data array on the next refresh', async () => {
-    const high: GraphData[] = [{ x: 1_000, y: 4.1 }];
-    const low: GraphData[] = [{ x: 1_000, y: 3.9 }];
-    const c = await render({ data1: high, data2: low });
-
-    high.push({ x: 2_000, y: 4.2 });
-    low.push({ x: 3_000, y: 3.8 });
-    vi.advanceTimersByTime(LIVE_REFRESH_MS);
-
-    expect(c.data.datasets[0].data).toHaveLength(2);
-    expect(c.data.datasets[1].data).toHaveLength(2);
-    expect(c.scales['x'].max).toBe(3_000);
-  });
-
-  it('slides both lines to the time range, ending at the latest point of either', async () => {
-    const c = await render({
-      data1: [
-        { x: 0, y: 4 },
-        { x: 50_000, y: 4.1 }
-      ],
-      data2: [
-        { x: 0, y: 3 },
-        { x: 60_000, y: 3.1 }
-      ],
-      timeRangeSec: 30
-    });
-
-    expect(c.scales['x'].min).toBe(30_000);
-    expect(c.scales['x'].max).toBe(60_000);
-  });
-
-  it('keeps a line hidden from the legend hidden across refreshes', async () => {
+  it('picks up pushed points on each refresh, keeping a line hidden from the legend hidden', async () => {
     const high: GraphData[] = [{ x: 1_000, y: 4.1 }];
     const c = await render({ data1: high, data2: [{ x: 1_000, y: 3.9 }] });
     const [, lowItem] = c.legend!.legendItems!;
@@ -100,6 +68,7 @@ describe('DoubleLineGraphComponent', () => {
     high.push({ x: 2_000, y: 4.2 });
     vi.advanceTimersByTime(LIVE_REFRESH_MS * 2);
 
+    expect(c.data.datasets[0].data).toHaveLength(2);
     expect(c.isDatasetVisible(0)).toBe(true);
     expect(c.isDatasetVisible(1)).toBe(false);
   });

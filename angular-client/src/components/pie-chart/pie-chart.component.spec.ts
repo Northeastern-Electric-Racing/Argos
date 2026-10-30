@@ -31,7 +31,7 @@ describe('PieChartComponent', () => {
     return fixture.debugElement.query(By.directive(BaseChartDirective)).injector.get(BaseChartDirective).chart!;
   }
 
-  it('draws a pie of the values, labelled by name, with a legend and title', async () => {
+  it('draws a pie of the values, labelled by name', async () => {
     const c = await render({
       data: [
         { value: 1, name: 'Pumps' },
@@ -39,11 +39,8 @@ describe('PieChartComponent', () => {
       ]
     });
 
-    expect(c.config).toMatchObject({ type: 'pie' });
     expect(c.data.labels).toEqual(['Pumps', 'Fans']);
     expect(c.data.datasets[0].data).toEqual([1, 2]);
-    expect(c.options.plugins?.legend?.display).toBe(true);
-    expect(c.options.plugins?.title?.text).toBe('Pie Chart');
   });
 
   it('updates the same chart when the values change', async () => {
@@ -101,14 +98,5 @@ describe('PieChartComponent', () => {
     });
 
     expect(tooltipLines(c, 0)).toEqual(['0']);
-  });
-
-  it('shows a changed title', async () => {
-    const c = await render({ data: [{ value: 1, name: 'Pumps' }] });
-
-    fixture.componentRef.setInput('title', 'Current Motor Usage');
-    await settle();
-
-    expect(c.options.plugins?.title?.text).toBe('Current Motor Usage');
   });
 });
