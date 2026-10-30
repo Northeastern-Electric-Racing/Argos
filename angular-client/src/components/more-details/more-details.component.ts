@@ -2,12 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import Storage from 'src/services/storage.service';
-import { ButtonComponent } from '../argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 
 @Component({
   selector: 'more-details',
   templateUrl: './more-details.component.html',
-  imports: [ButtonComponent]
+  imports: [NzButtonModule]
 })
 export default class MoreDetailsComponent {
   private router = inject(Router);

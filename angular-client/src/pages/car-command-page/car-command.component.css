@@ -37,35 +37,6 @@
   margin: 0;
 }
 
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.auth-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.auth-input-group label {
-  color: var(--color-text-subtitle);
-  font-size: var(--font-size-sm);
-  font-family: var(--font-family);
-}
-
-.auth-input-group nz-input-password {
-  width: 100%;
-}
-
-.auth-error {
-  color: #f04346;
-  font-size: var(--font-size-sm);
-  text-align: center;
-  margin: 0;
-}
-
 /* ---- Commands Grid ---- */
 .commands-grid {
   display: grid;

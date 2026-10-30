@@ -12,36 +12,36 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+            <button nz-button nzSize="small" [attr.aria-pressed]="showSideBar" (click)="toggleSideBar()">
+              <nz-icon [nzType]="showSideBar ? 'menu-fold' : 'menu-unfold'" />
+              Sidebar
+            </button>
+            <button
+              nz-button
+              nzSize="small"
+              [nzType]="showMultiYaxis ? 'primary' : 'default'"
+              [attr.aria-pressed]="showMultiYaxis"
+              (click)="toggleMultiYaxis()"
+            >
+              Multi Y-axis
+            </button>
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button nz-button nzSize="small" (click)="togglePause()">
+                <nz-icon [nzType]="isPaused ? 'caret-right' : 'pause'" />
+                {{ isPaused ? 'Play' : 'Pause' }}
+              </button>
             }
           </div>
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+              <nz-segmented
+                nzSize="small"
+                aria-label="X range unit"
+                [nzOptions]="rangeModeOptions"
+                [ngModel]="rangeMode"
+                (ngModelChange)="setRangeMode($event)"
               />
               <label class="input-label" for="graph-x-range">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
               <nz-input-number

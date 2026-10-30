@@ -129,4 +129,15 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     const lastNav = routerNavigate.mock.lastCall!;
     expect(lastNav[1].queryParams.topics).toBeNull();
   });
+
+  it('switches the live X range between seconds and points from the range-unit control', () => {
+    mountAndLoadDataTypes();
+    const page = fixture.componentInstance;
+
+    page.setRangeMode('points');
+    expect(page.graphConfig.rangeMode).toBe('points');
+
+    page.setRangeMode('time');
+    expect(page.graphConfig.rangeMode).toBe('time');
+  });
 });

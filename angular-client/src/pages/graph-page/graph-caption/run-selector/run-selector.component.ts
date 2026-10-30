@@ -6,14 +6,15 @@ import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
   styleUrls: ['./run-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [NzButtonModule, NzIconModule]
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

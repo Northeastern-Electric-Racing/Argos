@@ -10,25 +10,24 @@
       <info-background title="Car Commands" icon="lock">
         <div class="auth-content">
           <p class="auth-description">Enter the command password to access car controls.</p>
-          <div class="auth-form">
-            <div class="auth-input-group">
-              <label for="password">Password</label>
-              <nz-input-password>
-                <input nz-input id="password" [(ngModel)]="enteredPw" />
-              </nz-input-password>
-            </div>
-            <argos-button label="Authenticate" [onClick]="authenticatePw" />
-            @if (authError()) {
-              <p class="auth-error">{{ authError() }}</p>
-            }
-          </div>
+          <form nz-form nzLayout="vertical" class="auth-form" (ngSubmit)="authenticatePw()">
+            <nz-form-item>
+              <nz-form-label nzFor="password">Password</nz-form-label>
+              <nz-form-control [nzValidateStatus]="authError() ? 'error' : ''" [nzErrorTip]="authError()">
+                <nz-input-password>
+                  <input nz-input id="password" name="password" [(ngModel)]="enteredPw" />
+                </nz-input-password>
+              </nz-form-control>
+            </nz-form-item>
+            <button nz-button nzType="primary" nzBlock type="submit">Authenticate</button>
+          </form>
         </div>
       </info-background>
     </div>
   } @else {
     <div class="page-header">
       <typography variant="large-header" content="Car Commands" />
-      <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
+      <button nz-button (click)="onUpdateVideosPressed()">Update Videos</button>
     </div>
 
     <div class="commands-grid">
@@ -48,7 +47,7 @@
           </div>
           <div class="settings-footer">
             <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
-            <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
+            <button nz-button nzType="primary" (click)="confirmSaveSettings()">Save Settings</button>
           </div>
         </div>
       </info-background>

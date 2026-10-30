@@ -2,24 +2,15 @@
   <div class="presets-row">
     <select-dropdown
       class="preset-select"
+      size="small"
       [options]="presetSelectorConfig().options"
       [placeholder]="presetSelectorConfig().placeholder"
       [defaultValue]="activePresetName()"
     />
-    <argos-button
-      [onClick]="openPresetsDialog"
-      label="Manage Presets"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <button nz-button nzSize="small" (click)="openPresetsDialog()">Manage Presets</button>
   </div>
   <div class="header-row">
-    <argos-button
-      [onClick]="clearSelections"
-      label="Clear Topics"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <button nz-button nzSize="small" (click)="clearSelections()">Clear Topics</button>
     <div class="toggle-group">
       <label class="flatten-toggle">
         <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
@@ -33,9 +24,10 @@
       </label>
     </div>
   </div>
-  <nz-input-search class="tree-search">
-    <input nz-input [(ngModel)]="searchValue" placeholder="Select Data Type" aria-label="Search topics" />
-  </nz-input-search>
+  <nz-input-wrapper nzAllowClear class="tree-search">
+    <nz-icon nzInputPrefix nzType="search" />
+    <input nz-input [(ngModel)]="searchValue" placeholder="Search topics" aria-label="Search topics" />
+  </nz-input-wrapper>
   <div class="tree-scroll" style="height: 80vh">
     <topic-tree [nodes]="activeNodes()" [searchValue]="searchValue()" />
   </div>

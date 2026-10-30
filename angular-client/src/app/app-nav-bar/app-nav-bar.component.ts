@@ -10,7 +10,7 @@ import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
-import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
@@ -39,7 +39,7 @@ export interface NavItem {
   imports: [
     NzDrawerModule,
     CurrentRunDisplayComponent,
-    ToastButtonComponent,
+    NzButtonModule,
     MessagesPerSecondComponent,
     AsyncPipe,
     DatePipe,
@@ -103,6 +103,7 @@ export class AppNavBarComponent implements OnInit {
 
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
+    this.notification.create('success', 'New Run Started', 'Your new run has started successfully.');
     runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
       this.newRunIsLoading = isLoading;
     });

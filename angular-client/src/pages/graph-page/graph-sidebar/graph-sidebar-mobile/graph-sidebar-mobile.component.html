@@ -1,4 +1,4 @@
-<button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
+<button nz-button nzType="primary" nzSize="large" class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
 <nz-drawer
   [(nzVisible)]="sidebarVisible"
@@ -20,19 +20,9 @@
           [placeholder]="presetSelectorConfig().placeholder"
           [defaultValue]="activePresetName()"
         />
-        <argos-button
-          [onClick]="openPresetsDialog"
-          label="Manage"
-          size="sm"
-          additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-        />
+        <button nz-button (click)="openPresetsDialog()">Manage</button>
       </div>
-      <argos-button
-        [onClick]="clearSelections"
-        label="Clear Topics"
-        size="sm"
-        additionalStyles="background-color: #323232; border: 1.4px solid #027bd7; width: 100%;"
-      />
+      <button nz-button nzBlock (click)="clearSelections()">Clear Topics</button>
       <div class="toggle-group">
         <label class="flatten-toggle">
           <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
@@ -45,9 +35,10 @@
           <nz-switch [ngModel]="flattenMode()" (ngModelChange)="toggleFlattenMode($event)" />
         </label>
       </div>
-      <nz-input-search class="tree-search">
-        <input nz-input [(ngModel)]="searchValue" placeholder="Search topics..." aria-label="Search topics" />
-      </nz-input-search>
+      <nz-input-wrapper nzAllowClear class="tree-search">
+        <nz-icon nzInputPrefix nzType="search" />
+        <input nz-input [(ngModel)]="searchValue" placeholder="Search topics" aria-label="Search topics" />
+      </nz-input-wrapper>
       <div class="tree-scroll" style="height: calc(100vh - 220px)">
         <topic-tree [nodes]="activeNodes()" [searchValue]="searchValue()" />
       </div>

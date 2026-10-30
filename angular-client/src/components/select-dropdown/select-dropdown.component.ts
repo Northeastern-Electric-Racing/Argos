@@ -1,5 +1,5 @@
 import { Component, computed, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzSelectModule, NzSelectSizeType } from 'ng-zorro-antd/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
@@ -34,6 +34,8 @@ export class SelectDropdownComponent {
   defaultValue = input<string | undefined>(undefined);
   /** Accessible name for the select; defaults to the placeholder, which callers use as its caption. */
   label = input<string | undefined>(undefined);
+  /** Ant's control size; small lines the select up with small buttons in toolbars. */
+  size = input<NzSelectSizeType>('default');
   accessibleName = computed(() => this.label() ?? this.placeholder());
   readonly inputId = `select-dropdown-${nextId++}`;
 

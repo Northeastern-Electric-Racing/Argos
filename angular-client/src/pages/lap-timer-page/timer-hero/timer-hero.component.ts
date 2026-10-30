@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatDeltaMs } from 'src/utils/lap-timer.types';
@@ -11,7 +11,7 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
   templateUrl: './timer-hero.component.html',
   styleUrl: './timer-hero.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, InfoBackgroundComponent]
+  imports: [NzButtonModule, InfoBackgroundComponent]
 })
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);

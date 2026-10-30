@@ -10,17 +10,12 @@
       </span>
       <span class="sessions-toolbar-actions">
         @if (timer.sessions().length > 0) {
-          <argos-button
-            label="Clear All"
-            [onClick]="onClearAllSessions"
-            additionalStyles="height: 32px; width: 110px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-battery-low);"
-          />
+          <button nz-button nzSize="small" nzDanger (click)="onClearAllSessions()">Clear All</button>
         }
-        <argos-button
-          label="+ New Session"
-          [onClick]="onNewSession"
-          additionalStyles="height: 32px; width: 140px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <button nz-button nzSize="small" (click)="onNewSession()">
+          <nz-icon nzType="plus" />
+          New Session
+        </button>
       </span>
     </div>
 
@@ -70,6 +65,8 @@
                 <td class="col-name">
                   @if (editingSessionId() === s.id) {
                     <input
+                      nz-input
+                      nzSize="small"
                       class="session-rename-input"
                       type="text"
                       [ngModel]="editingName()"
@@ -96,6 +93,9 @@
                 <td class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
                 <td class="col-actions">
                   <button
+                    nz-button
+                    nzType="text"
+                    nzShape="circle"
                     class="session-menu-btn"
                     nz-dropdown
                     nzTrigger="click"
@@ -104,18 +104,18 @@
                     (click)="$event.stopPropagation()"
                     aria-label="Session actions"
                   >
-                    <mat-icon>more_vert</mat-icon>
+                    <nz-icon nzType="more" />
                   </button>
                   <nz-dropdown-menu #sessionMenu="nzDropdownMenu">
                     <ul nz-menu>
-                      <li nz-menu-item class="session-menu-item" (click)="startEdit(s)">
-                        <mat-icon>edit</mat-icon><span>Rename</span>
+                      <li nz-menu-item (click)="startEdit(s)">
+                        <nz-icon nzType="edit" class="ant-dropdown-menu-item-icon" /><span>Rename</span>
                       </li>
-                      <li nz-menu-item class="session-menu-item" (click)="onDownload(s.id)">
-                        <mat-icon>download</mat-icon><span>Download CSV</span>
+                      <li nz-menu-item (click)="onDownload(s.id)">
+                        <nz-icon nzType="download" class="ant-dropdown-menu-item-icon" /><span>Download CSV</span>
                       </li>
-                      <li nz-menu-item nzDanger class="session-menu-item" (click)="onDeleteSession(s)">
-                        <mat-icon>delete</mat-icon><span>Delete</span>
+                      <li nz-menu-item nzDanger (click)="onDeleteSession(s)">
+                        <nz-icon nzType="delete" class="ant-dropdown-menu-item-icon" /><span>Delete</span>
                       </li>
                     </ul>
                   </nz-dropdown-menu>

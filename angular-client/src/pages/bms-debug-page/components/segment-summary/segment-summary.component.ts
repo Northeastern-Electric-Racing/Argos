@@ -8,7 +8,8 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 import { DividerComponent } from '../../../../components/divider/divider';
-import { ToastButtonComponent } from '../../../../components/toast-button/toast-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import VStackComponent from 'src/components/vstack/vstack.component';
 
 @Component({
@@ -16,7 +17,14 @@ import VStackComponent from 'src/components/vstack/vstack.component';
   templateUrl: './segment-summary.component.html',
   styleUrl: './segment-summary.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
+  imports: [
+    InfoBackgroundComponent,
+    InfoValueDisplayComponent,
+    DividerComponent,
+    NzButtonModule,
+    NzIconModule,
+    VStackComponent
+  ]
 })
 export class SegmentSummaryComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

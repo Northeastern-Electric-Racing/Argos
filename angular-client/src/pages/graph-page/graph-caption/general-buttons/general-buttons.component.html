@@ -1,24 +1,23 @@
 <div class="general-buttons-row">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
-    <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" additionalStyles="border: 1.4px solid #000" />
+    <button nz-button nzSize="small" nzType="primary" (click)="onSetRealTime()()">Realtime</button>
   }
-  <argos-button
-    [onClick]="onClearDataType()"
-    label="Clear Graph"
-    size="sm"
-    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-  />
+  <button nz-button nzSize="small" (click)="onClearDataType()()">Clear Graph</button>
 
   <div class="historical-section">
     <span class="historical-label">Historical:</span>
     <select-dropdown
+      size="small"
       [options]="quickSelectConfig().options"
       [placeholder]="quickSelectConfig().placeholder"
       [defaultValue]="selectedPresetLabel()"
     />
     <div class="custom-stack">
-      <span
+      <button
+        nz-button
+        nzSize="small"
+        [nzType]="customActive() ? 'primary' : 'default'"
         nz-popover
         nzPopoverTrigger="click"
         nzPopoverPlacement="bottom"
@@ -27,17 +26,8 @@
         [(nzPopoverVisible)]="customPopoverOpen"
         (nzPopoverVisibleChange)="$event && onCustomPopoverShow()"
       >
-        <argos-button
-          [onClick]="noop"
-          label="Custom"
-          size="sm"
-          [additionalStyles]="
-            customActive()
-              ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
-              : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
-          "
-        />
-      </span>
+        Custom
+      </button>
       @if (customActive() && customCaption()) {
         <span class="custom-caption">{{ customCaption() }}</span>
       }
@@ -46,24 +36,14 @@
 
   <ng-template #customRangeContent>
     <div class="custom-popover-body">
-      <div class="mode-toggle">
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="customMode() === 'last-x'"
-          (click)="setCustomMode('last-x')"
-        >
-          Last X
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="customMode() === 'date-range'"
-          (click)="setCustomMode('date-range')"
-        >
-          Date Range
-        </button>
-      </div>
+      <nz-segmented
+        nzBlock
+        nzSize="small"
+        aria-label="Custom range type"
+        [nzOptions]="customModeOptions"
+        [ngModel]="customMode()"
+        (ngModelChange)="setCustomMode($event)"
+      />
 
       @if (customMode() === 'last-x') {
         <div class="mode-body">
@@ -91,12 +71,7 @@
               nzPlaceHolder="30"
             />
           </div>
-          <argos-button
-            [onClick]="applyCustomLastX"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
+          <button nz-button nzType="primary" nzSize="small" nzBlock (click)="applyCustomLastX()">Apply</button>
         </div>
       } @else {
         <div class="mode-body">
@@ -124,12 +99,7 @@
               [nzDisabledDate]="isAfterMaxDate"
             />
           </div>
-          <argos-button
-            [onClick]="applyCustomDateRange"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
+          <button nz-button nzType="primary" nzSize="small" nzBlock (click)="applyCustomDateRange()">Apply</button>
         </div>
       }
     </div>

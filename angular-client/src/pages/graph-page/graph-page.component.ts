@@ -23,7 +23,9 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSegmentedModule, NzSegmentedOptions } from 'ng-zorro-antd/segmented';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -43,7 +45,9 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
+    NzButtonModule,
+    NzIconModule,
+    NzSegmentedModule,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
@@ -191,8 +195,13 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleRangeMode = () => {
-    this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
+  readonly rangeModeOptions: NzSegmentedOptions = [
+    { label: 'Time', value: 'time' },
+    { label: 'Points', value: 'points' }
+  ];
+
+  setRangeMode = (mode: 'time' | 'points') => {
+    this.rangeMode = mode;
     this.onGraphConfigChange();
   };
 

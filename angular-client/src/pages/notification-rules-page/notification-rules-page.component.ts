@@ -7,7 +7,8 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { FormsModule } from '@angular/forms';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import {
   addRule,
   ClientRule,
@@ -37,7 +38,8 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TypographyComponent,
-    ButtonComponent,
+    FormsModule,
+    NzButtonModule,
     NzInputModule,
     NzIconModule,
     RulesTableComponent,
@@ -183,11 +185,6 @@ export default class NotificationRulesPageComponent implements OnInit {
 
   onSelectionChanged(rules: ClientRule[]): void {
     this.selectedRules.set(rules);
-  }
-
-  onSearchInput(event: Event): void {
-    const { value } = event.target as HTMLInputElement;
-    this.searchTerm.set(value);
   }
 
   toggleStreamRail = () => {

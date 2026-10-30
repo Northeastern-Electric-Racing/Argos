@@ -27,7 +27,8 @@ import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import { mapNodesToTreeNodes, flattenTreeNodes, filterSelectedNodes } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 import TopicTreeComponent from '../topic-tree/topic-tree.component';
@@ -38,7 +39,8 @@ import TopicTreeComponent from '../topic-tree/topic-tree.component';
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
-    ButtonComponent,
+    NzButtonModule,
+    NzIconModule,
     TopicTreeComponent,
     NzInputModule,
     TypographyComponent,

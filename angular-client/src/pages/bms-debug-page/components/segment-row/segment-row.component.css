@@ -113,8 +113,8 @@
   background-color: #1e9ad8;
 }
 
-/* Ant select overrides: fit the dropdown to the controls-zone's fluid sizing */
-.controls-zone ::ng-deep .small-grey-select {
+/* Fit the dropdown to the controls-zone's fluid sizing */
+.controls-zone select-dropdown {
   width: 100%;
   min-width: 0;
   font-size: clamp(7px, 0.94vw, 18px);

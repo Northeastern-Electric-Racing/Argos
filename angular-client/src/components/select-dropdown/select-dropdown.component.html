@@ -2,6 +2,7 @@
 <nz-select
   class="small-grey-select"
   [nzId]="inputId"
+  [nzSize]="size()"
   [ngModel]="selectedOption?.name"
   (ngModelChange)="handleChangedOption($event)"
   [nzPlaceHolder]="placeholder()"

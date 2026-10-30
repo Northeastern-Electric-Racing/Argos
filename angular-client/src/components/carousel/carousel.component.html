@@ -1,28 +1,14 @@
-<div class="modal-container">
-  <nz-carousel nzArrows nzAutoPlay [nzAutoPlaySpeed]="3000" (nzAfterChange)="updateIndex($event)">
-    @for (run of runs; track run.id) {
-      <div nz-carousel-content>
-        <div class="run-card">
-          <mat-grid-list cols="2" rowHeight="40px">
-            <mat-grid-tile>
-              <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-            </mat-grid-tile>
-            <mat-grid-tile>
-              <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-            </mat-grid-tile>
-            <mat-grid-tile>
-              <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-            </mat-grid-tile>
-            <mat-grid-tile colspan="2">
-              <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-            </mat-grid-tile>
-          </mat-grid-list>
-        </div>
-
-        <div class="select-button-container">
-          <button nz-button (click)="selectRun(run)">Select this Run</button>
-        </div>
+<nz-carousel nzArrows nzAutoPlay [nzAutoPlaySpeed]="3000" (nzAfterChange)="updateIndex($event)">
+  @for (run of runs; track run.id) {
+    <div nz-carousel-content>
+      <div class="slide">
+        <nz-descriptions nzBordered nzSize="small" [nzColumn]="1" [nzTitle]="'Run #' + run.id">
+          <nz-descriptions-item nzTitle="Driver">{{ run.driverName || '—' }}</nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Location">{{ run.locationName || '—' }}</nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Started">{{ datePipe(run.time) }}</nz-descriptions-item>
+        </nz-descriptions>
+        <button nz-button nzType="primary" class="select-button" (click)="selectRun(run)">Select this Run</button>
       </div>
-    }
-  </nz-carousel>
-</div>
+    </div>
+  }
+</nz-carousel>

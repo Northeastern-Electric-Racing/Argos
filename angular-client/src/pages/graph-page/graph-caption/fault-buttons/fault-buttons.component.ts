@@ -1,12 +1,12 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 
 @Component({
   selector: 'fault-buttons',
   templateUrl: './fault-buttons.component.html',
   styleUrl: './fault-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [NzButtonModule]
 })
 export class FaultButtonsComponent {
   onClearData = input.required<() => void>();

@@ -3,9 +3,8 @@ import { Router } from '@angular/router';
 import { NzCarouselComponent, NzCarouselModule } from 'ng-zorro-antd/carousel';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
 import { Run } from 'src/utils/types.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import TypographyComponent from '../typography/typography.component';
+import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
 
 // the data for the dialog, basically just all the runs
 export interface DialogData {
@@ -17,7 +16,7 @@ export interface DialogData {
   templateUrl: 'carousel.component.html',
   styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [NzCarouselModule, MatGridList, MatGridTile, NzButtonModule, TypographyComponent]
+  imports: [NzCarouselModule, NzDescriptionsModule, NzButtonModule]
 })
 export class CarouselComponent {
   public dialogRef = inject(NzModalRef);

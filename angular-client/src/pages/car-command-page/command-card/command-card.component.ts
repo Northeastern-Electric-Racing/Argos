@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { CarCommand } from 'src/utils/types.utils';
 import CommandRowComponent from './command-row/command-row.component';
 
@@ -9,7 +9,7 @@ import CommandRowComponent from './command-row/command-row.component';
   templateUrl: './command-card.component.html',
   styleUrls: ['./command-card.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [InfoBackgroundComponent, ButtonComponent, CommandRowComponent]
+  imports: [InfoBackgroundComponent, NzButtonModule, CommandRowComponent]
 })
 export default class CommandCardComponent {
   command = input.required<CarCommand>();

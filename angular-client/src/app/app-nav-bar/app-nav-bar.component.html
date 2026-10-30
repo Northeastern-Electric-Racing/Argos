@@ -41,14 +41,7 @@
     </div>
 
     <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 130px"
-      />
+      <button nz-button nzType="primary" [nzLoading]="newRunIsLoading" (click)="onStartNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"

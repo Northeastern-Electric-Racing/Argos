@@ -1,27 +1,18 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 
 @Component({
   selector: 'setting-input',
   templateUrl: './setting-input.component.html',
   styleUrls: ['./setting-input.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NzInputModule]
+  imports: [FormsModule, NzInputNumberModule]
 })
 export default class SettingInputComponent {
   label = input.required<string>();
   value = model<number | undefined>();
-  min = input<number>();
-  max = input<number>();
-
-  onValueChange(raw: string) {
-    let num = Number(raw);
-    if (isNaN(num)) return;
-    const minVal = this.min();
-    const maxVal = this.max();
-    if (minVal !== undefined && num < minVal) num = minVal;
-    if (maxVal !== undefined && num > maxVal) num = maxVal;
-    this.value.set(num);
-  }
+  // nz-input-number clamps typed values to these bounds on blur
+  min = input<number>(-Infinity);
+  max = input<number>(Infinity);
 }

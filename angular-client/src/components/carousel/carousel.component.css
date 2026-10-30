@@ -1,72 +1,17 @@
-.select-button-container {
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-}
-
-.run-card {
+/* Inset each slide so nz-carousel's arrows sit beside the run details, not over them. */
+.slide {
   display: flex;
-  margin-top: 8px;
   flex-direction: column;
-  justify-content: space-between;
-  border: 2.5px solid #0099ff;
-  margin-left: 8px;
-  margin-right: 8px;
-  border-radius: 10px;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 32px 28px;
 }
 
-.number-buttons {
-  background-color: #262626;
-  border-radius: 10px;
-  color: white !important;
-  padding: 15px;
-  font-size: small;
-}
-
-/* Container that holds the carousel */
-.modal-container {
-  background-color: #262626;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-/* should eventually be replaced with Grid component */
-
-.row {
-  display: flex;
-  background-color: #262626;
-  color: #ffff;
+.slide nz-descriptions {
   width: 100%;
 }
 
-.left {
-  margin-left: 5px;
-  text-align: left;
-  margin-right: auto;
-}
-
-.right {
-  margin-left: auto;
-  margin-right: 5px;
-  text-align: right;
-}
-
-.number_buttons.highlight {
-  border: 2px solid #0099ff; /* Highlight color */
-  background-color: #808080; /* Slightly different background to stand out */
-}
-
-.modal-close-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  scale: 75%;
-  border-radius: 10px;
-  margin-top: 15px;
-  margin-right: 10px;
-}
-
-/* Ant's carousel arrows sit over the slide; keep them clear of the run card. */
+/* Ant's dark theme draws the carousel arrows in the page text colour at low opacity; keep them visible. */
 :host ::ng-deep .slick-arrow {
   color: #ffffff;
 }

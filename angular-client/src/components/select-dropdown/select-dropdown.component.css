@@ -1,8 +1,14 @@
-/* Ant select at a compact fixed width. */
-.small-grey-select {
+/* Compact fixed width by default; callers size the host element to change it. */
+:host {
+  display: inline-block;
   width: 10vw;
   min-width: 140px;
   font-size: 0.8rem;
+}
+
+.small-grey-select {
+  width: 100%;
+  font-size: inherit;
 }
 
 /* Callers pass the current choice (e.g. "Segment 1") as the placeholder, so show it at Ant's text colour, not its 30% placeholder grey. */

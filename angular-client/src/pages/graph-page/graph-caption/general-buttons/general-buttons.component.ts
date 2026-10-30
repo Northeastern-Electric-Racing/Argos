@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
+import { NzSegmentedModule, NzSegmentedOptions } from 'ng-zorro-antd/segmented';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
 
 export interface RangePreset {
@@ -35,7 +36,8 @@ type CustomMode = 'last-x' | 'date-range';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RunSelectorComponent,
-    ButtonComponent,
+    NzButtonModule,
+    NzSegmentedModule,
     SelectDropdownComponent,
     NzPopoverModule,
     NzDatePickerModule,
@@ -93,8 +95,10 @@ export class GeneralButtonsComponent {
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
 
-  // The popover's own click trigger opens and closes it; the button only needs a handler.
-  noop = () => {};
+  readonly customModeOptions: NzSegmentedOptions = [
+    { label: 'Last X', value: 'last-x' },
+    { label: 'Date Range', value: 'date-range' }
+  ];
 
   // Disables days after `maxDate` in the date pickers (refreshed each time the popover opens).
   isAfterMaxDate = (date: Date): boolean => date.getTime() > this.maxDate().getTime();

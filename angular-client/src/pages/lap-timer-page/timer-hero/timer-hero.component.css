@@ -79,3 +79,8 @@
   gap: 12px;
   margin-top: 8px;
 }
+
+.hero-actions button {
+  min-width: 120px;
+  font-weight: 600;
+}

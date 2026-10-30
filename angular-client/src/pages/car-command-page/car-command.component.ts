@@ -20,7 +20,8 @@ import { groupCarCommands } from 'src/utils/topic.utils';
 
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzFormModule } from 'ng-zorro-antd/form';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -37,7 +38,8 @@ import CommandCardComponent from './command-card/command-card.component';
   imports: [
     NzInputModule,
     FormsModule,
-    ButtonComponent,
+    NzButtonModule,
+    NzFormModule,
     LoadingPageComponent,
     ErrorPageComponent,
     TypographyComponent,
