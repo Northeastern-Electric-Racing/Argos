@@ -22,6 +22,7 @@
             size="m"
             appearance="secondary-grayscale"
             iconStart="@tui.upload"
+            [loading]="uploading()"
             (click)="onUpload()"
           >
             Upload
@@ -32,6 +33,7 @@
             size="m"
             appearance="secondary-grayscale"
             iconStart="@tui.download"
+            [loading]="downloading()"
             (click)="onDownload()"
           >
             Download

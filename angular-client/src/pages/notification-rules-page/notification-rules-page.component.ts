@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ToastService } from 'src/services/toast.service';
 import { Router } from '@angular/router';
 import { TuiButton, TuiDialogService, TuiInput } from '@taiga-ui/core';
+import { TuiButtonLoading } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -44,7 +45,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, TuiButton, TuiInput, RulesTableComponent, NotificationListComponent]
+  imports: [TypographyComponent, TuiButton, TuiButtonLoading, TuiInput, RulesTableComponent, NotificationListComponent]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

@@ -21,6 +21,9 @@
 }
 
 .home-logo {
+  background: none;
+  border: none;
+  color: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
