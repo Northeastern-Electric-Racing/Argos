@@ -1,10 +1,17 @@
 import { Component, computed, input } from '@angular/core';
-import { ArcElement, ChartData, ChartOptions, Legend, PieController, Title, Tooltip } from 'chart.js';
+import { ArcElement, ChartData, ChartOptions, Legend, PieController, Title, Tooltip, TooltipItem } from 'chart.js';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import Theme from 'src/services/theme.service';
 
 const SLICE_COLORS = ['#ce2727', '#2799ce', '#3cba40', '#ba3cb4', '#808080'];
 const TEXT_COLOR = '#ffffff';
+
+/** A slice's value and its share of the slices still shown, e.g. "2 (66.7%)" */
+function sliceLabel({ chart, dataset, dataIndex, formattedValue }: TooltipItem<'pie'>): string {
+  const total = dataset.data.reduce((sum, value, index) => (chart.getDataVisibility(index) ? sum + value : sum), 0);
+  if (total === 0) return formattedValue;
+  return `${formattedValue} (${((dataset.data[dataIndex] / total) * 100).toFixed(1)}%)`;
+}
 
 @Component({
   selector: 'pie-chart',
@@ -38,7 +45,8 @@ export default class PieChartComponent {
     animation: false,
     plugins: {
       legend: { display: true, position: 'right', labels: { color: TEXT_COLOR, boxWidth: 12 } },
-      title: { display: true, text: this.title(), color: TEXT_COLOR, align: 'start' }
+      title: { display: true, text: this.title(), color: TEXT_COLOR, align: 'start' },
+      tooltip: { callbacks: { label: sliceLabel } }
     }
   }));
 }
