@@ -10,7 +10,6 @@ import AccelerationOverTimeDisplayComponent from 'src/components/acceleration-ov
 import SpeedOverTimeDisplayComponent from 'src/components/speed-over-time-display/speed-over-time-display.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
-import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 
 @Component({
   selector: 'landing-page-mobile',
@@ -19,7 +18,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   imports: [
     TypographyComponent,
     VStackComponent,
-    SidebarToggleComponent,
     SpeedOverTimeDisplayComponent,
     DriverComponent,
     AccelerationGraphsComponent,

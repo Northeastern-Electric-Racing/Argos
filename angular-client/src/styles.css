@@ -1,6 +1,13 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
+
+@import '@spartan-ng/brain/hlm-tailwind-preset.css';
+
 /* You can add global styles to this file, and also import other style files */
-@import 'styles/roboto.scss';
-@import 'styles/material-icons.scss';
+@import './styles/roboto.scss';
+@import './styles/material-icons.scss';
 
 /* Seven-segment display font */
 @font-face {
@@ -51,7 +58,8 @@
 html,
 body {
   height: 100%;
-  font-family: var(--font-family);
+  /* Tailwind's preflight sets 1.5; the existing layouts were built on the browser default. */
+  line-height: normal;
 }
 body {
   margin: 0;
@@ -67,9 +75,6 @@ body {
 * {
   scrollbar-width: none;
 }
-.mat-mdc-dialog-container {
-  --mat-dialog-container-color: transparent !important;
-}
 
 .connection-dot {
   background-color: transparent;
@@ -80,115 +85,93 @@ body {
   border-radius: 50%;
 }
 
-.p-dialog-title {
-  --p-dialog-title-font-weight: bold;
+:root {
+  color-scheme: light;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
-.p-dialog {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 20px !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-}
-.p-dialog-header {
-  background-color: #262626 !important;
-  color: white !important;
-  padding: 1rem !important;
-  font-size: 1.2rem;
-  padding: 1rem;
-  border-radius: 20px 20px 0px 0px !important;
-}
-.p-dialog-content {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 0px 0px 20px 20px !important;
+/*
+ * Spartan neutral dark theme, nudged toward Argos: near-black page, Argos panel grey for cards and
+ * popovers, NER red as the primary. The focus ring stays the theme's neutral grey so red only ever
+ * means primary or invalid.
+ */
+:root.dark {
+  color-scheme: dark;
+
+  --font-sans: var(--font-family);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --background: oklch(0.173 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: var(--color-background-info);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: var(--color-background-info);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.636 0.209 24.8);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.32 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.32 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.32 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.636 0.209 24.8);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Main select button */
-.p-select {
-  color: white !important;
-  background-color: #5a5a5a !important;
-
-  border: none !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Dropdown panel */
-.p-select-panel {
-  background-color: #5a5a5a !important;
-  color: white !important;
-  border-radius: 0 0 5px 5px !important;
-  gap: 0px !important;
-}
-
-/* Dropdown items */
-.p-select-option {
-  color: white !important;
-  background-color: transparent !important;
-  padding: 8px 16px !important;
-  border-radius: 5px !important;
-}
-
-/* Hovered item */
-.p-select-option:hover {
-  background-color: #45454594 !important;
-  border-radius: 0px !important;
-}
-
-/* Selected item */
-.p-select-option.p-highlight {
-  background-color: rgba(0, 122, 255, 0.15) !important;
-  color: #007aff !important;
-}
-
-/* Dropdown list container */
-.p-select-list {
-  background-color: #5a5a5a !important;
-  border-radius: 0 0 5px 5px !important;
-  margin: 0px;
-}
-
-/* Navbar options dropdown */
-.nav-options-dialog.p-dialog {
-  position: fixed !important;
-  top: 70px !important;
-  right: 10px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-}
-
-.nav-options-dialog .p-dialog-content {
-  padding: 0 !important;
-}
-
-.p-dialog-mask:has(.nav-options-dialog) {
-  background: transparent !important;
-}
-
-/* Cell comparison dialog — compact, no backdrop */
-.cell-compare-dialog.p-dialog {
-  width: auto !important;
-  min-width: 0 !important;
-  border-radius: 12px !important;
-}
-
-.cell-compare-dialog .p-dialog-header {
-  padding: 8px 14px !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-.cell-compare-dialog .p-dialog-content {
-  padding: 0 14px 10px !important;
-  border-radius: 0 0 12px 12px !important;
-}
-
-.p-dialog-mask:has(.cell-compare-dialog) {
-  background: transparent !important;
-  pointer-events: none !important;
-}
-
-.cell-compare-dialog {
-  pointer-events: auto !important;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

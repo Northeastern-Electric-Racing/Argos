@@ -1,11 +1,14 @@
-@if (!this.templateReady) {
+<hlm-dialog-header>
+  <h2 hlmDialogTitle>Edit Run</h2>
+</hlm-dialog-header>
+@if (!this.templateReady()) {
   <loading-page />
 } @else {
   <select-dropdown
-    [options]="this.selectorConfig.options"
-    [placeholder]="this.selectorConfig.placeholder"
-    [defaultValue]="this.selectorConfig.defaultValue"
+    [options]="this.selectorConfig().options"
+    [placeholder]="this.selectorConfig().placeholder"
+    [defaultValue]="this.selectorConfig().defaultValue"
   >
   </select-dropdown>
-  <form-template [fields]="this.inputFields" />
+  <form-template [fields]="this.inputFields()" />
 }

@@ -1,31 +1,21 @@
-<!-- dynamic-form.component.html -->
 <form class="form" [formGroup]="form">
-  @for (field of fields(); track field) {
-    <div class="flex flex-column gap-1">
-      @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
-      }
-      <input
-        [attr.placeholder]="field.placeholder"
-        [formControlName]="field.name"
-        [type]="field.type"
-        [value]="'boston'"
-        pInputText
-        class="form-control w-full"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
-        }"
-      />
+  <div hlmFieldGroup>
+    @for (field of fields(); track field) {
+      <div hlmField>
+        @if (field.label) {
+          <label hlmFieldLabel [for]="'form-field-' + field.name" [class.required]="field.required">{{ field.label }}</label>
+        }
+        <input
+          hlmInput
+          [id]="'form-field-' + field.name"
+          [attr.placeholder]="field.placeholder"
+          [formControlName]="field.name"
+          [type]="field.type"
+        />
+        <hlm-field-error>{{ getErrorMessage(field) }}</hlm-field-error>
+      </div>
+    }
 
-      <!-- Error Message -->
-      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
-        <div class="error-msg">
-          {{ getErrorMessage(field) }}
-        </div>
-      }
-    </div>
-  }
-
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+    <button hlmBtn type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>
+  </div>
 </form>

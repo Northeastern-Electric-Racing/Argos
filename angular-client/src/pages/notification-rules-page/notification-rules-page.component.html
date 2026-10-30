@@ -13,29 +13,49 @@
       <div class="header-row">
         <typography variant="x-large-title" content="Notification Rules" />
         <div class="header-buttons">
-          <argos-button label="View Log" [onClick]="onViewLog" additionalStyles="background-color: #ef4345;" />
-          <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
-          <argos-button label="Download" [onClick]="onDownload" additionalStyles="background-color: #555;" />
+          <button hlmBtn variant="outline" type="button" (click)="onViewLog()">
+            <ng-icon name="lucideHistory" />
+            View Log
+          </button>
+          <button hlmBtn variant="outline" type="button" [disabled]="uploading()" (click)="onUpload()">
+            <ng-icon name="lucideUpload" />
+            Upload
+          </button>
+          <button hlmBtn variant="outline" type="button" [disabled]="downloading()" (click)="onDownload()">
+            <ng-icon name="lucideDownload" />
+            Download
+          </button>
         </div>
       </div>
 
       <div class="rules-bar">
         <typography variant="header" content="Rules" />
         <div class="rules-bar-actions">
-          <argos-button label="Add" [onClick]="onAddRule" />
-          <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
-          <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+          <button hlmBtn type="button" aria-haspopup="dialog" (click)="onAddRule()">
+            <ng-icon name="lucidePlus" />
+            Add
+          </button>
+          <button hlmBtn variant="destructive" type="button" [disabled]="!hasSelection()" (click)="onRemoveSelected()">
+            <ng-icon name="lucideTrash2" />
+            Remove
+          </button>
+          <button hlmBtn variant="secondary" type="button" [disabled]="!hasSelection()" (click)="onToggleSubscription()">
+            <ng-icon name="lucideBellRing" />
+            Toggle Subscription
+          </button>
         </div>
-        <div class="search-container">
+        <div hlmInputGroup class="search-container">
           <input
-            pInputText
-            type="text"
-            placeholder="Search..."
+            hlmInputGroupInput
+            type="search"
+            placeholder="Search rules..."
             [value]="searchTerm()"
             (input)="onSearchInput($event)"
             aria-label="Search rules"
-            class="search-input"
           />
+          <div hlmInputGroupAddon>
+            <ng-icon name="lucideSearch" />
+          </div>
         </div>
       </div>
 
@@ -48,13 +68,17 @@
     </div>
 
     <button
+      hlmBtn
+      variant="outline"
+      size="icon-sm"
       type="button"
       class="stream-toggle"
       (click)="toggleStreamRail()"
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
-      [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
+      [attr.aria-expanded]="streamRailOpen()"
+      [hlmTooltip]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
-      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
+      <ng-icon [name]="streamRailOpen() ? 'lucideChevronRight' : 'lucideChevronLeft'" />
     </button>
 
     <aside

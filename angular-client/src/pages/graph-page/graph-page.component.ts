@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { toast } from '@spartan-ng/brain/sonner';
 import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
@@ -23,7 +23,6 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -32,7 +31,13 @@ import LiveValueStripComponent from './live-value-strip/live-value-strip.compone
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideArrowLeftRight, lucideChartLine, lucidePanelLeft, lucidePause, lucidePlay } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmToggle } from '@spartan-ng/helm/toggle';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -43,22 +48,26 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
     CustomGraphComponent,
     LiveValueStripComponent,
     TypographyComponent,
-    InputNumberModule,
+    HlmButton,
+    HlmInput,
+    HlmLabel,
+    HlmToggle,
+    HlmTooltip,
+    NgIcon,
     FormsModule
-  ]
+  ],
+  providers: [provideIcons({ lucideArrowLeftRight, lucideChartLine, lucidePanelLeft, lucidePause, lucidePlay })]
 })
 export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private toastService = inject(MessageService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
@@ -247,7 +256,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) {
-        this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+        toast.error('Error', { description: error.message });
       }
     });
     runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
@@ -554,11 +563,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     } else if (this.run !== undefined || this.selectedFault !== undefined || this.historicalRangeActive()) {
       this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
     } else {
-      this.toastService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No run selected. Please select a run or choose "Real Time".'
-      });
+      toast.error('Error', { description: 'No run selected. Please select a run or choose "Real Time".' });
     }
   };
 

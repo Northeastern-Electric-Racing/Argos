@@ -8,79 +8,99 @@
       <loading-page />
     </div>
   } @else {
-    <div class="container">
+    <div class="graph-container">
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
+            <button
+              hlmToggle
+              variant="outline"
               size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
+              class="max-md:hidden"
+              aria-label="Sidebar"
+              hlmTooltip="Show topic sidebar"
+              [state]="showSideBar ? 'on' : 'off'"
+              (stateChange)="toggleSideBar()"
+            >
+              <ng-icon name="lucidePanelLeft" />
+            </button>
+            <button
+              hlmToggle
+              variant="outline"
               size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+              aria-label="Multiple Y axes"
+              hlmTooltip="One Y axis per topic"
+              [state]="showMultiYaxis ? 'on' : 'off'"
+              (stateChange)="toggleMultiYaxis()"
+            >
+              <ng-icon name="lucideChartLine" />
+            </button>
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button
+                hlmBtn
+                variant="outline"
+                size="icon-sm"
+                type="button"
+                [attr.aria-label]="isPaused ? 'Play' : 'Pause'"
+                [hlmTooltip]="isPaused ? 'Resume live data' : 'Pause live data'"
+                (click)="togglePause()"
+              >
+                <ng-icon [name]="isPaused ? 'lucidePlay' : 'lucidePause'" />
+              </button>
             }
           </div>
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
-              <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputnumber
-                [(ngModel)]="rangeValue"
-                mode="decimal"
-                [min]="1"
-                [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
+              <button hlmBtn variant="outline" size="sm" type="button" (click)="toggleRangeMode()">
+                <ng-icon name="lucideArrowLeftRight" />
+                {{ rangeMode === 'time' ? 'Time Range' : 'Point Range' }}
+              </button>
+              <label hlmLabel class="input-label" for="graph-x-range">{{
+                rangeMode === 'time' ? 'X (sec):' : 'X (points):'
+              }}</label>
+              <input
+                hlmInput
+                id="graph-x-range"
+                type="number"
+                class="h-8 w-[70px] text-xs md:text-xs md:w-20"
+                [ngModel]="rangeValue"
+                (ngModelChange)="rangeValue = $event; onGraphConfigChange()"
+                min="1"
+                step="1"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (onInput)="onGraphConfigChange()"
-              ></p-inputnumber>
+                [attr.aria-label]="rangeMode === 'time' ? 'X range in seconds' : 'X range in points'"
+              />
             </div>
           }
 
           <div class="toolbar-group config-group">
-            <label class="input-label">Y Min:</label>
-            <p-inputnumber
-              [(ngModel)]="yAxisMin"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+            <label hlmLabel class="input-label" for="graph-y-min">Y Min:</label>
+            <input
+              hlmInput
+              id="graph-y-min"
+              type="number"
+              class="h-8 w-[55px] px-1.5 text-xs md:text-xs md:w-[60px]"
+              [ngModel]="yAxisMin"
+              (ngModelChange)="yAxisMin = $event; onGraphConfigChange()"
+              step="any"
               placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              aria-label="Y axis minimum"
+            />
 
-            <label class="input-label">Y Max:</label>
-            <p-inputnumber
-              [(ngModel)]="yAxisMax"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+            <label hlmLabel class="input-label" for="graph-y-max">Y Max:</label>
+            <input
+              hlmInput
+              id="graph-y-max"
+              type="number"
+              class="h-8 w-[55px] px-1.5 text-xs md:text-xs md:w-[60px]"
+              [ngModel]="yAxisMax"
+              (ngModelChange)="yAxisMax = $event; onGraphConfigChange()"
+              step="any"
               placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              aria-label="Y axis maximum"
+            />
           </div>
 
           <div class="toolbar-group">

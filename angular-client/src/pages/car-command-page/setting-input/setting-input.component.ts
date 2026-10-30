@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputTextModule } from 'primeng/inputtext';
+import { HlmInput } from '@spartan-ng/helm/input';
 
 @Component({
   selector: 'setting-input',
   templateUrl: './setting-input.component.html',
   styleUrls: ['./setting-input.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputTextModule]
+  imports: [FormsModule, HlmInput]
 })
 export default class SettingInputComponent {
   label = input.required<string>();

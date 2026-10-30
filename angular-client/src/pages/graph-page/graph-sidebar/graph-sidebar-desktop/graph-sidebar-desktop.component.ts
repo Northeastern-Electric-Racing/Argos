@@ -12,10 +12,10 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.component';
+import { HlmSwitch } from '@spartan-ng/helm/switch';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -30,28 +30,36 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
+  TreeNode,
   TreeNodeData
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
-import TypographyComponent from 'src/components/typography/typography.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideBookmark, lucideEraser } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
+
+/** Gives each instance unique switch ids, since the graph page renders two sidebars. */
+let nextSwitchId = 0;
 
 @Component({
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent, Tree, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [HlmButton, HlmLabel, NgIcon, TopicTreeComponent, HlmSwitch, FormsModule, SelectDropdownComponent],
+  providers: [provideIcons({ lucideBookmark, lucideEraser })]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
+  protected readonly switchId = `graph-sidebar-desktop-${nextSwitchId++}`;
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(HlmDialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
+  private presetDialogRef?: BrnDialogRef<DataType[] | null>;
 
   dataTypes = input<DataType[]>([]);
   treeNodes = computed(() => {
@@ -105,18 +113,14 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
-      header: 'Topic Presets',
-      width: '640px',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: {
+    this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
+      contentClass: 'w-[640px] sm:max-w-[640px]',
+      context: {
         dataTypes: this.dataTypes()
       }
     });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef?.closed$.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -129,23 +133,15 @@ export default class GraphSidebarDesktopComponent implements OnDestroy {
     }
   }
 
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
+  nodeSelect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.addDataType(dt);
     }
   }
 
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
+  onNodeUnselect(node: TreeNode<TreeNodeData>) {
+    const dt = node.data?.dataType;
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
     }

@@ -1,25 +1,24 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="field">
-    <label for="edit-expr">Expression</label>
-    <input id="edit-expr" pInputText formControlName="expr" />
-    @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="error" role="alert">Expression is required</small>
-    }
+<hlm-dialog-header>
+  <h2 hlmDialogTitle>{{ context.header }}</h2>
+</hlm-dialog-header>
+<form class="grid gap-6" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div hlmFieldGroup>
+    <div hlmField>
+      <label hlmFieldLabel for="edit-expr">Expression</label>
+      <input id="edit-expr" hlmInput formControlName="expr" />
+      <hlm-field-error validator="required">Expression is required</hlm-field-error>
+    </div>
+
+    <div hlmField>
+      <label hlmFieldLabel for="edit-debounce">Debounce Time (seconds)</label>
+      <input id="edit-debounce" hlmInput formControlName="debounce_time" type="number" />
+      <hlm-field-error validator="required">Debounce time is required</hlm-field-error>
+      <hlm-field-error validator="min">Must be 0 or greater</hlm-field-error>
+    </div>
   </div>
 
-  <div class="field">
-    <label for="edit-debounce">Debounce Time (seconds)</label>
-    <input id="edit-debounce" pInputText formControlName="debounce_time" type="number" />
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="error" role="alert">Debounce time is required</small>
-    }
-    @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="error" role="alert">Must be 0 or greater</small>
-    }
-  </div>
-
-  <div class="button-row">
-    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton type="submit" label="Save"></button>
-  </div>
+  <hlm-dialog-footer>
+    <button hlmBtn variant="ghost" type="button" (click)="onCancel()">Cancel</button>
+    <button hlmBtn type="submit">Save</button>
+  </hlm-dialog-footer>
 </form>

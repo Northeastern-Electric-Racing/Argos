@@ -1,25 +1,48 @@
-@if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
-    </ng-template>
-  </p-drawer>
+@if (isMobile) {
+  <header class="mobile-bar">
+    <button
+      hlmBtn
+      variant="ghost"
+      size="icon-lg"
+      type="button"
+      aria-label="Open navigation"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="sidebarVisible"
+      (click)="sidebarVisible = true"
+    >
+      <ng-icon name="lucideMenu" />
+    </button>
+    <button type="button" class="mobile-home" aria-label="Home" (click)="this.homeNavItem.onClick()">
+      <mat-icon [svgIcon]="this.homeNavItem.icon" />
+      <span>Argos</span>
+    </button>
+    <span class="mobile-clock">{{ time$ | async | date: 'HH:mm' }}</span>
+  </header>
+  <hlm-sheet side="left" [state]="sidebarVisible ? 'open' : 'closed'" (stateChanged)="onSidebarStateChanged($event)">
+    <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-80 overflow-y-auto">
+      <hlm-sheet-header>
+        <h2 hlmSheetTitle class="text-center">
+          <typography variant="large-header" content="Argos" />
+        </h2>
+      </hlm-sheet-header>
+      <nav class="px-4 pb-4">
+        @for (navItem of allNavItems; track navItem) {
+          <sidebar-chip
+            icon="{{ navItem.icon }}"
+            value="{{ navItem.label }}"
+            [active]="this.isSelected(navItem)"
+            (click)="navItem.onClick()"
+          >
+          </sidebar-chip>
+        }
+      </nav>
+    </hlm-sheet-content>
+  </hlm-sheet>
 } @else {
   <nav class="navbar">
-    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+    <button type="button" class="home-logo" aria-label="Home" (click)="this.homeNavItem.onClick()">
       <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </div>
+    </button>
     <div class="navbar-nav">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
@@ -50,25 +73,46 @@
         additionalStyles="fontSize: 36px"
       />
       <messages-per-second />
-      <button
-        type="button"
-        class="navbar-notification"
-        aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
-      >
-        <mat-icon [svgIcon]="'notifications'" />
-        @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
-        }
-      </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
+      <hlm-popover align="end" sideOffset="8" (stateChanged)="onNotificationPanelStateChanged($event)">
+        <button
+          hlmPopoverTrigger
+          type="button"
+          class="navbar-notification"
+          [attr.aria-label]="
+            notificationLogService.unreadCount() > 0
+              ? 'Notifications, ' + notificationLogService.unreadCount() + ' unread'
+              : 'Notifications'
+          "
+          hlmTooltip="Notifications"
+          position="bottom"
+        >
+          <mat-icon [svgIcon]="'notifications'" />
+          @if (notificationLogService.unreadCount() > 0) {
+            <span hlmBadge variant="destructive" class="notification-badge" aria-hidden="true">{{
+              notificationLogService.unreadCount()
+            }}</span>
+          }
+        </button>
+        <hlm-popover-content *hlmPopoverPortal="let ctx" class="notification-popover w-auto p-0">
           <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
-        <mat-icon [svgIcon]="'apps'" />
-      </div>
+        </hlm-popover-content>
+      </hlm-popover>
+      <hlm-popover #menuPopover align="end" sideOffset="8" (stateChanged)="menuOpen = $event === 'open'">
+        <button
+          hlmPopoverTrigger
+          type="button"
+          class="navbar-menu"
+          [class.selected]="menuOpen"
+          aria-label="More pages"
+          hlmTooltip="More pages"
+          position="bottom"
+        >
+          <mat-icon [svgIcon]="'apps'" />
+        </button>
+        <hlm-popover-content *hlmPopoverPortal="let ctx" class="w-auto p-0">
+          <app-nav-options-menu [menuItems]="navMenuItems" (itemSelected)="closeMenu()" />
+        </hlm-popover-content>
+      </hlm-popover>
     </hstack>
   </nav>
 }

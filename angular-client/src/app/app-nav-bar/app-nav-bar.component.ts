@@ -1,14 +1,20 @@
-import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { toast } from '@spartan-ng/brain/sonner';
+import { BrnPopover } from '@spartan-ng/brain/popover';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideMenu } from '@ng-icons/lucide';
+import { HlmBadge } from '@spartan-ng/helm/badge';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { HlmPopoverImports } from '@spartan-ng/helm/popover';
+import { HlmSheetImports } from '@spartan-ng/helm/sheet';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -22,8 +28,6 @@ import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -37,7 +41,7 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    HlmSheetImports,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -48,26 +52,28 @@ export interface NavItem {
     SidebarChipComponent,
     MatIcon,
     NotificationListComponent,
-    Popover,
-    Badge
+    NavOptionsMenuComponent,
+    HlmPopoverImports,
+    HlmBadge,
+    HlmButton,
+    HlmTooltip,
+    NgIcon
   ],
+  providers: [provideIcons({ lucideMenu })],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
 })
-export class AppNavBarComponent implements OnInit, OnDestroy {
+export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
   private router = inject(Router);
-  private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(HlmDialogService);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  private menuPopover = viewChild('menuPopover', { read: BrnPopover });
+  menuOpen = false;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -76,9 +82,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
 
   ngOnInit(): void {
-    this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
-      this.sidebarVisible = isOpen;
-    });
     this.isMobile = window.innerWidth <= 768;
     this.router.events
       .pipe(
@@ -88,12 +91,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
       });
-  }
-
-  ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
   }
 
   // on resize, set the screen width
@@ -114,17 +111,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       this.newRunIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) toast.error('Error', { description: error.message });
     });
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    this.dialogService.open(RunFormComponent, { contentClass: 'w-[550px] sm:max-w-[550px]' });
   };
 
   homeNavItem: NavItem = {
@@ -159,15 +151,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
-
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
 
   navMenuItems: NavItem[] = [
     {
@@ -216,33 +199,22 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
-      data: {
-        items: this.navMenuItems
-      }
-    });
+  closeMenu() {
+    this.menuPopover()?.close();
+  }
 
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
+  onSidebarStateChanged(state: string) {
+    this.sidebarVisible = state === 'open';
   }
 
   navigateTo(route: string): void {
     this.selectedRoute = route;
+    this.sidebarVisible = false;
     this.router.navigate([route]);
   }
 
-  onNotificationPanelShow(): void {
-    this.notificationLogService.markAllRead();
+  onNotificationPanelStateChanged(state: string): void {
+    if (state === 'open') this.notificationLogService.markAllRead();
   }
 
   isSelected(navItem: NavItem) {

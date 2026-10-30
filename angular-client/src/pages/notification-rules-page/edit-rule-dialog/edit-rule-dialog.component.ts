@@ -1,8 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
+import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmDialogImports } from '@spartan-ng/helm/dialog';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
+
+export interface EditRuleContext {
+  header: string;
+  expr: string;
+  debounce_time: number;
+}
 
 export interface EditRuleResult {
   expr: string;
@@ -12,18 +20,18 @@ export interface EditRuleResult {
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, ButtonDirective],
-  templateUrl: './edit-rule-dialog.component.html',
-  styleUrls: ['./edit-rule-dialog.component.css']
+  imports: [ReactiveFormsModule, HlmInput, HlmFieldImports, HlmButton, HlmDialogImports],
+  host: { class: 'grid gap-6 min-w-0' },
+  templateUrl: './edit-rule-dialog.component.html'
 })
 export class EditRuleDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject(BrnDialogRef);
+  protected context = injectBrnDialogContext<EditRuleContext>();
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    expr: [this.config.data.expr as string, Validators.required],
-    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]]
+    expr: [this.context.expr, Validators.required],
+    debounce_time: [this.context.debounce_time, [Validators.required, Validators.min(0)]]
   });
 
   onSubmit(): void {

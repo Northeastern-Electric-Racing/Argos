@@ -12,24 +12,30 @@
     </div>
     <div class="list-actions">
       @if (hasEntries()) {
-        <p-button
-          label="Clear"
-          severity="danger"
-          [text]="true"
-          size="small"
-          (onClick)="notificationLogService.clearAll()"
-          ariaLabel="Clear all notifications"
-        />
+        <button
+          hlmBtn
+          variant="ghost"
+          size="sm"
+          class="text-destructive"
+          (click)="notificationLogService.clearAll()"
+          aria-label="Clear all notifications"
+        >
+          Clear
+        </button>
       }
     </div>
   </header>
 
   <div class="list-body">
     @if (!hasEntries()) {
-      <div class="empty-state">
-        <i class="pi pi-bell-slash empty-icon"></i>
-        <span class="empty-text">No notifications yet</span>
-        <span class="empty-hint">Triggered rules will appear here</span>
+      <div hlmEmpty class="gap-3 p-8">
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon">
+            <ng-icon name="lucideBellOff" />
+          </div>
+          <div hlmEmptyTitle class="text-sm">No notifications yet</div>
+          <div hlmEmptyDescription class="text-xs">Triggered rules will appear here</div>
+        </div>
       </div>
     } @else {
       <ul class="entries" role="list">
@@ -48,12 +54,15 @@
               </div>
             </div>
             <button
+              hlmBtn
+              variant="ghost"
+              size="icon-xs"
               type="button"
               class="entry-dismiss"
               (click)="notificationLogService.dismissEntry(entry.id)"
               [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
             >
-              <i class="pi pi-times"></i>
+              <ng-icon name="lucideX" />
             </button>
           </li>
         }
@@ -63,9 +72,9 @@
 
   @if (variant() === 'popover' && hasEntries()) {
     <footer class="list-footer">
-      <button type="button" class="view-all-button" (click)="viewAll()" aria-label="View all notifications">
+      <button hlmBtn variant="ghost" size="sm" type="button" class="w-full" (click)="viewAll()">
         View all notifications
-        <i class="pi pi-arrow-right"></i>
+        <ng-icon name="lucideArrowRight" />
       </button>
     </footer>
   }

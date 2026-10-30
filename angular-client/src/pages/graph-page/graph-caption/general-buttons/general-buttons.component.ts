@@ -1,14 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { Popover } from 'primeng/popover';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideCalendarRange, lucideEraser, lucideRadio } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmDatePickerImports } from '@spartan-ng/helm/date-picker';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmPopoverImports } from '@spartan-ng/helm/popover';
+import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
 
 export interface RangePreset {
@@ -35,17 +39,19 @@ type CustomMode = 'last-x' | 'date-range';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RunSelectorComponent,
-    ButtonComponent,
     SelectDropdownComponent,
-    Popover,
-    DatePicker,
-    InputNumberModule,
+    HlmButton,
+    NgIcon,
+    HlmPopoverImports,
+    HlmToggleGroupImports,
+    HlmDatePickerImports,
+    HlmInput,
+    HlmLabel,
     FormsModule
-  ]
+  ],
+  providers: [provideIcons({ lucideCalendarRange, lucideEraser, lucideRadio })]
 })
 export class GeneralButtonsComponent {
-  private toastService = inject(MessageService);
-
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
   onClearDataType = input.required<() => void>();
@@ -66,9 +72,13 @@ export class GeneralButtonsComponent {
   onApplyCustomLastX = input.required<(totalMinutes: number) => void>();
   onApplyCustomDateRange = input.required<(startMs: number, endMs: number) => void>();
 
-  customPopover = viewChild.required<Popover>('customPopover');
+  customPopoverOpen = signal(false);
 
   customMode = signal<CustomMode>('last-x');
+  readonly customModes: { value: CustomMode; label: string }[] = [
+    { value: 'last-x', label: 'Last X' },
+    { value: 'date-range', label: 'Date Range' }
+  ];
   customHours = signal<number | null>(0);
   customMinutes = signal<number | null>(30);
   customFromDate = signal<Date>(new Date(Date.now() - 30 * 60 * 1000));
@@ -93,9 +103,40 @@ export class GeneralButtonsComponent {
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
 
-  toggleCustomPopover = (event?: Event) => {
-    if (event) this.customPopover().toggle(event);
+  toggleCustomPopover = () => {
+    this.customPopoverOpen.update((open) => !open);
   };
+
+  onCustomPopoverStateChanged(state: string) {
+    const open = state === 'open';
+    this.customPopoverOpen.set(open);
+    if (open) this.onCustomPopoverShow();
+  }
+
+  /** yyyy-mm-dd, the day half of a From/To picker. */
+  formatDay = (date: Date): string =>
+    [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
+
+  /** "HH:mm:ss" for the time half of a From/To picker. */
+  timeOf(date: Date): string {
+    return [date.getHours(), date.getMinutes(), date.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
+  }
+
+  /** Keeps the time of day when a new calendar day is picked. */
+  withDay(current: Date, day: Date | null): Date {
+    if (!day) return current;
+    const next = new Date(day);
+    next.setHours(current.getHours(), current.getMinutes(), current.getSeconds(), 0);
+    return next;
+  }
+
+  /** Applies an "HH:mm[:ss]" time input to the picked day. */
+  withTime(current: Date, time: string): Date {
+    const [h = 0, m = 0, sec = 0] = time.split(':').map(Number);
+    const next = new Date(current);
+    next.setHours(h, m, sec, 0);
+    return next;
+  }
 
   // Refresh the popover contents every time it opens. Without this, the From/To pickers
   // and `maxDate` go stale (component-init values) once the page has been open a while,
@@ -123,8 +164,8 @@ export class GeneralButtonsComponent {
     }
   };
 
-  setCustomMode = (mode: CustomMode) => {
-    this.customMode.set(mode);
+  setCustomMode = (mode: CustomMode | CustomMode[] | null | undefined) => {
+    if (typeof mode === 'string') this.customMode.set(mode);
   };
 
   applyCustomLastX = () => {
@@ -132,19 +173,11 @@ export class GeneralButtonsComponent {
     const minutes = this.customMinutes() ?? 0;
     const totalMinutes = Math.floor(hours * 60 + minutes);
     if (totalMinutes <= 0) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Custom range must be greater than 0 minutes.'
-      });
+      toast.warning('Invalid Range', { description: 'Custom range must be greater than 0 minutes.' });
       return;
     }
     if (totalMinutes > MAX_RANGE_MINUTES) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Range Too Large',
-        detail: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
-      });
+      toast.warning('Range Too Large', { description: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.` });
       return;
     }
     this.onApplyCustomLastX()(totalMinutes);
@@ -155,37 +188,21 @@ export class GeneralButtonsComponent {
     const to = this.customToDate();
     const now = Date.now();
     if (!from || !to) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Pick both a start and end time.'
-      });
+      toast.warning('Invalid Range', { description: 'Pick both a start and end time.' });
       return;
     }
     const startMs = from.getTime();
     const endMs = to.getTime();
     if (startMs >= endMs) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'Start must be before end.'
-      });
+      toast.warning('Invalid Range', { description: 'Start must be before end.' });
       return;
     }
     if (endMs > now + 60 * 1000) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Invalid Range',
-        detail: 'End time cannot be in the future.'
-      });
+      toast.warning('Invalid Range', { description: 'End time cannot be in the future.' });
       return;
     }
     if (endMs - startMs > MAX_RANGE_MINUTES * 60 * 1000) {
-      this.toastService.add({
-        severity: 'warn',
-        summary: 'Range Too Large',
-        detail: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.`
-      });
+      toast.warning('Range Too Large', { description: `Custom range capped at ${MAX_RANGE_MINUTES / (24 * 60)} days.` });
       return;
     }
     this.onApplyCustomDateRange()(startMs, endMs);

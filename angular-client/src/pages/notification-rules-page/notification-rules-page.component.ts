@@ -1,12 +1,27 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { toast } from '@spartan-ng/brain/sonner';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  lucideBellRing,
+  lucideChevronLeft,
+  lucideChevronRight,
+  lucideDownload,
+  lucideHistory,
+  lucidePlus,
+  lucideSearch,
+  lucideTrash2,
+  lucideUpload
+} from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
+import { ConfirmService } from 'src/services/confirm.service';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
   addRule,
   ClientRule,
@@ -34,11 +49,32 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
+  imports: [
+    TypographyComponent,
+    HlmButton,
+    HlmInputGroupImports,
+    HlmTooltip,
+    NgIcon,
+    RulesTableComponent,
+    NotificationListComponent
+  ],
+  providers: [
+    provideIcons({
+      lucideBellRing,
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideDownload,
+      lucideHistory,
+      lucidePlus,
+      lucideSearch,
+      lucideTrash2,
+      lucideUpload
+    })
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(HlmDialogService);
+  private confirmService = inject(ConfirmService);
   private router = inject(Router);
 
   clientId!: string;
@@ -54,8 +90,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
 
-  private confirmRef: DynamicDialogRef | null | undefined;
-  private addRuleRef: DynamicDialogRef | null | undefined;
+  private confirmRef: BrnDialogRef<boolean> | undefined;
+  private addRuleRef: BrnDialogRef<RulePayload | null> | undefined;
 
   ngOnInit(): void {
     // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
@@ -75,37 +111,43 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onAddRule = () => {
-    this.addRuleRef = this.dialogService.open(AddRuleDialogComponent, {
-      header: 'Add New Rule',
-      width: '500px',
-      closable: true,
-      closeAriaLabel: 'Close'
+    this.addRuleRef = this.dialogService.open<RulePayload | null>(AddRuleDialogComponent, {
+      contentClass: 'w-[500px] sm:max-w-[500px]'
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.addRuleRef?.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
+    this.addRuleRef.closed$.pipe(take(1)).subscribe(async (rule) => {
       if (!rule) return;
 
       try {
         const response = await addRule(this.clientId, rule);
         if (response.ok) {
-          this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
+          toast.success('Rule Added', { description: `Rule "${rule.id}" created` });
           this.rulesTable()?.loadRules();
         } else {
           const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
+          toast.error('Add Failed', { description: text });
         }
       } catch {
-        this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: 'Network error' });
+        toast.error('Add Failed', { description: 'Network error' });
       }
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.confirmService.confirm({
+      header: 'Delete Rules',
+      message: `Delete ${selected.length} selected rule(s)?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      destructive: true,
+      accept: () => void this.removeRules(selected)
+    });
+  };
 
+  private removeRules = async (selected: ClientRule[]) => {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
@@ -118,16 +160,12 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     if (errors.length > 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Delete Error',
-        detail: `Failed to delete: ${errors.join(', ')}`
-      });
+      toast.error('Delete Error', { description: `Failed to delete: ${errors.join(', ')}` });
       // Keep failed rules selected so the user can retry
       const failedSet = new Set(errors);
       this.selectedRules.set(selected.filter((r) => failedSet.has(r.id)));
     } else {
-      this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${selected.length} rule(s) removed` });
+      toast.success('Deleted', { description: `${selected.length} rule(s) removed` });
       this.selectedRules.set([]);
     }
 
@@ -157,14 +195,14 @@ export default class NotificationRulesPageComponent implements OnInit {
         const parts: string[] = [];
         if (toSubscribe.length > 0) parts.push(`subscribed to ${toSubscribe.length}`);
         if (toUnsubscribe.length > 0) parts.push(`unsubscribed from ${toUnsubscribe.length}`);
-        this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Toggled: ${parts.join(', ')}` });
+        toast.success('Updated', { description: `Toggled: ${parts.join(', ')}` });
         this.rulesTable()?.loadRules();
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update some subscriptions' });
+        toast.error('Error', { description: 'Failed to update some subscriptions' });
         this.rulesTable()?.loadRules();
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
+      toast.error('Error', { description: 'Network error' });
     }
   };
 
@@ -194,9 +232,9 @@ export default class NotificationRulesPageComponent implements OnInit {
       this.parseCsvAndConfirm(text);
     } catch (err) {
       if (err instanceof FileReadError && err.kind === 'invalid-extension') {
-        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .csv file' });
+        toast.error('Invalid File', { description: 'Please select a .csv file' });
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+        toast.error('Read Error', { description: 'Failed to read file' });
       }
     }
   }
@@ -205,16 +243,13 @@ export default class NotificationRulesPageComponent implements OnInit {
     const result = this.parseCsv(csv);
     if (!result) return;
 
-    this.confirmRef = this.dialogService.open(UploadConfirmDialogComponent, {
-      header: 'Confirm Rule Upload',
-      width: '600px',
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: { rules: result }
+    this.confirmRef = this.dialogService.open<boolean>(UploadConfirmDialogComponent, {
+      contentClass: 'w-[600px] sm:max-w-[600px]',
+      context: { rules: result }
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.confirmRef?.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
+    this.confirmRef.closed$.pipe(take(1)).subscribe((confirmed) => {
       if (confirmed) {
         this.batchAddRules(result);
       }
@@ -228,11 +263,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       .filter((l) => l.length > 0);
 
     if (lines.length < 2) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Parse Error',
-        detail: 'CSV must have a header row and at least one data row'
-      });
+      toast.error('Parse Error', { description: 'CSV must have a header row and at least one data row' });
       return null;
     }
 
@@ -240,10 +271,8 @@ export default class NotificationRulesPageComponent implements OnInit {
 
     for (const required of CSV_HEADERS) {
       if (!headers.includes(required)) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Parse Error',
-          detail: `Missing required column: ${required}. Expected: ${CSV_HEADERS.join(', ')}`
+        toast.error('Parse Error', {
+          description: `Missing required column: ${required}. Expected: ${CSV_HEADERS.join(', ')}`
         });
         return null;
       }
@@ -285,16 +314,11 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     if (errors.length > 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Parse Warnings',
-        detail: errors.join('; '),
-        life: 8000
-      });
+      toast.warning('Parse Warnings', { description: errors.join('; '), duration: 8000 });
     }
 
     if (rules.length === 0) {
-      this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'No valid rules found in CSV' });
+      toast.error('Parse Error', { description: 'No valid rules found in CSV' });
       return null;
     }
 
@@ -349,21 +373,12 @@ export default class NotificationRulesPageComponent implements OnInit {
     this.uploading.set(false);
 
     if (successCount > 0) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Upload Complete',
-        detail: `${successCount} of ${rules.length} rule(s) added successfully`
-      });
+      toast.success('Upload Complete', { description: `${successCount} of ${rules.length} rule(s) added successfully` });
       this.rulesTable()?.loadRules();
     }
 
     if (errors.length > 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Upload Errors',
-        detail: errors.join('; '),
-        life: 8000
-      });
+      toast.error('Upload Errors', { description: errors.join('; '), duration: 8000 });
     }
   }
 
@@ -373,7 +388,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     try {
       const response = await getRulesByClientId(this.clientId);
       if (!response.ok) {
-        this.messageService.add({ severity: 'error', summary: 'Download Error', detail: 'Failed to fetch rules' });
+        toast.error('Download Error', { description: 'Failed to fetch rules' });
         this.downloading.set(false);
         return;
       }
@@ -382,7 +397,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       const rules = data.client_rules;
 
       if (rules.length === 0) {
-        this.messageService.add({ severity: 'info', summary: 'No Rules', detail: 'No rules to export' });
+        toast.info('No Rules', { description: 'No rules to export' });
         this.downloading.set(false);
         return;
       }
@@ -401,9 +416,9 @@ export default class NotificationRulesPageComponent implements OnInit {
         csvContent,
         'text/csv;charset=utf-8;'
       );
-      this.messageService.add({ severity: 'success', summary: 'Downloaded', detail: `Exported ${rules.length} rule(s)` });
+      toast.success('Downloaded', { description: `Exported ${rules.length} rule(s)` });
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Download Error', detail: 'Failed to download rules' });
+      toast.error('Download Error', { description: 'Failed to download rules' });
     }
 
     this.downloading.set(false);

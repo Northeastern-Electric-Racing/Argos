@@ -10,3 +10,8 @@
 :host(.label) .disable-text-selection {
   color: inherit !important;
 }
+
+/* Tailwind's preflight zeroes <p> margins; keep the browser default the layouts were built on. */
+p {
+  margin-block: 1em;
+}

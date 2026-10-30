@@ -30,6 +30,13 @@
   transition: fill 0.2s ease-in-out;
 }
 
+.home-logo:focus-visible,
+.navbar-menu:focus-visible,
+.navbar-notification:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 .home-logo .mat-icon {
   width: 48px;
   height: 48px;
@@ -91,23 +98,47 @@
   right: 2px;
 }
 
-:host {
-  --p-dialog-background: transparent !important;
-  --p-dialog-border-color: transparent !important;
+.notification-popover {
+  overflow: hidden;
+  border-radius: var(--border-radius-panel);
 }
 
-:host ::ng-deep .notification-popover.p-popover {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  border-radius: var(--border-radius-panel) !important;
+/* Mobile: one slim bar on every page holds the navigation sheet's trigger. */
+.mobile-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 52px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  background-color: var(--color-background-info);
 }
 
-:host ::ng-deep .notification-popover .p-popover-content {
-  padding: 0 !important;
-  background: transparent !important;
+.mobile-home {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border-radius: 4px;
 }
 
-:host ::ng-deep .notification-popover .p-popover-arrow {
-  display: none !important;
+.mobile-home .mat-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.mobile-home:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.mobile-clock {
+  margin-left: auto;
+  padding-right: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
 }

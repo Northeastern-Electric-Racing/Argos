@@ -29,12 +29,6 @@
   flex: 1 1 280px;
 }
 
-.save-form label {
-  color: #ccc;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
 .save-form-controls {
   display: flex;
   gap: 8px;
@@ -69,23 +63,7 @@
 }
 
 .preset-table {
-  width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
-  color: #eee;
-}
-
-.preset-table th,
-.preset-table td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #2a2a2a;
-  font-size: 0.9rem;
-}
-
-.preset-table th {
-  color: #aaa;
-  font-weight: 600;
 }
 
 .preset-table td.topic-count,
@@ -110,11 +88,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
 }

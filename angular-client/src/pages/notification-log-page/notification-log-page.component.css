@@ -37,31 +37,8 @@
 /* ---- Empty state ---- */
 
 .empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 3rem 1rem;
-  text-align: center;
-  color: var(--color-text-secondary);
-  background-color: var(--color-background-info);
-  border: 1px dashed var(--color-divider);
-  border-radius: var(--border-radius-panel);
+  background-color: var(--card);
   min-height: 300px;
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  color: #444;
-  margin-bottom: 8px;
-}
-
-.empty-hint {
-  font-size: 0.825rem;
-  color: var(--color-text-secondary);
-  opacity: 0.75;
 }
 
 /* ---- Log table ---- */
@@ -72,7 +49,14 @@
   background-color: var(--color-background-info);
   border: 1px solid var(--color-divider);
   border-radius: var(--border-radius-panel);
-  overflow: hidden;
+  overflow: auto;
+}
+
+.sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--color-background-info);
 }
 
 .rule-cell {
@@ -120,53 +104,6 @@
   text-align: right;
 }
 
-/* ---- PrimeNG table overrides ---- */
-
-:host ::ng-deep .p-datatable {
-  background-color: transparent !important;
-  color: var(--color-text-primary) !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
-  background-color: #252525 !important;
-  color: var(--color-text-subtitle) !important;
-  border-bottom: 1px solid var(--color-divider) !important;
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.04em !important;
-  padding: 10px 14px !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
-  background-color: transparent !important;
-  color: var(--color-text-primary) !important;
-  transition: background-color 0.15s ease;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
-  background-color: transparent !important;
-  border-bottom: 1px solid rgba(65, 65, 65, 0.4) !important;
-  padding: 10px 14px !important;
-  font-size: 0.875rem !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr.p-row-odd {
-  background-color: rgba(255, 255, 255, 0.015) !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr.unread > td {
-  color: #ffffff !important;
-}
-
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr.unread .col-rule {
-  font-weight: 600;
-}
-
 /* ---- Mobile ---- */
 
 @media (max-width: 768px) {
@@ -183,10 +120,5 @@
 
   .col-time {
     font-size: 0.75rem;
-  }
-
-  :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
-    padding: 8px 10px !important;
-    font-size: 0.8rem !important;
   }
 }

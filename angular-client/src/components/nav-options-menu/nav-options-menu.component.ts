@@ -1,7 +1,6 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatIconModule } from '@angular/material/icon';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
 
 @Component({
@@ -12,6 +11,12 @@ import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
   styleUrls: ['./nav-options-menu.component.css']
 })
 export class NavOptionsMenuComponent {
-  private config = inject(DynamicDialogConfig);
-  menuItems: NavItem[] = this.config.data?.items || [];
+  menuItems = input<NavItem[]>([]);
+  /** Emits after an item's action runs, so the hosting popover can close. */
+  itemSelected = output<NavItem>();
+
+  select(item: NavItem) {
+    item.onClick();
+    this.itemSelected.emit(item);
+  }
 }

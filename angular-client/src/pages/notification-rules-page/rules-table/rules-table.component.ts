@@ -1,11 +1,17 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Table, TableModule } from 'primeng/table';
-import { ToggleSwitch } from 'primeng/toggleswitch';
-import { FormsModule } from '@angular/forms';
-import { ButtonDirective } from 'primeng/button';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { toast } from '@spartan-ng/brain/sonner';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideBellPlus, lucidePencil, lucideSearchX, lucideTrash2 } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmSpinner } from '@spartan-ng/helm/spinner';
+import { HlmSwitch } from '@spartan-ng/helm/switch';
+import { HlmTableImports } from '@spartan-ng/helm/table';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { take } from 'rxjs';
+import { ConfirmService } from 'src/services/confirm.service';
 import {
   ClientRule,
   deleteRule,
@@ -20,7 +26,8 @@ import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edi
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective],
+  imports: [HlmTableImports, HlmCheckbox, HlmSwitch, HlmButton, HlmEmptyImports, HlmSpinner, HlmTooltip, NgIcon],
+  providers: [provideIcons({ lucideBellPlus, lucidePencil, lucideSearchX, lucideTrash2 })],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })
@@ -29,23 +36,27 @@ export class RulesTableComponent implements OnInit {
   searchTerm = input('');
 
   selectionChanged = output<ClientRule[]>();
-
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(HlmDialogService);
+  private confirmService = inject(ConfirmService);
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
   selectedRules = signal<ClientRule[]>([]);
 
-  dt = viewChild<Table>('dt');
-
-  constructor() {
-    effect(() => {
-      this.dt()?.filterGlobal(this.searchTerm(), 'contains');
-    });
-  }
-
-  private editRef: DynamicDialogRef | null | undefined;
+  /** Rules whose expression, topic or id contains the search term (case-insensitive). */
+  filteredRules = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.rules();
+    return this.rules().filter((r) => [r.expr, r.topic, r.id].some((field) => field.toLowerCase().includes(term)));
+  });
+  private selectedIds = computed(() => new Set(this.selectedRules().map((r) => r.id)));
+  allVisibleSelected = computed(() => {
+    const visible = this.filteredRules();
+    return visible.length > 0 && visible.every((r) => this.selectedIds().has(r.id));
+  });
+  someVisibleSelected = computed(
+    () => !this.allVisibleSelected() && this.filteredRules().some((r) => this.selectedIds().has(r.id))
+  );
 
   ngOnInit(): void {
     this.loadRules();
@@ -58,13 +69,32 @@ export class RulesTableComponent implements OnInit {
       if (response.ok) {
         const data: RulesResponse = await response.json();
         this.rules.set(data.client_rules);
+        // Re-point the selection at the fresh rules (dropping deleted ones) and tell the page,
+        // so a later bulk action doesn't act on stale or removed rules.
+        const fresh = new Map(data.client_rules.map((r) => [r.id, r]));
+        this.onSelectionChange(this.selectedRules().flatMap((r) => fresh.get(r.id) ?? []));
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Failed to fetch rules' });
+        toast.error('Load Error', { description: 'Failed to fetch rules' });
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Network error' });
+      toast.error('Load Error', { description: 'Network error' });
     }
     this.loading.set(false);
+  }
+
+  isSelected(rule: ClientRule): boolean {
+    return this.selectedIds().has(rule.id);
+  }
+
+  toggleRow(rule: ClientRule, checked: boolean): void {
+    const others = this.selectedRules().filter((r) => r.id !== rule.id);
+    this.onSelectionChange(checked ? [...others, rule] : others);
+  }
+
+  toggleAllVisible(checked: boolean): void {
+    const visibleIds = new Set(this.filteredRules().map((r) => r.id));
+    const others = this.selectedRules().filter((r) => !visibleIds.has(r.id));
+    this.onSelectionChange(checked ? [...others, ...this.filteredRules()] : others);
   }
 
   onSelectionChange(selected: ClientRule[]): void {
@@ -83,25 +113,22 @@ export class RulesTableComponent implements OnInit {
       } else {
         // Revert the toggle on failure
         this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update subscription' });
+        toast.error('Error', { description: 'Failed to update subscription' });
       }
     } catch {
       this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
+      toast.error('Error', { description: 'Network error' });
     }
   }
 
   onEdit(rule: ClientRule): void {
-    this.editRef = this.dialogService.open(EditRuleDialogComponent, {
-      header: `Edit Rule: ${rule.id}`,
-      width: '450px',
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: { expr: rule.expr, debounce_time: rule.debounce_time }
+    const editRef = this.dialogService.open<EditRuleResult | null>(EditRuleDialogComponent, {
+      contentClass: 'w-[450px] sm:max-w-[450px]',
+      context: { header: `Edit Rule: ${rule.id}`, expr: rule.expr, debounce_time: rule.debounce_time }
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.editRef?.onClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
+    editRef.closed$.pipe(take(1)).subscribe(async (result) => {
       if (!result) return;
 
       try {
@@ -110,33 +137,42 @@ export class RulesTableComponent implements OnInit {
           this.rules.update((rules) =>
             rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
           );
-          this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Rule "${rule.id}" updated` });
+          toast.success('Updated', { description: `Rule "${rule.id}" updated` });
         } else {
           const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: text });
+          toast.error('Edit Failed', { description: text });
         }
       } catch {
-        this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: 'Network error' });
+        toast.error('Edit Failed', { description: 'Network error' });
       }
     });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.confirmService.confirm({
+      header: 'Delete Rule',
+      message: `Delete rule "${rule.id}"?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      destructive: true,
+      accept: () => void this.deleteRule(rule)
+    });
+  }
 
+  private async deleteRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
         this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
         this.selectionChanged.emit(this.selectedRules());
-        this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `Rule "${rule.id}" removed` });
+        toast.success('Deleted', { description: `Rule "${rule.id}" removed` });
       } else {
         const text = await response.text();
-        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: text });
+        toast.error('Delete Failed', { description: text });
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: 'Network error' });
+      toast.error('Delete Failed', { description: 'Network error' });
     }
   }
 }

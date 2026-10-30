@@ -1,70 +1,102 @@
-<p-table
-  #dt
-  [value]="rules()"
-  [globalFilterFields]="['expr', 'topic', 'id']"
-  [selection]="selectedRules()"
-  (selectionChange)="onSelectionChange($any($event))"
-  dataKey="id"
-  [scrollable]="true"
-  scrollHeight="600px"
-  [loading]="loading()"
->
-  <ng-template #header>
-    <tr>
-      <th style="width: 3rem">
-        <p-tableheadercheckbox />
-      </th>
-      <th>Rule</th>
-      <th>Applied To</th>
-      <!-- TODO: Uploaded By column once backend supports it -->
-      <th>Uploaded By</th>
-      <!-- TODO: Description column once backend supports it -->
-      <th>Description</th>
-      <th>Subscribed</th>
-      <th style="width: 5rem" aria-label="Actions"></th>
-    </tr>
-  </ng-template>
-  <ng-template #body let-rule>
-    <tr>
-      <td>
-        <p-tablecheckbox [value]="rule" />
-      </td>
-      <td>{{ rule.expr }}</td>
-      <td>{{ rule.topic }}</td>
-      <td>-</td>
-      <td>-</td>
-      <td>
-        <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
-      </td>
-      <td class="action-icons">
-        <button
-          pButton
-          class="p-button-text p-button-sm"
-          icon="pi pi-pencil"
-          (click)="onEdit(rule)"
-          aria-label="Edit rule"
-        ></button>
-        <button
-          pButton
-          class="p-button-text p-button-sm p-button-danger"
-          icon="pi pi-trash"
-          (click)="onDelete(rule)"
-          aria-label="Delete rule"
-        ></button>
-      </td>
-    </tr>
-  </ng-template>
-  <ng-template #emptymessage>
-    <tr>
-      <td colspan="7">
-        <div class="empty-state">
-          @if (rules().length === 0) {
-            No rules yet. Add a rule or upload a CSV to get started.
-          } @else {
-            No rules match your search.
-          }
-        </div>
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
+<div hlmTableContainer class="rules-scroll">
+  <table hlmTable>
+    <thead hlmTHead class="sticky-head">
+      <tr hlmTr>
+        <th hlmTh class="w-12">
+          <hlm-checkbox
+            [checked]="allVisibleSelected()"
+            [indeterminate]="someVisibleSelected()"
+            (checkedChange)="toggleAllVisible($event)"
+            aria-label="Select all rules"
+          />
+        </th>
+        <th hlmTh>Rule</th>
+        <th hlmTh>Applied To</th>
+        <!-- TODO: Uploaded By column once backend supports it -->
+        <th hlmTh class="hidden md:table-cell">Uploaded By</th>
+        <!-- TODO: Description column once backend supports it -->
+        <th hlmTh class="hidden md:table-cell">Description</th>
+        <th hlmTh>Subscribed</th>
+        <th hlmTh class="w-20"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody hlmTBody>
+      @if (loading()) {
+        <tr hlmTr>
+          <td hlmTd colspan="7" class="whitespace-normal">
+            <div class="empty-state" role="status"><hlm-spinner class="text-2xl" /> Loading rules…</div>
+          </td>
+        </tr>
+      } @else {
+        @for (rule of filteredRules(); track rule.id) {
+          <tr hlmTr [attr.data-state]="isSelected(rule) ? 'selected' : null">
+            <td hlmTd>
+              <hlm-checkbox
+                [checked]="isSelected(rule)"
+                (checkedChange)="toggleRow(rule, $event)"
+                [aria-label]="'Select rule ' + rule.id"
+              />
+            </td>
+            <td hlmTd class="whitespace-normal wrap-anywhere">{{ rule.expr }}</td>
+            <td hlmTd class="whitespace-normal wrap-anywhere">{{ rule.topic }}</td>
+            <td hlmTd class="hidden md:table-cell">-</td>
+            <td hlmTd class="hidden md:table-cell">-</td>
+            <td hlmTd>
+              <hlm-switch
+                [checked]="rule.is_subscribed"
+                (checkedChange)="onToggleSubscription(rule, $event)"
+                [aria-label]="'Subscribe to rule ' + rule.id"
+              />
+            </td>
+            <td hlmTd>
+              <div class="action-icons">
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-sm"
+                  type="button"
+                  (click)="onEdit(rule)"
+                  aria-label="Edit rule"
+                  hlmTooltip="Edit rule"
+                >
+                  <ng-icon name="lucidePencil" />
+                </button>
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-sm"
+                  type="button"
+                  class="text-destructive"
+                  (click)="onDelete(rule)"
+                  aria-label="Delete rule"
+                  hlmTooltip="Delete rule"
+                >
+                  <ng-icon name="lucideTrash2" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr hlmTr>
+            <td hlmTd colspan="7" class="whitespace-normal">
+              <div hlmEmpty class="p-8">
+                <div hlmEmptyHeader>
+                  <div hlmEmptyMedia variant="icon">
+                    <ng-icon [name]="rules().length === 0 ? 'lucideBellPlus' : 'lucideSearchX'" />
+                  </div>
+                  @if (rules().length === 0) {
+                    <div hlmEmptyTitle>No rules yet</div>
+                    <div hlmEmptyDescription>Add a rule or upload a CSV to get started.</div>
+                  } @else {
+                    <div hlmEmptyTitle>No matching rules</div>
+                    <div hlmEmptyDescription>No rules match your search.</div>
+                  }
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

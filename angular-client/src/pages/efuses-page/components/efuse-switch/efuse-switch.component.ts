@@ -1,4 +1,5 @@
 import { Component, computed, effect, input, output, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { BrnToggleGroupImports } from '@spartan-ng/brain/toggle-group';
 
 export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
 
@@ -16,11 +17,15 @@ export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
  *
  * Emits the newly selected state via the `stateChange` output so
  * the parent can send the appropriate CAN message.
+ *
+ * Built on Spartan's unstyled brain toggle group (single, non-nullable), which supplies
+ * role=group and aria-pressed; the helm styling is left off to keep the annunciator look.
  */
 @Component({
   selector: 'efuse-switch',
   templateUrl: './efuse-switch.component.html',
   styleUrls: ['./efuse-switch.component.css'],
+  imports: [BrnToggleGroupImports],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class EfuseSwitchComponent implements OnInit {
@@ -64,8 +69,8 @@ export default class EfuseSwitchComponent implements OnInit {
     this.selected.set(opts.includes('AUTO') ? 'AUTO' : 'OFF');
   }
 
-  select(state: EfuseSwitchState): void {
-    if (this.disabled()) return;
+  select(state: EfuseSwitchState | EfuseSwitchState[] | null | undefined): void {
+    if (this.disabled() || typeof state !== 'string') return;
     if (state === this.selected()) return;
     this.selected.set(state);
     this.stateChange.emit(state);

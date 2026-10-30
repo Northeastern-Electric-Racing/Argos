@@ -1,3 +1,6 @@
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideShieldCheck } from '@ng-icons/lucide';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -5,9 +8,8 @@ import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData, FaultNode } from 'src/utils/types.utils';
 
-import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
-import { Ripple } from 'primeng/ripple';
-import { TableModule } from 'primeng/table';
+import { HlmAccordionImports } from '@spartan-ng/helm/accordion';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 
@@ -16,7 +18,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
   styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Accordion, AccordionPanel, Ripple, AccordionHeader, AccordionContent, TableModule, DatePipe, TypographyComponent]
+  imports: [HlmAccordionImports, HlmEmptyImports, HlmTableImports, DatePipe, NgIcon, TypographyComponent],
+  providers: [provideIcons({ lucideShieldCheck })]
 })
 export default class FaultPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -42,7 +45,8 @@ export default class FaultPageComponent implements OnInit {
       });
   }
 
-  onRowSelect = () => {
+  onRowSelect = (fault: FaultData) => {
+    this.selectedFault = fault;
     if (this.selectedFault) {
       this.faultService.selectFault(this.selectedFault);
       this.navigateTo(appRoutes.faultsGraphRoute());

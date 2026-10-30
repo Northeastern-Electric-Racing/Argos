@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmService } from 'src/services/confirm.service';
+import { toast } from '@spartan-ng/brain/sonner';
 import {
   authenticatePw,
   getSettings,
@@ -17,9 +18,12 @@ import APIService from 'src/services/api.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
-import { Password } from 'primeng/password';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideLockOpen, lucideRefreshCw, lucideSave } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -27,32 +31,31 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'car-command',
   templateUrl: './car-command.component.html',
   styleUrls: ['./car-command.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
   imports: [
-    Password,
+    HlmInput,
+    HlmLabel,
     FormsModule,
-    ButtonComponent,
+    HlmButton,
+    NgIcon,
     LoadingPageComponent,
     ErrorPageComponent,
     TypographyComponent,
     InfoBackgroundComponent,
     SettingToggleComponent,
     SettingInputComponent,
-    CommandCardComponent,
-    ConfirmDialog
-  ]
+    CommandCardComponent
+  ],
+  providers: [provideIcons({ lucideLockOpen, lucideRefreshCw, lucideSave })]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
-  private toastService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);
@@ -99,7 +102,7 @@ export default class CarCommandComponent implements OnInit {
   }
 
   confirmSendCommand(title: string, value: number) {
-    this.confirmationService.confirm({
+    this.confirmService.confirm({
       message: `Send command "${title}" with value ${value} to the car?`,
       header: 'Confirm Command',
       acceptLabel: 'Send',
@@ -111,10 +114,10 @@ export default class CarCommandComponent implements OnInit {
   private sendCarCommand(title: string, values: number[]) {
     const commandQueryResponse = this.serverService.query<string>(() => sendConfig(title, values));
     commandQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.toastService.add({ severity: 'error', summary: 'Command Failed', detail: error.message });
+      if (error) toast.error('Command Failed', { description: error.message });
     });
     commandQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message) => {
-      if (message) this.toastService.add({ severity: 'success', summary: 'Success', detail: message });
+      if (message) toast.success('Success', { description: message });
     });
   }
 
@@ -134,18 +137,16 @@ export default class CarCommandComponent implements OnInit {
 
   onUpdateVideosPressed = () => {
     const updateVideoQueryResponse = this.serverService.query(() => updateVideos(), { invalidates: ['videos'] });
-    this.toastService.add({
-      severity: 'success',
-      summary: 'Update Videos',
-      detail: 'A request was made for scylla to update its videos, this may take a minute, please refresh in a moment'
+    toast.success('Update Videos', {
+      description: 'A request was made for scylla to update its videos, this may take a minute, please refresh in a moment'
     });
     updateVideoQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) toast.error('Error', { description: error.message });
     });
   };
 
   confirmSaveSettings = () => {
-    this.confirmationService.confirm({
+    this.confirmService.confirm({
       message: 'Save all settings changes? This will update the live server configuration.',
       header: 'Confirm Settings Update',
       acceptLabel: 'Save',
@@ -166,10 +167,10 @@ export default class CarCommandComponent implements OnInit {
     if (value === undefined) return;
     const response = this.serverService.query(() => apiCall(value), { invalidates: ['settings'] });
     response.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.toastService.add({ severity: 'success', summary });
+      toast.success(summary);
     });
     response.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) toast.error('Error', { description: error.message });
     });
   }
 }

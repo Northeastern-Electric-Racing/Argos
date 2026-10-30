@@ -15,59 +15,25 @@
     </div>
     <div class="hero-actions">
       @if (!timer.activeSession()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--go" (click)="onStart()">Start</button>
       } @else if (timer.isIdle()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Delete"
-          [onClick]="onDeleteActiveButton"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--go" (click)="onStart()">Start</button>
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--halt" (click)="onDeleteActiveButton()">
+          Delete
+        </button>
       } @else if (timer.isRunning()) {
-        <argos-button
-          label="Pause"
-          [onClick]="onPause"
-          additionalStyles="background-color: var(--color-battery-med); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Lap"
-          [onClick]="onLap"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Stop"
-          [onClick]="onStop"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--hold" (click)="onPause()">Pause</button>
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--go" (click)="onLap()">Lap</button>
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--halt" (click)="onStop()">Stop</button>
       } @else if (timer.isPaused()) {
-        <argos-button
-          label="Resume"
-          [onClick]="onResume"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Reset"
-          [onClick]="onReset"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
-        <argos-button
-          label="Download"
-          [onClick]="onDownloadActiveButton"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
-        <argos-button
-          label="End Session"
-          [onClick]="onEndActiveSession"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--go" (click)="onResume()">Resume</button>
+        <button hlmBtn size="lg" type="button" class="timer-btn timer-btn--halt" (click)="onReset()">Reset</button>
+        <button hlmBtn variant="outline" size="lg" type="button" class="timer-btn" (click)="onDownloadActiveButton()">
+          Download
+        </button>
+        <button hlmBtn variant="outline" size="lg" type="button" class="timer-btn" (click)="onEndActiveSession()">
+          End Session
+        </button>
       }
     </div>
   </div>

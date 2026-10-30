@@ -1,5 +1,4 @@
 import { Component, input, OnInit } from '@angular/core';
-import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 
 /**
@@ -10,7 +9,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'graph-header',
   templateUrl: './graph-header.component.html',
   styleUrls: ['./graph-header.component.css'],
-  imports: [TypographyComponent, SidebarToggleComponent],
+  imports: [TypographyComponent],
   host: {
     '(window:resize)': 'onResize()'
   }

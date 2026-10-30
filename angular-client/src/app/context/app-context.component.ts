@@ -3,12 +3,13 @@ import { CellService } from 'src/services/cell.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
-import { Toast } from 'primeng/toast';
+import { HlmToasterImports } from '@spartan-ng/helm/sonner';
 import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NotificationLogService } from 'src/services/notification-log.service';
+import { ConfirmDialogComponent } from 'src/components/confirm-dialog/confirm-dialog.component';
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -17,7 +18,7 @@ import { NotificationLogService } from 'src/services/notification-log.service';
   selector: 'app-context',
   templateUrl: './app-context.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Toast, AppNavBarComponent, RouterOutlet]
+  imports: [HlmToasterImports, AppNavBarComponent, RouterOutlet, ConfirmDialogComponent]
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
@@ -90,7 +91,6 @@ export default class AppContextComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    document.documentElement.classList.add('dark-mode-always');
     this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
   }

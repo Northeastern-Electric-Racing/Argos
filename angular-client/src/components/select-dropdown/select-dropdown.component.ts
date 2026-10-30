@@ -1,6 +1,6 @@
-import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Component, effect, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { HlmSelectImports } from '@spartan-ng/helm/select';
+import type { ClassValue } from 'clsx';
 
 export interface SelectorConfig {
   options: DropdownOption[];
@@ -17,7 +17,7 @@ export interface DropdownOption {
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  imports: [HlmSelectImports]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -30,8 +30,11 @@ export class SelectDropdownComponent {
   ]);
   placeholder = input<string>('placeholder');
   defaultValue = input<string | undefined>(undefined);
+  /** Extra classes for the trigger button, merged over helm's through tailwind-merge. */
+  triggerClass = input<ClassValue>('');
 
-  selectedOption: DropdownOption | undefined;
+  /** Name of the shown option; option names double as the select's values. */
+  selectedName = signal<string | null>(null);
 
   constructor() {
     // The dropdown's selected display tracks `defaultValue`:
@@ -45,24 +48,18 @@ export class SelectDropdownComponent {
       if (val) {
         const match = this.options().find((option) => option.name === val);
         if (match) {
-          this.selectedOption = match;
+          this.selectedName.set(match.name);
         }
       } else {
-        this.selectedOption = undefined;
+        this.selectedName.set(null);
       }
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
-    changeEvent.value.function();
-  }
-
-  // Get display text for the dropdown
-  getDisplayText(): string {
-    const defaultValue = this.defaultValue();
-    if (defaultValue !== undefined) {
-      return defaultValue;
-    }
-    return this.selectedOption ? this.selectedOption.name : this.placeholder();
+  handleChangedOption(name: string | null | undefined) {
+    this.selectedName.set(name ?? null);
+    this.options()
+      .find((option) => option.name === name)
+      ?.function();
   }
 }
