@@ -1,34 +1,24 @@
-<div class="modal-container">
-  <!-- Carousel Content -->
-  <p-carousel
-    [value]="runs"
-    [numVisible]="1"
-    [numScroll]="1"
-    [circular]="true"
-    [autoplayInterval]="3000"
-    (onPage)="handlePageChange($event)"
-  >
-    <ng-template let-run let-i="index" #item>
+<p-carousel
+  [value]="runs"
+  [numVisible]="1"
+  [numScroll]="1"
+  [circular]="true"
+  [autoplayInterval]="3000"
+  (onPage)="handlePageChange($event)"
+>
+  <ng-template let-run #item>
+    <div class="run-slide">
       <div class="run-card">
-        <mat-grid-list cols="2" rowHeight="40px">
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-          </mat-grid-tile>
-        </mat-grid-list>
+        <div class="run-card-header">
+          <span class="run-id">Run #{{ run.id }}</span>
+          <span class="run-meta"><i class="pi pi-user" aria-hidden="true"></i>{{ run.driverName }}</span>
+        </div>
+        <div class="run-card-footer">
+          <span class="run-meta"><i class="pi pi-calendar" aria-hidden="true"></i>{{ datePipe(run.time) }}</span>
+          <span class="run-meta"><i class="pi pi-map-marker" aria-hidden="true"></i>{{ run.locationName }}</span>
+        </div>
       </div>
-
-      <div class="select-button-container">
-        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
-      </div>
-    </ng-template>
-  </p-carousel>
-</div>
+      <p-button label="Select this Run" icon="pi pi-check" (onClick)="selectRun(run)" />
+    </div>
+  </ng-template>
+</p-carousel>

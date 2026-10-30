@@ -55,12 +55,6 @@
   font-family: var(--font-family);
 }
 
-.auth-input-group ::ng-deep p-password,
-.auth-input-group ::ng-deep .p-password,
-.auth-input-group ::ng-deep .p-inputtext {
-  width: 100%;
-}
-
 /* ---- Commands Grid ---- */
 .commands-grid {
   display: grid;
