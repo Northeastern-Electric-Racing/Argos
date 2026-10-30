@@ -27,6 +27,9 @@
   --mat-tab-inactive-label-text-color: var(--color-text-primary);
   --mat-tab-inactive-hover-label-text-color: var(--mat-sys-primary);
   --mat-tab-inactive-focus-label-text-color: var(--mat-sys-primary);
+  --mat-tab-active-label-text-color: var(--mat-sys-primary);
+  --mat-tab-active-hover-label-text-color: var(--mat-sys-primary);
+  --mat-tab-active-focus-label-text-color: var(--mat-sys-primary);
   flex: 1;
   min-width: 0;
   align-self: stretch;
@@ -43,13 +46,21 @@
   margin-right: 8px;
 }
 
-.navbar-nav--small {
-  --mat-tab-label-text-size: 14px;
+.navbar-nav--compact {
+  --mat-tab-label-text-size: 15px;
 }
 
-.navbar-nav--small .nav-link-icon {
-  width: 24px;
-  height: 24px;
+.navbar-nav--compact .mat-mdc-tab-link {
+  padding: 0 10px;
+}
+
+.navbar-nav--compact .nav-link-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.navbar-nav--icons .nav-link-icon {
+  margin-right: 0;
 }
 
 .navbar-end {

@@ -17,6 +17,7 @@ import { MatBadge } from '@angular/material/badge';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
 import { MatToolbar } from '@angular/material/toolbar';
+import { MatTooltip } from '@angular/material/tooltip';
 import { MatListItem, MatListItemIcon, MatListItemTitle, MatNavList } from '@angular/material/list';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { CdkMenuTrigger } from '@angular/cdk/menu';
@@ -67,6 +68,7 @@ export interface NavItem {
     DatePipe,
     TypographyComponent,
     MatToolbar,
+    MatTooltip,
     MatTabNav,
     MatTabLink,
     MatButton,
@@ -107,6 +109,8 @@ export class AppNavBarComponent implements OnInit {
   sidebarVisible = false;
   isMobile = false;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+  // Below this width the page tabs drop to smaller labels so all four fit beside the run controls.
+  isNavCompact = window.innerWidth <= 1400;
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
@@ -127,6 +131,7 @@ export class AppNavBarComponent implements OnInit {
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+    this.isNavCompact = window.innerWidth <= 1400;
   }
 
   newRunIsLoading = false;

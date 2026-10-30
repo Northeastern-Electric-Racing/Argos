@@ -31,14 +31,25 @@
       mat-tab-nav-bar
       mat-stretch-tabs="false"
       class="navbar-nav"
-      [class.navbar-nav--small]="isWindowSmall"
+      [class.navbar-nav--compact]="isNavCompact"
+      [class.navbar-nav--icons]="isWindowSmall"
       [tabPanel]="tabPanel()"
       aria-label="Pages"
     >
       @for (navItem of onlyDesktopNavItems; track navItem.id) {
-        <a mat-tab-link [routerLink]="navItem.id" [active]="this.isSelected(navItem)">
+        <!-- Narrow windows show icon-only tabs; the tooltip and aria-label keep the page name. -->
+        <a
+          mat-tab-link
+          [routerLink]="navItem.id"
+          [active]="this.isSelected(navItem)"
+          [attr.aria-label]="isWindowSmall ? navItem.label : null"
+          [matTooltip]="navItem.label"
+          [matTooltipDisabled]="!isWindowSmall"
+        >
           <mat-icon class="nav-link-icon" [svgIcon]="navItem.icon" />
-          <span class="nav-link-label">{{ navItem.label }}</span>
+          @if (!isWindowSmall) {
+            <span class="nav-link-label">{{ navItem.label }}</span>
+          }
         </a>
       }
     </nav>
