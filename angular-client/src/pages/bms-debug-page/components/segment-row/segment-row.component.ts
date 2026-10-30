@@ -11,13 +11,14 @@ import {
 import { appRoutes } from 'src/app/app-routes';
 import { SegmentHeatmapComponent } from '../segment-heatmap/segment-heatmap.component';
 import { SegmentOverviewComponent } from '../segment-overview/segment-overview.component';
+import { TuiButton } from '@taiga-ui/core';
 
 @Component({
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
+  imports: [TuiButton, SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
 })
 export class SegmentRowComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

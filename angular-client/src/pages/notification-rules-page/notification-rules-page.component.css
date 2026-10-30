@@ -5,35 +5,7 @@
 .stream-toggle {
   align-self: flex-start;
   flex-shrink: 0;
-  width: 28px;
-  height: 44px;
   margin-top: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #3a3a3a;
-  border: 1px solid #555;
-  border-radius: 6px;
-  color: var(--color-text-subtitle);
-  cursor: pointer;
-  padding: 0;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.stream-toggle:hover,
-.stream-toggle:focus-visible {
-  background-color: #4a4a4a;
-  border-color: #666;
-  color: #fff;
-  outline: none;
-}
-
-.stream-toggle tui-icon {
-  font-size: 1rem;
-  transition: transform 0.25s ease;
 }
 
 .page-layout {
@@ -161,12 +133,6 @@
     flex-wrap: wrap;
   }
 
-  .header-buttons ::ng-deep argos-button .btn {
-    width: 100px !important;
-    height: 38px !important;
-    font-size: 14px;
-  }
-
   .rules-bar {
     flex-direction: column;
     align-items: flex-start;
@@ -176,14 +142,6 @@
   .rules-bar-actions {
     flex-wrap: wrap;
     gap: 6px;
-  }
-
-  .rules-bar-actions ::ng-deep argos-button .btn {
-    width: auto !important;
-    min-width: 70px;
-    height: 36px !important;
-    font-size: 13px;
-    padding: 2px 10px;
   }
 
   .search-container {

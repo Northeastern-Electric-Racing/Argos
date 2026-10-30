@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { TuiIcon, TuiInput } from '@taiga-ui/core';
+import { TuiButton, TuiIcon, TuiInput } from '@taiga-ui/core';
 import { TuiPassword, type TuiConfirmData } from '@taiga-ui/kit';
 import { injectConfirm } from 'src/utils/confirm.utils';
 import {
@@ -21,7 +21,6 @@ import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -40,7 +39,7 @@ import CommandCardComponent from './command-card/command-card.component';
     TuiInput,
     TuiPassword,
     FormsModule,
-    ButtonComponent,
+    TuiButton,
     LoadingPageComponent,
     ErrorPageComponent,
     TypographyComponent,

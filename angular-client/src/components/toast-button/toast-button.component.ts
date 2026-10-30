@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { ToastService } from 'src/services/toast.service';
-import { TuiButton } from '@taiga-ui/core';
+import { TuiButton, type TuiSizeL, type TuiSizeS } from '@taiga-ui/core';
 
 export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
 
@@ -15,11 +15,10 @@ const APPEARANCE: Record<toastSeverity, string> = {
 @Component({
   selector: 'toast-button',
   templateUrl: './toast-button.component.html',
-  styleUrls: ['./toast-button.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TuiButton]
 })
-export class ToastButtonComponent implements OnInit {
+export class ToastButtonComponent {
   private toasts = inject(ToastService);
   buttonLabel = input.required<string>();
   popUpSeverity = input<toastSeverity>('success');
@@ -28,12 +27,8 @@ export class ToastButtonComponent implements OnInit {
   disableToast = input<boolean>(false);
 
   onClick = input.required<() => void>();
-  additionalStyles = input<string>('');
-  style = 'width: 140px;';
-
-  ngOnInit(): void {
-    this.style += this.additionalStyles();
-  }
+  size = input<TuiSizeS | TuiSizeL>('m');
+  appearance = input<string>('primary');
 
   handleClick() {
     // the first () is to access the signal value,

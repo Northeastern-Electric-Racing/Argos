@@ -23,7 +23,6 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -32,7 +31,7 @@ import LiveValueStripComponent from './live-value-strip/live-value-strip.compone
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
-import { TuiNumberFormat, TuiTextfield } from '@taiga-ui/core';
+import { TuiButton, TuiNumberFormat, TuiTextfield } from '@taiga-ui/core';
 import { TuiInputNumber } from '@taiga-ui/kit';
 import { FormsModule } from '@angular/forms';
 
@@ -44,13 +43,13 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
     CustomGraphComponent,
     LiveValueStripComponent,
     TypographyComponent,
+    TuiButton,
     TuiInputNumber,
     TuiNumberFormat,
     TuiTextfield,

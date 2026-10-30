@@ -93,24 +93,8 @@
   width: clamp(64px, 9.4vw, 190px);
 }
 
-.see-more-btn {
-  background-color: #2aaeee;
-  color: #000;
-  border: none;
-  border-radius: clamp(8px, 1.25vw, 24px);
-  padding: clamp(2px, 0.47vw, 10px) clamp(6px, 1.4vw, 28px);
-  font-size: clamp(7px, 0.94vw, 18px);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
+.controls-actions button {
   width: 100%;
-  text-align: center;
-  height: clamp(18px, 2.3vw, 44px);
-  box-sizing: border-box;
-}
-
-.see-more-btn:hover {
-  background-color: #1e9ad8;
 }
 
 /* ── Let the Taiga select fill the controls zone ── */

@@ -35,7 +35,6 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent, PresetDialogData } from '../../preset-dialog/preset-dialog.component';
 import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.component';
@@ -54,7 +53,6 @@ import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.compone
     TuiHeader,
     TuiTitle,
     TopicTreeComponent,
-    ButtonComponent,
     TypographyComponent,
     TuiSwitch,
     FormsModule,

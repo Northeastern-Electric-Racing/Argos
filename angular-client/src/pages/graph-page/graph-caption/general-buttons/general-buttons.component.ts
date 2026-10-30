@@ -2,13 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { ToastService } from 'src/services/toast.service';
 import { FormsModule } from '@angular/forms';
 import { TuiDay, TuiTime } from '@taiga-ui/cdk';
-import { TuiCalendar, tuiDateFormatProvider, TuiDropdown, TuiTextfield } from '@taiga-ui/core';
-import { TuiInputDateTime, TuiInputNumber, TuiSegmented } from '@taiga-ui/kit';
+import { TuiButton, TuiCalendar, tuiDateFormatProvider, TuiDropdown, TuiTextfield } from '@taiga-ui/core';
+import { TuiChevron, TuiInputDateTime, TuiInputNumber, TuiSegmented } from '@taiga-ui/kit';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
 
 export interface RangePreset {
@@ -50,9 +49,10 @@ export function fromDayTime([day, time]: readonly [TuiDay, TuiTime?]): Date {
   providers: [tuiDateFormatProvider({ mode: 'yyyy/mm/dd', separator: '-' })],
   imports: [
     RunSelectorComponent,
-    ButtonComponent,
     SelectDropdownComponent,
+    TuiButton,
     TuiCalendar,
+    TuiChevron,
     TuiDropdown,
     TuiInputDateTime,
     TuiInputNumber,
@@ -114,9 +114,6 @@ export class GeneralButtonsComponent {
     if (minutes === undefined) return undefined;
     return this.presets().find((p) => p.minutes === minutes)?.label;
   });
-
-  // The Custom button's own click is a no-op: tuiDropdownOpen opens and closes the popover
-  readonly noop = () => {};
 
   /** Taiga's tuiDropdownOpen reports clicks, Esc and outside clicks; seed the fields on open */
   onCustomOpenChange(open: boolean) {

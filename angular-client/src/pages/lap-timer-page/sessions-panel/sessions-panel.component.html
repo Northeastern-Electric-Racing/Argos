@@ -10,17 +10,27 @@
       </span>
       <span class="sessions-toolbar-actions">
         @if (timer.sessions().length > 0) {
-          <argos-button
-            label="Clear All"
-            [onClick]="onClearAllSessions"
-            additionalStyles="height: 32px; width: 110px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-battery-low);"
-          />
+          <button
+            tuiButton
+            type="button"
+            size="s"
+            appearance="secondary-destructive"
+            iconStart="@tui.trash"
+            (click)="onClearAllSessions()"
+          >
+            Clear All
+          </button>
         }
-        <argos-button
-          label="+ New Session"
-          [onClick]="onNewSession"
-          additionalStyles="height: 32px; width: 140px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <button
+          tuiButton
+          type="button"
+          size="s"
+          appearance="secondary-grayscale"
+          iconStart="@tui.plus"
+          (click)="onNewSession()"
+        >
+          New Session
+        </button>
       </span>
     </div>
 

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, DestroyRef } from
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ToastService } from 'src/services/toast.service';
 import { injectConfirm } from 'src/utils/confirm.utils';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { TuiButton } from '@taiga-ui/core';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatDeltaMs } from 'src/utils/lap-timer.types';
@@ -12,7 +12,7 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
   templateUrl: './timer-hero.component.html',
   styleUrl: './timer-hero.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, InfoBackgroundComponent]
+  imports: [TuiButton, InfoBackgroundComponent]
 })
 export default class TimerHeroComponent {
   private destroyRef = inject(DestroyRef);

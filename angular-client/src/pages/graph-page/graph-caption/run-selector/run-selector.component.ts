@@ -5,16 +5,15 @@ import { Run } from 'src/utils/types.utils';
 import { CarouselComponent, DialogData } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import { TuiDialogService } from '@taiga-ui/core';
+import { TuiButton, TuiDialogService } from '@taiga-ui/core';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
   styleUrls: ['./run-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [TuiButton]
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

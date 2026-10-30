@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TuiDialogService } from '@taiga-ui/core';
+import { TuiButton, TuiDialogService } from '@taiga-ui/core';
 import { TuiSwitch } from '@taiga-ui/kit';
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import {
@@ -33,7 +33,6 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent, PresetDialogData } from '../../preset-dialog/preset-dialog.component';
 import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.component';
@@ -43,7 +42,7 @@ import { TopicTreeComponent } from 'src/components/topic-tree/topic-tree.compone
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent, TopicTreeComponent, TypographyComponent, TuiSwitch, FormsModule, SelectDropdownComponent]
+  imports: [TuiButton, TopicTreeComponent, TypographyComponent, TuiSwitch, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarDesktopComponent {
   private destroyRef = inject(DestroyRef);

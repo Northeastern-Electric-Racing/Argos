@@ -1,7 +1,7 @@
 <tui-loader class="table-loader" [loading]="loading()" [overlay]="true">
   <div class="table-scroll">
     <table tuiTable size="m" class="rules-table" [ngModel]="selectedRules()" (ngModelChange)="onSelectionChange($event)">
-      <thead>
+      <thead tuiThead>
         <tr>
           <th tuiTh class="col-select">
             <input tuiCheckbox tuiCheckboxTable type="checkbox" size="s" aria-label="Select all rules" />
@@ -28,7 +28,7 @@
                 [tuiCheckboxRow]="rule"
               />
             </td>
-            <td tuiTd>{{ rule.expr }}</td>
+            <td tuiTd class="col-expr">{{ rule.expr }}</td>
             <td tuiTd>{{ rule.topic }}</td>
             <td tuiTd class="col-optional">-</td>
             <td tuiTd class="col-optional">-</td>
@@ -36,7 +36,7 @@
               <input
                 tuiSwitch
                 type="checkbox"
-                size="s"
+                size="m"
                 [attr.aria-label]="'Subscribe to rule ' + rule.id"
                 [ngModel]="rule.is_subscribed"
                 (ngModelChange)="onToggleSubscription(rule, $event)"
@@ -47,7 +47,7 @@
                 <button
                   appearance="flat-grayscale"
                   iconStart="@tui.pencil"
-                  size="xs"
+                  size="s"
                   tuiIconButton
                   type="button"
                   (click)="onEdit(rule)"
@@ -57,7 +57,7 @@
                 <button
                   appearance="flat-destructive"
                   iconStart="@tui.trash-2"
-                  size="xs"
+                  size="s"
                   tuiIconButton
                   type="button"
                   (click)="onDelete(rule)"

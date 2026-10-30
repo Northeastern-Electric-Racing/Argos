@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiButton, type TuiDialogContext, TuiInput, TuiLabel } from '@taiga-ui/core';
 import { type TuiConfirmData } from '@taiga-ui/kit';
+import { TuiBlockStatus } from '@taiga-ui/layout';
 import { injectContext } from '@taiga-ui/polymorpheus';
 import { injectConfirm } from 'src/utils/confirm.utils';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
@@ -30,7 +31,7 @@ export interface PresetDialogData {
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, TuiButton, TuiInput, TuiLabel, TuiTable]
+  imports: [FormsModule, TuiBlockStatus, TuiButton, TuiInput, TuiLabel, TuiTable]
 })
 export class PresetDialogComponent {
   private destroyRef = inject(DestroyRef);

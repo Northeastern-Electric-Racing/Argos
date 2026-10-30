@@ -28,11 +28,11 @@
 
   <div class="list-body">
     @if (!hasEntries()) {
-      <div class="empty-state">
-        <tui-icon icon="@tui.bell-off" class="empty-icon" />
-        <span class="empty-text">No notifications yet</span>
-        <span class="empty-hint">Triggered rules will appear here</span>
-      </div>
+      <tui-block-status size="m" class="empty-state">
+        <tui-icon tuiSlot="top" icon="@tui.bell-off" class="empty-icon" />
+        <h3>No notifications yet</h3>
+        Triggered rules will appear here
+      </tui-block-status>
     } @else {
       <ul class="entries" role="list">
         @for (entry of entries(); track entry.id) {

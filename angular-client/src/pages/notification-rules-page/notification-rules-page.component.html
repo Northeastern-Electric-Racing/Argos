@@ -13,18 +13,60 @@
       <div class="header-row">
         <typography variant="x-large-title" content="Notification Rules" />
         <div class="header-buttons">
-          <argos-button label="View Log" [onClick]="onViewLog" additionalStyles="background-color: #ef4345;" />
-          <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
-          <argos-button label="Download" [onClick]="onDownload" additionalStyles="background-color: #555;" />
+          <button tuiButton type="button" size="m" appearance="primary" iconStart="@tui.scroll-text" (click)="onViewLog()">
+            View Log
+          </button>
+          <button
+            tuiButton
+            type="button"
+            size="m"
+            appearance="secondary-grayscale"
+            iconStart="@tui.upload"
+            (click)="onUpload()"
+          >
+            Upload
+          </button>
+          <button
+            tuiButton
+            type="button"
+            size="m"
+            appearance="secondary-grayscale"
+            iconStart="@tui.download"
+            (click)="onDownload()"
+          >
+            Download
+          </button>
         </div>
       </div>
 
       <div class="rules-bar">
         <typography variant="header" content="Rules" />
         <div class="rules-bar-actions">
-          <argos-button label="Add" [onClick]="onAddRule" />
-          <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
-          <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+          <button tuiButton type="button" size="s" appearance="primary" iconStart="@tui.plus" (click)="onAddRule()">
+            Add
+          </button>
+          <button
+            tuiButton
+            type="button"
+            size="s"
+            appearance="secondary-destructive"
+            iconStart="@tui.trash"
+            [disabled]="!hasSelection()"
+            (click)="onRemoveSelected()"
+          >
+            Remove
+          </button>
+          <button
+            tuiButton
+            type="button"
+            size="s"
+            appearance="secondary-grayscale"
+            iconStart="@tui.bell-ring"
+            [disabled]="!hasSelection()"
+            (click)="onToggleSubscription()"
+          >
+            Toggle Subscription
+          </button>
         </div>
         <div class="search-container">
           <tui-textfield iconStart="@tui.search" tuiTextfieldSize="s" class="search-input">
@@ -49,13 +91,17 @@
     </div>
 
     <button
+      tuiIconButton
       type="button"
+      size="s"
+      appearance="secondary-grayscale"
       class="stream-toggle"
-      (click)="toggleStreamRail()"
-      [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
+      [iconStart]="streamRailOpen() ? '@tui.chevron-right' : '@tui.chevron-left'"
+      [attr.aria-expanded]="streamRailOpen()"
       [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
+      (click)="toggleStreamRail()"
     >
-      <tui-icon [icon]="streamRailOpen() ? '@tui.chevron-right' : '@tui.chevron-left'" />
+      {{ streamRailOpen() ? 'Hide notification stream' : 'Show notification stream' }}
     </button>
 
     <aside

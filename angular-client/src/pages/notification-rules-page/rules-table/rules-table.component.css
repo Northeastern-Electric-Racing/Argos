@@ -19,6 +19,11 @@
   width: 5rem;
 }
 
+/* Keep each expression on one line; the table scrolls sideways on narrow screens */
+.col-expr {
+  white-space: nowrap;
+}
+
 .empty-state {
   padding: 40px;
   text-align: center;

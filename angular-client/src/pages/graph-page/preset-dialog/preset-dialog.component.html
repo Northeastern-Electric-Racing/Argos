@@ -35,7 +35,16 @@
         </div>
       </div>
 
-      <button appearance="outline" size="m" tuiButton type="button" (click)="onUploadClick()">Upload JSON</button>
+      <button
+        appearance="secondary-grayscale"
+        iconStart="@tui.upload"
+        size="m"
+        tuiButton
+        type="button"
+        (click)="onUploadClick()"
+      >
+        Upload JSON
+      </button>
     </div>
     @if (!hasSelection()) {
       <small class="hint">Select a topic to save a preset</small>
@@ -44,10 +53,10 @@
 
   <section class="presets-list">
     @if (presets().length === 0) {
-      <div class="empty-state">
-        <p>No presets yet</p>
-        <small> Save your current topic selection or upload a JSON of your preset </small>
-      </div>
+      <tui-block-status class="empty-state" [card]="true">
+        <h3>No presets yet</h3>
+        Save your current topic selection or upload a JSON of your preset
+      </tui-block-status>
     } @else {
       <table tuiTable size="m" class="preset-table">
         <thead>
@@ -67,7 +76,7 @@
               <td tuiTd class="actions">
                 <span class="action-buttons">
                   <button size="xs" tuiButton type="button" (click)="onApply(preset)">Apply</button>
-                  <button appearance="outline" size="xs" tuiButton type="button" (click)="onDownload(preset)">
+                  <button appearance="secondary-grayscale" size="xs" tuiButton type="button" (click)="onDownload(preset)">
                     Download
                   </button>
                   <button appearance="flat-destructive" size="xs" tuiButton type="button" (click)="onDelete(preset)">
@@ -84,6 +93,6 @@
 
   <div class="footer">
     <button appearance="flat" size="m" tuiButton type="button" (click)="onAddDefaultPresets()">Add Default Presets</button>
-    <button appearance="secondary" size="m" tuiButton type="button" (click)="onClose()">Close</button>
+    <button appearance="secondary-grayscale" size="m" tuiButton type="button" (click)="onClose()">Close</button>
   </div>
 </div>

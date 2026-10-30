@@ -199,31 +199,12 @@
 /* ---- Empty state ---- */
 
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
   padding: 2.5rem 1rem;
-  text-align: center;
-  color: var(--color-text-secondary);
 }
 
 .empty-icon {
   font-size: 1.75rem;
-  color: #444;
-}
-
-.empty-text {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text-subtitle);
-}
-
-.empty-hint {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  opacity: 0.8;
+  color: var(--tui-text-tertiary);
 }
 
 /* ---- Footer ---- */

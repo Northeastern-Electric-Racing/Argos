@@ -2,12 +2,12 @@ import { Component, inject } from '@angular/core';
 import { ToastService } from 'src/services/toast.service';
 import { Router } from '@angular/router';
 import Storage from 'src/services/storage.service';
-import { ButtonComponent } from '../argos-button/argos-button.component';
+import { TuiButton } from '@taiga-ui/core';
 
 @Component({
   selector: 'more-details',
   templateUrl: './more-details.component.html',
-  imports: [ButtonComponent]
+  imports: [TuiButton]
 })
 export default class MoreDetailsComponent {
   private router = inject(Router);

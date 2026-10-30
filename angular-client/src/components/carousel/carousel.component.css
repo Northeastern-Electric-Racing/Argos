@@ -12,32 +12,23 @@
 /* Taiga centres each item in a full-width slot; let the run card fill it */
 .slide {
   inline-size: 100%;
-}
-
-.select-button-container {
-  width: 100%;
-  text-align: center;
-  padding: 10px 0;
+  padding: 0.25rem;
 }
 
 .run-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border: 2.5px solid #0099ff;
-  margin-left: 8px;
-  margin-right: 8px;
-  border-radius: 10px;
+  gap: 0.75rem;
 }
 
-.left {
-  margin-left: 5px;
-  text-align: left;
-  margin-right: auto;
+.run-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
 }
 
-.right {
-  margin-left: auto;
-  margin-right: 5px;
-  text-align: right;
+.pager {
+  display: flex;
+  inline-size: fit-content;
+  margin: 0.75rem auto 0;
 }

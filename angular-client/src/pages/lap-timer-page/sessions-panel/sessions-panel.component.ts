@@ -5,9 +5,8 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { TuiTable } from '@taiga-ui/addon-table';
-import { TuiDataList, TuiDropdown } from '@taiga-ui/core';
+import { TuiButton, TuiDataList, TuiDropdown } from '@taiga-ui/core';
 import { injectConfirm } from 'src/utils/confirm.utils';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -25,7 +24,7 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     TuiTable,
     TuiDataList,
     TuiDropdown,
-    ButtonComponent,
+    TuiButton,
     InfoBackgroundComponent,
     TypographyComponent
   ]

@@ -79,3 +79,8 @@
   gap: 12px;
   margin-top: 8px;
 }
+
+/* The timer's actions keep the old 140px footprint so the row does not jump between states */
+.hero-action {
+  min-inline-size: 8.75rem;
+}

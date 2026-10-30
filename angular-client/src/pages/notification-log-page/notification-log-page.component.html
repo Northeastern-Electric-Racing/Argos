@@ -22,11 +22,11 @@
   </header>
 
   @if (!hasEntries()) {
-    <div class="empty-state">
-      <tui-icon icon="@tui.bell-off" class="empty-icon" />
-      <typography variant="subheader" content="No notifications have been triggered yet" />
-      <span class="empty-hint">Triggered rules will appear here in real-time</span>
-    </div>
+    <tui-block-status class="empty-state" [card]="true">
+      <tui-icon tuiSlot="top" icon="@tui.bell-off" class="empty-icon" />
+      <h2>No notifications have been triggered yet</h2>
+      Triggered rules will appear here in real-time
+    </tui-block-status>
   } @else {
     <div class="log-table-wrapper">
       <table tuiTable size="m" class="log-table">

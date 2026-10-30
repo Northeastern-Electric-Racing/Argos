@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { TuiButton, TuiIcon } from '@taiga-ui/core';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
+import { TuiBlockStatus } from '@taiga-ui/layout';
 
 export type NotificationListVariant = 'popover' | 'stream';
 
@@ -12,7 +13,7 @@ export type NotificationListVariant = 'popover' | 'stream';
   templateUrl: './notification-list.component.html',
   styleUrls: ['./notification-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, TuiButton, TuiIcon]
+  imports: [DatePipe, TuiBlockStatus, TuiButton, TuiIcon]
 })
 export class NotificationListComponent {
   protected notificationLogService = inject(NotificationLogService);

@@ -22,11 +22,11 @@
   align-items: center;
   gap: 6px;
   padding-left: 10px;
-  border-left: 1px solid #2a3a44;
+  border-left: 1px solid var(--tui-border-normal);
 }
 
 .historical-label {
-  color: #8fcadd;
+  color: var(--tui-text-secondary);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -41,7 +41,7 @@
 }
 
 .custom-caption {
-  color: #8fcadd;
+  color: var(--tui-text-secondary);
   font-size: 10px;
   line-height: 1;
   white-space: nowrap;
@@ -76,7 +76,7 @@
 }
 
 .popover-label {
-  color: #c9d6dc;
+  color: var(--tui-text-secondary);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;

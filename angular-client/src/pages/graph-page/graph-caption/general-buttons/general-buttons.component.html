@@ -1,14 +1,27 @@
 <div class="general-buttons-row">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
-    <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" additionalStyles="border: 1.4px solid #000" />
+    <button
+      tuiButton
+      type="button"
+      size="s"
+      appearance="secondary-grayscale"
+      iconStart="@tui.radio"
+      (click)="onSetRealTime()()"
+    >
+      Realtime
+    </button>
   }
-  <argos-button
-    [onClick]="onClearDataType()"
-    label="Clear Graph"
-    size="sm"
-    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-  />
+  <button
+    tuiButton
+    type="button"
+    size="s"
+    appearance="secondary-grayscale"
+    iconStart="@tui.eraser"
+    (click)="onClearDataType()()"
+  >
+    Clear Graph
+  </button>
 
   <div class="historical-section">
     <span class="historical-label">Historical:</span>
@@ -17,24 +30,21 @@
       [placeholder]="quickSelectConfig().placeholder"
       [defaultValue]="selectedPresetLabel()"
     />
-    <div
-      class="custom-stack"
-      tuiDropdownAlign="end"
-      [tuiDropdown]="customPopover"
-      [tuiDropdownOpen]="customOpen()"
-      (tuiDropdownOpenChange)="onCustomOpenChange($event)"
-    >
+    <div class="custom-stack">
       <!-- tuiDropdownOpen toggles the popover on the button's click, Esc and outside clicks -->
-      <argos-button
-        [onClick]="noop"
-        label="Custom"
-        size="sm"
-        [additionalStyles]="
-          customActive()
-            ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
-            : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
-        "
-      />
+      <button
+        tuiButton
+        tuiChevron
+        type="button"
+        size="s"
+        tuiDropdownAlign="end"
+        [appearance]="customActive() ? 'primary' : 'secondary-grayscale'"
+        [tuiDropdown]="customPopover"
+        [tuiDropdownOpen]="customOpen()"
+        (tuiDropdownOpenChange)="onCustomOpenChange($event)"
+      >
+        Custom
+      </button>
       @if (customActive() && customCaption()) {
         <span class="custom-caption">{{ customCaption() }}</span>
       }
@@ -83,12 +93,7 @@
               />
             </tui-textfield>
           </div>
-          <argos-button
-            [onClick]="applyCustomLastX"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
+          <button tuiButton type="button" size="s" appearance="primary" (click)="applyCustomLastX()">Apply</button>
         </div>
       } @else {
         <div class="mode-body">
@@ -120,12 +125,7 @@
               <tui-calendar *tuiDropdown />
             </tui-textfield>
           </div>
-          <argos-button
-            [onClick]="applyCustomDateRange"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
+          <button tuiButton type="button" size="s" appearance="primary" (click)="applyCustomDateRange()">Apply</button>
         </div>
       }
     </div>

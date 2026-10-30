@@ -10,26 +10,42 @@
       <info-background title="Car Commands" icon="lock">
         <div class="auth-content">
           <p class="auth-description">Enter the command password to access car controls.</p>
-          <div class="auth-form">
+          <!-- A real form, so Enter in the password field authenticates -->
+          <form class="auth-form" (ngSubmit)="authenticatePw()">
             <div class="auth-input-group">
               <label for="password">Password</label>
               <tui-textfield>
-                <input id="password" tuiInput type="password" autocomplete="current-password" [(ngModel)]="enteredPw" />
+                <input
+                  id="password"
+                  name="password"
+                  tuiInput
+                  type="password"
+                  autocomplete="current-password"
+                  [(ngModel)]="enteredPw"
+                />
                 <tui-icon tuiPassword />
               </tui-textfield>
             </div>
-            <argos-button label="Authenticate" [onClick]="authenticatePw" />
+            <button tuiButton type="submit" appearance="primary" iconStart="@tui.lock-open">Authenticate</button>
             @if (authError()) {
-              <p class="auth-error">{{ authError() }}</p>
+              <p class="auth-error" role="alert">{{ authError() }}</p>
             }
-          </div>
+          </form>
         </div>
       </info-background>
     </div>
   } @else {
     <div class="page-header">
       <typography variant="large-header" content="Car Commands" />
-      <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
+      <button
+        tuiButton
+        type="button"
+        appearance="secondary-grayscale"
+        iconStart="@tui.refresh-cw"
+        (click)="onUpdateVideosPressed()"
+      >
+        Update Videos
+      </button>
     </div>
 
     <div class="commands-grid">
@@ -49,7 +65,9 @@
           </div>
           <div class="settings-footer">
             <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
-            <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
+            <button tuiButton type="button" appearance="primary" iconStart="@tui.save" (click)="confirmSaveSettings()">
+              Save Settings
+            </button>
           </div>
         </div>
       </info-background>

@@ -38,30 +38,13 @@
 
 .empty-state {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 3rem 1rem;
-  text-align: center;
-  color: var(--color-text-secondary);
-  background-color: var(--color-background-info);
-  border: 1px dashed var(--color-divider);
-  border-radius: var(--border-radius-panel);
   min-height: 300px;
+  background-color: var(--tui-background-elevation-2);
 }
 
 .empty-icon {
   font-size: 2.5rem;
-  color: #444;
-  margin-bottom: 8px;
-}
-
-.empty-hint {
-  font-size: 0.825rem;
-  color: var(--color-text-secondary);
-  opacity: 0.75;
+  color: var(--tui-text-tertiary);
 }
 
 /* ---- Log table ---- */
