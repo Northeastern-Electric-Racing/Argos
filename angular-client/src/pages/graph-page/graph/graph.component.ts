@@ -88,7 +88,6 @@ export default class CustomGraphComponent implements OnDestroy {
   private chartDirective = viewChild(BaseChartDirective);
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<ObservableGraphInfo[]>();
-  limitRange = input(true);
   isPaused = input<boolean>(false);
   realTime = input<boolean>(false);
   clearGraph = input<number>(0);
@@ -163,8 +162,6 @@ export default class CustomGraphComponent implements OnDestroy {
       cancelAnimationFrame(this.frame);
       this.frame = undefined;
     }
-    this.data.clear();
-    this.datasets.clear();
   }
 
   private get chart(): Chart<'line', GraphData[]> | undefined {

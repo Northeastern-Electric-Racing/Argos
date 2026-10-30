@@ -450,7 +450,8 @@ export const cursorPlugin: Plugin<'line'> = {
     if (cursor && tooltip?.getActiveElements().length) {
       const { xAlign, yAlign } = placeTooltip(cursor, tooltip, chart.chartArea);
       if (xAlign !== tooltip.xAlign || yAlign !== tooltip.yAlign) {
-        // Tooltip#update isn't in the TooltipModel type; setActiveElements would also stop live replays updating it
+        // Tooltip#update isn't in the TooltipModel type (checked against Chart.js 4.5.1); setActiveElements would also
+        // stop live replays updating it
         (tooltip as unknown as { update(changed: boolean, replay: boolean): void }).update(true, true);
         args.changed = true;
       }
