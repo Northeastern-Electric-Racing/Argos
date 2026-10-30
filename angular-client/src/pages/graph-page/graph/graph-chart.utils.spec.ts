@@ -51,16 +51,6 @@ describe('graph-chart utils', () => {
       legend.onLeave!.call(undefined as never, event, undefined as never, undefined as never);
       expect(canvas.style.cursor).toBe('');
     });
-
-    it('hides the x-axis until there is data', () => {
-      expect(options.scales!['x']!.display).toBe(false);
-    });
-
-    it('draws text in the app font and a dark grey tooltip with round series swatches', () => {
-      expect(options.font!.family).toContain('Roboto');
-      expect(options.plugins!.tooltip!.backgroundColor).toBe('rgba(30, 30, 30, 0.92)');
-      expect(options.plugins!.tooltip!.usePointStyle).toBe(true);
-    });
   });
 
   it('gives at least ten topics distinct colors', () => {

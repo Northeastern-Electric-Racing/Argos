@@ -72,7 +72,7 @@
   min-height: 0;
   overflow: hidden;
   padding-right: 16px;
-  padding-bottom: 40px; /* bottom gutter under the chart (Chart.js draws its legend inside the canvas) */
+  padding-bottom: 40px;
 }
 
 .mobile-sidebar {

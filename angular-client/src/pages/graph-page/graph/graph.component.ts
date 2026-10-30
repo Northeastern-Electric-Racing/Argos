@@ -85,7 +85,7 @@ export default class CustomGraphComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   /** Emits when the topics change, ending the subscriptions made for the previous ones. */
   private valuesChange$ = new Subject<void>();
-  private chartDirective = viewChild(BaseChartDirective);
+  private chartDirective = viewChild<BaseChartDirective<'line', GraphData[]>>(BaseChartDirective);
   showMultipleYAxes = input<boolean>(false);
   valuesSubject = input.required<ObservableGraphInfo[]>();
   isPaused = input<boolean>(false);
@@ -165,7 +165,7 @@ export default class CustomGraphComponent implements OnDestroy {
   }
 
   private get chart(): Chart<'line', GraphData[]> | undefined {
-    return this.chartDirective()?.chart as Chart<'line', GraphData[]> | undefined;
+    return this.chartDirective()?.chart;
   }
 
   /**
@@ -191,11 +191,10 @@ export default class CustomGraphComponent implements OnDestroy {
     const keys = Array.from(this.data.keys());
 
     // Reuse dataset objects across frames: Chart.js keys its per-dataset state (legend toggles) on identity
-    chart.data.datasets = keys.map((key, index) => {
+    chart.data.datasets = Array.from(this.data, ([key, points], index) => {
       let dataset = this.datasets.get(key);
       if (!dataset) {
         const color = SERIES_COLORS[this.datasets.size % SERIES_COLORS.length];
-        const points = this.data.get(key)!;
         dataset = { label: key, data: points, samples: points, borderColor: color, backgroundColor: color };
         this.datasets.set(key, dataset);
       }
@@ -230,8 +229,8 @@ export default class CustomGraphComponent implements OnDestroy {
         x.min = undefined;
         x.max = undefined;
       } else {
-        // Pin both ends to the data, as ApexCharts' range/auto-fit did: left unset, Chart.js rounds linear
-        // bounds out to the next "nice" tick, leaving up to a tick step of empty axis past the latest point
+        // Pin both ends to the data: left unset, Chart.js rounds linear bounds out to the next "nice" tick,
+        // leaving up to a tick step of empty axis past the latest point
         x.min = effectiveRange !== undefined ? span.maxX - effectiveRange : span.minX;
         x.max = span.maxX;
         if (x.min === x.max) {
@@ -245,7 +244,7 @@ export default class CustomGraphComponent implements OnDestroy {
     // Multi-day historical ranges get per-day boundary annotations (the x ticks date each midnight).
     // Realtime ranges are bounded and never multi-day.
     const isMultiDay = !this.realTime() && !!span && span.spanMs > DAY_MS;
-    options.plugins!.annotation!.annotations = isMultiDay ? buildDayBoundaryAnnotations(span!) : [];
+    options.plugins!.annotation!.annotations = isMultiDay ? buildDayBoundaryAnnotations(span) : [];
 
     chart.update('none');
   }
@@ -321,8 +320,9 @@ export default class CustomGraphComponent implements OnDestroy {
   saveCsv = () => {
     const { chart } = this;
     // Datasets follow the data's order; a series added since the last frame has none yet, and isn't hidden
-    const datasets = chart?.data.datasets.length ?? 0;
-    const shown = new Map(Array.from(this.data).filter((_, i) => i >= datasets || chart!.isDatasetVisible(i)));
+    const shown = new Map(
+      Array.from(this.data).filter((_, i) => !chart || i >= chart.data.datasets.length || chart.isDatasetVisible(i))
+    );
     const url = URL.createObjectURL(new Blob([buildCsv(shown)], { type: 'text/csv' }));
     download(url, 'csv');
     // Released once the click has handed the file to the browser's download

@@ -40,16 +40,15 @@ const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
 const THEME_SURFACE = '#0c2026';
 const THEME_OUTLINE = '#8fcadd';
 
-export type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
+type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
 
-export type DataSpan = { minX: number; maxX: number; spanMs: number };
+type DataSpan = { minX: number; maxX: number; spanMs: number };
 
 /** A series' name for people: a single-value topic's series is "<topic> 0", so it goes by the topic alone. */
-export function seriesTitle(key: string): string {
+function seriesTitle(key: string): string {
   return key.replace(/ 0$/, '');
 }
 
-/** Chart.js scale id of a series' y-axis: the shared `y` axis, or one axis per series when multi-axis is on. */
 export function yAxisIdFor(index: number, multipleYAxes: boolean): string {
   return multipleYAxes && index > 0 ? `y${index}` : 'y';
 }
@@ -146,7 +145,6 @@ const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;
 const MAX_X_TICKS = 6;
 
-/** Clock-friendly tick steps: 1 to 500 ms, 1/2/5/10/15/30 s and min, 1/2/3/6/12 h, then days. */
 const TIME_STEPS_MS = [
   ...[1, 2, 5, 10, 20, 50, 100, 200, 500],
   ...[1, 2, 5, 10, 15, 30].map((n) => n * SECOND_MS),
@@ -220,7 +218,7 @@ export function formatTooltipTime(value: number, axisSpanMs: number, withDate = 
 
 /** An x tick label as precise as the step needs; with hour-or-longer steps, local midnights show their date. */
 export function formatTimeTick(value: number, stepMs: number): string {
-  if (stepMs >= HOUR_MS && value - startOfLocalDay(value) === 0) return TIME_LABELS.date.format(value);
+  if (stepMs >= HOUR_MS && value === startOfLocalDay(value)) return TIME_LABELS.date.format(value);
   if (stepMs < SECOND_MS) return TIME_LABELS.millis.format(value);
   if (stepMs < MINUTE_MS) return TIME_LABELS.seconds.format(value);
   return TIME_LABELS.minutes.format(value);
@@ -287,7 +285,7 @@ export function nearestIndex(points: readonly { x: number }[], x: number): numbe
 }
 
 /** How far, in pixels, from a series' sample the pointer still hovers it, however short the series' period. */
-export const HOVER_SNAP_PX = 8;
+const HOVER_SNAP_PX = 8;
 /** How many of a series' sample periods from its nearest sample the pointer still hovers it (see hoverSample). */
 export const HOVER_REACH_PERIODS = 2;
 
@@ -398,12 +396,6 @@ const cursors = new WeakMap<Chart, Cursor | null>();
 /** The cursor each chart last drew, so pointer moves off the plot don't redraw it for nothing. */
 const drawnCursors = new WeakMap<Chart, Cursor | null>();
 
-/** The sample a dataset shows at the pointer's time (see hoverSample); null off the plot or away from its data. */
-export function sampleAtCursor(chart: Chart, datasetIndex: number): HoveredSample | null {
-  const cursor = cursors.get(chart);
-  return cursor ? sampleAtPixel(chart, datasetIndex, cursor.x) : null;
-}
-
 /** Of every visible series' hovered sample, the one nearest the pointer's time (the first series' on a tie). */
 function nearestHoveredSample(chart: Chart): GraphData | null {
   const cursor = cursors.get(chart);
@@ -419,7 +411,7 @@ function nearestHoveredSample(chart: Chart): GraphData | null {
 }
 
 /** Hides the cursor lines, dots and tooltip until the pointer next moves, e.g. after a zoom moved the data under it. */
-export function hideCursor(chart: Chart): void {
+function hideCursor(chart: Chart): void {
   // The zoom plugin calls onZoomComplete 250 ms after a wheel zoom, by when the chart may have been destroyed
   if (!(chart.ctx as CanvasRenderingContext2D | null)) return;
   cursors.set(chart, null);
@@ -589,7 +581,8 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
           // The series' hovered sample, where its hover dot sits
           label: (item) => {
             const { chart } = item;
-            const sample = sampleAtCursor(chart, item.datasetIndex)?.value;
+            const cursor = cursors.get(chart);
+            const sample = cursor && sampleAtPixel(chart, item.datasetIndex, cursor.x)?.value;
             const row = `${item.dataset.label}: ${tooltipNumber.format(sample?.y ?? item.parsed.y ?? NaN)}`;
             const titleTime = nearestHoveredSample(chart)?.x;
             if (!sample || titleTime === undefined) return row;
@@ -615,7 +608,7 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
           mode: 'x',
           // As each zoom step lands, not on onZoomComplete: the plugin delays that 250 ms after a wheel and to the
           // end of a pinch, and live points arriving meanwhile would reset the x-window under the zoom
-          onZoom: () => callbacks.onZoom(),
+          onZoom: callbacks.onZoom,
           // The data under the cursor moved, so the hover is stale until the pointer moves again
           onZoomComplete: ({ chart }) => hideCursor(chart)
         },
