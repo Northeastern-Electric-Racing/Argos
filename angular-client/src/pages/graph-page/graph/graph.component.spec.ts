@@ -232,7 +232,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
     const c = await render({ valuesSubject: [voltage], realTime: true });
 
     c.zoomScale('x', { min: 5_000, max: 6_000 }, 'none');
-    fixture.componentInstance.zoomed.set(true);
     voltage.updates.next([[{ x: 40_000, y: 3 }]]);
     await settle();
     expect(c.scales['x'].min).toBe(5_000);
@@ -241,6 +240,77 @@ describe('CustomGraphComponent (Chart.js)', () => {
     await settle();
     expect(fixture.componentInstance.zoomed()).toBe(false);
     expect(c.scales['x'].min).toBe(40_000 - BASE_CONFIG.timeRangeMs);
+  });
+
+  describe('zoom and pan gestures in live mode', () => {
+    const liveTopic = () =>
+      topic('V', [
+        { x: 0, y: 1 },
+        { x: 30_000, y: 2 }
+      ]);
+
+    it('holds a ctrl-wheel zoom as live points arrive, before the zoom completes', async () => {
+      const voltage = liveTopic();
+      const c = await render({ valuesSubject: [voltage], realTime: true });
+
+      c.canvas.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, clientX: 300, clientY: 150, cancelable: true })
+      );
+      const { min, max } = c.scales['x'];
+      expect(max - min).toBeLessThan(BASE_CONFIG.timeRangeMs);
+      voltage.updates.next([[{ x: 31_000, y: 3 }]]);
+      await settle();
+
+      expect(fixture.componentInstance.zoomed()).toBe(true);
+      expect(c.scales['x'].min).toBe(min);
+      expect(c.scales['x'].max).toBe(max);
+    });
+
+    it('holds a shift-drag pan as live points arrive mid-gesture', async () => {
+      const voltage = liveTopic();
+      const c = await render({ valuesSubject: [voltage], realTime: true });
+
+      c.options.plugins!.zoom!.pan!.onPanStart!({ chart: c, event: {} as never, point: { x: 300, y: 150 } });
+      c.pan({ x: 100 }, undefined, 'none');
+      const { min, max } = c.scales['x'];
+      expect(max).toBeLessThan(30_000);
+      voltage.updates.next([[{ x: 31_000, y: 3 }]]);
+      await settle();
+
+      expect(fixture.componentInstance.zoomed()).toBe(true);
+      expect(c.scales['x'].min).toBe(min);
+      expect(c.scales['x'].max).toBe(max);
+    });
+
+    it('zooms a drag to the times under the box, even when live points arrive mid-drag', async () => {
+      const voltage = liveTopic();
+      const c = await render({ valuesSubject: [voltage], realTime: true });
+      const y = c.chartArea.top + 50;
+      const [from, to] = [c.chartArea.left + 100, c.chartArea.left + 300];
+      const expected = [from, to].map((px) => c.scales['x'].getValueForPixel(px)!);
+
+      c.canvas.dispatchEvent(new MouseEvent('mousedown', { button: 0, clientX: from, clientY: y, bubbles: true }));
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: to, clientY: y }));
+      voltage.updates.next([[{ x: 35_000, y: 3 }]]);
+      await settle();
+      document.dispatchEvent(new MouseEvent('mouseup', { clientX: to, clientY: y }));
+      await settle();
+
+      expect(fixture.componentInstance.zoomed()).toBe(true);
+      expect(c.scales['x'].min).toBeCloseTo(expected[0], -1);
+      expect(c.scales['x'].max).toBeCloseTo(expected[1], -1);
+    });
+
+    it('ignores a pan on an empty chart, so arriving data is not hidden behind it', async () => {
+      const voltage = topic('V', []);
+      const c = await render({ valuesSubject: [voltage], realTime: true });
+
+      c.options.plugins!.zoom!.pan!.onPanStart!({ chart: c, event: {} as never, point: { x: 300, y: 150 } });
+      voltage.updates.next([[{ x: 1000, y: 1 }]]);
+      await settle();
+
+      expect(fixture.componentInstance.zoomed()).toBe(false);
+    });
   });
 
   it('drops the zoom when the data resets, fitting the new data', async () => {
@@ -253,7 +323,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
       ]
     });
     c.zoomScale('x', { min: 5_000, max: 6_000 }, 'none');
-    fixture.componentInstance.zoomed.set(true);
 
     fixture.componentRef.setInput('valuesSubject', [
       topic('W', [
@@ -271,7 +340,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
   it('drops the zoom when the graph is cleared', async () => {
     const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
     c.zoomScale('x', { min: 0, max: 1_000 }, 'none');
-    fixture.componentInstance.zoomed.set(true);
 
     fixture.componentRef.setInput('clearGraph', 1);
     await settle();
@@ -385,7 +453,7 @@ describe('CustomGraphComponent (Chart.js)', () => {
     const voltage = topic('V', []);
     const c = await render({ valuesSubject: [voltage], realTime: true });
 
-    c.options.plugins!.zoom!.zoom!.onZoomComplete!({ chart: c });
+    c.options.plugins!.zoom!.zoom!.onZoom!({ chart: c, trigger: 'drag' });
     voltage.updates.next([[{ x: 1000, y: 1 }]]);
     await settle();
 
@@ -430,7 +498,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
     ]);
     const c = await render({ valuesSubject: [voltage], realTime: true });
     c.zoomScale('x', { min: 5_000, max: 6_000 }, 'none');
-    fixture.componentInstance.zoomed.set(true);
     voltage.updates.next([[{ x: 40_000, y: 3 }]]);
     await settle();
 

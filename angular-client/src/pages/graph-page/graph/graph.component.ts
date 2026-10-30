@@ -114,7 +114,7 @@ export default class CustomGraphComponent implements OnDestroy {
   private frame: number | undefined;
 
   readonly chartData: { datasets: LineDataset[] } = { datasets: [] };
-  // A drag on an empty chart zooms its placeholder 0..1 axis; ignore it, or data arriving next would stay hidden
+  // A zoom or pan on an empty chart moves its placeholder 0..1 axis; ignore it, or data arriving next would stay hidden
   readonly chartOptions = buildBaseOptions({ onZoom: () => this.zoomed.set(this.hasData()) });
   readonly chartPlugins = [cursorPlugin];
 
@@ -222,9 +222,9 @@ export default class CustomGraphComponent implements OnDestroy {
     scales['x']!.display = !!span;
     if (!multipleYAxes) scales['y']!.display = !!span;
 
-    // Only constrain the x-axis range in real-time mode, and not while the user is zoomed in;
-    // historical mode auto-fits all data
-    if (!this.zoomed()) {
+    // Only constrain the x-axis range in real-time mode, and not while the user is zoomed in or mid-gesture
+    // (a drag-zoom box maps to the times under it on release); historical mode auto-fits all data
+    if (!this.zoomed() && !chart.isZoomingOrPanning()) {
       let effectiveRange: number | undefined = undefined;
       if (this.realTime()) {
         effectiveRange = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
@@ -307,7 +307,6 @@ export default class CustomGraphComponent implements OnDestroy {
 
   /** Drops any user zoom/pan and lets the chart follow the live window (or fit all data) again. */
   resetZoom = (): void => {
-    // The zoom plugin fires onZoomComplete from resetZoom too, so clear the flag after it
     this.chart?.resetZoom('none');
     this.zoomed.set(false);
     this.updateChart();
@@ -317,10 +316,9 @@ export default class CustomGraphComponent implements OnDestroy {
   zoomIn = () => this.zoomBy(1.2);
   zoomOut = () => this.zoomBy(0.75);
 
-  /** Zooms the x-axis about its centre; like a drag-zoom, this stops the live window from following. */
+  /** Zooms the x-axis about its centre; like a drag-zoom, this stops the live window from following (onZoom). */
   private zoomBy(factor: number): void {
     this.chart?.zoom({ x: factor }, 'none');
-    this.zoomed.set(true);
   }
 
   /** Downloads every series the graph holds as CSV, at full resolution (not the decimated points drawn). */

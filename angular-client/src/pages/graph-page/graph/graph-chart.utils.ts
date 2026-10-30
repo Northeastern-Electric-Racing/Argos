@@ -553,20 +553,22 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
           wheel: { enabled: true, modifierKey: 'ctrl' },
           pinch: { enabled: true },
           mode: 'x',
+          // As each zoom step lands, not on onZoomComplete: the plugin delays that 250 ms after a wheel and to the
+          // end of a pinch, and live points arriving meanwhile would reset the x-window under the zoom
+          onZoom: () => callbacks.onZoom(),
           // The data under the cursor moved, so the hover is stale until the pointer moves again
-          onZoomComplete: ({ chart }) => {
-            hideCursor(chart);
-            callbacks.onZoom();
-          }
+          onZoomComplete: ({ chart }) => hideCursor(chart)
         },
         pan: {
           enabled: true,
           mode: 'x',
           modifierKey: 'shift',
-          onPanComplete: ({ chart }) => {
-            hideCursor(chart);
+          // At the start of the gesture, for the same reason as zoom's onZoom; returning false would reject the pan
+          onPanStart: () => {
             callbacks.onZoom();
-          }
+            return undefined;
+          },
+          onPanComplete: ({ chart }) => hideCursor(chart)
         },
         // Bounds drag, ctrl-wheel and pinch zoom alike
         limits: { x: { minRange: 1000 } }
