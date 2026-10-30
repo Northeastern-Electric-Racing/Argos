@@ -1,4 +1,5 @@
-import { formatClock, liveWindow, windowPoints } from './live-line-chart.utils';
+import { Scale, Tick } from 'chart.js';
+import { buildLiveLineOptions, formatClock, liveWindow, windowPoints } from './live-line-chart.utils';
 
 describe('live line chart utils', () => {
   describe('liveWindow', () => {
@@ -59,5 +60,19 @@ describe('live line chart utils', () => {
 
   it('formats a timestamp as a local clock time', () => {
     expect(formatClock(new Date(2026, 0, 1, 9, 5, 7).getTime())).toBe('9:05:07');
+  });
+
+  it('labels each second on the time axis once, even when ticks are under a second apart', () => {
+    // The ticks Chart.js puts on a single point's one-second window: its edges and every half second
+    const at = (ms: number) => new Date(2026, 0, 1, 9, 5, 6, ms).getTime();
+    const ticks: Tick[] = [at(800), at(1_000), at(1_500), at(1_800)].map((value) => ({ value }));
+    const label = buildLiveLineOptions({ legend: false }).scales!['x']!.ticks!.callback!;
+
+    expect(ticks.map((tick, index) => label.call({} as Scale, tick.value, index, ticks))).toEqual([
+      '9:05:06',
+      '9:05:07',
+      '',
+      ''
+    ]);
   });
 });
