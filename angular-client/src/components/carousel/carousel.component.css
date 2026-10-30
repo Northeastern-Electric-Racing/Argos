@@ -1,6 +1,6 @@
 .modal-container {
-  background-color: #262626;
-  border-radius: 20px;
+  background-color: var(--ui-surface-2);
+  border-radius: var(--ui-radius-lg);
   overflow: hidden;
 }
 
@@ -41,22 +41,10 @@
   padding: 10px;
 }
 
-.run-select-button {
-  background: #313131;
-  border-color: #777777;
-  border-radius: 10px;
-  padding: 0 1.5rem;
-}
-
-.run-select-button:hover:not(:disabled) {
-  background: rgba(104, 104, 104, 0.261);
-  border-color: #777777;
-}
-
 .run-card {
-  border: 2.5px solid #0099ff;
-  margin: 0 8px;
-  border-radius: 10px;
+  border: 2px solid var(--ui-secondary);
+  margin: 0 var(--ui-space-2);
+  border-radius: var(--ui-radius);
 }
 
 .carousel-footer {
@@ -79,7 +67,7 @@
   padding: 0;
   border: none;
   border-radius: 2px;
-  background: #555;
+  background: var(--ui-control-off);
   cursor: pointer;
 }
 
