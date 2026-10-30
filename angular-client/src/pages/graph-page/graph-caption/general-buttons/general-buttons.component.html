@@ -1,14 +1,9 @@
 <div class="general-buttons-row">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
-    <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" additionalStyles="border: 1.4px solid #000" />
+    <button matButton="filled" (click)="onSetRealTime()()">Realtime</button>
   }
-  <argos-button
-    [onClick]="onClearDataType()"
-    label="Clear Graph"
-    size="sm"
-    additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-  />
+  <button matButton="outlined" (click)="onClearDataType()()">Clear Graph</button>
 
   <div class="historical-section">
     <span class="historical-label">Historical:</span>
@@ -18,18 +13,14 @@
       [defaultValue]="selectedPresetLabel()"
     />
     <div class="custom-stack" cdkOverlayOrigin #customOrigin="cdkOverlayOrigin">
-      <argos-button
-        [onClick]="toggleCustomPopover"
-        label="Custom"
-        size="sm"
-        hasPopup="dialog"
-        [expanded]="customPopoverOpen()"
-        [additionalStyles]="
-          customActive()
-            ? 'background-color: #027bd7; border: 1.4px solid #8fcadd;'
-            : 'background-color: #0c2026; border: 1.4px solid #8fcadd;'
-        "
-      />
+      <button
+        [matButton]="customActive() ? 'tonal' : 'outlined'"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="customPopoverOpen()"
+        (click)="toggleCustomPopover()"
+      >
+        Custom
+      </button>
       @if (customActive() && customCaption()) {
         <span class="custom-caption">{{ customCaption() }}</span>
       }
@@ -85,12 +76,7 @@
               placeholder="30"
             />
           </mat-form-field>
-          <argos-button
-            [onClick]="applyCustomLastX"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
+          <button matButton="filled" class="apply-button" (click)="applyCustomLastX()">Apply</button>
         </div>
       } @else {
         <div class="mode-body">
@@ -140,12 +126,7 @@
               <mat-timepicker #toTimePicker interval="15m" />
             </mat-form-field>
           </div>
-          <argos-button
-            [onClick]="applyCustomDateRange"
-            label="Apply"
-            size="sm"
-            additionalStyles="background-color: #027bd7; border: 1.4px solid #8fcadd;"
-          />
+          <button matButton="filled" class="apply-button" (click)="applyCustomDateRange()">Apply</button>
         </div>
       }
     </div>

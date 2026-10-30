@@ -23,7 +23,6 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -34,6 +33,9 @@ import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { MatButton } from '@angular/material/button';
+import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -44,7 +46,6 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
@@ -53,6 +54,10 @@ import { FormsModule } from '@angular/forms';
     TypographyComponent,
     MatFormField,
     MatInput,
+    MatButton,
+    MatIcon,
+    MatButtonToggleGroup,
+    MatButtonToggle,
     FormsModule
   ]
 })

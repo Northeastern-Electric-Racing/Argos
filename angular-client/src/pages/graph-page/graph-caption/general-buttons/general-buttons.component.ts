@@ -18,8 +18,8 @@ import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.c
 import { Run } from 'src/utils/types.utils';
 
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
+import { MatButton } from '@angular/material/button';
 
 export interface RangePreset {
   label: string;
@@ -53,7 +53,6 @@ const withTimeOf = (day: Date | null, time: Date | null): Date | null => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RunSelectorComponent,
-    ButtonComponent,
     SelectDropdownComponent,
     CdkConnectedOverlay,
     CdkOverlayOrigin,
@@ -72,7 +71,8 @@ const withTimeOf = (day: Date | null, time: Date | null): Date | null => {
     MatTimepicker,
     MatTimepickerInput,
     MatTimepickerToggle,
-    FormsModule
+    FormsModule,
+    MatButton
   ]
 })
 export class GeneralButtonsComponent {

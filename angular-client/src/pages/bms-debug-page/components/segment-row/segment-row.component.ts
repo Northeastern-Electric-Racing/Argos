@@ -11,13 +11,15 @@ import {
 import { appRoutes } from 'src/app/app-routes';
 import { SegmentHeatmapComponent } from '../segment-heatmap/segment-heatmap.component';
 import { SegmentOverviewComponent } from '../segment-overview/segment-overview.component';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
+  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent, MatButton, MatIcon]
 })
 export class SegmentRowComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

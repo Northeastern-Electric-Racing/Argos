@@ -4,10 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { ConfirmService } from 'src/services/confirm.service';
 import { ToastService } from 'src/services/toast.service';
-import { MatIconButton } from '@angular/material/button';
+import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -27,9 +26,9 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     MatMenuItem,
     MatMenuTrigger,
     MatIconButton,
-    ButtonComponent,
     InfoBackgroundComponent,
-    TypographyComponent
+    TypographyComponent,
+    MatButton
   ]
 })
 export default class SessionsPanelComponent {

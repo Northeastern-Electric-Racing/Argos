@@ -6,14 +6,14 @@ import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastService } from 'src/services/toast.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
   styleUrls: ['./run-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [MatButton]
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

@@ -1,12 +1,13 @@
 /*
- * Material Symbols Outlined, subset to the ligature icons the app uses (about 4.6 kB instead of the
+ * Material Symbols Outlined, subset to the ligature icons the app uses (about 5 kB instead of the
  * full 488 kB font). mat-icon uses it as its default font set (see app-context.component.ts);
  * registered SVG icons are unaffected.
  *
  * Adding a ligature icon? Add its name to this list (alphabetical) and re-download the font:
- *   arrow_forward,check_box,check_box_outline_blank,check_circle,chevron_left,chevron_right,close,
- *   delete,download,edit,error,flag,history,info,lock,lock_open,more_vert,notifications_off,pause,
- *   play_arrow,restart_alt,search,settings,terminal,visibility,visibility_off,volume_up,warning
+ *   add,arrow_forward,check_box,check_box_outline_blank,check_circle,checklist,chevron_left,
+ *   chevron_right,close,delete,done,download,edit,error,flag,history,info,lock,lock_open,more_vert,
+ *   notifications,notifications_off,pause,play_arrow,restart_alt,save,search,send,settings,stop,sync,
+ *   terminal,upload,visibility,visibility_off,volume_up,warning
  * 1. Fetch https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=<list>&display=block
  *    with a browser User-Agent (so it returns woff2).
  * 2. Save the woff2 it links to as src/assets/fonts/material-symbols-outlined-subset.woff2.

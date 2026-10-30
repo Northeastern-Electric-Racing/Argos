@@ -34,10 +34,11 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent, PresetDialogData } from '../../preset-dialog/preset-dialog.component';
 import { TopicTreeComponent } from '../topic-tree/topic-tree.component';
+import { MatButton, MatFabButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'graph-sidebar-mobile',
@@ -48,11 +49,13 @@ import { TopicTreeComponent } from '../topic-tree/topic-tree.component';
     MatSidenavContainer,
     MatSidenav,
     TopicTreeComponent,
-    ButtonComponent,
     TypographyComponent,
     MatSlideToggle,
     FormsModule,
-    SelectDropdownComponent
+    SelectDropdownComponent,
+    MatButton,
+    MatFabButton,
+    MatIcon
   ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {

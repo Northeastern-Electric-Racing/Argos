@@ -10,39 +10,36 @@
   } @else {
     <div class="container">
       <div class="toolbar">
-        <div class="toolbar-left">
+        <div class="toolbar-left dense-actions">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+            <mat-button-toggle-group multiple aria-label="Graph view">
+              <mat-button-toggle value="sidebar" [checked]="showSideBar" (change)="toggleSideBar()"
+                >Sidebar</mat-button-toggle
+              >
+              <mat-button-toggle value="multi-y" [checked]="showMultiYaxis" (change)="toggleMultiYaxis()">
+                Multi Y-axis
+              </mat-button-toggle>
+            </mat-button-toggle-group>
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button matButton="outlined" (click)="togglePause()">
+                <mat-icon>{{ isPaused ? 'play_arrow' : 'pause' }}</mat-icon>
+                {{ isPaused ? 'Play' : 'Pause' }}
+              </button>
             }
           </div>
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <mat-button-toggle-group
+                hideSingleSelectionIndicator
+                [value]="rangeMode"
+                (change)="$event.value !== rangeMode && toggleRangeMode()"
+                aria-label="X range unit"
+              >
+                <mat-button-toggle value="time">Time</mat-button-toggle>
+                <mat-button-toggle value="points">Points</mat-button-toggle>
+              </mat-button-toggle-group>
               <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
               <mat-form-field class="dense-controls time-range-input" subscriptSizing="dynamic">
                 <input

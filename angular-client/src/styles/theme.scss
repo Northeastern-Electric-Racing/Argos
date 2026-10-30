@@ -28,6 +28,16 @@ html {
 
   @include mat.strong-focus-indicators();
 
+  // Outlined buttons are the dashboard's secondary actions; a neutral label keeps NER red for the
+  // primary (filled) action in each group instead of painting every toolbar button red.
+  @include mat.button-overrides(
+    (
+      outlined-label-text-color: var(--mat-sys-on-surface),
+      outlined-state-layer-color: var(--mat-sys-on-surface),
+      outlined-ripple-color: var(--mat-sys-on-surface)
+    )
+  );
+
   // Snackbars (toasts) sit on the dark surface instead of M3's light inverse surface.
   @include mat.snack-bar-overrides(
     (
@@ -91,13 +101,31 @@ html {
   );
 }
 
-// Destructive actions (delete, clear) in the error colour, set through each component's tokens.
+// Toolbars of small actions (graph page, topic sidebar): density -3 gives 28px buttons and
+// toggles, the height of the old toolbar buttons, without touching each component's size.
+.dense-actions {
+  @include mat.theme(
+    (
+      density: -3
+    )
+  );
+}
+
+// Destructive actions (delete, clear, stop) in the error colour, set through each component's tokens
+// so ripple, focus and disabled states still come from Material.
 .danger-action {
   @include mat.button-overrides(
     (
       text-label-text-color: var(--mat-sys-error),
       text-state-layer-color: var(--mat-sys-error),
-      text-ripple-color: var(--mat-sys-error)
+      text-ripple-color: var(--mat-sys-error),
+      // Filled destructive buttons use the deep error container: red at a glance, AA with its text.
+      filled-container-color: var(--mat-sys-error-container),
+      filled-label-text-color: var(--mat-sys-on-error-container),
+      outlined-label-text-color: var(--mat-sys-error),
+      outlined-outline-color: var(--mat-sys-error),
+      outlined-state-layer-color: var(--mat-sys-error),
+      outlined-ripple-color: var(--mat-sys-error)
     )
   );
 
@@ -113,6 +141,25 @@ html {
     (
       item-label-text-color: var(--mat-sys-error),
       item-icon-color: var(--mat-sys-error)
+    )
+  );
+}
+
+// Stopwatch controls on the lap timer keep their at-a-glance go (green) and hold (amber) colours.
+.go-action {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--color-battery-high),
+      filled-label-text-color: #000
+    )
+  );
+}
+
+.hold-action {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--color-battery-med),
+      filled-label-text-color: #000
     )
   );
 }

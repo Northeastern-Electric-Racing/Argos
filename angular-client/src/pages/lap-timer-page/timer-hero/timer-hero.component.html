@@ -15,59 +15,21 @@
     </div>
     <div class="hero-actions">
       @if (!timer.activeSession()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
+        <button matButton="filled" class="go-action" (click)="onStart()"><mat-icon>play_arrow</mat-icon>Start</button>
       } @else if (timer.isIdle()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Delete"
-          [onClick]="onDeleteActiveButton"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <button matButton="filled" class="go-action" (click)="onStart()"><mat-icon>play_arrow</mat-icon>Start</button>
+        <button matButton="filled" class="danger-action" (click)="onDeleteActiveButton()">
+          <mat-icon>delete</mat-icon>Delete
+        </button>
       } @else if (timer.isRunning()) {
-        <argos-button
-          label="Pause"
-          [onClick]="onPause"
-          additionalStyles="background-color: var(--color-battery-med); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Lap"
-          [onClick]="onLap"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Stop"
-          [onClick]="onStop"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <button matButton="filled" class="hold-action" (click)="onPause()"><mat-icon>pause</mat-icon>Pause</button>
+        <button matButton="filled" class="go-action" (click)="onLap()"><mat-icon>flag</mat-icon>Lap</button>
+        <button matButton="filled" class="danger-action" (click)="onStop()"><mat-icon>stop</mat-icon>Stop</button>
       } @else if (timer.isPaused()) {
-        <argos-button
-          label="Resume"
-          [onClick]="onResume"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Reset"
-          [onClick]="onReset"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
-        <argos-button
-          label="Download"
-          [onClick]="onDownloadActiveButton"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
-        <argos-button
-          label="End Session"
-          [onClick]="onEndActiveSession"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <button matButton="filled" class="go-action" (click)="onResume()"><mat-icon>play_arrow</mat-icon>Resume</button>
+        <button matButton="filled" class="danger-action" (click)="onReset()"><mat-icon>restart_alt</mat-icon>Reset</button>
+        <button matButton="outlined" (click)="onDownloadActiveButton()"><mat-icon>download</mat-icon>Download</button>
+        <button matButton="outlined" (click)="onEndActiveSession()"><mat-icon>done</mat-icon>End Session</button>
       }
     </div>
   </div>

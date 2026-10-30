@@ -78,4 +78,11 @@
   justify-content: center;
   gap: 12px;
   margin-top: 8px;
+  /* Big touch targets for the pit wall, set through Material's button tokens. */
+  --mat-button-filled-container-height: 48px;
+  --mat-button-outlined-container-height: 48px;
+}
+
+.hero-actions button {
+  min-width: 120px;
 }

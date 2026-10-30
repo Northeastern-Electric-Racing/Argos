@@ -1,10 +1,22 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal, WritableSignal } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  signal,
+  WritableSignal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { ToastService } from 'src/services/toast.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { MatBadge } from '@angular/material/badge';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
+import { MatToolbar } from '@angular/material/toolbar';
 import { MatListItem, MatListItemIcon, MatListItemTitle, MatNavList } from '@angular/material/list';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { CdkMenuTrigger } from '@angular/cdk/menu';
@@ -15,13 +27,10 @@ import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
-import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
-import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
@@ -53,13 +62,16 @@ export interface NavItem {
     CdkTrapFocus,
     NavOptionsMenuComponent,
     CurrentRunDisplayComponent,
-    ToastButtonComponent,
     MessagesPerSecondComponent,
     AsyncPipe,
     DatePipe,
     TypographyComponent,
-    HStackComponent,
-    SidebarChipComponent,
+    MatToolbar,
+    MatTabNav,
+    MatTabLink,
+    MatButton,
+    MatIconButton,
+    RouterLink,
     MatIcon,
     NotificationListComponent
   ],
@@ -76,6 +88,9 @@ export class AppNavBarComponent implements OnInit {
   private sidebarService = inject(SidebarService);
   private dialog = inject(MatDialog);
   protected notificationLogService = inject(NotificationLogService);
+
+  /** The page area the desktop tab nav bar labels (app-context wraps the router outlet in it). */
+  tabPanel = input<MatTabNavPanel>();
 
   /**
    * The apps grid is a CDK menu (keyboard navigation, focus management and ARIA come from
@@ -127,6 +142,15 @@ export class AppNavBarComponent implements OnInit {
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    });
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((run) => {
+      if (run) {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'New Run Started',
+          detail: 'Your new run has started successfully.'
+        });
+      }
     });
   };
 

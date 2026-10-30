@@ -5,12 +5,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatPrefix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
-import { MatIconButton } from '@angular/material/button';
+import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
   addRule,
   ClientRule,
@@ -40,7 +39,6 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TypographyComponent,
-    ButtonComponent,
     MatFormField,
     MatPrefix,
     MatInput,
@@ -48,7 +46,8 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
     MatTooltip,
     MatIconButton,
     RulesTableComponent,
-    NotificationListComponent
+    NotificationListComponent,
+    MatButton
   ]
 })
 export default class NotificationRulesPageComponent implements OnInit {

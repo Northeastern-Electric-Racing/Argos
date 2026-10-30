@@ -31,7 +31,7 @@
                 <mat-icon>{{ hidePw() ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
             </mat-form-field>
-            <argos-button label="Authenticate" [onClick]="authenticatePw" />
+            <button matButton="filled" (click)="authenticatePw()">Authenticate</button>
             @if (authError()) {
               <p class="auth-error">{{ authError() }}</p>
             }
@@ -42,7 +42,7 @@
   } @else {
     <div class="page-header">
       <typography variant="large-header" content="Car Commands" />
-      <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
+      <button matButton="outlined" (click)="onUpdateVideosPressed()"><mat-icon>sync</mat-icon>Update Videos</button>
     </div>
 
     <div class="commands-grid">
@@ -62,7 +62,7 @@
           </div>
           <div class="settings-footer">
             <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
-            <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
+            <button matButton="filled" (click)="confirmSaveSettings()"><mat-icon>save</mat-icon>Save Settings</button>
           </div>
         </div>
       </info-background>

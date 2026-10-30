@@ -1,4 +1,6 @@
-<button class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
+<button matFab extended class="toggle-btn" [attr.aria-expanded]="sidebarVisible" (click)="toggleSidebar()">
+  <mat-icon>checklist</mat-icon>Select Topics
+</button>
 
 <mat-sidenav-container class="topics-drawer" [class.topics-drawer--open]="sidebarVisible" [hasBackdrop]="true">
   <mat-sidenav
@@ -9,7 +11,7 @@
     role="region"
     aria-label="Topics"
   >
-    <div class="sidebar-content">
+    <div class="sidebar-content dense-actions">
       <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
       <div class="presets-row">
         <select-dropdown
@@ -18,19 +20,9 @@
           [placeholder]="presetSelectorConfig().placeholder"
           [defaultValue]="activePresetName()"
         />
-        <argos-button
-          [onClick]="openPresetsDialog"
-          label="Manage"
-          size="sm"
-          additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-        />
+        <button matButton="outlined" (click)="openPresetsDialog()">Manage</button>
       </div>
-      <argos-button
-        [onClick]="clearSelections"
-        label="Clear Topics"
-        size="sm"
-        additionalStyles="background-color: #323232; border: 1.4px solid #027bd7; width: 100%;"
-      />
+      <button matButton="outlined" (click)="clearSelections()">Clear Topics</button>
       <div class="toggle-group">
         <mat-slide-toggle
           class="flatten-toggle"

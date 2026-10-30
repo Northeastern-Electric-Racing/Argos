@@ -22,33 +22,29 @@
     </mat-sidenav>
   </mat-sidenav-container>
 } @else {
-  <nav class="navbar">
-    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+  <mat-toolbar class="navbar">
+    <a matIconButton class="home-logo" [routerLink]="homeNavItem.id" aria-label="Argos home">
       <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </div>
-    <div class="navbar-nav">
-      @for (navItem of onlyDesktopNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [small]="this.isWindowSmall"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
-        >
-        </sidebar-chip>
+    </a>
+    <!-- Page links as a Material tab nav bar: links with hrefs, arrow-key focus and the active ink bar. -->
+    <nav
+      mat-tab-nav-bar
+      mat-stretch-tabs="false"
+      class="navbar-nav"
+      [class.navbar-nav--small]="isWindowSmall"
+      [tabPanel]="tabPanel()"
+      aria-label="Pages"
+    >
+      @for (navItem of onlyDesktopNavItems; track navItem.id) {
+        <a mat-tab-link [routerLink]="navItem.id" [active]="this.isSelected(navItem)">
+          <mat-icon class="nav-link-icon" [svgIcon]="navItem.icon" />
+          <span class="nav-link-label">{{ navItem.label }}</span>
+        </a>
       }
-    </div>
+    </nav>
 
-    <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 130px"
-      />
+    <div class="navbar-end">
+      <button matButton="filled" class="new-run-button" (click)="onStartNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
@@ -57,6 +53,7 @@
       />
       <messages-per-second />
       <button
+        matIconButton
         type="button"
         class="navbar-notification"
         aria-label="Notifications"
@@ -94,6 +91,7 @@
         />
       </ng-template>
       <button
+        matIconButton
         type="button"
         class="navbar-menu"
         aria-label="More pages"
@@ -108,6 +106,6 @@
       <ng-template #appsMenu>
         <app-nav-options-menu [items]="navMenuItems" />
       </ng-template>
-    </hstack>
-  </nav>
+    </div>
+  </mat-toolbar>
 }

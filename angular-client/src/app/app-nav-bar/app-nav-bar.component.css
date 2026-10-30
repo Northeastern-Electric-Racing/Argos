@@ -1,33 +1,16 @@
-/* Container for the top nav */
+/* Top app bar: a mat-toolbar on the dashboard's panel grey, at the old 60px height. */
 .navbar {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  height: 60px;
-  padding: 10px;
-  align-self: center;
-  align-items: center;
-  background-color: #2c2c2c;
+  --mat-toolbar-container-background-color: var(--color-background-info);
+  --mat-toolbar-standard-height: 60px;
+  --mat-toolbar-title-text-line-height: normal;
+  gap: 8px;
+  padding: 0 10px;
   margin-bottom: 1rem;
-  padding-left: 10px;
-  padding-right: 10px;
-  width: 100%;
-}
-
-/* Branding text */
-.navbar-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 
 .home-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 4px;
-  transition: fill 0.2s ease-in-out;
+  --mat-icon-button-state-layer-size: 56px;
+  --mat-icon-button-icon-size: 48px;
 }
 
 .home-logo .mat-icon {
@@ -35,60 +18,70 @@
   height: 48px;
 }
 
-/* Nav items container – using flex gap for spacing */
+/* Page links: tab nav bar sized to the toolbar, with the old bold labels and 36px icons. */
 .navbar-nav {
-  display: inline-flex;
+  --mat-tab-container-height: 60px;
+  --mat-tab-divider-height: 0;
+  --mat-tab-label-text-size: 20px;
+  --mat-tab-label-text-weight: 700;
+  --mat-tab-inactive-label-text-color: var(--color-text-primary);
+  --mat-tab-inactive-hover-label-text-color: var(--mat-sys-primary);
+  --mat-tab-inactive-focus-label-text-color: var(--mat-sys-primary);
   flex: 1;
+  min-width: 0;
+  align-self: stretch;
 }
 
-.navbar-menu {
-  cursor: pointer;
+.navbar-nav .mat-mdc-tab-link {
+  min-width: 0;
+  padding: 0 12px;
+}
+
+.nav-link-icon {
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+}
+
+.navbar-nav--small {
+  --mat-tab-label-text-size: 14px;
+}
+
+.navbar-nav--small .nav-link-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.navbar-end {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.navbar-menu mat-icon {
-  width: 48px;
-  height: 48px;
-  transition: color 0.2s ease;
-}
-
-.navbar-menu.selected,
-.navbar-menu:hover {
-  color: #ef4345;
+  gap: 16px;
+  margin-left: auto;
 }
 
 .navbar-notification {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-  position: relative;
-  background: none;
-  border: none;
-  color: inherit;
+  --mat-icon-button-icon-size: 32px;
 }
 
-.navbar-notification mat-icon {
+.navbar-notification .mat-icon {
   width: 32px;
   height: 32px;
-  font-size: 32px;
-  transition: color 0.2s ease;
-}
-
-.navbar-notification:hover {
-  color: #ef4345;
 }
 
 .navbar-menu {
-  background: none;
-  border: none;
-  color: inherit;
+  --mat-icon-button-state-layer-size: 56px;
+  --mat-icon-button-icon-size: 48px;
+}
+
+.navbar-menu .mat-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.navbar-notification:hover,
+.navbar-menu:hover,
+.navbar-menu.selected {
+  --mat-icon-button-icon-color: var(--mat-sys-primary);
 }
 
 /* Mobile drawer: a full-viewport sidenav container that only takes pointer events while open. */

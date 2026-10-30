@@ -1,4 +1,4 @@
-<div class="background">
+<div class="background dense-actions">
   <div class="presets-row">
     <select-dropdown
       class="preset-select"
@@ -6,20 +6,10 @@
       [placeholder]="presetSelectorConfig().placeholder"
       [defaultValue]="activePresetName()"
     />
-    <argos-button
-      [onClick]="openPresetsDialog"
-      label="Manage Presets"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <button matButton="outlined" (click)="openPresetsDialog()">Manage Presets</button>
   </div>
   <div class="header-row">
-    <argos-button
-      [onClick]="clearSelections"
-      label="Clear Topics"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <button matButton="outlined" (click)="clearSelections()">Clear Topics</button>
     <div class="toggle-group">
       <mat-slide-toggle
         class="flatten-toggle"

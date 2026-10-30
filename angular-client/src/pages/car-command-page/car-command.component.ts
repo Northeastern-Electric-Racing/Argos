@@ -20,10 +20,9 @@ import { groupCarCommands } from 'src/utils/topic.utils';
 
 import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import { MatIconButton } from '@angular/material/button';
+import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -39,7 +38,6 @@ import CommandCardComponent from './command-card/command-card.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    ButtonComponent,
     LoadingPageComponent,
     ErrorPageComponent,
     TypographyComponent,
@@ -52,7 +50,8 @@ import CommandCardComponent from './command-card/command-card.component';
     MatInput,
     MatIconButton,
     MatIcon,
-    MatSuffix
+    MatSuffix,
+    MatButton
   ]
 })
 export default class CarCommandComponent implements OnInit {
