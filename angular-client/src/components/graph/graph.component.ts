@@ -38,7 +38,6 @@ export class GraphComponent {
   data = input.required<GraphData[]>();
   color = input.required<string>(); // Must be hex
   title = input<string | undefined>(undefined);
-  graphContainerId = input.required<string>();
   timeRangeSec = input<number | undefined>(undefined);
   timeRangeMs = computed(() => (this.timeRangeSec() ?? DEFAULT_TIME_RANGE_SEC) * 1000);
 

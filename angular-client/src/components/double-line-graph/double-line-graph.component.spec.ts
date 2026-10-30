@@ -29,7 +29,6 @@ describe('DoubleLineGraphComponent (Chart.js)', () => {
     fixture.componentRef.setInput('color1', '#ff0000');
     fixture.componentRef.setInput('data2', []);
     fixture.componentRef.setInput('color2', '#0000ff');
-    fixture.componentRef.setInput('graphContainerId', 'graph');
     for (const [name, value] of Object.entries(inputs)) {
       fixture.componentRef.setInput(name, value);
     }

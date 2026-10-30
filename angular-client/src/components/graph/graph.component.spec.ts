@@ -26,7 +26,6 @@ describe('GraphComponent (Chart.js)', () => {
     host.style.height = '200px';
     document.body.appendChild(host);
     fixture.componentRef.setInput('color', '#ff0000');
-    fixture.componentRef.setInput('graphContainerId', 'graph');
     for (const [name, value] of Object.entries(inputs)) {
       fixture.componentRef.setInput(name, value);
     }

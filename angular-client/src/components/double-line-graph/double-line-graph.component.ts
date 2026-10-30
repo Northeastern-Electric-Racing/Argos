@@ -42,7 +42,6 @@ export class DoubleLineGraphComponent {
   color2 = input.required<string>(); // Must be hex
   title2 = input<string | undefined>(undefined);
   header = input<string | undefined>(undefined);
-  graphContainerId = input.required<string>();
   timeRangeSec = input<number | undefined>(undefined);
   timeRangeMs = computed(() => (this.timeRangeSec() ?? DEFAULT_TIME_RANGE_SEC) * 1000);
 
