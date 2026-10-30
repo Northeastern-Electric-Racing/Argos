@@ -6,7 +6,7 @@ import { GraphData } from 'src/utils/types.utils';
 import { LIVE_REFRESH_MS } from '../graph/live-line-chart.utils';
 import { DoubleLineGraphComponent } from './double-line-graph.component';
 
-describe('DoubleLineGraphComponent (Chart.js)', () => {
+describe('DoubleLineGraphComponent', () => {
   let fixture: ComponentFixture<DoubleLineGraphComponent>;
 
   beforeEach(() => {

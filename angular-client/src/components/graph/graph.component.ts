@@ -9,7 +9,7 @@ import {
   untracked,
   viewChild
 } from '@angular/core';
-import { Chart, ChartDataset } from 'chart.js';
+import { ChartData } from 'chart.js';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import { GraphData } from 'src/utils/types.utils';
 import {
@@ -22,9 +22,6 @@ import {
   windowPoints
 } from './live-line-chart.utils';
 
-type LineDataset = ChartDataset<'line', GraphData[]>;
-
-/** One live line, following the last `timeRangeSec` of `data` (which its caller may push points into). */
 @Component({
   selector: 'graph-component',
   templateUrl: './graph.component.html',
@@ -34,14 +31,14 @@ type LineDataset = ChartDataset<'line', GraphData[]>;
   imports: [BaseChartDirective]
 })
 export class GraphComponent {
-  private chartDirective = viewChild(BaseChartDirective);
+  private chartDirective = viewChild<BaseChartDirective<'line', GraphData[]>>(BaseChartDirective);
   data = input.required<GraphData[]>();
   color = input.required<string>(); // Must be hex
   title = input<string | undefined>(undefined);
   timeRangeSec = input<number | undefined>(undefined);
   timeRangeMs = computed(() => (this.timeRangeSec() ?? DEFAULT_TIME_RANGE_SEC) * 1000);
 
-  readonly chartData: { datasets: LineDataset[] } = { datasets: [{ data: [] }] };
+  readonly chartData: ChartData<'line', GraphData[]> = { datasets: [{ data: [] }] };
   readonly chartOptions = buildLiveLineOptions({ legend: false });
 
   constructor() {
@@ -61,11 +58,10 @@ export class GraphComponent {
     });
   }
 
-  private get chart(): Chart<'line', GraphData[]> | undefined {
-    return this.chartDirective()?.chart as Chart<'line', GraphData[]> | undefined;
+  private get chart() {
+    return this.chartDirective()?.chart;
   }
 
-  /** Pushes the line's current window, colour and title into Chart.js and redraws without animation. */
   private syncChart(): void {
     const { chart } = this;
     if (!chart) return;

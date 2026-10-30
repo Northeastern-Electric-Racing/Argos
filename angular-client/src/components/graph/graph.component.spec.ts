@@ -6,7 +6,7 @@ import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from './graph.component';
 import { LIVE_REFRESH_MS } from './live-line-chart.utils';
 
-describe('GraphComponent (Chart.js)', () => {
+describe('GraphComponent (info graph)', () => {
   let fixture: ComponentFixture<GraphComponent>;
 
   beforeEach(() => {

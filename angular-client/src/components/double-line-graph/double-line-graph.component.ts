@@ -9,7 +9,7 @@ import {
   untracked,
   viewChild
 } from '@angular/core';
-import { Chart, ChartDataset } from 'chart.js';
+import { ChartData } from 'chart.js';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import { GraphData } from 'src/utils/types.utils';
 import {
@@ -22,9 +22,6 @@ import {
   windowPoints
 } from '../graph/live-line-chart.utils';
 
-type LineDataset = ChartDataset<'line', GraphData[]>;
-
-/** Two live lines with a legend, following the last `timeRangeSec` of either (callers may push points into them). */
 @Component({
   selector: 'double-line-graph',
   templateUrl: './double-line-graph.component.html',
@@ -34,7 +31,7 @@ type LineDataset = ChartDataset<'line', GraphData[]>;
   imports: [BaseChartDirective]
 })
 export class DoubleLineGraphComponent {
-  private chartDirective = viewChild(BaseChartDirective);
+  private chartDirective = viewChild<BaseChartDirective<'line', GraphData[]>>(BaseChartDirective);
   data1 = input.required<GraphData[]>();
   color1 = input.required<string>(); // Must be hex
   title1 = input<string | undefined>(undefined);
@@ -45,7 +42,7 @@ export class DoubleLineGraphComponent {
   timeRangeSec = input<number | undefined>(undefined);
   timeRangeMs = computed(() => (this.timeRangeSec() ?? DEFAULT_TIME_RANGE_SEC) * 1000);
 
-  readonly chartData: { datasets: LineDataset[] } = { datasets: [{ data: [] }, { data: [] }] };
+  readonly chartData: ChartData<'line', GraphData[]> = { datasets: [{ data: [] }, { data: [] }] };
   readonly chartOptions = buildLiveLineOptions({ legend: true });
 
   constructor() {
@@ -68,11 +65,10 @@ export class DoubleLineGraphComponent {
     });
   }
 
-  private get chart(): Chart<'line', GraphData[]> | undefined {
-    return this.chartDirective()?.chart as Chart<'line', GraphData[]> | undefined;
+  private get chart() {
+    return this.chartDirective()?.chart;
   }
 
-  /** Pushes both lines' current window, colours and titles into Chart.js and redraws without animation. */
   private syncChart(): void {
     const { chart } = this;
     if (!chart) return;
