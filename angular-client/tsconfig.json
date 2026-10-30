@@ -91,6 +91,9 @@
       ],
       "@spartan-ng/helm/alert-dialog": [
         "./libs/ui/alert-dialog/src/index.ts"
+      ],
+      "@spartan-ng/helm/card": [
+        "./libs/ui/card/src/index.ts"
       ]
     },
     "outDir": "./dist/out-tsc",

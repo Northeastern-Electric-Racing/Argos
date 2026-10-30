@@ -1,29 +1,9 @@
-.select-button-container {
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-}
-
-.run-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border: 2.5px solid #0099ff;
-  border-radius: 10px;
-}
-
+/* The carousel's previous/next buttons sit in its side margins; keep them inside the dialog. */
 .modal-container {
   overflow: hidden;
 }
 
-.left {
-  margin-left: 5px;
-  text-align: left;
-  margin-right: auto;
-}
-
-.right {
-  margin-left: auto;
-  margin-right: 5px;
-  text-align: right;
+/* Leaves room for the card's ring inside the carousel viewport. */
+.run-card {
+  margin: 4px;
 }

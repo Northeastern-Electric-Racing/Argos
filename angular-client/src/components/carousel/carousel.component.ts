@@ -2,12 +2,11 @@ import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmCarouselImports } from '@spartan-ng/helm/carousel';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import Autoplay from 'embla-carousel-autoplay';
 import { Run } from 'src/utils/types.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
-import TypographyComponent from '../typography/typography.component';
 
 // the data for the dialog: all the runs, and what to do with the picked one
 export interface DialogData {
@@ -22,7 +21,7 @@ export interface DialogData {
   templateUrl: 'carousel.component.html',
   styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [HlmCarouselImports, HlmDialogImports, HlmButton, MatGridList, MatGridTile, TypographyComponent]
+  imports: [HlmCarouselImports, HlmCardImports, HlmDialogImports, HlmButton]
 })
 export class CarouselComponent {
   public dialogRef = inject(BrnDialogRef);

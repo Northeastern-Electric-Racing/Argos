@@ -14,7 +14,6 @@ import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
@@ -70,7 +69,6 @@ export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private router = inject(Router);
-  private sidebarService = inject(SidebarService);
   private dialogService = inject(HlmDialogService);
   protected notificationLogService = inject(NotificationLogService);
 
@@ -84,9 +82,6 @@ export class AppNavBarComponent implements OnInit {
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
 
   ngOnInit(): void {
-    this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
-      this.sidebarVisible = isOpen;
-    });
     this.isMobile = window.innerWidth <= 768;
     this.router.events
       .pipe(
@@ -214,6 +209,7 @@ export class AppNavBarComponent implements OnInit {
 
   navigateTo(route: string): void {
     this.selectedRoute = route;
+    this.sidebarVisible = false;
     this.router.navigate([route]);
   }
 

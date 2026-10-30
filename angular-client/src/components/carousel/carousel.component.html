@@ -6,26 +6,17 @@
     <hlm-carousel-content>
       @for (run of runs; track run.id) {
         <hlm-carousel-item>
-          <div class="run-card">
-            <mat-grid-list cols="2" rowHeight="40px">
-              <mat-grid-tile>
-                <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-              </mat-grid-tile>
-              <mat-grid-tile>
-                <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-              </mat-grid-tile>
-              <mat-grid-tile>
-                <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-              </mat-grid-tile>
-              <mat-grid-tile colspan="2">
-                <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-              </mat-grid-tile>
-            </mat-grid-list>
-          </div>
-
-          <div class="select-button-container">
-            <button hlmBtn variant="outline" (click)="selectRun(run)">Select this Run</button>
-          </div>
+          <section hlmCard size="sm" class="run-card" [attr.aria-label]="'Run ' + run.id">
+            <div hlmCardHeader>
+              <h3 hlmCardTitle>Run #{{ run.id }}</h3>
+              <p hlmCardDescription>{{ datePipe(run.time) }}</p>
+              <div hlmCardAction class="text-sm font-medium">{{ run.driverName }}</div>
+            </div>
+            <div hlmCardContent class="text-muted-foreground">{{ run.locationName }}</div>
+            <div hlmCardFooter class="justify-end">
+              <button hlmBtn size="sm" type="button" (click)="selectRun(run)">Select this Run</button>
+            </div>
+          </section>
         </hlm-carousel-item>
       }
     </hlm-carousel-content>
