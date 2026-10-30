@@ -28,6 +28,13 @@ mat-icon {
   justify-content: space-between;
 }
 
+/* Compact icon action (e.g. reset graph) that keeps the title row at its text height. */
+.title-action {
+  --mat-icon-button-state-layer-size: 32px;
+  position: relative;
+  z-index: 10;
+}
+
 .title.sliced-left-corner {
   padding-left: var(--slice-x, 120px);
 }

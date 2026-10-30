@@ -23,7 +23,8 @@
 :root {
   /* Colors */
   --color-text-primary: #efefef;
-  --color-text-secondary: #797a7a;
+  /* #9a9a9a clears WCAG AA (4.5:1) on the #2c2c2c panels; the old #797a7a did not. */
+  --color-text-secondary: #9a9a9a;
   --color-text-subtitle: #cacaca;
   --color-background-info: #2c2c2c;
   --color-background-page: var(--mat-sys-surface);

@@ -13,6 +13,11 @@
   height: 100%;
 }
 
+/* The tree has a fixed height; keep the controls above it from being squeezed. */
+.sidebar-content > :not(topic-tree) {
+  flex-shrink: 0;
+}
+
 .presets-row {
   display: flex;
   align-items: center;
