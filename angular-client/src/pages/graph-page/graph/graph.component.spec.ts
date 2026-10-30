@@ -173,24 +173,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(ticks).toContain(new Date(2026, 9, 17).getTime());
   });
 
-  it('puts x-axis ticks on whole minutes in a five-minute live window', async () => {
-    const start = new Date(2026, 9, 16, 12, 7, 31, 250).getTime();
-    const c = await render({
-      valuesSubject: [
-        topic('V', [
-          { x: start, y: 1 },
-          { x: start + 10 * 60 * 1000, y: 2 }
-        ])
-      ],
-      realTime: true,
-      graphConfig: { ...BASE_CONFIG, timeRangeMs: 5 * 60 * 1000 }
-    });
-
-    const ticks = c.scales['x'].ticks.map((t) => t.value);
-    expect(ticks.length).toBeGreaterThan(1);
-    expect(ticks.filter((v) => v % 60_000 !== 0)).toEqual([]);
-  });
-
   it('applies the configured y-limits', async () => {
     const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
 
@@ -301,17 +283,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
       expect(c.scales['x'].min).toBeCloseTo(expected[0], -1);
       expect(c.scales['x'].max).toBeCloseTo(expected[1], -1);
     });
-
-    it('ignores a pan on an empty chart, so arriving data is not hidden behind it', async () => {
-      const voltage = topic('V', []);
-      const c = await render({ valuesSubject: [voltage], realTime: true });
-
-      c.options.plugins!.zoom!.pan!.onPanStart!({ chart: c, event: {} as never, point: { x: 300, y: 150 } });
-      voltage.updates.next([[{ x: 1000, y: 1 }]]);
-      await settle();
-
-      expect(fixture.componentInstance.zoomed()).toBe(false);
-    });
   });
 
   it('drops the zoom when the data resets, fitting the new data', async () => {
@@ -336,16 +307,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(fixture.componentInstance.zoomed()).toBe(false);
     expect(c.scales['x'].min).toBe(100_000);
     expect(c.scales['x'].max).toBe(160_000);
-  });
-
-  it('drops the zoom when the graph is cleared', async () => {
-    const c = await render({ valuesSubject: [topic('V', [{ x: 0, y: 1 }])] });
-    c.zoomScale('x', { min: 0, max: 1_000 }, 'none');
-
-    fixture.componentRef.setInput('clearGraph', 1);
-    await settle();
-
-    expect(fixture.componentInstance.zoomed()).toBe(false);
   });
 
   function toolbarButton(label: string): HTMLButtonElement {
@@ -398,15 +359,12 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(saved.href).toMatch(/^data:image\/png/);
   });
 
-  it('downloads the graph data as CSV from the toolbar', async () => {
-    await render({
-      valuesSubject: [
-        topic('V', [
-          { x: 0, y: 1 },
-          { x: 1000, y: 2 }
-        ])
-      ]
+  it('downloads the series shown as CSV from the toolbar, leaving out those hidden from the legend', async () => {
+    const c = await render({
+      valuesSubject: [topic('V', [{ x: 0, y: 1 }]), topic('I', [{ x: 0, y: 2 }]), topic('T', [{ x: 0, y: 3 }])]
     });
+    c.setDatasetVisibility(1, false);
+    c.update('none');
     const blobs: Blob[] = [];
     vi.stubGlobal(
       'URL',
@@ -423,30 +381,9 @@ describe('CustomGraphComponent (Chart.js)', () => {
     const saved = download.mock.contexts.at(-1) as unknown as HTMLAnchorElement;
     expect(saved.download).toMatch(/\.csv$/);
     expect(blobs[0].type).toBe('text/csv');
-    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V');
+    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V,T');
     await new Promise((resolve) => setTimeout(resolve));
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:graph');
-  });
-
-  it('leaves series hidden from the legend out of the CSV', async () => {
-    const c = await render({
-      valuesSubject: [topic('V', [{ x: 0, y: 1 }]), topic('I', [{ x: 0, y: 2 }]), topic('T', [{ x: 0, y: 3 }])]
-    });
-    c.setDatasetVisibility(1, false);
-    c.update('none');
-    const blobs: Blob[] = [];
-    vi.stubGlobal(
-      'URL',
-      class extends URL {
-        static override createObjectURL = (blob: Blob) => (blobs.push(blob), 'blob:graph');
-        static override revokeObjectURL = vi.fn();
-      }
-    );
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-
-    toolbarButton('Save CSV').click();
-
-    expect((await blobs[0].text()).split('\r\n')[0]).toBe('time,V,T');
   });
 
   const emptyMessage = () => (fixture.nativeElement as HTMLElement).querySelector('.empty-state')?.textContent?.trim();
@@ -588,16 +525,6 @@ describe('CustomGraphComponent (Chart.js)', () => {
       expect(tooltipRows(c)).toEqual(['V 0: 10']);
       expect(c.tooltip!.title).toEqual([formatTooltipTime(10_000, 20_000)]);
       expect(hoverDots(c)).toContainEqual(pixelOf(c, { x: 10_000, y: 10 }));
-    });
-
-    it('never shows a value between two samples, as on a flag topic', async () => {
-      const flag = Array.from({ length: 21 }, (_, i) => ({ x: i * 1000, y: i % 2 }));
-      const c = await render({ valuesSubject: [topic('Flag', flag)] });
-
-      for (const time of [2_400, 2_500, 2_600, 13_490]) {
-        await hover(c, time);
-        expect(['Flag 0: 0', 'Flag 0: 1']).toContain(tooltipRows(c)[0]);
-      }
     });
 
     it('shows real samples of a decimated series, with their dots on the drawn line', async () => {

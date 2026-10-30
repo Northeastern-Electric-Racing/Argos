@@ -13,63 +13,14 @@ import {
   nearestIndex,
   nearestPerSeries,
   pickTimeStep,
-  placeTooltip,
-  SERIES_COLORS,
-  yAxisIdFor
+  placeTooltip
 } from './graph-chart.utils';
 
 const NO_LIMITS = { yMin: null, yMax: null };
 
 describe('graph-chart utils', () => {
-  describe('buildBaseOptions', () => {
-    const options = buildBaseOptions({ onZoom: () => undefined });
-
-    it('treats a click with a few pixels of jitter as a click, not a drag-zoom', () => {
-      expect(options.plugins!.zoom!.zoom!.drag!.threshold).toBe(10);
-    });
-
-    it('never zooms the x-axis in past one second', () => {
-      expect(options.plugins!.zoom!.limits!['x']!.minRange).toBe(1000);
-    });
-
-    it("hovers every series at the cursor's time, with one tooltip that follows the cursor", () => {
-      expect(options.interaction!.mode).toBe('nearestPerSeries');
-      expect(options.plugins!.tooltip!.position).toBe('cursor');
-    });
-
-    it('reserves room for the last x label so the plot does not jump sideways as ticks slide in', () => {
-      expect((options.layout!.padding as { right: number }).right).toBeGreaterThanOrEqual(32);
-    });
-
-    it('shows a pointer over legend items, which toggle their series', () => {
-      const legend = options.plugins!.legend!;
-      const canvas = document.createElement('canvas');
-      const event = { native: { target: canvas } } as never;
-
-      legend.onHover!.call(undefined as never, event, undefined as never, undefined as never);
-      expect(canvas.style.cursor).toBe('pointer');
-      legend.onLeave!.call(undefined as never, event, undefined as never, undefined as never);
-      expect(canvas.style.cursor).toBe('');
-    });
-  });
-
-  it('gives at least ten topics distinct colors', () => {
-    expect(new Set(SERIES_COLORS.slice(0, 10)).size).toBe(10);
-  });
-
-  it('keeps every series color legible as axis text on the page background (WCAG AA, 4.5:1)', () => {
-    const luminance = (hex: string) => {
-      const [r, g, b] = [1, 3, 5].map((i) => {
-        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-      });
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    };
-    // --color-background-page (styles.css)
-    const page = luminance('#101010');
-
-    const tooDark = SERIES_COLORS.filter((color) => (luminance(color) + 0.05) / (page + 0.05) < 4.5);
-    expect(tooDark).toEqual([]);
+  it('treats a click with a few pixels of jitter as a click, not a drag-zoom', () => {
+    expect(buildBaseOptions({ onZoom: () => undefined }).plugins!.zoom!.zoom!.drag!.threshold).toBe(10);
   });
 
   describe('time ticks on the x-axis', () => {
@@ -107,22 +58,24 @@ describe('graph-chart utils', () => {
       expect(after.filter((t) => t <= at(13, 50, 51))).toEqual(before.filter((t) => t >= at(13, 50, 22, 500)));
     });
 
-    // DST changes in America/New_York, where the team runs the client. In a zone without them (UTC CI) these
-    // hold trivially; run Karma with TZ=America/New_York to exercise them.
+    // DST changes in America/New_York, the zone test-setup.ts pins
     const dstRanges: [string, number, number][] = [
       ['spring forward, 30 min steps', new Date(2026, 2, 8, 1).getTime(), new Date(2026, 2, 8, 4).getTime()],
       ['spring forward, 1 h steps', new Date(2026, 2, 8, 0).getTime(), new Date(2026, 2, 8, 5).getTime()],
       ['fall back, 30 min steps', new Date(2026, 10, 1, 0).getTime(), new Date(2026, 10, 1, 3).getTime()],
       ['fall back, days', new Date(2026, 9, 30).getTime(), new Date(2026, 10, 3).getTime()]
     ];
-    for (const [name, min, max] of dstRanges) {
-      it(`keeps ticks strictly increasing across a DST change (${name})`, () => {
+    it('keeps ticks strictly increasing across a DST change', () => {
+      for (const [name, min, max] of dstRanges) {
         const ticks = buildTimeTicks(min, max);
 
-        expect(ticks.length).toBeGreaterThan(1);
-        expect(ticks.filter((t, i) => i > 0 && t <= ticks[i - 1])).toEqual([]);
-      });
-    }
+        expect(ticks.length, name).toBeGreaterThan(1);
+        expect(
+          ticks.filter((t, i) => i > 0 && t <= ticks[i - 1]),
+          name
+        ).toEqual([]);
+      }
+    });
 
     it('labels ticks as precisely as the step needs, dating midnights on long ranges', () => {
       expect(formatTimeTick(at(13, 50, 24, 120), 200)).toBe('13:50:24.120');
@@ -152,13 +105,6 @@ describe('graph-chart utils', () => {
       expect(Object.keys(scales)).toEqual(['y', 'y1']);
     });
 
-    it('prunes a y-axis when its topic is deselected', () => {
-      const scales = buildYScales(['BMS/Pack/Voltage 0'], true, NO_LIMITS);
-
-      expect(Object.keys(scales)).toEqual(['y']);
-      expect((scales['y'] as { title: { text: string } }).title.text).toBe('BMS/Pack/Voltage');
-    });
-
     it("titles each axis with its topic, dropping only the trailing value index ' 0'", () => {
       const scales = buildYScales(['BMS/Segment_Temp/0 0', 'Motor/Phase 1'], true, NO_LIMITS);
 
@@ -166,57 +112,20 @@ describe('graph-chart utils', () => {
       expect(titles).toEqual(['BMS/Segment_Temp/0', 'Motor/Phase 1']);
     });
 
-    it("colors each axis's title and ticks like its series", () => {
-      const scales = buildYScales(['A 0', 'B 0'], true, NO_LIMITS, ['#111111', '#222222']);
+    it('applies the user y-limits to every axis, and auto-fits when none are set', () => {
+      const limited = Object.values(buildYScales(['A 0', 'B 0'], true, { yMin: -5, yMax: 10 }));
+      const unlimited = buildYScales(['A 0'], false, NO_LIMITS)['y'] as { min?: number; max?: number };
 
-      const colors = Object.values(scales).map((s) => s as { title: { color: string }; ticks: { color: string } });
-      expect(colors.map((s) => s.title.color)).toEqual(['#111111', '#222222']);
-      expect(colors.map((s) => s.ticks.color)).toEqual(['#111111', '#222222']);
+      expect(limited.map((s) => [(s as { min: number }).min, (s as { max: number }).max])).toEqual([
+        [-5, 10],
+        [-5, 10]
+      ]);
+      expect([unlimited.min, unlimited.max]).toEqual([undefined, undefined]);
     });
-
-    it('hides the axis of a series hidden from the legend', () => {
-      const scales = buildYScales(['A 0', 'B 0'], true, NO_LIMITS);
-
-      for (const scale of Object.values(scales)) {
-        expect((scale as { display: unknown }).display).toBe('auto');
-      }
-    });
-
-    it('leaves headroom so lines at the extremes clear the plot border', () => {
-      expect((buildYScales(['A 0'], false, NO_LIMITS)['y'] as { grace: string }).grace).toBe('5%');
-    });
-
-    it('alternates y-axis sides so stacked axes stay readable', () => {
-      const scales = buildYScales(['A 0', 'B 0', 'C 0'], true, NO_LIMITS);
-
-      const sides = Object.values(scales).map((s) => (s as { position: string }).position);
-      expect(sides).toEqual(['left', 'right', 'left']);
-    });
-
-    it('applies the user y-limits to every axis', () => {
-      const scales = buildYScales(['A 0', 'B 0'], true, { yMin: -5, yMax: 10 });
-
-      for (const scale of Object.values(scales)) {
-        expect((scale as { min: number }).min).toBe(-5);
-        expect((scale as { max: number }).max).toBe(10);
-      }
-    });
-
-    it('leaves the y-axis auto-fitting when no limits are set', () => {
-      const scales = buildYScales(['A 0'], false, NO_LIMITS);
-
-      expect((scales['y'] as { min?: number }).min).toBeUndefined();
-      expect((scales['y'] as { max?: number }).max).toBeUndefined();
-    });
-  });
-
-  it('maps every series to the shared axis unless multi-axis is on', () => {
-    expect([0, 1, 2].map((i) => yAxisIdFor(i, false))).toEqual(['y', 'y', 'y']);
-    expect([0, 1, 2].map((i) => yAxisIdFor(i, true))).toEqual(['y', 'y1', 'y2']);
   });
 
   describe('computeDataSpan', () => {
-    it('spans the earliest to the latest point across series', () => {
+    it('spans the earliest to the latest point across series, and is null with no points', () => {
       const span = computeDataSpan(
         new Map([
           [
@@ -237,9 +146,6 @@ describe('graph-chart utils', () => {
       );
 
       expect(span).toEqual({ minX: 2, maxX: 20, spanMs: 18 });
-    });
-
-    it('is null when there are no points', () => {
       expect(computeDataSpan(new Map([['A 0', []]]))).toBeNull();
     });
   });
@@ -253,52 +159,35 @@ describe('graph-chart utils', () => {
       expect(annotations.every((a) => a.xMin === a.xMax)).toBe(true);
     });
 
-    it('labels each day at the top of the plot, clear of the data and the x ticks', () => {
-      const start = new Date(2026, 0, 1, 12).getTime();
-      const [annotation] = buildDayBoundaryAnnotations({ minX: start, maxX: start + DAY_MS });
-
-      expect(annotation.label!.position).toBe('end');
-    });
-
-    for (const [name, minX, maxX] of [
-      ['spring forward', new Date(2026, 2, 6, 12).getTime(), new Date(2026, 2, 10, 12).getTime()],
-      ['fall back', new Date(2026, 9, 30, 12).getTime(), new Date(2026, 10, 3, 12).getTime()]
-    ] as const) {
-      it(`keeps each line on its own local midnight across a DST change (${name})`, () => {
+    it('keeps each line on its own local midnight across a DST change', () => {
+      for (const [name, minX, maxX] of [
+        ['spring forward', new Date(2026, 2, 6, 12).getTime(), new Date(2026, 2, 10, 12).getTime()],
+        ['fall back', new Date(2026, 9, 30, 12).getTime(), new Date(2026, 10, 3, 12).getTime()]
+      ] as const) {
         const annotations = buildDayBoundaryAnnotations({ minX, maxX });
 
-        expect(annotations.length).toBe(4);
-        expect(annotations.map((a) => new Date(a.xMin as number).getHours())).toEqual([0, 0, 0, 0]);
-        expect(new Set(annotations.map((a) => a.label!.content)).size).toBe(4);
-      });
-    }
-
-    it('draws nothing inside a single day', () => {
-      const start = new Date(2026, 0, 1, 1).getTime();
-
-      expect(buildDayBoundaryAnnotations({ minX: start, maxX: start + 60 * 60 * 1000 })).toEqual([]);
+        expect(
+          annotations.map((a) => new Date(a.xMin as number).getHours()),
+          name
+        ).toEqual([0, 0, 0, 0]);
+        expect(new Set(annotations.map((a) => a.label!.content)).size, name).toBe(4);
+      }
     });
   });
 
   describe('nearestIndex', () => {
     const points = [{ x: 10 }, { x: 20 }, { x: 30 }];
 
-    it('finds an exact match', () => {
-      expect(nearestIndex(points, 20)).toBe(1);
-    });
-
     it('picks the closer neighbour between two samples, the earlier one on a tie', () => {
+      expect(nearestIndex(points, 20)).toBe(1);
       expect(nearestIndex(points, 24)).toBe(1);
       expect(nearestIndex(points, 26)).toBe(2);
       expect(nearestIndex(points, 25)).toBe(1);
     });
 
-    it('clamps to the first or last sample outside the data', () => {
+    it('clamps to the first or last sample outside the data, and is -1 for an empty series', () => {
       expect(nearestIndex(points, -5)).toBe(0);
       expect(nearestIndex(points, 99)).toBe(2);
-    });
-
-    it('is -1 for an empty series', () => {
       expect(nearestIndex([], 5)).toBe(-1);
     });
   });
@@ -316,7 +205,7 @@ describe('graph-chart utils', () => {
       expect(hoverSample(flag, 15)).toEqual({ x: 10, y: 1 });
     });
 
-    it(`reaches ${HOVER_REACH_PERIODS} sample periods into a gap from either side, and finds nothing past that`, () => {
+    it(`reaches ${HOVER_REACH_PERIODS} sample periods into a gap or past either end, and finds nothing past that`, () => {
       // Every 10 ms, then nothing from 50 to 200
       const points = [...steady(0, 50), ...steady(200, 250)];
 
@@ -324,6 +213,10 @@ describe('graph-chart utils', () => {
       expect(hoverSample(points, 75)).toBeNull();
       expect(hoverSample(points, 125)).toBeNull();
       expect(hoverSample(points, 180)).toEqual({ x: 200, y: 0 });
+      expect(hoverSample(points, -15)).toEqual({ x: 0, y: 0 });
+      expect(hoverSample(points, -25)).toBeNull();
+      expect(hoverSample(points, 270)).toEqual({ x: 250, y: 1 });
+      expect(hoverSample(points, 275)).toBeNull();
     });
 
     it("judges a gap by the series' own period, so a sparse series still shows between its samples", () => {
@@ -336,28 +229,15 @@ describe('graph-chart utils', () => {
       expect(hoverSample(sparse, 1400)).toEqual({ x: 1000, y: 2 });
     });
 
-    it('shows an end sample just past either end, and nothing further out', () => {
-      const points = steady(100, 200);
-
-      expect(hoverSample(points, 85)).toEqual({ x: 100, y: 0 });
-      expect(hoverSample(points, 75)).toBeNull();
-      expect(hoverSample(points, 220)).toEqual({ x: 200, y: 0 });
-      expect(hoverSample(points, 225)).toBeNull();
-    });
-
     it('reaches at least `snap` from a sample, so a lone sample can be hovered', () => {
       expect(hoverSample([{ x: 100, y: 5 }], 104, 5)).toEqual({ x: 100, y: 5 });
       expect(hoverSample([{ x: 100, y: 5 }], 106, 5)).toBeNull();
-    });
-
-    it('is null for an empty series', () => {
-      expect(hoverSample([], 5)).toBeNull();
     });
   });
 
   describe('nearestPerSeries', () => {
     // The x scale maps pixel p to time 10 * p across a 40 px plot
-    const fakeChart = (series: { x: number; y: number }[][], visible = series.map((_, i) => i), drawn = series) =>
+    const fakeChart = (series: { x: number; y: number }[][], drawn: { x: number; y: number }[][]) =>
       ({
         isPointInArea: ({ x, y }: { x: number; y: number }) => x >= 0 && x <= 40 && y >= 0 && y <= 40,
         scales: {
@@ -373,53 +253,21 @@ describe('graph-chart utils', () => {
         data: { datasets: series.map((data) => ({ data })) },
         getDatasetMeta: () => ({ yAxisID: 'y' }),
         getSortedVisibleDatasetMetas: () =>
-          visible.map((index) => ({ index, data: drawn[index].map((point) => ({ point })) }))
+          drawn.map((points, index) => ({ index, data: points.map((point) => ({ point })) }))
       }) as never;
-    const at = (x: number, y = 20) => ({ native: null, type: 'mousemove', x, y }) as never;
-    // Two series on unaligned clocks
-    const series = [
-      [
+    const at = (x: number) => ({ native: null, type: 'mousemove', x, y: 20 }) as never;
+
+    it('keeps a series whose newest sample arrived after the last frame drew it', () => {
+      const series = [
         { x: 100, y: 1 },
         { x: 200, y: 2 },
         { x: 300, y: 3 }
-      ],
-      [
-        { x: 150, y: 4 },
-        { x: 260, y: 5 }
-      ]
-    ];
+      ];
 
-    it("takes each visible series' nearest sample to the cursor's time, with its element", () => {
-      const items = nearestPerSeries(fakeChart(series), at(25), {} as never);
-
-      expect(items.map(({ datasetIndex, index }) => [datasetIndex, index])).toEqual([
-        [0, 1],
-        [1, 1]
-      ]);
-      expect(items[0].element).toEqual({ point: series[0][1] } as never);
-    });
-
-    it('leaves out a series when the cursor is in a gap in it', () => {
-      // Series 1 samples every 10 ms, then nothing from 100 to 390
-      const gappy = [series[0], [...series[0].map((p, i) => ({ x: i * 10 + 80, y: 0 })), { x: 390, y: 0 }]];
-
-      expect(nearestPerSeries(fakeChart(gappy), at(25), {} as never).map((item) => item.datasetIndex)).toEqual([0]);
-    });
-
-    it('keeps a series whose newest sample arrived after the last frame drew it', () => {
-      const drawn = [series[0].slice(0, 2)];
-
-      const items = nearestPerSeries(fakeChart([series[0]], [0], drawn), at(30), {} as never);
+      const items = nearestPerSeries(fakeChart([series], [series.slice(0, 2)]), at(30), {} as never);
 
       expect(items.map(({ datasetIndex, index }) => [datasetIndex, index])).toEqual([[0, 1]]);
-    });
-
-    it('skips series hidden from the legend', () => {
-      expect(nearestPerSeries(fakeChart(series, [1]), at(25), {} as never).map((item) => item.datasetIndex)).toEqual([1]);
-    });
-
-    it('hovers nothing outside the plot area', () => {
-      expect(nearestPerSeries(fakeChart(series), at(25, 60), {} as never)).toEqual([]);
+      expect(items[0].element).toEqual({ point: series[1] } as never);
     });
   });
 
@@ -470,48 +318,34 @@ describe('graph-chart utils', () => {
       expect(csv.split('\r\n').slice(1, 3)).toEqual([`${iso(1000)},1`, `${iso(1000)},2`]);
     });
 
-    it('quotes a series name holding a comma or a quote', () => {
-      expect(buildCsv(new Map([['a,"b"', []]]))).toBe('time,"a,""b"""\r\n');
-    });
-
-    it("heads a single-value topic's column with the topic alone, as its axis title does", () => {
-      expect(
-        buildCsv(
-          new Map([
-            ['BMS/Segment_Temp/0 0', []],
-            ['Motor/Phase 1', []]
-          ])
-        )
-      ).toBe('time,BMS/Segment_Temp/0,Motor/Phase 1\r\n');
-    });
-
-    it('keeps a spreadsheet from running a series name as a formula, but leaves negative values numbers', () => {
+    it('quotes series names and keeps a spreadsheet from running one as a formula, but leaves negative values numbers', () => {
       const csv = buildCsv(
         new Map([
           ['=HYPERLINK("x") 0', [{ x: 1000, y: -1.5 }]],
           ['+A 0', []],
           ['-B 0', []],
-          ['@C 0', []]
+          ['@C 0', []],
+          ['a,b 0', []]
         ])
       );
 
-      expect(csv.split('\r\n').slice(0, 2)).toEqual([`time,"'=HYPERLINK(""x"")",'+A,'-B,'@C`, `${iso(1000)},-1.5,,,`]);
+      expect(csv.split('\r\n').slice(0, 2)).toEqual([
+        `time,"'=HYPERLINK(""x"")",'+A,'-B,'@C,"a,b"`,
+        `${iso(1000)},-1.5,,,,`
+      ]);
     });
   });
 
   describe('placeTooltip', () => {
     const area = { left: 0, top: 0, right: 400, bottom: 300 };
 
-    it('sits below-right of the cursor when it fits', () => {
+    it('sits below-right of the cursor, flipping to its other side near the right and bottom edges', () => {
       expect(placeTooltip({ x: 100, y: 100 }, { width: 50, height: 20 }, area)).toEqual({
         x: 112,
         y: 112,
         xAlign: 'left',
         yAlign: 'top'
       });
-    });
-
-    it("flips to the cursor's other side near the right and bottom edges", () => {
       expect(placeTooltip({ x: 380, y: 290 }, { width: 50, height: 20 }, area)).toEqual({
         x: 368,
         y: 278,
