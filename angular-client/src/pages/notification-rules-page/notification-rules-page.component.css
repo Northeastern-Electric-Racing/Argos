@@ -161,11 +161,8 @@
     width: 100%;
     margin-left: 0;
     flex-wrap: wrap;
-  }
-
-  .header-buttons ::ng-deep argos-button .ui-button {
-    min-width: 100px;
-    min-height: 38px;
+    --ui-button-lg-min-width: 100px;
+    --ui-button-lg-min-height: 38px;
   }
 
   .rules-bar {
@@ -177,12 +174,9 @@
   .rules-bar-actions {
     flex-wrap: wrap;
     gap: 6px;
-  }
-
-  .rules-bar-actions ::ng-deep argos-button .ui-button {
-    min-width: 70px;
-    min-height: 36px;
-    padding: 0 var(--ui-space-3);
+    --ui-button-lg-min-width: 70px;
+    --ui-button-lg-min-height: 36px;
+    --ui-button-padding-x: var(--ui-space-3);
   }
 
   .search-container {
