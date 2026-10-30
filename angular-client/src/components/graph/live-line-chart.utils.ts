@@ -6,6 +6,7 @@ import {
   LineController,
   LineElement,
   PointElement,
+  Tick,
   TooltipItem,
   Tooltip
 } from 'chart.js';
@@ -31,6 +32,15 @@ const pad = (n: number) => (n < 10 ? '0' : '') + n;
 export function formatClock(ms: number): string {
   const date = new Date(ms);
   return `${date.getHours()}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+/**
+ * A time-axis tick's clock time, blank when the tick before it reads the same: ticks under a second apart (a
+ * short window, such as a single point's) would otherwise repeat a label.
+ */
+function clockTickLabel(value: number | string, index: number, ticks: Tick[]): string {
+  const label = formatClock(+value);
+  return index > 0 && formatClock(ticks[index - 1].value) === label ? '' : label;
 }
 
 /** A timestamp as a local date and time, e.g. 1/31/26, 9:05:07 */
@@ -93,7 +103,7 @@ export function buildLiveLineOptions({ legend }: { legend: boolean }): ChartOpti
         type: 'linear',
         grid: { display: false },
         border: { display: false },
-        ticks: { color: TICK_COLOR, maxTicksLimit: 3, maxRotation: 0, callback: (value) => formatClock(+value) }
+        ticks: { color: TICK_COLOR, maxTicksLimit: 3, maxRotation: 0, callback: clockTickLabel }
       },
       y: {
         type: 'linear',
