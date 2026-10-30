@@ -4,8 +4,10 @@ import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Table, TableModule } from 'primeng/table';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
-import { ButtonDirective } from 'primeng/button';
-import { take } from 'rxjs';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Button } from 'primeng/button';
+import { map, take } from 'rxjs';
 import {
   ClientRule,
   deleteRule,
@@ -20,7 +22,7 @@ import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edi
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective],
+  imports: [TableModule, ToggleSwitch, FormsModule, Button],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })
@@ -38,6 +40,14 @@ export class RulesTableComponent implements OnInit {
   selectedRules = signal<ClientRule[]>([]);
 
   dt = viewChild<Table>('dt');
+
+  // Phones get PrimeNG's small table density so the key columns fit
+  readonly compact = toSignal(
+    inject(BreakpointObserver)
+      .observe('(max-width: 768px)')
+      .pipe(map((state) => state.matches)),
+    { initialValue: false }
+  );
 
   constructor() {
     effect(() => {

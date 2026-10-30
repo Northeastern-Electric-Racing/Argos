@@ -47,14 +47,16 @@
                 <span class="entry-values-data">{{ entry.notification.values.join(', ') }}</span>
               </div>
             </div>
-            <button
-              type="button"
+            <p-button
               class="entry-dismiss"
-              (click)="notificationLogService.dismissEntry(entry.id)"
-              [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
-            >
-              <i class="pi pi-times"></i>
-            </button>
+              icon="pi pi-times"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              [ariaLabel]="'Dismiss notification ' + entry.notification.id"
+              (onClick)="notificationLogService.dismissEntry(entry.id)"
+            />
           </li>
         }
       </ul>
@@ -63,10 +65,16 @@
 
   @if (variant() === 'popover' && hasEntries()) {
     <footer class="list-footer">
-      <button type="button" class="view-all-button" (click)="viewAll()" aria-label="View all notifications">
-        View all notifications
-        <i class="pi pi-arrow-right"></i>
-      </button>
+      <p-button
+        label="View all notifications"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        severity="secondary"
+        [text]="true"
+        size="small"
+        [fluid]="true"
+        (onClick)="viewAll()"
+      />
     </footer>
   }
 </div>

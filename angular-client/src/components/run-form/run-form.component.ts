@@ -68,7 +68,9 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
+    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup | undefined) => {
+      // Closing the dialog with X or Escape emits no form: nothing to save
+      if (!form) return;
       if (this.selectedRun === undefined) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
         return;

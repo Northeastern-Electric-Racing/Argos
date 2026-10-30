@@ -1,3 +1,4 @@
+import { Button } from 'primeng/button';
 import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -17,7 +18,7 @@ import { SegmentOverviewComponent } from '../segment-overview/segment-overview.c
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
+  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent, Button]
 })
 export class SegmentRowComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

@@ -18,8 +18,9 @@ import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
 import { Password } from 'primeng/password';
+import { Message } from 'primeng/message';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -38,7 +39,8 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
   imports: [
     Password,
     FormsModule,
-    ButtonComponent,
+    Message,
+    Button,
     LoadingPageComponent,
     ErrorPageComponent,
     TypographyComponent,

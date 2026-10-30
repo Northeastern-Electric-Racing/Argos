@@ -80,94 +80,14 @@ body {
   border-radius: 50%;
 }
 
-.p-dialog-title {
-  --p-dialog-title-font-weight: bold;
-}
-
+/* Dialog and select colors, radius and padding are design tokens in src/theme/argos-preset.ts.
+   Dialog max size has no token: PrimeNG caps it at 90% of the viewport. */
 .p-dialog {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 20px !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
   max-width: 100% !important;
   max-height: 100% !important;
 }
-.p-dialog-header {
-  background-color: #262626 !important;
-  color: white !important;
-  padding: 1rem !important;
-  font-size: 1.2rem;
-  padding: 1rem;
-  border-radius: 20px 20px 0px 0px !important;
-}
-.p-dialog-content {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 0px 0px 20px 20px !important;
-}
 
-/* Main select button */
-.p-select {
-  color: white !important;
-  background-color: #5a5a5a !important;
-
-  border: none !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Dropdown panel */
-.p-select-panel {
-  background-color: #5a5a5a !important;
-  color: white !important;
-  border-radius: 0 0 5px 5px !important;
-  gap: 0px !important;
-}
-
-/* Dropdown items */
-.p-select-option {
-  color: white !important;
-  background-color: transparent !important;
-  padding: 8px 16px !important;
-  border-radius: 5px !important;
-}
-
-/* Hovered item */
-.p-select-option:hover {
-  background-color: #45454594 !important;
-  border-radius: 0px !important;
-}
-
-/* Selected item */
-.p-select-option.p-highlight {
-  background-color: rgba(0, 122, 255, 0.15) !important;
-  color: #007aff !important;
-}
-
-/* Dropdown list container */
-.p-select-list {
-  background-color: #5a5a5a !important;
-  border-radius: 0 0 5px 5px !important;
-  margin: 0px;
-}
-
-/* Navbar options dropdown */
-.nav-options-dialog.p-dialog {
-  position: fixed !important;
-  top: 70px !important;
-  right: 10px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-}
-
-.nav-options-dialog .p-dialog-content {
-  padding: 0 !important;
-}
-
-.p-dialog-mask:has(.nav-options-dialog) {
-  background: transparent !important;
-}
-
-/* Cell comparison dialog — compact, no backdrop */
+/* Cell comparison dialog: compact. It opens with modal: false, so PrimeNG already lets clicks through the mask. */
 .cell-compare-dialog.p-dialog {
   width: auto !important;
   min-width: 0 !important;
@@ -176,19 +96,51 @@ body {
 
 .cell-compare-dialog .p-dialog-header {
   padding: 8px 14px !important;
-  border-radius: 12px 12px 0 0 !important;
 }
 
 .cell-compare-dialog .p-dialog-content {
   padding: 0 14px 10px !important;
-  border-radius: 0 0 12px 12px !important;
 }
 
-.p-dialog-mask:has(.cell-compare-dialog) {
-  background: transparent !important;
-  pointer-events: none !important;
+/* Nav bar apps menu (app-nav-bar): a popup p-menu appended to body, laid out as a 3-column icon grid; colors and spacing are [dt] tokens */
+.nav-apps-menu.p-menu {
+  min-width: 300px;
 }
 
-.cell-compare-dialog {
-  pointer-events: auto !important;
+.nav-apps-menu .p-menu-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.nav-apps-menu .nav-apps-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  margin: 4px 10px;
+  cursor: pointer;
+  min-height: 80px;
+  user-select: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nav-apps-menu .nav-apps-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+.nav-apps-menu .nav-apps-label {
+  font-size: 16px;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Destructive entries in popup menus (MenuItem styleClass); menus are appended to body, so this is global */
+.p-menu .menu-item-danger .p-menu-item-label,
+.p-menu .menu-item-danger .p-menu-item-icon {
+  color: var(--p-red-400);
 }

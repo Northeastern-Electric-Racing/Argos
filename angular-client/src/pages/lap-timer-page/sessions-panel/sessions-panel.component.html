@@ -10,17 +10,16 @@
       </span>
       <span class="sessions-toolbar-actions">
         @if (timer.sessions().length > 0) {
-          <argos-button
+          <p-button
             label="Clear All"
-            [onClick]="onClearAllSessions"
-            additionalStyles="height: 32px; width: 110px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-battery-low);"
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            size="small"
+            (onClick)="onClearAllSessions()"
           />
         }
-        <argos-button
-          label="+ New Session"
-          [onClick]="onNewSession"
-          additionalStyles="height: 32px; width: 140px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <p-button label="New Session" icon="pi pi-plus" severity="secondary" size="small" (onClick)="onNewSession()" />
       </span>
     </div>
 
@@ -50,8 +49,8 @@
             <tr
               class="session-row"
               [class.session-row-active]="timer.activeSession()?.id === s.id"
-              (click)="onSelectSession(s.id)"
-              role="button"
+              (click)="onRowClick($event, s.id)"
+              [attr.aria-current]="timer.activeSession()?.id === s.id ? 'true' : null"
               tabindex="0"
               (keyup.enter)="onSelectSession(s.id)"
             >
@@ -63,15 +62,19 @@
               <td class="col-name">
                 @if (editingSessionId() === s.id) {
                   <input
+                    #renameInput
+                    pInputText
+                    pSize="small"
+                    [fluid]="true"
                     class="session-rename-input"
                     type="text"
+                    aria-label="Session name"
                     [ngModel]="editingName()"
                     (ngModelChange)="editingName.set($event)"
                     (keydown.enter)="commitEdit(s); $event.stopPropagation()"
                     (keydown.escape)="cancelEdit(); $event.stopPropagation()"
                     (blur)="commitEdit(s)"
                     (click)="$event.stopPropagation()"
-                    autofocus
                   />
                 } @else {
                   <span class="session-name" [title]="s.name">{{ s.name }}</span>
@@ -88,26 +91,15 @@
               </td>
               <td class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
               <td class="col-actions">
-                <button
-                  class="session-menu-btn"
-                  (click)="$event.stopPropagation(); rowPopover.toggle($event)"
-                  aria-label="Session actions"
-                >
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-                <p-popover #rowPopover>
-                  <div class="session-menu-list">
-                    <button class="session-menu-item" (click)="startEdit(s, rowPopover)">
-                      <mat-icon>edit</mat-icon><span>Rename</span>
-                    </button>
-                    <button class="session-menu-item" (click)="onDownload(s.id, rowPopover)">
-                      <mat-icon>download</mat-icon><span>Download CSV</span>
-                    </button>
-                    <button class="session-menu-item destructive" (click)="onDeleteSession(s, rowPopover)">
-                      <mat-icon>delete</mat-icon><span>Delete</span>
-                    </button>
-                  </div>
-                </p-popover>
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  ariaLabel="Session actions"
+                  (onClick)="openSessionMenu($event, s)"
+                />
               </td>
             </tr>
           </ng-template>
@@ -116,3 +108,5 @@
     }
   </div>
 </info-background>
+
+<p-menu #sessionMenu [model]="sessionMenuItems()" [popup]="true" appendTo="body" />

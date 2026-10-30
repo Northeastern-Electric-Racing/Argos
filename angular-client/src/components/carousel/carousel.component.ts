@@ -3,10 +3,8 @@ import { Router } from '@angular/router';
 import { CarouselPageEvent, Carousel } from 'primeng/carousel';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Run } from 'src/utils/types.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 
 import { Button } from 'primeng/button';
-import TypographyComponent from '../typography/typography.component';
 
 // the data for the dialog, basically just all the runs
 export interface DialogData {
@@ -18,7 +16,7 @@ export interface DialogData {
   templateUrl: 'carousel.component.html',
   styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Carousel, MatGridList, MatGridTile, Button, TypographyComponent]
+  imports: [Carousel, Button]
 })
 export class CarouselComponent {
   public dialogRef = inject(DynamicDialogRef);

@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
+import { PrimeTemplate, TreeNode } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
 import { ToggleSwitch } from 'primeng/toggleswitch';
@@ -34,7 +34,7 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
@@ -43,7 +43,7 @@ import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.compone
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent, Tree, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  imports: [Button, Tree, PrimeTemplate, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);

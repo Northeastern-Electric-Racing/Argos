@@ -5,6 +5,9 @@
   [selection]="selectedRules()"
   (selectionChange)="onSelectionChange($any($event))"
   dataKey="id"
+  [size]="compact() ? 'small' : undefined"
+  [stripedRows]="true"
+  [rowHover]="true"
   [scrollable]="true"
   scrollHeight="600px"
   [loading]="loading()"
@@ -12,14 +15,15 @@
   <ng-template #header>
     <tr>
       <th style="width: 3rem">
-        <p-tableheadercheckbox />
+        <!-- camelCase selector: PrimeNG 21 has no p-table-header-checkbox; keep on the fork -->
+        <p-tableHeaderCheckbox />
       </th>
       <th>Rule</th>
       <th>Applied To</th>
       <!-- TODO: Uploaded By column once backend supports it -->
-      <th>Uploaded By</th>
+      <th class="hide-mobile">Uploaded By</th>
       <!-- TODO: Description column once backend supports it -->
-      <th>Description</th>
+      <th class="hide-mobile">Description</th>
       <th>Subscribed</th>
       <th style="width: 5rem" aria-label="Actions"></th>
     </tr>
@@ -27,30 +31,39 @@
   <ng-template #body let-rule>
     <tr>
       <td>
-        <p-tablecheckbox [value]="rule" />
+        <!-- camelCase selector: PrimeNG 21 has no p-table-checkbox; keep on the fork -->
+        <p-tableCheckbox [value]="rule" />
       </td>
       <td>{{ rule.expr }}</td>
       <td>{{ rule.topic }}</td>
-      <td>-</td>
-      <td>-</td>
+      <td class="hide-mobile">-</td>
+      <td class="hide-mobile">-</td>
       <td>
-        <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
+        <p-toggleswitch
+          [ngModel]="rule.is_subscribed"
+          (ngModelChange)="onToggleSubscription(rule, $event)"
+          [ariaLabel]="'Subscribe to ' + rule.expr + ' on ' + rule.topic"
+        />
       </td>
       <td class="action-icons">
-        <button
-          pButton
-          class="p-button-text p-button-sm"
+        <p-button
           icon="pi pi-pencil"
-          (click)="onEdit(rule)"
-          aria-label="Edit rule"
-        ></button>
-        <button
-          pButton
-          class="p-button-text p-button-sm p-button-danger"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          ariaLabel="Edit rule"
+          (onClick)="onEdit(rule)"
+        />
+        <p-button
           icon="pi pi-trash"
-          (click)="onDelete(rule)"
-          aria-label="Delete rule"
-        ></button>
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          ariaLabel="Delete rule"
+          (onClick)="onDelete(rule)"
+        />
       </td>
     </tr>
   </ng-template>

@@ -1,6 +1,8 @@
 <div class="switch-group">
   <button
+    type="button"
     class="switch-button"
+    [attr.aria-pressed]="locked()"
     [class.active]="locked()"
     [class.state-locked]="locked()"
     (click)="pressed.emit()"

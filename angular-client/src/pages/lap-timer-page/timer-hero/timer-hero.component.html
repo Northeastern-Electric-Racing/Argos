@@ -14,59 +14,39 @@
       <div class="hero-current-delta" [class]="currentLapDeltaClass()">{{ currentLapDeltaText() }}</div>
     </div>
     <div class="hero-actions">
-      @if (!timer.activeSession()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-      } @else if (timer.isIdle()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
+      @if (!timer.activeSession() || timer.isIdle()) {
+        <p-button label="Start" icon="pi pi-play" severity="success" size="large" (onClick)="onStart()" />
+      }
+      @if (timer.activeSession() && timer.isIdle()) {
+        <p-button
           label="Delete"
-          [onClick]="onDeleteActiveButton"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          size="large"
+          (onClick)="onDeleteActiveButton()"
         />
       } @else if (timer.isRunning()) {
-        <argos-button
-          label="Pause"
-          [onClick]="onPause"
-          additionalStyles="background-color: var(--color-battery-med); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Lap"
-          [onClick]="onLap"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Stop"
-          [onClick]="onStop"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <p-button label="Pause" icon="pi pi-pause" severity="warn" size="large" (onClick)="onPause()" />
+        <p-button label="Lap" icon="pi pi-flag" severity="success" size="large" (onClick)="onLap()" />
+        <p-button label="Stop" icon="pi pi-stop" severity="danger" size="large" (onClick)="onStop()" />
       } @else if (timer.isPaused()) {
-        <argos-button
-          label="Resume"
-          [onClick]="onResume"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Reset"
-          [onClick]="onReset"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
-        <argos-button
+        <p-button label="Resume" icon="pi pi-play" severity="success" size="large" (onClick)="onResume()" />
+        <p-button label="Reset" icon="pi pi-refresh" severity="danger" size="large" (onClick)="onReset()" />
+        <p-button
           label="Download"
-          [onClick]="onDownloadActiveButton"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
+          icon="pi pi-download"
+          severity="secondary"
+          size="large"
+          (onClick)="onDownloadActiveButton()"
         />
-        <argos-button
+        <p-button
           label="End Session"
-          [onClick]="onEndActiveSession"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
+          icon="pi pi-sign-out"
+          severity="secondary"
+          [outlined]="true"
+          size="large"
+          (onClick)="onEndActiveSession()"
         />
       }
     </div>

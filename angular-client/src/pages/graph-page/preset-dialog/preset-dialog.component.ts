@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
+import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
@@ -21,7 +21,7 @@ interface PresetDialogData {
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
+  imports: [FormsModule, InputText, ButtonDirective, ButtonLabel, ConfirmDialog]
 })
 export class PresetDialogComponent {
   private ref = inject(DynamicDialogRef);

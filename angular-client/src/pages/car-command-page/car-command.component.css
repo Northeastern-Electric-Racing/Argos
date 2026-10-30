@@ -55,19 +55,6 @@
   font-family: var(--font-family);
 }
 
-.auth-input-group ::ng-deep p-password,
-.auth-input-group ::ng-deep .p-password,
-.auth-input-group ::ng-deep .p-inputtext {
-  width: 100%;
-}
-
-.auth-error {
-  color: #f04346;
-  font-size: var(--font-size-sm);
-  text-align: center;
-  margin: 0;
-}
-
 /* ---- Commands Grid ---- */
 .commands-grid {
   display: grid;

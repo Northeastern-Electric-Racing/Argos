@@ -1,88 +1,45 @@
-.select-button-container {
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-}
-
-/* Run select button - using PrimeNG's CSS variables */
-.run-select-button {
-  --p-button-primary-color: #ffffff;
-  --p-button-primary-background: #313131;
-  --p-button-primary-border-color: #777777;
-  --p-button-primary-hover-background: rgba(104, 104, 104, 0.261);
-  --p-button-primary-hover-border-color: #777777;
-  --p-button-border-radius: 10px;
-  --p-button-padding-y: 8px;
-  --p-button-padding-x: 1.5rem;
-  --p-button-transition-duration: 0.15s;
-  --p-iconwrapper-padding-x: 1rem;
+/* Carousel navigation and indicators use the theme's carousel tokens */
+.run-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
 }
 
 .run-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border: 2.5px solid #0099ff;
-  margin-left: 8px;
-  margin-right: 8px;
-  border-radius: 10px;
-}
-
-.number-buttons {
-  background-color: #262626;
-  border-radius: 10px;
-  color: white !important;
-  padding: 15px;
-  font-size: small;
-}
-
-/* Container that holds the carousel */
-.modal-container {
-  background-color: #262626;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-:host ::ng-deep .p-carousel-prev,
-:host ::ng-deep .p-carousel-next {
-  background-color: #262626;
-  border-color: #262626;
-  color: white;
-  border-radius: 100px;
-}
-
-/* should eventually be replaced with Grid component */
-
-.row {
-  display: flex;
-  background-color: #262626;
-  color: #ffff;
+  gap: 1.5rem;
   width: 100%;
+  box-sizing: border-box;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 12px;
+  background: var(--p-surface-900);
 }
 
-.left {
-  margin-left: 5px;
-  text-align: left;
-  margin-right: auto;
+.run-card-header,
+.run-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.right {
-  margin-left: auto;
-  margin-right: 5px;
-  text-align: right;
+.run-id {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
 }
 
-.number_buttons.highlight {
-  border: 2px solid #0099ff; /* Highlight color */
-  background-color: #808080; /* Slightly different background to stand out */
+.run-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--p-text-muted-color);
 }
 
-.modal-close-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  scale: 75%;
-  border-radius: 10px;
-  margin-top: 15px;
-  margin-right: 10px;
+.run-meta .pi {
+  font-size: 0.875rem;
 }

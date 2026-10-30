@@ -6,14 +6,14 @@ import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 
 @Component({
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
   styleUrls: ['./run-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [Button]
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

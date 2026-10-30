@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Popover } from 'primeng/popover';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { InputText } from 'primeng/inputtext';
+import { Menu } from 'primeng/menu';
 import { TableModule } from 'primeng/table';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -21,8 +22,9 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     FormsModule,
     MatIcon,
     TableModule,
-    Popover,
-    ButtonComponent,
+    Menu,
+    InputText,
+    Button,
     InfoBackgroundComponent,
     TypographyComponent
   ]
@@ -34,6 +36,36 @@ export default class SessionsPanelComponent {
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');
+
+  // One popup menu serves every row; its items are rebuilt for the row that opened it
+  private readonly sessionMenu = viewChild.required<Menu>('sessionMenu');
+  readonly sessionMenuItems = signal<MenuItem[]>([]);
+
+  // The rename field appears after the menu closes, so it takes focus itself (autofocus only works on page load)
+  private readonly renameInput = viewChild<ElementRef<HTMLInputElement>>('renameInput');
+
+  constructor() {
+    effect(() => {
+      const input = this.renameInput()?.nativeElement;
+      input?.focus();
+      input?.select();
+    });
+  }
+
+  openSessionMenu(event: Event, session: LapSession): void {
+    this.sessionMenuItems.set([
+      { label: 'Rename', icon: 'pi pi-pencil', command: () => this.startEdit(session) },
+      { label: 'Download CSV', icon: 'pi pi-download', command: () => this.onDownload(session.id) },
+      { separator: true },
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        styleClass: 'menu-item-danger',
+        command: () => this.onDeleteSession(session)
+      }
+    ]);
+    this.sessionMenu().toggle(event);
+  }
 
   onClearAllSessions = () => {
     const count = this.timer.sessions().length;
@@ -70,13 +102,18 @@ export default class SessionsPanelComponent {
     });
   };
 
+  // The actions menu button lets its click reach the document, so an open menu elsewhere closes; skip row selection for it
+  onRowClick = (event: MouseEvent, id: string) => {
+    if ((event.target as HTMLElement).closest('.col-actions')) return;
+    this.onSelectSession(id);
+  };
+
   onSelectSession = (id: string) => {
     if (this.timer.activeSession()?.id === id) return;
     this.timer.selectSession(id);
   };
 
-  onDeleteSession = (session: LapSession, popover?: Popover) => {
-    popover?.hide();
+  onDeleteSession = (session: LapSession) => {
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
       this.toast('success', 'Session deleted', `"${session.name}"`);
@@ -94,14 +131,12 @@ export default class SessionsPanelComponent {
     });
   };
 
-  onDownload = (sessionId: string, popover?: Popover) => {
-    popover?.hide();
+  onDownload = (sessionId: string) => {
     const filename = this.timer.downloadCsv(sessionId);
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  startEdit(session: LapSession, popover?: Popover): void {
-    popover?.hide();
+  startEdit(session: LapSession): void {
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
   }

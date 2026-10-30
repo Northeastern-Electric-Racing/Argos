@@ -6,20 +6,16 @@
       [placeholder]="presetSelectorConfig().placeholder"
       [defaultValue]="activePresetName()"
     />
-    <argos-button
-      [onClick]="openPresetsDialog"
+    <p-button
       label="Manage Presets"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
+      icon="pi pi-sliders-h"
+      severity="secondary"
+      size="small"
+      (onClick)="openPresetsDialog()"
     />
   </div>
   <div class="header-row">
-    <argos-button
-      [onClick]="clearSelections"
-      label="Clear Topics"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <p-button label="Clear Topics" icon="pi pi-times" severity="secondary" size="small" (onClick)="clearSelections()" />
     <div class="toggle-group">
       <label class="flatten-toggle">
         <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
@@ -41,19 +37,19 @@
   </div>
   <p-tree
     [value]="activeNodes()"
-    styleClass="w-full md:w-[30rem]"
     (onNodeSelect)="nodeSelect($event)"
     (onNodeUnselect)="onNodeUnselect($event)"
     [(selection)]="selectedNodes"
     [filter]="true"
     filterPlaceholder="Select Data Type"
-    styleClass="w-full"
+    ariaLabel="Data types"
     [autofocus]="true"
     [style]="{ height: '80vh', overflow: 'auto' }"
     [metaKeySelection]="false"
     selectionMode="multiple"
   >
-    <ng-template let-node #node>
+    <!-- PrimeNG 21 Tree reads node templates only from pTemplate, not #node: keep this on the fork -->
+    <ng-template let-node pTemplate="default">
       <div class="tree-node-container" (click)="onRowClick($event, node)">
         <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
         @if (node.children?.length === 0) {

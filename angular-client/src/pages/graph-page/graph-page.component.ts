@@ -23,7 +23,9 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { Button } from 'primeng/button';
+import { SelectButton } from 'primeng/selectbutton';
+import { ToggleButton } from 'primeng/togglebutton';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -43,7 +45,9 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
+    Button,
+    ToggleButton,
+    SelectButton,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
@@ -86,9 +90,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
   // UI state variables
   showSideBar = true;
-  toggleSideBar = () => {
-    this.showSideBar = !this.showSideBar;
-  };
   selectedFault?: FaultData;
   onFaultPage: boolean = false;
   renderFaultPage = false;
@@ -104,9 +105,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   customLastXMinutes = signal<number | undefined>(undefined);
   customDateRange = signal<{ startMs: number; endMs: number } | undefined>(undefined);
   showMultiYaxis = false;
-  toggleMultiYaxis = () => {
-    this.showMultiYaxis = !this.showMultiYaxis;
-  };
   isPaused = false;
   togglePause = () => {
     this.isPaused = !this.isPaused;
@@ -191,8 +189,12 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleRangeMode = () => {
-    this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
+  readonly rangeModeOptions: { label: string; value: 'time' | 'points' }[] = [
+    { label: 'Time', value: 'time' },
+    { label: 'Points', value: 'points' }
+  ];
+  setRangeMode = (mode: 'time' | 'points') => {
+    this.rangeMode = mode;
     this.onGraphConfigChange();
   };
 
