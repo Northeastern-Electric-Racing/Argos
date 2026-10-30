@@ -5,6 +5,7 @@
   [selection]="selectedRules()"
   (selectionChange)="onSelectionChange($any($event))"
   dataKey="id"
+  [size]="compact() ? 'small' : undefined"
   [stripedRows]="true"
   [rowHover]="true"
   [scrollable]="true"
