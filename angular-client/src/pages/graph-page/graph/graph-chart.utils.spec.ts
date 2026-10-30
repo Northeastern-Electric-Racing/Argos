@@ -8,8 +8,8 @@ import {
   DAY_MS,
   formatTimeTick,
   formatTooltipTime,
-  HOVER_SNAP_PX,
-  lineValueAt,
+  HOVER_REACH_PERIODS,
+  hoverSample,
   nearestIndex,
   nearestPerSeries,
   pickTimeStep,
@@ -145,6 +145,7 @@ describe('graph-chart utils', () => {
     it('titles the tooltip in 24-hour time, with milliseconds once the axis does', () => {
       expect(formatTooltipTime(at(13, 50, 24, 120), 30_000)).toBe('10/17/2026, 13:50:24');
       expect(formatTooltipTime(at(13, 50, 24, 120), 1_000)).toBe('10/17/2026, 13:50:24.120');
+      expect(formatTooltipTime(at(13, 50, 24, 120), 1_000, false)).toBe('13:50:24.120');
     });
   });
 
@@ -312,48 +313,61 @@ describe('graph-chart utils', () => {
     });
   });
 
-  describe('lineValueAt', () => {
-    const points = [
-      { x: 10, y: 0 },
-      { x: 20, y: 10 },
-      { x: 30, y: 4 }
-    ];
+  describe('hoverSample', () => {
+    /** Samples every `period` ms from `from` to `to` inclusive, alternating 0 and 1 like a flag topic. */
+    const steady = (from: number, to: number, period = 10) =>
+      Array.from({ length: (to - from) / period + 1 }, (_, i) => ({ x: from + i * period, y: i % 2 }));
 
-    it('is a sample at its own time', () => {
-      expect(lineValueAt(points, 20)).toEqual({ x: 20, y: 10 });
+    it('is the nearest real sample, never a value interpolated between two', () => {
+      const flag = steady(0, 100);
+
+      expect(hoverSample(flag, 14)).toEqual({ x: 10, y: 1 });
+      expect(hoverSample(flag, 16)).toEqual({ x: 20, y: 0 });
+      expect(hoverSample(flag, 15)).toEqual({ x: 10, y: 1 });
     });
 
-    it('is on the straight line between the samples either side, as the line is drawn', () => {
-      expect(lineValueAt(points, 12.5)).toEqual({ x: 12.5, y: 2.5 });
-      expect(lineValueAt(points, 25)).toEqual({ x: 25, y: 7 });
+    it(`reaches ${HOVER_REACH_PERIODS} sample periods into a gap from either side, and finds nothing past that`, () => {
+      // Every 10 ms, then nothing from 50 to 200
+      const points = [...steady(0, 50), ...steady(200, 250)];
+
+      expect(hoverSample(points, 70)).toEqual({ x: 50, y: 1 });
+      expect(hoverSample(points, 75)).toBeNull();
+      expect(hoverSample(points, 125)).toBeNull();
+      expect(hoverSample(points, 180)).toEqual({ x: 200, y: 0 });
     });
 
-    it('snaps to the end sample just past either end, and is null further out', () => {
-      expect(lineValueAt(points, 8, 2)).toEqual({ x: 10, y: 0 });
-      expect(lineValueAt(points, 33, 2)).toBeNull();
-      expect(lineValueAt(points, 31, 2)).toEqual({ x: 30, y: 4 });
-      expect(lineValueAt(points, 5, 2)).toBeNull();
+    it("judges a gap by the series' own period, so a sparse series still shows between its samples", () => {
+      const sparse = [
+        { x: 0, y: 1 },
+        { x: 1000, y: 2 },
+        { x: 2000, y: 3 }
+      ];
+
+      expect(hoverSample(sparse, 1400)).toEqual({ x: 1000, y: 2 });
+    });
+
+    it('shows an end sample just past either end, and nothing further out', () => {
+      const points = steady(100, 200);
+
+      expect(hoverSample(points, 85)).toEqual({ x: 100, y: 0 });
+      expect(hoverSample(points, 75)).toBeNull();
+      expect(hoverSample(points, 220)).toEqual({ x: 200, y: 0 });
+      expect(hoverSample(points, 225)).toBeNull();
+    });
+
+    it('reaches at least `snap` from a sample, so a lone sample can be hovered', () => {
+      expect(hoverSample([{ x: 100, y: 5 }], 104, 5)).toEqual({ x: 100, y: 5 });
+      expect(hoverSample([{ x: 100, y: 5 }], 106, 5)).toBeNull();
     });
 
     it('is null for an empty series', () => {
-      expect(lineValueAt([], 5)).toBeNull();
+      expect(hoverSample([], 5)).toBeNull();
     });
   });
 
   describe('nearestPerSeries', () => {
-    // Two series on unaligned timestamps; the x scale maps pixel p to time 10 * p across a 40 px plot
-    const series = [
-      [
-        { x: 100, y: 1 },
-        { x: 200, y: 2 },
-        { x: 300, y: 3 }
-      ],
-      [
-        { x: 150, y: 4 },
-        { x: 260, y: 5 }
-      ]
-    ];
-    const fakeChart = (visible = [0, 1]) =>
+    // The x scale maps pixel p to time 10 * p across a 40 px plot
+    const fakeChart = (series: { x: number; y: number }[][], visible = series.map((_, i) => i), drawn = series) =>
       ({
         isPointInArea: ({ x, y }: { x: number; y: number }) => x >= 0 && x <= 40 && y >= 0 && y <= 40,
         scales: {
@@ -369,12 +383,24 @@ describe('graph-chart utils', () => {
         data: { datasets: series.map((data) => ({ data })) },
         getDatasetMeta: () => ({ yAxisID: 'y' }),
         getSortedVisibleDatasetMetas: () =>
-          visible.map((index) => ({ index, data: series[index].map((point) => ({ point })) }))
+          visible.map((index) => ({ index, data: drawn[index].map((point) => ({ point })) }))
       }) as never;
     const at = (x: number, y = 20) => ({ native: null, type: 'mousemove', x, y }) as never;
+    // Two series on unaligned clocks
+    const series = [
+      [
+        { x: 100, y: 1 },
+        { x: 200, y: 2 },
+        { x: 300, y: 3 }
+      ],
+      [
+        { x: 150, y: 4 },
+        { x: 260, y: 5 }
+      ]
+    ];
 
-    it("takes each visible series with data at the cursor's time, with its nearest sample's element", () => {
-      const items = nearestPerSeries(fakeChart(), at(25), {} as never);
+    it("takes each visible series' nearest sample to the cursor's time, with its element", () => {
+      const items = nearestPerSeries(fakeChart(series), at(25), {} as never);
 
       expect(items.map(({ datasetIndex, index }) => [datasetIndex, index])).toEqual([
         [0, 1],
@@ -383,17 +409,27 @@ describe('graph-chart utils', () => {
       expect(items[0].element).toEqual({ point: series[0][1] } as never);
     });
 
-    it(`leaves out a series with no data within ${HOVER_SNAP_PX} px of the cursor's time`, () => {
-      // Time 50: series 0 starts 5 px later, series 1 10 px later
-      expect(nearestPerSeries(fakeChart(), at(5), {} as never).map((item) => item.datasetIndex)).toEqual([0]);
+    it('leaves out a series when the cursor is in a gap in it', () => {
+      // Series 1 samples every 10 ms, then nothing from 100 to 390
+      const gappy = [series[0], [...series[0].map((p, i) => ({ x: i * 10 + 80, y: 0 })), { x: 390, y: 0 }]];
+
+      expect(nearestPerSeries(fakeChart(gappy), at(25), {} as never).map((item) => item.datasetIndex)).toEqual([0]);
+    });
+
+    it('keeps a series whose newest sample arrived after the last frame drew it', () => {
+      const drawn = [series[0].slice(0, 2)];
+
+      const items = nearestPerSeries(fakeChart([series[0]], [0], drawn), at(30), {} as never);
+
+      expect(items.map(({ datasetIndex, index }) => [datasetIndex, index])).toEqual([[0, 1]]);
     });
 
     it('skips series hidden from the legend', () => {
-      expect(nearestPerSeries(fakeChart([1]), at(25), {} as never).map((item) => item.datasetIndex)).toEqual([1]);
+      expect(nearestPerSeries(fakeChart(series, [1]), at(25), {} as never).map((item) => item.datasetIndex)).toEqual([1]);
     });
 
     it('hovers nothing outside the plot area', () => {
-      expect(nearestPerSeries(fakeChart(), at(25, 60), {} as never)).toEqual([]);
+      expect(nearestPerSeries(fakeChart(series), at(25, 60), {} as never)).toEqual([]);
     });
   });
 

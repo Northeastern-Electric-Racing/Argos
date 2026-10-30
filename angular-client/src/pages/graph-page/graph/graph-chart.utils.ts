@@ -1,6 +1,7 @@
 import type {
   Chart,
   ChartArea,
+  ChartDataset,
   ChartEvent,
   ChartOptions,
   ChartType,
@@ -11,7 +12,6 @@ import type {
 } from 'chart.js';
 import { getRelativePosition } from 'chart.js/helpers';
 import type { AnnotationOptions } from 'chartjs-plugin-annotation';
-import { binarySearchInsertIndex } from 'src/utils/array.utils';
 import { GraphData } from 'src/utils/types.utils';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
@@ -196,10 +196,15 @@ const TOOLTIP_LABELS = {
   seconds: new Intl.DateTimeFormat('en-US', TOOLTIP_TIME),
   millis: new Intl.DateTimeFormat('en-US', { ...TOOLTIP_TIME, fractionalSecondDigits: 3 })
 };
+const TOOLTIP_ROW_LABELS = { seconds: TIME_LABELS.seconds, millis: TIME_LABELS.millis };
 
-/** A tooltip title: the point's date and 24-hour time, to the millisecond once the x ticks are sub-second. */
-export function formatTooltipTime(value: number, axisSpanMs: number): string {
-  return (pickTimeStep(axisSpanMs) < SECOND_MS ? TOOLTIP_LABELS.millis : TOOLTIP_LABELS.seconds).format(value);
+/**
+ * A tooltip time: the sample's date and 24-hour time, to the millisecond once the x ticks are sub-second; without
+ * the date for a row's own time.
+ */
+export function formatTooltipTime(value: number, axisSpanMs: number, withDate = true): string {
+  const labels = withDate ? TOOLTIP_LABELS : TOOLTIP_ROW_LABELS;
+  return (pickTimeStep(axisSpanMs) < SECOND_MS ? labels.millis : labels.seconds).format(value);
 }
 
 /** An x tick label as precise as the step needs; with hour-or-longer steps, local midnights show their date. */
@@ -270,52 +275,74 @@ export function nearestIndex(points: readonly { x: number }[], x: number): numbe
   return lo > 0 && x - points[lo - 1].x <= points[lo].x - x ? lo - 1 : lo;
 }
 
-/** How far, in pixels, past a series' first or last sample the pointer still hovers that end sample. */
+/** How far, in pixels, from a series' sample the pointer still hovers it, however short the series' period. */
 export const HOVER_SNAP_PX = 8;
+/** How many of a series' sample periods from its nearest sample the pointer still hovers it (see hoverSample). */
+export const HOVER_REACH_PERIODS = 2;
 
-/**
- * Where a series' line crosses time `x`: linear between the samples either side, as the line is drawn, or the end
- * sample when `x` is within `snap` of it. Null where the series has no data near `x`, so hover leaves it out.
- */
-export function lineValueAt(points: readonly GraphData[], x: number, snap = 0): GraphData | null {
-  const [first] = points;
-  const last = points.at(-1);
-  if (!first || !last) return null;
-  if (x <= first.x) return first.x - x <= snap ? first : null;
-  if (x >= last.x) return x - last.x <= snap ? last : null;
-  // first.x < x < last.x, so there is a sample before x and one at or after it
-  const after = binarySearchInsertIndex(points, x);
-  const a = points[after - 1];
-  const b = points[after];
-  return b.x === x ? b : { x, y: a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x) };
+/** The median interval between a series' samples around index `i`, up to 8 either side; 0 for a lone sample. */
+function typicalPeriod(points: readonly { x: number }[], i: number): number {
+  const intervals: number[] = [];
+  for (let j = Math.max(1, i - 8); j <= Math.min(points.length - 1, i + 8); j++) {
+    intervals.push(points[j].x - points[j - 1].x);
+  }
+  intervals.sort((a, b) => a - b);
+  return intervals[intervals.length >> 1] ?? 0;
 }
 
-/** The point on a dataset's drawn line at a canvas x, in data and canvas units; null where it has no data near. */
-function lineAtPixel(chart: Chart, datasetIndex: number, px: number): { value: GraphData; x: number; y: number } | null {
+/**
+ * The real sample hover shows for a series at time `x`: its nearest, while that is within HOVER_REACH_PERIODS of the
+ * series' typical period around it (or `snap`, if wider). Along steady data the nearest sample is always in reach;
+ * in a gap over twice that long, and well past either end, the series has nothing to show and hover leaves it out.
+ */
+export function hoverSample(points: readonly GraphData[], x: number, snap = 0): GraphData | null {
+  const i = nearestIndex(points, x);
+  if (i < 0) return null;
+  const reach = Math.max(snap, HOVER_REACH_PERIODS * typicalPeriod(points, i));
+  return Math.abs(points[i].x - x) <= reach ? points[i] : null;
+}
+
+/** A series' dataset, carrying its full-resolution samples: decimation swaps `data` for the points it draws. */
+export type SeriesDataset = ChartDataset<'line', GraphData[]> & { samples?: GraphData[] };
+
+function samplesOf(chart: Chart, datasetIndex: number): GraphData[] {
+  const dataset = chart.data.datasets[datasetIndex] as unknown as SeriesDataset;
+  return dataset.samples ?? dataset.data;
+}
+
+/** A hovered sample, in data units and canvas pixels. */
+type HoveredSample = { value: GraphData; x: number; y: number };
+
+/**
+ * The sample a dataset shows at a canvas x, or null where it has none (see hoverSample). Its pixel is on the drawn
+ * line: a vertex, or, when decimated, inside the min-max stroke of its pixel column.
+ */
+function sampleAtPixel(chart: Chart, datasetIndex: number, px: number): HoveredSample | null {
   const xScale = chart.scales['x'];
   const time = xScale.getValueForPixel(px);
   if (time === undefined) return null;
   const snap = (HOVER_SNAP_PX * (xScale.max - xScale.min)) / (xScale.width || 1);
-  // Decimation swaps a dataset's data for the decimated points, which is what its line is drawn through
-  const value = lineValueAt(chart.data.datasets[datasetIndex].data as GraphData[], time, snap);
+  const value = hoverSample(samplesOf(chart, datasetIndex), time, snap);
   if (!value) return null;
   const yScale = chart.scales[chart.getDatasetMeta(datasetIndex).yAxisID ?? 'y'];
   return { value, x: xScale.getPixelForValue(value.x), y: yScale.getPixelForValue(value.y) };
 }
 
 /**
- * Interaction mode (registered as `nearestPerSeries`): every visible series with data at the cursor's time, as
+ * Interaction mode (registered as `nearestPerSeries`): every visible series with a sample near the cursor's time, as
  * uPlot's cursor does. Built-in `index` mode assumes every series shares timestamps, which topics don't. Each item
- * carries its nearest sample's element, which Chart.js needs; the hover dot and the tooltip's value come from the
- * line at the cursor's time instead (see cursorPlugin and the tooltip's label callback).
+ * carries the drawn element nearest that sample, which Chart.js needs; the hover dot and the tooltip row come from
+ * the sample itself (see cursorPlugin and the tooltip's callbacks).
  */
 export const nearestPerSeries: InteractionModeFunction = (chart, event) => {
   const position = getRelativePosition(event, chart);
   if (!chart.isPointInArea(position)) return [];
-  const time = chart.scales['x'].getValueForPixel(position.x) ?? 0;
   return chart.getSortedVisibleDatasetMetas().flatMap(({ index: datasetIndex, data: elements }) => {
-    if (!lineAtPixel(chart, datasetIndex, position.x)) return [];
-    const index = nearestIndex(chart.data.datasets[datasetIndex].data as { x: number }[], time);
+    const sample = sampleAtPixel(chart, datasetIndex, position.x);
+    if (!sample) return [];
+    // Points pushed since the last frame have no element yet; the newest drawn one stands in for them
+    const drawn = chart.data.datasets[datasetIndex].data as { x: number }[];
+    const index = Math.min(nearestIndex(drawn, sample.value.x), elements.length - 1);
     const element = elements[index];
     return element ? [{ element, datasetIndex, index }] : [];
   });
@@ -360,10 +387,24 @@ const cursors = new WeakMap<Chart, Cursor | null>();
 /** The cursor each chart last drew, so pointer moves off the plot don't redraw it for nothing. */
 const drawnCursors = new WeakMap<Chart, Cursor | null>();
 
-/** Where the pointer's time crosses a dataset's line, in data and canvas units; null off the plot or away from data. */
-export function lineAtCursor(chart: Chart, datasetIndex: number): { value: GraphData; x: number; y: number } | null {
+/** The sample a dataset shows at the pointer's time (see hoverSample); null off the plot or away from its data. */
+export function sampleAtCursor(chart: Chart, datasetIndex: number): HoveredSample | null {
   const cursor = cursors.get(chart);
-  return cursor ? lineAtPixel(chart, datasetIndex, cursor.x) : null;
+  return cursor ? sampleAtPixel(chart, datasetIndex, cursor.x) : null;
+}
+
+/** Of every visible series' hovered sample, the one nearest the pointer's time (the first series' on a tie). */
+function nearestHoveredSample(chart: Chart): GraphData | null {
+  const cursor = cursors.get(chart);
+  if (!cursor) return null;
+  const time = chart.scales['x'].getValueForPixel(cursor.x);
+  if (time === undefined) return null;
+  let nearest: GraphData | null = null;
+  for (const { index } of chart.getSortedVisibleDatasetMetas()) {
+    const sample = sampleAtPixel(chart, index, cursor.x)?.value;
+    if (sample && (!nearest || Math.abs(sample.x - time) < Math.abs(nearest.x - time))) nearest = sample;
+  }
+  return nearest;
 }
 
 /** Hides the cursor lines, dots and tooltip until the pointer next moves, e.g. after a zoom moved the data under it. */
@@ -425,14 +466,14 @@ export const cursorPlugin: Plugin<'line'> = {
     ctx.moveTo(chartArea.left, y);
     ctx.lineTo(chartArea.right, y);
     ctx.stroke();
-    // A dot where each hovered line crosses the cursor's time, in its series' color, ringed in the page background
-    // so it stays visible on its own dense line
+    // A dot on each hovered sample, in its series' color, ringed in the page background so it stays visible on its
+    // own dense line
     ctx.setLineDash([]);
     ctx.globalAlpha = 1;
     ctx.lineWidth = HOVER_DOT.borderWidth;
     ctx.strokeStyle = HOVER_DOT.borderColor;
     for (const { datasetIndex } of chart.getActiveElements()) {
-      const point = lineAtPixel(chart, datasetIndex, cursor.x);
+      const point = sampleAtPixel(chart, datasetIndex, cursor.x);
       if (!point) continue;
       ctx.fillStyle = chart.data.datasets[datasetIndex].borderColor as string;
       ctx.beginPath();
@@ -463,13 +504,13 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
     normalized: true,
     spanGaps: true,
     font: { family: "'Roboto', sans-serif" },
-    // Every series at the cursor's time (see nearestPerSeries), drawn with cursorPlugin's crosshair
+    // Every series' sample nearest the cursor's time (see nearestPerSeries), drawn with cursorPlugin's crosshair
     interaction: { mode: 'nearestPerSeries', intersect: false },
     // The x-axis reserves half of an edge tick's label as it arrives; fixed room keeps the plot from jumping
     layout: { padding: { right: 32, left: 8 } },
     elements: {
-      // No sample dots, hovered or not: cursorPlugin draws the hover dot where the line crosses the cursor's time,
-      // which is off the nearest sample between samples
+      // No sample dots, hovered or not: cursorPlugin draws the hover dot on the hovered sample, which with
+      // decimation needn't be a drawn point
       point: { radius: 0, hoverRadius: 0 },
       line: { borderWidth: 3, tension: 0 }
     },
@@ -522,20 +563,25 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
         boxHeight: 8,
         boxPadding: 4,
         callbacks: {
-          // The time under the cursor, which each row's sample is nearest
+          // When the sample nearest the pointer was taken. Topics sample on their own clocks, so a row whose sample
+          // was taken at another time, as precisely as the title shows it, says when (see label)
           title: (items) => {
             const [first] = items;
             if (!first) return '';
             const { chart } = first;
             const { min, max } = chart.scales['x'];
-            const cursor = cursors.get(chart);
-            const time = cursor ? chart.scales['x'].getValueForPixel(cursor.x) : first.parsed.x;
-            return formatTooltipTime(time ?? 0, max - min);
+            return formatTooltipTime(nearestHoveredSample(chart)?.x ?? first.parsed.x ?? 0, max - min);
           },
-          // The line's value at the cursor's time, where its hover dot sits
+          // The series' hovered sample, where its hover dot sits
           label: (item) => {
-            const value = lineAtCursor(item.chart, item.datasetIndex)?.value.y ?? item.parsed.y;
-            return `${item.dataset.label}: ${tooltipNumber.format(value ?? NaN)}`;
+            const { chart } = item;
+            const sample = sampleAtCursor(chart, item.datasetIndex)?.value;
+            const row = `${item.dataset.label}: ${tooltipNumber.format(sample?.y ?? item.parsed.y ?? NaN)}`;
+            const titleTime = nearestHoveredSample(chart)?.x;
+            if (!sample || titleTime === undefined) return row;
+            const span = chart.scales['x'].max - chart.scales['x'].min;
+            const sameTime = formatTooltipTime(sample.x, span) === formatTooltipTime(titleTime, span);
+            return sameTime ? row : `${row} (${formatTooltipTime(sample.x, span, false)})`;
           },
           labelPointStyle: () => ({ pointStyle: 'circle', rotation: 0 }),
           labelColor: ({ dataset }) => ({

@@ -15,7 +15,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import {
   Chart,
-  ChartDataset,
   Decimation,
   Interaction,
   Legend,
@@ -42,14 +41,13 @@ import {
   DAY_MS,
   nearestPerSeries,
   SERIES_COLORS,
+  SeriesDataset,
   yAxisIdFor
 } from './graph-chart.utils';
 
 // The uPlot-style hover: every series at the cursor's time, in a tooltip beside the cursor (see chartOptions)
 Interaction.modes.nearestPerSeries = nearestPerSeries;
 Tooltip.positioners.cursor = cursorPositioner;
-
-type LineDataset = ChartDataset<'line', GraphData[]>;
 
 /** Saves a URL's content as argos-graph-<time>.<extension>. */
 function download(href: string, extension: string): void {
@@ -110,10 +108,10 @@ export default class CustomGraphComponent implements OnDestroy {
   // label -> x,y (topic, data point). These arrays are handed to Chart.js as-is (parsing: false).
   data = new Map<string, GraphData[]>();
   timeRangeMs: number | undefined = undefined;
-  private datasets = new Map<string, LineDataset>();
+  private datasets = new Map<string, SeriesDataset>();
   private frame: number | undefined;
 
-  readonly chartData: { datasets: LineDataset[] } = { datasets: [] };
+  readonly chartData: { datasets: SeriesDataset[] } = { datasets: [] };
   // A zoom or pan on an empty chart moves its placeholder 0..1 axis; ignore it, or data arriving next would stay hidden
   readonly chartOptions = buildBaseOptions({ onZoom: () => this.zoomed.set(this.hasData()) });
   readonly chartPlugins = [cursorPlugin];
@@ -200,7 +198,8 @@ export default class CustomGraphComponent implements OnDestroy {
       let dataset = this.datasets.get(key);
       if (!dataset) {
         const color = SERIES_COLORS[this.datasets.size % SERIES_COLORS.length];
-        dataset = { label: key, data: this.data.get(key)!, borderColor: color, backgroundColor: color };
+        const points = this.data.get(key)!;
+        dataset = { label: key, data: points, samples: points, borderColor: color, backgroundColor: color };
         this.datasets.set(key, dataset);
       }
       dataset.yAxisID = yAxisIdFor(index, multipleYAxes);

@@ -4,6 +4,7 @@ import { Chart } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { By } from '@angular/platform-browser';
 import CustomGraphComponent from './graph.component';
+import { formatTooltipTime, nearestIndex } from './graph-chart.utils';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 
 type GraphConfig = ReturnType<CustomGraphComponent['graphConfig']>;
@@ -541,7 +542,15 @@ describe('CustomGraphComponent (Chart.js)', () => {
         .map(({ props: { x, y } }) => ({ x: Math.round(x), y: Math.round(y) }));
     }
 
-    it("shows each line's value at the pointer's time, with its dot on the line", async () => {
+    /** Samples every second from `from` to `to` seconds after `t0`, all of value `y`. */
+    const everySecond = (from: number, to: number, y: number, t0 = 0): GraphData[] =>
+      Array.from({ length: to - from + 1 }, (_, i) => ({ x: t0 + (from + i) * 1000, y }));
+    const pixelOf = (c: Chart, { x, y }: GraphData) => ({
+      x: Math.round(c.scales['x'].getPixelForValue(x)),
+      y: Math.round(c.scales['y'].getPixelForValue(y))
+    });
+
+    it("shows each series' nearest real sample, with its dot on that sample", async () => {
       const c = await render({
         valuesSubject: [
           topic('V', [
@@ -553,34 +562,75 @@ describe('CustomGraphComponent (Chart.js)', () => {
       });
       (c.ctx as unknown as { __clearDrawCalls(): void }).__clearDrawCalls();
 
-      await hover(c, 2_500);
+      await hover(c, 7_500);
 
-      expect(tooltipRows(c)).toEqual(['V 0: 2.5']);
-      const x = c.scales['x'].getPixelForValue(2_500);
-      expect(hoverDots(c)).toContainEqual({ x: Math.round(x), y: Math.round(c.scales['y'].getPixelForValue(2.5)) });
+      expect(tooltipRows(c)).toEqual(['V 0: 10']);
+      expect(c.tooltip!.title).toEqual([formatTooltipTime(10_000, 20_000)]);
+      expect(hoverDots(c)).toContainEqual(pixelOf(c, { x: 10_000, y: 10 }));
     });
 
-    it("leaves out a series with no data near the pointer's time, instead of its first or last sample", async () => {
+    it('never shows a value between two samples, as on a flag topic', async () => {
+      const flag = Array.from({ length: 21 }, (_, i) => ({ x: i * 1000, y: i % 2 }));
+      const c = await render({ valuesSubject: [topic('Flag', flag)] });
+
+      for (const time of [2_400, 2_500, 2_600, 13_490]) {
+        await hover(c, time);
+        expect(['Flag 0: 0', 'Flag 0: 1']).toContain(tooltipRows(c)[0]);
+      }
+    });
+
+    it('shows real samples of a decimated series, with their dots on the drawn line', async () => {
+      // More points than Chart.js draws across the plot's width, so min-max decimation thins what it draws
+      const noisy = Array.from({ length: 6_000 }, (_, i) => ({ x: i * 10, y: Math.round(Math.sin(i * 1.7) * 1000) }));
+      const c = await render({ valuesSubject: [topic('Noisy', noisy)] });
+      expect(c.data.datasets[0].data.length).toBeLessThan(noisy.length);
+
+      for (const time of [12_345, 33_333, 50_005]) {
+        (c.ctx as unknown as { __clearDrawCalls(): void }).__clearDrawCalls();
+        await hover(c, time);
+        const { x } = c.scales;
+        const shown = noisy[nearestIndex(noisy, x.getValueForPixel(Math.round(x.getPixelForValue(time)))!)];
+
+        expect(tooltipRows(c)).toEqual([`Noisy 0: ${shown.y.toLocaleString('en-US')}`]);
+        expect(hoverDots(c)).toContainEqual(pixelOf(c, shown));
+      }
+    });
+
+    it('leaves out a series when the pointer is in a gap in it, or well past its first or last sample', async () => {
+      const t0 = new Date(2026, 9, 17, 13, 50, 0).getTime();
       const c = await render({
         valuesSubject: [
-          topic('Long', [
-            { x: 0, y: 1 },
-            { x: 20_000, y: 1 }
-          ]),
-          topic('Early', [
-            { x: 0, y: 2 },
-            { x: 5_000, y: 2 }
-          ]),
-          topic('Late', [
-            { x: 15_000, y: 3 },
-            { x: 20_000, y: 3 }
-          ])
+          topic('Long', everySecond(0, 20, 1, t0)),
+          topic('Early', everySecond(0, 5, 2, t0)),
+          topic('Late', everySecond(15, 20, 3, t0)),
+          topic('Gappy', [...everySecond(0, 4, 4, t0), ...everySecond(16, 20, 4, t0)])
         ]
       });
 
-      await hover(c, 10_000);
-
+      await hover(c, t0 + 10_000);
       expect(tooltipRows(c)).toEqual(['Long 0: 1']);
+
+      // Within two sample periods of Early's last sample and of Gappy's first stretch
+      await hover(c, t0 + 5_800);
+      expect(tooltipRows(c)).toEqual(['Long 0: 1', 'Early 0: 2 (13:50:05)', 'Gappy 0: 4 (13:50:04)']);
+    });
+
+    it("titles the tooltip with the nearest sample's time, and gives a row taken at another time its own", async () => {
+      const t0 = new Date(2026, 9, 17, 13, 50, 0).getTime();
+      // A samples on whole seconds, B 700 ms later
+      const c = await render({
+        valuesSubject: [topic('A', everySecond(0, 20, 1, t0)), topic('B', everySecond(0, 20, 2, t0 + 700))]
+      });
+
+      // Nearest samples: A at :02 (200 ms off), B at :01.700 (100 ms off)
+      await hover(c, t0 + 1_800);
+      expect(c.tooltip!.title).toEqual(['10/17/2026, 13:50:01']);
+      expect(tooltipRows(c)).toEqual(['A 0: 1 (13:50:02)', 'B 0: 2']);
+
+      // Nearest samples: A at :05 and B at :05.700, both 13:50:05 to the second
+      await hover(c, t0 + 5_300);
+      expect(c.tooltip!.title).toEqual(['10/17/2026, 13:50:05']);
+      expect(tooltipRows(c)).toEqual(['A 0: 1', 'B 0: 2']);
     });
 
     it('flips the tooltip at the right edge by the size of what it now shows', async () => {
