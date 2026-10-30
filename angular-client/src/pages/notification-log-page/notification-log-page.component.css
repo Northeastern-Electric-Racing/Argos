@@ -22,46 +22,25 @@
   min-width: 0;
 }
 
-.entry-count {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  padding: 4px 10px;
-  border-radius: 12px;
-  background-color: #2c2c2c;
-  border: 1px solid var(--color-divider);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 /* ---- Empty state ---- */
 
 .empty-state {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
+  margin: 0;
   padding: 3rem 1rem;
-  text-align: center;
-  color: var(--color-text-secondary);
   background-color: var(--color-background-info);
   border: 1px dashed var(--color-divider);
   border-radius: var(--border-radius-panel);
   min-height: 300px;
 }
 
-.empty-icon {
-  font-size: 2.5rem;
-  color: #444;
-  margin-bottom: 8px;
-}
-
-.empty-hint {
-  font-size: 0.825rem;
-  color: var(--color-text-secondary);
-  opacity: 0.75;
+.empty-text {
+  color: var(--color-text-subtitle);
+  font-size: var(--font-size-md);
+  margin-bottom: 4px;
 }
 
 /* ---- Log table ---- */
@@ -95,48 +74,33 @@
   box-shadow: 0 0 6px rgba(239, 67, 69, 0.4);
 }
 
-.col-rule {
-  width: 25%;
-}
-
-.col-topic {
-  width: 35%;
-}
-
-.col-values {
-  width: 20%;
+.col-values,
+.col-time {
   font-variant-numeric: tabular-nums;
 }
 
 .col-time {
-  width: 12%;
   font-family: 'Roboto Mono', 'Menlo', monospace;
-  font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
 }
 
-.col-actions {
-  width: 8%;
-  text-align: right;
-}
-
-/* ---- Ant table tweaks: sit on the panel background, emphasise unread rows ---- */
+/* ---- Table: sit on the panel background, emphasise unread rows ---- */
 
 :host ::ng-deep .ant-table {
   background: transparent;
 }
 
-:host ::ng-deep .ant-table-thead > tr > th {
+th {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-:host ::ng-deep .ant-table-tbody > tr.unread > td {
+.unread > td {
   color: #ffffff;
 }
 
-:host ::ng-deep .ant-table-tbody > tr.unread .col-rule {
+.unread .col-rule {
   font-weight: 600;
 }
 
@@ -156,10 +120,5 @@
 
   .col-time {
     font-size: 0.75rem;
-  }
-
-  :host ::ng-deep .ant-table-tbody > tr > td {
-    padding: 8px 10px;
-    font-size: 0.8rem;
   }
 }

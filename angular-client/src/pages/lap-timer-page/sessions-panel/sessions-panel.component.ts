@@ -5,12 +5,12 @@ import { MatIcon } from '@angular/material/icon';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 
@@ -25,11 +25,11 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     MatIcon,
     NzTableModule,
     NzDropdownModule,
+    NzEmptyModule,
     NzButtonModule,
     NzIconModule,
     NzInputModule,
-    InfoBackgroundComponent,
-    TypographyComponent
+    InfoBackgroundComponent
   ]
 })
 export default class SessionsPanelComponent {

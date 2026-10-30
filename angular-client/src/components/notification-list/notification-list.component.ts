@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, computed, inject, input } from '@an
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
@@ -13,7 +14,7 @@ export type NotificationListVariant = 'popover' | 'stream';
   templateUrl: './notification-list.component.html',
   styleUrls: ['./notification-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, NzButtonModule, NzIconModule]
+  imports: [DatePipe, NzButtonModule, NzEmptyModule, NzIconModule]
 })
 export class NotificationListComponent {
   protected notificationLogService = inject(NotificationLogService);

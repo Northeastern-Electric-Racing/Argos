@@ -20,13 +20,7 @@
     </div>
 
     @if (timer.sessions().length === 0) {
-      <div class="sessions-empty">
-        <typography
-          variant="info-subtitle"
-          content="Start a new session to begin"
-          additionalStyles="font-size: 14px; color: var(--color-text-subtitle);"
-        />
-      </div>
+      <nz-empty class="sessions-empty" nzNotFoundImage="simple" nzNotFoundContent="Start a new session to begin" />
     } @else {
       <div class="sessions-table-wrap">
         <nz-table
@@ -38,13 +32,13 @@
         >
           <thead>
             <tr>
-              <th class="col-state"></th>
-              <th class="col-name">Name</th>
-              <th class="col-started">Started</th>
-              <th class="col-laps">Laps</th>
-              <th class="col-best">Best</th>
-              <th class="col-run">Run</th>
-              <th class="col-actions"></th>
+              <th nzWidth="40px" nzAlign="center" aria-label="State"></th>
+              <th>Name</th>
+              <th nzWidth="150px">Started</th>
+              <th nzWidth="60px" nzAlign="right">Laps</th>
+              <th nzWidth="90px" nzAlign="right">Best</th>
+              <th nzWidth="60px" nzAlign="right">Run</th>
+              <th nzWidth="48px" aria-label="Actions"></th>
             </tr>
           </thead>
           <tbody>
@@ -57,12 +51,12 @@
                 tabindex="0"
                 (keyup.enter)="onSelectSession(s.id)"
               >
-                <td class="col-state">
+                <td nzAlign="center">
                   @if (activeStateIcon(s); as icon) {
                     <mat-icon class="session-state-icon">{{ icon }}</mat-icon>
                   }
                 </td>
-                <td class="col-name">
+                <td>
                   @if (editingSessionId() === s.id) {
                     <input
                       nz-input
@@ -81,17 +75,17 @@
                     <span class="session-name" [title]="s.name">{{ s.name }}</span>
                   }
                 </td>
-                <td class="col-started monospace">{{ s.sessionStartEpochMs | date: 'yyyy-MM-dd HH:mm' }}</td>
-                <td class="col-laps">{{ s.laps.length }}</td>
-                <td class="col-best monospace">
+                <td class="monospace nowrap">{{ s.sessionStartEpochMs | date: 'yyyy-MM-dd HH:mm' }}</td>
+                <td nzAlign="right">{{ s.laps.length }}</td>
+                <td nzAlign="right" class="monospace best">
                   @if (bestLapMsForSession(s.id) !== null) {
                     {{ formatLapMs(bestLapMsForSession(s.id)!) }}
                   } @else {
                     —
                   }
                 </td>
-                <td class="col-run">{{ s.runIdAtSessionStart ?? '—' }}</td>
-                <td class="col-actions">
+                <td nzAlign="right">{{ s.runIdAtSessionStart ?? '—' }}</td>
+                <td nzAlign="right">
                   <button
                     nz-button
                     nzType="text"

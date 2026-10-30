@@ -3,7 +3,7 @@
     <div class="header-title">
       <typography variant="x-large-title" content="Notification Log" />
       @if (hasEntries()) {
-        <span class="entry-count">{{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}</span>
+        <nz-tag>{{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}</nz-tag>
       }
     </div>
     @if (hasEntries()) {
@@ -21,11 +21,11 @@
   </header>
 
   @if (!hasEntries()) {
-    <div class="empty-state">
-      <nz-icon nzType="bell" class="empty-icon" />
-      <typography variant="subheader" content="No notifications have been triggered yet" />
-      <span class="empty-hint">Triggered rules will appear here in real-time</span>
-    </div>
+    <nz-empty class="empty-state" nzNotFoundImage="simple" [nzNotFoundContent]="emptyContent" />
+    <ng-template #emptyContent>
+      <div class="empty-text">No notifications have been triggered yet</div>
+      <div>Triggered rules will appear here in real-time</div>
+    </ng-template>
   } @else {
     <div class="log-table-wrapper">
       <nz-table
@@ -38,11 +38,11 @@
       >
         <thead>
           <tr>
-            <th class="col-rule">Rule ID</th>
-            <th class="col-topic">Topic</th>
-            <th class="col-values">Values</th>
-            <th class="col-time">Time</th>
-            <th class="col-actions"></th>
+            <th nzWidth="25%">Rule ID</th>
+            <th nzWidth="35%">Topic</th>
+            <th nzWidth="20%">Values</th>
+            <th nzWidth="12%">Time</th>
+            <th nzWidth="8%" aria-label="Actions"></th>
           </tr>
         </thead>
         <tbody>
@@ -54,10 +54,10 @@
                   {{ entry.notification.id }}
                 </span>
               </td>
-              <td class="col-topic">{{ entry.notification.topic }}</td>
+              <td>{{ entry.notification.topic }}</td>
               <td class="col-values">{{ entry.notification.values.join(', ') }}</td>
               <td class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
-              <td class="col-actions">
+              <td nzAlign="right">
                 <button
                   nz-button
                   nzType="text"

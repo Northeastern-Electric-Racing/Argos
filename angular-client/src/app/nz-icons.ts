@@ -1,12 +1,9 @@
 import { IconDefinition } from '@ant-design/icons-angular';
 import {
   ArrowRightOutline,
-  BellOutline,
   CaretRightOutline,
   DownloadOutline,
   HistoryOutline,
-  ExportOutline,
-  ImportOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
   MoreOutline,
@@ -20,12 +17,9 @@ import {
  */
 export const appIcons: IconDefinition[] = [
   ArrowRightOutline,
-  BellOutline,
   CaretRightOutline,
   DownloadOutline,
   HistoryOutline,
-  ExportOutline,
-  ImportOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
   MoreOutline,
