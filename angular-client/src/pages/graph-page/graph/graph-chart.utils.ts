@@ -409,6 +409,8 @@ function nearestHoveredSample(chart: Chart): GraphData | null {
 
 /** Hides the cursor lines, dots and tooltip until the pointer next moves, e.g. after a zoom moved the data under it. */
 export function hideCursor(chart: Chart): void {
+  // The zoom plugin calls onZoomComplete 250 ms after a wheel zoom, by when the chart may have been destroyed
+  if (!(chart.ctx as CanvasRenderingContext2D | null)) return;
   cursors.set(chart, null);
   chart.setActiveElements([]);
   chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
