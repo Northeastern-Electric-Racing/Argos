@@ -544,12 +544,12 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#fff', font: { size: 15 } },
+        labels: { color: '#fff', font: { size: 15 }, usePointStyle: true, boxWidth: 12, boxHeight: 12 },
         // The canvas is a crosshair for zooming (graph.component.css); a legend item toggles its series
         onHover: (event) => setCanvasCursor(event, 'pointer'),
         onLeave: (event) => setCanvasCursor(event, '')
       },
-      // Styled like uPlot's: dark grey, small type, a round swatch per series, below-right of the cursor
+      // Styled like uPlot's: dark grey, a round swatch per series, below-right of the cursor
       tooltip: {
         enabled: true,
         position: 'cursor',
@@ -559,14 +559,14 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
         cornerRadius: 4,
         caretSize: 0,
         caretPadding: 0,
-        padding: { x: 8, y: 6 },
-        titleFont: { size: 12, weight: 'normal' },
-        titleMarginBottom: 2,
-        bodyFont: { size: 12 },
-        bodySpacing: 2,
+        padding: { x: 10, y: 8 },
+        titleFont: { size: 16, weight: 'normal' },
+        titleMarginBottom: 4,
+        bodyFont: { size: 16 },
+        bodySpacing: 3,
         usePointStyle: true,
-        boxWidth: 8,
-        boxHeight: 8,
+        boxWidth: 12,
+        boxHeight: 12,
         boxPadding: 4,
         callbacks: {
           // When the sample nearest the pointer was taken. Topics sample on their own clocks, so a row whose sample
