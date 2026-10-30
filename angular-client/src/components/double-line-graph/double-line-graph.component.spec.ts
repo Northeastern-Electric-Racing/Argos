@@ -91,6 +91,20 @@ describe('DoubleLineGraphComponent (Chart.js)', () => {
     expect(c.scales['x'].max).toBe(60_000);
   });
 
+  it('keeps a line hidden from the legend hidden across refreshes', async () => {
+    const high: GraphData[] = [{ x: 1_000, y: 4.1 }];
+    const c = await render({ data1: high, data2: [{ x: 1_000, y: 3.9 }] });
+    const [, lowItem] = c.legend!.legendItems!;
+
+    // What a legend click does
+    c.options.plugins!.legend!.onClick!.call(c.legend!, {} as never, lowItem, c.legend!);
+    high.push({ x: 2_000, y: 4.2 });
+    vi.advanceTimersByTime(LIVE_REFRESH_MS * 2);
+
+    expect(c.isDatasetVisible(0)).toBe(true);
+    expect(c.isDatasetVisible(1)).toBe(false);
+  });
+
   it('applies colour and title changes to the live chart', async () => {
     const c = await render({ data1: [{ x: 1_000, y: 4.1 }] });
 
