@@ -1,0 +1,23 @@
+.table-scroll {
+  margin-top: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.fault-table {
+  width: 100%;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover,
+.clickable-row:focus-visible {
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+}
+
+.empty-row {
+  padding: 16px;
+  color: var(--mat-sys-on-surface-variant);
+}

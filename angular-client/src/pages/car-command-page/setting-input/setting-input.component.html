@@ -1,13 +1,12 @@
-<div class="setting-input-wrapper">
-  <label [for]="label() + '-input'" class="setting-label">{{ label() }}</label>
+<mat-form-field class="setting-field" subscriptSizing="dynamic">
+  <mat-label>{{ label() }}</mat-label>
   <input
-    pInputText
+    matInput
     type="number"
-    [id]="label() + '-input'"
     [(ngModel)]="value"
     [attr.min]="min()"
     [attr.max]="max()"
     (change)="onValueChange($any($event.target).value)"
     autocomplete="off"
   />
-</div>
+</mat-form-field>

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ToastService } from 'src/services/toast.service';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { partitionDataTypesByName } from 'src/utils/dataTypes.utils';
@@ -29,7 +29,7 @@ export const PRESET_SEEDS: PresetSeed[] = [];
 @Injectable({ providedIn: 'root' })
 export class GraphPresetService {
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private presets = new BehaviorSubject<Preset[]>([]);
   private presets$ = this.presets.asObservable();
 

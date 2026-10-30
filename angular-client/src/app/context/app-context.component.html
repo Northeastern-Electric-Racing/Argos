@@ -1,3 +1,5 @@
-<p-toast />
-<app-nav-bar />
-<router-outlet />
+<app-nav-bar [tabPanel]="pagePanel" />
+<!-- The panel the desktop nav bar's page tabs control; it holds whichever page is routed. -->
+<mat-tab-nav-panel #pagePanel class="page-panel">
+  <router-outlet />
+</mat-tab-nav-panel>

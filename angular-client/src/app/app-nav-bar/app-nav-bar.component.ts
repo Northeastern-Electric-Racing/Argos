@@ -1,29 +1,42 @@
-import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  signal,
+  WritableSignal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { ToastService } from 'src/services/toast.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
+import { MatBadge } from '@angular/material/badge';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatListItem, MatListItemIcon, MatListItemTitle, MatNavList } from '@angular/material/list';
+import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
+import { CdkMenuTrigger } from '@angular/cdk/menu';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
-import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
-import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
 
 export interface NavItem {
   id: string;
@@ -37,43 +50,67 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    MatSidenavContainer,
+    MatSidenav,
+    MatBadge,
+    MatNavList,
+    MatListItem,
+    MatListItemIcon,
+    MatListItemTitle,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
+    CdkMenuTrigger,
+    CdkTrapFocus,
+    NavOptionsMenuComponent,
     CurrentRunDisplayComponent,
-    ToastButtonComponent,
     MessagesPerSecondComponent,
     AsyncPipe,
     DatePipe,
     TypographyComponent,
-    HStackComponent,
-    SidebarChipComponent,
+    MatToolbar,
+    MatTooltip,
+    MatTabNav,
+    MatTabLink,
+    MatButton,
+    MatIconButton,
+    RouterLink,
     MatIcon,
-    NotificationListComponent,
-    Popover,
-    Badge
+    NotificationListComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
 })
-export class AppNavBarComponent implements OnInit, OnDestroy {
+export class AppNavBarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  /** The page area the desktop tab nav bar labels (app-context wraps the router outlet in it). */
+  tabPanel = input<MatTabNavPanel>();
+
+  /**
+   * The apps grid is a CDK menu (keyboard navigation, focus management and ARIA come from
+   * @angular/cdk/menu); the notifications panel is a CDK overlay. Both anchor to their nav bar buttons.
+   */
+  menuOpen = signal(false);
+  notificationsOpen = signal(false);
+  readonly overlayPositions: ConnectedPosition[] = [
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 }
+  ];
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
   sidebarVisible = false;
   isMobile = false;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+  // Below this width the page tabs drop to smaller labels so all four fit beside the run controls.
+  isNavCompact = window.innerWidth <= 1400;
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
@@ -90,16 +127,11 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
-  }
-
   // on resize, set the screen width
   onResize(): void {
     this.isMobile = window.innerWidth <= 768;
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+    this.isNavCompact = window.innerWidth <= 1400;
   }
 
   newRunIsLoading = false;
@@ -116,15 +148,19 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((run) => {
+      if (run) {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'New Run Started',
+          detail: 'Your new run has started successfully.'
+        });
+      }
+    });
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    this.dialog.open(RunFormComponent, { width: '550px' });
   };
 
   homeNavItem: NavItem = {
@@ -159,15 +195,6 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
-
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
 
   navMenuItems: NavItem[] = [
     {
@@ -216,24 +243,12 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
-      data: {
-        items: this.navMenuItems
-      }
-    });
+  closeOnEscape(event: KeyboardEvent, open: WritableSignal<boolean>) {
+    if (event.key === 'Escape') open.set(false);
+  }
 
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
+  toggleNotifications() {
+    this.notificationsOpen.update((open) => !open);
   }
 
   navigateTo(route: string): void {

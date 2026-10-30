@@ -1,0 +1,42 @@
+/*
+ * Material Symbols Outlined, subset to the ligature icons the app uses (about 5 kB instead of the
+ * full 488 kB font). mat-icon uses it as its default font set (see app-context.component.ts);
+ * registered SVG icons are unaffected.
+ *
+ * Adding a ligature icon? Add its name to this list (alphabetical) and re-download the font:
+ *   add,arrow_forward,check_box,check_box_outline_blank,check_circle,checklist,chevron_left,
+ *   chevron_right,close,delete,done,download,edit,error,flag,history,info,lock,lock_open,more_vert,
+ *   notifications,notifications_off,pause,play_arrow,restart_alt,save,search,send,settings,stop,sync,
+ *   terminal,upload,visibility,visibility_off,volume_up,warning
+ * 1. Fetch https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=<list>&display=block
+ *    with a browser User-Agent (so it returns woff2).
+ * 2. Save the woff2 it links to as src/assets/fonts/material-symbols-outlined-subset.woff2.
+ * An icon missing from the subset renders as its name in text. Names come from templates
+ * (<mat-icon>name</mat-icon>, [fontIcon], icon="…" on info-background/info-panel) and from TS
+ * (e.g. info-background button configs, toast severities, lap-timer session state).
+ */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(../assets/fonts/material-symbols-outlined-subset.woff2) format('woff2');
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}

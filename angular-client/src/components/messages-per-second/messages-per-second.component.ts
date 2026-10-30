@@ -29,7 +29,9 @@ export class MessagesPerSecondComponent {
   }
 
   additionalStyles = computed(() => {
-    return this.small() ? 'fontSize: 12px; color: gray;' : 'fontSize: 15px; color: gray;';
+    return this.small()
+      ? 'fontSize: 12px; color: var(--mat-sys-on-surface-variant);'
+      : 'fontSize: 15px; color: var(--mat-sys-on-surface-variant);';
   });
 
   getDisplayNumber = () => {

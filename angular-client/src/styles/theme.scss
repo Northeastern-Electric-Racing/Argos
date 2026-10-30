@@ -1,0 +1,170 @@
+// Angular Material M3 theme for the angular-client.
+// Palettes come from `ng generate @angular/material:theme-color` seeded with NER red (#ef4345)
+// and a neutral grey, so surfaces stay close to today's near-black dashboard.
+@use '@angular/material' as mat;
+@use './theme-colors' as ner;
+
+html {
+  // The dashboard is dark-only.
+  color-scheme: dark;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: ner.$primary-palette,
+        tertiary: ner.$tertiary-palette,
+        theme-type: dark
+      ),
+      typography: Roboto,
+      density: 0
+    ),
+    $overrides: (
+      // M3 dark uses primary tone 80 (a pale pink); tone 60 keeps the NER red recognisable while
+      // still clearing WCAG AA both as text on the dark surface and with on-primary text on top.
+      primary: #ff5353,
+      on-primary: #410004
+    )
+  );
+
+  @include mat.strong-focus-indicators();
+
+  // Outlined buttons are the dashboard's secondary actions; a neutral label keeps NER red for the
+  // primary (filled) action in each group instead of painting every toolbar button red.
+  @include mat.button-overrides(
+    (
+      outlined-label-text-color: var(--mat-sys-on-surface),
+      outlined-state-layer-color: var(--mat-sys-on-surface),
+      outlined-ripple-color: var(--mat-sys-on-surface)
+    )
+  );
+
+  // Snackbars (toasts) sit on the dark surface instead of M3's light inverse surface.
+  @include mat.snack-bar-overrides(
+    (
+      container-color: var(--mat-sys-surface-container-highest),
+      supporting-text-color: var(--mat-sys-on-surface)
+    )
+  );
+
+  // M3 dialogs default to the page surface; lift them so they stand out from the dimmed page.
+  @include mat.dialog-overrides(
+    (
+      container-color: var(--mat-sys-surface-container-high)
+    )
+  );
+
+  // Tables sit on the existing #2c2c2c info panels, so let the panel show through.
+  @include mat.table-overrides(
+    (
+      background-color: transparent
+    )
+  );
+
+  // The topic tree is dense (hundreds of topics) and sits on the page background.
+  @include mat.tree-overrides(
+    (
+      container-background-color: transparent,
+      node-min-height: 32px
+    )
+  );
+
+  // Fault accordions read as panels on the page, like the app's other #2c2c2c info panels.
+  @include mat.expansion-overrides(
+    (
+      container-background-color: var(--color-background-info)
+    )
+  );
+
+  // Drawers are full-viewport overlays over the page; keep their empty content area see-through.
+  @include mat.sidenav-overrides(
+    (
+      content-background-color: transparent,
+      container-width: 300px
+    )
+  );
+}
+
+// Compact controls for dense toolbars (graph page axis inputs, quick selects). Density -4 makes
+// them 40px; the field height is brought down to 32px so they sit in line with the 28px buttons.
+.dense-controls {
+  @include mat.theme(
+    (
+      density: -4
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      container-height: 32px,
+      container-vertical-padding: 4px
+    )
+  );
+}
+
+// Toolbars of small actions (graph page, topic sidebar): density -3 gives 28px buttons and
+// toggles, the height of the old toolbar buttons, without touching each component's size.
+.dense-actions {
+  @include mat.theme(
+    (
+      density: -3
+    )
+  );
+}
+
+// Destructive actions (delete, clear, stop) in the error colour, set through each component's tokens
+// so ripple, focus and disabled states still come from Material.
+.danger-action {
+  @include mat.button-overrides(
+    (
+      text-label-text-color: var(--mat-sys-error),
+      text-state-layer-color: var(--mat-sys-error),
+      text-ripple-color: var(--mat-sys-error),
+      // Filled destructive buttons use the deep error container: red at a glance, AA with its text.
+      filled-container-color: var(--mat-sys-error-container),
+      filled-label-text-color: var(--mat-sys-on-error-container),
+      outlined-label-text-color: var(--mat-sys-error),
+      outlined-outline-color: var(--mat-sys-error),
+      outlined-state-layer-color: var(--mat-sys-error),
+      outlined-ripple-color: var(--mat-sys-error)
+    )
+  );
+
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-error),
+      state-layer-color: var(--mat-sys-error),
+      ripple-color: var(--mat-sys-error)
+    )
+  );
+
+  @include mat.menu-overrides(
+    (
+      item-label-text-color: var(--mat-sys-error),
+      item-icon-color: var(--mat-sys-error)
+    )
+  );
+}
+
+// Stopwatch controls on the lap timer keep their at-a-glance go (green) and hold (amber) colours.
+.go-action {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--color-battery-high),
+      filled-label-text-color: #000
+    )
+  );
+}
+
+.hold-action {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--color-battery-med),
+      filled-label-text-color: #000
+    )
+  );
+}
+
+body {
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}

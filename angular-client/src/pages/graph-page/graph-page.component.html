@@ -10,77 +10,76 @@
   } @else {
     <div class="container">
       <div class="toolbar">
-        <div class="toolbar-left">
+        <div class="toolbar-left dense-actions">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+            <mat-button-toggle-group multiple aria-label="Graph view">
+              <mat-button-toggle value="sidebar" [checked]="showSideBar" (change)="toggleSideBar()"
+                >Sidebar</mat-button-toggle
+              >
+              <mat-button-toggle value="multi-y" [checked]="showMultiYaxis" (change)="toggleMultiYaxis()">
+                Multi Y-axis
+              </mat-button-toggle>
+            </mat-button-toggle-group>
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button matButton="outlined" (click)="togglePause()">
+                <mat-icon>{{ isPaused ? 'play_arrow' : 'pause' }}</mat-icon>
+                {{ isPaused ? 'Play' : 'Pause' }}
+              </button>
             }
           </div>
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <mat-button-toggle-group
+                hideSingleSelectionIndicator
+                [value]="rangeMode"
+                (change)="$event.value !== rangeMode && toggleRangeMode()"
+                aria-label="X range unit"
+              >
+                <mat-button-toggle value="time">Time</mat-button-toggle>
+                <mat-button-toggle value="points">Points</mat-button-toggle>
+              </mat-button-toggle-group>
               <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputnumber
-                [(ngModel)]="rangeValue"
-                mode="decimal"
-                [min]="1"
-                [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
-                [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (onInput)="onGraphConfigChange()"
-              ></p-inputnumber>
+              <mat-form-field class="dense-controls time-range-input" subscriptSizing="dynamic">
+                <input
+                  matInput
+                  type="number"
+                  [ngModel]="rangeValue"
+                  (ngModelChange)="rangeValue = $event; onGraphConfigChange()"
+                  [min]="1"
+                  [step]="1"
+                  [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
+                  [attr.aria-label]="rangeMode === 'time' ? 'X range in seconds' : 'X range in points'"
+                />
+              </mat-form-field>
             </div>
           }
 
           <div class="toolbar-group config-group">
             <label class="input-label">Y Min:</label>
-            <p-inputnumber
-              [(ngModel)]="yAxisMin"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
-              placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+            <mat-form-field class="dense-controls y-axis-input" subscriptSizing="dynamic">
+              <input
+                matInput
+                type="number"
+                [ngModel]="yAxisMin"
+                (ngModelChange)="yAxisMin = $event; onGraphConfigChange()"
+                placeholder="Auto"
+                aria-label="Y axis minimum"
+              />
+            </mat-form-field>
 
             <label class="input-label">Y Max:</label>
-            <p-inputnumber
-              [(ngModel)]="yAxisMax"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
-              placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+            <mat-form-field class="dense-controls y-axis-input" subscriptSizing="dynamic">
+              <input
+                matInput
+                type="number"
+                [ngModel]="yAxisMax"
+                (ngModelChange)="yAxisMax = $event; onGraphConfigChange()"
+                placeholder="Auto"
+                aria-label="Y axis maximum"
+              />
+            </mat-form-field>
           </div>
 
           <div class="toolbar-group">

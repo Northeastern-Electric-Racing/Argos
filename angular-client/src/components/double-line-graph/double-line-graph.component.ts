@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
-import { DialogService } from 'primeng/dynamicdialog';
+import { MatDialog } from '@angular/material/dialog';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
@@ -18,11 +18,10 @@ type ChartOptions = Pick<
   selector: 'double-line-graph',
   templateUrl: './double-line-graph.component.html',
   styleUrls: ['./double-line-graph.component.css'],
-  providers: [DialogService],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class DoubleLineGraphComponent implements OnInit, OnDestroy {
-  public dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
   data1 = input.required<GraphData[]>();
   color1 = input.required<string>(); // Must be hex
   title1 = input<string | undefined>(undefined);
@@ -122,9 +121,9 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
   timeRangeMs = computed(() => (this.timeRangeSec() ?? 120) * 1000); // defaults to 2 minutes
   timeOuts: NodeJS.Timeout[] = [];
   openDialog = () => {
-    this.dialogService.open(GraphDialogComponent, {
-      header: this.header(),
+    this.dialog.open(GraphDialogComponent, {
       data: {
+        header: this.header(),
         data: this.data1(),
         color: this.color1(),
         title: this.title1()

@@ -1,12 +1,15 @@
-.required:after {
-  content: '*';
-  color: red;
-  margin-left: 6px;
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
 }
 
-.error-msg {
-  color: red;
-  margin-top: 4px;
-  font-size: 12px;
-  font-weight: 500;
+.form-field {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
 }

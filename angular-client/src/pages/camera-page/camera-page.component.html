@@ -1,13 +1,14 @@
 @if (this.urlAvailable) {
   <div class="background">
     <div class="top-right">
-      <p-select
-        [options]="videoUrls"
-        [(ngModel)]="selectedVideoName"
-        placeholder="Select a Video"
-        (onChange)="onDropdownChange($event)"
-        [style]="{ padding: '5px' }"
-      />
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>Video</mat-label>
+        <mat-select [(ngModel)]="selectedVideoName" (selectionChange)="onDropdownChange($event)">
+          @for (video of videoUrls; track video) {
+            <mat-option [value]="video">{{ video }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
     </div>
 
     <div class="video-container">

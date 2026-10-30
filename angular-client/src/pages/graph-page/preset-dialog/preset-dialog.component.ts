@@ -1,17 +1,19 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { ConfirmService } from 'src/services/confirm.service';
+import { ToastService } from 'src/services/toast.service';
+import { MatButton } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatTableModule } from '@angular/material/table';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { DataType } from 'src/utils/types.utils';
 
-interface PresetDialogData {
+export interface PresetDialogData {
   dataTypes: DataType[];
 }
 
@@ -20,18 +22,27 @@ interface PresetDialogData {
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
+  imports: [
+    FormsModule,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatFormField,
+    MatLabel,
+    MatHint,
+    MatInput,
+    MatButton,
+    MatTableModule
+  ]
 })
 export class PresetDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject(MatDialogRef<PresetDialogComponent, DataType[] | null>);
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(ToastService);
+  private confirmationService = inject(ConfirmService);
 
-  private data = this.config.data as PresetDialogData;
+  private data = inject<PresetDialogData>(MAT_DIALOG_DATA);
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
     initialValue: [] as DataType[]
@@ -39,6 +50,7 @@ export class PresetDialogComponent {
 
   presets = toSignal(this.presetService.getPresets(), { initialValue: [] as Preset[] });
   newPresetName = signal('');
+  readonly columns = ['name', 'topics', 'actions'];
   hasSelection = computed(() => this.currentSelection().length > 0);
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 

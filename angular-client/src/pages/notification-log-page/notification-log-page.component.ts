@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { TableModule } from 'primeng/table';
-import { Button } from 'primeng/button';
+import { MatTableModule } from '@angular/material/table';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 
@@ -10,10 +11,11 @@ import { NotificationLogService } from 'src/services/notification-log.service';
   templateUrl: './notification-log-page.component.html',
   styleUrls: ['./notification-log-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, DatePipe, Button, TypographyComponent]
+  imports: [MatTableModule, DatePipe, MatButton, MatIconButton, MatIcon, TypographyComponent]
 })
 export default class NotificationLogPageComponent {
   protected notificationLogService = inject(NotificationLogService);
   protected entries = this.notificationLogService.notifications;
   protected hasEntries = computed(() => this.entries().length > 0);
+  protected readonly columns = ['rule', 'topic', 'values', 'time', 'actions'];
 }

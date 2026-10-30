@@ -6,6 +6,6 @@
     (click)="pressed.emit()"
     aria-label="Toggle lock"
   >
-    <span class="material-icons switch-label">{{ locked() ? 'lock' : 'lock_open' }}</span>
+    <span class="material-symbols-outlined switch-label" aria-hidden="true">{{ locked() ? 'lock' : 'lock_open' }}</span>
   </button>
 </div>

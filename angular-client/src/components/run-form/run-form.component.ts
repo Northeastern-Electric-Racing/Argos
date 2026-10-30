@@ -1,12 +1,14 @@
-import { Component, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { MatDialogClose, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
+import { ToastService } from 'src/services/toast.service';
 import { FormGroup } from '@angular/forms';
 import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
@@ -17,14 +19,24 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
   templateUrl: './run-form.component.html',
   styleUrl: './run-form.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
+  imports: [
+    SelectDropdownComponent,
+    FormTemplateComponent,
+    LoadingPageComponent,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogClose,
+    MatIconButton,
+    MatIcon
+  ]
 })
 export class RunFormComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
-  templateReady = false;
+  private messageService = inject(ToastService);
+  private ref = inject(MatDialogRef);
+  // A signal: it flips in a fetch callback, which a zoneless app doesn't otherwise re-render for.
+  templateReady = signal(false);
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
   runsLoaded = false;
@@ -68,18 +80,24 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((form: FormGroup) => {
-      if (this.selectedRun === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
-        return;
-      }
-      updateRun(
-        this.selectedRun.id,
-        form.controls['driverName'].value,
-        form.controls['locationName'].value,
-        form.controls['notes'].value
-      );
-    });
+    // beforeClosed: the dialog destroys this component before afterClosed emits.
+    this.ref
+      .beforeClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((form: FormGroup | undefined) => {
+        // Closed without submitting (Escape / backdrop): nothing to save.
+        if (!form) return;
+        if (this.selectedRun === undefined) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
+          return;
+        }
+        updateRun(
+          this.selectedRun.id,
+          form.controls['driverName'].value,
+          form.controls['locationName'].value,
+          form.controls['notes'].value
+        );
+      });
   }
 
   ngOnInit() {
@@ -90,11 +108,11 @@ export class RunFormComponent implements OnInit {
   loadAllRuns = () => {
     if (this.runsLoaded) return;
 
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runsQueryResponse = this.apiService.query<Run[]>(() => getAllRuns());
 
     runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
@@ -164,11 +182,11 @@ export class RunFormComponent implements OnInit {
     }
 
     // If not found locally, fetch from API
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runQueryResponse = this.apiService.query<Run>(() => getRunById(runId));
 
     runQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+      this.templateReady.set(!isLoading);
     });
 
     runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {

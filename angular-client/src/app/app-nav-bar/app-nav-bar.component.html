@@ -1,48 +1,61 @@
 @if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
-    </ng-template>
-  </p-drawer>
+  <mat-sidenav-container class="nav-drawer" [class.nav-drawer--open]="sidebarVisible" [hasBackdrop]="true">
+    <mat-sidenav mode="over" [(opened)]="sidebarVisible">
+      <div class="drawer-header">
+        <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+      </div>
+      <!-- mat-nav-list is the drawer's navigation landmark; its items are buttons because one opens a dialog. -->
+      <mat-nav-list aria-label="Navigation">
+        @for (navItem of allNavItems; track navItem) {
+          <button
+            mat-list-item
+            type="button"
+            [activated]="this.isSelected(navItem)"
+            [attr.aria-current]="this.isSelected(navItem) ? 'page' : null"
+            (click)="navItem.onClick()"
+          >
+            <mat-icon matListItemIcon [svgIcon]="navItem.icon" />
+            <span matListItemTitle>{{ navItem.label }}</span>
+          </button>
+        }
+      </mat-nav-list>
+    </mat-sidenav>
+  </mat-sidenav-container>
 } @else {
-  <nav class="navbar">
-    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+  <mat-toolbar class="navbar">
+    <a matIconButton class="home-logo" [routerLink]="homeNavItem.id" aria-label="Argos home">
       <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </div>
-    <div class="navbar-nav">
-      @for (navItem of onlyDesktopNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [small]="this.isWindowSmall"
+    </a>
+    <!-- Page links as a Material tab nav bar: links with hrefs, arrow-key focus and the active ink bar. -->
+    <nav
+      mat-tab-nav-bar
+      mat-stretch-tabs="false"
+      class="navbar-nav"
+      [class.navbar-nav--compact]="isNavCompact"
+      [class.navbar-nav--icons]="isWindowSmall"
+      [tabPanel]="tabPanel()"
+      aria-label="Pages"
+    >
+      @for (navItem of onlyDesktopNavItems; track navItem.id) {
+        <!-- Narrow windows show icon-only tabs; the tooltip and aria-label keep the page name. -->
+        <a
+          mat-tab-link
+          [routerLink]="navItem.id"
           [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
+          [attr.aria-label]="isWindowSmall ? navItem.label : null"
+          [matTooltip]="navItem.label"
+          [matTooltipDisabled]="!isWindowSmall"
         >
-        </sidebar-chip>
+          <mat-icon class="nav-link-icon" [svgIcon]="navItem.icon" />
+          @if (!isWindowSmall) {
+            <span class="nav-link-label">{{ navItem.label }}</span>
+          }
+        </a>
       }
-    </div>
+    </nav>
 
-    <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 130px"
-      />
+    <div class="navbar-end">
+      <button matButton="filled" class="new-run-button" (click)="onStartNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
@@ -51,24 +64,59 @@
       />
       <messages-per-second />
       <button
+        matIconButton
         type="button"
         class="navbar-notification"
         aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="notificationsOpen()"
+        cdkOverlayOrigin
+        #notificationOrigin="cdkOverlayOrigin"
+        (click)="toggleNotifications()"
+        [matBadge]="notificationLogService.unreadCount()"
+        [matBadgeHidden]="notificationLogService.unreadCount() === 0"
+        [matBadgeDescription]="notificationLogService.unreadCount() + ' unread notifications'"
       >
         <mat-icon [svgIcon]="'notifications'" />
-        @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
-        }
       </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
-          <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
+      <ng-template
+        cdkConnectedOverlay
+        [cdkConnectedOverlayOrigin]="notificationOrigin"
+        [cdkConnectedOverlayOpen]="notificationsOpen()"
+        [cdkConnectedOverlayPositions]="overlayPositions"
+        [cdkConnectedOverlayHasBackdrop]="true"
+        cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+        (attach)="onNotificationPanelShow()"
+        (backdropClick)="notificationsOpen.set(false)"
+        (detach)="notificationsOpen.set(false)"
+        (overlayKeydown)="closeOnEscape($event, notificationsOpen)"
+      >
+        <!-- Focus moves into the panel on open and back to the bell on close. -->
+        <notification-list
+          variant="popover"
+          class="notification-popover"
+          role="dialog"
+          aria-label="Notifications"
+          cdkTrapFocus
+          [cdkTrapFocusAutoCapture]="true"
+        />
+      </ng-template>
+      <button
+        matIconButton
+        type="button"
+        class="navbar-menu"
+        aria-label="More pages"
+        [cdkMenuTriggerFor]="appsMenu"
+        [cdkMenuPosition]="overlayPositions"
+        (cdkMenuOpened)="menuOpen.set(true)"
+        (cdkMenuClosed)="menuOpen.set(false)"
+        [class.selected]="menuOpen()"
+      >
         <mat-icon [svgIcon]="'apps'" />
-      </div>
-    </hstack>
-  </nav>
+      </button>
+      <ng-template #appsMenu>
+        <app-nav-options-menu [items]="navMenuItems" />
+      </ng-template>
+    </div>
+  </mat-toolbar>
 }

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { ConfirmService } from 'src/services/confirm.service';
+import { ToastService } from 'src/services/toast.service';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatDeltaMs } from 'src/utils/lap-timer.types';
@@ -10,12 +12,12 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
   templateUrl: './timer-hero.component.html',
   styleUrl: './timer-hero.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, InfoBackgroundComponent]
+  imports: [MatButton, MatIcon, InfoBackgroundComponent]
 })
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmService);
+  private messageService = inject(ToastService);
 
   readonly currentLapDeltaText = computed(() => formatDeltaMs(this.timer.currentLapDeltaToBestMs()));
   readonly currentLapDeltaClass = computed(() => {

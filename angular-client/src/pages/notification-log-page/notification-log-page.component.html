@@ -7,60 +7,60 @@
       }
     </div>
     @if (hasEntries()) {
-      <p-button
-        label="Clear All"
-        icon="pi pi-trash"
-        severity="danger"
-        [text]="true"
-        (onClick)="notificationLogService.clearAll()"
-        ariaLabel="Clear all notifications"
-      />
+      <button matButton class="danger-action" (click)="notificationLogService.clearAll()">
+        <mat-icon>delete</mat-icon>
+        Clear All
+      </button>
     }
   </header>
 
   @if (!hasEntries()) {
     <div class="empty-state">
-      <i class="pi pi-bell-slash empty-icon"></i>
+      <mat-icon class="empty-icon" aria-hidden="true">notifications_off</mat-icon>
       <typography variant="subheader" content="No notifications have been triggered yet" />
       <span class="empty-hint">Triggered rules will appear here in real-time</span>
     </div>
   } @else {
     <div class="log-table-wrapper">
-      <p-table [value]="entries()" stripedRows [scrollable]="true" scrollHeight="flex">
-        <ng-template #header>
-          <tr>
-            <th class="col-rule">Rule ID</th>
-            <th class="col-topic">Topic</th>
-            <th class="col-values">Values</th>
-            <th class="col-time">Time</th>
-            <th class="col-actions"></th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-entry>
-          <tr [class.unread]="!entry.read">
-            <td class="col-rule">
+      <div class="log-table-scroll">
+        <table mat-table [dataSource]="entries()" class="log-table">
+          <ng-container matColumnDef="rule">
+            <th mat-header-cell *matHeaderCellDef class="col-rule">Rule ID</th>
+            <td mat-cell *matCellDef="let entry" class="col-rule">
               <span class="rule-cell">
                 <span class="rule-dot" [class.unread-dot]="!entry.read" aria-hidden="true"></span>
                 {{ entry.notification.id }}
               </span>
             </td>
-            <td class="col-topic">{{ entry.notification.topic }}</td>
-            <td class="col-values">{{ entry.notification.values.join(', ') }}</td>
-            <td class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
-            <td class="col-actions">
-              <p-button
-                icon="pi pi-times"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                size="small"
-                (onClick)="notificationLogService.dismissEntry(entry.id)"
-                [ariaLabel]="'Dismiss notification ' + entry.notification.id"
-              />
+          </ng-container>
+          <ng-container matColumnDef="topic">
+            <th mat-header-cell *matHeaderCellDef class="col-topic">Topic</th>
+            <td mat-cell *matCellDef="let entry" class="col-topic">{{ entry.notification.topic }}</td>
+          </ng-container>
+          <ng-container matColumnDef="values">
+            <th mat-header-cell *matHeaderCellDef class="col-values">Values</th>
+            <td mat-cell *matCellDef="let entry" class="col-values">{{ entry.notification.values.join(', ') }}</td>
+          </ng-container>
+          <ng-container matColumnDef="time">
+            <th mat-header-cell *matHeaderCellDef class="col-time">Time</th>
+            <td mat-cell *matCellDef="let entry" class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="col-actions"></th>
+            <td mat-cell *matCellDef="let entry" class="col-actions">
+              <button
+                matIconButton
+                (click)="notificationLogService.dismissEntry(entry.id)"
+                [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
             </td>
-          </tr>
-        </ng-template>
-      </p-table>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let entry; columns: columns" [class.unread]="!entry.read"></tr>
+        </table>
+      </div>
     </div>
   }
 </div>

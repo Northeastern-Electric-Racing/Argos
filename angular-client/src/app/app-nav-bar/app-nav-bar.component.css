@@ -1,33 +1,16 @@
-/* Container for the top nav */
+/* Top app bar: a mat-toolbar on the dashboard's panel grey, at the old 60px height. */
 .navbar {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  height: 60px;
-  padding: 10px;
-  align-self: center;
-  align-items: center;
-  background-color: #2c2c2c;
+  --mat-toolbar-container-background-color: var(--color-background-info);
+  --mat-toolbar-standard-height: 60px;
+  --mat-toolbar-title-text-line-height: normal;
+  gap: 8px;
+  padding: 0 10px;
   margin-bottom: 1rem;
-  padding-left: 10px;
-  padding-right: 10px;
-  width: 100%;
-}
-
-/* Branding text */
-.navbar-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 
 .home-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 4px;
-  transition: fill 0.2s ease-in-out;
+  --mat-icon-button-state-layer-size: 56px;
+  --mat-icon-button-icon-size: 48px;
 }
 
 .home-logo .mat-icon {
@@ -35,79 +18,112 @@
   height: 48px;
 }
 
-/* Nav items container – using flex gap for spacing */
+/* Page links: tab nav bar sized to the toolbar, with the old bold labels and 36px icons. */
 .navbar-nav {
-  display: inline-flex;
+  --mat-tab-container-height: 60px;
+  --mat-tab-divider-height: 0;
+  --mat-tab-label-text-size: 20px;
+  --mat-tab-label-text-weight: 700;
+  --mat-tab-inactive-label-text-color: var(--color-text-primary);
+  --mat-tab-inactive-hover-label-text-color: var(--mat-sys-primary);
+  --mat-tab-inactive-focus-label-text-color: var(--mat-sys-primary);
+  --mat-tab-active-label-text-color: var(--mat-sys-primary);
+  --mat-tab-active-hover-label-text-color: var(--mat-sys-primary);
+  --mat-tab-active-focus-label-text-color: var(--mat-sys-primary);
   flex: 1;
+  min-width: 0;
+  align-self: stretch;
 }
 
-.navbar-menu {
-  cursor: pointer;
+.navbar-nav .mat-mdc-tab-link {
+  min-width: 0;
+  padding: 0 12px;
+}
+
+.nav-link-icon {
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+}
+
+.navbar-nav--compact {
+  --mat-tab-label-text-size: 15px;
+}
+
+.navbar-nav--compact .mat-mdc-tab-link {
+  padding: 0 10px;
+}
+
+.navbar-nav--compact .nav-link-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.navbar-nav--icons .nav-link-icon {
+  margin-right: 0;
+}
+
+.navbar-end {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.navbar-menu mat-icon {
-  width: 48px;
-  height: 48px;
-  transition: color 0.2s ease;
-}
-
-.navbar-menu.selected,
-.navbar-menu:hover {
-  color: #ef4345;
+  gap: 16px;
+  margin-left: auto;
 }
 
 .navbar-notification {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-  position: relative;
-  background: none;
-  border: none;
-  color: inherit;
+  --mat-icon-button-icon-size: 32px;
 }
 
-.navbar-notification mat-icon {
+.navbar-notification .mat-icon {
   width: 32px;
   height: 32px;
-  font-size: 32px;
-  transition: color 0.2s ease;
 }
 
-.navbar-notification:hover {
-  color: #ef4345;
+.navbar-menu {
+  --mat-icon-button-state-layer-size: 56px;
+  --mat-icon-button-icon-size: 48px;
 }
 
-.notification-badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
+.navbar-menu .mat-icon {
+  width: 48px;
+  height: 48px;
 }
 
-:host {
-  --p-dialog-background: transparent !important;
-  --p-dialog-border-color: transparent !important;
+.navbar-notification:hover,
+.navbar-menu:hover,
+.navbar-menu.selected {
+  --mat-icon-button-icon-color: var(--mat-sys-primary);
 }
 
-:host ::ng-deep .notification-popover.p-popover {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  border-radius: var(--border-radius-panel) !important;
+/* Mobile drawer: a full-viewport sidenav container that only takes pointer events while open. */
+.nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
 }
 
-:host ::ng-deep .notification-popover .p-popover-content {
-  padding: 0 !important;
-  background: transparent !important;
+.nav-drawer--open {
+  pointer-events: auto;
 }
 
-:host ::ng-deep .notification-popover .p-popover-arrow {
-  display: none !important;
+.drawer-header {
+  padding: 16px 8px;
+}
+
+/* Material resets native button styles only in action lists; nav-list items here are buttons. */
+.nav-drawer button[mat-list-item] {
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  width: 100%;
+}
+
+.notification-popover {
+  display: block;
+  box-shadow: var(--mat-sys-level3);
+  /* One surface step up (as the toasts are), so it stands apart from the #2c2c2c cards underneath */
+  --color-background-info: var(--mat-sys-surface-container-highest);
+  border-radius: var(--border-radius-panel);
 }

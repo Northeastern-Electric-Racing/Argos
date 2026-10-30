@@ -1,0 +1,14 @@
+<div class="toast" matSnackBarLabel>
+  <mat-icon class="toast-icon" aria-hidden="true">{{ icon }}</mat-icon>
+  <div class="toast-text">
+    <span class="toast-summary">{{ message.summary }}</span>
+    @if (message.detail) {
+      <span class="toast-detail">{{ message.detail }}</span>
+    }
+  </div>
+</div>
+<div matSnackBarActions>
+  <button matIconButton matSnackBarAction (click)="snackBarRef.dismiss()" aria-label="Dismiss">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>

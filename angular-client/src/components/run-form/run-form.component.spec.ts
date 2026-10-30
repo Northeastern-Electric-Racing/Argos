@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 
 import { RunFormComponent } from './run-form.component';
@@ -12,7 +11,7 @@ describe('RunFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RunFormComponent],
-      providers: [MessageService, { provide: DynamicDialogRef, useValue: { close: () => {}, onClose: new Subject() } }]
+      providers: [{ provide: MatDialogRef, useValue: { close: () => {}, beforeClosed: () => new Subject() } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(RunFormComponent);

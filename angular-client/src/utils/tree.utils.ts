@@ -1,12 +1,23 @@
 import { Injector, Signal, runInInjectionContext, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { TreeNode } from 'primeng/api';
 import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, Node } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
+
+/** A node of the graph sidebar's topic tree (rendered by mat-tree in TopicTreeComponent). */
+export interface TreeNode<T> {
+  label?: string;
+  data?: T;
+  /** Unique, stable id (the topic path); the tree tracks expansion by it. */
+  key?: string;
+  children?: TreeNode<T>[];
+  /** Only leaves (topics) are selectable; branches expand and collapse. */
+  selectable?: boolean;
+  expanded?: boolean;
+}
 
 export interface TreeNodeData extends Node {
   displayValue: Signal<string>;
@@ -93,8 +104,7 @@ export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLe
 
 /**
  * Filters a flat list of leaf TreeNodes to only those whose dataType is in
- * `selectedDataTypes`. Preserves the original node references so PrimeNG's
- * selection-by-reference matching keeps working.
+ * `selectedDataTypes`. Preserves the original node references so live display values stay wired.
  */
 export function filterSelectedNodes(
   flatNodes: TreeNode<TreeNodeData>[],
@@ -128,4 +138,26 @@ export function findSelectedTreeNodes(
   search(treeNodes);
   containsSelected.forEach((_, node) => (node.expanded = true));
   return selected;
+}
+
+/**
+ * Filters a tree by label, case-insensitively. A node is kept when it, an ancestor or a descendant
+ * matches; branches that lead to a match come back expanded. Returns copies, so the source tree's
+ * expansion state is left alone.
+ */
+export function filterTreeNodes(nodes: TreeNode<TreeNodeData>[], query: string): TreeNode<TreeNodeData>[] {
+  const term = query.trim().toLowerCase();
+  if (!term) return nodes;
+
+  const visit = (node: TreeNode<TreeNodeData>, ancestorMatched: boolean): TreeNode<TreeNodeData> | null => {
+    const matched = ancestorMatched || (node.label ?? '').toLowerCase().includes(term);
+    const children = (node.children ?? [])
+      .map((child) => visit(child, matched))
+      .filter((child): child is TreeNode<TreeNodeData> => child !== null);
+    if (!matched && children.length === 0) return null;
+    const leadsToMatch = !ancestorMatched && children.length > 0;
+    return { ...node, children, expanded: leadsToMatch || node.expanded };
+  };
+
+  return nodes.map((node) => visit(node, false)).filter((node): node is TreeNode<TreeNodeData> => node !== null);
 }

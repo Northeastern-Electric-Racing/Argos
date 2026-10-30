@@ -1,6 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop.component';
@@ -15,8 +13,7 @@ describe('GraphSidebarDesktopComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GraphSidebarDesktopComponent],
-      providers: [MessageService, DialogService]
+      imports: [GraphSidebarDesktopComponent]
     }).compileComponents();
 
     topicService = TestBed.inject(TopicSelectionService);

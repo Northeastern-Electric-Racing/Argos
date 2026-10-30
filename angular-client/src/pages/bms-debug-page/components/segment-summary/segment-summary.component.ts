@@ -8,15 +8,16 @@ import { InfoBackgroundComponent } from '../../../../components/info-background/
 
 import { InfoValueDisplayComponent } from '../../../../components/info-value-dispaly/info-value-display.component';
 import { DividerComponent } from '../../../../components/divider/divider';
-import { ToastButtonComponent } from '../../../../components/toast-button/toast-button.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'segment-summary',
   templateUrl: './segment-summary.component.html',
   styleUrl: './segment-summary.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, ToastButtonComponent, VStackComponent]
+  imports: [InfoBackgroundComponent, InfoValueDisplayComponent, DividerComponent, VStackComponent, MatButton, MatIcon]
 })
 export class SegmentSummaryComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

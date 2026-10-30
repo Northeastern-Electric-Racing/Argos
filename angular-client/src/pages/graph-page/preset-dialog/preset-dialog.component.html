@@ -1,4 +1,5 @@
-<div class="dialog-content">
+<h2 mat-dialog-title>Topic Presets</h2>
+<mat-dialog-content class="dialog-content">
   <input
     #fileInput
     type="file"
@@ -7,35 +8,31 @@
     (change)="onFileSelected($event)"
     aria-hidden="true"
   />
-
   <section class="save-section">
     <div class="actions-row">
-      <div class="save-form">
-        <label for="preset-name">Save current selection</label>
-        <div class="save-form-controls">
-          <input
-            id="preset-name"
-            pInputText
-            [ngModel]="newPresetName()"
-            (ngModelChange)="newPresetName.set($event)"
-            placeholder="Preset name…"
-            (keyup.enter)="onSaveCurrent()"
-          />
-          <button
-            pButton
-            type="button"
-            label="Save"
-            (click)="onSaveCurrent()"
-            [disabled]="!hasSelection() || newPresetName().trim().length === 0"
-          ></button>
-        </div>
-      </div>
-
-      <button pButton type="button" label="Upload JSON" class="p-button-outlined" (click)="onUploadClick()"></button>
+      <mat-form-field class="save-field" subscriptSizing="dynamic">
+        <mat-label>Save current selection</mat-label>
+        <input
+          matInput
+          [ngModel]="newPresetName()"
+          (ngModelChange)="newPresetName.set($event)"
+          placeholder="Preset name…"
+          (keyup.enter)="onSaveCurrent()"
+        />
+        @if (!hasSelection()) {
+          <mat-hint>Select a topic to save a preset</mat-hint>
+        }
+      </mat-form-field>
+      <button
+        matButton="filled"
+        type="button"
+        (click)="onSaveCurrent()"
+        [disabled]="!hasSelection() || newPresetName().trim().length === 0"
+      >
+        Save
+      </button>
+      <button matButton="outlined" type="button" (click)="onUploadClick()">Upload JSON</button>
     </div>
-    @if (!hasSelection()) {
-      <small class="hint">Select a topic to save a preset</small>
-    }
   </section>
 
   <section class="presets-list">
@@ -45,49 +42,33 @@
         <small> Save your current topic selection or upload a JSON of your preset </small>
       </div>
     } @else {
-      <table class="preset-table">
-        <thead>
-          <tr>
-            <th class="name">Name</th>
-            <th class="topic-count">Topics</th>
-            <th class="actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (preset of presets(); track preset.id) {
-            <tr>
-              <td class="name" [title]="preset.name">
-                <span class="name-text">{{ preset.name }}</span>
-              </td>
-              <td class="topic-count">{{ preset.topicNames.length }}</td>
-              <td class="actions">
-                <button pButton type="button" label="Apply" (click)="onApply(preset)"></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Download"
-                  class="p-button-outlined"
-                  (click)="onDownload(preset)"
-                ></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Delete"
-                  class="p-button-text p-button-danger"
-                  (click)="onDelete(preset)"
-                ></button>
-              </td>
-            </tr>
-          }
-        </tbody>
+      <table mat-table [dataSource]="presets()" class="preset-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef class="name">Name</th>
+          <td mat-cell *matCellDef="let preset" class="name" [title]="preset.name">
+            <span class="name-text">{{ preset.name }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="topics">
+          <th mat-header-cell *matHeaderCellDef class="topic-count">Topics</th>
+          <td mat-cell *matCellDef="let preset" class="topic-count">{{ preset.topicNames.length }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions">Actions</th>
+          <td mat-cell *matCellDef="let preset" class="actions">
+            <button matButton="filled" type="button" (click)="onApply(preset)">Apply</button>
+            <button matButton="outlined" type="button" (click)="onDownload(preset)">Download</button>
+            <button matButton type="button" class="danger-action" (click)="onDelete(preset)">Delete</button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let preset; columns: columns"></tr>
       </table>
     }
   </section>
-
-  <div class="footer">
-    <button pButton type="button" label="Add Default Presets" class="p-button-text" (click)="onAddDefaultPresets()"></button>
-    <button pButton type="button" label="Close" class="p-button-text" (click)="onClose()"></button>
-  </div>
-
-  <p-confirmdialog />
-</div>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="footer">
+  <button matButton type="button" (click)="onAddDefaultPresets()">Add Default Presets</button>
+  <span class="spacer"></span>
+  <button matButton type="button" (click)="onClose()">Close</button>
+</mat-dialog-actions>

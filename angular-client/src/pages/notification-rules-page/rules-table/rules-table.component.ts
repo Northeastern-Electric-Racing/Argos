@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Table, TableModule } from 'primeng/table';
-import { ToggleSwitch } from 'primeng/toggleswitch';
-import { FormsModule } from '@angular/forms';
-import { ButtonDirective } from 'primeng/button';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
+import { SelectionModel } from '@angular/cdk/collections';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatProgressBar } from '@angular/material/progress-bar';
 import { take } from 'rxjs';
 import {
   ClientRule,
@@ -20,7 +23,7 @@ import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edi
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective],
+  imports: [MatTableModule, MatCheckbox, MatSlideToggle, MatIconButton, MatIcon, MatProgressBar],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })
@@ -30,22 +33,54 @@ export class RulesTableComponent implements OnInit {
 
   selectionChanged = output<ClientRule[]>();
 
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private messageService = inject(ToastService);
+  private dialog = inject(MatDialog);
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
   selectedRules = signal<ClientRule[]>([]);
 
-  dt = viewChild<Table>('dt');
+  readonly columns = ['select', 'expr', 'topic', 'uploadedBy', 'description', 'subscribed', 'actions'];
+  /** Multi-row selection, keyed by rule id so it survives the rules array being replaced. */
+  readonly selection = new SelectionModel<ClientRule>(true, [], true, (a, b) => a.id === b.id);
+  readonly dataSource = new MatTableDataSource<ClientRule>([]);
+  /** Rows the search term currently shows; drives the header checkbox. */
+  private filteredRules = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    return term ? this.rules().filter((r) => this.matchesSearch(r, term)) : this.rules();
+  });
 
   constructor() {
+    // Same fields PrimeNG's globalFilterFields searched: expr, topic and id.
+    this.dataSource.filterPredicate = (rule, filter) => this.matchesSearch(rule, filter);
     effect(() => {
-      this.dt()?.filterGlobal(this.searchTerm(), 'contains');
+      this.dataSource.data = this.rules();
+      this.dataSource.filter = this.searchTerm().trim().toLowerCase();
     });
   }
 
-  private editRef: DynamicDialogRef | null | undefined;
+  private matchesSearch(rule: ClientRule, term: string): boolean {
+    return [rule.expr, rule.topic, rule.id].some((field) => field.toLowerCase().includes(term));
+  }
+
+  isAllSelected(): boolean {
+    const visible = this.filteredRules();
+    return visible.length > 0 && visible.every((r) => this.selection.isSelected(r));
+  }
+
+  toggleAllRows(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.selection.select(...this.filteredRules());
+    }
+    this.onSelectionChange(this.selection.selected);
+  }
+
+  toggleRow(rule: ClientRule): void {
+    this.selection.toggle(rule);
+    this.onSelectionChange(this.selection.selected);
+  }
 
   ngOnInit(): void {
     this.loadRules();
@@ -68,7 +103,7 @@ export class RulesTableComponent implements OnInit {
   }
 
   onSelectionChange(selected: ClientRule[]): void {
-    this.selectedRules.set(selected);
+    this.selectedRules.set([...selected]);
     this.selectionChanged.emit(selected);
   }
 
@@ -92,33 +127,33 @@ export class RulesTableComponent implements OnInit {
   }
 
   onEdit(rule: ClientRule): void {
-    this.editRef = this.dialogService.open(EditRuleDialogComponent, {
-      header: `Edit Rule: ${rule.id}`,
+    const editRef = this.dialog.open(EditRuleDialogComponent, {
       width: '450px',
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: { expr: rule.expr, debounce_time: rule.debounce_time }
+      data: { id: rule.id, expr: rule.expr, debounce_time: rule.debounce_time }
     });
 
-    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.editRef?.onClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
-      if (!result) return;
+    editRef
+      .afterClosed()
+      .pipe(take(1))
+      // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+      .subscribe(async (result: EditRuleResult | null) => {
+        if (!result) return;
 
-      try {
-        const response = await editRule(rule.id, result);
-        if (response.ok) {
-          this.rules.update((rules) =>
-            rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
-          );
-          this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Rule "${rule.id}" updated` });
-        } else {
-          const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: text });
+        try {
+          const response = await editRule(rule.id, result);
+          if (response.ok) {
+            this.rules.update((rules) =>
+              rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
+            );
+            this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Rule "${rule.id}" updated` });
+          } else {
+            const text = await response.text();
+            this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: text });
+          }
+        } catch {
+          this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: 'Network error' });
         }
-      } catch {
-        this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: 'Network error' });
-      }
-    });
+      });
   }
 
   async onDelete(rule: ClientRule): Promise<void> {
@@ -128,8 +163,8 @@ export class RulesTableComponent implements OnInit {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
-        this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
-        this.selectionChanged.emit(this.selectedRules());
+        this.selection.deselect(rule);
+        this.onSelectionChange(this.selection.selected);
         this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `Rule "${rule.id}" removed` });
       } else {
         const text = await response.text();

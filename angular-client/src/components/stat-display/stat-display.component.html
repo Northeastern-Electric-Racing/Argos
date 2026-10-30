@@ -1,7 +1,7 @@
 @if (headerLabel()) {
   <div class="header">
     @if (headerIcon()) {
-      <mat-icon aria-hidden="false" [svgIcon]="headerIcon()" class="header-icon" />
+      <mat-icon [svgIcon]="headerIcon()" class="header-icon" />
     }
     <span class="header-label">{{ headerLabel() }}</span>
   </div>

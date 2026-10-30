@@ -2,6 +2,7 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import { MatIcon } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
 
@@ -13,6 +14,8 @@ import HStackComponent from '../hstack/hstack.component';
 interface ButtonInputs {
   onClick: () => void;
   icon: string;
+  /** Accessible name; defaults to "Reset <title>" (every current title button resets its graph). */
+  label?: string;
 }
 
 @Component({
@@ -20,7 +23,7 @@ interface ButtonInputs {
   templateUrl: './info-background.component.html',
   styleUrls: ['./info-background.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent]
+  imports: [MatIcon, MatIconButton, SelectDropdownComponent, TypographyComponent, HStackComponent]
 })
 export class InfoBackgroundComponent {
   icon = input<string>();

@@ -1,28 +1,36 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { MatButton } from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogTitle
+} from '@angular/material/dialog';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
+
+export interface GraphDialogData {
+  header?: string;
+  data: GraphData[];
+  color: string;
+  title?: string;
+  subTitle?: string;
+  graphContainerId: string;
+}
 
 @Component({
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
-  providers: [DialogService],
+  styleUrl: './graph-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [GraphComponent]
+  imports: [GraphComponent, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose, MatButton]
 })
 export class GraphDialogComponent {
-  public dialogService = inject(DialogService);
-  public config = inject(DynamicDialogConfig);
-  public ref = inject(DynamicDialogRef);
-  data: GraphData[];
-  color: string;
-  title: string;
-  graphContainerId: string;
-
-  constructor() {
-    this.data = this.config.data.data;
-    this.color = this.config.data.color;
-    this.title = this.config.data.title;
-    this.graphContainerId = this.config.data.graphContainerId;
-  }
+  private dialogData = inject<GraphDialogData>(MAT_DIALOG_DATA);
+  header = this.dialogData.header;
+  data: GraphData[] = this.dialogData.data;
+  color: string = this.dialogData.color;
+  title = this.dialogData.title;
+  graphContainerId: string = this.dialogData.graphContainerId;
 }

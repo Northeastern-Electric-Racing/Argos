@@ -1,0 +1,62 @@
+:host {
+  display: block;
+}
+
+.topic-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.filter {
+  width: 100%;
+}
+
+.tree {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding-right: 8px;
+  border-radius: var(--mat-sys-corner-small);
+  cursor: pointer;
+}
+
+.tree-node:hover {
+  color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.tree-node.selected {
+  background: color-mix(in srgb, var(--mat-sys-primary) 22%, transparent);
+}
+
+.node-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chevron {
+  transition: transform 0.15s ease;
+}
+
+.chevron.open {
+  transform: rotate(90deg);
+}
+
+.check {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.tree-node.selected .check {
+  color: var(--mat-sys-primary);
+}

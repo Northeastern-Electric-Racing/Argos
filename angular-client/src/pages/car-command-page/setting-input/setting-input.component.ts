@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputTextModule } from 'primeng/inputtext';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 
 @Component({
   selector: 'setting-input',
   templateUrl: './setting-input.component.html',
   styleUrls: ['./setting-input.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputTextModule]
+  imports: [FormsModule, MatFormField, MatLabel, MatInput]
 })
 export default class SettingInputComponent {
   label = input.required<string>();
