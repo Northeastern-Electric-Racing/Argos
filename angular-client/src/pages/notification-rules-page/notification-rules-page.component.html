@@ -15,11 +15,11 @@
         <div class="header-buttons">
           <button nz-button nzType="primary" (click)="onViewLog()">View Log</button>
           <button nz-button [nzLoading]="uploading()" (click)="onUpload()">
-            <nz-icon nzType="upload" />
+            <nz-icon aria-hidden="true" nzType="upload" />
             Upload
           </button>
           <button nz-button [nzLoading]="downloading()" (click)="onDownload()">
-            <nz-icon nzType="download" />
+            <nz-icon aria-hidden="true" nzType="download" />
             Download
           </button>
         </div>
@@ -29,7 +29,7 @@
         <typography variant="header" content="Rules" />
         <div class="rules-bar-actions">
           <button nz-button nzType="primary" (click)="onAddRule()">
-            <nz-icon nzType="plus" />
+            <nz-icon aria-hidden="true" nzType="plus" />
             Add
           </button>
           <button nz-button nzDanger [disabled]="!hasSelection()" (click)="onRemoveSelected()">Remove</button>
@@ -37,7 +37,7 @@
         </div>
         <div class="search-container">
           <nz-input-wrapper nzAllowClear class="search-input">
-            <nz-icon nzInputPrefix nzType="search" />
+            <nz-icon aria-hidden="true" nzInputPrefix nzType="search" />
             <input
               nz-input
               type="text"
@@ -66,7 +66,7 @@
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
       [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
-      <nz-icon [nzType]="streamRailOpen() ? 'right' : 'left'" />
+      <nz-icon aria-hidden="true" [nzType]="streamRailOpen() ? 'right' : 'left'" />
     </button>
 
     <aside

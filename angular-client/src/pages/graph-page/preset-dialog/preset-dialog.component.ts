@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { NZ_MODAL_DATA, NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzTableModule } from 'ng-zorro-antd/table';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
@@ -19,7 +21,7 @@ interface PresetDialogData {
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NzInputModule, NzButtonModule]
+  imports: [FormsModule, NzInputModule, NzButtonModule, NzEmptyModule, NzTableModule]
 })
 export class PresetDialogComponent {
   private ref = inject<NzModalRef<PresetDialogComponent, DataType[] | null>>(NzModalRef);

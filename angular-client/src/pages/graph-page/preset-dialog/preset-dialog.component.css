@@ -51,65 +51,16 @@
 }
 
 .presets-list {
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--color-divider);
   padding-top: 12px;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 24px 12px;
-  border: 1px dashed #444;
-  border-radius: 6px;
-  color: #aaa;
-}
-
-.empty-state p {
-  margin: 0 0 4px;
-  color: #ddd;
-}
-
-.preset-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-  color: #eee;
-}
-
-.preset-table th,
-.preset-table td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #2a2a2a;
-  font-size: 0.9rem;
-}
-
-.preset-table th {
-  color: #aaa;
-  font-weight: 600;
-}
-
-.preset-table td.topic-count,
-.preset-table th.topic-count {
-  text-align: right;
-  width: 70px;
-}
-
-.preset-table td.actions,
-.preset-table th.actions {
-  text-align: right;
-  width: 16rem;
+.actions {
   white-space: nowrap;
 }
 
-.preset-table td.actions button {
+.actions button + button {
   margin-left: 6px;
-}
-
-.preset-table .name-text {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .footer {

@@ -58,7 +58,7 @@
               (click)="notificationLogService.dismissEntry(entry.id)"
               [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
             >
-              <nz-icon nzType="close" />
+              <nz-icon aria-hidden="true" nzType="close" />
             </button>
           </li>
         }
@@ -70,7 +70,7 @@
     <footer class="list-footer">
       <button nz-button nzType="text" nzBlock (click)="viewAll()">
         View all notifications
-        <nz-icon nzType="arrow-right" />
+        <nz-icon aria-hidden="true" nzType="arrow-right" />
       </button>
     </footer>
   }

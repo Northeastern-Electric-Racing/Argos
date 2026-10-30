@@ -16,7 +16,7 @@
       <nz-tree-node-toggle nzTreeNodeNoopToggle aria-hidden="true" />
     } @else {
       <nz-tree-node-toggle aria-hidden="true">
-        <nz-icon nzType="caret-down" nzTreeNodeToggleRotateIcon />
+        <nz-icon aria-hidden="true" nzType="caret-down" nzTreeNodeToggleRotateIcon />
       </nz-tree-node-toggle>
     }
     <nz-tree-node-option [nzSelected]="isSelected(node)" (nzClick)="activate(node)">

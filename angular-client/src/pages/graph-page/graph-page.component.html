@@ -13,7 +13,7 @@
         <div class="toolbar-left">
           <div class="toolbar-group">
             <button nz-button nzSize="small" [attr.aria-pressed]="showSideBar" (click)="toggleSideBar()">
-              <nz-icon [nzType]="showSideBar ? 'menu-fold' : 'menu-unfold'" />
+              <nz-icon aria-hidden="true" [nzType]="showSideBar ? 'menu-fold' : 'menu-unfold'" />
               Sidebar
             </button>
             <button
@@ -27,7 +27,7 @@
             </button>
             @if (realTime === true) {
               <button nz-button nzSize="small" (click)="togglePause()">
-                <nz-icon [nzType]="isPaused ? 'caret-right' : 'pause'" />
+                <nz-icon aria-hidden="true" [nzType]="isPaused ? 'caret-right' : 'pause'" />
                 {{ isPaused ? 'Play' : 'Pause' }}
               </button>
             }

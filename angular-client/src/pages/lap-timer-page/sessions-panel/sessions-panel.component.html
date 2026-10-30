@@ -13,7 +13,7 @@
           <button nz-button nzSize="small" nzDanger (click)="onClearAllSessions()">Clear All</button>
         }
         <button nz-button nzSize="small" (click)="onNewSession()">
-          <nz-icon nzType="plus" />
+          <nz-icon aria-hidden="true" nzType="plus" />
           New Session
         </button>
       </span>
@@ -98,18 +98,20 @@
                     (click)="$event.stopPropagation()"
                     aria-label="Session actions"
                   >
-                    <nz-icon nzType="more" />
+                    <nz-icon aria-hidden="true" nzType="more" />
                   </button>
                   <nz-dropdown-menu #sessionMenu="nzDropdownMenu">
                     <ul nz-menu>
                       <li nz-menu-item (click)="startEdit(s)">
-                        <nz-icon nzType="edit" class="ant-dropdown-menu-item-icon" /><span>Rename</span>
+                        <nz-icon aria-hidden="true" nzType="edit" class="ant-dropdown-menu-item-icon" /><span>Rename</span>
                       </li>
                       <li nz-menu-item (click)="onDownload(s.id)">
-                        <nz-icon nzType="download" class="ant-dropdown-menu-item-icon" /><span>Download CSV</span>
+                        <nz-icon aria-hidden="true" nzType="download" class="ant-dropdown-menu-item-icon" /><span
+                          >Download CSV</span
+                        >
                       </li>
                       <li nz-menu-item nzDanger (click)="onDeleteSession(s)">
-                        <nz-icon nzType="delete" class="ant-dropdown-menu-item-icon" /><span>Delete</span>
+                        <nz-icon aria-hidden="true" nzType="delete" class="ant-dropdown-menu-item-icon" /><span>Delete</span>
                       </li>
                     </ul>
                   </nz-dropdown-menu>
