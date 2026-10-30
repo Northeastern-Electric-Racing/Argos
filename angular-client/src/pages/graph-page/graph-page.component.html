@@ -12,7 +12,13 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <button nz-button nzSize="small" [attr.aria-pressed]="showSideBar" (click)="toggleSideBar()">
+            <button
+              nz-button
+              nzSize="small"
+              class="sidebar-toggle"
+              [attr.aria-pressed]="showSideBar"
+              (click)="toggleSideBar()"
+            >
               <nz-icon aria-hidden="true" [nzType]="showSideBar ? 'menu-fold' : 'menu-unfold'" />
               Sidebar
             </button>

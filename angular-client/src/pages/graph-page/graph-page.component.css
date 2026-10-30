@@ -135,7 +135,9 @@
     flex-flow: column;
   }
 
-  .desktop-sidebar {
+  /* The desktop sidebar is hidden on mobile (topics live in the drawer), so its toggle is too */
+  .desktop-sidebar,
+  .sidebar-toggle {
     display: none;
   }
 
