@@ -1,10 +1,20 @@
-<hlm-dialog-header>
-  <h2 hlmDialogTitle>{{ context.header }}</h2>
-  <p hlmDialogDescription>{{ context.message }}</p>
-</hlm-dialog-header>
-<hlm-dialog-footer>
-  <button hlmBtn variant="outline" type="button" (click)="reject()">{{ context.rejectLabel ?? 'Cancel' }}</button>
-  <button hlmBtn [variant]="context.destructive ? 'destructive' : 'default'" type="button" (click)="accept()">
-    {{ context.acceptLabel ?? 'Confirm' }}
-  </button>
-</hlm-dialog-footer>
+<hlm-alert-dialog [state]="confirmService.pending() ? 'open' : 'closed'" (stateChanged)="onStateChanged($event)">
+  <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx" class="w-[calc(100vw-2rem)] sm:w-md">
+    @if (confirmService.pending(); as question) {
+      <hlm-alert-dialog-header>
+        <h2 hlmAlertDialogTitle>{{ question.header }}</h2>
+        <p hlmAlertDialogDescription>{{ question.message }}</p>
+      </hlm-alert-dialog-header>
+      <hlm-alert-dialog-footer>
+        <button hlmAlertDialogCancel (click)="confirmService.answer(false)">{{ question.rejectLabel ?? 'Cancel' }}</button>
+        <button
+          hlmAlertDialogAction
+          [variant]="question.destructive ? 'destructive' : 'default'"
+          (click)="confirmService.answer(true)"
+        >
+          {{ question.acceptLabel ?? 'Confirm' }}
+        </button>
+      </hlm-alert-dialog-footer>
+    }
+  </hlm-alert-dialog-content>
+</hlm-alert-dialog>

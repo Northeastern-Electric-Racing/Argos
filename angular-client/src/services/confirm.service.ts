@@ -1,29 +1,35 @@
-import { inject, Injectable } from '@angular/core';
-import { HlmDialogService } from '@spartan-ng/helm/dialog';
-import { take } from 'rxjs';
-import { ConfirmDialogComponent, ConfirmDialogContext } from 'src/components/confirm-dialog/confirm-dialog.component';
+import { Injectable, signal } from '@angular/core';
 
-export interface ConfirmOptions extends ConfirmDialogContext {
+export interface ConfirmOptions {
+  header: string;
+  message: string;
+  acceptLabel?: string;
+  rejectLabel?: string;
+  /** Styles the accept button as destructive (delete, clear, reset). */
+  destructive?: boolean;
   accept: () => void;
 }
 
 /**
- * Asks the user to confirm an action in a Spartan alert dialog, running `accept` only on yes.
- * Spartan has no confirmation service, so this wraps HlmDialogService the way PrimeNG's ConfirmationService did.
+ * Asks the user to confirm an action, running `accept` only on yes. The question is shown by the
+ * app-wide ConfirmDialogComponent, which renders Spartan's Alert Dialog. Spartan's Alert Dialog is
+ * declared in templates, so this service only holds the pending question for it, the way PrimeNG's
+ * ConfirmationService fed its single confirm dialog.
  */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
-  private dialogService = inject(HlmDialogService);
+  private readonly _pending = signal<ConfirmOptions | null>(null);
+  /** The question waiting for an answer, or null when none is open. */
+  readonly pending = this._pending.asReadonly();
 
-  confirm({ accept, ...context }: ConfirmOptions): void {
-    const ref = this.dialogService.open<boolean, ConfirmDialogContext>(ConfirmDialogComponent, {
-      context,
-      role: 'alertdialog',
-      showCloseButton: false,
-      closeOnOutsidePointerEvents: false
-    });
-    ref.closed$.pipe(take(1)).subscribe((accepted) => {
-      if (accepted) accept();
-    });
+  confirm(options: ConfirmOptions): void {
+    this._pending.set(options);
+  }
+
+  /** Answers the pending question; only a yes runs its `accept`. */
+  answer(accepted: boolean): void {
+    const pending = this._pending();
+    this._pending.set(null);
+    if (accepted) pending?.accept();
   }
 }

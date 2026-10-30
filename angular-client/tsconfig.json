@@ -82,6 +82,15 @@
       ],
       "@spartan-ng/helm/toggle": [
         "./libs/ui/toggle/src/index.ts"
+      ],
+      "@spartan-ng/helm/tooltip": [
+        "./libs/ui/tooltip/src/index.ts"
+      ],
+      "@spartan-ng/helm/empty": [
+        "./libs/ui/empty/src/index.ts"
+      ],
+      "@spartan-ng/helm/alert-dialog": [
+        "./libs/ui/alert-dialog/src/index.ts"
       ]
     },
     "outDir": "./dist/out-tsc",

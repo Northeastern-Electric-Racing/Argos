@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { toast } from '@spartan-ng/brain/sonner';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucidePencil, lucideTrash2 } from '@ng-icons/lucide';
+import { lucideBellPlus, lucidePencil, lucideSearchX, lucideTrash2 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { HlmSpinner } from '@spartan-ng/helm/spinner';
 import { HlmSwitch } from '@spartan-ng/helm/switch';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { take } from 'rxjs';
 import { ConfirmService } from 'src/services/confirm.service';
 import {
@@ -24,8 +26,8 @@ import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edi
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmTableImports, HlmCheckbox, HlmSwitch, HlmButton, HlmSpinner, NgIcon],
-  providers: [provideIcons({ lucidePencil, lucideTrash2 })],
+  imports: [HlmTableImports, HlmCheckbox, HlmSwitch, HlmButton, HlmEmptyImports, HlmSpinner, HlmTooltip, NgIcon],
+  providers: [provideIcons({ lucideBellPlus, lucidePencil, lucideSearchX, lucideTrash2 })],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })

@@ -11,7 +11,10 @@
       }
     </div>
     <div class="card-footer">
-      <argos-button label="Send Command" [onClick]="handleSend" />
+      <button hlmBtn type="button" (click)="handleSend()">
+        <ng-icon name="lucideSend" />
+        Send Command
+      </button>
     </div>
   </div>
 </info-background>

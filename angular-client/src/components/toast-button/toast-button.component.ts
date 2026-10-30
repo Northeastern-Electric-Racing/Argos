@@ -1,4 +1,5 @@
 import { Component, OnInit, input, ChangeDetectionStrategy } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { showToast, ToastSeverity } from 'src/utils/toast.utils';
 
 export type toastSeverity = ToastSeverity;
@@ -6,7 +7,7 @@ export type toastSeverity = ToastSeverity;
 @Component({
   selector: 'toast-button',
   templateUrl: './toast-button.component.html',
-  styleUrls: ['./toast-button.component.css'],
+  imports: [HlmButton],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ToastButtonComponent implements OnInit {
@@ -18,7 +19,7 @@ export class ToastButtonComponent implements OnInit {
 
   onClick = input.required<() => void>();
   additionalStyles = input<string>('');
-  style = 'width: 140px; height: 45px;';
+  style = '';
 
   ngOnInit(): void {
     this.style += this.additionalStyles();

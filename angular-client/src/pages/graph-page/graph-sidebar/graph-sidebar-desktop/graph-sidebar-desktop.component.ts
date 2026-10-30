@@ -35,8 +35,10 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
-import TypographyComponent from 'src/components/typography/typography.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideBookmark, lucideEraser } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
 /** Gives each instance unique switch ids, since the graph page renders two sidebars. */
@@ -47,7 +49,8 @@ let nextSwitchId = 0;
   templateUrl: './graph-sidebar-desktop.component.html',
   styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent, TopicTreeComponent, TypographyComponent, HlmSwitch, FormsModule, SelectDropdownComponent]
+  imports: [HlmButton, HlmLabel, NgIcon, TopicTreeComponent, HlmSwitch, FormsModule, SelectDropdownComponent],
+  providers: [provideIcons({ lucideBookmark, lucideEraser })]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
   protected readonly switchId = `graph-sidebar-desktop-${nextSwitchId++}`;

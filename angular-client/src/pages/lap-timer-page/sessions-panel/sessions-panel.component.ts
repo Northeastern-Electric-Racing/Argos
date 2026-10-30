@@ -12,14 +12,13 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideDownload, lucideEllipsisVertical, lucidePencil, lucideTrash2 } from '@ng-icons/lucide';
+import { lucideDownload, lucideEllipsisVertical, lucidePencil, lucidePlus, lucideTrash2 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { ConfirmService } from 'src/services/confirm.service';
 import { showToast } from 'src/utils/toast.utils';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmTableImports } from '@spartan-ng/helm/table';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -30,7 +29,7 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
   templateUrl: './sessions-panel.component.html',
   styleUrl: './sessions-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideIcons({ lucideDownload, lucideEllipsisVertical, lucidePencil, lucideTrash2 })],
+  providers: [provideIcons({ lucideDownload, lucideEllipsisVertical, lucidePencil, lucidePlus, lucideTrash2 })],
   imports: [
     DatePipe,
     FormsModule,
@@ -40,7 +39,6 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     HlmTableImports,
     HlmDropdownMenuImports,
     HlmInput,
-    ButtonComponent,
     InfoBackgroundComponent,
     TypographyComponent
   ]

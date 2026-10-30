@@ -2,15 +2,26 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnIni
 import { Router } from '@angular/router';
 import { toast } from '@spartan-ng/brain/sonner';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronLeft, lucideChevronRight } from '@ng-icons/lucide';
+import {
+  lucideBellRing,
+  lucideChevronLeft,
+  lucideChevronRight,
+  lucideDownload,
+  lucideHistory,
+  lucidePlus,
+  lucideSearch,
+  lucideTrash2,
+  lucideUpload
+} from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
-import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import { ConfirmService } from 'src/services/confirm.service';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import {
   addRule,
   ClientRule,
@@ -38,8 +49,28 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, HlmInput, NgIcon, RulesTableComponent, NotificationListComponent],
-  providers: [provideIcons({ lucideChevronLeft, lucideChevronRight })]
+  imports: [
+    TypographyComponent,
+    HlmButton,
+    HlmInputGroupImports,
+    HlmTooltip,
+    NgIcon,
+    RulesTableComponent,
+    NotificationListComponent
+  ],
+  providers: [
+    provideIcons({
+      lucideBellRing,
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideDownload,
+      lucideHistory,
+      lucidePlus,
+      lucideSearch,
+      lucideTrash2,
+      lucideUpload
+    })
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private dialogService = inject(HlmDialogService);

@@ -9,6 +9,7 @@ import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NotificationLogService } from 'src/services/notification-log.service';
+import { ConfirmDialogComponent } from 'src/components/confirm-dialog/confirm-dialog.component';
 
 /**
  * Container for the entire application, contains the socket service, API serivce, and storage service.
@@ -17,7 +18,7 @@ import { NotificationLogService } from 'src/services/notification-log.service';
   selector: 'app-context',
   templateUrl: './app-context.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [HlmToasterImports, AppNavBarComponent, RouterOutlet]
+  imports: [HlmToasterImports, AppNavBarComponent, RouterOutlet, ConfirmDialogComponent]
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);

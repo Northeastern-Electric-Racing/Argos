@@ -50,16 +50,26 @@
             </td>
             <td hlmTd>
               <div class="action-icons">
-                <button hlmBtn variant="ghost" size="icon-sm" (click)="onEdit(rule)" aria-label="Edit rule">
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-sm"
+                  type="button"
+                  (click)="onEdit(rule)"
+                  aria-label="Edit rule"
+                  hlmTooltip="Edit rule"
+                >
                   <ng-icon name="lucidePencil" />
                 </button>
                 <button
                   hlmBtn
                   variant="ghost"
                   size="icon-sm"
+                  type="button"
                   class="text-destructive"
                   (click)="onDelete(rule)"
                   aria-label="Delete rule"
+                  hlmTooltip="Delete rule"
                 >
                   <ng-icon name="lucideTrash2" />
                 </button>
@@ -69,12 +79,19 @@
         } @empty {
           <tr hlmTr>
             <td hlmTd colspan="7" class="whitespace-normal">
-              <div class="empty-state">
-                @if (rules().length === 0) {
-                  No rules yet. Add a rule or upload a CSV to get started.
-                } @else {
-                  No rules match your search.
-                }
+              <div hlmEmpty class="p-8">
+                <div hlmEmptyHeader>
+                  <div hlmEmptyMedia variant="icon">
+                    <ng-icon [name]="rules().length === 0 ? 'lucideBellPlus' : 'lucideSearchX'" />
+                  </div>
+                  @if (rules().length === 0) {
+                    <div hlmEmptyTitle>No rules yet</div>
+                    <div hlmEmptyDescription>Add a rule or upload a CSV to get started.</div>
+                  } @else {
+                    <div hlmEmptyTitle>No matching rules</div>
+                    <div hlmEmptyDescription>No rules match your search.</div>
+                  }
+                </div>
               </div>
             </td>
           </tr>

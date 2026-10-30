@@ -21,9 +21,9 @@
   </hlm-sheet>
 } @else {
   <nav class="navbar">
-    <div class="home-logo" (click)="this.homeNavItem.onClick()">
+    <button type="button" class="home-logo" aria-label="Home" (click)="this.homeNavItem.onClick()">
       <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </div>
+    </button>
     <div class="navbar-nav">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
@@ -55,10 +55,23 @@
       />
       <messages-per-second />
       <hlm-popover align="end" sideOffset="8" (stateChanged)="onNotificationPanelStateChanged($event)">
-        <button hlmPopoverTrigger type="button" class="navbar-notification" aria-label="Notifications">
+        <button
+          hlmPopoverTrigger
+          type="button"
+          class="navbar-notification"
+          [attr.aria-label]="
+            notificationLogService.unreadCount() > 0
+              ? 'Notifications, ' + notificationLogService.unreadCount() + ' unread'
+              : 'Notifications'
+          "
+          hlmTooltip="Notifications"
+          position="bottom"
+        >
           <mat-icon [svgIcon]="'notifications'" />
           @if (notificationLogService.unreadCount() > 0) {
-            <span hlmBadge variant="destructive" class="notification-badge">{{ notificationLogService.unreadCount() }}</span>
+            <span hlmBadge variant="destructive" class="notification-badge" aria-hidden="true">{{
+              notificationLogService.unreadCount()
+            }}</span>
           }
         </button>
         <hlm-popover-content *hlmPopoverPortal="let ctx" class="notification-popover w-auto p-0">
@@ -66,7 +79,15 @@
         </hlm-popover-content>
       </hlm-popover>
       <hlm-popover #menuPopover align="end" sideOffset="8" (stateChanged)="menuOpen = $event === 'open'">
-        <button hlmPopoverTrigger type="button" class="navbar-menu" [class.selected]="menuOpen" aria-label="More pages">
+        <button
+          hlmPopoverTrigger
+          type="button"
+          class="navbar-menu"
+          [class.selected]="menuOpen"
+          aria-label="More pages"
+          hlmTooltip="More pages"
+          position="bottom"
+        >
           <mat-icon [svgIcon]="'apps'" />
         </button>
         <hlm-popover-content *hlmPopoverPortal="let ctx" class="w-auto p-0">

@@ -23,7 +23,6 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -32,7 +31,13 @@ import LiveValueStripComponent from './live-value-strip/live-value-strip.compone
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideArrowLeftRight, lucideChartLine, lucidePanelLeft, lucidePause, lucidePlay } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmToggle } from '@spartan-ng/helm/toggle';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -43,16 +48,21 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
     CustomGraphComponent,
     LiveValueStripComponent,
     TypographyComponent,
+    HlmButton,
     HlmInput,
+    HlmLabel,
+    HlmToggle,
+    HlmTooltip,
+    NgIcon,
     FormsModule
-  ]
+  ],
+  providers: [provideIcons({ lucideArrowLeftRight, lucideChartLine, lucidePanelLeft, lucidePause, lucidePlay })]
 })
 export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);

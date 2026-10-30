@@ -6,23 +6,19 @@
       [placeholder]="presetSelectorConfig().placeholder"
       [defaultValue]="activePresetName()"
     />
-    <argos-button
-      [onClick]="openPresetsDialog"
-      label="Manage Presets"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <button hlmBtn variant="outline" size="sm" type="button" aria-haspopup="dialog" (click)="openPresetsDialog()">
+      <ng-icon name="lucideBookmark" />
+      Manage Presets
+    </button>
   </div>
   <div class="header-row">
-    <argos-button
-      [onClick]="clearSelections"
-      label="Clear Topics"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <button hlmBtn variant="outline" size="sm" type="button" (click)="clearSelections()">
+      <ng-icon name="lucideEraser" />
+      Clear Topics
+    </button>
     <div class="toggle-group">
-      <label class="flatten-toggle">
-        <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
+      <label hlmLabel class="flatten-toggle">
+        Selected
         <hlm-switch
           [checked]="selectedOnly()"
           (checkedChange)="toggleSelectedOnly($event)"
@@ -30,8 +26,8 @@
           aria-label="Show only selected topics"
         />
       </label>
-      <label class="flatten-toggle">
-        <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
+      <label hlmLabel class="flatten-toggle">
+        Flat
         <hlm-switch
           [checked]="flattenMode()"
           (checkedChange)="toggleFlattenMode($event)"

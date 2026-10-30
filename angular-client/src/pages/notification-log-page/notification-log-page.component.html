@@ -21,10 +21,14 @@
   </header>
 
   @if (!hasEntries()) {
-    <div class="empty-state">
-      <ng-icon name="lucideBellOff" class="empty-icon" />
-      <typography variant="subheader" content="No notifications have been triggered yet" />
-      <span class="empty-hint">Triggered rules will appear here in real-time</span>
+    <div hlmEmpty class="empty-state border">
+      <div hlmEmptyHeader>
+        <div hlmEmptyMedia variant="icon">
+          <ng-icon name="lucideBellOff" />
+        </div>
+        <div hlmEmptyTitle>No notifications have been triggered yet</div>
+        <div hlmEmptyDescription>Triggered rules will appear here in real time.</div>
+      </div>
     </div>
   } @else {
     <div class="log-table-wrapper">

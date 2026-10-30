@@ -21,12 +21,8 @@
   max-width: 100%;
 }
 
-.presets-row argos-button {
+.presets-row button {
   flex-shrink: 0;
-}
-
-.presets-row argos-button ::ng-deep .btn {
-  white-space: nowrap;
 }
 
 .header-row {

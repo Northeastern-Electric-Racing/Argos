@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideCalendarRange, lucideEraser, lucideRadio } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDatePickerImports } from '@spartan-ng/helm/date-picker';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
@@ -10,7 +13,6 @@ import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.c
 import { Run } from 'src/utils/types.utils';
 
 import { RunSelectorComponent } from '../run-selector/run-selector.component';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 import { SelectDropdownComponent } from '../../../../components/select-dropdown/select-dropdown.component';
 
 export interface RangePreset {
@@ -37,15 +39,17 @@ type CustomMode = 'last-x' | 'date-range';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RunSelectorComponent,
-    ButtonComponent,
     SelectDropdownComponent,
+    HlmButton,
+    NgIcon,
     HlmPopoverImports,
     HlmToggleGroupImports,
     HlmDatePickerImports,
     HlmInput,
     HlmLabel,
     FormsModule
-  ]
+  ],
+  providers: [provideIcons({ lucideCalendarRange, lucideEraser, lucideRadio })]
 })
 export class GeneralButtonsComponent {
   historicalOn = input<boolean>(false);

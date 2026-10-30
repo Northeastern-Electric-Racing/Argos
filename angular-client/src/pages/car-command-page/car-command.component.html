@@ -10,23 +10,38 @@
       <info-background title="Car Commands" icon="lock">
         <div class="auth-content">
           <p class="auth-description">Enter the command password to access car controls.</p>
-          <div class="auth-form">
+          <form class="auth-form" (ngSubmit)="authenticatePw()">
             <div class="auth-input-group">
               <label hlmLabel for="password">Password</label>
-              <input hlmInput id="password" type="password" autocomplete="current-password" [(ngModel)]="enteredPw" />
+              <input
+                hlmInput
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                [attr.aria-invalid]="authError() ? true : null"
+                [attr.aria-describedby]="authError() ? 'password-error' : null"
+                [(ngModel)]="enteredPw"
+              />
             </div>
-            <argos-button label="Authenticate" [onClick]="authenticatePw" />
+            <button hlmBtn type="submit">
+              <ng-icon name="lucideLockOpen" />
+              Authenticate
+            </button>
             @if (authError()) {
-              <p class="auth-error">{{ authError() }}</p>
+              <p id="password-error" class="auth-error" role="alert">{{ authError() }}</p>
             }
-          </div>
+          </form>
         </div>
       </info-background>
     </div>
   } @else {
     <div class="page-header">
       <typography variant="large-header" content="Car Commands" />
-      <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
+      <button hlmBtn variant="outline" type="button" (click)="onUpdateVideosPressed()">
+        <ng-icon name="lucideRefreshCw" />
+        Update Videos
+      </button>
     </div>
 
     <div class="commands-grid">
@@ -46,7 +61,10 @@
           </div>
           <div class="settings-footer">
             <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
-            <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
+            <button hlmBtn type="button" (click)="confirmSaveSettings()">
+              <ng-icon name="lucideSave" />
+              Save Settings
+            </button>
           </div>
         </div>
       </info-background>

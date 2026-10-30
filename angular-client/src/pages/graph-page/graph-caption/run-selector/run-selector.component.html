@@ -1,1 +1,4 @@
-<argos-button [onClick]="openDialog" [label]="label" size="sm" additionalStyles="background-color: #027bd7" />
+<button hlmBtn size="sm" type="button" aria-haspopup="dialog" (click)="openDialog()">
+  <ng-icon name="lucideHistory" />
+  {{ label }}
+</button>

@@ -7,6 +7,7 @@ import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
@@ -51,7 +52,8 @@ export interface NavItem {
     NotificationListComponent,
     NavOptionsMenuComponent,
     HlmPopoverImports,
-    HlmBadge
+    HlmBadge,
+    HlmTooltip
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {

@@ -10,17 +10,15 @@
       </span>
       <span class="sessions-toolbar-actions">
         @if (timer.sessions().length > 0) {
-          <argos-button
-            label="Clear All"
-            [onClick]="onClearAllSessions"
-            additionalStyles="height: 32px; width: 110px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-battery-low);"
-          />
+          <button hlmBtn variant="outline" size="sm" type="button" class="text-destructive" (click)="onClearAllSessions()">
+            <ng-icon name="lucideTrash2" />
+            Clear All
+          </button>
         }
-        <argos-button
-          label="+ New Session"
-          [onClick]="onNewSession"
-          additionalStyles="height: 32px; width: 140px; font-size: 13px; background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="onNewSession()">
+          <ng-icon name="lucidePlus" />
+          New Session
+        </button>
       </span>
     </div>
 

@@ -1,12 +1,15 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideEraser } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 
 @Component({
   selector: 'fault-buttons',
   templateUrl: './fault-buttons.component.html',
   styleUrl: './fault-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [HlmButton, NgIcon],
+  providers: [provideIcons({ lucideEraser })]
 })
 export class FaultButtonsComponent {
   onClearData = input.required<() => void>();

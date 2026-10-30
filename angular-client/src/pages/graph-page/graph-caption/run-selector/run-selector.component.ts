@@ -7,14 +7,17 @@ import APIService from 'src/services/api.service';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { toast } from '@spartan-ng/brain/sonner';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideHistory } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 
 @Component({
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
   styleUrls: ['./run-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ButtonComponent]
+  imports: [HlmButton, NgIcon],
+  providers: [provideIcons({ lucideHistory })]
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

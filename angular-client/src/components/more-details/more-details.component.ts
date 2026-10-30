@@ -2,12 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { toast } from '@spartan-ng/brain/sonner';
 import Storage from 'src/services/storage.service';
-import { ButtonComponent } from '../argos-button/argos-button.component';
+import { HlmButton } from '@spartan-ng/helm/button';
 
 @Component({
   selector: 'more-details',
   templateUrl: './more-details.component.html',
-  imports: [ButtonComponent]
+  imports: [HlmButton]
 })
 export default class MoreDetailsComponent {
   private router = inject(Router);

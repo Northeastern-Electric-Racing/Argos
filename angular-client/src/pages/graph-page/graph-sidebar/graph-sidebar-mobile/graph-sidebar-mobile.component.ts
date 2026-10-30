@@ -36,7 +36,10 @@ import {
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideBookmark, lucideEraser, lucideListTree } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
@@ -51,12 +54,15 @@ let nextSwitchId = 0;
   imports: [
     HlmSheetImports,
     TopicTreeComponent,
-    ButtonComponent,
+    HlmButton,
+    HlmLabel,
+    NgIcon,
     TypographyComponent,
     HlmSwitch,
     FormsModule,
     SelectDropdownComponent
-  ]
+  ],
+  providers: [provideIcons({ lucideBookmark, lucideEraser, lucideListTree })]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
   protected readonly switchId = `graph-sidebar-mobile-${nextSwitchId++}`;

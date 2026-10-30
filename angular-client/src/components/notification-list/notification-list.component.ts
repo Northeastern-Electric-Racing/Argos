@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideArrowRight, lucideBellOff, lucideX } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
 
@@ -14,7 +15,7 @@ export type NotificationListVariant = 'popover' | 'stream';
   templateUrl: './notification-list.component.html',
   styleUrls: ['./notification-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, HlmButton, NgIcon],
+  imports: [DatePipe, HlmButton, HlmEmptyImports, NgIcon],
   providers: [provideIcons({ lucideArrowRight, lucideBellOff, lucideX })]
 })
 export class NotificationListComponent {

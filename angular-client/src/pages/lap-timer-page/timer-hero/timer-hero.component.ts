@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ConfirmService } from 'src/services/confirm.service';
 import { showToast } from 'src/utils/toast.utils';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatDeltaMs } from 'src/utils/lap-timer.types';
@@ -11,7 +11,7 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
   templateUrl: './timer-hero.component.html',
   styleUrl: './timer-hero.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, InfoBackgroundComponent]
+  imports: [HlmButton, InfoBackgroundComponent]
 })
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);

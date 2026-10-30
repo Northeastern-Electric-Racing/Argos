@@ -79,3 +79,30 @@
   gap: 12px;
   margin-top: 8px;
 }
+
+/* Lap timer actions keep their traffic-light colours so they read at a glance trackside. */
+.timer-btn {
+  min-width: 7rem;
+  font-weight: 700;
+}
+
+.timer-btn--go {
+  background-color: var(--color-battery-high);
+  color: #000;
+}
+
+.timer-btn--hold {
+  background-color: var(--color-battery-med);
+  color: #000;
+}
+
+.timer-btn--halt {
+  background-color: var(--color-battery-low);
+  color: #fff;
+}
+
+.timer-btn--go:hover,
+.timer-btn--hold:hover,
+.timer-btn--halt:hover {
+  filter: brightness(0.9);
+}

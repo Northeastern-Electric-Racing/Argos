@@ -21,7 +21,9 @@ import { groupCarCommands } from 'src/utils/topic.utils';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideLockOpen, lucideRefreshCw, lucideSave } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -39,7 +41,8 @@ import CommandCardComponent from './command-card/command-card.component';
     HlmInput,
     HlmLabel,
     FormsModule,
-    ButtonComponent,
+    HlmButton,
+    NgIcon,
     LoadingPageComponent,
     ErrorPageComponent,
     TypographyComponent,
@@ -47,7 +50,8 @@ import CommandCardComponent from './command-card/command-card.component';
     SettingToggleComponent,
     SettingInputComponent,
     CommandCardComponent
-  ]
+  ],
+  providers: [provideIcons({ lucideLockOpen, lucideRefreshCw, lucideSave })]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
