@@ -133,11 +133,11 @@ describe('AppNavBarComponent', () => {
         fixture.debugElement.queryAll(By.directive(MatTooltip)).map((tooltip) => tooltip.injector.get(MatTooltip));
       expect(tooltips().map((tooltip) => tooltip.disabled)).toEqual([true, true, true, true]);
 
-      // jsdom has no layout: make the BMS label overflow its box, as a long run number can, and
-      // report the nav list's resize.
-      const bmsLabelBox = pageLinks()[2].querySelector('[matListItemTitle]')!.parentElement!;
-      Object.defineProperty(bmsLabelBox, 'scrollWidth', { value: 40 });
-      Object.defineProperty(bmsLabelBox, 'clientWidth', { value: 12 });
+      // jsdom has no layout: make the BMS label overflow its box by a fraction of a pixel (which the
+      // browser still ellipsizes), as a long run number can, and report the nav list's resize.
+      const bmsLabel = pageLinks()[2].querySelector<HTMLElement>('[matListItemTitle]')!;
+      vi.spyOn(bmsLabel, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 30.4, 18));
+      vi.spyOn(bmsLabel.parentElement!, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 30, 18));
       resized();
       fixture.detectChanges();
 

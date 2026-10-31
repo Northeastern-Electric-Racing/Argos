@@ -132,9 +132,12 @@ export class AppNavBarComponent implements OnInit {
       if (!list || typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(() => {
         const cut = Array.from(list.querySelectorAll('a[mat-list-item]')).filter((link) => {
-          // The title is inline; the list item's content box around it is what clips and ellipsizes.
-          const box = link.querySelector('[matListItemTitle]')?.parentElement;
-          return !!box && box.scrollWidth > box.clientWidth;
+          // The title is inline, so its box keeps the full text width; the list item's content box
+          // around it clips and ellipsizes. Compare fractional widths: the browser ellipsizes even a
+          // sub-pixel overflow, which scrollWidth and clientWidth round away.
+          const title = link.querySelector('[matListItemTitle]');
+          const box = title?.parentElement;
+          return !!box && title!.getBoundingClientRect().width > box.getBoundingClientRect().width + 0.01;
         });
         this.truncatedLabels.set(new Set(cut.map((link) => link.getAttribute('href') ?? '')));
       });

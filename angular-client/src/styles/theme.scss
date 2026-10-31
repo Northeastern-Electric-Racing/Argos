@@ -44,8 +44,9 @@ html {
     )
   );
 
-  // Focused fields mark their label, underline or outline, caret and select arrow in primary, but
-  // #ff5353 is only 2.94:1 on the #464747 field fill. Primary tone 80 (#ffb3ae) is 5.47:1 there.
+  // Focused fields mark their label, underline or outline and caret in primary, as do a focused or
+  // open mat-select's arrow and an open datepicker's toggle. #ff5353 is only 2.94:1 on the #464747
+  // field fill, so they all take primary tone 80 (#ffb3ae), 5.47:1 there.
   $primary-on-field: map.get(ner.$primary-palette, 80);
   @include mat.form-field-overrides(
     (
@@ -54,8 +55,17 @@ html {
       filled-caret-color: $primary-on-field,
       outlined-focus-label-text-color: $primary-on-field,
       outlined-focus-outline-color: $primary-on-field,
-      outlined-caret-color: $primary-on-field,
-      focus-select-arrow-color: $primary-on-field
+      outlined-caret-color: $primary-on-field
+    )
+  );
+  @include mat.select-overrides(
+    (
+      focused-arrow-color: $primary-on-field
+    )
+  );
+  @include mat.datepicker-overrides(
+    (
+      toggle-active-state-icon-color: $primary-on-field
     )
   );
 
