@@ -52,7 +52,16 @@
                   autofocus
                 />
               } @else {
-                <span class="session-name" [title]="s.name">{{ s.name }}</span>
+                <!-- The row stays a table row; this button is its keyboard and screen-reader way to select. -->
+                <button
+                  type="button"
+                  class="session-name"
+                  [title]="s.name"
+                  [attr.aria-current]="timer.activeSession()?.id === s.id ? 'true' : null"
+                  (click)="onSelectSession(s.id); $event.stopPropagation()"
+                >
+                  {{ s.name }}
+                </button>
               }
             </td>
           </ng-container>
@@ -109,9 +118,6 @@
             class="session-row"
             [class.session-row-active]="timer.activeSession()?.id === s.id"
             (click)="onSelectSession(s.id)"
-            role="button"
-            tabindex="0"
-            (keyup.enter)="onSelectSession(s.id)"
           ></tr>
         </table>
       </div>

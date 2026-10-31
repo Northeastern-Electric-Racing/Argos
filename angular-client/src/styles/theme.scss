@@ -20,7 +20,8 @@ html {
     ),
     $overrides: (
       // M3 dark uses primary tone 80 (a pale pink); tone 60 keeps the NER red recognisable while
-      // still clearing WCAG AA both as text on the dark surface and with on-primary text on top.
+      // still clearing WCAG AA with on-primary text on top, and as text on the page surface (5.9:1).
+      // On the #2c2c2c panels it is only 4.39:1, so small text there stays neutral.
       primary: #ff5353,
       on-primary: #410004
     )
@@ -150,7 +151,7 @@ html {
   @include mat.button-overrides(
     (
       filled-container-color: var(--color-battery-high),
-      filled-label-text-color: #000
+      filled-label-text-color: var(--color-on-status)
     )
   );
 }
@@ -159,7 +160,7 @@ html {
   @include mat.button-overrides(
     (
       filled-container-color: var(--color-battery-med),
-      filled-label-text-color: #000
+      filled-label-text-color: var(--color-on-status)
     )
   );
 }

@@ -6,7 +6,6 @@ import Storage from 'src/services/storage.service';
 import { AppNavBarComponent } from '../app-nav-bar/app-nav-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
-import { MatTabNavPanel } from '@angular/material/tabs';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NotificationLogService } from 'src/services/notification-log.service';
 
@@ -17,7 +16,7 @@ import { NotificationLogService } from 'src/services/notification-log.service';
   selector: 'app-context',
   templateUrl: './app-context.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [AppNavBarComponent, RouterOutlet, MatTabNavPanel]
+  imports: [AppNavBarComponent, RouterOutlet]
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);

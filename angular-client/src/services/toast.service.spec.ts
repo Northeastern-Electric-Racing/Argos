@@ -44,4 +44,12 @@ describe('ToastService', () => {
     dismissLast();
     expect(opened.map((o) => o.message.summary)).toEqual(['First', 'Offline']);
   });
+
+  it('drops a repeat of the toast on screen', () => {
+    service.add({ severity: 'success', summary: 'New Run Started', detail: 'Started.' });
+    service.add({ severity: 'success', summary: 'New Run Started', detail: 'Started.' });
+
+    dismissLast();
+    expect(opened.map((o) => o.message.summary)).toEqual(['New Run Started']);
+  });
 });

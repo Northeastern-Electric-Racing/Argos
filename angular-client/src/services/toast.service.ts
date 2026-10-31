@@ -1,5 +1,5 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
-import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ToastComponent } from 'src/components/toast/toast.component';
 
 export type ToastSeverity = 'success' | 'info' | 'warn' | 'error';
@@ -23,14 +23,15 @@ const DEFAULT_LIFE_MS = 3000;
 export class ToastService {
   private snackBar = inject(MatSnackBar);
   private destroyRef = inject(DestroyRef);
-  private current?: MatSnackBarRef<ToastComponent>;
+  /** The toast on screen, if any. */
+  private showing?: ToastMessage;
   private queue: ToastMessage[] = [];
 
   add(message: ToastMessage): void {
-    if (this.current) {
-      // A repeat of a toast that's already waiting adds nothing.
-      const queued = this.queue.some((m) => m.summary === message.summary && m.detail === message.detail);
-      if (!queued) this.queue.push(message);
+    if (this.showing) {
+      // A repeat of the toast on screen, or of one already waiting, adds nothing.
+      const same = (m: ToastMessage) => m.summary === message.summary && m.detail === message.detail;
+      if (!same(this.showing) && !this.queue.some(same)) this.queue.push(message);
       return;
     }
     this.show(message);
@@ -45,9 +46,9 @@ export class ToastService {
       politeness: message.severity === 'error' ? 'assertive' : 'polite',
       panelClass: ['toast-panel', `toast-${message.severity}`]
     });
-    this.current = ref;
+    this.showing = message;
     ref.afterDismissed().subscribe(() => {
-      this.current = undefined;
+      this.showing = undefined;
       const next = this.queue.shift();
       // Tearing down the app (or a test) dismisses the open toast; don't open queued ones then.
       if (next && !this.destroyRef.destroyed) this.show(next);

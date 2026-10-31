@@ -33,6 +33,8 @@
   --color-battery-low: #f50905;
   --color-battery-med: #ffea00;
   --color-battery-high: #1ae824;
+  /* Text on the battery/status colours above, as on the lap timer's go and hold buttons. */
+  --color-on-status: #000000;
   --color-widget-glass: #ffffff;
 
   /* Typography */

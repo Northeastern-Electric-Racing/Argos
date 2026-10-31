@@ -1,21 +1,11 @@
-import {
-  Component,
-  inject,
-  input,
-  OnInit,
-  DestroyRef,
-  ChangeDetectionStrategy,
-  signal,
-  WritableSignal
-} from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal, WritableSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ToastService } from 'src/services/toast.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { MatBadge } from '@angular/material/badge';
 import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatListItem, MatListItemIcon, MatListItemTitle, MatNavList } from '@angular/material/list';
@@ -33,7 +23,7 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
-import { filter } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
@@ -69,11 +59,10 @@ export interface NavItem {
     TypographyComponent,
     MatToolbar,
     MatTooltip,
-    MatTabNav,
-    MatTabLink,
     MatButton,
     MatIconButton,
     RouterLink,
+    RouterLinkActive,
     MatIcon,
     NotificationListComponent
   ],
@@ -91,9 +80,6 @@ export class AppNavBarComponent implements OnInit {
   private dialog = inject(MatDialog);
   protected notificationLogService = inject(NotificationLogService);
 
-  /** The page area the desktop tab nav bar labels (app-context wraps the router outlet in it). */
-  tabPanel = input<MatTabNavPanel>();
-
   /**
    * The apps grid is a CDK menu (keyboard navigation, focus management and ARIA come from
    * @angular/cdk/menu); the notifications panel is a CDK overlay. Both anchor to their nav bar buttons.
@@ -104,27 +90,19 @@ export class AppNavBarComponent implements OnInit {
     { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 }
   ];
 
-  // Set selected route to current URL path
-  selectedRoute: string = window.location.pathname;
   sidebarVisible = false;
   isMobile = false;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
-  // Below this width the page tabs drop to smaller labels so all four fit beside the run controls.
+  // Below this width the page links drop to smaller labels so all four fit beside the run controls.
   isNavCompact = window.innerWidth <= 1400;
+  // Below this width even icon-only page links don't fit, so they move into the apps menu.
+  isNavCollapsed = window.innerWidth <= 1000;
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
       this.sidebarVisible = isOpen;
     });
     this.isMobile = window.innerWidth <= 768;
-    this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationEnd),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((event: NavigationEnd) => {
-        this.selectedRoute = event.url;
-      });
   }
 
   // on resize, set the screen width
@@ -132,6 +110,7 @@ export class AppNavBarComponent implements OnInit {
     this.isMobile = window.innerWidth <= 768;
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
     this.isNavCompact = window.innerWidth <= 1400;
+    this.isNavCollapsed = window.innerWidth <= 1000;
   }
 
   newRunIsLoading = false;
@@ -140,22 +119,22 @@ export class AppNavBarComponent implements OnInit {
     map(() => new Date())
   );
 
+  /** Starts one run per click: the button is disabled until the server answers. */
   onStartNewRun = () => {
+    if (this.newRunIsLoading) return;
+    this.newRunIsLoading = true;
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
-    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.newRunIsLoading = isLoading;
+    runsQueryResponse.error.pipe(filter(Boolean), take(1), takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      this.newRunIsLoading = false;
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
-    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
-    });
-    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((run) => {
-      if (run) {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'New Run Started',
-          detail: 'Your new run has started successfully.'
-        });
-      }
+    runsQueryResponse.data.pipe(filter(Boolean), take(1), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.newRunIsLoading = false;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'New Run Started',
+        detail: 'Your new run has started successfully.'
+      });
     });
   };
 
@@ -193,8 +172,6 @@ export class AppNavBarComponent implements OnInit {
       icon: 'electrical_services'
     }
   ];
-
-  onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
 
   navMenuItems: NavItem[] = [
     {
@@ -243,6 +220,12 @@ export class AppNavBarComponent implements OnInit {
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
+  /** The apps menu leads with the main pages once they no longer fit in the toolbar. */
+  get appsMenuItems(): NavItem[] {
+    return this.isNavCollapsed ? this.collapsedMenuItems : this.navMenuItems;
+  }
+  private collapsedMenuItems: NavItem[] = [...this.mostUsedNavItems, ...this.navMenuItems];
+
   closeOnEscape(event: KeyboardEvent, open: WritableSignal<boolean>) {
     if (event.key === 'Escape') open.set(false);
   }
@@ -252,15 +235,10 @@ export class AppNavBarComponent implements OnInit {
   }
 
   navigateTo(route: string): void {
-    this.selectedRoute = route;
     this.router.navigate([route]);
   }
 
   onNotificationPanelShow(): void {
     this.notificationLogService.markAllRead();
-  }
-
-  isSelected(navItem: NavItem) {
-    return navItem.id === this.selectedRoute;
   }
 }

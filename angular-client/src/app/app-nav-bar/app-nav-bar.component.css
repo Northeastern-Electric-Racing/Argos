@@ -8,59 +8,47 @@
   margin-bottom: 1rem;
 }
 
-.home-logo {
+.home-logo,
+.navbar-menu {
   --mat-icon-button-state-layer-size: 56px;
   --mat-icon-button-icon-size: 48px;
 }
 
-.home-logo .mat-icon {
-  width: 48px;
-  height: 48px;
+.navbar-notification {
+  --mat-icon-button-icon-size: 32px;
 }
 
-/* Page links: tab nav bar sized to the toolbar, with the old bold labels and 36px icons. */
+.navbar .mat-mdc-icon-button .mat-icon {
+  width: var(--mat-icon-button-icon-size);
+  height: var(--mat-icon-button-icon-size);
+}
+
+/* Page links: the current page gets the nav list's active indicator, as in the drawer. */
 .navbar-nav {
-  --mat-tab-container-height: 60px;
-  --mat-tab-divider-height: 0;
-  --mat-tab-label-text-size: 20px;
-  --mat-tab-label-text-weight: 700;
-  --mat-tab-inactive-label-text-color: var(--color-text-primary);
-  --mat-tab-inactive-hover-label-text-color: var(--mat-sys-primary);
-  --mat-tab-inactive-focus-label-text-color: var(--mat-sys-primary);
-  --mat-tab-active-label-text-color: var(--mat-sys-primary);
-  --mat-tab-active-hover-label-text-color: var(--mat-sys-primary);
-  --mat-tab-active-focus-label-text-color: var(--mat-sys-primary);
-  flex: 1;
+  --mat-list-list-item-label-text-size: 20px;
+  --mat-list-list-item-label-text-weight: 700;
+  --mat-list-list-item-leading-icon-size: 36px;
+  --mat-list-list-item-leading-icon-start-space: 0;
+  --mat-list-list-item-leading-icon-end-space: 8px;
+  display: flex;
+  gap: 4px;
+  padding: 0;
   min-width: 0;
-  align-self: stretch;
 }
 
-.navbar-nav .mat-mdc-tab-link {
-  min-width: 0;
-  padding: 0 12px;
-}
-
-.nav-link-icon {
-  width: 36px;
-  height: 36px;
-  margin-right: 8px;
+.navbar-nav .mat-mdc-list-item {
+  width: auto;
+  flex: none;
+  padding: 0 14px;
 }
 
 .navbar-nav--compact {
-  --mat-tab-label-text-size: 15px;
+  --mat-list-list-item-label-text-size: 15px;
+  --mat-list-list-item-leading-icon-size: 28px;
 }
 
-.navbar-nav--compact .mat-mdc-tab-link {
-  padding: 0 10px;
-}
-
-.navbar-nav--compact .nav-link-icon {
-  width: 28px;
-  height: 28px;
-}
-
-.navbar-nav--icons .nav-link-icon {
-  margin-right: 0;
+.navbar-nav--icons {
+  --mat-list-list-item-leading-icon-end-space: 0;
 }
 
 .navbar-end {
@@ -68,25 +56,6 @@
   align-items: center;
   gap: 16px;
   margin-left: auto;
-}
-
-.navbar-notification {
-  --mat-icon-button-icon-size: 32px;
-}
-
-.navbar-notification .mat-icon {
-  width: 32px;
-  height: 32px;
-}
-
-.navbar-menu {
-  --mat-icon-button-state-layer-size: 56px;
-  --mat-icon-button-icon-size: 48px;
-}
-
-.navbar-menu .mat-icon {
-  width: 48px;
-  height: 48px;
 }
 
 .navbar-notification:hover,

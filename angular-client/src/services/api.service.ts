@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { QueryResponse } from 'src/utils/api.utils';
 
 /**
@@ -83,7 +83,7 @@ export default class APIService {
     isError.next(false);
 
     apiCall()
-      .then((response) => this.handleErrors(response, error, isError))
+      .then((response) => this.handleErrors(response))
       .then((response) => response.json() as Promise<T>)
       .then((resolvedData) => {
         data.next(resolvedData);
@@ -107,16 +107,14 @@ export default class APIService {
   }
 
   /**
-   * Handles any errors that may have occurred during the api call
+   * Rejects a failed response with its status text, so the catch below reports it once. Scylla's
+   * error bodies are plain text, so parsing them as JSON would only add a second, raw parse error.
    * @param response The response to check for errors
-   * @param error The error subject to emit errors to
-   * @param isError boolean subject to emit whether or not an error has occurred
-   * @returns The response
+   * @returns The response, if it succeeded
    */
-  private handleErrors(response: Response, error: BehaviorSubject<Error | null>, isError: Subject<boolean>): Response {
+  private handleErrors(response: Response): Response {
     if (!response.ok) {
-      isError.next(true);
-      error.next(new Error(response.statusText));
+      throw new Error(response.statusText);
     }
     return response;
   }
