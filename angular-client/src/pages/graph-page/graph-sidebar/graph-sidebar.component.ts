@@ -1,34 +1,21 @@
-import { Component, input, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mobile.component';
 
 /**
- * Sidebar component wrapper that determines to display mobile or desktop sidebar.
- * @param nodes The nodes to display on the sidebar.
- * @param selectDataType The function to call when a data type is selected.
+ * Sidebar component wrapper that shows the mobile (drawer) or desktop sidebar.
+ * @param dataTypes The data types to offer as topics.
+ * @param isMobile Whether to show the mobile sidebar; the graph page owns the breakpoint.
  */
 @Component({
   selector: 'graph-sidebar',
   templateUrl: './graph-sidebar.component.html',
   styleUrls: ['./graph-sidebar.component.css'],
   imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  changeDetection: ChangeDetectionStrategy.Eager
 })
-export default class GraphSidebarComponent implements OnInit {
+export default class GraphSidebarComponent {
   dataTypes = input.required<DataType[]>();
-
-  isMobile!: boolean;
-  mobileThreshold = 768;
-
-  ngOnInit() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
-  }
+  isMobile = input.required<boolean>();
 }
