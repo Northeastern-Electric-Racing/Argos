@@ -11,7 +11,7 @@
   border-radius: clamp(4px, 0.63vw, 14px);
   gap: clamp(4px, 0.94vw, 20px);
   width: 100%;
-  background-color: #1a1a1a;
+  background-color: var(--ui-surface-1);
   padding: clamp(2px, 0.4vw, 7px);
 }
 
@@ -48,7 +48,7 @@
   align-items: center;
   justify-content: center;
   padding: clamp(1px, 0.3vw, 6px) clamp(4px, 0.94vw, 20px) clamp(1px, 0.3vw, 6px) clamp(20px, 4vw, 80px);
-  background-color: #2c2c2c;
+  background-color: var(--color-background-info);
   border-radius: clamp(4px, 0.63vw, 14px);
   clip-path: polygon(clamp(34px, 6.9vw, 136px) 0, 100% 0, 100% 100%, 0 100%, 0 clamp(34px, 6.9vw, 136px));
   min-height: 0;
@@ -58,7 +58,7 @@
   display: flex;
   align-items: center;
   padding: clamp(1px, 0.3vw, 6px) clamp(2px, 0.5vw, 10px);
-  background-color: #2c2c2c;
+  background-color: var(--color-background-info);
   border-radius: clamp(4px, 0.63vw, 14px);
   min-width: clamp(160px, 22vw, 420px);
   max-width: clamp(160px, 22vw, 420px);
@@ -81,7 +81,7 @@
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
   font-size: clamp(10px, 1.56vw, 30px);
-  color: #efefef;
+  color: var(--ui-text);
   white-space: nowrap;
 }
 
@@ -119,9 +119,9 @@
 .controls-zone select-dropdown {
   --ui-select-height: clamp(18px, 2.3vw, 44px);
   --ui-select-radius: clamp(8px, 1.25vw, 24px);
-  --ui-select-bg: #555;
+  --ui-select-bg: var(--ui-control-off);
   --ui-select-font-size: clamp(7px, 0.94vw, 18px);
   --ui-select-font-weight: 600;
-  --ui-select-color: #c0c0c0;
+  --ui-select-color: var(--ui-text);
   --ui-select-padding-left: clamp(4px, 0.94vw, 20px);
 }

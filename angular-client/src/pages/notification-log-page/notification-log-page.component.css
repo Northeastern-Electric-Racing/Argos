@@ -63,7 +63,6 @@
 .empty-hint {
   font-size: 0.825rem;
   color: var(--color-text-secondary);
-  opacity: 0.75;
 }
 
 /* ---- Log table ---- */

@@ -1,5 +1,6 @@
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import NotificationRulesPageComponent from './notification-rules-page.component';
 
@@ -54,6 +55,32 @@ describe('NotificationRulesPageComponent', () => {
 
       await component.onFileSelected(event);
       expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', summary: 'Invalid File' }));
+    });
+  });
+
+  describe('Remove selected', () => {
+    const selected = [
+      { id: 'a', topic: 't', expr: 'a > 1', debounce_time: 1, subscribers: [], is_subscribed: false },
+      { id: 'b', topic: 't', expr: 'a > 2', debounce_time: 1, subscribers: [], is_subscribed: false }
+    ];
+
+    it('asks through the app confirm dialog, and deletes nothing until accepted', async () => {
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'confirm').mockReturnValue(undefined);
+      const fetchMock = vi.fn<(url: string) => Promise<Response>>(() => Promise.resolve({ ok: true } as Response));
+      vi.stubGlobal('fetch', fetchMock);
+      component.selectedRules.set(selected);
+      fetchMock.mockClear();
+
+      component.onRemoveSelected();
+      const [[options]] = confirm.mock.calls;
+      expect(options).toEqual(expect.objectContaining({ header: 'Delete Rules', danger: true }));
+      expect(options.message).toContain('2');
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      options.accept?.();
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/delete')).length).toBe(2);
+      vi.unstubAllGlobals();
     });
   });
 });
