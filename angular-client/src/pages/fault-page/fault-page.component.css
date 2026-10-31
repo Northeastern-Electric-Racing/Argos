@@ -18,3 +18,7 @@
   justify-content: left;
   overflow-y: auto;
 }
+
+.fault-row {
+  cursor: pointer;
+}

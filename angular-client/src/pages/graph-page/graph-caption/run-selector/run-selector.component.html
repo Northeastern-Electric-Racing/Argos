@@ -1,1 +1,4 @@
-<argos-button [onClick]="openDialog" [label]="label" size="sm" additionalStyles="background-color: #027bd7" />
+<button nz-button nzSize="small" (click)="openDialog()">
+  <nz-icon aria-hidden="true" nzType="history" />
+  {{ label }}
+</button>

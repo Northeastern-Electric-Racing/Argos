@@ -1,88 +1,21 @@
-.select-button-container {
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-}
-
-/* Run select button - using PrimeNG's CSS variables */
-.run-select-button {
-  --p-button-primary-color: #ffffff;
-  --p-button-primary-background: #313131;
-  --p-button-primary-border-color: #777777;
-  --p-button-primary-hover-background: rgba(104, 104, 104, 0.261);
-  --p-button-primary-hover-border-color: #777777;
-  --p-button-border-radius: 10px;
-  --p-button-padding-y: 8px;
-  --p-button-padding-x: 1.5rem;
-  --p-button-transition-duration: 0.15s;
-  --p-iconwrapper-padding-x: 1rem;
-}
-
-.run-card {
+/* Inset each slide so nz-carousel's arrows sit beside the run details, not over them. */
+.slide {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border: 2.5px solid #0099ff;
-  margin-left: 8px;
-  margin-right: 8px;
-  border-radius: 10px;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 32px 28px;
 }
 
-.number-buttons {
-  background-color: #262626;
-  border-radius: 10px;
-  color: white !important;
-  padding: 15px;
-  font-size: small;
-}
-
-/* Container that holds the carousel */
-.modal-container {
-  background-color: #262626;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-:host ::ng-deep .p-carousel-prev,
-:host ::ng-deep .p-carousel-next {
-  background-color: #262626;
-  border-color: #262626;
-  color: white;
-  border-radius: 100px;
-}
-
-/* should eventually be replaced with Grid component */
-
-.row {
-  display: flex;
-  background-color: #262626;
-  color: #ffff;
+.slide nz-descriptions {
   width: 100%;
 }
 
-.left {
-  margin-left: 5px;
-  text-align: left;
-  margin-right: auto;
-}
-
-.right {
-  margin-left: auto;
-  margin-right: 5px;
-  text-align: right;
-}
-
-.number_buttons.highlight {
-  border: 2px solid #0099ff; /* Highlight color */
-  background-color: #808080; /* Slightly different background to stand out */
-}
-
-.modal-close-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  scale: 75%;
-  border-radius: 10px;
-  margin-top: 15px;
-  margin-right: 10px;
+/* nz-carousel locks its slides to the height of its element when it lays out, which can be taken mid-way through
+   the modal's open animation and come out far too tall. Let the slides size to their content. nz-carousel has
+   no input for this and sets the heights inline, hence ::ng-deep and !important. */
+:host ::ng-deep .slick-list,
+:host ::ng-deep .slick-track,
+:host ::ng-deep [nz-carousel-content] {
+  height: auto !important;
 }

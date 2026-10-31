@@ -1,7 +1,6 @@
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { BehaviorSubject } from 'rxjs';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
@@ -72,7 +71,6 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
         TopicSelectionService,
         FaultService,
         Storage,
-        MessageService,
         { provide: APIService, useValue: apiServiceMock },
         { provide: ActivatedRoute, useValue: routeMock },
         { provide: Router, useValue: routerMock }
@@ -130,5 +128,16 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     expect(topicService.getSelectedDataTypes().value).toEqual([]);
     const lastNav = routerNavigate.mock.lastCall!;
     expect(lastNav[1].queryParams.topics).toBeNull();
+  });
+
+  it('switches the live X range between seconds and points from the range-unit control', () => {
+    mountAndLoadDataTypes();
+    const page = fixture.componentInstance;
+
+    page.setRangeMode('points');
+    expect(page.graphConfig.rangeMode).toBe('points');
+
+    page.setRangeMode('time');
+    expect(page.graphConfig.rangeMode).toBe('time');
   });
 });

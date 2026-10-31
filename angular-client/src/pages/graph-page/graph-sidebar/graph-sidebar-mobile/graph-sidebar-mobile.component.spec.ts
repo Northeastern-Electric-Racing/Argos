@@ -1,6 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile.component';
@@ -15,8 +13,7 @@ describe('GraphSidebarMobileComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GraphSidebarMobileComponent],
-      providers: [MessageService, DialogService]
+      imports: [GraphSidebarMobileComponent]
     }).compileComponents();
 
     topicService = TestBed.inject(TopicSelectionService);
@@ -27,17 +24,49 @@ describe('GraphSidebarMobileComponent', () => {
   });
 
   it('builds the tree from dataTypes', () => {
-    expect(component.treeNodes().map((n) => n.label)).toEqual(['BMS']);
+    expect(component.treeNodes().map((n) => n.title)).toEqual(['BMS']);
     expect(component.flatNodes().map((n) => n.data?.dataType.name)).toEqual(['BMS/Pack/SoC']);
   });
 
-  it('rebuilds the tree and selection when dataTypes changes', () => {
+  it('rebuilds the tree when dataTypes changes, keeping the selection', () => {
     topicService.addDataType(speed);
     fixture.componentRef.setInput('dataTypes', [soc, speed]);
     fixture.detectChanges();
 
-    expect(component.treeNodes().map((n) => n.label)).toEqual(['BMS', 'MPU']);
+    expect(component.treeNodes().map((n) => n.title)).toEqual(['BMS', 'MPU']);
     expect(component.flatNodes().length).toBe(2);
-    expect(component.selectedNodes()?.map((n) => n.data?.dataType.name)).toEqual(['MPU/State/Speed']);
+    expect(topicService.isSelected(speed)).toBe(true);
+  });
+
+  describe('topics drawer', () => {
+    const focusable = 'button, input, [tabindex]:not([tabindex="-1"])';
+    const closedDrawerControls = () => document.querySelectorAll(`.ant-drawer:not(.ant-drawer-open) :is(${focusable})`);
+    const drawerControls = () => document.querySelectorAll(`.ant-drawer-open :is(${focusable})`);
+    /** Waits out nz-drawer's 300ms open or close animation, then re-renders. */
+    const afterAnimation = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+    const toggle = () => fixture.nativeElement.querySelector('.toggle-btn') as HTMLButtonElement;
+
+    afterEach(() => fixture.destroy());
+
+    it('leaves nothing focusable behind while closed', async () => {
+      await afterAnimation();
+      expect(closedDrawerControls()).toHaveLength(0);
+    });
+
+    it('shows its controls when opened and removes them once closed', async () => {
+      toggle().click();
+      await afterAnimation();
+      expect(drawerControls().length).toBeGreaterThan(0);
+      expect(document.querySelector('.ant-drawer-open input[aria-label="Search topics"]')).not.toBeNull();
+
+      (document.querySelector('.ant-drawer-close') as HTMLButtonElement).click();
+      await afterAnimation();
+      expect(drawerControls()).toHaveLength(0);
+      expect(closedDrawerControls()).toHaveLength(0);
+    });
   });
 });

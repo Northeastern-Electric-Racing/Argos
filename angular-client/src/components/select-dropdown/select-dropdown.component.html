@@ -1,9 +1,16 @@
-<p-select
+<label class="visually-hidden" [for]="inputId">{{ accessibleName() }}</label>
+<nz-select
+  #select
   class="small-grey-select"
-  [options]="options()"
-  [(ngModel)]="selectedOption"
-  optionLabel="name"
-  [placeholder]="placeholder()"
-  (onChange)="handleChangedOption($event)"
-  appendTo="body"
-></p-select>
+  [nzId]="inputId"
+  [nzSize]="size()"
+  [ngModel]="selectedOption?.name"
+  (ngModelChange)="handleChangedOption($event)"
+  [nzPlaceHolder]="placeholder()"
+  [nzDropdownMatchSelectWidth]="false"
+  (nzOpenChange)="!$event && select.focus()"
+>
+  @for (option of options(); track option.name) {
+    <nz-option [nzValue]="option.name" [nzLabel]="option.name" />
+  }
+</nz-select>

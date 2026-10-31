@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { NZ_MODAL_DATA, NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzTableModule } from 'ng-zorro-antd/table';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
@@ -20,18 +21,16 @@ interface PresetDialogData {
   templateUrl: './preset-dialog.component.html',
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
+  imports: [FormsModule, NzInputModule, NzButtonModule, NzEmptyModule, NzTableModule]
 })
 export class PresetDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject<NzModalRef<PresetDialogComponent, DataType[] | null>>(NzModalRef);
+  private data = inject<PresetDialogData>(NZ_MODAL_DATA);
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private notification = inject(NotificationAnnouncerService);
+  private modal = inject(NzModalService);
 
-  private data = this.config.data as PresetDialogData;
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
     initialValue: [] as DataType[]
@@ -51,20 +50,12 @@ export class PresetDialogComponent {
     if (existing) {
       this.confirmReplace(name, () => {
         this.presetService.replacePreset(existing.id, { topicNames });
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Preset Replaced',
-          detail: `"${name}" now contains ${topicNames.length} topic(s)`
-        });
+        this.notification.create('success', 'Preset Replaced', `"${name}" now contains ${topicNames.length} topic(s)`);
         this.newPresetName.set('');
       });
     } else {
       this.presetService.addPreset(name, topicNames);
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Preset Saved',
-        detail: `"${name}" with ${topicNames.length} topic(s)`
-      });
+      this.notification.create('success', 'Preset Saved', `"${name}" with ${topicNames.length} topic(s)`);
       this.newPresetName.set('');
     }
   }
@@ -85,9 +76,9 @@ export class PresetDialogComponent {
       text = await readTextFile(file, '.json');
     } catch (err) {
       if (err instanceof FileReadError && err.kind === 'invalid-extension') {
-        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .json file' });
+        this.notification.create('error', 'Invalid File', 'Please select a .json file');
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+        this.notification.create('error', 'Read Error', 'Failed to read file');
       }
       return;
     }
@@ -125,50 +116,39 @@ export class PresetDialogComponent {
   }
 
   onDelete(preset: Preset): void {
-    this.confirmationService.confirm({
-      message: `Delete preset "${preset.name}"?`,
-      header: 'Delete Preset',
-      acceptLabel: 'Delete',
-      rejectLabel: 'Cancel',
-      accept: () => {
+    this.modal.confirm({
+      nzContent: `Delete preset "${preset.name}"?`,
+      nzTitle: 'Delete Preset',
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
         this.presetService.deletePreset(preset.id);
-        this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
+        this.notification.create('success', 'Preset Deleted', preset.name);
       }
     });
   }
 
   private confirmReplace(name: string, onAccept: () => void): void {
-    this.confirmationService.confirm({
-      message: `A preset named "${name}" already exists. Replace its topics?`,
-      header: 'Replace Preset',
-      acceptLabel: 'Replace',
-      rejectLabel: 'Cancel',
-      accept: onAccept
+    this.modal.confirm({
+      nzContent: `A preset named "${name}" already exists. Replace its topics?`,
+      nzTitle: 'Replace Preset',
+      nzOkText: 'Replace',
+      nzCancelText: 'Cancel',
+      nzOnOk: onAccept
     });
   }
 
   private toastImported(name: string, count: number): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Preset Imported',
-      detail: `"${name}" with ${count} topic(s)`
-    });
+    this.notification.create('success', 'Preset Imported', `"${name}" with ${count} topic(s)`);
   }
 
   onAddDefaultPresets(): void {
     const added = this.presetService.addDefaultPresets();
     if (added === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Defaults Already Present',
-        detail: 'All default presets are already in your list.'
-      });
+      this.notification.create('info', 'Defaults Already Present', 'All default presets are already in your list.');
     } else {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Defaults Added',
-        detail: `Added ${added} default preset${added === 1 ? '' : 's'}.`
-      });
+      this.notification.create('success', 'Defaults Added', `Added ${added} default preset${added === 1 ? '' : 's'}.`);
     }
   }
 
@@ -181,14 +161,14 @@ export class PresetDialogComponent {
     try {
       parsed = JSON.parse(text);
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'File is not valid JSON' });
+      this.notification.create('error', 'Parse Error', 'File is not valid JSON');
       return null;
     }
 
     if (Array.isArray(parsed)) {
       const topics = parsed.filter((n): n is string => typeof n === 'string' && n.length > 0);
       if (topics.length === 0) {
-        this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'No topic names found' });
+        this.notification.create('error', 'Parse Error', 'No topic names found');
         return null;
       }
       return { topicNames: Array.from(new Set(topics)) };
@@ -208,11 +188,11 @@ export class PresetDialogComponent {
       }
     }
 
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Parse Error',
-      detail: 'Expected an object with a "topicNames" string array, or a bare array of topic names'
-    });
+    this.notification.create(
+      'error',
+      'Parse Error',
+      'Expected an object with a "topicNames" string array, or a bare array of topic names'
+    );
     return null;
   }
 

@@ -14,60 +14,20 @@
       <div class="hero-current-delta" [class]="currentLapDeltaClass()">{{ currentLapDeltaText() }}</div>
     </div>
     <div class="hero-actions">
-      @if (!timer.activeSession()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-      } @else if (timer.isIdle()) {
-        <argos-button
-          label="Start"
-          [onClick]="onStart"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Delete"
-          [onClick]="onDeleteActiveButton"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+      @if (!timer.activeSession() || timer.isIdle()) {
+        <button nz-button nzSize="large" class="argos-btn-go" (click)="onStart()">Start</button>
+        @if (timer.activeSession()) {
+          <button nz-button nzSize="large" nzType="primary" nzDanger (click)="onDeleteActiveButton()">Delete</button>
+        }
       } @else if (timer.isRunning()) {
-        <argos-button
-          label="Pause"
-          [onClick]="onPause"
-          additionalStyles="background-color: var(--color-battery-med); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Lap"
-          [onClick]="onLap"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Stop"
-          [onClick]="onStop"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
+        <button nz-button nzSize="large" class="argos-btn-caution" (click)="onPause()">Pause</button>
+        <button nz-button nzSize="large" class="argos-btn-go" (click)="onLap()">Lap</button>
+        <button nz-button nzSize="large" nzType="primary" nzDanger (click)="onStop()">Stop</button>
       } @else if (timer.isPaused()) {
-        <argos-button
-          label="Resume"
-          [onClick]="onResume"
-          additionalStyles="background-color: var(--color-battery-high); color: #000; font-weight: 700;"
-        />
-        <argos-button
-          label="Reset"
-          [onClick]="onReset"
-          additionalStyles="background-color: var(--color-battery-low); color: #fff; font-weight: 600;"
-        />
-        <argos-button
-          label="Download"
-          [onClick]="onDownloadActiveButton"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
-        <argos-button
-          label="End Session"
-          [onClick]="onEndActiveSession"
-          additionalStyles="background-color: var(--color-background-info); border: 1px solid var(--color-divider); color: var(--color-text-primary);"
-        />
+        <button nz-button nzSize="large" class="argos-btn-go" (click)="onResume()">Resume</button>
+        <button nz-button nzSize="large" nzType="primary" nzDanger (click)="onReset()">Reset</button>
+        <button nz-button nzSize="large" (click)="onDownloadActiveButton()">Download</button>
+        <button nz-button nzSize="large" (click)="onEndActiveSession()">End Session</button>
       }
     </div>
   </div>

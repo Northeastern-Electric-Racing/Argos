@@ -13,29 +13,40 @@
       <div class="header-row">
         <typography variant="x-large-title" content="Notification Rules" />
         <div class="header-buttons">
-          <argos-button label="View Log" [onClick]="onViewLog" additionalStyles="background-color: #ef4345;" />
-          <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
-          <argos-button label="Download" [onClick]="onDownload" additionalStyles="background-color: #555;" />
+          <button nz-button nzType="primary" (click)="onViewLog()">View Log</button>
+          <button nz-button [nzLoading]="uploading()" (click)="onUpload()">
+            <nz-icon aria-hidden="true" nzType="upload" />
+            Upload
+          </button>
+          <button nz-button [nzLoading]="downloading()" (click)="onDownload()">
+            <nz-icon aria-hidden="true" nzType="download" />
+            Download
+          </button>
         </div>
       </div>
 
       <div class="rules-bar">
         <typography variant="header" content="Rules" />
         <div class="rules-bar-actions">
-          <argos-button label="Add" [onClick]="onAddRule" />
-          <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
-          <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+          <button nz-button nzType="primary" (click)="onAddRule()">
+            <nz-icon aria-hidden="true" nzType="plus" />
+            Add
+          </button>
+          <button nz-button nzDanger [disabled]="!hasSelection()" (click)="onRemoveSelected()">Remove</button>
+          <button nz-button [disabled]="!hasSelection()" (click)="onToggleSubscription()">Toggle Subscription</button>
         </div>
         <div class="search-container">
-          <input
-            pInputText
-            type="text"
-            placeholder="Search..."
-            [value]="searchTerm()"
-            (input)="onSearchInput($event)"
-            aria-label="Search rules"
-            class="search-input"
-          />
+          <nz-input-wrapper nzAllowClear class="search-input">
+            <nz-icon aria-hidden="true" nzInputPrefix nzType="search" />
+            <input
+              nz-input
+              type="text"
+              placeholder="Search rules"
+              [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event ?? '')"
+              aria-label="Search rules"
+            />
+          </nz-input-wrapper>
         </div>
       </div>
 
@@ -48,13 +59,14 @@
     </div>
 
     <button
+      nz-button
       type="button"
       class="stream-toggle"
       (click)="toggleStreamRail()"
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
       [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
     >
-      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
+      <nz-icon aria-hidden="true" [nzType]="streamRailOpen() ? 'right' : 'left'" />
     </button>
 
     <aside

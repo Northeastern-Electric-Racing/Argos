@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
 import { GraphPresetService, PRESET_SEEDS, Preset } from './graph-preset.service';
 
 const STORAGE_KEY = 'argos.graphPresets';
@@ -20,7 +19,7 @@ describe('GraphPresetService', () => {
   });
 
   function build(): GraphPresetService {
-    TestBed.configureTestingModule({ providers: [GraphPresetService, MessageService] });
+    TestBed.configureTestingModule({ providers: [GraphPresetService] });
     return TestBed.inject(GraphPresetService);
   }
 

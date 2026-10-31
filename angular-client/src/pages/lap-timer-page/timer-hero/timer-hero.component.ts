@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatDeltaMs } from 'src/utils/lap-timer.types';
@@ -10,12 +11,12 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
   templateUrl: './timer-hero.component.html',
   styleUrl: './timer-hero.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, InfoBackgroundComponent]
+  imports: [NzButtonModule, InfoBackgroundComponent]
 })
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private modal = inject(NzModalService);
+  private notification = inject(NotificationAnnouncerService);
 
   readonly currentLapDeltaText = computed(() => formatDeltaMs(this.timer.currentLapDeltaToBestMs()));
   readonly currentLapDeltaClass = computed(() => {
@@ -35,12 +36,13 @@ export default class TimerHeroComponent {
       this.timer.reset();
       return;
     }
-    this.confirmationService.confirm({
-      message: 'Discard all recorded laps in this session?',
-      header: 'Reset Active Session',
-      acceptLabel: 'Reset',
-      rejectLabel: 'Cancel',
-      accept: () => this.timer.reset()
+    this.modal.confirm({
+      nzContent: 'Discard all recorded laps in this session?',
+      nzTitle: 'Reset Active Session',
+      nzOkText: 'Reset',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.timer.reset()
     });
   };
 
@@ -59,7 +61,7 @@ export default class TimerHeroComponent {
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
-    this.messageService.add({ severity, summary, detail, life: 2000 });
+  private toast(severity: 'success' | 'warning' | 'error' | 'info', summary: string, detail: string): void {
+    this.notification.create(severity, summary, detail, { nzDuration: 2000 });
   }
 }

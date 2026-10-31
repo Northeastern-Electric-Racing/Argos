@@ -16,3 +16,7 @@
   width: 100%;
   height: 90vh;
 }
+
+.video-select {
+  min-width: 200px;
+}

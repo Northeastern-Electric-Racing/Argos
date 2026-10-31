@@ -15,7 +15,6 @@
   font-family: var(--font-family);
 }
 
-.setting-input-wrapper input {
+.setting-input-wrapper nz-input-number {
   width: 100%;
-  box-sizing: border-box;
 }

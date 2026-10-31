@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { ProgressSpinner } from 'primeng/progressspinner';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 /**
  * Loading Page Component to display while loading information from the backend.
@@ -9,6 +9,6 @@ import { ProgressSpinner } from 'primeng/progressspinner';
   templateUrl: './loading-page.component.html',
   styleUrls: ['./loading-page.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ProgressSpinner]
+  imports: [NzSpinModule]
 })
 export default class LoadingPageComponent {}

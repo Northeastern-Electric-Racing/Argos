@@ -1,21 +1,18 @@
-@if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
-    </ng-template>
-  </p-drawer>
-} @else {
+<ng-template #drawerTitle>
+  <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+</ng-template>
+<ng-template #drawerContent>
+  @for (navItem of allNavItems; track navItem) {
+    <sidebar-chip
+      icon="{{ navItem.icon }}"
+      value="{{ navItem.label }}"
+      [active]="this.isSelected(navItem)"
+      (click)="navItem.onClick()"
+    >
+    </sidebar-chip>
+  }
+</ng-template>
+@if (!isMobile && !sidebarVisible()) {
   <nav class="navbar">
     <div class="home-logo" (click)="this.homeNavItem.onClick()">
       <mat-icon [svgIcon]="this.homeNavItem.icon" />
@@ -35,14 +32,7 @@
     </div>
 
     <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 130px"
-      />
+      <button nz-button nzType="primary" [nzLoading]="newRunIsLoading()" (click)="onStartNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
@@ -54,21 +44,43 @@
         type="button"
         class="navbar-notification"
         aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
+        nz-popover
+        nzPopoverTrigger="click"
+        nzPopoverPlacement="bottomRight"
+        nzPopoverOverlayClassName="notification-popover"
+        [nzPopoverContent]="notificationPanel"
+        (nzPopoverVisibleChange)="$event && onNotificationPanelShow()"
       >
         <mat-icon [svgIcon]="'notifications'" />
         @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
+          <nz-badge
+            nzStandalone
+            [nzCount]="notificationLogService.unreadCount()"
+            [nzStyle]="{ boxShadow: 'none' }"
+            class="notification-badge"
+          />
         }
       </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
-          <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
+      <ng-template #notificationPanel>
+        <notification-list variant="popover" />
+      </ng-template>
+      <button
+        type="button"
+        class="navbar-menu"
+        aria-label="More pages"
+        nz-popover
+        nzPopoverTrigger="click"
+        nzPopoverPlacement="bottomRight"
+        nzPopoverOverlayClassName="nav-options-popover"
+        [(nzPopoverVisible)]="menuOpen"
+        [nzPopoverContent]="navOptionsMenu"
+        [class.selected]="menuOpen"
+      >
         <mat-icon [svgIcon]="'apps'" />
-      </div>
+      </button>
+      <ng-template #navOptionsMenu>
+        <app-nav-options-menu [menuItems]="navMenuItems" (itemSelected)="menuOpen = false" />
+      </ng-template>
     </hstack>
   </nav>
 }

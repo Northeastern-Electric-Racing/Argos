@@ -31,36 +31,7 @@
 }
 
 .empty-laps {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 32px;
-}
-
-.lap-table-wrap :where(.p-datatable) {
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-}
-.lap-table-wrap :where(th) {
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  background: transparent;
-  border-bottom: 1px solid var(--color-divider);
-  padding: 8px 12px;
-  text-align: left;
-}
-.lap-table-wrap :where(td) {
-  border-bottom: 1px solid var(--color-divider);
-  padding: 8px 12px;
-  vertical-align: middle;
-}
-.lap-table-wrap :where(tr):hover td {
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .lap-row-best > td:first-child {
@@ -70,40 +41,8 @@
   border-left: 3px solid var(--color-battery-low);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
-.lap-table-wrap th.col-num,
-.lap-table-wrap td.col-num {
-  width: 56px;
-  text-align: right !important;
-}
-.lap-table-wrap th.col-dur,
-.lap-table-wrap td.col-dur {
-  width: 100px;
-  text-align: right !important;
-}
-.lap-table-wrap th.col-delta,
-.lap-table-wrap td.col-delta {
-  width: 110px;
-  text-align: right !important;
-}
-.lap-table-wrap th.col-time,
-.lap-table-wrap td.col-time {
-  width: 130px;
-  text-align: right !important;
-}
-.lap-table-wrap th.col-run,
-.lap-table-wrap td.col-run {
-  width: 64px;
-  text-align: right !important;
-}
-.lap-table-wrap th.col-stat,
-.lap-table-wrap td.col-stat {
-  width: 100px;
-  text-align: right !important;
-}
-
 .delta-positive {
-  color: var(--color-battery-low);
+  color: var(--color-text-danger);
 }
 
 .best-flag {

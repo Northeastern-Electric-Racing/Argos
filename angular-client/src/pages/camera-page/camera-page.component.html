@@ -1,13 +1,18 @@
 @if (this.urlAvailable) {
   <div class="background">
     <div class="top-right">
-      <p-select
-        [options]="videoUrls"
+      <label class="visually-hidden" for="camera-video-select">Video</label>
+      <nz-select
+        class="video-select"
+        nzId="camera-video-select"
         [(ngModel)]="selectedVideoName"
-        placeholder="Select a Video"
-        (onChange)="onDropdownChange($event)"
-        [style]="{ padding: '5px' }"
-      />
+        nzPlaceHolder="Select a Video"
+        (ngModelChange)="onDropdownChange($event)"
+      >
+        @for (video of videoUrls; track video) {
+          <nz-option [nzValue]="video" [nzLabel]="video" />
+        }
+      </nz-select>
     </div>
 
     <div class="video-container">

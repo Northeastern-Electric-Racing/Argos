@@ -1,5 +1,5 @@
-import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { Component, computed, effect, input, ChangeDetectionStrategy } from '@angular/core';
+import { NzSelectModule, NzSelectSizeType } from 'ng-zorro-antd/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
@@ -12,12 +12,14 @@ export interface DropdownOption {
   function: () => void;
 }
 
+let nextId = 0;
+
 @Component({
   selector: 'select-dropdown',
   templateUrl: './select-dropdown.component.html',
   styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  imports: [NzSelectModule, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -30,6 +32,12 @@ export class SelectDropdownComponent {
   ]);
   placeholder = input<string>('placeholder');
   defaultValue = input<string | undefined>(undefined);
+  /** Accessible name for the select; defaults to the placeholder, which callers use as its caption. */
+  label = input<string | undefined>(undefined);
+  /** Ant's control size; small lines the select up with small buttons in toolbars. */
+  size = input<NzSelectSizeType>('default');
+  accessibleName = computed(() => this.label() ?? this.placeholder());
+  readonly inputId = `select-dropdown-${nextId++}`;
 
   selectedOption: DropdownOption | undefined;
 
@@ -53,8 +61,11 @@ export class SelectDropdownComponent {
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
-    changeEvent.value.function();
+  // Options are keyed by name; ngModelChange only fires on user picks, not when defaultValue sets the model.
+  handleChangedOption(name: string) {
+    const option = this.options().find((o) => o.name === name);
+    this.selectedOption = option;
+    option?.function();
   }
 
   // Get display text for the dropdown

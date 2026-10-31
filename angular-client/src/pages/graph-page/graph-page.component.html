@@ -12,75 +12,77 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+            <button
+              nz-button
+              nzSize="small"
+              class="sidebar-toggle"
+              [attr.aria-pressed]="showSideBar"
+              (click)="toggleSideBar()"
+            >
+              <nz-icon aria-hidden="true" [nzType]="showSideBar ? 'menu-fold' : 'menu-unfold'" />
+              Sidebar
+            </button>
+            <button
+              nz-button
+              nzSize="small"
+              [nzType]="showMultiYaxis ? 'primary' : 'default'"
+              [attr.aria-pressed]="showMultiYaxis"
+              (click)="toggleMultiYaxis()"
+            >
+              Multi Y-axis
+            </button>
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button nz-button nzSize="small" (click)="togglePause()">
+                <nz-icon aria-hidden="true" [nzType]="isPaused ? 'caret-right' : 'pause'" />
+                {{ isPaused ? 'Play' : 'Pause' }}
+              </button>
             }
           </div>
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+              <nz-segmented
+                nzSize="small"
+                aria-label="X range unit"
+                [nzOptions]="rangeModeOptions"
+                [ngModel]="rangeMode"
+                (ngModelChange)="setRangeMode($event)"
               />
-              <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputnumber
+              <label class="input-label" for="graph-x-range">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
+              <nz-input-number
+                nzId="graph-x-range"
                 [(ngModel)]="rangeValue"
-                mode="decimal"
-                [min]="1"
-                [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
-                [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (onInput)="onGraphConfigChange()"
-              ></p-inputnumber>
+                class="time-range-input"
+                nzSize="small"
+                [nzMin]="1"
+                [nzStep]="1"
+                [nzPlaceHolder]="rangeMode === 'time' ? '30' : 'Auto'"
+                (ngModelChange)="onGraphConfigChange()"
+              />
             </div>
           }
 
           <div class="toolbar-group config-group">
-            <label class="input-label">Y Min:</label>
-            <p-inputnumber
+            <label class="input-label" for="graph-y-min">Y Min:</label>
+            <nz-input-number
+              nzId="graph-y-min"
               [(ngModel)]="yAxisMin"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
-              placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              class="y-axis-input"
+              nzSize="small"
+              nzPlaceHolder="Auto"
+              (ngModelChange)="onGraphConfigChange()"
+            />
 
-            <label class="input-label">Y Max:</label>
-            <p-inputnumber
+            <label class="input-label" for="graph-y-max">Y Max:</label>
+            <nz-input-number
+              nzId="graph-y-max"
               [(ngModel)]="yAxisMax"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
-              placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              class="y-axis-input"
+              nzSize="small"
+              nzPlaceHolder="Auto"
+              (ngModelChange)="onGraphConfigChange()"
+            />
           </div>
 
           <div class="toolbar-group">
@@ -119,8 +121,8 @@
       }
 
       <div class="content-div">
-        @if (this.showSideBar) {
-          <graph-sidebar [dataTypes]="dataTypes" class="desktop-sidebar" />
+        @if (!isMobile() && this.showSideBar) {
+          <graph-sidebar [dataTypes]="dataTypes" [isMobile]="false" class="desktop-sidebar" />
         }
         <div class="right-container">
           <graph
@@ -134,7 +136,9 @@
             [graphConfig]="this.graphConfig"
           />
         </div>
-        <graph-sidebar [dataTypes]="dataTypes!" class="mobile-sidebar" />
+        @if (isMobile()) {
+          <graph-sidebar [dataTypes]="dataTypes!" [isMobile]="true" class="mobile-sidebar" />
+        }
       </div>
     </div>
   }

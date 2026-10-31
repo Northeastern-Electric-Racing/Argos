@@ -1,18 +1,18 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import Storage from 'src/services/storage.service';
-import { ButtonComponent } from '../argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 
 @Component({
   selector: 'more-details',
   templateUrl: './more-details.component.html',
-  imports: [ButtonComponent]
+  imports: [NzButtonModule]
 })
 export default class MoreDetailsComponent {
   private router = inject(Router);
   private storage = inject(Storage);
-  private messageService = inject(MessageService);
+  private notification = inject(NotificationAnnouncerService);
   label: string = 'More Details';
   goToGraph = () => {
     const runId = this.storage.getCurrentRunId().value;
@@ -25,11 +25,7 @@ export default class MoreDetailsComponent {
 
   showRouterDisconnectedToast() {
     setTimeout(() => {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Router is disconnected'
-      });
+      this.notification.create('error', 'Error', 'Router is disconnected');
     });
   }
 }

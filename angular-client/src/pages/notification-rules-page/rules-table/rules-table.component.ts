@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Table, TableModule } from 'primeng/table';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
+import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import { FormsModule } from '@angular/forms';
-import { ButtonDirective } from 'primeng/button';
-import { take } from 'rxjs';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { map, take } from 'rxjs';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   ClientRule,
   deleteRule,
@@ -20,7 +23,7 @@ import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edi
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective],
+  imports: [NzTableModule, NzSwitchModule, FormsModule, NzButtonModule, NzIconModule],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })
@@ -30,22 +33,38 @@ export class RulesTableComponent implements OnInit {
 
   selectionChanged = output<ClientRule[]>();
 
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private notification = inject(NotificationAnnouncerService);
+  private modal = inject(NzModalService);
+
+  /** On narrow screens the table is small, with tighter checkbox and action columns and no Uploaded By or Description. */
+  isMobile = toSignal(
+    inject(BreakpointObserver)
+      .observe('(max-width: 768px)')
+      .pipe(map((state) => state.matches)),
+    {
+      initialValue: false
+    }
+  );
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
   selectedRules = signal<ClientRule[]>([]);
 
-  dt = viewChild<Table>('dt');
+  selectedIds = computed(() => new Set(this.selectedRules().map((r) => r.id)));
 
-  constructor() {
-    effect(() => {
-      this.dt()?.filterGlobal(this.searchTerm(), 'contains');
-    });
-  }
+  /** Rules whose expression, topic or id contains the search term (case-insensitive). */
+  filteredRules = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.rules();
+    return this.rules().filter((r) => [r.expr, r.topic, r.id].some((f) => f.toLowerCase().includes(term)));
+  });
+  allChecked = computed(() => {
+    const visible = this.filteredRules();
+    return visible.length > 0 && visible.every((r) => this.selectedIds().has(r.id));
+  });
+  indeterminate = computed(() => !this.allChecked() && this.filteredRules().some((r) => this.selectedIds().has(r.id)));
 
-  private editRef: DynamicDialogRef | null | undefined;
+  private editRef: NzModalRef | undefined;
 
   ngOnInit(): void {
     this.loadRules();
@@ -59,10 +78,10 @@ export class RulesTableComponent implements OnInit {
         const data: RulesResponse = await response.json();
         this.rules.set(data.client_rules);
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Failed to fetch rules' });
+        this.notification.create('error', 'Load Error', 'Failed to fetch rules');
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Network error' });
+      this.notification.create('error', 'Load Error', 'Network error');
     }
     this.loading.set(false);
   }
@@ -72,36 +91,66 @@ export class RulesTableComponent implements OnInit {
     this.selectionChanged.emit(selected);
   }
 
+  onItemChecked(rule: ClientRule, checked: boolean): void {
+    const others = this.selectedRules().filter((r) => r.id !== rule.id);
+    this.onSelectionChange(checked ? [...others, rule] : others);
+  }
+
+  /** Header checkbox: selects or clears every rule currently shown. */
+  onAllChecked(checked: boolean): void {
+    const visibleIds = new Set(this.filteredRules().map((r) => r.id));
+    const others = this.selectedRules().filter((r) => !visibleIds.has(r.id));
+    this.onSelectionChange(checked ? [...others, ...this.filteredRules()] : others);
+  }
+
+  /** Rules whose subscription request is in flight; their switches show nz-switch's loading state and ignore clicks. */
+  pendingIds = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * nz-switch flips itself on click, so the rule follows it straight away and goes back to its earlier value if
+   * the request fails; the change to the bound value is what turns the switch back.
+   */
   async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
+    const previous = rule.is_subscribed;
+    const setSubscribed = (value: boolean) =>
+      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: value } : r)));
+    const setPending = (pending: boolean) =>
+      this.pendingIds.update((ids) => {
+        const next = new Set(ids);
+        if (pending) next.add(rule.id);
+        else next.delete(rule.id);
+        return next;
+      });
+    setSubscribed(subscribed);
+    setPending(true);
     const ruleIds = [rule.id];
     try {
       const response = subscribed
         ? await subscribeToRules(this.clientId(), ruleIds)
         : await unsubscribeFromRules(this.clientId(), ruleIds);
-      if (response.ok) {
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: subscribed } : r)));
-      } else {
-        // Revert the toggle on failure
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update subscription' });
+      if (!response.ok) {
+        setSubscribed(previous);
+        this.notification.create('error', 'Error', 'Failed to update subscription');
       }
     } catch {
-      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
+      setSubscribed(previous);
+      this.notification.create('error', 'Error', 'Network error');
+    } finally {
+      setPending(false);
     }
   }
 
   onEdit(rule: ClientRule): void {
-    this.editRef = this.dialogService.open(EditRuleDialogComponent, {
-      header: `Edit Rule: ${rule.id}`,
-      width: '450px',
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: { expr: rule.expr, debounce_time: rule.debounce_time }
+    this.editRef = this.modal.create({
+      nzContent: EditRuleDialogComponent,
+      nzFooter: null,
+      nzTitle: `Edit Rule: ${rule.id}`,
+      nzWidth: 450,
+      nzData: { expr: rule.expr, debounce_time: rule.debounce_time }
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.editRef?.onClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
+    this.editRef.afterClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
       if (!result) return;
 
       try {
@@ -110,33 +159,42 @@ export class RulesTableComponent implements OnInit {
           this.rules.update((rules) =>
             rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
           );
-          this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Rule "${rule.id}" updated` });
+          this.notification.create('success', 'Updated', `Rule "${rule.id}" updated`);
         } else {
           const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: text });
+          this.notification.create('error', 'Edit Failed', text);
         }
       } catch {
-        this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: 'Network error' });
+        this.notification.create('error', 'Edit Failed', 'Network error');
       }
     });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.modal.confirm({
+      nzTitle: 'Delete Rule',
+      nzContent: `Delete rule "${rule.id}"?`,
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.deleteRule(rule)
+    });
+  }
 
+  private async deleteRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
         this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
         this.selectionChanged.emit(this.selectedRules());
-        this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `Rule "${rule.id}" removed` });
+        this.notification.create('success', 'Deleted', `Rule "${rule.id}" removed`);
       } else {
         const text = await response.text();
-        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: text });
+        this.notification.create('error', 'Delete Failed', text);
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: 'Network error' });
+      this.notification.create('error', 'Delete Failed', 'Network error');
     }
   }
 }

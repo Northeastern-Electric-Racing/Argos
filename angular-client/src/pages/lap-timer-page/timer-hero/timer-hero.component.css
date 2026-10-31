@@ -63,7 +63,7 @@
 }
 
 .delta-positive {
-  color: var(--color-battery-low);
+  color: var(--color-text-danger);
 }
 .delta-negative {
   color: var(--color-battery-high);
@@ -78,4 +78,9 @@
   justify-content: center;
   gap: 12px;
   margin-top: 8px;
+}
+
+.hero-actions button {
+  min-width: 120px;
+  font-weight: 600;
 }

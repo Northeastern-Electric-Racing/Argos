@@ -9,10 +9,11 @@ import {
   DestroyRef,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { BreakpointObserver, MediaMatcher } from '@angular/cdk/layout';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
+import { BehaviorSubject, map, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
@@ -23,7 +24,9 @@ import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, FaultData, GraphData, ObservableGraphInfo, Run } from 'src/utils/types.utils';
-import { ButtonComponent } from '../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSegmentedModule, NzSegmentedOptions } from 'ng-zorro-antd/segmented';
 import { FaultButtonsComponent } from './graph-caption/fault-buttons/fault-buttons.component';
 import { GeneralButtonsComponent, RangePreset } from './graph-caption/general-buttons/general-buttons.component';
 import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
@@ -32,7 +35,7 @@ import LiveValueStripComponent from './live-value-strip/live-value-strip.compone
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -43,14 +46,16 @@ import { FormsModule } from '@angular/forms';
   imports: [
     LoadingPageComponent,
     ErrorPageComponent,
-    ButtonComponent,
+    NzButtonModule,
+    NzIconModule,
+    NzSegmentedModule,
     FaultButtonsComponent,
     GeneralButtonsComponent,
     GraphSidebarComponent,
     CustomGraphComponent,
     LiveValueStripComponent,
     TypographyComponent,
-    InputNumberModule,
+    NzInputNumberModule,
     FormsModule
   ]
 })
@@ -58,7 +63,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private toastService = inject(MessageService);
+  private notification = inject(NotificationAnnouncerService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
@@ -86,6 +91,14 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
   // UI state variables
   showSideBar = true;
+  /** At phone width only the drawer sidebar is rendered, and on desktop only the side panel, never both. */
+  private readonly mobileQuery = '(max-width: 768px)';
+  isMobile = toSignal(
+    inject(BreakpointObserver)
+      .observe(this.mobileQuery)
+      .pipe(map((state) => state.matches)),
+    { initialValue: inject(MediaMatcher).matchMedia(this.mobileQuery).matches }
+  );
   toggleSideBar = () => {
     this.showSideBar = !this.showSideBar;
   };
@@ -191,8 +204,13 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleRangeMode = () => {
-    this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
+  readonly rangeModeOptions: NzSegmentedOptions = [
+    { label: 'Time', value: 'time' },
+    { label: 'Points', value: 'points' }
+  ];
+
+  setRangeMode = (mode: 'time' | 'points') => {
+    this.rangeMode = mode;
     this.onGraphConfigChange();
   };
 
@@ -211,6 +229,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
           this.processDataTypeSelection(dataTypes);
         }
         this.updateUrl(dataTypes);
+        // The mobile topics drawer is its own overlay view, so a pick there doesn't by itself re-check this page.
+        this.cdr.markForCheck();
       });
 
     // Subscribe to URL changes to sync back to service
@@ -247,7 +267,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
       if (error) {
-        this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+        this.notification.create('error', 'Error', error.message);
       }
     });
     runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
@@ -554,11 +574,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     } else if (this.run !== undefined || this.selectedFault !== undefined || this.historicalRangeActive()) {
       this.processHistoricalDataTypeSelection(dataTypes); // ← pass whole array
     } else {
-      this.toastService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No run selected. Please select a run or choose "Real Time".'
-      });
+      this.notification.create('error', 'Error', 'No run selected. Please select a run or choose "Real Time".');
     }
   };
 

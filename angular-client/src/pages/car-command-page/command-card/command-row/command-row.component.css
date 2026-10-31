@@ -21,8 +21,6 @@
   align-self: center;
 }
 
-.value-row ::ng-deep p-inputnumber,
-.value-row ::ng-deep .p-inputnumber,
-.value-row ::ng-deep .p-inputtext {
+.value-row nz-input-number {
   width: 100%;
 }

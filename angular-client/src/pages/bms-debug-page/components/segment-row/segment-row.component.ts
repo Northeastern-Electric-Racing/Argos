@@ -1,6 +1,8 @@
 import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import {
@@ -17,7 +19,7 @@ import { SegmentOverviewComponent } from '../segment-overview/segment-overview.c
   templateUrl: './segment-row.component.html',
   styleUrl: './segment-row.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
+  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent, NzButtonModule, NzIconModule]
 })
 export class SegmentRowComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

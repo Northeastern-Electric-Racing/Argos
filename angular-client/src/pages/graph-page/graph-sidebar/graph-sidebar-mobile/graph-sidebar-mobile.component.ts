@@ -6,17 +6,17 @@ import {
   computed,
   inject,
   input,
-  linkedSignal,
   signal,
+  TemplateRef,
+  viewChild,
   untracked
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { Drawer } from 'primeng/drawer';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzDrawerRef, NzDrawerService } from 'ng-zorro-antd/drawer';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -26,47 +26,54 @@ import {
 import { GraphPresetService, Preset } from 'src/services/graph-preset.service';
 import Storage from 'src/services/storage.service';
 import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
-import {
-  mapNodesToTreeNodes,
-  findSelectedTreeNodes,
-  flattenTreeNodes,
-  filterSelectedNodes,
-  TreeNodeData
-} from 'src/utils/tree.utils';
+import { mapNodesToTreeNodes, flattenTreeNodes, filterSelectedNodes } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
-import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
+import TopicTreeComponent from '../topic-tree/topic-tree.component';
 
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Drawer, Tree, ButtonComponent, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  providers: [NzDrawerService],
+  imports: [
+    TopicTreeComponent,
+    NzInputModule,
+    NzButtonModule,
+    NzIconModule,
+    TypographyComponent,
+    NzSwitchModule,
+    FormsModule,
+    SelectDropdownComponent
+  ]
 })
 export default class GraphSidebarMobileComponent implements OnDestroy {
   dataTypes = input.required<DataType[]>();
 
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private modal = inject(NzModalService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef | null;
+  private presetDialogRef?: NzModalRef<PresetDialogComponent, DataType[] | null>;
 
-  sidebarVisible = false;
+  private drawerTitle = viewChild.required<TemplateRef<object>>('drawerTitle');
+  private drawerContent = viewChild.required<TemplateRef<{ $implicit: unknown; drawerRef: NzDrawerRef }>>('drawerContent');
+  private drawerService = inject(NzDrawerService);
+  private drawerRef?: NzDrawerRef;
   treeNodes = computed(() => {
     const nodes = dataTypesToNodes(this.dataTypes());
     // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
     return untracked(() => mapNodesToTreeNodes(nodes, this.storage, this.injector));
   });
   flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
-  // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
-  selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>
-    findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
-  );
+  searchValue = signal('');
+  private topicTree = viewChild(TopicTreeComponent);
   flattenMode = signal(false);
   selectedOnly = signal(false);
 
@@ -89,41 +96,55 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   }));
   activePresetName = toSignal(this.presetService.getActivePresetName(), { initialValue: undefined });
 
+  /**
+   * The topics drawer is opened through NzDrawerService, like the nav drawer, rather than kept in the template
+   * closed: a closed <nz-drawer> with *nzDrawerContent keeps rendering its content off-screen under zoneless
+   * change detection, where keyboard and screen-reader users still reach it. A service drawer is created open
+   * and disposed once closed.
+   */
   toggleSidebar = () => {
-    this.sidebarVisible = !this.sidebarVisible;
+    if (this.drawerRef) {
+      this.drawerRef.close();
+      return;
+    }
+    this.drawerRef = this.drawerService.create({
+      nzPlacement: 'right',
+      nzWidth: '85vw',
+      nzMaskClosable: false,
+      nzClosable: true,
+      nzTitle: this.drawerTitle(),
+      nzContent: this.drawerContent()
+    });
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- afterClose completes when the drawer closes
+    this.drawerRef.afterClose.subscribe(() => (this.drawerRef = undefined));
   };
 
   toggleFlattenMode(value: boolean) {
     this.flattenMode.set(value);
-    if (this.selectedOnly()) return;
-    const active = value ? this.flatNodes() : this.treeNodes();
-    this.selectedNodes.set(findSelectedTreeNodes(active, this.topicSelectionService));
   }
 
   toggleSelectedOnly(value: boolean) {
     this.selectedOnly.set(value);
-    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 
   clearSelections = () => {
-    this.treeNodes().forEach((n) => (n.expanded = false));
+    this.topicTree()?.collapseAll();
     this.topicSelectionService.clearSelection();
-    this.selectedNodes.set(undefined);
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
-      header: 'Topic Presets',
-      width: '90vw',
-      draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: {
+    this.presetDialogRef = this.modal.create<PresetDialogComponent, { dataTypes: DataType[] }, DataType[] | null>({
+      nzTitle: 'Topic Presets',
+      nzContent: PresetDialogComponent,
+      nzFooter: null,
+      nzDraggable: true,
+      nzWidth: '90vw',
+      nzData: {
         dataTypes: this.dataTypes()
       }
     });
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.presetDialogRef?.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    this.presetDialogRef.afterClose.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -131,30 +152,9 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   };
 
   ngOnDestroy(): void {
+    this.drawerRef?.close();
     if (this.presetDialogRef) {
-      this.presetDialogRef.close();
-    }
-  }
-
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
-    if (dt) {
-      this.topicSelectionService.addDataType(dt);
-    }
-  }
-
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
-    if (dt) {
-      this.topicSelectionService.removeDataType(dt);
+      this.presetDialogRef.destroy();
     }
   }
 
@@ -166,6 +166,5 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   private applyMatched(matched: DataType[]) {
     if (matched.length === 0) return; // unknown topics warn toast
     this.topicSelectionService.setSelectedDataTypes(matched);
-    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 }

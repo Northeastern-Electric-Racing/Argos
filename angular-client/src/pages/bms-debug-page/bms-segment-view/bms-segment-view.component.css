@@ -1,6 +1,6 @@
 /* AI-generated  */
 
-/* Allow PrimeNG dropdowns inside mat-grid-tiles to overflow the tile boundary */
+/* Let tile content (e.g. the header selects) overflow the mat-grid-tile boundary instead of being clipped */
 mat-grid-tile {
   overflow: visible !important;
 }

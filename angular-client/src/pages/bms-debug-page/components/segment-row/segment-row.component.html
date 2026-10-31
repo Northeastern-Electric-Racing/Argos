@@ -12,7 +12,10 @@
         [placeholder]="viewSelectorConfig.placeholder"
         [defaultValue]="viewSelectorConfig.defaultValue"
       />
-      <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
+      <button nz-button nzType="primary" nzShape="round" nzSize="small" nzBlock class="see-more" (click)="openSegmentPage()">
+        See more
+        <nz-icon aria-hidden="true" nzType="arrow-right" />
+      </button>
     </div>
   </div>
 

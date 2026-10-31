@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
+import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
-import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
+import { FormsModule } from '@angular/forms';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 import {
   addRule,
   ClientRule,
@@ -34,11 +36,19 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
+  imports: [
+    TypographyComponent,
+    FormsModule,
+    NzButtonModule,
+    NzInputModule,
+    NzIconModule,
+    RulesTableComponent,
+    NotificationListComponent
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private notification = inject(NotificationAnnouncerService);
+  private modal = inject(NzModalService);
   private router = inject(Router);
 
   clientId!: string;
@@ -54,8 +64,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
 
-  private confirmRef: DynamicDialogRef | null | undefined;
-  private addRuleRef: DynamicDialogRef | null | undefined;
+  private confirmRef: NzModalRef | undefined;
+  private addRuleRef: NzModalRef | undefined;
 
   ngOnInit(): void {
     // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
@@ -75,37 +85,46 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onAddRule = () => {
-    this.addRuleRef = this.dialogService.open(AddRuleDialogComponent, {
-      header: 'Add New Rule',
-      width: '500px',
-      closable: true,
-      closeAriaLabel: 'Close'
+    this.addRuleRef = this.modal.create({
+      nzContent: AddRuleDialogComponent,
+      nzFooter: null,
+      nzTitle: 'Add New Rule',
+      nzWidth: 500
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.addRuleRef?.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
+    this.addRuleRef.afterClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
       if (!rule) return;
 
       try {
         const response = await addRule(this.clientId, rule);
         if (response.ok) {
-          this.messageService.add({ severity: 'success', summary: 'Rule Added', detail: `Rule "${rule.id}" created` });
+          this.notification.create('success', 'Rule Added', `Rule "${rule.id}" created`);
           this.rulesTable()?.loadRules();
         } else {
           const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: text });
+          this.notification.create('error', 'Add Failed', text);
         }
       } catch {
-        this.messageService.add({ severity: 'error', summary: 'Add Failed', detail: 'Network error' });
+        this.notification.create('error', 'Add Failed', 'Network error');
       }
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.modal.confirm({
+      nzTitle: 'Delete Rules',
+      nzContent: `Delete ${selected.length} selected rule(s)?`,
+      nzOkText: 'Delete',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => this.removeRules(selected)
+    });
+  };
 
+  private removeRules = async (selected: ClientRule[]) => {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
@@ -118,16 +137,12 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     if (errors.length > 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Delete Error',
-        detail: `Failed to delete: ${errors.join(', ')}`
-      });
+      this.notification.create('error', 'Delete Error', `Failed to delete: ${errors.join(', ')}`);
       // Keep failed rules selected so the user can retry
       const failedSet = new Set(errors);
       this.selectedRules.set(selected.filter((r) => failedSet.has(r.id)));
     } else {
-      this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${selected.length} rule(s) removed` });
+      this.notification.create('success', 'Deleted', `${selected.length} rule(s) removed`);
       this.selectedRules.set([]);
     }
 
@@ -157,24 +172,19 @@ export default class NotificationRulesPageComponent implements OnInit {
         const parts: string[] = [];
         if (toSubscribe.length > 0) parts.push(`subscribed to ${toSubscribe.length}`);
         if (toUnsubscribe.length > 0) parts.push(`unsubscribed from ${toUnsubscribe.length}`);
-        this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Toggled: ${parts.join(', ')}` });
+        this.notification.create('success', 'Updated', `Toggled: ${parts.join(', ')}`);
         this.rulesTable()?.loadRules();
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update some subscriptions' });
+        this.notification.create('error', 'Error', 'Failed to update some subscriptions');
         this.rulesTable()?.loadRules();
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
+      this.notification.create('error', 'Error', 'Network error');
     }
   };
 
   onSelectionChanged(rules: ClientRule[]): void {
     this.selectedRules.set(rules);
-  }
-
-  onSearchInput(event: Event): void {
-    const { value } = event.target as HTMLInputElement;
-    this.searchTerm.set(value);
   }
 
   toggleStreamRail = () => {
@@ -194,9 +204,9 @@ export default class NotificationRulesPageComponent implements OnInit {
       this.parseCsvAndConfirm(text);
     } catch (err) {
       if (err instanceof FileReadError && err.kind === 'invalid-extension') {
-        this.messageService.add({ severity: 'error', summary: 'Invalid File', detail: 'Please select a .csv file' });
+        this.notification.create('error', 'Invalid File', 'Please select a .csv file');
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Read Error', detail: 'Failed to read file' });
+        this.notification.create('error', 'Read Error', 'Failed to read file');
       }
     }
   }
@@ -205,16 +215,16 @@ export default class NotificationRulesPageComponent implements OnInit {
     const result = this.parseCsv(csv);
     if (!result) return;
 
-    this.confirmRef = this.dialogService.open(UploadConfirmDialogComponent, {
-      header: 'Confirm Rule Upload',
-      width: '600px',
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: { rules: result }
+    this.confirmRef = this.modal.create({
+      nzContent: UploadConfirmDialogComponent,
+      nzFooter: null,
+      nzTitle: 'Confirm Rule Upload',
+      nzWidth: 600,
+      nzData: { rules: result }
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.confirmRef?.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
+    this.confirmRef.afterClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
       if (confirmed) {
         this.batchAddRules(result);
       }
@@ -228,11 +238,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       .filter((l) => l.length > 0);
 
     if (lines.length < 2) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Parse Error',
-        detail: 'CSV must have a header row and at least one data row'
-      });
+      this.notification.create('error', 'Parse Error', 'CSV must have a header row and at least one data row');
       return null;
     }
 
@@ -240,11 +246,11 @@ export default class NotificationRulesPageComponent implements OnInit {
 
     for (const required of CSV_HEADERS) {
       if (!headers.includes(required)) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Parse Error',
-          detail: `Missing required column: ${required}. Expected: ${CSV_HEADERS.join(', ')}`
-        });
+        this.notification.create(
+          'error',
+          'Parse Error',
+          `Missing required column: ${required}. Expected: ${CSV_HEADERS.join(', ')}`
+        );
         return null;
       }
     }
@@ -285,16 +291,11 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     if (errors.length > 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Parse Warnings',
-        detail: errors.join('; '),
-        life: 8000
-      });
+      this.notification.create('warning', 'Parse Warnings', errors.join('; '), { nzDuration: 8000 });
     }
 
     if (rules.length === 0) {
-      this.messageService.add({ severity: 'error', summary: 'Parse Error', detail: 'No valid rules found in CSV' });
+      this.notification.create('error', 'Parse Error', 'No valid rules found in CSV');
       return null;
     }
 
@@ -349,21 +350,16 @@ export default class NotificationRulesPageComponent implements OnInit {
     this.uploading.set(false);
 
     if (successCount > 0) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Upload Complete',
-        detail: `${successCount} of ${rules.length} rule(s) added successfully`
-      });
+      this.notification.create(
+        'success',
+        'Upload Complete',
+        `${successCount} of ${rules.length} rule(s) added successfully`
+      );
       this.rulesTable()?.loadRules();
     }
 
     if (errors.length > 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Upload Errors',
-        detail: errors.join('; '),
-        life: 8000
-      });
+      this.notification.create('error', 'Upload Errors', errors.join('; '), { nzDuration: 8000 });
     }
   }
 
@@ -373,7 +369,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     try {
       const response = await getRulesByClientId(this.clientId);
       if (!response.ok) {
-        this.messageService.add({ severity: 'error', summary: 'Download Error', detail: 'Failed to fetch rules' });
+        this.notification.create('error', 'Download Error', 'Failed to fetch rules');
         this.downloading.set(false);
         return;
       }
@@ -382,7 +378,7 @@ export default class NotificationRulesPageComponent implements OnInit {
       const rules = data.client_rules;
 
       if (rules.length === 0) {
-        this.messageService.add({ severity: 'info', summary: 'No Rules', detail: 'No rules to export' });
+        this.notification.create('info', 'No Rules', 'No rules to export');
         this.downloading.set(false);
         return;
       }
@@ -401,9 +397,9 @@ export default class NotificationRulesPageComponent implements OnInit {
         csvContent,
         'text/csv;charset=utf-8;'
       );
-      this.messageService.add({ severity: 'success', summary: 'Downloaded', detail: `Exported ${rules.length} rule(s)` });
+      this.notification.create('success', 'Downloaded', `Exported ${rules.length} rule(s)`);
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Download Error', detail: 'Failed to download rules' });
+      this.notification.create('error', 'Download Error', 'Failed to download rules');
     }
 
     this.downloading.set(false);

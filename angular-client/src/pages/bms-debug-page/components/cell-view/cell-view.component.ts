@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { NZ_MODAL_DATA } from 'ng-zorro-antd/modal';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
@@ -41,7 +41,7 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
-  public config = inject(DynamicDialogConfig);
+  public data = inject(NZ_MODAL_DATA);
 
   /** Shared Map reference — mutations by SegmentHeatmapComponent
    *  are visible here because it's the same Map object. */
@@ -54,7 +54,7 @@ export class CellViewComponent implements OnDestroy {
   }
 
   constructor() {
-    this.cellsMap = this.config.data.cells;
+    this.cellsMap = this.data.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
   }
