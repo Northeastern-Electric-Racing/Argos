@@ -56,3 +56,8 @@
   background: var(--mat-sys-primary);
   color: var(--mat-sys-on-primary);
 }
+
+.menu-item.menu-item--current:hover,
+.menu-item.menu-item--current:focus-visible {
+  background: color-mix(in srgb, var(--mat-sys-on-primary) 8%, var(--mat-sys-primary));
+}

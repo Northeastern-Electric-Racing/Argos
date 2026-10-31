@@ -1,6 +1,7 @@
 // Angular Material M3 theme for the angular-client.
 // Palettes come from `ng generate @angular/material:theme-color` seeded with NER red (#ef4345)
 // and a neutral grey, so surfaces stay close to today's near-black dashboard.
+@use 'sass:map';
 @use '@angular/material' as mat;
 @use './theme-colors' as ner;
 
@@ -26,6 +27,10 @@ html {
       on-primary: #410004
     )
   );
+
+  // NER red for small text on the #2c2c2c panels, where primary (#ff5353) is only 4.39:1: primary
+  // tone 70 is about 6:1 there, so the nav bar's small run number clears AA.
+  --color-primary-text-on-panel: #{map.get(ner.$primary-palette, 70)};
 
   @include mat.strong-focus-indicators();
 

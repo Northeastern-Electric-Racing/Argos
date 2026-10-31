@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, input, computed, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 
@@ -19,6 +19,10 @@ export class CurrentRunDisplayComponent implements OnInit {
   currentRun: number = 0;
   navBarStyle = input<boolean>(false);
   small = input<boolean>(false);
+  /** NER red in the nav bar; small text takes the lighter tone that clears AA on the toolbar. */
+  navBarRunStyle = computed(
+    () => `margin: 0px; color: ${this.small() ? 'var(--color-primary-text-on-panel)' : 'var(--mat-sys-primary)'};`
+  );
 
   ngOnInit() {
     this.storage

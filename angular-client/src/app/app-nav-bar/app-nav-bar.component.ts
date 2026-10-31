@@ -29,11 +29,12 @@ import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 
 /**
- * Window widths (px, inclusive) where the toolbar's page links change form. Measured in Playwright
- * from 1440 down to 769 px: compact labels need about 1180 px to clear Start New Run, so icon-only
- * starts at 1240 to leave room for a longer run number; icon-only links fit down to 1001 px.
+ * Window widths (px, inclusive) where the toolbar changes form. Page links get compact labels, then
+ * go icon-only, then move into the apps menu; the run display and clock go small at runCompact (as
+ * on base). Between breakpoints, page labels shrink with an ellipsis rather than run under Start New
+ * Run, so a long run number can't push the run controls over them.
  */
-const NAV_BREAKPOINTS = { compact: 1400, iconsOnly: 1240, collapsed: 1000, mobile: 768 };
+export const NAV_BREAKPOINTS = { compact: 1400, iconsOnly: 1240, runCompact: 1160, collapsed: 1000, mobile: 768 };
 
 export interface NavItem {
   id: string;
@@ -104,6 +105,8 @@ export class AppNavBarComponent implements OnInit {
   isWindowSmall = false;
   /** Page links use smaller labels so all four fit beside the run controls. */
   isNavCompact = false;
+  /** The run display and clock use their small type. */
+  isRunCompact = false;
   /** Even icon-only page links don't fit, so they lead the apps menu instead. */
   isNavCollapsed = false;
 
@@ -119,6 +122,7 @@ export class AppNavBarComponent implements OnInit {
     this.isMobile = width <= NAV_BREAKPOINTS.mobile;
     this.isWindowSmall = width <= NAV_BREAKPOINTS.iconsOnly && !this.isMobile;
     this.isNavCompact = width <= NAV_BREAKPOINTS.compact;
+    this.isRunCompact = width <= NAV_BREAKPOINTS.runCompact && !this.isMobile;
     this.isNavCollapsed = width <= NAV_BREAKPOINTS.collapsed;
   }
 

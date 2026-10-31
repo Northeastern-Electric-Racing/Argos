@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { QueryResponse } from 'src/utils/api.utils';
 
+/** The longest server error reason passed on to callers, in characters. */
+const MAX_REASON_LENGTH = 200;
+
 /**
  * Service for interacting with the api
  */
@@ -107,15 +110,18 @@ export default class APIService {
   }
 
   /**
-   * Rejects a failed response with the server's reason, so the catch below reports it once. Scylla's
-   * error bodies are plain-text reasons, not JSON; the status stands in when there is none.
+   * Rejects a failed response with the server's reason, so the catch below reports it once. Scylla
+   * answers errors with a short plain-text reason, not JSON. Anything else (an HTML proxy page, say)
+   * falls back to the status, and a reason is cut to 200 characters for the toasts that show it.
    * @param response The response to check for errors
    * @returns The response, if it succeeded
    */
   private async handleErrors(response: Response): Promise<Response> {
     if (!response.ok) {
-      const reason = (await response.text().catch(() => '')).trim();
-      throw new Error(reason || response.statusText || `HTTP ${response.status}`);
+      const isText = (response.headers.get('content-type') ?? '').startsWith('text/plain');
+      const reason = isText ? (await response.text().catch(() => '')).trim() : '';
+      const shown = reason.length > MAX_REASON_LENGTH ? reason.slice(0, MAX_REASON_LENGTH - 1) + '…' : reason;
+      throw new Error(shown || response.statusText || `HTTP ${response.status}`);
     }
     return response;
   }

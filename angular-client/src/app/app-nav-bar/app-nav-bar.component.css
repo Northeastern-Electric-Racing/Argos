@@ -36,9 +36,10 @@
   min-width: 0;
 }
 
+/* Links shrink (labels ellipsize) instead of running under the fixed-width run controls. */
 .navbar-nav .mat-mdc-list-item {
   width: auto;
-  flex: none;
+  min-width: 0;
   padding: 0 14px;
 }
 
@@ -52,6 +53,7 @@
 }
 
 .navbar-end {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 16px;

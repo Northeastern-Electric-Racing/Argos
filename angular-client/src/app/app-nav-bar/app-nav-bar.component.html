@@ -73,9 +73,9 @@
       >
         Start New Run
       </button>
-      <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
+      <current-run-display [navBarStyle]="true" [small]="isRunCompact" />
       <typography
-        [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
+        [variant]="isRunCompact ? 'sidebar-label' : 'large-header'"
         content="{{ time$ | async | date: 'HH:mm:ss' }}"
         additionalStyles="fontSize: 36px"
       />

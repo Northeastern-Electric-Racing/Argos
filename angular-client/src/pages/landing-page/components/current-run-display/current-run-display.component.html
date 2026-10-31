@@ -1,14 +1,10 @@
 @if (this.navBarStyle()) {
   <hstack spacing="5px">
-    <typography
-      [variant]="small() ? 'sidebar-label' : 'large-header'"
-      content="Run"
-      additionalStyles="margin: 0px; color: #ef4345; fontSize: 36px"
-    />
+    <typography [variant]="small() ? 'sidebar-label' : 'large-header'" content="Run" [additionalStyles]="navBarRunStyle()" />
     <typography
       [variant]="small() ? 'sidebar-label' : 'large-header'"
       content="#{{ currentRun }}"
-      additionalStyles="margin: 0px; color: #ef4345; fontSize: 36px;"
+      [additionalStyles]="navBarRunStyle()"
     />
   </hstack>
 } @else {

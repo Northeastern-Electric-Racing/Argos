@@ -5,7 +5,9 @@ import { provideRouter, Router } from '@angular/router';
 import { MatIconRegistry } from '@angular/material/icon';
 import { of } from 'rxjs';
 import { ToastService } from 'src/services/toast.service';
-import { AppNavBarComponent } from './app-nav-bar.component';
+import { By } from '@angular/platform-browser';
+import { CurrentRunDisplayComponent } from 'src/pages/landing-page/components/current-run-display/current-run-display.component';
+import { AppNavBarComponent, NAV_BREAKPOINTS } from './app-nav-bar.component';
 
 @Component({ template: '' })
 class BlankPageComponent {}
@@ -93,12 +95,12 @@ describe('AppNavBarComponent', () => {
       expect(pageLinks().some((link) => link.hasAttribute('aria-current'))).toBe(false);
     });
 
-    it('show full-size labels above 1400px and compact ones at 1400px and below', async () => {
-      await render(1440);
+    it('show full-size labels above the compact breakpoint and compact ones at it', async () => {
+      await render(NAV_BREAKPOINTS.compact + 1);
       expect(el().querySelector('mat-nav-list.navbar-nav')!.classList).not.toContain('navbar-nav--compact');
       fixture.destroy();
 
-      await render(1400);
+      await render(NAV_BREAKPOINTS.compact);
       expect(el().querySelector('mat-nav-list.navbar-nav')!.classList).toContain('navbar-nav--compact');
       expect(pageLinks().map((link) => link.querySelector('[matListItemTitle]')?.textContent)).toEqual([
         'Charging',
@@ -108,39 +110,57 @@ describe('AppNavBarComponent', () => {
       ]);
     });
 
-    it('keep their labels at 1241px, where all four still clear Start New Run', async () => {
-      await render(1241);
+    it('keep their labels just above the icon-only breakpoint', async () => {
+      await render(NAV_BREAKPOINTS.iconsOnly + 1);
       expect(pageLinks().map((link) => link.getAttribute('aria-label'))).toEqual([null, null, null, null]);
     });
 
-    it('go icon-only at 1240px, named by aria-label with a tooltip', async () => {
-      await render(1240);
+    it('go icon-only at the icon-only breakpoint, named by aria-label with a tooltip', async () => {
+      await render(NAV_BREAKPOINTS.iconsOnly);
       expect(pageLinks().map((link) => link.getAttribute('aria-label'))).toEqual(['Charging', 'Graph', 'BMS', 'eFuses']);
       expect(pageLinks().some((link) => link.querySelector('[matListItemTitle]'))).toBe(false);
       expect(pageLinks().every((link) => link.classList.contains('mat-mdc-tooltip-trigger'))).toBe(true);
     });
 
     it('leave the apps menu to the secondary pages while they fit', async () => {
-      await render(1240);
+      await render(NAV_BREAKPOINTS.iconsOnly);
       expect(openAppsMenu().slice(0, 1)).toEqual(['Fault']);
     });
 
-    it('move into the apps menu at 1000px and below, so every page stays reachable', async () => {
-      await render(1000);
+    it('move into the apps menu at the collapse breakpoint, so every page stays reachable', async () => {
+      await render(NAV_BREAKPOINTS.collapsed);
       expect(el().querySelector('mat-nav-list.navbar-nav')).toBeNull();
       expect(openAppsMenu().slice(0, 5)).toEqual(['Charging', 'Graph', 'BMS', 'eFuses', 'Fault']);
     });
 
     it('mark the current page in the apps menu once they have moved there', async () => {
-      await render(1000, '/bms/segment/1');
+      await render(NAV_BREAKPOINTS.collapsed, '/bms/segment/1');
       openAppsMenu();
       expect(currentInAppsMenu()).toEqual(['BMS']);
     });
   });
 
+  describe('run display', () => {
+    const runDisplayIsSmall = () =>
+      (
+        fixture.debugElement.query(By.directive(CurrentRunDisplayComponent)).componentInstance as CurrentRunDisplayComponent
+      ).small();
+
+    it('stays full size with icon-only links, down to its own breakpoint', async () => {
+      await render(NAV_BREAKPOINTS.runCompact + 1);
+      expect(pageLinks()[0].getAttribute('aria-label')).toBe('Charging');
+      expect(runDisplayIsSmall()).toBe(false);
+    });
+
+    it('goes small at its own breakpoint', async () => {
+      await render(NAV_BREAKPOINTS.runCompact);
+      expect(runDisplayIsSmall()).toBe(true);
+    });
+  });
+
   describe('mobile drawer', () => {
-    it('replaces the toolbar at 768px with page links that mark the current page', async () => {
-      await render(768, '/bms/segment/2');
+    it('replaces the toolbar at the mobile breakpoint with page links that mark the current page', async () => {
+      await render(NAV_BREAKPOINTS.mobile, '/bms/segment/2');
       expect(el().querySelector('mat-toolbar')).toBeNull();
       const links = Array.from(el().querySelectorAll('mat-nav-list a[mat-list-item]'));
       expect(links.map((link) => link.getAttribute('href'))).toEqual([
