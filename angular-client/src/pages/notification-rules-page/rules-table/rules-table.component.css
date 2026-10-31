@@ -12,10 +12,19 @@
   align-items: center;
 }
 
+/* Long topics like BMS/Status/Temp_Average break anywhere, so they never push the table wider than the screen */
+.wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 768px) {
   /* Uploaded By and Description have no data yet, so they give way on phones */
   .hide-mobile {
     display: none;
+  }
+
+  .action-icons {
+    gap: 0;
   }
 
   .empty-state {

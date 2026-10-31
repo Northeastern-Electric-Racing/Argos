@@ -4,7 +4,7 @@ import { CarouselPageEvent, Carousel } from 'primeng/carousel';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Run } from 'src/utils/types.utils';
 
-import { Button } from 'primeng/button';
+import { Button, ButtonProps } from 'primeng/button';
 
 // the data for the dialog, basically just all the runs
 export interface DialogData {
@@ -22,6 +22,9 @@ export class CarouselComponent {
   public dialogRef = inject(DynamicDialogRef);
   public config = inject(DynamicDialogConfig);
   public router = inject(Router);
+  // PrimeNG 21 binds its own arrow labels on the <p-button> host, so the inner <button> gets them from here
+  readonly prevButtonProps: ButtonProps = { severity: 'secondary', text: true, rounded: true, ariaLabel: 'Previous run' };
+  readonly nextButtonProps: ButtonProps = { severity: 'secondary', text: true, rounded: true, ariaLabel: 'Next run' };
   runs: Run[];
   currentIndex: number = 0;
   previousIndex: number = 0;

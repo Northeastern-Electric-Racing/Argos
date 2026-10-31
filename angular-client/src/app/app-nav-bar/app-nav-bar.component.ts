@@ -218,7 +218,7 @@ export class AppNavBarComponent implements OnInit {
       background: 'transparent',
       borderColor: 'transparent',
       borderRadius: 'var(--border-radius-panel)',
-      shadow: '0 8px 24px rgba(0, 0, 0, 0.35)'
+      shadow: '{overlay.popover.shadow}'
     },
     content: { padding: '0' }
   };
@@ -226,9 +226,9 @@ export class AppNavBarComponent implements OnInit {
   // The apps menu: a PrimeNG popup Menu (menu/menuitem roles, arrow keys, Escape, outside click)
   appsMenuOpen = false;
   appsMenuTokens = {
-    root: { background: '{surface.800}', borderColor: 'transparent', borderRadius: '20px', color: '#ffffff' },
+    root: { background: '{surface.800}', borderColor: 'transparent', borderRadius: '20px', color: '{surface.0}' },
     list: { padding: '16px', gap: '12px' },
-    item: { focusBackground: 'transparent', color: '#ffffff', focusColor: '#ef4345' }
+    item: { focusBackground: 'transparent', color: '{surface.0}', focusColor: '{primary.400}' }
   };
   appsMenuItems: MenuItem[] = this.navMenuItems.map((navItem) => ({
     label: navItem.label,

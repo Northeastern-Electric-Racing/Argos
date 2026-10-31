@@ -49,6 +49,11 @@ export class RulesTableComponent implements OnInit {
     { initialValue: false }
   );
 
+  /** BMS/Status/Temp_Average -> BMS/, Status/, Temp_Average, so a narrow column breaks after the slashes */
+  topicParts(topic: string): string[] {
+    return topic.split(/(?<=\/)/);
+  }
+
   constructor() {
     effect(() => {
       this.dt()?.filterGlobal(this.searchTerm(), 'contains');

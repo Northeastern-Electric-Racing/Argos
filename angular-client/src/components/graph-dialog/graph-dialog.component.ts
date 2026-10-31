@@ -1,12 +1,13 @@
 import { Component, inject, ChangeDetectionStrategy, forwardRef } from '@angular/core';
 import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { provideArgosDialogs } from 'src/services/argos-dialog.service';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
 
 @Component({
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
-  providers: [DialogService],
+  providers: [provideArgosDialogs],
   changeDetection: ChangeDetectionStrategy.Eager,
   // forwardRef: GraphComponent imports this dialog to open it, so the two modules form a cycle
   imports: [forwardRef(() => GraphComponent)]

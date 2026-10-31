@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import ApexCharts from 'apexcharts';
 import { DialogService } from 'primeng/dynamicdialog';
+import { provideArgosDialogs } from 'src/services/argos-dialog.service';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 
@@ -17,7 +18,7 @@ type ChartOptions = Pick<
   selector: 'graph-component',
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css'],
-  providers: [DialogService],
+  providers: [provideArgosDialogs],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class GraphComponent implements OnInit, OnDestroy {

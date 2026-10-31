@@ -62,6 +62,7 @@
       </button>
       <p-popover
         #notificationPanel
+        [focusOnShow]="false"
         (onShow)="onNotificationPanelShow()"
         styleClass="notification-popover"
         [dt]="notificationPopoverTokens"

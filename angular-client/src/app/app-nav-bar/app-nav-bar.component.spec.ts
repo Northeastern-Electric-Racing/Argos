@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
+import { By } from '@angular/platform-browser';
+import { Popover } from 'primeng/popover';
 import { AppNavBarComponent } from './app-nav-bar.component';
 
 describe('AppNavBarComponent: Start New Run', () => {
@@ -59,5 +61,11 @@ describe('AppNavBarComponent: Start New Run', () => {
     expect(component.newRunIsLoading()).toBe(false);
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
     expect(add).not.toHaveBeenCalledWith(expect.objectContaining({ severity: 'success' }));
+  });
+
+  // PrimeNG 21 marks every Button [autofocus], so the popover would jump to the first dismiss button
+  it('keeps focus on the Notifications trigger when the notification popover opens', () => {
+    const popover: Popover = fixture.debugElement.query(By.directive(Popover)).componentInstance;
+    expect(popover.focusOnShow).toBe(false);
   });
 });

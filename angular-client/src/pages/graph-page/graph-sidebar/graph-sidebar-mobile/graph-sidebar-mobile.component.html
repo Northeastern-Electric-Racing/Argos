@@ -59,6 +59,7 @@
         [style]="{ height: 'calc(100vh - 160px)', overflow: 'auto' }"
         [metaKeySelection]="false"
         selectionMode="multiple"
+        [pt]="{ nodeLabel: { style: { width: '100%' } } }"
       >
         <!-- PrimeNG 21 Tree reads node templates only from pTemplate, not #node: keep this on the fork -->
         <ng-template let-node pTemplate="default">

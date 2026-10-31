@@ -49,15 +49,3 @@
   gap: 8px;
   width: 100%;
 }
-
-:host ::ng-deep .p-tree-node-label {
-  width: 100%;
-}
-
-:host ::ng-deep .p-tree-node-leaf {
-  height: 30px;
-}
-
-:host ::ng-deep .p-tree-node-selectable {
-  height: 30px;
-}

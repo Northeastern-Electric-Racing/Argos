@@ -40,7 +40,7 @@ const ArgosPreset = definePreset(Aura, {
         // primary.600 keeps white button text above WCAG AA (about 4.8:1)
         primary: {
           color: '{primary.600}',
-          contrastColor: '#ffffff',
+          contrastColor: '{surface.0}',
           hoverColor: '{primary.500}',
           activeColor: '{primary.400}'
         },
@@ -50,9 +50,9 @@ const ArgosPreset = definePreset(Aura, {
           color: 'rgba(255,255,255,.87)',
           focusColor: 'rgba(255,255,255,.87)'
         },
-        // A red primary would make a focused field look invalid, so focus uses the app's blue accent
+        // A red primary would make a focused field look invalid, so focus uses a blue accent (about 3.8:1 on surface.800)
         formField: {
-          focusBorderColor: '#027bd7'
+          focusBorderColor: '{sky.600}'
         },
         // Panels, tables and overlays use the shade of the app's info cards (surface.800) instead of
         // Aura's near-black surface.900, so PrimeNG pieces sit in the same layer as Argos cards.
@@ -105,12 +105,12 @@ const ArgosPreset = definePreset(Aura, {
       },
       row: {
         background: 'transparent',
-        hoverBackground: 'rgba(255, 255, 255, 0.04)'
+        hoverBackground: 'color-mix(in srgb, {surface.0}, transparent 96%)'
       },
       colorScheme: {
         dark: {
           root: { borderColor: '{surface.700}' },
-          row: { stripedBackground: 'rgba(255, 255, 255, 0.02)' }
+          row: { stripedBackground: 'color-mix(in srgb, {surface.0}, transparent 98%)' }
         }
       }
     },

@@ -27,7 +27,7 @@
     </div>
   </div>
 
-  <p-popover #customPopover styleClass="custom-range-popover" (onShow)="onCustomPopoverShow()">
+  <p-popover #customPopover styleClass="custom-range-popover" [focusOnShow]="false" (onShow)="onCustomPopoverShow()">
     <ng-template #content>
       <div class="custom-popover-body">
         <p-selectbutton

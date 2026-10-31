@@ -1,5 +1,6 @@
 import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
+import { provideArgosDialogs } from 'src/services/argos-dialog.service';
 import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
@@ -9,7 +10,7 @@ import { GraphComponent } from '../graph/graph.component';
   selector: 'info-graph',
   templateUrl: './info-graph.component.html',
   styleUrls: ['./info-graph.component.css'],
-  providers: [DialogService],
+  providers: [provideArgosDialogs],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, GraphComponent]
 })

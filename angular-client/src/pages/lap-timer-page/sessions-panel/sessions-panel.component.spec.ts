@@ -62,4 +62,30 @@ describe('SessionsPanelComponent', () => {
 
     expect(timer.sessions().find((s) => s.id === session.id)).toBeUndefined();
   });
+  it('Enter on a row actions button opens the menu without switching to that session', () => {
+    timer.createSession('Qualifying');
+    fixture.detectChanges();
+    const active = timer.activeSession()!.id;
+    const other = timer.sessions().find((x) => x.id !== active)!;
+    const rows = [...fixture.nativeElement.querySelectorAll('tr.session-row')] as HTMLElement[];
+    const otherRow = rows.find((r) => r.textContent!.includes(other.name))!;
+    const actions: HTMLButtonElement = otherRow.querySelector('button[aria-label="Session actions"]')!;
+
+    actions.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+
+    expect(timer.activeSession()!.id).toBe(active);
+  });
+
+  it('Enter on a row itself switches to that session', () => {
+    timer.createSession('Qualifying');
+    fixture.detectChanges();
+    const active = timer.activeSession()!.id;
+    const other = timer.sessions().find((x) => x.id !== active)!;
+    const rows = [...fixture.nativeElement.querySelectorAll('tr.session-row')] as HTMLElement[];
+    const otherRow = rows.find((r) => r.textContent!.includes(other.name))!;
+
+    otherRow.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+
+    expect(timer.activeSession()!.id).toBe(other.id);
+  });
 });

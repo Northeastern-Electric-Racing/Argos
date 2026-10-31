@@ -71,7 +71,10 @@ export class HeatMapService {
         closable: true,
         modal: false,
         closeAriaLabel: 'Close',
-        styleClass: 'cell-compare-dialog'
+        // Compact: sized to its content, with tighter padding than other dialogs
+        style: { width: 'auto', borderRadius: '12px' },
+        contentStyle: { padding: '0 14px 10px' },
+        pt: { header: { style: { padding: '8px 14px' } } }
       });
       this.dialogRef?.onClose.subscribe(() => {
         this.clearSelection();

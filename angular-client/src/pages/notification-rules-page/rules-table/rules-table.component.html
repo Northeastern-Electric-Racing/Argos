@@ -14,7 +14,7 @@
 >
   <ng-template #header>
     <tr>
-      <th style="width: 3rem">
+      <th [style.width]="compact() ? '2.5rem' : '3rem'">
         <!-- camelCase selector: PrimeNG 21 has no p-table-header-checkbox; keep on the fork -->
         <p-tableHeaderCheckbox />
       </th>
@@ -25,7 +25,7 @@
       <!-- TODO: Description column once backend supports it -->
       <th class="hide-mobile">Description</th>
       <th>Subscribed</th>
-      <th style="width: 5rem" aria-label="Actions"></th>
+      <th [style.width]="compact() ? '4rem' : '5rem'" aria-label="Actions"></th>
     </tr>
   </ng-template>
   <ng-template #body let-rule>
@@ -34,8 +34,14 @@
         <!-- camelCase selector: PrimeNG 21 has no p-table-checkbox; keep on the fork -->
         <p-tableCheckbox [value]="rule" />
       </td>
-      <td>{{ rule.expr }}</td>
-      <td>{{ rule.topic }}</td>
+      <td class="wrap-anywhere">{{ rule.expr }}</td>
+      <td class="wrap-anywhere">
+        <!-- Line breaks go after slashes first -->
+        @for (part of topicParts(rule.topic); track $index) {
+          <span>{{ part }}</span
+          ><wbr />
+        }
+      </td>
       <td class="hide-mobile">-</td>
       <td class="hide-mobile">-</td>
       <td>
@@ -45,25 +51,27 @@
           [ariaLabel]="'Subscribe to ' + rule.expr + ' on ' + rule.topic"
         />
       </td>
-      <td class="action-icons">
-        <p-button
-          icon="pi pi-pencil"
-          severity="secondary"
-          [text]="true"
-          [rounded]="true"
-          size="small"
-          ariaLabel="Edit rule"
-          (onClick)="onEdit(rule)"
-        />
-        <p-button
-          icon="pi pi-trash"
-          severity="danger"
-          [text]="true"
-          [rounded]="true"
-          size="small"
-          ariaLabel="Delete rule"
-          (onClick)="onDelete(rule)"
-        />
+      <td>
+        <div class="action-icons">
+          <p-button
+            icon="pi pi-pencil"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Edit rule"
+            (onClick)="onEdit(rule)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            ariaLabel="Delete rule"
+            (onClick)="onDelete(rule)"
+          />
+        </div>
       </td>
     </tr>
   </ng-template>

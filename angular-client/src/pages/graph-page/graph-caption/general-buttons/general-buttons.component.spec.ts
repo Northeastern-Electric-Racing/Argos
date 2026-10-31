@@ -1,6 +1,8 @@
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { MessageService } from 'primeng/api';
+import { Popover } from 'primeng/popover';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
 describe('GeneralButtonsComponent — custom range validation', () => {
@@ -170,6 +172,14 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(toMs - fromMs).toBe(30 * 60 * 1000);
       // maxDate also refreshed
       expect(component.maxDate().getTime()).toBeGreaterThanOrEqual(before);
+    });
+  });
+  describe('custom range popover', () => {
+    // PrimeNG 21 marks every Button and input [autofocus], so a popover that focuses on show would
+    // jump into the Hours field and drop focus to <body> on Escape
+    it('keeps focus on the Custom trigger when it opens', () => {
+      const popover: Popover = fixture.debugElement.query(By.directive(Popover)).componentInstance;
+      expect(popover.focusOnShow).toBe(false);
     });
   });
 });

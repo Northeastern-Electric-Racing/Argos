@@ -4,6 +4,8 @@
   [numScroll]="1"
   [circular]="true"
   [autoplayInterval]="3000"
+  [prevButtonProps]="prevButtonProps"
+  [nextButtonProps]="nextButtonProps"
   (onPage)="handlePageChange($event)"
 >
   <ng-template let-run #item>

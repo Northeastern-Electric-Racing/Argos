@@ -52,7 +52,7 @@
               (click)="onRowClick($event, s.id)"
               [attr.aria-current]="timer.activeSession()?.id === s.id ? 'true' : null"
               tabindex="0"
-              (keyup.enter)="onSelectSession(s.id)"
+              (keyup.enter)="onRowEnter($event, s.id)"
             >
               <td class="col-state">
                 @if (activeStateIcon(s); as icon) {

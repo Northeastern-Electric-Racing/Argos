@@ -108,6 +108,12 @@ export default class SessionsPanelComponent {
     this.onSelectSession(id);
   };
 
+  // Enter on the row's actions button bubbles up here; only Enter on the row itself selects the session
+  onRowEnter = (event: Event, id: string) => {
+    if (event.target !== event.currentTarget) return;
+    this.onSelectSession(id);
+  };
+
   onSelectSession = (id: string) => {
     if (this.timer.activeSession()?.id === id) return;
     this.timer.selectSession(id);

@@ -80,27 +80,8 @@ body {
   border-radius: 50%;
 }
 
-/* Dialog and select colors, radius and padding are design tokens in src/theme/argos-preset.ts.
-   Dialog max size has no token: PrimeNG caps it at 90% of the viewport. */
-.p-dialog {
-  max-width: 100% !important;
-  max-height: 100% !important;
-}
-
-/* Cell comparison dialog: compact. It opens with modal: false, so PrimeNG already lets clicks through the mask. */
-.cell-compare-dialog.p-dialog {
-  width: auto !important;
-  min-width: 0 !important;
-  border-radius: 12px !important;
-}
-
-.cell-compare-dialog .p-dialog-header {
-  padding: 8px 14px !important;
-}
-
-.cell-compare-dialog .p-dialog-content {
-  padding: 0 14px 10px !important;
-}
+/* Dialog colors, radius and padding are design tokens in src/theme/argos-preset.ts; ArgosDialogService
+   (src/services/argos-dialog.service.ts) lifts PrimeNG's 90% size cap and the cell comparison dialog sets its own sizes. */
 
 /* Nav bar apps menu (app-nav-bar): a popup p-menu appended to body, laid out as a 3-column icon grid; colors and spacing are [dt] tokens */
 .nav-apps-menu.p-menu {
