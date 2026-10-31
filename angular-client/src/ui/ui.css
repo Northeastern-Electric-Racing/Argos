@@ -43,8 +43,14 @@
   --ui-success: #4ade80;
   --ui-warn: #fbbf24;
   --ui-info: #60a5fa;
-  /* Dark text on the bright success and warn fills. */
-  --ui-on-status: #0b0b0b;
+  /* Dark text on bright fills: success and warn buttons, and the BMS heat-map tiles. */
+  --ui-on-status: #000;
+  /* Lit-lamp text on the eFuses panel's dark tinted plates (AA on each). */
+  --ui-success-fg: #5fc04f;
+  /* Live controls drawn as unlit panel switches: dim, but AA on #1a1a1a. */
+  --ui-text-dim: #8a8a8a;
+  /* An unlit annunciator legend on #1a1a1a: deliberately dim, at 3:1 (below AA for text). */
+  --ui-text-unlit: #666;
 
   /* Colour: surfaces, lines and text */
   --ui-surface-1: #1c1c1c;
