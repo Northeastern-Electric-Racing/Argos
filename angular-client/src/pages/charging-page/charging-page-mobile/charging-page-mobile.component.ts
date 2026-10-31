@@ -3,7 +3,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 
-import { DividerComponent } from '../../../components/divider/divider';
 import { DatePipe } from '@angular/common';
 import FaultDisplayComponent from '../components/fault-display/fault-display.component';
 import PackVoltageDisplayComponent from '../components/pack-voltage/pack-voltage-display/pack-voltage-display.component';
@@ -16,14 +15,12 @@ import CombinedStatusMobileComponent from '../components/combined-status-display
 import VStackComponent from 'src/components/vstack/vstack.component';
 import LatencyDisplayComponent from 'src/components/latency-display/latency-display';
 import TypographyComponent from 'src/components/typography/typography.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
 
 @Component({
   selector: 'charging-page-mobile',
   templateUrl: './charging-page-mobile.component.html',
   styleUrls: ['./charging-page-mobile.component.css'],
   imports: [
-    DividerComponent,
     DatePipe,
     FaultDisplayComponent,
     PackVoltageDisplayComponent,
@@ -35,8 +32,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     CombinedStatusMobileComponent,
     VStackComponent,
     LatencyDisplayComponent,
-    TypographyComponent,
-    HStackComponent
+    TypographyComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {

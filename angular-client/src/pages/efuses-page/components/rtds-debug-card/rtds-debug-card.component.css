@@ -184,3 +184,20 @@
   line-height: 1.2;
   text-align: center;
 }
+
+/* Phones: the four buttons (600px in a row) become a 2x2 block, with the lock below. */
+@media (max-width: 768px) {
+  .rtds-button-row {
+    flex-wrap: wrap;
+  }
+
+  .rtds-button-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rtds-button {
+    min-width: 0;
+    padding: 14px 12px;
+  }
+}

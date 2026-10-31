@@ -23,6 +23,7 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { formatMs, LapSession } from 'src/utils/lap-timer.types';
+import { focusIfLost, focusTargetNear } from 'src/utils/focus.utils';
 
 @Component({
   selector: 'sessions-panel',
@@ -47,6 +48,7 @@ export default class SessionsPanelComponent {
   readonly timer = inject(LapTimerService);
   private confirmService = inject(ConfirmService);
   private injector = inject(Injector);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private renameInput = viewChild<ElementRef<HTMLInputElement>>('renameInput');
 
   readonly editingSessionId = signal<string | null>(null);
@@ -64,7 +66,9 @@ export default class SessionsPanelComponent {
       accept: () => {
         this.timer.clearAllSessions();
         this.toast('success', 'All sessions cleared', '');
-      }
+      },
+      // Clear All goes away with the sessions, so focus New Session.
+      focusFallback: () => focusTargetNear(this.host.nativeElement, 'button', 0)
     });
   };
 
@@ -94,9 +98,13 @@ export default class SessionsPanelComponent {
   };
 
   onDeleteSession = (session: LapSession) => {
+    // Once the row is gone, focus the next session's row (or the panel's first button).
+    const index = this.timer.sessions().indexOf(session);
+    const focusFallback = () => focusTargetNear(this.host.nativeElement, 'tr.session-row', index);
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
       this.toast('success', 'Session deleted', `"${session.name}"`);
+      focusIfLost(focusFallback, this.injector);
       return;
     }
     this.confirmService.confirm({
@@ -108,7 +116,8 @@ export default class SessionsPanelComponent {
       accept: () => {
         this.timer.deleteSession(session.id);
         this.toast('success', 'Session deleted', `"${session.name}"`);
-      }
+      },
+      focusFallback
     });
   };
 

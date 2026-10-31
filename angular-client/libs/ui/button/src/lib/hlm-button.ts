@@ -12,13 +12,15 @@ export const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/80',
         outline:
-          'border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs',
+          'border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:focus-visible:border-ring dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs',
         secondary:
           'bg-secondary text-secondary-foreground aria-expanded:bg-secondary aria-expanded:text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]',
         ghost:
           'hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground',
+        // Argos: helm's tinted red-on-red is 3.6:1 on cards and dialogs, so dark mode fills with 60%
+        // destructive under white text (5.4:1 on cards) and keeps the shared neutral focus ring.
         destructive:
-          'bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30',
+          'bg-destructive/10 hover:bg-destructive/20 text-destructive dark:bg-destructive/60 dark:hover:bg-destructive/50 dark:text-white',
         link: 'text-primary underline-offset-4 hover:underline'
       },
       size: {

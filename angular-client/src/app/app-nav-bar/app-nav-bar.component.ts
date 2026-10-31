@@ -116,6 +116,7 @@ export class AppNavBarComponent implements OnInit {
   };
 
   openRunForm = () => {
+    this.sidebarVisible = false;
     this.dialogService.open(RunFormComponent, { contentClass: 'w-[550px] sm:max-w-[550px]' });
   };
 

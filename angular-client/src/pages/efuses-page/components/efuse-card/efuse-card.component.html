@@ -4,10 +4,10 @@
   [topRightInfo]="notice()"
   [topRightInfoSize]="'12px'"
 >
-  <div style="padding: 20px 30px 10px 40px; height: 100%; box-sizing: border-box">
+  <div class="card-body">
     <vstack [align]="'flex-center'" [spacing]="'30px'" style="height: 100%; justify-content: space-between">
-      <!-- Current display + ADC displays side by side -->
-      <hstack [spacing]="'100px'" style="align-items: flex-start; margin-top: 10px">
+      <!-- Current display + ADC displays side by side; on phones the ADC pair wraps below Current -->
+      <div class="readings">
         <!-- Main Current Value (Large) -->
         <vstack [align]="'flex-start'">
           <seven-segment-display
@@ -57,7 +57,7 @@
             <div class="adc-voltage-label">ADC</div>
           </vstack>
         </vstack>
-      </hstack>
+      </div>
 
       <!-- Status Indicators + Switch (centered, stacked) -->
       <vstack [align]="'center'" [spacing]="'30px'">
@@ -67,7 +67,7 @@
         </hstack>
 
         <!-- Switch + optional AUTO telemetry display -->
-        <hstack [justifyContent]="hasAutoMode() ? 'space-between' : 'center'" [alignItems]="'center'" style="width: 100%">
+        <div class="controls" [class.controls-auto]="hasAutoMode()">
           <vstack [align]="'center'" [spacing]="'6px'">
             <hstack [justifyContent]="'center'" [alignItems]="'center'" [spacing]="'10px'">
               <efuse-switch
@@ -112,7 +112,7 @@
               <div class="adc-voltage-label">{{ autoLabel() }}</div>
             </vstack>
           }
-        </hstack>
+        </div>
       </vstack>
     </vstack>
   </div>

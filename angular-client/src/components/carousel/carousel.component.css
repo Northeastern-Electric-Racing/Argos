@@ -3,7 +3,8 @@
   overflow: hidden;
 }
 
-/* Leaves room for the card's ring inside the carousel viewport. */
+/* Leaves room for the card's ring inside the carousel viewport. The card takes the page background
+   (bg-background) because --card and --popover are the same grey, so it would vanish in the dialog. */
 .run-card {
   margin: 4px;
 }

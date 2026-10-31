@@ -6,7 +6,7 @@
     <hlm-carousel-content>
       @for (run of runs; track run.id) {
         <hlm-carousel-item>
-          <section hlmCard size="sm" class="run-card" [attr.aria-label]="'Run ' + run.id">
+          <section hlmCard size="sm" class="run-card bg-background" [attr.aria-label]="'Run ' + run.id">
             <div hlmCardHeader>
               <h3 hlmCardTitle>Run #{{ run.id }}</h3>
               <p hlmCardDescription>{{ datePipe(run.time) }}</p>

@@ -10,3 +10,19 @@
   width: 100%;
   overflow: hidden;
 }
+
+.compact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  padding-bottom: 16px;
+}
+
+.compact-grid .wide {
+  grid-column: 1 / -1;
+}
+
+/* The sessions and laps tables scroll inside a flex column, so they need a set height. */
+.compact-grid .table-tile {
+  height: 20rem;
+}

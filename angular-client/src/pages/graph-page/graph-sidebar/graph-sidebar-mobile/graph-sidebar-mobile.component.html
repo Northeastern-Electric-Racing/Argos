@@ -3,7 +3,12 @@
   Select Topics
 </button>
 
-<hlm-sheet side="right" [state]="sidebarVisible ? 'open' : 'closed'" (stateChanged)="sidebarVisible = $event === 'open'">
+<hlm-sheet
+  id="argos-topic-sheet"
+  side="right"
+  [state]="sidebarVisible ? 'open' : 'closed'"
+  (stateChanged)="sidebarVisible = $event === 'open'"
+>
   <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-[85vw] sm:max-w-none">
     <hlm-sheet-header>
       <h2 hlmSheetTitle class="text-center">

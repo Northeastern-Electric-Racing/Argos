@@ -97,7 +97,8 @@
 }
 
 .timer-btn--halt {
-  background-color: var(--color-battery-low);
+  /* --color-battery-low (#f50905) is 4.3:1 under white text; this darker red is 5.7:1. */
+  background-color: #d00000;
   color: #fff;
 }
 

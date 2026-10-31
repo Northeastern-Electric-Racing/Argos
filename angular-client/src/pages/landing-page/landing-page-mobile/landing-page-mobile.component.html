@@ -1,7 +1,6 @@
 <vstack style="width: 100%" spacing="20px">
-  <typography variant="xx-large-title" content="Argos" />
-  <typography variant="x-large-title" [content]="time() | date: 'HH:mm:ss'" />
-  <typography variant="x-large-title" content="{{ time() | date: 'MM/dd/yyyy' }}" />
+  <!-- The mobile nav header already shows Argos and the clock. -->
+  <typography variant="large-header" content="{{ time() | date: 'MM/dd/yyyy' }}" />
 
   <driver-component style="width: 100%" />
 

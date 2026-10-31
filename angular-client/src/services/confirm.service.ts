@@ -8,6 +8,11 @@ export interface ConfirmOptions {
   /** Styles the accept button as destructive (delete, clear, reset). */
   destructive?: boolean;
   accept: () => void;
+  /**
+   * Where focus goes if the control that asked is gone once the dialog closes, such as the delete
+   * button of a row that `accept` removed. Without it, focus would fall back to the page body.
+   */
+  focusFallback?: () => HTMLElement | null | undefined;
 }
 
 /**

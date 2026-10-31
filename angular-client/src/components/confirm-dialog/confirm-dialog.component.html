@@ -1,4 +1,11 @@
-<hlm-alert-dialog [state]="confirmService.pending() ? 'open' : 'closed'" (stateChanged)="onStateChanged($event)">
+<!-- A fixed id: Brain numbers template and service dialogs from separate counters, so its default
+     brn-dialog-N id can match an open HlmDialogService dialog and the confirm would never open. -->
+<hlm-alert-dialog
+  id="argos-confirm"
+  [state]="confirmService.pending() ? 'open' : 'closed'"
+  (stateChanged)="onStateChanged($event)"
+  (closed)="onClosed()"
+>
   <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx" class="w-[calc(100vw-2rem)] sm:w-md">
     @if (confirmService.pending(); as question) {
       <hlm-alert-dialog-header>

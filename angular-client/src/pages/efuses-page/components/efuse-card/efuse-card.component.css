@@ -6,6 +6,49 @@
   height: 100%;
 }
 
+.card-body {
+  padding: 20px 30px 10px 40px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.readings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px 100px;
+  margin-top: 10px;
+}
+
+/* The switch row, with the AUTO telemetry reading beside it when the eFuse has one. */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.controls-auto {
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .controls-auto {
+    justify-content: center;
+  }
+
+  .card-body {
+    padding: 12px 8px 10px;
+  }
+
+  .readings {
+    gap: 16px 32px;
+  }
+}
+
 /* Main current label (the text that just says 'current') */
 .current-label {
   font-size: 30px;

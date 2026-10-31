@@ -34,7 +34,7 @@
 
 .tree-row:hover {
   background-color: var(--accent);
-  color: var(--primary);
+  color: var(--accent-foreground);
 }
 
 [role='treeitem']:focus-visible > .tree-row {

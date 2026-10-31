@@ -13,6 +13,7 @@ import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-prese
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { DataType } from 'src/utils/types.utils';
+import { focusTargetNear } from 'src/utils/focus.utils';
 
 interface PresetDialogData {
   dataTypes: DataType[];
@@ -33,6 +34,7 @@ export class PresetDialogComponent {
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
   private confirmService = inject(ConfirmService);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
@@ -119,6 +121,7 @@ export class PresetDialogComponent {
   }
 
   onDelete(preset: Preset): void {
+    const index = this.presets().indexOf(preset);
     this.confirmService.confirm({
       message: `Delete preset "${preset.name}"?`,
       header: 'Delete Preset',
@@ -128,7 +131,9 @@ export class PresetDialogComponent {
       accept: () => {
         this.presetService.deletePreset(preset.id);
         toast.success('Preset Deleted', { description: preset.name });
-      }
+      },
+      // Once the row is gone, focus the next preset's Delete (or the dialog's first button).
+      focusFallback: () => focusTargetNear(this.host.nativeElement, 'td.actions button:last-child', index)
     });
   }
 

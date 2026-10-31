@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  OnInit,
+  signal,
+  viewChild
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { toast } from '@spartan-ng/brain/sonner';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -21,6 +31,7 @@ import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import { ConfirmService } from 'src/services/confirm.service';
+import { focusIfLost } from 'src/utils/focus.utils';
 import TypographyComponent from 'src/components/typography/typography.component';
 import {
   addRule,
@@ -88,6 +99,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   protected streamRailOpen = signal(true);
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
+  private addButton = viewChild<ElementRef<HTMLButtonElement>>('addButton');
+  private injector = inject(Injector);
   hasSelection = computed(() => this.selectedRules().length > 0);
 
   private confirmRef: BrnDialogRef<boolean> | undefined;
@@ -143,7 +156,9 @@ export default class NotificationRulesPageComponent implements OnInit {
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',
       destructive: true,
-      accept: () => void this.removeRules(selected)
+      accept: () => void this.removeRules(selected),
+      // Remove disables itself once nothing is selected, so focus moves to Add.
+      focusFallback: () => this.addButton()?.nativeElement
     });
   };
 
@@ -170,6 +185,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     this.rulesTable()?.loadRules();
+    focusIfLost(() => this.addButton()?.nativeElement, this.injector);
   };
 
   onToggleSubscription = async () => {

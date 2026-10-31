@@ -127,8 +127,10 @@ body {
 
 /*
  * Spartan neutral dark theme, nudged toward Argos: near-black page, Argos panel grey for cards and
- * popovers, NER red as the primary. The focus ring stays the theme's neutral grey so red only ever
- * means primary or invalid.
+ * popovers, NER red as the primary. The primary is NER red darkened just enough for white button
+ * text to pass WCAG AA (5.2:1). The focus ring stays neutral so red only ever means primary or
+ * invalid, but light enough that helm's ring-ring/50 still clears the 3:1 focus-indicator minimum
+ * on the page (4.0:1) and on cards and popovers (3.5:1).
  */
 :root.dark {
   color-scheme: dark;
@@ -145,7 +147,7 @@ body {
   --card-foreground: oklch(0.985 0 0);
   --popover: var(--color-background-info);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.636 0.209 24.8);
+  --primary: oklch(0.55 0.209 24.8);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.32 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -156,15 +158,15 @@ body {
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.87 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.636 0.209 24.8);
+  --sidebar-primary: oklch(0.55 0.209 24.8);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.87 0 0);
 }
 
 @layer base {

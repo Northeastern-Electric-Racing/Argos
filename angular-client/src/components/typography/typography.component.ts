@@ -1,4 +1,4 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { booleanAttribute, Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 import { StyleVariant } from 'src/utils/style-variant';
 
@@ -21,6 +21,8 @@ export default class TypographyComponent {
   variant = input.required<StyleVariant>();
   content = input<string | string[] | null>();
   additionalStyles = input<string>('');
+  /** Renders a span instead of a paragraph, for text inside buttons and other phrasing-only content. */
+  inline = input(false, { transform: booleanAttribute });
 
   style = computed(() => {
     let baseStyle: string;

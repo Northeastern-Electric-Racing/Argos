@@ -18,7 +18,12 @@
     </button>
     <span class="mobile-clock">{{ time$ | async | date: 'HH:mm' }}</span>
   </header>
-  <hlm-sheet side="left" [state]="sidebarVisible ? 'open' : 'closed'" (stateChanged)="onSidebarStateChanged($event)">
+  <hlm-sheet
+    id="argos-nav-sheet"
+    side="left"
+    [state]="sidebarVisible ? 'open' : 'closed'"
+    (stateChanged)="onSidebarStateChanged($event)"
+  >
     <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-80 overflow-y-auto">
       <hlm-sheet-header>
         <h2 hlmSheetTitle class="text-center">

@@ -1,1 +1,5 @@
-<p class="disable-text-selection" [style]="style()">{{ content() }}</p>
+@if (inline()) {
+  <span class="disable-text-selection" [style]="style()">{{ content() }}</span>
+} @else {
+  <p class="disable-text-selection" [style]="style()">{{ content() }}</p>
+}

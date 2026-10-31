@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { map } from 'rxjs';
@@ -19,6 +20,7 @@ import LapsTableComponent from './laps-table/laps-table.component';
   styleUrl: './lap-timer-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    NgTemplateOutlet,
     MatGridList,
     MatGridTile,
     HalfGaugeComponent,

@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  input,
+  OnInit,
+  output,
+  signal
+} from '@angular/core';
 import { toast } from '@spartan-ng/brain/sonner';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideBellPlus, lucidePencil, lucideSearchX, lucideTrash2 } from '@ng-icons/lucide';
@@ -12,6 +23,7 @@ import { HlmTableImports } from '@spartan-ng/helm/table';
 import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { take } from 'rxjs';
 import { ConfirmService } from 'src/services/confirm.service';
+import { focusIfLost, focusTargetNear } from 'src/utils/focus.utils';
 import {
   ClientRule,
   deleteRule,
@@ -38,6 +50,8 @@ export class RulesTableComponent implements OnInit {
   selectionChanged = output<ClientRule[]>();
   private dialogService = inject(HlmDialogService);
   private confirmService = inject(ConfirmService);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
@@ -149,23 +163,28 @@ export class RulesTableComponent implements OnInit {
   }
 
   onDelete(rule: ClientRule): void {
+    // Once the row is gone, focus the next row's delete button (or the select-all checkbox).
+    const index = this.filteredRules().indexOf(rule);
+    const focusFallback = () => focusTargetNear(this.host.nativeElement, 'button[aria-label="Delete rule"]', index);
     this.confirmService.confirm({
       header: 'Delete Rule',
       message: `Delete rule "${rule.id}"?`,
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',
       destructive: true,
-      accept: () => void this.deleteRule(rule)
+      accept: () => void this.deleteRule(rule, focusFallback),
+      focusFallback
     });
   }
 
-  private async deleteRule(rule: ClientRule): Promise<void> {
+  private async deleteRule(rule: ClientRule, focusFallback: () => HTMLElement | null): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
         this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
         this.selectionChanged.emit(this.selectedRules());
+        focusIfLost(focusFallback, this.injector);
         toast.success('Deleted', { description: `Rule "${rule.id}" removed` });
       } else {
         const text = await response.text();
