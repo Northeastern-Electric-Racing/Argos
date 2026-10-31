@@ -212,8 +212,9 @@
 .session-menu-item:hover {
   background: rgba(255, 255, 255, 0.04);
 }
+/* Taiga's AA destructive red (6.67:1 on the dropdown, 5.25:1 on its hover fill) */
 .session-menu-item.destructive {
-  color: var(--color-battery-low);
+  color: var(--tui-text-negative);
 }
 
 /* Shared 18px icon sizing for the state icon and menu icons. */

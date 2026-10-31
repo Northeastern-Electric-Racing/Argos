@@ -118,6 +118,12 @@ body {
   --tui-background-neutral-1-pressed: rgba(255, 255, 255, 0.16);
 }
 
+/* Grayscale buttons carry no red label, so they keep Taiga's stronger 15% and 20% hover and pressed fills */
+[tuiTheme='dark'] [tuiAppearance][data-appearance$='grayscale'] {
+  --tui-background-neutral-1-hover: rgba(255, 255, 255, 0.15);
+  --tui-background-neutral-1-pressed: rgba(255, 255, 255, 0.2);
+}
+
 /* The bell's unread badge is white text on Taiga's status-negative (#ff4d4d, 3.27:1); it takes the filled
    buttons' red instead (4.77:1). Scoped to the badge so status-negative's other uses (the invalid-field
    outline, negative toast icons, status dots) keep Taiga's colour */
@@ -127,14 +133,17 @@ body {
 
 /* Taiga's secondary and flat appearances change only the fill on hover and press, so their red labels move
    to lighter tints here: #ffa3a3 hovered (action and negative alike) and #ffb3b3 pressed. The conditions are
-   Taiga's own, except checkboxes and checked or invalid modes, which have their own fills */
+   Taiga's own (interactive elements only), except checkboxes and checked or invalid states, which have their own
+   fills */
 @media (hover: hover) and (pointer: fine) {
   [tuiAppearance]:is(
       [data-appearance='secondary'],
       [data-appearance='secondary-destructive'],
       [data-appearance='flat'],
       [data-appearance='flat-destructive']
-    ):not(input):not([data-mode]):not(:disabled):hover:not([data-state]) {
+    ):not(input):is(a, button, select, textarea, label, .tui-interactive):not([data-mode], .tui-invalid):not(
+      :disabled
+    ):hover:not([data-state]) {
     color: var(--tui-text-action-hover);
   }
 }
@@ -144,7 +153,7 @@ body {
     [data-appearance='secondary-destructive'],
     [data-appearance='flat'],
     [data-appearance='flat-destructive']
-  ):not(input):not([data-mode])[data-state='hover'] {
+  ):not(input):is(a, button, select, textarea, label, .tui-interactive):not([data-mode], .tui-invalid)[data-state='hover'] {
   color: var(--tui-text-action-hover);
 }
 
@@ -153,7 +162,7 @@ body {
     [data-appearance='secondary-destructive'],
     [data-appearance='flat'],
     [data-appearance='flat-destructive']
-  ):not(input):not([data-mode]):not(:disabled):is(
+  ):not(input):is(a, button, select, textarea, label, .tui-interactive):not([data-mode], .tui-invalid):not(:disabled):is(
     :active:not([data-state]):where(:hover, :focus-visible),
     [data-state='active']
   ) {
