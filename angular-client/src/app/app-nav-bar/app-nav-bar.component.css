@@ -7,7 +7,7 @@
   padding: 10px;
   align-self: center;
   align-items: center;
-  background-color: #2c2c2c;
+  background-color: var(--color-background-info);
   margin-bottom: 1rem;
   padding-left: 10px;
   padding-right: 10px;
@@ -26,8 +26,15 @@
   justify-content: center;
   cursor: pointer;
   padding: 10px;
-  border-radius: 4px;
-  transition: fill 0.2s ease-in-out;
+  border: none;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: inherit;
+}
+
+.home-logo:focus-visible,
+.navbar-notification:focus-visible {
+  outline: var(--ui-focus-ring);
 }
 
 .home-logo .mat-icon {
@@ -41,33 +48,13 @@
   flex: 1;
 }
 
-.navbar-menu {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.navbar-menu mat-icon {
-  width: 48px;
-  height: 48px;
-  transition: color 0.2s ease;
-}
-
-.navbar-menu.selected,
-.navbar-menu:hover {
-  color: #ef4345;
-}
-
 .navbar-notification {
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: var(--ui-radius-sm);
   position: relative;
   background: none;
   border: none;
@@ -82,32 +69,11 @@
 }
 
 .navbar-notification:hover {
-  color: #ef4345;
+  color: var(--ui-accent-fg);
 }
 
 .notification-badge {
   position: absolute;
   top: 2px;
   right: 2px;
-}
-
-:host {
-  --p-dialog-background: transparent !important;
-  --p-dialog-border-color: transparent !important;
-}
-
-:host ::ng-deep .notification-popover.p-popover {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  border-radius: var(--border-radius-panel) !important;
-}
-
-:host ::ng-deep .notification-popover .p-popover-content {
-  padding: 0 !important;
-  background: transparent !important;
-}
-
-:host ::ng-deep .notification-popover .p-popover-arrow {
-  display: none !important;
 }

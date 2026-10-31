@@ -16,21 +16,18 @@
               [onClick]="this.toggleSideBar"
               label="Tog Sidebar"
               size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+              variant="tonal"
+              [ariaPressed]="showSideBar"
             />
             <argos-button
               [onClick]="this.toggleMultiYaxis"
               label="Tog Mult Yaxis"
               size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+              variant="tonal"
+              [ariaPressed]="showMultiYaxis"
             />
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <argos-button [onClick]="this.togglePause" [label]="isPaused ? 'Play' : 'Pause'" size="sm" variant="tonal" />
             }
           </div>
 
@@ -41,46 +38,46 @@
                 [onClick]="this.toggleRangeMode"
                 [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
                 size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
+                variant="tonal"
               />
-              <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputnumber
+              <label class="input-label" for="graph-range-value">{{
+                rangeMode === 'time' ? 'X (sec):' : 'X (points):'
+              }}</label>
+              <input
+                id="graph-range-value"
+                type="number"
+                class="ui-input ui-input--sm time-range-input"
                 [(ngModel)]="rangeValue"
-                mode="decimal"
-                [min]="1"
-                [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
+                min="1"
+                step="1"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (onInput)="onGraphConfigChange()"
-              ></p-inputnumber>
+                (ngModelChange)="onGraphConfigChange()"
+              />
             </div>
           }
 
           <div class="toolbar-group config-group">
-            <label class="input-label">Y Min:</label>
-            <p-inputnumber
+            <label class="input-label" for="graph-y-min">Y Min:</label>
+            <input
+              id="graph-y-min"
+              type="number"
+              class="ui-input ui-input--sm y-axis-input"
               [(ngModel)]="yAxisMin"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+              step="any"
               placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              (ngModelChange)="onGraphConfigChange()"
+            />
 
-            <label class="input-label">Y Max:</label>
-            <p-inputnumber
+            <label class="input-label" for="graph-y-max">Y Max:</label>
+            <input
+              id="graph-y-max"
+              type="number"
+              class="ui-input ui-input--sm y-axis-input"
               [(ngModel)]="yAxisMax"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
+              step="any"
               placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+              (ngModelChange)="onGraphConfigChange()"
+            />
           </div>
 
           <div class="toolbar-group">

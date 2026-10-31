@@ -1,0 +1,11 @@
+<div class="ui-dialog-surface" cdkDrag cdkDragRootElement=".cdk-overlay-pane" [cdkDragDisabled]="!config.draggable">
+  <header class="ui-dialog-header" cdkDragHandle [class.draggable]="config.draggable">
+    <h2 class="ui-dialog-title" [id]="config.titleId">{{ config.header }}</h2>
+  </header>
+  <div class="ui-dialog-content">
+    <ng-container *ngComponentOutlet="config.component; injector: injector" />
+  </div>
+  <button type="button" class="ui-icon-button ui-dialog-close" aria-label="Close" (click)="close()">
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+</div>

@@ -1,34 +1,75 @@
-<div class="modal-container">
-  <!-- Carousel Content -->
-  <p-carousel
-    [value]="runs"
-    [numVisible]="1"
-    [numScroll]="1"
-    [circular]="true"
-    [autoplayInterval]="3000"
-    (onPage)="handlePageChange($event)"
-  >
-    <ng-template let-run let-i="index" #item>
-      <div class="run-card">
-        <mat-grid-list cols="2" rowHeight="40px">
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-          </mat-grid-tile>
-        </mat-grid-list>
+<section
+  class="modal-container"
+  aria-roledescription="carousel"
+  aria-label="Runs"
+  (mouseenter)="setPaused(true)"
+  (mouseleave)="setPaused(false)"
+  (focusin)="onFocusIn($event)"
+  (focusout)="setPaused(false)"
+>
+  @if (currentRun(); as run) {
+    <div class="carousel-row">
+      <button type="button" class="nav-button" aria-label="Previous run" (click)="prev()">
+        <mat-icon aria-hidden="true">chevron_left</mat-icon>
+      </button>
+      <div
+        class="slide"
+        role="group"
+        aria-roledescription="slide"
+        [attr.aria-label]="currentIndex() + 1 + ' of ' + runs.length"
+        [attr.aria-live]="rotating() ? 'off' : 'polite'"
+      >
+        <div class="run-card">
+          <mat-grid-list cols="2" rowHeight="40px">
+            <mat-grid-tile>
+              <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
+            </mat-grid-tile>
+            <mat-grid-tile>
+              <typography class="right" variant="subheader" [content]="run.driverName"></typography>
+            </mat-grid-tile>
+            <mat-grid-tile>
+              <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
+            </mat-grid-tile>
+            <mat-grid-tile colspan="2">
+              <typography variant="subheader" class="right" [content]="run.locationName"></typography>
+            </mat-grid-tile>
+          </mat-grid-list>
+        </div>
+        <div class="select-button-container">
+          <button type="button" class="ui-button ui-button--neutral" (click)="selectRun(run)">Select this Run</button>
+        </div>
       </div>
-
-      <div class="select-button-container">
-        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
-      </div>
-    </ng-template>
-  </p-carousel>
-</div>
+      <button type="button" class="nav-button" aria-label="Next run" (click)="next()">
+        <mat-icon aria-hidden="true">chevron_right</mat-icon>
+      </button>
+    </div>
+    <div class="carousel-footer">
+      <!-- WAI-ARIA carousel: auto-rotation needs a visible stop/start control. -->
+      <button
+        type="button"
+        class="ui-icon-button ui-icon-button--sm"
+        [attr.aria-label]="autoplay() ? 'Stop automatic slide show' : 'Start automatic slide show'"
+        (click)="autoplay.set(!autoplay())"
+      >
+        <mat-icon aria-hidden="true">{{ autoplay() ? 'pause' : 'play_arrow' }}</mat-icon>
+      </button>
+      @if (runs.length <= 12) {
+        <div class="indicators">
+          @for (r of runs; track r.id; let i = $index) {
+            <button
+              type="button"
+              class="indicator"
+              [attr.aria-current]="i === currentIndex()"
+              [attr.aria-label]="'Show run ' + r.id"
+              (click)="goTo(i)"
+            ></button>
+          }
+        </div>
+      } @else {
+        <div class="counter">{{ currentIndex() + 1 }} / {{ runs.length }}</div>
+      }
+    </div>
+  } @else {
+    <p class="empty">No runs yet</p>
+  }
+</section>

@@ -1,10 +1,5 @@
 /* AI-generated  */
 
-/* Allow PrimeNG dropdowns inside mat-grid-tiles to overflow the tile boundary */
-mat-grid-tile {
-  overflow: visible !important;
-}
-
 /* Hex sizing overrides for the full-page segment heatmap (larger than the row variant) */
 .segment-page-heatmap {
   --hex-w: clamp(60px, 5.5vw, 85px); /* responsive hex width */

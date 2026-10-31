@@ -1,10 +1,10 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { getLatestRun } from 'src/api/run.api';
 import { Run } from 'src/utils/types.utils';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
 import { DividerComponent } from '../../../../components/divider/divider';
@@ -26,7 +26,7 @@ export class DateLocationComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   time = new Date();
   // TODO: create query for most recent run on scylla
   location!: string;

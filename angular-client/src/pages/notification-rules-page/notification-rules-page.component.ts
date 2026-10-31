@@ -1,8 +1,10 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { ToastService } from 'src/ui/toast/toast.service';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { MatIcon } from '@angular/material/icon';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -34,11 +36,12 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   templateUrl: './notification-rules-page.component.html',
   styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
+  imports: [TypographyComponent, ButtonComponent, RulesTableComponent, NotificationListComponent, MatIcon]
 })
 export default class NotificationRulesPageComponent implements OnInit {
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private messageService = inject(ToastService);
+  private dialogService = inject(UiDialogService);
+  private confirmService = inject(ConfirmService);
   private router = inject(Router);
 
   clientId!: string;
@@ -54,8 +57,8 @@ export default class NotificationRulesPageComponent implements OnInit {
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   hasSelection = computed(() => this.selectedRules().length > 0);
 
-  private confirmRef: DynamicDialogRef | null | undefined;
-  private addRuleRef: DynamicDialogRef | null | undefined;
+  private confirmRef: DialogRef<boolean> | null | undefined;
+  private addRuleRef: DialogRef<RulePayload | null> | null | undefined;
 
   ngOnInit(): void {
     // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
@@ -75,15 +78,13 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onAddRule = () => {
-    this.addRuleRef = this.dialogService.open(AddRuleDialogComponent, {
+    this.addRuleRef = this.dialogService.open<RulePayload | null>(AddRuleDialogComponent, {
       header: 'Add New Rule',
-      width: '500px',
-      closable: true,
-      closeAriaLabel: 'Close'
+      width: '500px'
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.addRuleRef?.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
+    this.addRuleRef?.closed.pipe(take(1)).subscribe(async (rule) => {
       if (!rule) return;
 
       try {
@@ -101,11 +102,20 @@ export default class NotificationRulesPageComponent implements OnInit {
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.confirmService.confirm({
+      header: 'Delete Rules',
+      message: `Delete ${selected.length} selected rule(s)?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      danger: true,
+      accept: () => this.removeRules(selected)
+    });
+  };
 
+  private async removeRules(selected: ClientRule[]): Promise<void> {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
@@ -132,7 +142,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     this.rulesTable()?.loadRules();
-  };
+  }
 
   onToggleSubscription = async () => {
     const selected = this.selectedRules();
@@ -205,16 +215,14 @@ export default class NotificationRulesPageComponent implements OnInit {
     const result = this.parseCsv(csv);
     if (!result) return;
 
-    this.confirmRef = this.dialogService.open(UploadConfirmDialogComponent, {
+    this.confirmRef = this.dialogService.open<boolean>(UploadConfirmDialogComponent, {
       header: 'Confirm Rule Upload',
       width: '600px',
-      closable: true,
-      closeAriaLabel: 'Close',
       data: { rules: result }
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.confirmRef?.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
+    this.confirmRef?.closed.pipe(take(1)).subscribe((confirmed) => {
       if (confirmed) {
         this.batchAddRules(result);
       }

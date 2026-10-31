@@ -1,5 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
+import { ToastService } from 'src/ui/toast/toast.service';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  viewChild
+} from '@angular/core';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -14,8 +24,10 @@ import { formatDeltaMs } from 'src/utils/lap-timer.types';
 })
 export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmService);
+  private messageService = inject(ToastService);
+  private injector = inject(Injector);
+  private actions = viewChild.required<ElementRef<HTMLElement>>('actions');
 
   readonly currentLapDeltaText = computed(() => formatDeltaMs(this.timer.currentLapDeltaToBestMs()));
   readonly currentLapDeltaClass = computed(() => {
@@ -24,15 +36,17 @@ export default class TimerHeroComponent {
     return d < 0 ? 'delta-negative' : d > 0 ? 'delta-positive' : 'delta-neutral';
   });
 
-  onStart = () => this.timer.start();
-  onPause = () => this.timer.pause();
-  onResume = () => this.timer.resume();
+  // Start, Pause, Resume, Stop, Reset, End Session and Delete swap the action buttons, removing the
+  // one that was pressed; focus then moves to the first action of the new state, not to <body>.
+  onStart = (event?: Event) => this.changeState(() => this.timer.start(), event);
+  onPause = (event?: Event) => this.changeState(() => this.timer.pause(), event);
+  onResume = (event?: Event) => this.changeState(() => this.timer.resume(), event);
   onLap = () => this.timer.lap();
-  onStop = () => this.timer.stop();
+  onStop = (event?: Event) => this.changeState(() => this.timer.stop(), event);
 
-  onReset = () => {
+  onReset = (event?: Event) => {
     if (this.timer.laps().length === 0 && this.timer.currentLapTimeMs() === 0) {
-      this.timer.reset();
+      this.changeState(() => this.timer.reset(), event);
       return;
     }
     this.confirmationService.confirm({
@@ -40,24 +54,41 @@ export default class TimerHeroComponent {
       header: 'Reset Active Session',
       acceptLabel: 'Reset',
       rejectLabel: 'Cancel',
-      accept: () => this.timer.reset()
+      danger: true,
+      accept: () => this.changeState(() => this.timer.reset())
     });
   };
 
-  onEndActiveSession = () => {
-    this.timer.endActiveSession();
+  onEndActiveSession = (event?: Event) => {
+    this.changeState(() => this.timer.endActiveSession(), event);
     this.toast('success', 'Session ended', 'It remains in the history.');
   };
 
-  onDeleteActiveButton = () => {
+  onDeleteActiveButton = (event?: Event) => {
     const active = this.timer.activeSession();
-    if (active) this.timer.deleteSession(active.id);
+    if (active) this.changeState(() => this.timer.deleteSession(active.id), event);
   };
 
   onDownloadActiveButton = () => {
     const filename = this.timer.downloadCsv();
     if (filename) this.toast('success', 'Downloaded', filename);
   };
+
+  /**
+   * Runs a state change, then focuses the first action button once the new set has rendered.
+   * After a mouse click (detail > 0) the moved focus shows no ring, as the click itself would not.
+   */
+  private changeState(change: () => void, event?: Event): void {
+    change();
+    const pointer = event instanceof MouseEvent && event.detail > 0;
+    afterNextRender(
+      () =>
+        this.actions()
+          .nativeElement.querySelector('button')
+          ?.focus({ focusVisible: !pointer } as FocusOptions),
+      { injector: this.injector }
+    );
+  }
 
   private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
     this.messageService.add({ severity, summary, detail, life: 2000 });

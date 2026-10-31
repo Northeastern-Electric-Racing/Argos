@@ -1,0 +1,85 @@
+:host {
+  display: inline-block;
+  min-width: 10rem;
+}
+
+/*
+ * Pages restyle the trigger through these custom properties, set on ui-select or any ancestor,
+ * instead of piercing encapsulation: --ui-select-height, -radius, -bg, -color, -font-size,
+ * -font-weight and -padding-left.
+ */
+.ui-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--ui-select-height, var(--ui-control-height));
+  padding: 0 2.2rem 0 var(--ui-select-padding-left, var(--ui-space-3));
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-select-radius, var(--ui-radius));
+  background: var(--ui-select-bg, var(--ui-surface-3));
+  color: var(--ui-select-color, var(--ui-text));
+  font-size: var(--ui-select-font-size, var(--ui-font-md));
+  font-weight: var(--ui-select-font-weight, inherit);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition:
+    border-color var(--ui-duration-fast) ease,
+    box-shadow var(--ui-duration-fast) ease;
+}
+
+.ui-select--sm {
+  height: var(--ui-select-height, var(--ui-control-height-sm));
+  border-radius: var(--ui-select-radius, var(--ui-radius-sm));
+  font-size: var(--ui-select-font-size, var(--ui-font-sm));
+  padding-left: var(--ui-select-padding-left, var(--ui-space-2));
+}
+
+.ui-select:hover {
+  border-color: var(--ui-border-strong);
+  background: color-mix(in srgb, var(--ui-text) 6%, var(--ui-select-bg, var(--ui-surface-3)));
+}
+
+.ui-select:focus-visible,
+.ui-select[aria-expanded='true'] {
+  border-color: var(--ui-focus-color);
+  box-shadow: 0 0 0 1px var(--ui-focus-color);
+}
+
+.ui-select[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ui-select-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.ui-select-label.placeholder {
+  color: var(--ui-text-muted);
+}
+
+.ui-select-arrow {
+  position: absolute;
+  right: 0.45rem;
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--ui-text-muted);
+  pointer-events: none;
+  transition: transform var(--ui-duration) var(--ui-ease-out);
+}
+
+.ui-select[aria-expanded='true'] .ui-select-arrow {
+  transform: rotate(180deg);
+}
+
+.ui-option-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

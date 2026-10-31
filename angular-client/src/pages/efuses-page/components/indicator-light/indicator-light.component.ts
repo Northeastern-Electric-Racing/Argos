@@ -30,8 +30,8 @@ export default class IndicatorLightComponent {
   /** Resolved color values for active state */
   glowColor = computed(() => {
     const presets: Record<string, { bg: string; glow: string; text: string }> = {
-      red: { bg: '#4a1515', glow: '#cc3030', text: '#cc3030' },
-      green: { bg: '#1a3318', glow: '#4a9e3e', text: '#4a9e3e' },
+      red: { bg: '#4a1515', glow: '#cc3030', text: 'var(--ui-accent-fg)' },
+      green: { bg: '#1a3318', glow: '#4a9e3e', text: 'var(--ui-success-fg)' },
       amber: { bg: '#3d3010', glow: '#c8911e', text: '#c8911e' }
     };
     return presets[this.color()] ?? { bg: this.color(), glow: this.color(), text: '#ffffff' };

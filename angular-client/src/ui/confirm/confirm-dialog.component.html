@@ -1,0 +1,10 @@
+<p class="message" [id]="data.messageId">{{ data.message }}</p>
+<div class="actions">
+  <!-- The least destructive action takes initial focus (WAI-ARIA alertdialog pattern). -->
+  <button type="button" class="ui-button ui-button--text" cdkFocusInitial (click)="ref.close(false)">
+    {{ data.rejectLabel }}
+  </button>
+  <button type="button" class="ui-button" [class.ui-button--danger]="data.danger" (click)="ref.close(true)">
+    {{ data.acceptLabel }}
+  </button>
+</div>

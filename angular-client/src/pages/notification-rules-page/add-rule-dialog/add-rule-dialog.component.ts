@@ -1,10 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
+import { DialogRef } from '@angular/cdk/dialog';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+  DestroyRef
+} from '@angular/core';
+import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
+import { Listbox, Option } from '@angular/aria/listbox';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { ButtonDirective } from 'primeng/button';
 import { RulePayload } from 'src/api/rules.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
@@ -14,18 +24,34 @@ import { filter, take } from 'rxjs';
 @Component({
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, AutoComplete, ButtonDirective],
-  templateUrl: './add-rule-dialog.component.html',
-  styleUrls: ['./add-rule-dialog.component.css']
+  imports: [ReactiveFormsModule, Combobox, ComboboxPopup, ComboboxWidget, Listbox, Option, OverlayModule],
+  templateUrl: './add-rule-dialog.component.html'
 })
 export class AddRuleDialogComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  private ref = inject(DynamicDialogRef);
+  private ref = inject(DialogRef);
   private fb = inject(FormBuilder);
   private serverService = inject(APIService);
 
-  allTopics: string[] = [];
-  filteredTopics = signal<string[]>([]);
+  private allTopics = signal<string[]>([]);
+  private listbox = viewChild(Listbox);
+  /** Text typed in the topic combobox; the form's topic is only set to an exact topic (forceSelection). */
+  query = signal('');
+  popupExpanded = signal(false);
+  selectedTopic = signal<string[]>([]);
+  filteredTopics = computed(() => {
+    const search = this.query().toLowerCase();
+    const lower = (t: string) => t.toLowerCase();
+    return this.allTopics()
+      .filter((topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search)))
+      .slice(0, 100);
+  });
+
+  constructor() {
+    afterRenderEffect(() => {
+      if (this.popupExpanded()) this.listbox()?.scrollActiveItemIntoView();
+    });
+  }
 
   form = this.fb.group({
     id: ['', Validators.required],
@@ -43,18 +69,38 @@ export class AddRuleDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((dataTypes) => {
-        this.allTopics = dataTypes.map((dt) => dt.name);
+        this.allTopics.set(dataTypes.map((dt) => dt.name));
       });
   }
 
-  filterTopics(event: AutoCompleteCompleteEvent): void {
-    const search = event.query.toLowerCase();
-    const lower = (t: string) => t.toLowerCase();
-    this.filteredTopics.set(
-      this.allTopics.filter(
-        (topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search))
-      )
-    );
+  onQueryChange(value: string): void {
+    this.query.set(value);
+    this.form.controls.topic.setValue(this.allTopics().includes(value) ? value : '');
+    if (value) this.popupExpanded.set(true);
+  }
+
+  onCommit(): void {
+    const [topic] = this.selectedTopic();
+    if (topic) {
+      this.query.set(topic);
+      this.form.controls.topic.setValue(topic);
+    }
+    this.popupExpanded.set(false);
+  }
+
+  /** Like PrimeNG's forceSelection: free text that isn't a topic is cleared on blur. */
+  onTopicBlur(): void {
+    this.form.controls.topic.markAsTouched();
+    if (!this.allTopics().includes(this.query())) {
+      this.query.set('');
+      this.form.controls.topic.setValue('');
+    }
+  }
+
+  /** Whether a field shows an error, so its input gets aria-invalid and points at the message. */
+  protected invalid(name: keyof AddRuleDialogComponent['form']['controls']): boolean {
+    const control = this.form.controls[name];
+    return control.touched && control.invalid;
   }
 
   onSubmit(): void {

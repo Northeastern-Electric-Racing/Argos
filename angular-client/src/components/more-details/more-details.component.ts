@@ -1,6 +1,6 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import Storage from 'src/services/storage.service';
 import { ButtonComponent } from '../argos-button/argos-button.component';
 
@@ -12,7 +12,7 @@ import { ButtonComponent } from '../argos-button/argos-button.component';
 export default class MoreDetailsComponent {
   private router = inject(Router);
   private storage = inject(Storage);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   label: string = 'More Details';
   goToGraph = () => {
     const runId = this.storage.getCurrentRunId().value;

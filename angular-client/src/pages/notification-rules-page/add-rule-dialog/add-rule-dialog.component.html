@@ -1,49 +1,109 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="field">
-    <label for="rule-id">Rule ID</label>
-    <input id="rule-id" pInputText formControlName="id" placeholder="e.g. high-voltage-alert" />
-    @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
-      <small class="error" role="alert">Rule ID is required</small>
-    }
-  </div>
-
-  <div class="field">
-    <label for="rule-topic">Topic</label>
-    <p-autocomplete
-      id="rule-topic"
-      formControlName="topic"
-      [suggestions]="filteredTopics()"
-      (completeMethod)="filterTopics($event)"
-      [forceSelection]="true"
-      placeholder="e.g. BMS/Pack/Voltage"
-      [fluid]="true"
+<form class="ui-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="ui-field">
+    <label class="ui-label" for="rule-id">Rule ID</label>
+    <input
+      class="ui-input ui-input--fluid"
+      id="rule-id"
+      formControlName="id"
+      placeholder="e.g. high-voltage-alert"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('id') || null"
+      [attr.aria-describedby]="invalid('id') ? 'rule-id-error' : null"
     />
+    @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
+      <small class="ui-field-error" role="alert" id="rule-id-error">Rule ID is required</small>
+    }
+  </div>
+
+  <div class="ui-field">
+    <label class="ui-label" for="rule-topic">Topic</label>
+    <div #origin class="topic-autocomplete">
+      <input
+        id="rule-topic"
+        #combobox="ngCombobox"
+        ngCombobox
+        class="ui-input ui-input--fluid"
+        placeholder="e.g. BMS/Pack/Voltage"
+        aria-required="true"
+        [attr.aria-invalid]="invalid('topic') || null"
+        [attr.aria-describedby]="invalid('topic') ? 'rule-topic-error' : null"
+        [value]="query()"
+        (valueChange)="onQueryChange($event)"
+        [(expanded)]="popupExpanded"
+        (blur)="onTopicBlur()"
+      />
+    </div>
+    <div aria-live="polite" class="cdk-visually-hidden">
+      {{ query() && filteredTopics().length === 0 ? 'No topics match ' + query() : '' }}
+    </div>
+    <ng-template
+      [cdkConnectedOverlay]="{ origin, usePopover: 'inline', matchWidth: true }"
+      [cdkConnectedOverlayOpen]="popupExpanded() && filteredTopics().length > 0"
+    >
+      <ng-template ngComboboxPopup [combobox]="combobox">
+        <div class="ui-listbox-popup">
+          <div
+            #listbox="ngListbox"
+            ngListbox
+            ngComboboxWidget
+            focusMode="activedescendant"
+            selectionMode="explicit"
+            [tabindex]="-1"
+            [activeDescendant]="listbox.activeDescendant()"
+            [(value)]="selectedTopic"
+            (click)="onCommit()"
+            (keydown.enter)="onCommit()"
+          >
+            @for (topic of filteredTopics(); track topic) {
+              <div ngOption [value]="topic" [label]="topic" [title]="topic">{{ topic }}</div>
+            }
+          </div>
+        </div>
+      </ng-template>
+    </ng-template>
     @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
-      <small class="error" role="alert">Topic is required</small>
+      <small class="ui-field-error" role="alert" id="rule-topic-error">Topic is required</small>
     }
   </div>
 
-  <div class="field">
-    <label for="rule-expr">Expression</label>
-    <input id="rule-expr" pInputText formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
+  <div class="ui-field">
+    <label class="ui-label" for="rule-expr">Expression</label>
+    <input
+      class="ui-input ui-input--fluid"
+      id="rule-expr"
+      formControlName="expr"
+      placeholder="e.g. a > 5.0 || a < 1.0"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('expr') || null"
+      [attr.aria-describedby]="invalid('expr') ? 'rule-expr-error' : null"
+    />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="error" role="alert">Expression is required</small>
+      <small class="ui-field-error" role="alert" id="rule-expr-error">Expression is required</small>
     }
   </div>
 
-  <div class="field">
-    <label for="rule-debounce">Debounce Time (seconds)</label>
-    <input id="rule-debounce" pInputText formControlName="debounce_time" type="number" placeholder="e.g. 60" />
+  <div class="ui-field">
+    <label class="ui-label" for="rule-debounce">Debounce Time (seconds)</label>
+    <input
+      class="ui-input ui-input--fluid"
+      id="rule-debounce"
+      formControlName="debounce_time"
+      type="number"
+      placeholder="e.g. 60"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('debounce_time') || null"
+      [attr.aria-describedby]="invalid('debounce_time') ? 'rule-debounce-error' : null"
+    />
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="error" role="alert">Debounce time is required</small>
+      <small class="ui-field-error" role="alert" id="rule-debounce-error">Debounce time is required</small>
     }
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="error" role="alert">Must be 0 or greater</small>
+      <small class="ui-field-error" role="alert" id="rule-debounce-error">Must be 0 or greater</small>
     }
   </div>
 
-  <div class="button-row">
-    <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
-    <button pButton type="submit" label="Add Rule"></button>
+  <div class="ui-form-actions">
+    <button class="ui-button ui-button--text" type="button" (click)="onCancel()">Cancel</button>
+    <button class="ui-button" type="submit">Add Rule</button>
   </div>
 </form>

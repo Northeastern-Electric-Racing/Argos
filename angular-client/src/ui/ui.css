@@ -1,0 +1,715 @@
+/*
+ * Argos UI primitives: our own styles for Angular Aria directives and CDK building blocks.
+ * Angular Aria and the CDK ship no visual styles, so every look here is ours. Following the
+ * Aria guide, states are styled through ARIA attributes ([aria-selected], [aria-expanded],
+ * [aria-checked], [data-active]) so the visuals and the accessibility state never drift apart.
+ */
+@import '@angular/cdk/overlay-prebuilt.css';
+/* .cdk-visually-hidden, for text only screen readers should get. */
+@import '@angular/cdk/a11y-prebuilt.css';
+
+:root {
+  /*
+   * One token set: the --ui-* names alias the app's design tokens in styles.css where both exist,
+   * and add the ones the primitives need. Components use these instead of literal values.
+   * The client is dark-only (it always was), so there is one palette; color-scheme is set in styles.css.
+   */
+
+  /*
+   * Colour: brand and status. Every text pairing meets WCAG AA (4.5:1) on the surfaces it sits on,
+   * and every mark meets 3:1, so the NER red comes in three strengths:
+   *   --ui-accent: marks and edges (unread bars, checked boxes, outlines)
+   *   --ui-accent-strong: fills that carry white text (primary buttons, badges), 4.98:1
+   *   --ui-accent-fg: red text and icons on the dark surfaces, 4.57:1 or better
+   */
+  --ui-accent: #ef4343;
+  --ui-accent-hover: #f26b6b;
+  --ui-accent-strong: #d32f2f;
+  --ui-accent-strong-hover: #b71c1c;
+  --ui-accent-fg: #f87171;
+  --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 18%, transparent);
+  /* Text on an accent-soft fill, such as a selected option. */
+  --ui-accent-text: #ffb4b4;
+  /* Text and marks on a filled accent, such as a primary button or a checked checkbox. */
+  --ui-on-accent: #fff;
+  /* The telemetry blue the graph page has always used for its controls, deep enough for white text (5.12:1). */
+  --ui-secondary: #0270c2;
+  --ui-secondary-hover: #025fa5;
+  --ui-secondary-border: #8fcadd;
+  --ui-secondary-soft: color-mix(in srgb, var(--ui-secondary) 16%, var(--ui-surface-1));
+  /* NER red is the accent, so danger takes a separate orange hue and destructive buttons are never filled. */
+  --ui-danger: #fb923c;
+  --ui-danger-soft: color-mix(in srgb, var(--ui-danger) 16%, transparent);
+  --ui-success: #4ade80;
+  --ui-warn: #fbbf24;
+  --ui-info: #60a5fa;
+  /* Dark text on bright fills: success and warn buttons, and the BMS heat-map tiles. */
+  --ui-on-status: #000;
+  /* Lit-lamp text on the eFuses panel's dark tinted plates (AA on each). */
+  --ui-success-fg: #5fc04f;
+  /* Live controls drawn as unlit panel switches: dim, but AA on #1a1a1a. */
+  --ui-text-dim: #8a8a8a;
+  /* An unlit annunciator legend on #1a1a1a: deliberately dim, at 3:1 (below AA for text). */
+  --ui-text-unlit: #666;
+
+  /* Colour: surfaces, lines and text */
+  --ui-surface-1: #1c1c1c;
+  --ui-surface-2: #262626;
+  --ui-surface-3: #333333;
+  --ui-border: var(--color-divider);
+  /* Hairlines between list rows. */
+  --ui-border-subtle: color-mix(in srgb, var(--ui-border) 50%, transparent);
+  /* Hovered field borders and unchecked checkbox outlines. */
+  --ui-border-strong: #5a5a5a;
+  --ui-control-border: #7a7a7a;
+  /* Track of an off switch. */
+  --ui-control-off: #555;
+  --ui-control-off-hover: #666;
+  --ui-text: var(--color-text-primary);
+  --ui-text-muted: var(--color-text-secondary);
+  --ui-label: var(--color-text-subtitle);
+  /* Hover fills on transparent controls: rows, options, menu items, icon buttons. */
+  --ui-hover: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  --ui-hover-strong: color-mix(in srgb, var(--ui-text) 10%, transparent);
+  --ui-stripe: color-mix(in srgb, var(--ui-text) 4%, transparent);
+
+  /* Spacing: a 4px grid */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.25rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
+
+  /* Type scale for controls and chrome (page headings keep the --font-size-* scale in styles.css) */
+  --ui-font: var(--font-family);
+  --ui-font-xs: 0.75rem;
+  --ui-font-sm: 0.8125rem;
+  --ui-font-md: 0.9rem;
+  --ui-font-lg: 1.15rem;
+  --ui-weight-bold: 600;
+
+  /* Control sizes, shared by buttons, inputs and selects so they line up in a row */
+  --ui-control-height: 2.25rem;
+  --ui-control-height-sm: 1.75rem;
+
+  /* Shape and depth */
+  --ui-radius-sm: 6px;
+  --ui-radius: var(--border-radius-panel);
+  --ui-radius-lg: 16px;
+  --ui-radius-full: 999px;
+  --ui-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --ui-scrim: rgba(0, 0, 0, 0.55);
+
+  /* Focus: neutral, so a focused field never reads as a red validation error */
+  --ui-focus-color: #d4d4d4;
+  --ui-focus-ring: 2px solid color-mix(in srgb, var(--ui-focus-color) 80%, transparent);
+
+  /* Motion */
+  --ui-duration-fast: 120ms;
+  --ui-duration: 180ms;
+  --ui-ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Users who ask for less motion get state changes without the slides and fades (spinners keep turning). */
+@media (prefers-reduced-motion: reduce) {
+  :not(.ui-spinner),
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------- Buttons ---------- */
+/*
+ * One button, several variants. Each variant sets the same four custom properties, so hover,
+ * focus and disabled behave identically everywhere:
+ *   (default) primary: filled NER red, the page's main action
+ *   --secondary: filled telemetry blue, applying a setting
+ *   --tonal: blue-tinted surface with a blue edge, the graph page's toggles and tools
+ *   --neutral: raised grey, secondary actions such as upload or download
+ *   --outlined: accent edge only
+ *   --text: no fill or edge, such as Cancel
+ *   --success / --warn: filled status colours, the lap timer's start and pause
+ *   --danger: orange edge, never filled, for destructive actions
+ */
+.ui-button {
+  --ui-button-bg: var(--ui-accent-strong);
+  --ui-button-bg-hover: var(--ui-accent-strong-hover);
+  --ui-button-border: var(--ui-accent-strong);
+  --ui-button-color: var(--ui-on-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-control-height);
+  padding: 0 var(--ui-button-padding-x, var(--ui-space-4));
+  border: 1px solid var(--ui-button-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-button-bg);
+  color: var(--ui-button-color);
+  font: inherit;
+  font-family: var(--ui-font);
+  font-weight: var(--ui-weight-bold);
+  font-size: var(--ui-font-md);
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--ui-duration-fast) ease,
+    border-color var(--ui-duration-fast) ease,
+    color var(--ui-duration-fast) ease;
+}
+.ui-button:hover:not(:disabled) {
+  background: var(--ui-button-bg-hover);
+  border-color: var(--ui-button-border-hover, var(--ui-button-bg-hover));
+}
+.ui-button:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+.ui-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ui-button--secondary {
+  --ui-button-bg: var(--ui-secondary);
+  --ui-button-bg-hover: var(--ui-secondary-hover);
+  --ui-button-border: var(--ui-secondary-border);
+  --ui-button-border-hover: var(--ui-secondary-border);
+}
+.ui-button--tonal {
+  --ui-button-bg: var(--ui-secondary-soft);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-secondary) 30%, var(--ui-surface-1));
+  --ui-button-border: color-mix(in srgb, var(--ui-secondary-border) 70%, transparent);
+  --ui-button-border-hover: var(--ui-secondary-border);
+  --ui-button-color: var(--ui-text);
+}
+/* A tonal toggle that is on, styled from its aria-pressed: the filled secondary look, so on and off read apart. */
+.ui-button--tonal[aria-pressed='true'] {
+  --ui-button-bg: var(--ui-secondary);
+  --ui-button-bg-hover: var(--ui-secondary-hover);
+  --ui-button-border: var(--ui-secondary-border);
+  --ui-button-color: var(--ui-on-accent);
+}
+.ui-button--neutral {
+  --ui-button-bg: var(--ui-surface-3);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-text) 12%, var(--ui-surface-3));
+  --ui-button-border: var(--ui-border);
+  --ui-button-border-hover: var(--ui-border-strong);
+  --ui-button-color: var(--ui-text);
+}
+.ui-button--outlined {
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--ui-accent-soft);
+  --ui-button-border: var(--ui-accent);
+  --ui-button-border-hover: var(--ui-accent-hover);
+  --ui-button-color: var(--ui-accent-fg);
+}
+.ui-button--text {
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--ui-hover);
+  --ui-button-border: transparent;
+  --ui-button-border-hover: transparent;
+  --ui-button-color: var(--ui-text);
+}
+.ui-button--success {
+  --ui-button-bg: var(--ui-success);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-success) 82%, #fff);
+  --ui-button-border: var(--ui-success);
+  --ui-button-color: var(--ui-on-status);
+}
+.ui-button--warn {
+  --ui-button-bg: var(--ui-warn);
+  --ui-button-bg-hover: color-mix(in srgb, var(--ui-warn) 82%, #fff);
+  --ui-button-border: var(--ui-warn);
+  --ui-button-color: var(--ui-on-status);
+}
+.ui-button--danger {
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--ui-danger-soft);
+  --ui-button-border: var(--ui-danger);
+  --ui-button-border-hover: var(--ui-danger);
+  --ui-button-color: var(--ui-danger);
+}
+.ui-button--danger.ui-button--text {
+  --ui-button-border: transparent;
+  --ui-button-border-hover: transparent;
+}
+.ui-button--sm {
+  min-height: var(--ui-control-height-sm);
+  padding: 0 var(--ui-button-padding-x, var(--ui-space-3));
+  border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-font-xs);
+}
+/* The legacy 140x45 footprint; a page can shrink it with --ui-button-lg-min-width / -min-height. */
+.ui-button--lg {
+  min-width: var(--ui-button-lg-min-width, 140px);
+  min-height: var(--ui-button-lg-min-height, 45px);
+  font-size: var(--ui-font-md);
+}
+/* Narrow screens get touch-sized targets, which a page's own sizing cannot undercut. */
+@media (max-width: 768px) {
+  .ui-button--lg {
+    min-height: max(44px, var(--ui-button-lg-min-height, 44px));
+  }
+  .ui-button--sm {
+    min-height: 32px;
+  }
+}
+.ui-button--icon {
+  padding: 0;
+  width: 2rem;
+  min-height: 2rem;
+}
+.ui-button .material-icons {
+  font-size: 1.15rem;
+}
+
+/* ---------- Text / number / date inputs ---------- */
+.ui-input {
+  box-sizing: border-box;
+  height: var(--ui-control-height);
+  padding: 0 var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface-1);
+  color: var(--ui-text);
+  font: inherit;
+  font-family: var(--ui-font);
+  font-size: var(--ui-font-md);
+  color-scheme: dark;
+  transition:
+    border-color var(--ui-duration-fast) ease,
+    box-shadow var(--ui-duration-fast) ease;
+}
+.ui-input::placeholder {
+  color: var(--ui-text-muted);
+}
+.ui-input:hover {
+  border-color: var(--ui-border-strong);
+}
+.ui-input:focus {
+  outline: none;
+  border-color: var(--ui-focus-color);
+  box-shadow: 0 0 0 1px var(--ui-focus-color);
+}
+.ui-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ui-input[aria-invalid='true'],
+.ui-input.ng-invalid.ng-touched {
+  border-color: var(--ui-danger);
+}
+.ui-input[aria-invalid='true']:focus,
+.ui-input.ng-invalid.ng-touched:focus {
+  box-shadow: 0 0 0 1px var(--ui-danger);
+}
+.ui-input--sm {
+  height: var(--ui-control-height-sm);
+  padding: 0 var(--ui-space-2);
+  border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-font-sm);
+}
+.ui-input--fluid {
+  width: 100%;
+}
+textarea.ui-input {
+  height: auto;
+  padding: var(--ui-space-2) var(--ui-space-3);
+}
+
+/* ---------- Form fields: label, control, hint/error, and the action row ---------- */
+.ui-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+}
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  min-width: 0;
+}
+.ui-label {
+  color: var(--ui-label);
+  font-size: var(--ui-font-sm);
+  font-weight: var(--ui-weight-bold);
+}
+/* Marks a required field visually (aria-hidden); the control's aria-required tells assistive tech. */
+.ui-label .ui-required {
+  color: var(--ui-danger);
+  margin-left: 0.15em;
+}
+.ui-field-error {
+  color: var(--ui-danger);
+  font-size: var(--ui-font-xs);
+}
+.ui-field-hint {
+  color: var(--ui-text-muted);
+  font-size: var(--ui-font-xs);
+}
+.ui-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-2);
+}
+
+/* ---------- Segmented tabs (Angular Aria ngTabList / ngTab) ---------- */
+.ui-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface-1);
+}
+.ui-segmented [ngTab] {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--ui-control-height-sm) - 4px);
+  padding: 0 var(--ui-space-3);
+  border-radius: calc(var(--ui-radius) - 2px);
+  color: var(--ui-text-muted);
+  font-size: var(--ui-font-sm);
+  font-weight: var(--ui-weight-bold);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--ui-duration-fast) ease,
+    color var(--ui-duration-fast) ease;
+}
+.ui-segmented [ngTab]:hover {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+}
+.ui-segmented [ngTab][aria-selected='true'] {
+  background: var(--ui-secondary);
+  color: var(--ui-on-accent);
+}
+.ui-segmented [ngTab]:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 1px;
+}
+/* Aria marks hidden tab panels inert; they also leave the layout. A panel that sets its own
+   display must scope it to :not([inert]), or it ties this rule and wins. */
+[ngTabPanel][inert] {
+  display: none;
+}
+
+/* ---------- Checkbox ---------- */
+.ui-checkbox {
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  border: 1.5px solid var(--ui-control-border);
+  border-radius: 4px;
+  background: transparent;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.ui-checkbox::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.35rem;
+  border-left: 2px solid var(--ui-on-accent);
+  border-bottom: 2px solid var(--ui-on-accent);
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform var(--ui-duration-fast) ease;
+}
+.ui-checkbox:checked,
+.ui-checkbox:indeterminate {
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+}
+.ui-checkbox:checked::before {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+.ui-checkbox:indeterminate::before {
+  border-left: none;
+  height: 0;
+  transform: none;
+}
+.ui-checkbox:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Table (CDK table) ---------- */
+.ui-table-wrapper {
+  overflow: auto;
+  border-radius: var(--ui-radius);
+}
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--ui-text);
+  font-size: var(--ui-font-md);
+}
+/* Headers stick through the CDK's own option: *cdkHeaderRowDef="columns; sticky: true". */
+.ui-table th {
+  text-align: left;
+  font-weight: var(--ui-weight-bold);
+  padding: var(--ui-space-3);
+  background: var(--ui-surface-3);
+  border-bottom: 1px solid var(--ui-border);
+}
+.ui-table td {
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-bottom: 1px solid var(--ui-border);
+}
+.ui-table--striped tbody tr:nth-child(even) {
+  background: var(--ui-stripe);
+}
+.ui-table--hover tbody tr:hover {
+  background: var(--ui-hover);
+  cursor: pointer;
+}
+.ui-table tbody tr.ui-row-selected {
+  background: var(--ui-accent-soft);
+}
+.ui-table tbody tr:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-table .ui-table-empty {
+  text-align: center;
+  color: var(--ui-text-muted);
+  padding: var(--ui-space-8);
+}
+
+/* ---------- Spinner ---------- */
+.ui-spinner {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: 4px solid color-mix(in srgb, var(--ui-text) 15%, transparent);
+  border-top-color: var(--ui-accent);
+  animation: ui-spin 0.9s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Badge ---------- */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  box-sizing: border-box;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-accent-strong);
+  color: var(--ui-on-accent);
+  font-size: 0.7rem;
+  font-weight: var(--ui-weight-bold);
+}
+
+/* ---------- Dialog (CDK dialog + our container) ---------- */
+.ui-dialog-backdrop {
+  background: var(--ui-scrim);
+}
+.ui-dialog-pane {
+  /* The 16px gutter each side on phones comes from the maxWidth the dialog service passes. */
+  max-height: 100vh;
+}
+.ui-dialog-pane--modeless {
+  pointer-events: auto;
+}
+
+/* ---------- Drawer ---------- */
+/* The drawer focuses its container on open; the panel itself needs no focus outline. */
+.ui-drawer-pane .cdk-dialog-container:focus {
+  outline: none;
+}
+
+/* ---------- Floating surfaces: popover, listbox popup, menu ---------- */
+.ui-popover-panel,
+.ui-listbox-popup,
+.ui-menu {
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  animation: ui-pop-in var(--ui-duration-fast) var(--ui-ease-out);
+}
+
+/* ---------- Popover (CDK connected overlay) ---------- */
+.ui-popover-panel {
+  margin-top: var(--ui-space-2);
+}
+/* A popover with nothing tabbable focuses the panel itself; like the drawer, it needs no outline. */
+.ui-popover-panel:focus {
+  outline: none;
+}
+@keyframes ui-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- Listbox popup (Aria combobox + listbox, used by select and autocomplete) ---------- */
+.ui-listbox-popup {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: var(--ui-space-1);
+  padding: var(--ui-space-1);
+  max-height: 16rem;
+  overflow: auto;
+  font-size: var(--ui-font-sm);
+}
+/* Select popups: at least the trigger's width, wider when an option needs it. */
+.ui-listbox-popup--grow {
+  flex-shrink: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.ui-listbox-popup--sm {
+  font-size: var(--ui-font-xs);
+}
+.ui-listbox-popup [ngListbox] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  outline: none;
+}
+.ui-listbox-popup [ngOption] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-height: 2rem;
+  padding: 0 var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ui-listbox-popup [ngOption]:hover {
+  background: var(--ui-hover);
+}
+.ui-listbox-popup [ngOption][data-active='true'] {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-listbox-popup [ngOption][aria-selected='true'] {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-text);
+}
+.ui-listbox-popup .ui-option-check {
+  margin-left: auto;
+  font-size: 1rem;
+}
+.ui-listbox-popup [ngOption]:not([aria-selected='true']) .ui-option-check {
+  visibility: hidden;
+}
+.ui-listbox-empty {
+  padding: var(--ui-space-2) var(--ui-space-3);
+  color: var(--ui-text-muted);
+}
+
+/* ---------- Menu (Angular Aria menu in a CDK connected overlay) ---------- */
+.ui-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: var(--ui-space-1);
+}
+.ui-menu[data-visible='false'] {
+  display: none;
+}
+.ui-menu [ngMenuItem] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  outline: none;
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-font-md);
+  cursor: pointer;
+}
+.ui-menu [ngMenuItem]:hover,
+.ui-menu [ngMenuItem]:focus {
+  background: var(--ui-hover);
+}
+.ui-menu [ngMenuItem]:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-menu [ngMenuItem][aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------- Icon button (dialog, drawer and toast close) ---------- */
+.ui-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+}
+.ui-icon-button:hover {
+  color: var(--ui-text);
+  background: var(--ui-hover-strong);
+}
+.ui-icon-button:focus-visible {
+  outline: var(--ui-focus-ring);
+}
+.ui-icon-button--sm {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.ui-icon-button--sm mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Cell button: a table row's action, reachable by keyboard (fault tables) ---------- */
+.ui-cell-button {
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ui-cell-button:hover {
+  text-decoration: underline;
+}
+.ui-cell-button:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+}

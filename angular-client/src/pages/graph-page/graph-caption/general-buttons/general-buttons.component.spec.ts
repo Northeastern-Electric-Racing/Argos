@@ -1,6 +1,8 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import type { Mock } from 'vitest';
+import { TabsHarness } from '@angular/aria/tabs/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
 describe('GeneralButtonsComponent — custom range validation', () => {
@@ -27,7 +29,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       vi.fn(() => new Promise(() => {}))
     );
     toastSpy = {
-      add: vi.fn().mockName('MessageService.add')
+      add: vi.fn().mockName('ToastService.add')
     };
     onSelectPresetSpy = vi.fn().mockName('onSelectPreset');
     onApplyCustomLastXSpy = vi.fn().mockName('onApplyCustomLastX');
@@ -38,7 +40,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
 
     await TestBed.configureTestingModule({
       imports: [GeneralButtonsComponent],
-      providers: [{ provide: MessageService, useValue: toastSpy }]
+      providers: [{ provide: ToastService, useValue: toastSpy }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneralButtonsComponent);
@@ -170,6 +172,57 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(toMs - fromMs).toBe(30 * 60 * 1000);
       // maxDate also refreshed
       expect(component.maxDate().getTime()).toBeGreaterThanOrEqual(before);
+    });
+  });
+
+  describe('custom range tabs', () => {
+    const openPopover = async () => {
+      const trigger: HTMLButtonElement = fixture.nativeElement.querySelector('.custom-stack button');
+      trigger.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return trigger;
+    };
+    /** The custom range popover is in an overlay, so its tabs are found from the document root. */
+    const tabs = () => TestbedHarnessEnvironment.documentRootLoader(fixture).getHarness(TabsHarness);
+
+    it('marks the Custom trigger as a dialog popup and reports when it is open', async () => {
+      const trigger = await openPopover();
+      expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('switches between Last X and Date Range through the Aria tabs', async () => {
+      await openPopover();
+      const harness = await tabs();
+      expect(await Promise.all((await harness.getTabs()).map((t) => t.getTitle()))).toEqual(['Last X', 'Date Range']);
+      expect(await (await harness.getSelectedTab())?.getTitle()).toBe('Last X');
+      expect(document.getElementById('custom-hours')).not.toBeNull();
+
+      await harness.selectTab({ title: 'Date Range' });
+      await fixture.whenStable();
+
+      expect(component.customMode()).toBe('date-range');
+      expect(await (await harness.getSelectedTab())?.getTitle()).toBe('Date Range');
+      expect(document.getElementById('custom-from')).not.toBeNull();
+    });
+
+    it('does not give the hidden panel a display of its own (ui.css hides inert panels)', async () => {
+      await openPopover();
+      await (await tabs()).selectTab({ title: 'Date Range' });
+      await fixture.whenStable();
+      const hidden = document.querySelector<HTMLElement>('[ngTabPanel][inert]')!;
+      expect(hidden).not.toBeNull();
+      // Global styles are not loaded in unit tests; the component's flex column must not apply.
+      expect(getComputedStyle(hidden).display).not.toBe('flex');
+      const shown = document.querySelector<HTMLElement>('[ngTabPanel]:not([inert])')!;
+      expect(getComputedStyle(shown).display).toBe('flex');
+    });
+
+    it('ignores tab values that are not a custom mode', () => {
+      component.setCustomMode(undefined);
+      component.setCustomMode('something-else');
+      expect(component.customMode()).toBe('last-x');
     });
   });
 });

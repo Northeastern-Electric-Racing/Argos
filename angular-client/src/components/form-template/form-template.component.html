@@ -1,31 +1,35 @@
-<!-- dynamic-form.component.html -->
-<form class="form" [formGroup]="form">
+<form class="ui-form form" [formGroup]="form">
   @for (field of fields(); track field) {
-    <div class="flex flex-column gap-1">
+    <div class="ui-field">
       @if (field.label) {
-        <label class="text-sm font-semibold mb-1 required">{{ field.label }}</label>
+        <label class="ui-label" [for]="'form-field-' + field.name">
+          {{ field.label }}
+          @if (field.required) {
+            <span class="ui-required" aria-hidden="true">*</span>
+          }
+        </label>
       }
       <input
+        [id]="'form-field-' + field.name"
         [attr.placeholder]="field.placeholder"
         [formControlName]="field.name"
         [type]="field.type"
         [value]="'boston'"
-        pInputText
-        class="form-control w-full"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)
-        }"
+        [attr.aria-required]="field.required || null"
+        [attr.aria-invalid]="isInvalid(field.name) || null"
+        [attr.aria-describedby]="isInvalid(field.name) ? 'form-field-' + field.name + '-error' : null"
+        class="ui-input ui-input--fluid"
       />
 
-      <!-- Error Message -->
-      @if (form.get(field.name)?.invalid && (form.get(field.name)?.dirty || form.get(field.name)?.touched)) {
-        <div class="error-msg">
+      @if (isInvalid(field.name)) {
+        <small class="ui-field-error" [id]="'form-field-' + field.name + '-error'">
           {{ getErrorMessage(field) }}
-        </div>
+        </small>
       }
     </div>
   }
 
-  <button pButton type="button" [disabled]="!form.valid" label="Submit" (click)="onSubmit()"></button>
+  <div class="ui-form-actions">
+    <button class="ui-button" type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>
+  </div>
 </form>

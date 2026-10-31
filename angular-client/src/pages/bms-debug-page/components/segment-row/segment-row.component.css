@@ -11,7 +11,7 @@
   border-radius: clamp(4px, 0.63vw, 14px);
   gap: clamp(4px, 0.94vw, 20px);
   width: 100%;
-  background-color: #1a1a1a;
+  background-color: var(--ui-surface-1);
   padding: clamp(2px, 0.4vw, 7px);
 }
 
@@ -48,7 +48,7 @@
   align-items: center;
   justify-content: center;
   padding: clamp(1px, 0.3vw, 6px) clamp(4px, 0.94vw, 20px) clamp(1px, 0.3vw, 6px) clamp(20px, 4vw, 80px);
-  background-color: #2c2c2c;
+  background-color: var(--color-background-info);
   border-radius: clamp(4px, 0.63vw, 14px);
   clip-path: polygon(clamp(34px, 6.9vw, 136px) 0, 100% 0, 100% 100%, 0 100%, 0 clamp(34px, 6.9vw, 136px));
   min-height: 0;
@@ -58,7 +58,7 @@
   display: flex;
   align-items: center;
   padding: clamp(1px, 0.3vw, 6px) clamp(2px, 0.5vw, 10px);
-  background-color: #2c2c2c;
+  background-color: var(--color-background-info);
   border-radius: clamp(4px, 0.63vw, 14px);
   min-width: clamp(160px, 22vw, 420px);
   max-width: clamp(160px, 22vw, 420px);
@@ -81,7 +81,7 @@
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
   font-size: clamp(10px, 1.56vw, 30px);
-  color: #efefef;
+  color: var(--ui-text);
   white-space: nowrap;
 }
 
@@ -93,54 +93,35 @@
   width: clamp(64px, 9.4vw, 190px);
 }
 
+/* A secondary .ui-button (colours, hover, focus ring) at the row's fluid size. */
 .see-more-btn {
-  background-color: #2aaeee;
-  color: #000;
-  border: none;
-  border-radius: clamp(8px, 1.25vw, 24px);
-  padding: clamp(2px, 0.47vw, 10px) clamp(6px, 1.4vw, 28px);
-  font-size: clamp(7px, 0.94vw, 18px);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
   width: 100%;
-  text-align: center;
   height: clamp(18px, 2.3vw, 44px);
-  box-sizing: border-box;
+  min-height: 0;
+  padding: 0 clamp(6px, 1.4vw, 28px);
+  gap: 0.3em;
+  border-radius: clamp(8px, 1.25vw, 24px);
+  font-size: clamp(7px, 0.94vw, 18px);
 }
 
-.see-more-btn:hover {
-  background-color: #1e9ad8;
+.see-more-btn mat-icon {
+  font-size: 1.2em;
+  width: 1.2em;
+  height: 1.2em;
 }
 
-/* ── PrimeNG Select overrides: force the dropdown to match the controls-zone styling ── */
+/* Select sized to match the controls-zone styling */
 .controls-zone ::ng-deep .small-grey-select {
-  width: 100% !important;
-  min-width: 0 !important;
-  height: clamp(18px, 2.3vw, 44px) !important;
-  border-radius: clamp(8px, 1.25vw, 24px) !important;
-  background-color: #555 !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  min-width: 0;
 }
 
-.controls-zone ::ng-deep .p-select-label,
-.controls-zone ::ng-deep .p-select-label.p-placeholder {
-  width: auto !important;
-  padding: 0 clamp(4px, 0.94vw, 20px) !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  font-weight: 600 !important;
-  color: #c0c0c0 !important;
-  --p-select-placeholder-color: #c0c0c0 !important;
-  line-height: clamp(18px, 2.3vw, 44px) !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.controls-zone ::ng-deep .p-select-trigger {
-  padding-right: clamp(3px, 0.63vw, 14px) !important;
-  display: flex !important;
-  align-items: center !important;
+.controls-zone select-dropdown {
+  --ui-select-height: clamp(18px, 2.3vw, 44px);
+  --ui-select-radius: clamp(8px, 1.25vw, 24px);
+  --ui-select-bg: var(--ui-control-off);
+  --ui-select-font-size: clamp(7px, 0.94vw, 18px);
+  --ui-select-font-weight: 600;
+  --ui-select-color: var(--ui-text);
+  --ui-select-padding-left: clamp(4px, 0.94vw, 20px);
 }

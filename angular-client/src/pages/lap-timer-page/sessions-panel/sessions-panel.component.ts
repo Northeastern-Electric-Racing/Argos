@@ -1,10 +1,10 @@
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
+import { ToastService } from 'src/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Popover } from 'primeng/popover';
-import { TableModule } from 'primeng/table';
+import { SessionAction, SessionMenuComponent } from './session-menu/session-menu.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -20,8 +20,7 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
     DatePipe,
     FormsModule,
     MatIcon,
-    TableModule,
-    Popover,
+    SessionMenuComponent,
     ButtonComponent,
     InfoBackgroundComponent,
     TypographyComponent
@@ -29,11 +28,17 @@ import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 })
 export default class SessionsPanelComponent {
   readonly timer = inject(LapTimerService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmService);
+  private messageService = inject(ToastService);
 
   readonly editingSessionId = signal<string | null>(null);
   readonly editingName = signal('');
+  /** Runs the row action picked from the Aria menu. */
+  onMenuAction(action: SessionAction, session: LapSession): void {
+    if (action === 'rename') this.startEdit(session);
+    else if (action === 'download') this.onDownload(session.id);
+    else if (action === 'delete') this.onDeleteSession(session);
+  }
 
   onClearAllSessions = () => {
     const count = this.timer.sessions().length;
@@ -43,6 +48,7 @@ export default class SessionsPanelComponent {
       header: 'Clear All Sessions',
       acceptLabel: 'Clear All',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => {
         this.timer.clearAllSessions();
         this.toast('success', 'All sessions cleared', '');
@@ -75,8 +81,7 @@ export default class SessionsPanelComponent {
     this.timer.selectSession(id);
   };
 
-  onDeleteSession = (session: LapSession, popover?: Popover) => {
-    popover?.hide();
+  onDeleteSession = (session: LapSession) => {
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
       this.toast('success', 'Session deleted', `"${session.name}"`);
@@ -87,6 +92,7 @@ export default class SessionsPanelComponent {
       header: 'Delete Session',
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => {
         this.timer.deleteSession(session.id);
         this.toast('success', 'Session deleted', `"${session.name}"`);
@@ -94,14 +100,12 @@ export default class SessionsPanelComponent {
     });
   };
 
-  onDownload = (sessionId: string, popover?: Popover) => {
-    popover?.hide();
+  onDownload = (sessionId: string) => {
     const filename = this.timer.downloadCsv(sessionId);
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  startEdit(session: LapSession, popover?: Popover): void {
-    popover?.hide();
+  startEdit(session: LapSession): void {
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
   }

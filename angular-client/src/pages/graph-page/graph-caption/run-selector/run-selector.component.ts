@@ -1,11 +1,12 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Run } from 'src/utils/types.utils';
 import { CarouselComponent } from '../../../../components/carousel/carousel.component';
 import { getAllRuns } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
 
 @Component({
@@ -17,13 +18,13 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 })
 export class RunSelectorComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  public dialogService = inject(DialogService);
+  public dialogService = inject(UiDialogService);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   label!: string;
   runs!: Run[];
   runsIsLoading = true;
-  ref?: DynamicDialogRef | null;
+  ref?: DialogRef | null;
   selectRun = input.required<(run: Run) => void>();
 
   ngOnInit() {
@@ -46,10 +47,7 @@ export class RunSelectorComponent implements OnInit {
       width: '550px',
       data: { runs: this.runs, selectRun: this.selectRun() },
       header: 'Select a run to view',
-      modal: true, // makes the dialog modal
-      dismissableMask: true, // enables auto-close on outside click
-      closable: true,
-      closeAriaLabel: 'Close'
+      dismissableMask: true // enables auto-close on outside click
     });
   };
 }
