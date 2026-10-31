@@ -1,7 +1,7 @@
 <form tuiForm="m" [formGroup]="form" (ngSubmit)="onSubmit()">
   <tui-textfield>
     <label tuiLabel>Expression</label>
-    <input tuiInput formControlName="expr" />
+    <input tuiAutoFocus tuiInput formControlName="expr" />
   </tui-textfield>
   <tui-error formControlName="expr" />
 

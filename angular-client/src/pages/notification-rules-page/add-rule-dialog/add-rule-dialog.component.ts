@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
 import { TuiButton, type TuiDialogContext, TuiError, TuiFilterByInputPipe, TuiInput } from '@taiga-ui/core';
 import { TuiChevron, TuiComboBox, TuiDataListWrapper, TuiInputNumber } from '@taiga-ui/kit';
 import { TuiForm } from '@taiga-ui/layout';
 import { injectContext } from '@taiga-ui/polymorpheus';
-import { RULE_VALIDATION_ERRORS } from '../edit-rule-dialog/edit-rule-dialog.component';
+import { requiredWithMessage, RULE_VALIDATION_ERRORS } from '../edit-rule-dialog/rule-validators';
 import { RulePayload } from 'src/api/rules.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
@@ -17,6 +18,7 @@ import { filter, take } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    TuiAutoFocus,
     TuiButton,
     TuiError,
     TuiFilterByInputPipe,
@@ -41,10 +43,11 @@ export class AddRuleDialogComponent implements OnInit {
   allTopics = signal<string[]>([]);
 
   form = this.fb.group({
-    id: ['', Validators.required],
-    topic: ['', Validators.required],
-    expr: ['', Validators.required],
-    debounce_time: [60, [Validators.required, Validators.min(0)]]
+    id: ['', requiredWithMessage('Rule ID is required')],
+    // The combo box is strict: typed text that matches no topic leaves the value empty, so say how to fill it
+    topic: ['', requiredWithMessage('Pick a topic from the list')],
+    expr: ['', requiredWithMessage('Expression is required')],
+    debounce_time: [60, [requiredWithMessage('Debounce time is required'), Validators.min(0)]]
   });
 
   ngOnInit(): void {

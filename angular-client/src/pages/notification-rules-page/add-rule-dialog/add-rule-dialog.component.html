@@ -1,7 +1,7 @@
 <form tuiForm="m" [formGroup]="form" (ngSubmit)="onSubmit()">
   <tui-textfield>
     <label tuiLabel>Rule ID</label>
-    <input tuiInput formControlName="id" placeholder="e.g. high-voltage-alert" />
+    <input tuiAutoFocus tuiInput formControlName="id" placeholder="e.g. high-voltage-alert" />
   </tui-textfield>
   <tui-error formControlName="id" />
 

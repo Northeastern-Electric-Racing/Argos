@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TUI_VALIDATION_ERRORS, TuiButton, type TuiDialogContext, TuiError, TuiInput } from '@taiga-ui/core';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
+import { TuiButton, type TuiDialogContext, TuiError, TuiInput } from '@taiga-ui/core';
 import { TuiInputNumber } from '@taiga-ui/kit';
 import { TuiForm } from '@taiga-ui/layout';
 import { injectContext } from '@taiga-ui/polymorpheus';
+import { requiredWithMessage, RULE_VALIDATION_ERRORS } from './rule-validators';
 
 export interface EditRuleResult {
   expr: string;
@@ -12,16 +14,10 @@ export interface EditRuleResult {
 
 export type EditRuleData = EditRuleResult;
 
-/** Messages tui-error shows for the rule dialogs' validators */
-export const RULE_VALIDATION_ERRORS = {
-  provide: TUI_VALIDATION_ERRORS,
-  useValue: { required: 'This field is required', min: 'Must be 0 or greater' }
-};
-
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, TuiButton, TuiError, TuiInput, TuiInputNumber, TuiForm],
+  imports: [ReactiveFormsModule, TuiAutoFocus, TuiButton, TuiError, TuiInput, TuiInputNumber, TuiForm],
   providers: [RULE_VALIDATION_ERRORS],
   templateUrl: './edit-rule-dialog.component.html',
   styleUrls: ['./edit-rule-dialog.component.css']
@@ -31,8 +27,8 @@ export class EditRuleDialogComponent {
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    expr: [this.context.data.expr, Validators.required],
-    debounce_time: [this.context.data.debounce_time, [Validators.required, Validators.min(0)]]
+    expr: [this.context.data.expr, requiredWithMessage('Expression is required')],
+    debounce_time: [this.context.data.debounce_time, [requiredWithMessage('Debounce time is required'), Validators.min(0)]]
   });
 
   onSubmit(): void {
