@@ -4,9 +4,10 @@
     #faultsTable
     class="faults-table argos-striped argos-sticky-header"
     nzSize="small"
-    [nzData]="this.chipFaults"
+    [nzData]="chipFaults()"
     [nzFrontPagination]="false"
     [nzShowPagination]="false"
+    [nzNoResult]="noFaults"
   >
     <thead>
       <tr>
@@ -23,4 +24,5 @@
       }
     </tbody>
   </nz-table>
+  <ng-template #noFaults><span class="empty-text">No faults</span></ng-template>
 </info-background>

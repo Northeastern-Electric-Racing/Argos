@@ -2,6 +2,7 @@
   #rulesTable
   class="argos-sticky-header argos-brand-header"
   [nzSize]="isMobile() ? 'small' : 'middle'"
+  nzTableLayout="fixed"
   [nzData]="filteredRules()"
   [nzFrontPagination]="false"
   [nzShowPagination]="false"
@@ -48,6 +49,7 @@
           <nz-switch
             [nzId]="'subscribe-rule-' + $index"
             [ngModel]="rule.is_subscribed"
+            [nzLoading]="pendingIds().has(rule.id)"
             (ngModelChange)="onToggleSubscription(rule, $event)"
           />
         </td>

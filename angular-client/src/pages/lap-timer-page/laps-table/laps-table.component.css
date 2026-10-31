@@ -42,7 +42,7 @@
 }
 
 .delta-positive {
-  color: var(--color-battery-low);
+  color: var(--color-text-danger);
 }
 
 .best-flag {

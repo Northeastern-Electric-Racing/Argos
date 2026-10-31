@@ -6,6 +6,7 @@ import { RulesTableComponent } from './rules-table.component';
 describe('RulesTableComponent — subscription toggle', () => {
   let fixture: ComponentFixture<RulesTableComponent>;
   let subscribeStatus: number;
+  let holdSubscribe: Promise<void> | undefined;
 
   const rules: ClientRule[] = [
     { id: 'r1', topic: 'a/b', expr: 'x > 1', debounce_time: 0, subscribers: [], is_subscribed: false },
@@ -14,15 +15,16 @@ describe('RulesTableComponent — subscription toggle', () => {
 
   beforeEach(async () => {
     subscribeStatus = 200;
+    holdSubscribe = undefined;
     vi.stubGlobal(
       'fetch',
-      vi.fn((url: string) =>
-        Promise.resolve(
-          /subscribe/.test(url)
-            ? new Response('', { status: subscribeStatus })
-            : new Response(JSON.stringify({ requesting_client_id: 'c', client_rules: rules }), { status: 200 })
-        )
-      )
+      vi.fn(async (url: string) => {
+        if (!/subscribe/.test(url)) {
+          return new Response(JSON.stringify({ requesting_client_id: 'c', client_rules: rules }), { status: 200 });
+        }
+        await holdSubscribe;
+        return new Response('', { status: subscribeStatus });
+      })
     );
 
     await TestBed.configureTestingModule({
@@ -75,5 +77,20 @@ describe('RulesTableComponent — subscription toggle', () => {
     await toggleSecondSwitch();
     expect(secondSwitch().classList).not.toContain('ant-switch-checked');
     expect(fixture.componentInstance.rules()[1].is_subscribed).toBe(false);
+  });
+
+  it('ignores further clicks on a switch while its request is in flight', async () => {
+    let release!: () => void;
+    holdSubscribe = new Promise((resolve) => (release = resolve));
+    const subscribeCalls = () => vi.mocked(fetch).mock.calls.filter(([url]) => /subscribe/.test(String(url))).length;
+
+    secondSwitch().click();
+    await settle(() => expect(secondSwitch().classList).toContain('ant-switch-loading'));
+    secondSwitch().click();
+    expect(subscribeCalls()).toBe(1);
+
+    release();
+    await settle(() => expect(secondSwitch().classList).not.toContain('ant-switch-loading'));
+    expect(secondSwitch().classList).toContain('ant-switch-checked');
   });
 });

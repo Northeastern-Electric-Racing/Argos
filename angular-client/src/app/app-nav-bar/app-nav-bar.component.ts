@@ -12,7 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { interval, map, Observable, startWith } from 'rxjs';
+import { interval, map, merge, Observable, startWith, take } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
@@ -101,6 +101,9 @@ export class AppNavBarComponent implements OnInit {
       )
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
+        // Picking a page closes the nav drawer. This also keeps Esc working: a page's own drawer attaches its
+        // overlay later, so the CDK would hand Esc to that one instead.
+        this.drawerRef?.close();
       });
   }
 
@@ -132,21 +135,32 @@ export class AppNavBarComponent implements OnInit {
     this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
   }
 
-  newRunIsLoading = false;
+  newRunIsLoading = signal(false);
   time$: Observable<Date> = interval(1000).pipe(
     startWith(0),
     map(() => new Date())
   );
 
+  /** Starts a run; the button spins until the server answers, then a toast says how it went. */
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
-    this.notification.create('success', 'New Run Started', 'Your new run has started successfully.');
-    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
-      this.newRunIsLoading = isLoading;
-    });
-    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.notification.create('error', 'Error', error.message);
-    });
+    this.newRunIsLoading.set(true);
+    merge(
+      runsQueryResponse.data.pipe(
+        filter((run) => run !== null),
+        map(() => null)
+      ),
+      runsQueryResponse.error.pipe(filter((error): error is Error => error !== null))
+    )
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe((error) => {
+        this.newRunIsLoading.set(false);
+        if (error) {
+          this.notification.create('error', 'Error', error.message);
+        } else {
+          this.notification.create('success', 'New Run Started', 'Your new run has started successfully.');
+        }
+      });
   };
 
   openRunForm = () => {

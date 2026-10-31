@@ -78,3 +78,24 @@
   font-weight: 600;
   background: @btn-primary-bg;
 }
+
+// Ant's dark theme darkens danger default, dashed, text and link buttons' text to palette step 7 of @error-color
+// on hover and focus (about 3.7:1 on the #2c2c2c panels), and no token reaches that colour. Keep it at
+// @error-color, and mark hover on outline buttons with the border instead.
+.ant-btn-dangerous:not(.ant-btn-primary):not([disabled]) {
+  &:hover,
+  &:focus {
+    color: @error-color;
+  }
+}
+.ant-btn-dangerous:not(.ant-btn-primary):not(.ant-btn-text):not(.ant-btn-link):not([disabled]) {
+  &:hover,
+  &:focus {
+    border-color: @error-color;
+  }
+}
+
+// The red text colour for app styles outside Ant components (lap deltas, notification labels).
+:root {
+  --color-text-danger: @error-color;
+}

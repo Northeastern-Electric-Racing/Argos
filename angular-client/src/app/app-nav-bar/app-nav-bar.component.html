@@ -32,7 +32,7 @@
     </div>
 
     <hstack>
-      <button nz-button nzType="primary" [nzLoading]="newRunIsLoading" (click)="onStartNewRun()">Start New Run</button>
+      <button nz-button nzType="primary" [nzLoading]="newRunIsLoading()" (click)="onStartNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"

@@ -13,7 +13,8 @@ import { provideNzConfig } from 'ng-zorro-antd/core/config';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
 import { provideNzI18n, en_US } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { AccessibleModalService } from './services/accessible-modal.service';
 import AppContextComponent from './app/context/app-context.component';
 import { nzConfig } from './app/nz-config';
 import { appIcons } from './app/nz-icons';
@@ -21,8 +22,10 @@ import { appIcons } from './app/nz-icons';
 bootstrapApplication(AppContextComponent, {
   providers: [
     provideRouter(routes),
-    // NzModalService isn't providedIn root, so one app-wide instance is provided here.
-    importProvidersFrom(BrowserModule, NzModalModule),
+    importProvidersFrom(BrowserModule),
+    // NzModalService isn't providedIn root, so one app-wide instance is provided here: ours, which adds
+    // aria-modal, an accessible name and alertdialog for confirms to every nz-modal.
+    { provide: NzModalService, useClass: AccessibleModalService },
     ChipFaultPipe,
     provideHttpClient(withInterceptorsFromDi()),
     provideNzConfig(nzConfig),

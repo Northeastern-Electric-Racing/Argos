@@ -7,3 +7,8 @@
 .fault-row {
   cursor: pointer;
 }
+
+/* nz-table's default "No Data" is 30% white (2.7:1); this is AA. */
+.empty-text {
+  color: var(--color-text-subtitle);
+}

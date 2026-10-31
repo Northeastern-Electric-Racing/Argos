@@ -171,9 +171,8 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: #ef4345;
+  color: var(--color-text-danger);
   flex-shrink: 0;
-  opacity: 0.85;
 }
 
 .entry-values-data {

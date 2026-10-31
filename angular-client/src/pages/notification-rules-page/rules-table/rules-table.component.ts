@@ -103,26 +103,40 @@ export class RulesTableComponent implements OnInit {
     this.onSelectionChange(checked ? [...others, ...this.filteredRules()] : others);
   }
 
+  /** Rules whose subscription request is in flight; their switches show nz-switch's loading state and ignore clicks. */
+  pendingIds = signal<ReadonlySet<string>>(new Set());
+
   /**
-   * nz-switch flips itself on click, so the rule follows it straight away and goes back if the request fails;
-   * the change to the bound value is what turns the switch back.
+   * nz-switch flips itself on click, so the rule follows it straight away and goes back to its earlier value if
+   * the request fails; the change to the bound value is what turns the switch back.
    */
   async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
+    const previous = rule.is_subscribed;
     const setSubscribed = (value: boolean) =>
       this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: value } : r)));
+    const setPending = (pending: boolean) =>
+      this.pendingIds.update((ids) => {
+        const next = new Set(ids);
+        if (pending) next.add(rule.id);
+        else next.delete(rule.id);
+        return next;
+      });
     setSubscribed(subscribed);
+    setPending(true);
     const ruleIds = [rule.id];
     try {
       const response = subscribed
         ? await subscribeToRules(this.clientId(), ruleIds)
         : await unsubscribeFromRules(this.clientId(), ruleIds);
       if (!response.ok) {
-        setSubscribed(!subscribed);
+        setSubscribed(previous);
         this.notification.create('error', 'Error', 'Failed to update subscription');
       }
     } catch {
-      setSubscribed(!subscribed);
+      setSubscribed(previous);
       this.notification.create('error', 'Error', 'Network error');
+    } finally {
+      setPending(false);
     }
   }
 

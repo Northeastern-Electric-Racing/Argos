@@ -1,7 +1,7 @@
 .empty-state {
   padding: 40px;
   text-align: center;
-  color: #888;
+  color: var(--color-text-subtitle);
   font-size: 1rem;
 }
 
@@ -9,6 +9,11 @@
   display: flex;
   gap: 2px;
   align-items: center;
+}
+
+/* The table's layout is fixed so it fits narrow screens; long expressions and topics wrap instead. */
+td {
+  overflow-wrap: anywhere;
 }
 
 /* The table scrolls inside this box, under its sticky header (argos-sticky-header in styles.css). */
