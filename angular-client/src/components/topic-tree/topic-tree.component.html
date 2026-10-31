@@ -1,0 +1,45 @@
+<div class="topic-tree">
+  <tui-textfield iconStart="@tui.search" tuiTextfieldSize="s" class="filter">
+    <input
+      tuiInput
+      type="text"
+      [attr.aria-label]="filterPlaceholder()"
+      [placeholder]="filterPlaceholder()"
+      [ngModel]="filterText()"
+      (ngModelChange)="filterText.set($event)"
+    />
+  </tui-textfield>
+
+  <div class="tree-scroll">
+    @for (node of visibleNodes(); track node.key) {
+      <tui-tree
+        [childrenHandler]="childrenHandler"
+        [content]="content"
+        [map]="expansion()"
+        [tuiTreeController]="false"
+        [value]="node"
+        (toggled)="onToggled($event)"
+      />
+    }
+  </div>
+</div>
+
+<ng-template #content let-node>
+  <div
+    class="tree-node-container"
+    role="button"
+    tabindex="0"
+    [class.leaf]="isLeaf(node)"
+    [class.selected]="isSelected(node)"
+    [attr.aria-pressed]="isLeaf(node) ? isSelected(node) : null"
+    [attr.aria-expanded]="isLeaf(node) ? null : !!expansion().get(node)"
+    (click)="onRowClick(node)"
+    (keydown.enter)="onRowClick(node)"
+    (keydown.space)="$event.preventDefault(); onRowClick(node)"
+  >
+    <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
+    @if (isLeaf(node)) {
+      <typography additionalStyles="margin: 0px;" [content]="node.data.displayValue()" variant="subheader" />
+    }
+  </div>
+</ng-template>

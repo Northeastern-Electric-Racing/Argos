@@ -15,7 +15,6 @@
   font-family: var(--font-family);
 }
 
-.setting-input-wrapper input {
+.setting-input-wrapper tui-textfield {
   width: 100%;
-  box-sizing: border-box;
 }

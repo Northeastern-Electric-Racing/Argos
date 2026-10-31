@@ -12,75 +12,85 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button
-              [onClick]="this.toggleSideBar"
-              label="Tog Sidebar"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
-            <argos-button
-              [onClick]="this.toggleMultiYaxis"
-              label="Tog Mult Yaxis"
-              size="sm"
-              additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-            />
+            <!-- aria-pressed shows each toggle's state; the labels stay as the team's graph checks know them -->
+            <button
+              tuiButton
+              type="button"
+              size="s"
+              [appearance]="showSideBar ? 'secondary' : 'outline-grayscale'"
+              [attr.aria-pressed]="showSideBar"
+              (click)="toggleSideBar()"
+            >
+              Tog Sidebar
+            </button>
+            <button
+              tuiButton
+              type="button"
+              size="s"
+              [appearance]="showMultiYaxis ? 'secondary' : 'outline-grayscale'"
+              [attr.aria-pressed]="showMultiYaxis"
+              (click)="toggleMultiYaxis()"
+            >
+              Tog Mult Yaxis
+            </button>
             @if (realTime === true) {
-              <argos-button
-                [onClick]="this.togglePause"
-                [label]="isPaused ? 'Play' : 'Pause'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button
+                tuiButton
+                type="button"
+                size="s"
+                appearance="outline-grayscale"
+                [iconStart]="isPaused ? '@tui.play' : '@tui.pause'"
+                (click)="togglePause()"
+              >
+                {{ isPaused ? 'Play' : 'Pause' }}
+              </button>
             }
           </div>
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
             <div class="toolbar-group config-group">
-              <argos-button
-                [onClick]="this.toggleRangeMode"
-                [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
-                size="sm"
-                additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-              />
+              <button tuiButton type="button" size="s" appearance="outline-grayscale" (click)="toggleRangeMode()">
+                {{ rangeMode === 'time' ? 'Time Range' : 'Point Range' }}
+              </button>
               <label class="input-label">{{ rangeMode === 'time' ? 'X (sec):' : 'X (points):' }}</label>
-              <p-inputnumber
-                [(ngModel)]="rangeValue"
-                mode="decimal"
-                [min]="1"
-                [step]="1"
-                styleClass="time-range-input"
-                inputStyleClass="text-xs p-4"
-                [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (onInput)="onGraphConfigChange()"
-              ></p-inputnumber>
+              <tui-textfield tuiTextfieldSize="s" class="time-range-input" [tuiTextfieldCleaner]="false">
+                <input
+                  tuiInputNumber
+                  [attr.aria-label]="rangeMode === 'time' ? 'X range in seconds' : 'X range in points'"
+                  [min]="1"
+                  [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
+                  [ngModel]="rangeValue"
+                  (ngModelChange)="rangeValue = $event; onGraphConfigChange()"
+                />
+              </tui-textfield>
             </div>
           }
 
           <div class="toolbar-group config-group">
             <label class="input-label">Y Min:</label>
-            <p-inputnumber
-              [(ngModel)]="yAxisMin"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
-              placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+            <tui-textfield tuiTextfieldSize="s" class="y-axis-input">
+              <input
+                tuiInputNumber
+                aria-label="Y axis minimum"
+                placeholder="Auto"
+                [tuiNumberFormat]="{ precision: 4 }"
+                [ngModel]="yAxisMin"
+                (ngModelChange)="yAxisMin = $event; onGraphConfigChange()"
+              />
+            </tui-textfield>
 
             <label class="input-label">Y Max:</label>
-            <p-inputnumber
-              [(ngModel)]="yAxisMax"
-              mode="decimal"
-              [minFractionDigits]="0"
-              [maxFractionDigits]="4"
-              styleClass="y-axis-input"
-              inputStyleClass="text-xs p-1"
-              placeholder="Auto"
-              (onInput)="onGraphConfigChange()"
-            ></p-inputnumber>
+            <tui-textfield tuiTextfieldSize="s" class="y-axis-input">
+              <input
+                tuiInputNumber
+                aria-label="Y axis maximum"
+                placeholder="Auto"
+                [tuiNumberFormat]="{ precision: 4 }"
+                [ngModel]="yAxisMax"
+                (ngModelChange)="yAxisMax = $event; onGraphConfigChange()"
+              />
+            </tui-textfield>
           </div>
 
           <div class="toolbar-group">

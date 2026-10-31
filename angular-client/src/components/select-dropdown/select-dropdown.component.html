@@ -1,9 +1,18 @@
-<p-select
-  class="small-grey-select"
-  [options]="options()"
-  [(ngModel)]="selectedOption"
-  optionLabel="name"
-  [placeholder]="placeholder()"
-  (onChange)="handleChangedOption($event)"
-  appendTo="body"
-></p-select>
+<tui-textfield
+  class="small-select"
+  tuiChevron
+  tuiDropdownLimitWidth="min"
+  tuiTextfieldSize="s"
+  [identityMatcher]="identityMatcher"
+  [stringify]="stringify"
+  [tuiTextfieldCleaner]="false"
+>
+  <input
+    tuiSelect
+    [attr.aria-label]="placeholder()"
+    [placeholder]="placeholder()"
+    [ngModel]="selectedOption ?? null"
+    (ngModelChange)="handleChangedOption($event)"
+  />
+  <tui-data-list-wrapper *tuiDropdown [items]="options()" />
+</tui-textfield>

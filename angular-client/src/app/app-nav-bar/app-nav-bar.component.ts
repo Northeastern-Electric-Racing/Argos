@@ -1,14 +1,17 @@
 import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TuiButton, TuiClose, TuiDialogService, TuiDropdown, TuiPopup, TuiTitle } from '@taiga-ui/core';
+import { TuiAutoFocus, TuiFocusTrap } from '@taiga-ui/cdk';
+import { TuiHeader } from '@taiga-ui/layout';
+import { TuiBadgeNotification, TuiDrawer } from '@taiga-ui/kit';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { Drawer } from 'primeng/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -18,18 +21,16 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
-import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
-import { Popover } from 'primeng/popover';
-import { Badge } from 'primeng/badge';
 
+/** A page, rendered as a link, or an action (such as opening a dialog), rendered as a button */
 export interface NavItem {
-  id: string;
   label: string;
-  onClick: () => void;
   icon: string;
+  route?: string;
+  action?: () => void;
 }
 
 @Component({
@@ -37,7 +38,18 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    Drawer,
+    RouterLink,
+    RouterLinkActive,
+    TuiAutoFocus,
+    TuiFocusTrap,
+    TuiButton,
+    TuiClose,
+    TuiDrawer,
+    TuiHeader,
+    TuiPopup,
+    TuiTitle,
+    TuiDropdown,
+    TuiBadgeNotification,
     CurrentRunDisplayComponent,
     ToastButtonComponent,
     MessagesPerSecondComponent,
@@ -48,8 +60,7 @@ export interface NavItem {
     SidebarChipComponent,
     MatIcon,
     NotificationListComponent,
-    Popover,
-    Badge
+    NavOptionsMenuComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
@@ -59,18 +70,14 @@ export interface NavItem {
 export class AppNavBarComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
-  private router = inject(Router);
+  private toasts = inject(ToastService);
   private sidebarService = inject(SidebarService);
-  private dialogService = inject(DialogService);
+  private dialogs = inject(TuiDialogService);
   protected notificationLogService = inject(NotificationLogService);
 
-  ref: DynamicDialogRef | null | undefined;
-  menuRef: DynamicDialogRef | null | undefined;
-  editRunRef: DynamicDialogRef | null | undefined;
+  menuOpen = false;
+  notificationsOpen = false;
 
-  // Set selected route to current URL path
-  selectedRoute: string = window.location.pathname;
   sidebarVisible = false;
   isMobile = false;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
@@ -80,20 +87,10 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       this.sidebarVisible = isOpen;
     });
     this.isMobile = window.innerWidth <= 768;
-    this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationEnd),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((event: NavigationEnd) => {
-        this.selectedRoute = event.url;
-      });
   }
 
   ngOnDestroy(): void {
-    if (this.menuRef) {
-      this.menuRef.close();
-    }
+    this.menuOpen = false;
   }
 
   // on resize, set the screen width
@@ -114,138 +111,56 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
       this.newRunIsLoading = isLoading;
     });
     runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
-      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      if (error) this.toasts.show(error.message, { label: 'Error', appearance: 'negative' });
     });
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
-      width: '550px',
-      header: 'Edit Run',
-      closable: true,
-      closeAriaLabel: 'Close'
-    });
+    this.dialogs
+      .open(new PolymorpheusComponent(RunFormComponent), { label: 'Edit Run' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   };
 
-  homeNavItem: NavItem = {
-    id: appRoutes.landingRoute(),
-    label: 'Home',
-    onClick: () => this.navigateTo(appRoutes.landingRoute()),
-    icon: 'logo'
-  };
+  homeNavItem: NavItem = { label: 'Home', route: appRoutes.landingRoute(), icon: 'logo' };
 
   mostUsedNavItems: NavItem[] = [
-    {
-      id: appRoutes.chargingRoute(),
-      label: 'Charging',
-      onClick: () => {
-        this.navigateTo(appRoutes.chargingRoute());
-      },
-      icon: 'ev_station'
-    },
-    {
-      id: appRoutes.graphRoute(),
-      label: 'Graph',
-      onClick: () => this.navigateTo(appRoutes.graphRoute()),
-      icon: 'bar_chart'
-    },
-    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
-    {
-      id: appRoutes.efusesRoute(),
-      label: 'eFuses',
-      onClick: () => this.navigateTo(appRoutes.efusesRoute()),
-      icon: 'electrical_services'
-    }
+    { label: 'Charging', route: appRoutes.chargingRoute(), icon: 'ev_station' },
+    { label: 'Graph', route: appRoutes.graphRoute(), icon: 'bar_chart' },
+    { label: 'BMS', route: appRoutes.bmsRoute(), icon: 'action_key' },
+    { label: 'eFuses', route: appRoutes.efusesRoute(), icon: 'electrical_services' }
   ];
 
   onlyDesktopNavItems: NavItem[] = [...this.mostUsedNavItems];
 
-  toggleMenu() {
-    if (this.menuRef) {
-      this.menuRef.close();
-      this.menuRef = undefined;
-    } else {
-      this.openMenu();
-    }
-  }
-
   navMenuItems: NavItem[] = [
-    {
-      id: appRoutes.faultsRoute(),
-      label: 'Fault',
-      onClick: () => this.navigateTo(appRoutes.faultsRoute()),
-      icon: 'error'
-    },
-    {
-      id: appRoutes.mapRoute(),
-      label: 'Map',
-      onClick: () => this.navigateTo(appRoutes.mapRoute()),
-      icon: 'map'
-    },
-    {
-      id: appRoutes.cameraRoute(),
-      label: 'Camera',
-      onClick: () => this.navigateTo(appRoutes.cameraRoute()),
-      icon: 'linked_camera'
-    },
-    {
-      id: '',
-      label: 'Edit Runs',
-      onClick: this.openRunForm,
-      icon: 'edit'
-    },
-    {
-      id: appRoutes.commandsRoute(),
-      label: 'Commands',
-      onClick: () => this.navigateTo(appRoutes.commandsRoute()),
-      icon: 'electrical_services'
-    },
-    {
-      id: appRoutes.rulesRoute(),
-      label: 'Rules',
-      onClick: () => this.navigateTo(appRoutes.rulesRoute()),
-      icon: 'notifications'
-    },
-    {
-      id: appRoutes.lapTimerRoute(),
-      label: 'Lap Timer',
-      onClick: () => this.navigateTo(appRoutes.lapTimerRoute()),
-      icon: 'timer'
-    }
+    { label: 'Fault', route: appRoutes.faultsRoute(), icon: 'error' },
+    { label: 'Map', route: appRoutes.mapRoute(), icon: 'map' },
+    { label: 'Camera', route: appRoutes.cameraRoute(), icon: 'linked_camera' },
+    { label: 'Edit Runs', action: this.openRunForm, icon: 'edit' },
+    { label: 'Commands', route: appRoutes.commandsRoute(), icon: 'electrical_services' },
+    { label: 'Rules', route: appRoutes.rulesRoute(), icon: 'notifications' },
+    { label: 'Lap Timer', route: appRoutes.lapTimerRoute(), icon: 'timer' }
   ];
 
   allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
 
-  openMenu() {
-    this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {
-      showHeader: false,
-      modal: true,
-      // PrimeNG 21 only closes on mask click or Escape when the dialog is closable
-      closable: true,
-      dismissableMask: true,
-      styleClass: 'nav-options-dialog',
-      baseZIndex: 10000,
-      width: 'auto',
-      data: {
-        items: this.navMenuItems
-      }
-    });
-
-    this.menuRef?.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.menuRef = undefined;
-    });
+  onMenuItemClick(navItem: NavItem): void {
+    this.menuOpen = false;
+    navItem.action?.();
   }
 
-  navigateTo(route: string): void {
-    this.selectedRoute = route;
-    this.router.navigate([route]);
+  closeSidebar(): void {
+    // The drawer's focus trap hands focus back to what opened it only if focus has already left the drawer
+    // (Esc and the close button leave it on the close button, which outlives the trap during the leave animation)
+    if (document.activeElement instanceof HTMLElement && document.activeElement.closest('tui-drawer')) {
+      document.activeElement.blur();
+    }
+    this.sidebarVisible = false;
   }
 
-  onNotificationPanelShow(): void {
-    this.notificationLogService.markAllRead();
-  }
-
-  isSelected(navItem: NavItem) {
-    return navItem.id === this.selectedRoute;
+  onNotificationPanelChange(open: boolean): void {
+    this.notificationsOpen = open;
+    if (open) this.notificationLogService.markAllRead();
   }
 }

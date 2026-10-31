@@ -1,4 +1,4 @@
 <hstack>
   <typography variant="info-subtitle" [content]="label()" />
-  <p-toggleswitch [(ngModel)]="value" />
+  <input tuiSwitch type="checkbox" [attr.aria-label]="label()" [showIcons]="false" [(ngModel)]="value" />
 </hstack>

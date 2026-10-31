@@ -38,7 +38,7 @@
   padding: 32px;
 }
 
-.lap-table-wrap :where(.p-datatable) {
+.lap-table-wrap :where(table) {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
@@ -70,7 +70,7 @@
   border-left: 3px solid var(--color-battery-low);
 }
 
-/* !important: overrides PrimeNG's higher-specificity th/td defaults. */
+/* !important: overrides Taiga's tuiTh/tuiTd defaults. */
 .lap-table-wrap th.col-num,
 .lap-table-wrap td.col-num {
   width: 56px;
@@ -117,4 +117,8 @@
   font-size: 16px;
   width: 16px;
   height: 16px;
+}
+
+.laps-table {
+  width: 100%;
 }

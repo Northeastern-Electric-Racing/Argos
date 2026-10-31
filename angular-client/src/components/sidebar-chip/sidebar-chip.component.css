@@ -1,20 +1,31 @@
-.chip {
+:host {
   border-radius: 5px;
   padding: 5px;
   margin: 5px;
-  color: #e0e0e0;
+  color: var(--tui-text-primary);
   display: flex;
   align-items: center;
-  width: 100%;
   transition: color 0.2s;
-}
-
-.chip:hover {
-  color: #ef4345;
   cursor: pointer;
+  text-decoration: none;
+  /* button reset, for the action chips */
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: start;
 }
 
-/* New: When a chip is active, it keeps the hover style */
-.chip.active {
-  color: #ef4345;
+:host(:hover),
+:host(.active) {
+  color: var(--color-accent);
+}
+
+:host(:focus-visible) {
+  outline: 2px solid var(--tui-border-focus);
+  outline-offset: -2px;
+}
+
+.chip-icon {
+  margin-right: 10px;
+  flex-shrink: 0;
 }

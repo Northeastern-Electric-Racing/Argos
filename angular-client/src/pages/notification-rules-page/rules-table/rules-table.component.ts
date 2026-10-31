@@ -1,11 +1,21 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Table, TableModule } from 'primeng/table';
-import { ToggleSwitch } from 'primeng/toggleswitch';
-import { FormsModule } from '@angular/forms';
-import { ButtonDirective } from 'primeng/button';
-import { take } from 'rxjs';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+  DestroyRef
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ToastService } from 'src/services/toast.service';
+import { FormsModule, NgModel } from '@angular/forms';
+import { TuiTable, TuiTableControl } from '@taiga-ui/addon-table';
+import { TuiButton, TuiCheckbox, TuiDialogService, TuiLoader } from '@taiga-ui/core';
+import { TuiSwitch } from '@taiga-ui/kit';
+import { PolymorpheusComponent } from '@taiga-ui/polymorpheus';
 import {
   ClientRule,
   deleteRule,
@@ -15,37 +25,39 @@ import {
   subscribeToRules,
   unsubscribeFromRules
 } from 'src/api/rules.api';
-import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
+import { EditRuleData, EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
+import { injectConfirm } from 'src/utils/confirm.utils';
 
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective],
+  imports: [TuiTable, TuiTableControl, TuiButton, TuiCheckbox, TuiLoader, TuiSwitch, FormsModule],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })
 export class RulesTableComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  private confirm = injectConfirm();
   clientId = input.required<string>();
   searchTerm = input('');
 
   selectionChanged = output<ClientRule[]>();
 
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private toasts = inject(ToastService);
+  private dialogs = inject(TuiDialogService);
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
   selectedRules = signal<ClientRule[]>([]);
 
-  dt = viewChild<Table>('dt');
-
-  constructor() {
-    effect(() => {
-      this.dt()?.filterGlobal(this.searchTerm(), 'contains');
-    });
-  }
-
-  private editRef: DynamicDialogRef | null | undefined;
+  /** Rules whose expression, topic or ID contains the search term (case-insensitive) */
+  filteredRules = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.rules();
+    return this.rules().filter((rule) =>
+      [rule.expr, rule.topic, rule.id].some((field) => field.toLowerCase().includes(term))
+    );
+  });
 
   ngOnInit(): void {
     this.loadRules();
@@ -58,21 +70,33 @@ export class RulesTableComponent implements OnInit {
       if (response.ok) {
         const data: RulesResponse = await response.json();
         this.rules.set(data.client_rules);
+        this.reselect();
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Failed to fetch rules' });
+        this.toasts.show('Failed to fetch rules', { label: 'Load Error', appearance: 'negative' });
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Network error' });
+      this.toasts.show('Network error', { label: 'Load Error', appearance: 'negative' });
     }
     this.loading.set(false);
   }
 
-  onSelectionChange(selected: ClientRule[]): void {
-    this.selectedRules.set(selected);
-    this.selectionChanged.emit(selected);
+  onSelectionChange(selected: readonly ClientRule[]): void {
+    this.selectedRules.set([...selected]);
+    this.selectionChanged.emit(this.selectedRules());
   }
 
-  async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
+  /** The table selects by object identity, so point the selection at the reloaded rule objects (matched by ID) */
+  private reselect(): void {
+    const selectedIds = new Set(this.selectedRules().map((rule) => rule.id));
+    if (selectedIds.size === 0) return;
+    this.onSelectionChange(this.rules().filter((rule) => selectedIds.has(rule.id)));
+  }
+
+  /**
+   * On failure the switch is put back through its own control: rows are tracked by ID, so writing the rule's
+   * unchanged value back into the rules would never reach the switch, which would keep showing the rejected state.
+   */
+  async onToggleSubscription(rule: ClientRule, subscribed: boolean, toggle: NgModel): Promise<void> {
     const ruleIds = [rule.id];
     try {
       const response = subscribed
@@ -80,63 +104,68 @@ export class RulesTableComponent implements OnInit {
         : await unsubscribeFromRules(this.clientId(), ruleIds);
       if (response.ok) {
         this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: subscribed } : r)));
-      } else {
-        // Revert the toggle on failure
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update subscription' });
+        this.reselect();
+        return;
       }
+      this.toasts.show('Failed to update subscription', { label: 'Error', appearance: 'negative' });
     } catch {
-      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
+      this.toasts.show('Network error', { label: 'Error', appearance: 'negative' });
     }
+    // Not through ngModelChange (that would call this handler again), and with NgModel's last-seen value
+    // synced so a later [ngModel] change still reaches the switch
+    toggle.viewModel = !subscribed;
+    toggle.control.setValue(!subscribed, { emitViewToModelChange: false });
   }
 
   onEdit(rule: ClientRule): void {
-    this.editRef = this.dialogService.open(EditRuleDialogComponent, {
-      header: `Edit Rule: ${rule.id}`,
-      width: '450px',
-      closable: true,
-      closeAriaLabel: 'Close',
-      data: { expr: rule.expr, debounce_time: rule.debounce_time }
-    });
+    this.dialogs
+      .open<EditRuleResult | null>(new PolymorpheusComponent(EditRuleDialogComponent), {
+        label: `Edit Rule: ${rule.id}`,
+        size: 's',
+        data: { expr: rule.expr, debounce_time: rule.debounce_time } satisfies EditRuleData
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(async (result) => {
+        if (!result) return;
 
-    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
-    this.editRef?.onClose.pipe(take(1)).subscribe(async (result: EditRuleResult | null) => {
-      if (!result) return;
-
-      try {
-        const response = await editRule(rule.id, result);
-        if (response.ok) {
-          this.rules.update((rules) =>
-            rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
-          );
-          this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Rule "${rule.id}" updated` });
-        } else {
-          const text = await response.text();
-          this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: text });
+        try {
+          const response = await editRule(rule.id, result);
+          if (response.ok) {
+            this.rules.update((rules) =>
+              rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
+            );
+            this.reselect();
+            this.toasts.show(`Rule "${rule.id}" updated`, { label: 'Updated', appearance: 'positive' });
+          } else {
+            const text = await response.text();
+            this.toasts.show(text, { label: 'Edit Failed', appearance: 'negative' });
+          }
+        } catch {
+          this.toasts.show('Network error', { label: 'Edit Failed', appearance: 'negative' });
         }
-      } catch {
-        this.messageService.add({ severity: 'error', summary: 'Edit Failed', detail: 'Network error' });
-      }
-    });
+      });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.confirm('Delete Rule', { content: `Delete rule "${rule.id}"?`, yes: 'Delete', no: 'Cancel' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.removeRule(rule));
+  }
 
+  private async removeRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
         this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
         this.selectionChanged.emit(this.selectedRules());
-        this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `Rule "${rule.id}" removed` });
+        this.toasts.show(`Rule "${rule.id}" removed`, { label: 'Deleted', appearance: 'positive' });
       } else {
         const text = await response.text();
-        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: text });
+        this.toasts.show(text, { label: 'Delete Failed', appearance: 'negative' });
       }
     } catch {
-      this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: 'Network error' });
+      this.toasts.show('Network error', { label: 'Delete Failed', appearance: 'negative' });
     }
   }
 }

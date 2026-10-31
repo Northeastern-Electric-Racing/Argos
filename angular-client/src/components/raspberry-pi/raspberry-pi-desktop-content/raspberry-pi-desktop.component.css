@@ -22,7 +22,7 @@
 
 .wifi-dbm-unit {
   font-size: 18px;
-  color: gray;
+  color: var(--color-text-secondary);
   padding-top: 22px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;

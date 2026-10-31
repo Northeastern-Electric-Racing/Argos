@@ -1,1 +1,3 @@
-<argos-button [onClick]="openDialog" [label]="label" size="sm" additionalStyles="background-color: #027bd7" />
+<button tuiButton type="button" size="s" appearance="primary" iconStart="@tui.history" (click)="openDialog()">
+  {{ label }}
+</button>

@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { ButtonDirective } from 'primeng/button';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
+import { TuiButton, type TuiDialogContext, TuiError, TuiFilterByInputPipe, TuiInput } from '@taiga-ui/core';
+import { TuiChevron, TuiComboBox, TuiDataListWrapper, TuiInputNumber } from '@taiga-ui/kit';
+import { TuiForm } from '@taiga-ui/layout';
+import { injectContext } from '@taiga-ui/polymorpheus';
+import { requiredWithMessage, RULE_VALIDATION_ERRORS } from '../edit-rule-dialog/rule-validators';
 import { RulePayload } from 'src/api/rules.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
@@ -14,24 +16,38 @@ import { filter, take } from 'rxjs';
 @Component({
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, AutoComplete, ButtonDirective],
+  imports: [
+    ReactiveFormsModule,
+    TuiAutoFocus,
+    TuiButton,
+    TuiError,
+    TuiFilterByInputPipe,
+    TuiInput,
+    TuiChevron,
+    TuiComboBox,
+    TuiDataListWrapper,
+    TuiInputNumber,
+    TuiForm
+  ],
+  providers: [RULE_VALIDATION_ERRORS],
   templateUrl: './add-rule-dialog.component.html',
   styleUrls: ['./add-rule-dialog.component.css']
 })
 export class AddRuleDialogComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  private ref = inject(DynamicDialogRef);
+  private readonly context = injectContext<TuiDialogContext<RulePayload | null>>();
   private fb = inject(FormBuilder);
   private serverService = inject(APIService);
 
-  allTopics: string[] = [];
-  filteredTopics = signal<string[]>([]);
+  // Topic suggestions; the combo box filters them by what's typed (case-insensitive substring)
+  allTopics = signal<string[]>([]);
 
   form = this.fb.group({
-    id: ['', Validators.required],
-    topic: ['', Validators.required],
-    expr: ['', Validators.required],
-    debounce_time: [60, [Validators.required, Validators.min(0)]]
+    id: ['', requiredWithMessage('Rule ID is required')],
+    // The combo box is strict: typed text that matches no topic leaves the value empty, so say how to fill it
+    topic: ['', requiredWithMessage('Pick a topic from the list')],
+    expr: ['', requiredWithMessage('Expression is required')],
+    debounce_time: [60, [requiredWithMessage('Debounce time is required'), Validators.min(0)]]
   });
 
   ngOnInit(): void {
@@ -43,18 +59,8 @@ export class AddRuleDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((dataTypes) => {
-        this.allTopics = dataTypes.map((dt) => dt.name);
+        this.allTopics.set(dataTypes.map((dt) => dt.name));
       });
-  }
-
-  filterTopics(event: AutoCompleteCompleteEvent): void {
-    const search = event.query.toLowerCase();
-    const lower = (t: string) => t.toLowerCase();
-    this.filteredTopics.set(
-      this.allTopics.filter(
-        (topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search))
-      )
-    );
   }
 
   onSubmit(): void {
@@ -71,10 +77,10 @@ export class AddRuleDialogComponent implements OnInit {
       debounce_time: Number(value.debounce_time)
     };
 
-    this.ref.close(rule);
+    this.context.completeWith(rule);
   }
 
   onCancel(): void {
-    this.ref.close(null);
+    this.context.completeWith(null);
   }
 }

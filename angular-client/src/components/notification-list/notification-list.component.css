@@ -108,7 +108,7 @@
 }
 
 .entry.unread .entry-accent {
-  background-color: #ef4345;
+  background-color: var(--color-accent);
 }
 
 .entry-body {
@@ -171,7 +171,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: #ef4345;
+  color: var(--color-accent);
   flex-shrink: 0;
   opacity: 0.85;
 }
@@ -187,69 +187,24 @@
 
 .entry-dismiss {
   align-self: center;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
   opacity: 0;
-  transition:
-    opacity 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
-  flex-shrink: 0;
+  transition: opacity 0.15s ease;
 }
 
 .entry:hover .entry-dismiss,
-.entry:focus-within .entry-dismiss,
-.entry-dismiss:focus-visible {
+.entry:focus-within .entry-dismiss {
   opacity: 1;
-}
-
-.entry-dismiss:hover,
-.entry-dismiss:focus-visible {
-  color: #ef4345;
-  background-color: #ef43451a;
-  outline: none;
-}
-
-.entry-dismiss .pi {
-  font-size: 0.7rem;
 }
 
 /* ---- Empty state ---- */
 
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
   padding: 2.5rem 1rem;
-  text-align: center;
-  color: var(--color-text-secondary);
 }
 
 .empty-icon {
   font-size: 1.75rem;
-  color: #444;
-}
-
-.empty-text {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text-subtitle);
-}
-
-.empty-hint {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  opacity: 0.8;
+  color: var(--tui-text-tertiary);
 }
 
 /* ---- Footer ---- */
@@ -263,33 +218,6 @@
 
 .view-all-button {
   width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--color-text-subtitle);
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.view-all-button:hover,
-.view-all-button:focus-visible {
-  color: #ef4345;
-  background-color: #ef434514;
-  outline: none;
-}
-
-.view-all-button .pi {
-  font-size: 0.72rem;
 }
 
 /* ---- Mobile ---- */

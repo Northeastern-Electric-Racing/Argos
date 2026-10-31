@@ -93,54 +93,12 @@
   width: clamp(64px, 9.4vw, 190px);
 }
 
-.see-more-btn {
-  background-color: #2aaeee;
-  color: #000;
-  border: none;
-  border-radius: clamp(8px, 1.25vw, 24px);
-  padding: clamp(2px, 0.47vw, 10px) clamp(6px, 1.4vw, 28px);
-  font-size: clamp(7px, 0.94vw, 18px);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
+.controls-actions button {
   width: 100%;
-  text-align: center;
-  height: clamp(18px, 2.3vw, 44px);
-  box-sizing: border-box;
 }
 
-.see-more-btn:hover {
-  background-color: #1e9ad8;
-}
-
-/* ── PrimeNG Select overrides: force the dropdown to match the controls-zone styling ── */
-.controls-zone ::ng-deep .small-grey-select {
-  width: 100% !important;
-  min-width: 0 !important;
-  height: clamp(18px, 2.3vw, 44px) !important;
-  border-radius: clamp(8px, 1.25vw, 24px) !important;
-  background-color: #555 !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
-}
-
-.controls-zone ::ng-deep .p-select-label,
-.controls-zone ::ng-deep .p-select-label.p-placeholder {
-  width: auto !important;
-  padding: 0 clamp(4px, 0.94vw, 20px) !important;
-  font-size: clamp(7px, 0.94vw, 18px) !important;
-  font-weight: 600 !important;
-  color: #c0c0c0 !important;
-  --p-select-placeholder-color: #c0c0c0 !important;
-  line-height: clamp(18px, 2.3vw, 44px) !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.controls-zone ::ng-deep .p-select-trigger {
-  padding-right: clamp(3px, 0.63vw, 14px) !important;
-  display: flex !important;
-  align-items: center !important;
+/* ── Let the Taiga select fill the controls zone ── */
+.controls-zone {
+  --select-dropdown-width: 100%;
+  --select-dropdown-min-width: 0;
 }

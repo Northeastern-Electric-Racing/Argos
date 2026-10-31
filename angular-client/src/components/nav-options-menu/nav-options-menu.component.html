@@ -1,10 +1,27 @@
 <div class="menu-container">
-  <div class="menu-grid">
-    @for (menuItem of menuItems; track menuItem) {
-      <div class="menu-item" (click)="menuItem.onClick()" [attr.data-id]="menuItem.id">
-        <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
-        <span class="menu-label">{{ menuItem.label }}</span>
-      </div>
+  <!-- The dropdown is the menu (tuiDropdownRole="menu" on the trigger): page links plus the Edit Runs action,
+       with tui-data-list's arrow-key focus between items -->
+  <tui-data-list class="menu-grid">
+    @for (menuItem of items(); track menuItem.label) {
+      @if (menuItem.route) {
+        <a
+          tuiOption
+          role="menuitem"
+          class="menu-item"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [routerLink]="menuItem.route"
+          (click)="itemClick.emit(menuItem)"
+        >
+          <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
+          <span class="menu-label">{{ menuItem.label }}</span>
+        </a>
+      } @else {
+        <button tuiOption role="menuitem" type="button" class="menu-item" (click)="itemClick.emit(menuItem)">
+          <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
+          <span class="menu-label">{{ menuItem.label }}</span>
+        </button>
+      }
     }
-  </div>
+  </tui-data-list>
 </div>

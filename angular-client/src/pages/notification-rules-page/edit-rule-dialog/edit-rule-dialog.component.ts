@@ -1,29 +1,34 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
+import { TuiAutoFocus } from '@taiga-ui/cdk';
+import { TuiButton, type TuiDialogContext, TuiError, TuiInput } from '@taiga-ui/core';
+import { TuiInputNumber } from '@taiga-ui/kit';
+import { TuiForm } from '@taiga-ui/layout';
+import { injectContext } from '@taiga-ui/polymorpheus';
+import { requiredWithMessage, RULE_VALIDATION_ERRORS } from './rule-validators';
 
 export interface EditRuleResult {
   expr: string;
   debounce_time: number;
 }
 
+export type EditRuleData = EditRuleResult;
+
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, ButtonDirective],
+  imports: [ReactiveFormsModule, TuiAutoFocus, TuiButton, TuiError, TuiInput, TuiInputNumber, TuiForm],
+  providers: [RULE_VALIDATION_ERRORS],
   templateUrl: './edit-rule-dialog.component.html',
   styleUrls: ['./edit-rule-dialog.component.css']
 })
 export class EditRuleDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private readonly context = injectContext<TuiDialogContext<EditRuleResult | null, EditRuleData>>();
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    expr: [this.config.data.expr as string, Validators.required],
-    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]]
+    expr: [this.context.data.expr, requiredWithMessage('Expression is required')],
+    debounce_time: [this.context.data.debounce_time, [requiredWithMessage('Debounce time is required'), Validators.min(0)]]
   });
 
   onSubmit(): void {
@@ -38,10 +43,10 @@ export class EditRuleDialogComponent {
       debounce_time: Number(value.debounce_time)
     };
 
-    this.ref.close(result);
+    this.context.completeWith(result);
   }
 
   onCancel(): void {
-    this.ref.close(null);
+    this.context.completeWith(null);
   }
 }

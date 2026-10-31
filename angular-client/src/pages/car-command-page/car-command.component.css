@@ -55,14 +55,12 @@
   font-family: var(--font-family);
 }
 
-.auth-input-group ::ng-deep p-password,
-.auth-input-group ::ng-deep .p-password,
-.auth-input-group ::ng-deep .p-inputtext {
+.auth-input-group tui-textfield {
   width: 100%;
 }
 
 .auth-error {
-  color: #f04346;
+  color: var(--tui-text-negative);
   font-size: var(--font-size-sm);
   text-align: center;
   margin: 0;

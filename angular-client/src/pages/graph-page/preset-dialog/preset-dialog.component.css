@@ -29,63 +29,34 @@
   flex: 1 1 280px;
 }
 
-.save-form label {
-  color: #ccc;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
 .save-form-controls {
   display: flex;
   gap: 8px;
 }
 
-.save-form-controls input {
+.name-field {
   flex: 1 1 auto;
   min-width: 0;
 }
 
 .hint {
-  color: #888;
+  color: var(--tui-text-secondary);
   font-size: 0.8rem;
 }
 
 .presets-list {
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--tui-border-normal);
   padding-top: 12px;
 }
 
 .empty-state {
-  text-align: center;
-  padding: 24px 12px;
-  border: 1px dashed #444;
-  border-radius: 6px;
-  color: #aaa;
-}
-
-.empty-state p {
-  margin: 0 0 4px;
-  color: #ddd;
+  padding: 1.5rem 0.75rem;
+  background: var(--tui-background-neutral-1);
 }
 
 .preset-table {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
-  color: #eee;
-}
-
-.preset-table th,
-.preset-table td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #2a2a2a;
-  font-size: 0.9rem;
-}
-
-.preset-table th {
-  color: #aaa;
-  font-weight: 600;
 }
 
 .preset-table td.topic-count,
@@ -101,8 +72,9 @@
   white-space: nowrap;
 }
 
-.preset-table td.actions button {
-  margin-left: 6px;
+.action-buttons {
+  display: inline-flex;
+  gap: 6px;
 }
 
 .preset-table .name-text {

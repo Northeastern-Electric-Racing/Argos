@@ -1,34 +1,58 @@
 <div class="modal-container">
-  <!-- Carousel Content -->
-  <p-carousel
-    [value]="runs"
-    [numVisible]="1"
-    [numScroll]="1"
-    [circular]="true"
-    [autoplayInterval]="3000"
-    (onPage)="handlePageChange($event)"
+  <button
+    appearance="secondary-grayscale"
+    iconStart="@tui.chevron-left"
+    size="s"
+    tuiIconButton
+    type="button"
+    [disabled]="!runs.length"
+    (click)="carousel.prev()"
   >
-    <ng-template let-run let-i="index" #item>
-      <div class="run-card">
-        <mat-grid-list cols="2" rowHeight="40px">
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-          </mat-grid-tile>
-        </mat-grid-list>
-      </div>
-
-      <div class="select-button-container">
-        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
-      </div>
-    </ng-template>
-  </p-carousel>
+    Previous run
+  </button>
+  <tui-carousel #carousel class="carousel" [duration]="3000" [(index)]="index">
+    <div *tuiItem="let i" class="slide">
+      @if (runAt(i); as run) {
+        <div tuiCardLarge="compact" tuiAppearance="outline-grayscale" class="run-card">
+          <header tuiHeader="body-l">
+            <h3 tuiTitle>
+              Run #{{ run.id }}
+              <span tuiSubtitle>{{ datePipe(run.time) }}</span>
+            </h3>
+          </header>
+          <div class="run-details">
+            <div tuiCell size="s">
+              <tui-icon icon="@tui.user" />
+              <span tuiTitle>
+                <span tuiSubtitle>Driver</span>
+                {{ run.driverName || 'Unknown' }}
+              </span>
+            </div>
+            <div tuiCell size="s">
+              <tui-icon icon="@tui.map-pin" />
+              <span tuiTitle>
+                <span tuiSubtitle>Location</span>
+                {{ run.locationName || 'Unknown' }}
+              </span>
+            </div>
+          </div>
+          <button tuiButton type="button" size="m" appearance="primary" (click)="selectRun(run)">Select this Run</button>
+        </div>
+      }
+    </div>
+  </tui-carousel>
+  <button
+    appearance="secondary-grayscale"
+    iconStart="@tui.chevron-right"
+    size="s"
+    tuiIconButton
+    type="button"
+    [disabled]="!runs.length"
+    (click)="carousel.next()"
+  >
+    Next run
+  </button>
 </div>
+@if (runs.length > 1) {
+  <tui-pager size="s" class="pager" [count]="runs.length" [index]="activeIndex()" />
+}

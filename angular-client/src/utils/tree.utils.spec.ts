@@ -1,7 +1,13 @@
 import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { TreeNode } from 'primeng/api';
-import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNodeData } from './tree.utils';
+import {
+  compactTopicLabel,
+  filterSelectedNodes,
+  filterTreeNodes,
+  flattenTreeNodes,
+  TreeNode,
+  TreeNodeData
+} from './tree.utils';
 import { DataType, Node } from './types.utils';
 
 const EMPTY_DISPLAY = signal('');
@@ -119,7 +125,7 @@ describe('filterSelectedNodes', () => {
     expect(result).toEqual([voltage, speed]);
   });
 
-  it('preserves original node references so PrimeNG selection-by-ref works', () => {
+  it('preserves original node references', () => {
     const [match] = filterSelectedNodes(flat, [voltage.data!.dataType]);
     expect(match).toBe(voltage);
   });
@@ -132,5 +138,33 @@ describe('filterSelectedNodes', () => {
     const ghost: DataType = { name: 'Does/Not/Exist', unit: '' };
     const result = filterSelectedNodes(flat, [ghost, soc.data!.dataType]);
     expect(result).toEqual([soc]);
+  });
+});
+
+describe('filterTreeNodes', () => {
+  const soc = leaf('BMS/Pack/SOC', '%');
+  const volts = leaf('BMS/Pack/Voltage', 'V');
+  const speed = leaf('VCU/CarState/speed', 'mph');
+  const pack = branch('Pack', [soc, volts]);
+  const tree = [branch('BMS', [pack]), branch('VCU', [speed])];
+
+  it('returns the same nodes for an empty query', () => {
+    expect(filterTreeNodes(tree, '  ')).toBe(tree);
+  });
+
+  it('keeps matching leaves and the branches leading to them, case-insensitively', () => {
+    const [bms, ...rest] = filterTreeNodes(tree, 'soc');
+    expect(rest).toEqual([]);
+    expect(bms.label).toBe('BMS');
+    expect(bms.children?.[0].children).toEqual([soc]);
+  });
+
+  it('keeps every child of a matching branch', () => {
+    const [bms] = filterTreeNodes(tree, 'pack');
+    expect(bms.children).toEqual([pack]);
+  });
+
+  it('returns nothing when no node matches', () => {
+    expect(filterTreeNodes(tree, 'nope')).toEqual([]);
   });
 });
