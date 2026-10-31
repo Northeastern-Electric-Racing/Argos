@@ -57,7 +57,8 @@
   font-weight: 400;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #3a3a3a;
+  /* Unselected positions are live buttons, so they stay AA rather than unlit-dark. */
+  color: var(--ui-text-dim);
   user-select: none;
   transition:
     color 0.08s ease,
@@ -72,7 +73,7 @@
 }
 
 .switch-button:not(.active):hover .switch-label {
-  color: #555555;
+  color: var(--ui-text-muted);
 }
 
 /* ---- Active / pressed: flush with base ---- */
@@ -87,7 +88,7 @@
 }
 
 .switch-button.active.state-on .switch-label {
-  color: #4a9e3e;
+  color: var(--ui-success-fg);
   text-shadow: 0 0 3px rgba(74, 158, 62, 0.35);
 }
 
@@ -107,6 +108,6 @@
 }
 
 .switch-button.active.state-off .switch-label {
-  color: #cc3030;
+  color: var(--ui-accent-fg);
   text-shadow: 0 0 3px rgba(204, 48, 48, 0.35);
 }
