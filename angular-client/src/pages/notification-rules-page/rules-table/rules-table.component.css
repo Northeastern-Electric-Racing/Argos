@@ -11,37 +11,14 @@
   align-items: center;
 }
 
-:host ::ng-deep .ant-table-thead > tr > th {
-  background-color: #e74c3c;
-  color: #fff;
-  font-weight: 600;
+/* The table scrolls inside this box, under its sticky header (argos-sticky-header in styles.css). */
+:host {
+  display: block;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 @media (max-width: 768px) {
-  :host ::ng-deep .ant-table-thead > tr > th {
-    padding: 8px 6px;
-    font-size: 0.8rem;
-  }
-
-  :host ::ng-deep .ant-table-tbody > tr > td {
-    padding: 6px;
-    font-size: 0.85rem;
-  }
-
-  /* Tighten the checkbox column */
-  :host ::ng-deep .ant-table-thead > tr > th:first-child,
-  :host ::ng-deep .ant-table-tbody > tr > td:first-child {
-    width: 2.5rem;
-    padding-left: 4px;
-    padding-right: 2px;
-  }
-
-  /* Tighten the actions column */
-  :host ::ng-deep .ant-table-thead > tr > th:last-child,
-  :host ::ng-deep .ant-table-tbody > tr > td:last-child {
-    width: 4rem;
-  }
-
   .action-icons {
     gap: 0;
   }

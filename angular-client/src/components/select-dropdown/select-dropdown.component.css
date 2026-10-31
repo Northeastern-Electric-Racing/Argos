@@ -11,7 +11,8 @@
   font-size: inherit;
 }
 
-/* Callers pass the current choice (e.g. "Segment 1") as the placeholder, so show it at Ant's text colour, not its 30% placeholder grey. */
+/* Callers pass the current choice (e.g. "Segment 1") as the placeholder, so show it at Ant's text colour, not the
+   placeholder grey. Ant's @input-placeholder-color token would recolour every placeholder, hence ::ng-deep here. */
 :host ::ng-deep .ant-select-selection-placeholder {
   color: rgba(255, 255, 255, 0.85);
 }

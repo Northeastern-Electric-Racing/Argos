@@ -93,7 +93,3 @@
   top: 2px;
   right: 2px;
 }
-
-:host ::ng-deep .notification-badge .ant-badge-count {
-  box-shadow: none;
-}

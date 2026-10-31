@@ -1,17 +1,17 @@
 <nz-table
   #rulesTable
-  nzSize="middle"
+  class="argos-sticky-header argos-brand-header"
+  [nzSize]="isMobile() ? 'small' : 'middle'"
   [nzData]="filteredRules()"
   [nzFrontPagination]="false"
   [nzShowPagination]="false"
-  [nzScroll]="{ y: '600px' }"
   [nzLoading]="loading()"
   [nzNoResult]="emptyMessage"
 >
   <thead>
     <tr>
       <th
-        nzWidth="3rem"
+        [nzWidth]="isMobile() ? '2.5rem' : '3rem'"
         nzLabel="Select all rules"
         [nzChecked]="allChecked()"
         [nzIndeterminate]="indeterminate()"
@@ -26,7 +26,7 @@
         <th>Description</th>
       }
       <th>Subscribed</th>
-      <th nzWidth="5rem" aria-label="Actions"></th>
+      <th [nzWidth]="isMobile() ? '4rem' : '5rem'"><span class="visually-hidden">Actions</span></th>
     </tr>
   </thead>
   <tbody>

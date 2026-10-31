@@ -106,6 +106,14 @@ body {
   background: var(--color-background-info);
 }
 
+/* nz-table's nzScroll.y splits the header and body into two <table>s, so body cells lose their column headers.
+   Instead, class="argos-sticky-header" on an nz-table inside a scrolling box keeps one table and pins its header. */
+.argos-sticky-header .ant-table-thead > tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
 /* ---- ng-zorro overlays (theme tokens live in styles/ng-zorro-theme.less) ---- */
 
 /* Navbar "more pages" and notification popovers: no padding or arrow, panel draws its own surface */

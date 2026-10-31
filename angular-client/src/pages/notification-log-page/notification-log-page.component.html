@@ -30,11 +30,10 @@
     <div class="log-table-wrapper">
       <nz-table
         #logTable
-        class="argos-striped"
+        class="argos-striped argos-sticky-header"
         [nzData]="entries()"
         [nzFrontPagination]="false"
         [nzShowPagination]="false"
-        [nzScroll]="{ y: 'calc(100vh - 260px)' }"
       >
         <thead>
           <tr>
@@ -42,7 +41,7 @@
             <th nzWidth="35%">Topic</th>
             <th nzWidth="20%">Values</th>
             <th nzWidth="12%">Time</th>
-            <th nzWidth="8%" aria-label="Actions"></th>
+            <th nzWidth="8%"><span class="visually-hidden">Actions</span></th>
           </tr>
         </thead>
         <tbody>

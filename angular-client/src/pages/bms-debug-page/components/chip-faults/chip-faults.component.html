@@ -2,12 +2,11 @@
   <div style="padding-top: 20px"></div>
   <nz-table
     #faultsTable
-    class="argos-striped"
+    class="faults-table argos-striped argos-sticky-header"
     nzSize="small"
     [nzData]="this.chipFaults"
     [nzFrontPagination]="false"
     [nzShowPagination]="false"
-    [nzScroll]="{ y: '300px' }"
   >
     <thead>
       <tr>

@@ -36,7 +36,7 @@ export class RulesTableComponent implements OnInit {
   private notification = inject(NotificationAnnouncerService);
   private modal = inject(NzModalService);
 
-  /** On narrow screens the Uploaded By and Description columns are left out, so nz-table sizes the rest to fit. */
+  /** On narrow screens the table is small, with tighter checkbox and action columns and no Uploaded By or Description. */
   isMobile = toSignal(
     inject(BreakpointObserver)
       .observe('(max-width: 768px)')
@@ -103,21 +103,25 @@ export class RulesTableComponent implements OnInit {
     this.onSelectionChange(checked ? [...others, ...this.filteredRules()] : others);
   }
 
+  /**
+   * nz-switch flips itself on click, so the rule follows it straight away and goes back if the request fails;
+   * the change to the bound value is what turns the switch back.
+   */
   async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
+    const setSubscribed = (value: boolean) =>
+      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: value } : r)));
+    setSubscribed(subscribed);
     const ruleIds = [rule.id];
     try {
       const response = subscribed
         ? await subscribeToRules(this.clientId(), ruleIds)
         : await unsubscribeFromRules(this.clientId(), ruleIds);
-      if (response.ok) {
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: subscribed } : r)));
-      } else {
-        // Revert the toggle on failure
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
+      if (!response.ok) {
+        setSubscribed(!subscribed);
         this.notification.create('error', 'Error', 'Failed to update subscription');
       }
     } catch {
-      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
+      setSubscribed(!subscribed);
       this.notification.create('error', 'Error', 'Network error');
     }
   }

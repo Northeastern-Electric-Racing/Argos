@@ -1,10 +1,3 @@
-/* Labels as before: smaller and lighter than Ant's form labels. */
-:host ::ng-deep .ant-form-item-label > label {
-  color: #ccc;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
 .button-row {
   display: flex;
   justify-content: flex-end;

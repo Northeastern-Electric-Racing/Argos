@@ -1,3 +1,9 @@
+/* The table scrolls in place under its sticky header (argos-sticky-header in styles.css). */
+.faults-table {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 .fault-row {
   cursor: pointer;
 }

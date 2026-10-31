@@ -1,4 +1,13 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  TemplateRef,
+  viewChild,
+  signal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
@@ -8,7 +17,7 @@ import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzDrawerRef, NzDrawerService } from 'ng-zorro-antd/drawer';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
@@ -37,7 +46,6 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
-    NzDrawerModule,
     CurrentRunDisplayComponent,
     NzButtonModule,
     MessagesPerSecondComponent,
@@ -52,6 +60,7 @@ export interface NavItem {
     NzBadgeModule,
     NavOptionsMenuComponent
   ],
+  providers: [NzDrawerService],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
@@ -64,21 +73,27 @@ export class AppNavBarComponent implements OnInit {
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private modal = inject(NzModalService);
+  private drawerService = inject(NzDrawerService);
   protected notificationLogService = inject(NotificationLogService);
 
   menuOpen = false;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
-  sidebarVisible = false;
-  isMobile = false;
+  /** Whether the nav drawer is open; a signal, since it closes from the drawer's own timer. */
+  sidebarVisible = signal(false);
+  isMobile = window.innerWidth <= 768;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+
+  private drawerTitle = viewChild.required<TemplateRef<object>>('drawerTitle');
+  private drawerContent = viewChild.required<TemplateRef<{ $implicit: unknown; drawerRef: NzDrawerRef }>>('drawerContent');
+  private drawerRef: NzDrawerRef | undefined;
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
-      this.sidebarVisible = isOpen;
+      if (isOpen) this.openDrawer();
     });
-    this.isMobile = window.innerWidth <= 768;
+    this.destroyRef.onDestroy(() => this.drawerRef?.close());
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
@@ -87,6 +102,28 @@ export class AppNavBarComponent implements OnInit {
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
       });
+  }
+
+  /**
+   * The nav drawer is opened through NzDrawerService rather than kept in the template closed. A closed
+   * <nz-drawer> with *nzDrawerContent leaves its content branch stale after its close animation (it clears the
+   * flag in a timeout without marking itself for check), which zoneless change detection reports as NG0100.
+   * A service drawer is created open and disposed once closed, so it never sits closed.
+   */
+  private openDrawer(): void {
+    if (this.drawerRef) return;
+    this.sidebarVisible.set(true);
+    this.drawerRef = this.drawerService.create({
+      nzPlacement: 'left',
+      nzClosable: true,
+      nzTitle: this.drawerTitle(),
+      nzContent: this.drawerContent()
+    });
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- afterClose completes when the drawer closes
+    this.drawerRef.afterClose.subscribe(() => {
+      this.drawerRef = undefined;
+      this.sidebarVisible.set(false);
+    });
   }
 
   // on resize, set the screen width

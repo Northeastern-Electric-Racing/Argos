@@ -1,7 +1,8 @@
 // ng-zorro-antd's dark theme, importing only the components Argos uses
 // (https://ng.ant.design/docs/getting-started/en "Import Component Styles" and
 // https://ng.ant.design/docs/customize-theme/en). Each entry.less pulls in its own style dependencies.
-// A handful of Ant Design tokens move it toward Argos's look; everything else is Ant Design's default.
+// A handful of Ant Design tokens move it toward Argos's look and keep text at WCAG AA contrast; everything else
+// is Ant Design's default.
 @import 'ng-zorro-antd/style/dark.less';
 @import 'ng-zorro-antd/style/entry.less';
 @import 'ng-zorro-antd/icon/style/entry.less';
@@ -29,26 +30,51 @@
 @import 'ng-zorro-antd/tree/style/entry.less';
 @import 'ng-zorro-antd/tree-view/style/entry.less';
 
-@primary-color: #ef4345; // NER red
+// NER red, for accents: switches, checkboxes, focus rings, borders and the selected-item tint.
+@primary-color: #ef4345;
+// Filled buttons carry white labels, which are only 3.8:1 on NER red, under WCAG AA's 4.5:1. Their fill is a
+// darker red instead (5.6:1); Ant darkens it further on hover and press, so those states pass too.
+@btn-primary-bg: #c62828;
+@btn-danger-bg: #c62828;
+@btn-danger-border: #c62828;
+// Red text never uses NER red, which is 4.0:1 on the #262626 surfaces. Links, danger text and outline buttons,
+// form errors and the hover and pressed text of default buttons (@primary-5, @primary-7, which the dark theme
+// mixes down to about 3:1) use Ant's lighter red-4 instead (5.9:1 there). The dark theme's own error red is about 2:1.
+@link-color: #ff7875;
+@error-color: #ff7875;
+@primary-5: #ff7875;
+@primary-7: #ff7875;
+// The dark theme's placeholders are 30% white (about 2.3:1 on inputs); 55% white is 5.5:1.
+@input-placeholder-color: fade(@white, 55%);
+// Form labels as before: smaller and lighter than Ant's 85% white.
+@label-color: #cccccc;
+@form-item-label-font-size: 13px;
 @font-family: 'Roboto', sans-serif;
 @body-background: #101010;
 @component-background: #262626;
 @popover-background: #262626;
 @border-radius-base: 6px;
-// The dark theme's error red (#a61d24) is too dark for form error text on the dark surfaces (about 2:1);
-// Ant's standard red-5 keeps validation messages and danger buttons readable (WCAG AA).
-@error-color: #ff4d4f;
 // Rounder modals than Ant's default, closer to the old dialogs; Ant rounds the header and footer to match.
 @modal-border-radius: 16px;
-// The dark theme's row hover equals @component-background, so hovering a table row showed no change.
-@table-row-hover-bg: #383838;
+// The dark theme's row hover equals @component-background, so hovering a table row showed no change. Kept dark
+// enough that a hovered danger icon in the row still has 3:1.
+@table-row-hover-bg: #333333;
 
 // Ant has primary, default, dashed, text and link buttons, plus nzDanger. The lap timer also needs
 // go (green) and caution (yellow) buttons, so these two build on Ant's own button mixin, the same
-// way Ant builds its danger button, and inherit its hover, active, focus and disabled states.
+// way Ant builds its danger button, and inherit its hover, active, focus and disabled states. The dark theme
+// darkens the fill on hover, so go starts from a lighter green to keep its black label above 4.5:1 there.
 .ant-btn.argos-btn-go {
-  .button-variant-primary(#000; @success-color);
+  .button-variant-primary(#000; color(colorPalette('@{success-color}', 5)));
 }
 .ant-btn.argos-btn-caution {
   .button-variant-primary(#000; @warning-color);
+}
+
+// The rules table's header keeps the old NER-red band, on the filled-button red so its white text passes AA.
+// class="argos-brand-header" on an nz-table opts in; Ant's @table-header-bg token would recolour every table.
+.argos-brand-header .ant-table-thead > tr > th {
+  color: @btn-primary-color;
+  font-weight: 600;
+  background: @btn-primary-bg;
 }

@@ -45,13 +45,13 @@
 
 /* ---- Log table ---- */
 
+/* Sized to its rows, up to the space left on the page; the table scrolls in here under its sticky header
+   (argos-sticky-header in styles.css). */
 .log-table-wrapper {
-  flex: 1;
   min-height: 0;
-  background-color: var(--color-background-info);
   border: 1px solid var(--color-divider);
   border-radius: var(--border-radius-panel);
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .rule-cell {
@@ -84,11 +84,7 @@
   font-size: 0.85rem;
 }
 
-/* ---- Table: sit on the panel background, emphasise unread rows ---- */
-
-:host ::ng-deep .ant-table {
-  background: transparent;
-}
+/* ---- Table: emphasise unread rows ---- */
 
 th {
   font-size: 0.75rem;

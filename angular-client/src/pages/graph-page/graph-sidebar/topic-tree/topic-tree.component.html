@@ -21,9 +21,9 @@
     }
     <nz-tree-node-option [nzSelected]="isSelected(node)" (nzClick)="activate(node)">
       <div class="tree-node-container">
-        <typography additionalStyles="padding: 0px;" [content]="node.title" variant="sidebar-label" />
+        <typography additionalStyles="padding: 0px; margin: 0;" [content]="node.title" variant="sidebar-label" />
         @if (node.isLeaf) {
-          <typography [content]="node.data.displayValue()" variant="subheader" />
+          <typography additionalStyles="margin: 0;" [content]="node.data.displayValue()" variant="subheader" />
         }
       </div>
     </nz-tree-node-option>
