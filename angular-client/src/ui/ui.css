@@ -60,7 +60,7 @@
   --ui-control-off: #555;
   --ui-control-off-hover: #666;
   --ui-text: var(--color-text-primary);
-  --ui-text-muted: #a3a3a3;
+  --ui-text-muted: var(--color-text-secondary);
   --ui-label: var(--color-text-subtitle);
   /* Hover fills on transparent controls: rows, options, menu items, icon buttons. */
   --ui-hover: color-mix(in srgb, var(--ui-text) 8%, transparent);
@@ -184,10 +184,12 @@
   --ui-button-border-hover: var(--ui-secondary-border);
   --ui-button-color: var(--ui-text);
 }
-/* A tonal toggle that is on, styled from its aria-pressed. */
+/* A tonal toggle that is on, styled from its aria-pressed: the filled secondary look, so on and off read apart. */
 .ui-button--tonal[aria-pressed='true'] {
-  --ui-button-bg: color-mix(in srgb, var(--ui-secondary) 34%, var(--ui-surface-1));
+  --ui-button-bg: var(--ui-secondary);
+  --ui-button-bg-hover: var(--ui-secondary-hover);
   --ui-button-border: var(--ui-secondary-border);
+  --ui-button-color: var(--ui-on-accent);
 }
 .ui-button--neutral {
   --ui-button-bg: var(--ui-surface-3);

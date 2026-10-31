@@ -1,6 +1,7 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
@@ -40,6 +41,7 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(ToastService);
   private dialogService = inject(UiDialogService);
+  private confirmService = inject(ConfirmService);
   private router = inject(Router);
 
   clientId!: string;
@@ -100,11 +102,20 @@ export default class NotificationRulesPageComponent implements OnInit {
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.confirmService.confirm({
+      header: 'Delete Rules',
+      message: `Delete ${selected.length} selected rule(s)?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      danger: true,
+      accept: () => this.removeRules(selected)
+    });
+  };
 
+  private async removeRules(selected: ClientRule[]): Promise<void> {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
@@ -131,7 +142,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     }
 
     this.rulesTable()?.loadRules();
-  };
+  }
 
   onToggleSubscription = async () => {
     const selected = this.selectedRules();

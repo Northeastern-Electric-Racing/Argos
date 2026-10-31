@@ -8,7 +8,7 @@
 
 .wifi-dbm-unit {
   font-size: 18px;
-  color: gray;
+  color: var(--ui-text-muted);
   padding-top: 22px;
 }
 

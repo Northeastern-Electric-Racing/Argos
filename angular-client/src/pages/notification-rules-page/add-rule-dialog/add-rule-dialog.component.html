@@ -68,7 +68,15 @@
 
   <div class="ui-field">
     <label class="ui-label" for="rule-expr">Expression</label>
-    <input class="ui-input ui-input--fluid" id="rule-expr" formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
+    <input
+      class="ui-input ui-input--fluid"
+      id="rule-expr"
+      formControlName="expr"
+      placeholder="e.g. a > 5.0 || a < 1.0"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('expr') || null"
+      [attr.aria-describedby]="invalid('expr') ? 'rule-expr-error' : null"
+    />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
       <small class="ui-field-error" role="alert" id="rule-expr-error">Expression is required</small>
     }

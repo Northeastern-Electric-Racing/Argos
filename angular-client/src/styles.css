@@ -25,7 +25,8 @@
 :root {
   /* Colors */
   --color-text-primary: #efefef;
-  --color-text-secondary: #797a7a;
+  /* #a3a3a3, not the old #797a7a: AA (4.5:1) on every surface up to #333. */
+  --color-text-secondary: #a3a3a3;
   --color-text-subtitle: #cacaca;
   --color-background-info: #2c2c2c;
   --color-background-page: #101010;

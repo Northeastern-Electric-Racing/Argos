@@ -29,7 +29,7 @@ export class MessagesPerSecondComponent {
   }
 
   additionalStyles = computed(() => {
-    return this.small() ? 'fontSize: 12px; color: gray;' : 'fontSize: 15px; color: gray;';
+    return this.small() ? 'fontSize: 12px; color: var(--ui-text-muted);' : 'fontSize: 15px; color: var(--ui-text-muted);';
   });
 
   getDisplayNumber = () => {

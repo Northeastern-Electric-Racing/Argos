@@ -104,7 +104,7 @@
 }
 
 .delta-positive {
-  color: var(--color-battery-low);
+  color: var(--ui-accent-fg);
 }
 
 .best-flag {

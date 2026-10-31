@@ -38,15 +38,15 @@ export default class TimerHeroComponent {
 
   // Start, Pause, Resume, Stop, Reset, End Session and Delete swap the action buttons, removing the
   // one that was pressed; focus then moves to the first action of the new state, not to <body>.
-  onStart = () => this.changeState(() => this.timer.start());
-  onPause = () => this.changeState(() => this.timer.pause());
-  onResume = () => this.changeState(() => this.timer.resume());
+  onStart = (event?: Event) => this.changeState(() => this.timer.start(), event);
+  onPause = (event?: Event) => this.changeState(() => this.timer.pause(), event);
+  onResume = (event?: Event) => this.changeState(() => this.timer.resume(), event);
   onLap = () => this.timer.lap();
-  onStop = () => this.changeState(() => this.timer.stop());
+  onStop = (event?: Event) => this.changeState(() => this.timer.stop(), event);
 
-  onReset = () => {
+  onReset = (event?: Event) => {
     if (this.timer.laps().length === 0 && this.timer.currentLapTimeMs() === 0) {
-      this.changeState(() => this.timer.reset());
+      this.changeState(() => this.timer.reset(), event);
       return;
     }
     this.confirmationService.confirm({
@@ -59,14 +59,14 @@ export default class TimerHeroComponent {
     });
   };
 
-  onEndActiveSession = () => {
-    this.changeState(() => this.timer.endActiveSession());
+  onEndActiveSession = (event?: Event) => {
+    this.changeState(() => this.timer.endActiveSession(), event);
     this.toast('success', 'Session ended', 'It remains in the history.');
   };
 
-  onDeleteActiveButton = () => {
+  onDeleteActiveButton = (event?: Event) => {
     const active = this.timer.activeSession();
-    if (active) this.changeState(() => this.timer.deleteSession(active.id));
+    if (active) this.changeState(() => this.timer.deleteSession(active.id), event);
   };
 
   onDownloadActiveButton = () => {
@@ -74,10 +74,20 @@ export default class TimerHeroComponent {
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  /** Runs a state change, then focuses the first action button once the new set has rendered. */
-  private changeState(change: () => void): void {
+  /**
+   * Runs a state change, then focuses the first action button once the new set has rendered.
+   * After a mouse click (detail > 0) the moved focus shows no ring, as the click itself would not.
+   */
+  private changeState(change: () => void, event?: Event): void {
     change();
-    afterNextRender(() => this.actions().nativeElement.querySelector('button')?.focus(), { injector: this.injector });
+    const pointer = event instanceof MouseEvent && event.detail > 0;
+    afterNextRender(
+      () =>
+        this.actions()
+          .nativeElement.querySelector('button')
+          ?.focus({ focusVisible: !pointer } as FocusOptions),
+      { injector: this.injector }
+    );
   }
 
   private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
