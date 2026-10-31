@@ -36,7 +36,7 @@
   font-size: var(--font-size-xs);
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--ui-text-muted);
 }
 .sessions-count {
   font-family: var(--font-family);

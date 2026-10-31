@@ -1,9 +1,17 @@
 <form class="ui-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="ui-field">
     <label class="ui-label" for="rule-id">Rule ID</label>
-    <input class="ui-input ui-input--fluid" id="rule-id" formControlName="id" placeholder="e.g. high-voltage-alert" />
+    <input
+      class="ui-input ui-input--fluid"
+      id="rule-id"
+      formControlName="id"
+      placeholder="e.g. high-voltage-alert"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('id') || null"
+      [attr.aria-describedby]="invalid('id') ? 'rule-id-error' : null"
+    />
     @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
-      <small class="ui-field-error" role="alert">Rule ID is required</small>
+      <small class="ui-field-error" role="alert" id="rule-id-error">Rule ID is required</small>
     }
   </div>
 
@@ -16,7 +24,9 @@
         ngCombobox
         class="ui-input ui-input--fluid"
         placeholder="e.g. BMS/Pack/Voltage"
-        [attr.aria-invalid]="form.get('topic')?.touched && form.get('topic')?.invalid"
+        aria-required="true"
+        [attr.aria-invalid]="invalid('topic') || null"
+        [attr.aria-describedby]="invalid('topic') ? 'rule-topic-error' : null"
         [value]="query()"
         (valueChange)="onQueryChange($event)"
         [(expanded)]="popupExpanded"
@@ -52,7 +62,7 @@
       </ng-template>
     </ng-template>
     @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
-      <small class="ui-field-error" role="alert">Topic is required</small>
+      <small class="ui-field-error" role="alert" id="rule-topic-error">Topic is required</small>
     }
   </div>
 
@@ -60,7 +70,7 @@
     <label class="ui-label" for="rule-expr">Expression</label>
     <input class="ui-input ui-input--fluid" id="rule-expr" formControlName="expr" placeholder="e.g. a > 5.0 || a < 1.0" />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="ui-field-error" role="alert">Expression is required</small>
+      <small class="ui-field-error" role="alert" id="rule-expr-error">Expression is required</small>
     }
   </div>
 
@@ -72,12 +82,15 @@
       formControlName="debounce_time"
       type="number"
       placeholder="e.g. 60"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('debounce_time') || null"
+      [attr.aria-describedby]="invalid('debounce_time') ? 'rule-debounce-error' : null"
     />
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="ui-field-error" role="alert">Debounce time is required</small>
+      <small class="ui-field-error" role="alert" id="rule-debounce-error">Debounce time is required</small>
     }
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="ui-field-error" role="alert">Must be 0 or greater</small>
+      <small class="ui-field-error" role="alert" id="rule-debounce-error">Must be 0 or greater</small>
     }
   </div>
 

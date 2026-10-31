@@ -6,7 +6,7 @@
     additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
   />
   <div ngAccordionGroup class="accordion" [multiExpandable]="true">
-    @for (node of nodeArray; track node.node) {
+    @for (node of nodeArray(); track node.node) {
       <h3 class="accordion-heading">
         <span ngAccordionTrigger [panel]="panel" #trigger="ngAccordionTrigger" class="accordion-trigger">
           {{ node.node }}
@@ -16,10 +16,19 @@
       <div ngAccordionPanel #panel="ngAccordionPanel" class="accordion-panel">
         <ng-template ngAccordionContent>
           <div class="accordion-body">
-            <table cdk-table class="ui-table ui-table--striped ui-table--hover" [dataSource]="node.data">
+            <table
+              cdk-table
+              class="ui-table ui-table--striped ui-table--hover"
+              [dataSource]="node.data"
+              [trackBy]="trackFault"
+            >
               <ng-container cdkColumnDef="name">
                 <th cdk-header-cell *cdkHeaderCellDef>Name</th>
-                <td cdk-cell *cdkCellDef="let fault">{{ fault.name }}</td>
+                <td cdk-cell *cdkCellDef="let fault">
+                  <button type="button" class="ui-cell-button" (click)="onRowSelect(fault); $event.stopPropagation()">
+                    {{ fault.name }}
+                  </button>
+                </td>
               </ng-container>
               <ng-container cdkColumnDef="occurredAt">
                 <th cdk-header-cell *cdkHeaderCellDef>Occurred At</th>
@@ -34,14 +43,8 @@
                 <td cdk-cell *cdkCellDef="let fault">{{ fault.expired ? 'Yes' : 'No' }}</td>
               </ng-container>
               <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
-              <tr
-                cdk-row
-                *cdkRowDef="let fault; columns: columns"
-                tabindex="0"
-                [attr.aria-label]="'Graph fault ' + fault.name"
-                (click)="onRowSelect(fault)"
-                (keydown.enter)="onRowSelect(fault)"
-              ></tr>
+              <!-- The whole row is a mouse target; keyboard and screen-reader users get the Name button. -->
+              <tr cdk-row *cdkRowDef="let fault; columns: columns" (click)="onRowSelect(fault)"></tr>
             </table>
           </div>
         </ng-template>

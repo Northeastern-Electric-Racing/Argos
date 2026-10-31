@@ -15,17 +15,26 @@
    * The client is dark-only (it always was), so there is one palette; color-scheme is set in styles.css.
    */
 
-  /* Colour: brand and status */
+  /*
+   * Colour: brand and status. Every text pairing meets WCAG AA (4.5:1) on the surfaces it sits on,
+   * and every mark meets 3:1, so the NER red comes in three strengths:
+   *   --ui-accent: marks and edges (unread bars, checked boxes, outlines)
+   *   --ui-accent-strong: fills that carry white text (primary buttons, badges), 4.98:1
+   *   --ui-accent-fg: red text and icons on the dark surfaces, 4.57:1 or better
+   */
   --ui-accent: #ef4343;
   --ui-accent-hover: #f26b6b;
+  --ui-accent-strong: #d32f2f;
+  --ui-accent-strong-hover: #b71c1c;
+  --ui-accent-fg: #f87171;
   --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 18%, transparent);
   /* Text on an accent-soft fill, such as a selected option. */
   --ui-accent-text: #ffb4b4;
   /* Text and marks on a filled accent, such as a primary button or a checked checkbox. */
   --ui-on-accent: #fff;
-  /* The telemetry blue the graph page has always used for its controls. */
-  --ui-secondary: #027bd7;
-  --ui-secondary-hover: #1f8fe6;
+  /* The telemetry blue the graph page has always used for its controls, deep enough for white text (5.12:1). */
+  --ui-secondary: #0270c2;
+  --ui-secondary-hover: #025fa5;
   --ui-secondary-border: #8fcadd;
   --ui-secondary-soft: color-mix(in srgb, var(--ui-secondary) 16%, var(--ui-surface-1));
   /* NER red is the accent, so danger takes a separate orange hue and destructive buttons are never filled. */
@@ -38,11 +47,12 @@
   --ui-on-status: #0b0b0b;
 
   /* Colour: surfaces, lines and text */
-  --ui-surface-0: var(--color-background-page);
   --ui-surface-1: #1c1c1c;
   --ui-surface-2: #262626;
   --ui-surface-3: #333333;
   --ui-border: var(--color-divider);
+  /* Hairlines between list rows. */
+  --ui-border-subtle: color-mix(in srgb, var(--ui-border) 50%, transparent);
   /* Hovered field borders and unchecked checkbox outlines. */
   --ui-border-strong: #5a5a5a;
   --ui-control-border: #7a7a7a;
@@ -72,7 +82,6 @@
   --ui-font-sm: 0.8125rem;
   --ui-font-md: 0.9rem;
   --ui-font-lg: 1.15rem;
-  --ui-weight-medium: 500;
   --ui-weight-bold: 600;
 
   /* Control sizes, shared by buttons, inputs and selects so they line up in a row */
@@ -122,9 +131,9 @@
  *   --danger: orange edge, never filled, for destructive actions
  */
 .ui-button {
-  --ui-button-bg: var(--ui-accent);
-  --ui-button-bg-hover: var(--ui-accent-hover);
-  --ui-button-border: var(--ui-accent);
+  --ui-button-bg: var(--ui-accent-strong);
+  --ui-button-bg-hover: var(--ui-accent-strong-hover);
+  --ui-button-border: var(--ui-accent-strong);
   --ui-button-color: var(--ui-on-accent);
   display: inline-flex;
   align-items: center;
@@ -175,6 +184,11 @@
   --ui-button-border-hover: var(--ui-secondary-border);
   --ui-button-color: var(--ui-text);
 }
+/* A tonal toggle that is on, styled from its aria-pressed. */
+.ui-button--tonal[aria-pressed='true'] {
+  --ui-button-bg: color-mix(in srgb, var(--ui-secondary) 34%, var(--ui-surface-1));
+  --ui-button-border: var(--ui-secondary-border);
+}
 .ui-button--neutral {
   --ui-button-bg: var(--ui-surface-3);
   --ui-button-bg-hover: color-mix(in srgb, var(--ui-text) 12%, var(--ui-surface-3));
@@ -185,11 +199,9 @@
 .ui-button--outlined {
   --ui-button-bg: transparent;
   --ui-button-bg-hover: var(--ui-accent-soft);
+  --ui-button-border: var(--ui-accent);
   --ui-button-border-hover: var(--ui-accent-hover);
-  --ui-button-color: var(--ui-accent);
-}
-.ui-button--outlined:hover:not(:disabled) {
-  color: var(--ui-accent-hover);
+  --ui-button-color: var(--ui-accent-fg);
 }
 .ui-button--text {
   --ui-button-bg: transparent;
@@ -233,8 +245,14 @@
   min-height: var(--ui-button-lg-min-height, 45px);
   font-size: var(--ui-font-md);
 }
-.ui-button--block {
-  width: 100%;
+/* Narrow screens get touch-sized targets, which a page's own sizing cannot undercut. */
+@media (max-width: 768px) {
+  .ui-button--lg {
+    min-height: max(44px, var(--ui-button-lg-min-height, 44px));
+  }
+  .ui-button--sm {
+    min-height: 32px;
+  }
 }
 .ui-button--icon {
   padding: 0;
@@ -311,20 +329,12 @@ textarea.ui-input {
   gap: var(--ui-space-1);
   min-width: 0;
 }
-.ui-field--inline {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--ui-space-2);
-}
 .ui-label {
   color: var(--ui-label);
   font-size: var(--ui-font-sm);
   font-weight: var(--ui-weight-bold);
 }
-.ui-field--inline .ui-label {
-  white-space: nowrap;
-}
-/* Marks a required field, with the word for assistive tech in a visually hidden span. */
+/* Marks a required field visually (aria-hidden); the control's aria-required tells assistive tech. */
 .ui-label .ui-required {
   color: var(--ui-danger);
   margin-left: 0.15em;
@@ -384,7 +394,8 @@ textarea.ui-input {
   outline: var(--ui-focus-ring);
   outline-offset: 1px;
 }
-/* Aria marks hidden tab panels inert; they also leave the layout. */
+/* Aria marks hidden tab panels inert; they also leave the layout. A panel that sets its own
+   display must scope it to :not([inert]), or it ties this rule and wins. */
 [ngTabPanel][inert] {
   display: none;
 }
@@ -498,7 +509,7 @@ textarea.ui-input {
   padding: 0 0.3rem;
   box-sizing: border-box;
   border-radius: var(--ui-radius-full);
-  background: var(--ui-accent);
+  background: var(--ui-accent-strong);
   color: var(--ui-on-accent);
   font-size: 0.7rem;
   font-weight: var(--ui-weight-bold);
@@ -674,4 +685,23 @@ textarea.ui-input {
   font-size: 18px;
   width: 18px;
   height: 18px;
+}
+
+/* ---------- Cell button: a table row's action, reachable by keyboard (fault tables) ---------- */
+.ui-cell-button {
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ui-cell-button:hover {
+  text-decoration: underline;
+}
+.ui-cell-button:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
 }

@@ -162,7 +162,6 @@
     margin-left: 0;
     flex-wrap: wrap;
     --ui-button-lg-min-width: 100px;
-    --ui-button-lg-min-height: 38px;
   }
 
   .rules-bar {
@@ -175,7 +174,6 @@
     flex-wrap: wrap;
     gap: 6px;
     --ui-button-lg-min-width: 70px;
-    --ui-button-lg-min-height: 36px;
     --ui-button-padding-x: var(--ui-space-3);
   }
 

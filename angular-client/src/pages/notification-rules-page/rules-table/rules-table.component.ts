@@ -1,6 +1,7 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { CdkTableModule } from '@angular/cdk/table';
 import { MatIcon } from '@angular/material/icon';
@@ -32,6 +33,7 @@ export class RulesTableComponent implements OnInit {
 
   private messageService = inject(ToastService);
   private dialogService = inject(UiDialogService);
+  private confirmService = inject(ConfirmService);
 
   rules = signal<ClientRule[]>([]);
   loading = signal(true);
@@ -96,23 +98,29 @@ export class RulesTableComponent implements OnInit {
     this.selectionChanged.emit(selected);
   }
 
+  /**
+   * Optimistic: the row shows the new state at once and reverts if the server refuses, so the
+   * switch (which flips itself on click) always ends up matching the rule.
+   */
   async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
     const ruleIds = [rule.id];
+    this.setSubscribed(rule.id, subscribed);
     try {
       const response = subscribed
         ? await subscribeToRules(this.clientId(), ruleIds)
         : await unsubscribeFromRules(this.clientId(), ruleIds);
-      if (response.ok) {
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: subscribed } : r)));
-      } else {
-        // Revert the toggle on failure
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
+      if (!response.ok) {
+        this.setSubscribed(rule.id, !subscribed);
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update subscription' });
       }
     } catch {
-      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
+      this.setSubscribed(rule.id, !subscribed);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Network error' });
     }
+  }
+
+  private setSubscribed(id: string, is_subscribed: boolean): void {
+    this.rules.update((rules) => rules.map((r) => (r.id === id ? { ...r, is_subscribed } : r)));
   }
 
   onEdit(rule: ClientRule): void {
@@ -143,9 +151,18 @@ export class RulesTableComponent implements OnInit {
     });
   }
 
-  async onDelete(rule: ClientRule): Promise<void> {
-    if (!confirm(`Delete rule "${rule.id}"?`)) return;
+  onDelete(rule: ClientRule): void {
+    this.confirmService.confirm({
+      header: 'Delete Rule',
+      message: `Delete rule "${rule.id}"?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      danger: true,
+      accept: () => this.deleteRule(rule)
+    });
+  }
 
+  private async deleteRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {

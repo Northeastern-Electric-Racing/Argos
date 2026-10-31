@@ -13,7 +13,7 @@
       <div class="hero-current-time">{{ timer.formattedCurrentLap() }}</div>
       <div class="hero-current-delta" [class]="currentLapDeltaClass()">{{ currentLapDeltaText() }}</div>
     </div>
-    <div class="hero-actions">
+    <div class="hero-actions" #actions>
       @if (!timer.activeSession()) {
         <argos-button label="Start" [onClick]="onStart" variant="success" />
       } @else if (timer.isIdle()) {

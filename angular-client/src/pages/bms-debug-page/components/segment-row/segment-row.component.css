@@ -93,24 +93,21 @@
   width: clamp(64px, 9.4vw, 190px);
 }
 
+/* A secondary .ui-button (colours, hover, focus ring) at the row's fluid size. */
 .see-more-btn {
-  background-color: #2aaeee;
-  color: #000;
-  border: none;
-  border-radius: clamp(8px, 1.25vw, 24px);
-  padding: clamp(2px, 0.47vw, 10px) clamp(6px, 1.4vw, 28px);
-  font-size: clamp(7px, 0.94vw, 18px);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
   width: 100%;
-  text-align: center;
   height: clamp(18px, 2.3vw, 44px);
-  box-sizing: border-box;
+  min-height: 0;
+  padding: 0 clamp(6px, 1.4vw, 28px);
+  gap: 0.3em;
+  border-radius: clamp(8px, 1.25vw, 24px);
+  font-size: clamp(7px, 0.94vw, 18px);
 }
 
-.see-more-btn:hover {
-  background-color: #1e9ad8;
+.see-more-btn mat-icon {
+  font-size: 1.2em;
+  width: 1.2em;
+  height: 1.2em;
 }
 
 /* Select sized to match the controls-zone styling */

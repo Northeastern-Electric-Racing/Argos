@@ -1,7 +1,7 @@
 .session-menu-btn {
   background: transparent;
   border: none;
-  color: var(--color-text-secondary);
+  color: var(--ui-text-muted);
   cursor: pointer;
   padding: 2px;
   display: inline-flex;
