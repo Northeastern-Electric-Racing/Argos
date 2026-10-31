@@ -171,9 +171,9 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: var(--color-accent);
+  /* Taiga's AA red text (4.69:1 on the panel); NER red at 85% was 3.0:1 */
+  color: var(--tui-text-action);
   flex-shrink: 0;
-  opacity: 0.85;
 }
 
 .entry-values-data {
