@@ -28,6 +28,13 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 
+/**
+ * Window widths (px, inclusive) where the toolbar's page links change form. Measured in Playwright
+ * from 1440 down to 769 px: compact labels need about 1180 px to clear Start New Run, so icon-only
+ * starts at 1240 to leave room for a longer run number; icon-only links fit down to 1001 px.
+ */
+const NAV_BREAKPOINTS = { compact: 1400, iconsOnly: 1240, collapsed: 1000, mobile: 768 };
+
 export interface NavItem {
   id: string;
   label: string;
@@ -91,26 +98,28 @@ export class AppNavBarComponent implements OnInit {
   ];
 
   sidebarVisible = false;
+  /** The drawer replaces the toolbar. */
   isMobile = false;
-  isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
-  // Below this width the page links drop to smaller labels so all four fit beside the run controls.
-  isNavCompact = window.innerWidth <= 1400;
-  // Below this width even icon-only page links don't fit, so they move into the apps menu.
-  isNavCollapsed = window.innerWidth <= 1000;
+  /** Page links are icon-only, named by aria-label and a tooltip. */
+  isWindowSmall = false;
+  /** Page links use smaller labels so all four fit beside the run controls. */
+  isNavCompact = false;
+  /** Even icon-only page links don't fit, so they lead the apps menu instead. */
+  isNavCollapsed = false;
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
       this.sidebarVisible = isOpen;
     });
-    this.isMobile = window.innerWidth <= 768;
+    this.onResize();
   }
 
-  // on resize, set the screen width
   onResize(): void {
-    this.isMobile = window.innerWidth <= 768;
-    this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
-    this.isNavCompact = window.innerWidth <= 1400;
-    this.isNavCollapsed = window.innerWidth <= 1000;
+    const width = window.innerWidth;
+    this.isMobile = width <= NAV_BREAKPOINTS.mobile;
+    this.isWindowSmall = width <= NAV_BREAKPOINTS.iconsOnly && !this.isMobile;
+    this.isNavCompact = width <= NAV_BREAKPOINTS.compact;
+    this.isNavCollapsed = width <= NAV_BREAKPOINTS.collapsed;
   }
 
   newRunIsLoading = false;
@@ -119,7 +128,7 @@ export class AppNavBarComponent implements OnInit {
     map(() => new Date())
   );
 
-  /** Starts one run per click: the button is disabled until the server answers. */
+  /** Starts one run per click: the button is disabled (but keeps focus) until the server answers. */
   onStartNewRun = () => {
     if (this.newRunIsLoading) return;
     this.newRunIsLoading = true;

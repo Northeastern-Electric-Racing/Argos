@@ -107,14 +107,15 @@ export default class APIService {
   }
 
   /**
-   * Rejects a failed response with its status text, so the catch below reports it once. Scylla's
-   * error bodies are plain text, so parsing them as JSON would only add a second, raw parse error.
+   * Rejects a failed response with the server's reason, so the catch below reports it once. Scylla's
+   * error bodies are plain-text reasons, not JSON; the status stands in when there is none.
    * @param response The response to check for errors
    * @returns The response, if it succeeded
    */
-  private handleErrors(response: Response): Response {
+  private async handleErrors(response: Response): Promise<Response> {
     if (!response.ok) {
-      throw new Error(response.statusText);
+      const reason = (await response.text().catch(() => '')).trim();
+      throw new Error(reason || response.statusText || `HTTP ${response.status}`);
     }
     return response;
   }

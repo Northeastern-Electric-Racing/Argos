@@ -146,6 +146,29 @@ html {
   );
 }
 
+// The current page in the nav lists (toolbar and drawer) is a primary pill with on-primary text, so
+// the indicator clears 3:1 against the toolbar (4.39:1) and the drawer (5.9:1), and its label 4.5:1
+// (5.4:1). M3's default secondary-container pill is only 1.5:1 against the toolbar.
+.mat-mdc-nav-list {
+  @include mat.list-overrides(
+    (
+      active-indicator-color: var(--mat-sys-primary)
+    )
+  );
+}
+
+.nav-current-page {
+  @include mat.list-overrides(
+    (
+      list-item-label-text-color: var(--mat-sys-on-primary),
+      list-item-hover-label-text-color: var(--mat-sys-on-primary),
+      list-item-focus-label-text-color: var(--mat-sys-on-primary),
+      list-item-leading-icon-color: var(--mat-sys-on-primary),
+      list-item-hover-leading-icon-color: var(--mat-sys-on-primary)
+    )
+  );
+}
+
 // Stopwatch controls on the lap timer keep their at-a-glance go (green) and hold (amber) colours.
 .go-action {
   @include mat.button-overrides(

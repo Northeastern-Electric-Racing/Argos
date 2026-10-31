@@ -8,7 +8,13 @@
       <mat-nav-list aria-label="Navigation">
         @for (navItem of allNavItems; track navItem.label) {
           @if (navItem.id) {
-            <a mat-list-item [routerLink]="navItem.id" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
+            <a
+              mat-list-item
+              [routerLink]="navItem.id"
+              routerLinkActive="nav-current-page"
+              #rla="routerLinkActive"
+              [activated]="rla.isActive"
+            >
               <mat-icon matListItemIcon [svgIcon]="navItem.icon" />
               <span matListItemTitle>{{ navItem.label }}</span>
             </a>
@@ -41,7 +47,7 @@
           <a
             mat-list-item
             [routerLink]="navItem.id"
-            routerLinkActive
+            routerLinkActive="nav-current-page"
             #rla="routerLinkActive"
             [activated]="rla.isActive"
             [attr.aria-label]="isWindowSmall ? navItem.label : null"
@@ -58,7 +64,13 @@
     }
 
     <div class="navbar-end">
-      <button matButton="filled" class="new-run-button" [disabled]="newRunIsLoading" (click)="onStartNewRun()">
+      <button
+        matButton="filled"
+        class="new-run-button"
+        disabledInteractive
+        [disabled]="newRunIsLoading"
+        (click)="onStartNewRun()"
+      >
         Start New Run
       </button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />

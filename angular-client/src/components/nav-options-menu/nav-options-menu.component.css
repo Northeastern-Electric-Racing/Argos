@@ -50,3 +50,9 @@
   color: var(--mat-sys-primary);
   background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
 }
+
+/* The current page, as in the nav lists: a primary tile with on-primary text. */
+.menu-item.menu-item--current {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}

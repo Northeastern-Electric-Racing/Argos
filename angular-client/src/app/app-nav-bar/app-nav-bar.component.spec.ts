@@ -63,6 +63,8 @@ describe('AppNavBarComponent', () => {
     fixture.detectChanges();
     return Array.from(document.querySelectorAll('.menu-item .menu-label')).map((label) => label.textContent!.trim());
   };
+  const currentInAppsMenu = () =>
+    Array.from(document.querySelectorAll('.menu-item[aria-current="page"]')).map((item) => item.textContent?.trim());
 
   describe('desktop page links', () => {
     it('are links in a navigation landmark, not tabs', async () => {
@@ -106,15 +108,20 @@ describe('AppNavBarComponent', () => {
       ]);
     });
 
-    it('go icon-only at 1160px, named by aria-label with a tooltip', async () => {
-      await render(1160);
+    it('keep their labels at 1241px, where all four still clear Start New Run', async () => {
+      await render(1241);
+      expect(pageLinks().map((link) => link.getAttribute('aria-label'))).toEqual([null, null, null, null]);
+    });
+
+    it('go icon-only at 1240px, named by aria-label with a tooltip', async () => {
+      await render(1240);
       expect(pageLinks().map((link) => link.getAttribute('aria-label'))).toEqual(['Charging', 'Graph', 'BMS', 'eFuses']);
       expect(pageLinks().some((link) => link.querySelector('[matListItemTitle]'))).toBe(false);
       expect(pageLinks().every((link) => link.classList.contains('mat-mdc-tooltip-trigger'))).toBe(true);
     });
 
     it('leave the apps menu to the secondary pages while they fit', async () => {
-      await render(1160);
+      await render(1240);
       expect(openAppsMenu().slice(0, 1)).toEqual(['Fault']);
     });
 
@@ -122,6 +129,12 @@ describe('AppNavBarComponent', () => {
       await render(1000);
       expect(el().querySelector('mat-nav-list.navbar-nav')).toBeNull();
       expect(openAppsMenu().slice(0, 5)).toEqual(['Charging', 'Graph', 'BMS', 'eFuses', 'Fault']);
+    });
+
+    it('mark the current page in the apps menu once they have moved there', async () => {
+      await render(1000, '/bms/segment/1');
+      openAppsMenu();
+      expect(currentInAppsMenu()).toEqual(['BMS']);
     });
   });
 
@@ -165,16 +178,18 @@ describe('AppNavBarComponent', () => {
       );
     });
 
-    it('is disabled while a run is starting, so a double click starts one run', async () => {
+    it('is disabled while a run is starting, keeping focus, so a double click starts one run', async () => {
+      startNewRunButton().focus();
       startNewRunButton().click();
       fixture.detectChanges();
-      expect(startNewRunButton().disabled).toBe(true);
+      expect(startNewRunButton().getAttribute('aria-disabled')).toBe('true');
+      expect(document.activeElement).toBe(startNewRunButton());
 
       startNewRunButton().click();
       expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/runs/new'))).toHaveLength(1);
     });
 
-    it('toasts the server error once, with no success, and can be retried', async () => {
+    it("toasts the server's error reason once, with no success, and can be retried", async () => {
       fetchMock.mockResolvedValue(new Response('Could not connect to db', { status: 500, statusText: 'Server Error' }));
 
       startNewRunButton().click();
@@ -182,9 +197,18 @@ describe('AppNavBarComponent', () => {
       fixture.detectChanges();
 
       expect(toastSpy.add.mock.calls.map(([message]) => [message.severity, message.detail])).toEqual([
-        ['error', 'Server Error']
+        ['error', 'Could not connect to db']
       ]);
-      expect(startNewRunButton().disabled).toBe(false);
+      expect(startNewRunButton().hasAttribute('aria-disabled')).toBe(false);
+    });
+
+    it('falls back to the status when the error has no reason or status text', async () => {
+      fetchMock.mockResolvedValue(new Response('', { status: 502, statusText: '' }));
+
+      startNewRunButton().click();
+      await flush();
+
+      expect(toastSpy.add.mock.calls.map(([message]) => message.detail)).toEqual(['HTTP 502']);
     });
   });
 });

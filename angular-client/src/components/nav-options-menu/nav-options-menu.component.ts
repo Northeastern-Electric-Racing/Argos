@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
+import { isActive, Router } from '@angular/router';
 import { CdkMenu, CdkMenuItem } from '@angular/cdk/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
@@ -16,4 +17,15 @@ import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
 })
 export class NavOptionsMenuComponent {
   items = input.required<NavItem[]>();
+  private router = inject(Router);
+
+  /** Ids of the items whose page is open (or one of its subroutes), matched as routerLinkActive does. */
+  protected readonly currentIds = computed(
+    () =>
+      new Set(
+        this.items()
+          .filter((item) => item.id && isActive(item.id, this.router)())
+          .map((item) => item.id)
+      )
+  );
 }
