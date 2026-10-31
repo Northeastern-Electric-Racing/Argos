@@ -100,3 +100,9 @@
 .nav-drawer {
   inline-size: 20rem;
 }
+
+/* A column, so the Edit Runs button stretches to the full width like the link rows */
+.nav-drawer nav {
+  display: flex;
+  flex-direction: column;
+}

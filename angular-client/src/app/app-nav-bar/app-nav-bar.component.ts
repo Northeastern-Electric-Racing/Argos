@@ -1,4 +1,13 @@
-import { Component, inject, OnDestroy, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  ElementRef,
+  viewChild
+} from '@angular/core';
 import { ToastService } from 'src/services/toast.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -75,6 +84,8 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
   private dialogs = inject(TuiDialogService);
   protected notificationLogService = inject(NotificationLogService);
 
+  private moreButton = viewChild<ElementRef<HTMLButtonElement>>('moreButton');
+
   menuOpen = false;
   notificationsOpen = false;
 
@@ -147,6 +158,9 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
 
   onMenuItemClick(navItem: NavItem): void {
     this.menuOpen = false;
+    // A keyboard user's focus is on the menu item, which closing the menu destroys; put it on the trigger first
+    // so an action's dialog records the trigger and returns focus there when it closes
+    this.moreButton()?.nativeElement.focus();
     navItem.action?.();
   }
 
