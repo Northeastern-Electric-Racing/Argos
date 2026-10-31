@@ -1,47 +1,38 @@
 <button nz-button nzType="primary" nzSize="large" class="toggle-btn" (click)="toggleSidebar()">Select Topics</button>
 
-<nz-drawer
-  [(nzVisible)]="sidebarVisible"
-  nzPlacement="right"
-  nzWidth="85vw"
-  [nzMaskClosable]="false"
-  [nzTitle]="drawerTitle"
-  (nzOnClose)="sidebarVisible = false"
->
-  <ng-template #drawerTitle>
-    <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
-  </ng-template>
-  <ng-container *nzDrawerContent>
-    <div class="sidebar-content">
-      <div class="presets-row">
-        <select-dropdown
-          class="preset-select"
-          [options]="presetSelectorConfig().options"
-          [placeholder]="presetSelectorConfig().placeholder"
-          [defaultValue]="activePresetName()"
-        />
-        <button nz-button (click)="openPresetsDialog()">Manage</button>
-      </div>
-      <button nz-button nzBlock (click)="clearSelections()">Clear Topics</button>
-      <div class="toggle-group">
-        <label class="flatten-toggle">
-          <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
-          <span class="visually-hidden">Show only selected topics</span>
-          <nz-switch [ngModel]="selectedOnly()" (ngModelChange)="toggleSelectedOnly($event)" />
-        </label>
-        <label class="flatten-toggle">
-          <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
-          <span class="visually-hidden">Flatten topic tree</span>
-          <nz-switch [ngModel]="flattenMode()" (ngModelChange)="toggleFlattenMode($event)" />
-        </label>
-      </div>
-      <nz-input-wrapper nzAllowClear class="tree-search">
-        <nz-icon aria-hidden="true" nzInputPrefix nzType="search" />
-        <input nz-input [(ngModel)]="searchValue" placeholder="Search topics" aria-label="Search topics" />
-      </nz-input-wrapper>
-      <div class="tree-scroll" style="height: calc(100vh - 220px)">
-        <topic-tree [nodes]="activeNodes()" [searchValue]="searchValue()" />
-      </div>
+<ng-template #drawerTitle>
+  <typography style="width: 100%; text-align: center" variant="large-header" content="Topics" />
+</ng-template>
+<ng-template #drawerContent>
+  <div class="sidebar-content">
+    <div class="presets-row">
+      <select-dropdown
+        class="preset-select"
+        [options]="presetSelectorConfig().options"
+        [placeholder]="presetSelectorConfig().placeholder"
+        [defaultValue]="activePresetName()"
+      />
+      <button nz-button (click)="openPresetsDialog()">Manage</button>
     </div>
-  </ng-container>
-</nz-drawer>
+    <button nz-button nzBlock (click)="clearSelections()">Clear Topics</button>
+    <div class="toggle-group">
+      <label class="flatten-toggle">
+        <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
+        <span class="visually-hidden">Show only selected topics</span>
+        <nz-switch [ngModel]="selectedOnly()" (ngModelChange)="toggleSelectedOnly($event)" />
+      </label>
+      <label class="flatten-toggle">
+        <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" aria-hidden="true" />
+        <span class="visually-hidden">Flatten topic tree</span>
+        <nz-switch [ngModel]="flattenMode()" (ngModelChange)="toggleFlattenMode($event)" />
+      </label>
+    </div>
+    <nz-input-wrapper nzAllowClear class="tree-search">
+      <nz-icon aria-hidden="true" nzInputPrefix nzType="search" />
+      <input nz-input [(ngModel)]="searchValue" placeholder="Search topics" aria-label="Search topics" />
+    </nz-input-wrapper>
+    <div class="tree-scroll" style="height: calc(100vh - 220px)">
+      <topic-tree [nodes]="activeNodes()" [searchValue]="searchValue()" />
+    </div>
+  </div>
+</ng-template>

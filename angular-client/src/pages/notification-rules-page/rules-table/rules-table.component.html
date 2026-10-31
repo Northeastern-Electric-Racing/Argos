@@ -2,7 +2,7 @@
   #rulesTable
   class="argos-sticky-header argos-brand-header"
   [nzSize]="isMobile() ? 'small' : 'middle'"
-  nzTableLayout="fixed"
+  [nzTableLayout]="isMobile() ? 'fixed' : 'auto'"
   [nzData]="filteredRules()"
   [nzFrontPagination]="false"
   [nzShowPagination]="false"

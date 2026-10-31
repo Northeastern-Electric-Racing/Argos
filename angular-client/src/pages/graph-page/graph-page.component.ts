@@ -9,10 +9,11 @@ import {
   DestroyRef,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { BreakpointObserver, MediaMatcher } from '@angular/cdk/layout';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { NotificationAnnouncerService } from 'src/services/notification-announcer.service';
-import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
+import { BehaviorSubject, map, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
@@ -90,6 +91,14 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
   // UI state variables
   showSideBar = true;
+  /** At phone width only the drawer sidebar is rendered, and on desktop only the side panel, never both. */
+  private readonly mobileQuery = '(max-width: 768px)';
+  isMobile = toSignal(
+    inject(BreakpointObserver)
+      .observe(this.mobileQuery)
+      .pipe(map((state) => state.matches)),
+    { initialValue: inject(MediaMatcher).matchMedia(this.mobileQuery).matches }
+  );
   toggleSideBar = () => {
     this.showSideBar = !this.showSideBar;
   };
@@ -220,6 +229,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
           this.processDataTypeSelection(dataTypes);
         }
         this.updateUrl(dataTypes);
+        // The mobile topics drawer is its own overlay view, so a pick there doesn't by itself re-check this page.
+        this.cdr.markForCheck();
       });
 
     // Subscribe to URL changes to sync back to service

@@ -73,10 +73,6 @@
   padding-bottom: 40px; /* reserve space for ApexCharts legend when multiple topics are plotted */
 }
 
-.mobile-sidebar {
-  display: none;
-}
-
 .mobile-value-strip {
   display: none;
 }
@@ -135,14 +131,9 @@
     flex-flow: column;
   }
 
-  /* The desktop sidebar is hidden on mobile (topics live in the drawer), so its toggle is too */
-  .desktop-sidebar,
+  /* The desktop sidebar isn't rendered on mobile (topics live in the drawer), so its toggle is hidden too */
   .sidebar-toggle {
     display: none;
-  }
-
-  .mobile-sidebar {
-    display: block;
   }
 
   .mobile-value-strip {

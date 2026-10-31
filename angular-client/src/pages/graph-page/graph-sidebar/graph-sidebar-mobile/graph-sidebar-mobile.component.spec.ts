@@ -37,4 +37,36 @@ describe('GraphSidebarMobileComponent', () => {
     expect(component.flatNodes().length).toBe(2);
     expect(topicService.isSelected(speed)).toBe(true);
   });
+
+  describe('topics drawer', () => {
+    const focusable = 'button, input, [tabindex]:not([tabindex="-1"])';
+    const closedDrawerControls = () => document.querySelectorAll(`.ant-drawer:not(.ant-drawer-open) :is(${focusable})`);
+    const drawerControls = () => document.querySelectorAll(`.ant-drawer-open :is(${focusable})`);
+    /** Waits out nz-drawer's 300ms open or close animation, then re-renders. */
+    const afterAnimation = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+    const toggle = () => fixture.nativeElement.querySelector('.toggle-btn') as HTMLButtonElement;
+
+    afterEach(() => fixture.destroy());
+
+    it('leaves nothing focusable behind while closed', async () => {
+      await afterAnimation();
+      expect(closedDrawerControls()).toHaveLength(0);
+    });
+
+    it('shows its controls when opened and removes them once closed', async () => {
+      toggle().click();
+      await afterAnimation();
+      expect(drawerControls().length).toBeGreaterThan(0);
+      expect(document.querySelector('.ant-drawer-open input[aria-label="Search topics"]')).not.toBeNull();
+
+      (document.querySelector('.ant-drawer-close') as HTMLButtonElement).click();
+      await afterAnimation();
+      expect(drawerControls()).toHaveLength(0);
+      expect(closedDrawerControls()).toHaveLength(0);
+    });
+  });
 });

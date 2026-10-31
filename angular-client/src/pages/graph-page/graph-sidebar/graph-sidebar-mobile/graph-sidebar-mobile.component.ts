@@ -7,6 +7,7 @@ import {
   inject,
   input,
   signal,
+  TemplateRef,
   viewChild,
   untracked
 } from '@angular/core';
@@ -15,7 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzDrawerRef, NzDrawerService } from 'ng-zorro-antd/drawer';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -39,8 +40,8 @@ import TopicTreeComponent from '../topic-tree/topic-tree.component';
   templateUrl: './graph-sidebar-mobile.component.html',
   styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [NzDrawerService],
   imports: [
-    NzDrawerModule,
     TopicTreeComponent,
     NzInputModule,
     NzButtonModule,
@@ -61,7 +62,10 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   private injector = inject(Injector);
   private presetDialogRef?: NzModalRef<PresetDialogComponent, DataType[] | null>;
 
-  sidebarVisible = false;
+  private drawerTitle = viewChild.required<TemplateRef<object>>('drawerTitle');
+  private drawerContent = viewChild.required<TemplateRef<{ $implicit: unknown; drawerRef: NzDrawerRef }>>('drawerContent');
+  private drawerService = inject(NzDrawerService);
+  private drawerRef?: NzDrawerRef;
   treeNodes = computed(() => {
     const nodes = dataTypesToNodes(this.dataTypes());
     // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
@@ -92,8 +96,27 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   }));
   activePresetName = toSignal(this.presetService.getActivePresetName(), { initialValue: undefined });
 
+  /**
+   * The topics drawer is opened through NzDrawerService, like the nav drawer, rather than kept in the template
+   * closed: a closed <nz-drawer> with *nzDrawerContent keeps rendering its content off-screen under zoneless
+   * change detection, where keyboard and screen-reader users still reach it. A service drawer is created open
+   * and disposed once closed.
+   */
   toggleSidebar = () => {
-    this.sidebarVisible = !this.sidebarVisible;
+    if (this.drawerRef) {
+      this.drawerRef.close();
+      return;
+    }
+    this.drawerRef = this.drawerService.create({
+      nzPlacement: 'right',
+      nzWidth: '85vw',
+      nzMaskClosable: false,
+      nzClosable: true,
+      nzTitle: this.drawerTitle(),
+      nzContent: this.drawerContent()
+    });
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- afterClose completes when the drawer closes
+    this.drawerRef.afterClose.subscribe(() => (this.drawerRef = undefined));
   };
 
   toggleFlattenMode(value: boolean) {
@@ -129,6 +152,7 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   };
 
   ngOnDestroy(): void {
+    this.drawerRef?.close();
     if (this.presetDialogRef) {
       this.presetDialogRef.destroy();
     }

@@ -121,7 +121,7 @@
       }
 
       <div class="content-div">
-        @if (this.showSideBar) {
+        @if (!isMobile() && this.showSideBar) {
           <graph-sidebar [dataTypes]="dataTypes" class="desktop-sidebar" />
         }
         <div class="right-container">
@@ -136,7 +136,9 @@
             [graphConfig]="this.graphConfig"
           />
         </div>
-        <graph-sidebar [dataTypes]="dataTypes!" class="mobile-sidebar" />
+        @if (isMobile()) {
+          <graph-sidebar [dataTypes]="dataTypes!" class="mobile-sidebar" />
+        }
       </div>
     </div>
   }

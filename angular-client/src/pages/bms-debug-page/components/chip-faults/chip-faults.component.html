@@ -16,7 +16,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (fault of faultsTable.data; track $index) {
+      @for (fault of faultsTable.data; track fault) {
         <tr class="fault-row" tabindex="0" (click)="onRowSelect(fault)" (keydown.enter)="onRowSelect(fault)">
           <td>{{ fault.name }}</td>
           <td>{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
