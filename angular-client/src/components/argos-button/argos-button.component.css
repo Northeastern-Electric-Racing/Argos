@@ -1,14 +1,3 @@
 :host {
   display: inline-flex;
 }
-
-/* Narrow screens get a touch-sized target. */
-@media (max-width: 768px) {
-  .ui-button--lg {
-    min-height: var(--ui-button-lg-min-height, 44px);
-  }
-
-  .ui-button--sm {
-    min-height: 32px;
-  }
-}

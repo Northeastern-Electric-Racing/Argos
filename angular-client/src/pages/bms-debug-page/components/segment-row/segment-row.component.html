@@ -12,7 +12,10 @@
         [placeholder]="viewSelectorConfig.placeholder"
         [defaultValue]="viewSelectorConfig.defaultValue"
       />
-      <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
+      <button type="button" class="ui-button ui-button--secondary see-more-btn" (click)="openSegmentPage()">
+        See more
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+      </button>
     </div>
   </div>
 

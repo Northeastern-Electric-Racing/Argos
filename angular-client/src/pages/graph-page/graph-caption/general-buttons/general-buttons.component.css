@@ -22,12 +22,12 @@
   align-items: center;
   gap: 6px;
   padding-left: 10px;
-  border-left: 1px solid #2a3a44;
+  border-left: 1px solid color-mix(in srgb, var(--ui-secondary-border) 25%, var(--ui-surface-1));
 }
 
 .historical-label {
-  color: #8fcadd;
-  font-size: 12px;
+  color: var(--ui-secondary-border);
+  font-size: var(--ui-font-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -47,7 +47,7 @@
 }
 
 .custom-caption {
-  color: #8fcadd;
+  color: var(--ui-secondary-border);
   font-size: 10px;
   line-height: 1;
   white-space: nowrap;
@@ -61,7 +61,8 @@
   padding: var(--ui-space-4);
 }
 
-.mode-body {
+/* :not([inert]) so the hidden panel keeps ui.css's display: none. */
+.mode-body:not([inert]) {
   display: flex;
   flex-direction: column;
   gap: var(--ui-space-3);

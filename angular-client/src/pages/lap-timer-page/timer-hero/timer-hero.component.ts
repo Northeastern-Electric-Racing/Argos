@@ -1,6 +1,15 @@
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  viewChild
+} from '@angular/core';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import LapTimerService from 'src/services/lap-timer.service';
@@ -17,6 +26,8 @@ export default class TimerHeroComponent {
   readonly timer = inject(LapTimerService);
   private confirmationService = inject(ConfirmService);
   private messageService = inject(ToastService);
+  private injector = inject(Injector);
+  private actions = viewChild.required<ElementRef<HTMLElement>>('actions');
 
   readonly currentLapDeltaText = computed(() => formatDeltaMs(this.timer.currentLapDeltaToBestMs()));
   readonly currentLapDeltaClass = computed(() => {
@@ -25,15 +36,17 @@ export default class TimerHeroComponent {
     return d < 0 ? 'delta-negative' : d > 0 ? 'delta-positive' : 'delta-neutral';
   });
 
-  onStart = () => this.timer.start();
-  onPause = () => this.timer.pause();
-  onResume = () => this.timer.resume();
+  // Start, Pause, Resume, Stop, Reset, End Session and Delete swap the action buttons, removing the
+  // one that was pressed; focus then moves to the first action of the new state, not to <body>.
+  onStart = () => this.changeState(() => this.timer.start());
+  onPause = () => this.changeState(() => this.timer.pause());
+  onResume = () => this.changeState(() => this.timer.resume());
   onLap = () => this.timer.lap();
-  onStop = () => this.timer.stop();
+  onStop = () => this.changeState(() => this.timer.stop());
 
   onReset = () => {
     if (this.timer.laps().length === 0 && this.timer.currentLapTimeMs() === 0) {
-      this.timer.reset();
+      this.changeState(() => this.timer.reset());
       return;
     }
     this.confirmationService.confirm({
@@ -42,24 +55,30 @@ export default class TimerHeroComponent {
       acceptLabel: 'Reset',
       rejectLabel: 'Cancel',
       danger: true,
-      accept: () => this.timer.reset()
+      accept: () => this.changeState(() => this.timer.reset())
     });
   };
 
   onEndActiveSession = () => {
-    this.timer.endActiveSession();
+    this.changeState(() => this.timer.endActiveSession());
     this.toast('success', 'Session ended', 'It remains in the history.');
   };
 
   onDeleteActiveButton = () => {
     const active = this.timer.activeSession();
-    if (active) this.timer.deleteSession(active.id);
+    if (active) this.changeState(() => this.timer.deleteSession(active.id));
   };
 
   onDownloadActiveButton = () => {
     const filename = this.timer.downloadCsv();
     if (filename) this.toast('success', 'Downloaded', filename);
   };
+
+  /** Runs a state change, then focuses the first action button once the new set has rendered. */
+  private changeState(change: () => void): void {
+    change();
+    afterNextRender(() => this.actions().nativeElement.querySelector('button')?.focus(), { injector: this.injector });
+  }
 
   private toast(severity: 'success' | 'warn' | 'error' | 'info', summary: string, detail: string): void {
     this.messageService.add({ severity, summary, detail, life: 2000 });

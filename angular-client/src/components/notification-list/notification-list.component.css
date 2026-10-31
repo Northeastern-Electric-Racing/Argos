@@ -44,7 +44,6 @@
 .title-text {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-text-primary);
 }
 
 .title-count {
@@ -89,7 +88,7 @@
   align-items: start;
   gap: 10px;
   padding: 10px 14px 10px 11px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 50%, transparent);
+  border-bottom: 1px solid var(--ui-border-subtle);
   transition: background-color 0.15s ease;
 }
 
@@ -171,7 +170,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
   flex-shrink: 0;
   opacity: 0.85;
 }
@@ -185,24 +184,11 @@
 
 /* ---- Dismiss button ---- */
 
+/* Sized and shaped by .ui-icon-button--sm; shown on row hover or focus on pointer screens. */
 .entry-dismiss {
   align-self: center;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
   opacity: 0;
-  transition:
-    opacity 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
-  flex-shrink: 0;
+  transition: opacity 0.15s ease;
 }
 
 .entry:hover .entry-dismiss,
@@ -213,12 +199,10 @@
 
 .entry-dismiss:hover,
 .entry-dismiss:focus-visible {
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
   background-color: var(--ui-accent-soft);
-  outline: none;
 }
 
-.entry-dismiss mat-icon,
 /* ---- Empty state ---- */
 
 .empty-state {
@@ -247,7 +231,6 @@
 
 .empty-hint {
   font-size: 0.75rem;
-  color: var(--color-text-secondary);
   opacity: 0.8;
 }
 
@@ -282,9 +265,8 @@
 
 .view-all-button:hover,
 .view-all-button:focus-visible {
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
   background-color: var(--ui-accent-soft);
-  outline: none;
 }
 
 /* ---- Mobile ---- */

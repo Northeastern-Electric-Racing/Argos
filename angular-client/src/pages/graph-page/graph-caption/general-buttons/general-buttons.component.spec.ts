@@ -1,5 +1,7 @@
 import { ToastService } from 'src/ui/toast/toast.service';
 import type { Mock } from 'vitest';
+import { TabsHarness } from '@angular/aria/tabs/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
@@ -181,8 +183,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       await fixture.whenStable();
       return trigger;
     };
-    const tab = (label: string) =>
-      Array.from(document.querySelectorAll<HTMLElement>('[role="tab"]')).find((t) => t.textContent?.trim() === label)!;
+    /** The custom range popover is in an overlay, so its tabs are found from the document root. */
+    const tabs = () => TestbedHarnessEnvironment.documentRootLoader(fixture).getHarness(TabsHarness);
 
     it('marks the Custom trigger as a dialog popup and reports when it is open', async () => {
       const trigger = await openPopover();
@@ -190,18 +192,31 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(trigger.getAttribute('aria-expanded')).toBe('true');
     });
 
-    it('switches between Last X and Date Range through the Aria tab list', async () => {
+    it('switches between Last X and Date Range through the Aria tabs', async () => {
       await openPopover();
-      expect(tab('Last X').getAttribute('aria-selected')).toBe('true');
+      const harness = await tabs();
+      expect(await Promise.all((await harness.getTabs()).map((t) => t.getTitle()))).toEqual(['Last X', 'Date Range']);
+      expect(await (await harness.getSelectedTab())?.getTitle()).toBe('Last X');
       expect(document.getElementById('custom-hours')).not.toBeNull();
 
-      tab('Date Range').click();
-      fixture.detectChanges();
+      await harness.selectTab({ title: 'Date Range' });
       await fixture.whenStable();
 
       expect(component.customMode()).toBe('date-range');
-      expect(tab('Date Range').getAttribute('aria-selected')).toBe('true');
+      expect(await (await harness.getSelectedTab())?.getTitle()).toBe('Date Range');
       expect(document.getElementById('custom-from')).not.toBeNull();
+    });
+
+    it('does not give the hidden panel a display of its own (ui.css hides inert panels)', async () => {
+      await openPopover();
+      await (await tabs()).selectTab({ title: 'Date Range' });
+      await fixture.whenStable();
+      const hidden = document.querySelector<HTMLElement>('[ngTabPanel][inert]')!;
+      expect(hidden).not.toBeNull();
+      // Global styles are not loaded in unit tests; the component's flex column must not apply.
+      expect(getComputedStyle(hidden).display).not.toBe('flex');
+      const shown = document.querySelector<HTMLElement>('[ngTabPanel]:not([inert])')!;
+      expect(getComputedStyle(shown).display).toBe('flex');
     });
 
     it('ignores tab values that are not a custom mode', () => {

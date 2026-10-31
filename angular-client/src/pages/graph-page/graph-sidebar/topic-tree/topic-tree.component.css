@@ -60,7 +60,7 @@
 }
 
 .tree-item:hover .item-label {
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
 }
 
 /* On a selected (red-tinted) row the accent label would be red on red, so keep the plain text colour. */
@@ -105,7 +105,7 @@
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  border: 1.5px solid #7a7a7a;
+  border: 1.5px solid var(--ui-control-border);
   border-radius: 4px;
 }
 
@@ -113,7 +113,7 @@
   font-size: 0.85rem;
   width: 0.85rem;
   height: 0.85rem;
-  color: #fff;
+  color: var(--ui-on-accent);
   visibility: hidden;
 }
 

@@ -1,6 +1,6 @@
 import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, inject, input, ChangeDetectionStrategy, computed } from '@angular/core';
-import { ButtonVariant } from '../argos-button/argos-button.component';
+import { buttonClass, ButtonVariant } from '../argos-button/argos-button.component';
 
 export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
 
@@ -23,9 +23,7 @@ export class ToastButtonComponent {
   onClick = input.required<() => void>();
   /** Layout tweaks only (size, margins); the look comes from `variant`. */
   additionalStyles = input<string>('');
-  protected cssClass = computed(() =>
-    this.variant() === 'primary' ? 'ui-button ui-button--lg' : `ui-button ui-button--lg ui-button--${this.variant()}`
-  );
+  protected cssClass = computed(() => buttonClass(this.variant(), 'lg'));
 
   handleClick() {
     // the first () is to access the signal value,

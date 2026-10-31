@@ -12,8 +12,20 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="toolbar-group">
-            <argos-button [onClick]="this.toggleSideBar" label="Tog Sidebar" size="sm" variant="tonal" />
-            <argos-button [onClick]="this.toggleMultiYaxis" label="Tog Mult Yaxis" size="sm" variant="tonal" />
+            <argos-button
+              [onClick]="this.toggleSideBar"
+              label="Tog Sidebar"
+              size="sm"
+              variant="tonal"
+              [ariaPressed]="showSideBar"
+            />
+            <argos-button
+              [onClick]="this.toggleMultiYaxis"
+              label="Tog Mult Yaxis"
+              size="sm"
+              variant="tonal"
+              [ariaPressed]="showMultiYaxis"
+            />
             @if (realTime === true) {
               <argos-button [onClick]="this.togglePause" [label]="isPaused ? 'Play' : 'Pause'" size="sm" variant="tonal" />
             }

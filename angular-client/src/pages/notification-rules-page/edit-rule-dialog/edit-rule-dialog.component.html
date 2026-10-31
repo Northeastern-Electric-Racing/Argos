@@ -1,20 +1,35 @@
 <form class="ui-form" [formGroup]="form" (ngSubmit)="onSubmit()">
   <div class="ui-field">
     <label class="ui-label" for="edit-expr">Expression</label>
-    <input class="ui-input ui-input--fluid" id="edit-expr" formControlName="expr" />
+    <input
+      class="ui-input ui-input--fluid"
+      id="edit-expr"
+      formControlName="expr"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('expr') || null"
+      [attr.aria-describedby]="invalid('expr') ? 'edit-expr-error' : null"
+    />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="ui-field-error" role="alert">Expression is required</small>
+      <small class="ui-field-error" role="alert" id="edit-expr-error">Expression is required</small>
     }
   </div>
 
   <div class="ui-field">
     <label class="ui-label" for="edit-debounce">Debounce Time (seconds)</label>
-    <input class="ui-input ui-input--fluid" id="edit-debounce" formControlName="debounce_time" type="number" />
+    <input
+      class="ui-input ui-input--fluid"
+      id="edit-debounce"
+      formControlName="debounce_time"
+      type="number"
+      aria-required="true"
+      [attr.aria-invalid]="invalid('debounce_time') || null"
+      [attr.aria-describedby]="invalid('debounce_time') ? 'edit-debounce-error' : null"
+    />
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="ui-field-error" role="alert">Debounce time is required</small>
+      <small class="ui-field-error" role="alert" id="edit-debounce-error">Debounce time is required</small>
     }
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="ui-field-error" role="alert">Must be 0 or greater</small>
+      <small class="ui-field-error" role="alert" id="edit-debounce-error">Must be 0 or greater</small>
     }
   </div>
 

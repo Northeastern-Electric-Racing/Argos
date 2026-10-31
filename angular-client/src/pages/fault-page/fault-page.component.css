@@ -56,7 +56,7 @@
 }
 
 .accordion-trigger[aria-expanded='true'] {
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
 }
 
 .expand-icon {

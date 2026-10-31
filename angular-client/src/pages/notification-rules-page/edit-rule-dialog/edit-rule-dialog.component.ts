@@ -23,6 +23,12 @@ export class EditRuleDialogComponent {
     debounce_time: [this.dialogData.debounce_time as number, [Validators.required, Validators.min(0)]]
   });
 
+  /** Whether a field shows an error, so its input gets aria-invalid and points at the message. */
+  protected invalid(name: keyof EditRuleDialogComponent['form']['controls']): boolean {
+    const control = this.form.controls[name];
+    return control.touched && control.invalid;
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

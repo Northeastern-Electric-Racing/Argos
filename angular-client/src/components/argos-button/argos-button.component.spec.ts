@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ButtonComponent } from './argos-button.component';
+import { buttonClass, ButtonComponent } from './argos-button.component';
 
 describe('ButtonComponent', () => {
   let component: ButtonComponent;
@@ -63,5 +63,17 @@ describe('ButtonComponent', () => {
     button.click();
     expect(received).toBeDefined();
     expect(received instanceof Event).toBe(true);
+  });
+
+  it('buttonClass gives primary the plain button and other variants their modifier', () => {
+    expect(buttonClass('primary', 'lg')).toBe('ui-button ui-button--lg');
+    expect(buttonClass('danger', 'sm')).toBe('ui-button ui-button--sm ui-button--danger');
+  });
+
+  it('reports an on/off toggle through aria-pressed, and leaves it off plain buttons', () => {
+    expect(button().hasAttribute('aria-pressed')).toBe(false);
+    fixture.componentRef.setInput('ariaPressed', true);
+    fixture.detectChanges();
+    expect(button().getAttribute('aria-pressed')).toBe('true');
   });
 });

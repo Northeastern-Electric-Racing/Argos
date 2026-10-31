@@ -97,6 +97,12 @@ export class AddRuleDialogComponent implements OnInit {
     }
   }
 
+  /** Whether a field shows an error, so its input gets aria-invalid and points at the message. */
+  protected invalid(name: keyof AddRuleDialogComponent['form']['controls']): boolean {
+    const control = this.form.controls[name];
+    return control.touched && control.invalid;
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

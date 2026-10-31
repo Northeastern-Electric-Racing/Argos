@@ -22,7 +22,7 @@
 
 .navbar-menu.selected,
 .navbar-menu:hover {
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
 }
 
 .navbar-menu:focus-visible {
@@ -56,7 +56,7 @@
 
 .ui-menu .menu-item:hover {
   background: none;
-  color: var(--ui-accent);
+  color: var(--ui-accent-fg);
 }
 
 .ui-menu .menu-item:focus:not(:focus-visible) {
