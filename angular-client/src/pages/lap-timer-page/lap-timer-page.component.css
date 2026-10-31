@@ -18,6 +18,10 @@
   padding-bottom: 16px;
 }
 
+.compact-grid > * {
+  min-width: 0;
+}
+
 .compact-grid .wide {
   grid-column: 1 / -1;
 }

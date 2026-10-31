@@ -65,7 +65,7 @@
 
 .navbar-menu.selected,
 .navbar-menu:hover {
-  color: #ef4345;
+  color: var(--color-ner-red);
 }
 
 .navbar-notification {
@@ -89,7 +89,7 @@
 }
 
 .navbar-notification:hover {
-  color: #ef4345;
+  color: var(--color-ner-red);
 }
 
 .notification-badge {

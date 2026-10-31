@@ -75,8 +75,8 @@
 }
 
 .rule-dot.unread-dot {
-  background-color: #ef4345;
-  box-shadow: 0 0 6px rgba(239, 67, 69, 0.4);
+  background-color: var(--color-ner-red);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-ner-red) 40%, transparent);
 }
 
 .col-rule {

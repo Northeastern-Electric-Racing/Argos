@@ -27,14 +27,28 @@ export class ConfirmService {
   /** The question waiting for an answer, or null when none is open. */
   readonly pending = this._pending.asReadonly();
 
+  /** Questions asked while another is open or its dialog is still closing, shown in order. */
+  private readonly queue: ConfirmOptions[] = [];
+  private closing = false;
+
   confirm(options: ConfirmOptions): void {
-    this._pending.set(options);
+    if (this._pending() || this.closing) this.queue.push(options);
+    else this._pending.set(options);
   }
 
   /** Answers the pending question; only a yes runs its `accept`. */
   answer(accepted: boolean): void {
     const pending = this._pending();
+    if (!pending) return;
     this._pending.set(null);
-    if (accepted) pending?.accept();
+    this.closing = true;
+    if (accepted) pending.accept();
+  }
+
+  /** Called by the dialog once it has finished closing, to show the next queued question. */
+  closed(): void {
+    this.closing = false;
+    const next = this.queue.shift();
+    if (next) this._pending.set(next);
   }
 }

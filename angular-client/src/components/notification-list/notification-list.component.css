@@ -108,7 +108,7 @@
 }
 
 .entry.unread .entry-accent {
-  background-color: #ef4345;
+  background-color: var(--color-ner-red);
 }
 
 .entry-body {
@@ -171,7 +171,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: #ef4345;
+  color: var(--color-ner-red);
   flex-shrink: 0;
   opacity: 0.85;
 }

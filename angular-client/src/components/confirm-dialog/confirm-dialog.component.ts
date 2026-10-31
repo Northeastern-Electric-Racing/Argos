@@ -33,5 +33,6 @@ export class ConfirmDialogComponent {
     const fallback = this.asked?.focusFallback;
     this.asked = null;
     if (fallback && focusLost()) fallback()?.focus();
+    this.confirmService.closed();
   }
 }

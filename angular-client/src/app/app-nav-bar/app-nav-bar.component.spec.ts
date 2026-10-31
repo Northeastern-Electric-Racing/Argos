@@ -1,20 +1,30 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
+import { Subject } from 'rxjs';
 import { AppNavBarComponent } from './app-nav-bar.component';
 
 describe('AppNavBarComponent', () => {
+  let fixture: ComponentFixture<AppNavBarComponent>;
   let component: AppNavBarComponent;
+  let closed$: Subject<unknown>;
   const open = vi.fn();
+  const realWidth = window.innerWidth;
+
+  const setWidth = (width: number) => Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
 
   beforeEach(async () => {
-    open.mockReset();
+    closed$ = new Subject();
+    open.mockReset().mockImplementation(() => ({ closed$ }));
     await TestBed.configureTestingModule({
       imports: [AppNavBarComponent],
       providers: [provideRouter([{ path: '**', children: [] }]), { provide: HlmDialogService, useValue: { open } }]
     }).compileComponents();
-    component = TestBed.createComponent(AppNavBarComponent).componentInstance;
+    fixture = TestBed.createComponent(AppNavBarComponent);
+    component = fixture.componentInstance;
   });
+
+  afterEach(() => setWidth(realWidth));
 
   const navItem = (label: string) => component.allNavItems.find((item) => item.label === label)!;
 
@@ -29,5 +39,20 @@ describe('AppNavBarComponent', () => {
     navItem('Edit Runs').onClick();
     expect(open).toHaveBeenCalledTimes(1);
     expect(component.sidebarVisible).toBe(false);
+  });
+
+  it('returns focus to the menu button when the Edit Run dialog from the sheet closes', async () => {
+    setWidth(390);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    navItem('Edit Runs').onClick();
+    (document.activeElement as HTMLElement | null)?.blur();
+    closed$.next(undefined);
+
+    const menuButton = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Open navigation"]');
+    expect(document.activeElement).toBe(menuButton);
+    fixture.nativeElement.remove();
   });
 });

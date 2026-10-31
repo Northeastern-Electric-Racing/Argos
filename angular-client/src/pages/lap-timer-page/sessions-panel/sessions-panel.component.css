@@ -15,6 +15,7 @@
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
 }
 
 .sessions-toolbar {
@@ -53,13 +54,17 @@
 .sessions-table-wrap {
   flex: 1 1 0;
   min-height: 0;
-  overflow: hidden auto;
+  /* Scrolls sideways too, so on a phone every column and the row menu stay reachable. Relative so
+     the sr-only header text is clipped here instead of widening the page. */
+  position: relative;
+  overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--color-divider) transparent;
 }
 .sessions-table-wrap::-webkit-scrollbar {
   display: block;
   width: 6px;
+  height: 6px;
 }
 .sessions-table-wrap::-webkit-scrollbar-thumb {
   background: var(--color-divider);

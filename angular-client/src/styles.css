@@ -30,6 +30,9 @@
 /* ---- Design Tokens ---- */
 :root {
   /* Colors */
+  /* NER red for text, icons and accents on dark surfaces (5.0:1 on the page). Fills under white
+     text use the theme's --primary, the same hue darkened to pass AA. */
+  --color-ner-red: #ef4345;
   --color-text-primary: #efefef;
   --color-text-secondary: #797a7a;
   --color-text-subtitle: #cacaca;

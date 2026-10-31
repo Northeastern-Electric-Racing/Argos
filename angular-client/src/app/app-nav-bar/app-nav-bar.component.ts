@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, viewChild } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, viewChild, ElementRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { toast } from '@spartan-ng/brain/sonner';
@@ -24,7 +24,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
-import { filter } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
+import { focusLost } from 'src/utils/focus.utils';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
@@ -73,6 +74,8 @@ export class AppNavBarComponent implements OnInit {
   protected notificationLogService = inject(NotificationLogService);
 
   private menuPopover = viewChild('menuPopover', { read: BrnPopover });
+  private navToggle = viewChild<ElementRef<HTMLButtonElement>>('navToggle');
+  private menuTrigger = viewChild<ElementRef<HTMLButtonElement>>('menuTrigger');
   menuOpen = false;
 
   // Set selected route to current URL path
@@ -117,7 +120,13 @@ export class AppNavBarComponent implements OnInit {
 
   openRunForm = () => {
     this.sidebarVisible = false;
-    this.dialogService.open(RunFormComponent, { contentClass: 'w-[550px] sm:max-w-[550px]' });
+    const ref = this.dialogService.open(RunFormComponent, { contentClass: 'w-[550px] sm:max-w-[550px]' });
+    // Edit Runs sits in the sheet or the More pages popover, both closed by now, so the dialog has
+    // nothing to hand focus back to; return it to the button that opened them.
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot close; take(1) ends it
+    ref.closed$.pipe(take(1)).subscribe(() => {
+      if (focusLost()) (this.isMobile ? this.navToggle() : this.menuTrigger())?.nativeElement.focus();
+    });
   };
 
   homeNavItem: NavItem = {

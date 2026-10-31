@@ -97,8 +97,8 @@
 }
 
 .timer-btn--halt {
-  /* --color-battery-low (#f50905) is 4.3:1 under white text; this darker red is 5.7:1. */
-  background-color: #d00000;
+  /* --color-battery-low (#f50905) is 4.3:1 under white text; the primary NER red is 5.2:1. */
+  background-color: var(--primary);
   color: #fff;
 }
 

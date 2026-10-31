@@ -13,14 +13,17 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Scrolls sideways too, so on a phone every column stays reachable. Relative so any sr-only
+     text is clipped here instead of widening the page. */
+  position: relative;
+  overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--color-divider) transparent;
 }
 .lap-table-wrap::-webkit-scrollbar {
   display: block;
   width: 6px;
+  height: 6px;
 }
 .lap-table-wrap::-webkit-scrollbar-thumb {
   background: var(--color-divider);

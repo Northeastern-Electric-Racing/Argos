@@ -1,6 +1,7 @@
 @if (isMobile) {
   <header class="mobile-bar">
     <button
+      #navToggle
       hlmBtn
       variant="ghost"
       size="icon-lg"
@@ -104,6 +105,7 @@
       </hlm-popover>
       <hlm-popover #menuPopover align="end" sideOffset="8" (stateChanged)="menuOpen = $event === 'open'">
         <button
+          #menuTrigger
           hlmPopoverTrigger
           type="button"
           class="navbar-menu"

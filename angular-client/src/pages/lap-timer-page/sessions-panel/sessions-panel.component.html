@@ -10,7 +10,7 @@
       </span>
       <span class="sessions-toolbar-actions">
         @if (timer.sessions().length > 0) {
-          <button hlmBtn variant="outline" size="sm" type="button" class="text-destructive" (click)="onClearAllSessions()">
+          <button hlmBtn variant="destructive" size="sm" type="button" (click)="onClearAllSessions()">
             <ng-icon name="lucideTrash2" />
             Clear All
           </button>

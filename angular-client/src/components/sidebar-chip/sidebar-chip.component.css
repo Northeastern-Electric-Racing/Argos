@@ -15,11 +15,11 @@
 }
 
 .chip:hover {
-  color: #ef4345;
+  color: var(--color-ner-red);
   cursor: pointer;
 }
 
 /* New: When a chip is active, it keeps the hover style */
 .chip.active {
-  color: #ef4345;
+  color: var(--color-ner-red);
 }

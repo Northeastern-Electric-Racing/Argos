@@ -59,6 +59,15 @@ describe('ConfirmDialogComponent', () => {
     fallback.remove();
   });
 
+  it('shows a question asked in the same tick as the previous answer', async () => {
+    button('Cancel')?.click();
+    service.confirm({ header: 'Clear All Sessions', message: 'Delete all sessions?', accept });
+    await vi.waitFor(() => expect(alertDialog()?.textContent).toContain('Clear All Sessions'));
+
+    button('Confirm')?.click();
+    expect(accept).toHaveBeenCalledTimes(1);
+  });
+
   it('does not run accept on cancel', () => {
     button('Cancel')?.click();
     expect(accept).not.toHaveBeenCalled();
