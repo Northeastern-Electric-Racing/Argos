@@ -15,12 +15,17 @@ describe('RulesTableComponent', () => {
   let fixture: ComponentFixture<RulesTableComponent>;
   let toggleResponse: Response;
   let serverSubscribed: boolean;
+  // When set, subscribe/unsubscribe requests wait here until the test settles them
+  let heldToggles: ((response: Response) => void)[] | null;
 
   const mountWith = async (isSubscribed: boolean): Promise<HTMLInputElement> => {
     serverSubscribed = isSubscribed;
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes('subscribe')) return toggleResponse;
+      if (url.includes('subscribe')) {
+        if (heldToggles) return new Promise<Response>((resolve) => heldToggles!.push(resolve));
+        return toggleResponse;
+      }
       return new Response(JSON.stringify({ requesting_client_id: 'c1', client_rules: [rule(serverSubscribed)] }));
     });
 
@@ -43,7 +48,13 @@ describe('RulesTableComponent', () => {
     await fixture.whenStable();
   };
 
+  const settle = async (): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve));
+    await fixture.whenStable();
+  };
+
   beforeEach(async () => {
+    heldToggles = null;
     await TestBed.configureTestingModule({ imports: [RulesTableComponent] }).compileComponents();
   });
 
@@ -93,5 +104,24 @@ describe('RulesTableComponent', () => {
     await fixture.whenStable();
 
     expect(input.checked).toBe(true);
+  });
+
+  it('shows the server value after two overlapping toggles both fail', async () => {
+    const input = await mountWith(true);
+    heldToggles = [];
+
+    input.click(); // off
+    await settle();
+    input.click(); // back on
+    await settle();
+    expect(heldToggles).toHaveLength(2);
+
+    for (const resolve of heldToggles) {
+      resolve(new Response('nope', { status: 500 }));
+      await settle();
+    }
+
+    expect(input.checked).toBe(true);
+    expect(fixture.componentInstance.rules()[0].is_subscribed).toBe(true);
   });
 });

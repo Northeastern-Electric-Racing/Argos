@@ -93,8 +93,9 @@ export class RulesTableComponent implements OnInit {
   }
 
   /**
-   * On failure the switch is put back through its own control: rows are tracked by ID, so writing the rule's
-   * unchanged value back into the rules would never reach the switch, which would keep showing the rejected state.
+   * On failure the switch is put back to the rule's last confirmed value (not just the inverse of this request,
+   * which is wrong when overlapping toggles both fail), through its own control: rows are tracked by ID, so
+   * writing the rule's unchanged value back into the rules would never reach the switch.
    */
   async onToggleSubscription(rule: ClientRule, subscribed: boolean, toggle: NgModel): Promise<void> {
     const ruleIds = [rule.id];
@@ -113,8 +114,9 @@ export class RulesTableComponent implements OnInit {
     }
     // Not through ngModelChange (that would call this handler again), and with NgModel's last-seen value
     // synced so a later [ngModel] change still reaches the switch
-    toggle.viewModel = !subscribed;
-    toggle.control.setValue(!subscribed, { emitViewToModelChange: false });
+    const confirmed = this.rules().find((r) => r.id === rule.id)?.is_subscribed ?? !subscribed;
+    toggle.viewModel = confirmed;
+    toggle.control.setValue(confirmed, { emitViewToModelChange: false });
   }
 
   onEdit(rule: ClientRule): void {
