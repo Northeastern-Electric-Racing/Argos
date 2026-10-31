@@ -39,6 +39,6 @@ mat-icon {
 }
 
 /* Room for "Set ALL Maps: C Volts" (BMS segment view) */
-hstack ::ng-deep .small-select {
-  min-width: 13rem;
+hstack {
+  --select-dropdown-min-width: 13rem;
 }

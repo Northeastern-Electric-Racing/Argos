@@ -17,6 +17,6 @@
 }
 
 /* "Set ALL Maps: C Volts" is longer than the default select width */
-.section-header ::ng-deep .small-select {
-  min-width: 13rem;
+.section-header {
+  --select-dropdown-min-width: 13rem;
 }

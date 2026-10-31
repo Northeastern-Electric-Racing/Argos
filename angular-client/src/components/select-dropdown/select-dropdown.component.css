@@ -1,5 +1,7 @@
+/* Parents size the select through these inherited custom properties (no ::ng-deep needed) */
 .small-select {
-  min-width: max(10vw, 11rem);
+  width: var(--select-dropdown-width, auto);
+  min-width: var(--select-dropdown-min-width, max(10vw, 11rem));
 }
 
 .small-select input {

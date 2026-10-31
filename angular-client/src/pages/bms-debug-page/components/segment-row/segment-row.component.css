@@ -98,7 +98,7 @@
 }
 
 /* ── Let the Taiga select fill the controls zone ── */
-.controls-zone ::ng-deep .small-select {
-  width: 100%;
-  min-width: 0;
+.controls-zone {
+  --select-dropdown-width: 100%;
+  --select-dropdown-min-width: 0;
 }

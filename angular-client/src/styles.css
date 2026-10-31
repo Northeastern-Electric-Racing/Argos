@@ -24,7 +24,8 @@
 :root {
   /* Colors */
   --color-text-primary: #efefef;
-  --color-text-secondary: #797a7a;
+  /* Muted labels: at least 4.96:1 on the panel backgrounds (WCAG AA) */
+  --color-text-secondary: #9a9a9a;
   --color-text-subtitle: #cacaca;
   --color-background-info: #2c2c2c;
   --color-background-page: #101010;
@@ -97,9 +98,10 @@ body {
   --tui-background-base: var(--color-background-page);
   --tui-background-elevation-1: var(--color-background-elevated);
   --tui-background-elevation-2: var(--color-background-info);
-  /* Filled buttons use a slightly deeper NER red so white labels pass WCAG AA (4.8:1; #ef4345 is 3.8:1) */
+  /* Filled buttons use a deeper NER red so white labels pass WCAG AA in every state: 4.77:1 at rest,
+     5.29:1 hovered and 6.04:1 pressed (#ef4345 itself is 3.8:1) */
   --tui-background-accent-1: #d63436;
-  --tui-background-accent-1-hover: #e03c3e;
+  --tui-background-accent-1-hover: #c93133;
   --tui-background-accent-1-pressed: #b92d2f;
   --tui-text-primary-on-accent-1: #fff;
   --tui-text-action: #f26a6c;

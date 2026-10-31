@@ -100,8 +100,8 @@
     gap: 6px;
   }
 
-  :host ::ng-deep select-dropdown {
-    min-width: 130px;
+  select-dropdown {
+    --select-dropdown-min-width: 130px;
   }
 }
 
