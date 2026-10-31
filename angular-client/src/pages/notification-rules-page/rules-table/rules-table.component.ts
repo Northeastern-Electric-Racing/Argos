@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ToastService } from 'src/services/toast.service';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgModel } from '@angular/forms';
 import { TuiTable, TuiTableControl } from '@taiga-ui/addon-table';
 import { TuiButton, TuiCheckbox, TuiDialogService, TuiLoader } from '@taiga-ui/core';
 import { TuiSwitch } from '@taiga-ui/kit';
@@ -92,7 +92,11 @@ export class RulesTableComponent implements OnInit {
     this.onSelectionChange(this.rules().filter((rule) => selectedIds.has(rule.id)));
   }
 
-  async onToggleSubscription(rule: ClientRule, subscribed: boolean): Promise<void> {
+  /**
+   * On failure the switch is put back through its own control: rows are tracked by ID, so writing the rule's
+   * unchanged value back into the rules would never reach the switch, which would keep showing the rejected state.
+   */
+  async onToggleSubscription(rule: ClientRule, subscribed: boolean, toggle: NgModel): Promise<void> {
     const ruleIds = [rule.id];
     try {
       const response = subscribed
@@ -101,15 +105,16 @@ export class RulesTableComponent implements OnInit {
       if (response.ok) {
         this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: subscribed } : r)));
         this.reselect();
-      } else {
-        // Revert the toggle on failure
-        this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
-        this.toasts.show('Failed to update subscription', { label: 'Error', appearance: 'negative' });
+        return;
       }
+      this.toasts.show('Failed to update subscription', { label: 'Error', appearance: 'negative' });
     } catch {
-      this.rules.update((rules) => rules.map((r) => (r.id === rule.id ? { ...r, is_subscribed: !subscribed } : r)));
       this.toasts.show('Network error', { label: 'Error', appearance: 'negative' });
     }
+    // Not through ngModelChange (that would call this handler again), and with NgModel's last-seen value
+    // synced so a later [ngModel] change still reaches the switch
+    toggle.viewModel = !subscribed;
+    toggle.control.setValue(!subscribed, { emitViewToModelChange: false });
   }
 
   onEdit(rule: ClientRule): void {

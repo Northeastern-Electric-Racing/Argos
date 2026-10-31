@@ -38,8 +38,9 @@
                 type="checkbox"
                 size="m"
                 [attr.aria-label]="'Subscribe to rule ' + rule.id"
+                #subscription="ngModel"
                 [ngModel]="rule.is_subscribed"
-                (ngModelChange)="onToggleSubscription(rule, $event)"
+                (ngModelChange)="onToggleSubscription(rule, $event, subscription)"
               />
             </td>
             <td tuiTd class="col-actions">
