@@ -1,4 +1,15 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal, WritableSignal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  effect,
+  signal,
+  viewChild,
+  WritableSignal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ToastService } from 'src/services/toast.service';
@@ -110,11 +121,38 @@ export class AppNavBarComponent implements OnInit {
   /** Even icon-only page links don't fit, so they lead the apps menu instead. */
   isNavCollapsed = false;
 
+  private pageLinks = viewChild('pageLinks', { read: ElementRef<HTMLElement> });
+  /** Routes of the page links whose labels are ellipsized (a very long run number squeezes them). */
+  private truncatedLabels = signal<ReadonlySet<string>>(new Set());
+
+  constructor() {
+    // The labels can only be cut short when the nav list's width changes, so re-measure them then.
+    effect((onCleanup) => {
+      const list: HTMLElement | undefined = this.pageLinks()?.nativeElement;
+      if (!list || typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(() => {
+        const cut = Array.from(list.querySelectorAll('a[mat-list-item]')).filter((link) => {
+          // The title is inline; the list item's content box around it is what clips and ellipsizes.
+          const box = link.querySelector('[matListItemTitle]')?.parentElement;
+          return !!box && box.scrollWidth > box.clientWidth;
+        });
+        this.truncatedLabels.set(new Set(cut.map((link) => link.getAttribute('href') ?? '')));
+      });
+      observer.observe(list);
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
       this.sidebarVisible = isOpen;
     });
     this.onResize();
+  }
+
+  /** Whether a page link's label is out of sight: gone in icon-only mode, or cut short by an ellipsis. */
+  labelHidden(navItem: NavItem): boolean {
+    return this.isWindowSmall || this.truncatedLabels().has(navItem.id);
   }
 
   onResize(): void {

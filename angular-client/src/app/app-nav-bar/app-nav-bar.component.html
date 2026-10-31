@@ -37,22 +37,23 @@
          Below 1000px they no longer fit beside the run controls and lead the apps menu instead. -->
     @if (!isNavCollapsed) {
       <mat-nav-list
+        #pageLinks
         class="navbar-nav"
         [class.navbar-nav--compact]="isNavCompact"
         [class.navbar-nav--icons]="isWindowSmall"
         aria-label="Pages"
       >
         @for (navItem of mostUsedNavItems; track navItem.id) {
-          <!-- Narrow windows show icon-only links; the tooltip and aria-label keep the page name. -->
+          <!-- When the label is hidden (icon-only) or cut short, the tooltip and aria-label keep the page name. -->
           <a
             mat-list-item
             [routerLink]="navItem.id"
             routerLinkActive="nav-current-page"
             #rla="routerLinkActive"
             [activated]="rla.isActive"
-            [attr.aria-label]="isWindowSmall ? navItem.label : null"
+            [attr.aria-label]="labelHidden(navItem) ? navItem.label : null"
             [matTooltip]="navItem.label"
-            [matTooltipDisabled]="!isWindowSmall"
+            [matTooltipDisabled]="!labelHidden(navItem)"
           >
             <mat-icon matListItemIcon [svgIcon]="navItem.icon" />
             @if (!isWindowSmall) {

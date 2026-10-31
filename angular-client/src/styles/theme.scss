@@ -44,6 +44,21 @@ html {
     )
   );
 
+  // Focused fields mark their label, underline or outline, caret and select arrow in primary, but
+  // #ff5353 is only 2.94:1 on the #464747 field fill. Primary tone 80 (#ffb3ae) is 5.47:1 there.
+  $primary-on-field: map.get(ner.$primary-palette, 80);
+  @include mat.form-field-overrides(
+    (
+      filled-focus-label-text-color: $primary-on-field,
+      filled-focus-active-indicator-color: $primary-on-field,
+      filled-caret-color: $primary-on-field,
+      outlined-focus-label-text-color: $primary-on-field,
+      outlined-focus-outline-color: $primary-on-field,
+      outlined-caret-color: $primary-on-field,
+      focus-select-arrow-color: $primary-on-field
+    )
+  );
+
   // Snackbars (toasts) sit on the dark surface instead of M3's light inverse surface.
   @include mat.snack-bar-overrides(
     (

@@ -6,6 +6,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { of } from 'rxjs';
 import { ToastService } from 'src/services/toast.service';
 import { By } from '@angular/platform-browser';
+import { MatTooltip } from '@angular/material/tooltip';
 import { CurrentRunDisplayComponent } from 'src/pages/landing-page/components/current-run-display/current-run-display.component';
 import { AppNavBarComponent, NAV_BREAKPOINTS } from './app-nav-bar.component';
 
@@ -113,6 +114,35 @@ describe('AppNavBarComponent', () => {
     it('keep their labels just above the icon-only breakpoint', async () => {
       await render(NAV_BREAKPOINTS.iconsOnly + 1);
       expect(pageLinks().map((link) => link.getAttribute('aria-label'))).toEqual([null, null, null, null]);
+    });
+
+    it('show a tooltip on a label cut short by an ellipsis, and only then', async () => {
+      let resized = () => {};
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(callback: () => void) {
+            resized = callback;
+          }
+          observe() {}
+          disconnect() {}
+        }
+      );
+      await render(NAV_BREAKPOINTS.iconsOnly + 1);
+      const tooltips = () =>
+        fixture.debugElement.queryAll(By.directive(MatTooltip)).map((tooltip) => tooltip.injector.get(MatTooltip));
+      expect(tooltips().map((tooltip) => tooltip.disabled)).toEqual([true, true, true, true]);
+
+      // jsdom has no layout: make the BMS label overflow its box, as a long run number can, and
+      // report the nav list's resize.
+      const bmsLabelBox = pageLinks()[2].querySelector('[matListItemTitle]')!.parentElement!;
+      Object.defineProperty(bmsLabelBox, 'scrollWidth', { value: 40 });
+      Object.defineProperty(bmsLabelBox, 'clientWidth', { value: 12 });
+      resized();
+      fixture.detectChanges();
+
+      expect(tooltips().map((tooltip) => tooltip.disabled)).toEqual([true, true, false, true]);
+      expect(pageLinks()[2].getAttribute('aria-label')).toBe('BMS');
     });
 
     it('go icon-only at the icon-only breakpoint, named by aria-label with a tooltip', async () => {
