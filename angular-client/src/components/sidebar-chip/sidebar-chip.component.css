@@ -15,9 +15,14 @@
   text-align: start;
 }
 
-:host(:hover),
+/* Taiga's action text tokens, not NER red: the label is 16px at the small desktop width, where #ef4345
+   on the navbar is only 3.7:1 */
 :host(.active) {
-  color: var(--color-accent);
+  color: var(--tui-text-action);
+}
+
+:host(:hover) {
+  color: var(--tui-text-action-hover);
 }
 
 :host(:focus-visible) {

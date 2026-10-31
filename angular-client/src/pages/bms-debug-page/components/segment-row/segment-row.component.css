@@ -90,7 +90,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(2px, 0.47vw, 10px);
-  width: clamp(64px, 9.4vw, 190px);
+  /* 92px floor: room for "C Volts" plus the Taiga select's padding and chevron */
+  width: clamp(92px, 9.4vw, 190px);
 }
 
 .controls-actions button {

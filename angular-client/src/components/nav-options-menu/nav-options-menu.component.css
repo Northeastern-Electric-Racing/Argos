@@ -45,7 +45,12 @@
   line-height: 1.2;
 }
 
-.menu-grid .menu-item:hover,
+/* The current page; hovered or focused items sit on Taiga's lighter option fill, so they take the lighter tint */
 .menu-grid .menu-item.active {
-  color: var(--color-accent);
+  color: var(--tui-text-action);
+}
+
+.menu-grid .menu-item:hover,
+.menu-grid .menu-item:focus {
+  color: var(--tui-text-action-hover);
 }
