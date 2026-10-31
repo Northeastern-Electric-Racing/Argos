@@ -1,11 +1,27 @@
 <div class="menu-container">
-  <!-- The dropdown panel is the listbox; tuiOption gives each item role="option" and arrow-key focus -->
+  <!-- The dropdown is the menu (tuiDropdownRole="menu" on the trigger): page links plus the Edit Runs action,
+       with tui-data-list's arrow-key focus between items -->
   <tui-data-list class="menu-grid">
-    @for (menuItem of items(); track menuItem) {
-      <button tuiOption type="button" class="menu-item" (click)="itemClick.emit(menuItem)" [attr.data-id]="menuItem.id">
-        <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
-        <span class="menu-label">{{ menuItem.label }}</span>
-      </button>
+    @for (menuItem of items(); track menuItem.label) {
+      @if (menuItem.route) {
+        <a
+          tuiOption
+          role="menuitem"
+          class="menu-item"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [routerLink]="menuItem.route"
+          (click)="itemClick.emit(menuItem)"
+        >
+          <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
+          <span class="menu-label">{{ menuItem.label }}</span>
+        </a>
+      } @else {
+        <button tuiOption role="menuitem" type="button" class="menu-item" (click)="itemClick.emit(menuItem)">
+          <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
+          <span class="menu-label">{{ menuItem.label }}</span>
+        </button>
+      }
     }
   </tui-data-list>
 </div>

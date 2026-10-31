@@ -1,5 +1,16 @@
 @if (isMobile || this.sidebarVisible) {
-  <tui-drawer *tuiPopup="sidebarVisible" direction="start" class="nav-drawer" [overlay]="true" (tuiClose)="closeSidebar()">
+  <!-- A modal drawer: the focus trap keeps Tab inside it and, when it closes, returns focus to what opened it -->
+  <tui-drawer
+    *tuiPopup="sidebarVisible"
+    direction="start"
+    class="nav-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Navigation"
+    tuiFocusTrap
+    [overlay]="true"
+    (tuiClose)="closeSidebar()"
+  >
     <header>
       <div tuiHeader="h6">
         <div tuiTitle><typography variant="large-header" content="Argos" /></div>
@@ -18,32 +29,45 @@
         </div>
       </div>
     </header>
-    @for (navItem of allNavItems; track navItem) {
-      <sidebar-chip
-        icon="{{ navItem.icon }}"
-        value="{{ navItem.label }}"
-        [active]="this.isSelected(navItem)"
-        (click)="navItem.onClick()"
-      >
-      </sidebar-chip>
-    }
+    <nav aria-label="Pages">
+      @for (navItem of allNavItems; track navItem.label) {
+        @if (navItem.route) {
+          <a
+            sidebarChip
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            [routerLink]="navItem.route"
+            [icon]="navItem.icon"
+            [value]="navItem.label"
+          ></a>
+        } @else {
+          <button
+            sidebarChip
+            type="button"
+            [icon]="navItem.icon"
+            [value]="navItem.label"
+            (click)="navItem.action?.()"
+          ></button>
+        }
+      }
+    </nav>
   </tui-drawer>
 } @else {
   <nav class="navbar">
-    <button type="button" class="home-logo" aria-label="Home" (click)="this.homeNavItem.onClick()">
-      <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </button>
+    <a class="home-logo" aria-label="Home" ariaCurrentWhenActive="page" routerLinkActive [routerLink]="homeNavItem.route">
+      <mat-icon [svgIcon]="homeNavItem.icon" />
+    </a>
     <div class="navbar-nav">
-      @for (navItem of onlyDesktopNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [small]="this.isWindowSmall"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
-        >
-        </sidebar-chip>
+      @for (navItem of onlyDesktopNavItems; track navItem.label) {
+        <a
+          sidebarChip
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [routerLink]="navItem.route"
+          [icon]="navItem.icon"
+          [value]="navItem.label"
+          [small]="isWindowSmall"
+        ></a>
       }
     </div>
 
@@ -87,6 +111,7 @@
         class="navbar-menu"
         aria-label="More pages"
         tuiDropdownAlign="end"
+        tuiDropdownRole="menu"
         [class.selected]="menuOpen"
         [tuiDropdown]="menu"
         [(tuiDropdownOpen)]="menuOpen"

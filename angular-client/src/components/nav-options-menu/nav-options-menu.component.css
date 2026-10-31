@@ -28,6 +28,7 @@
   border: none;
   color: inherit;
   font: inherit;
+  text-decoration: none;
 }
 
 .menu-icon {
@@ -44,6 +45,7 @@
   line-height: 1.2;
 }
 
-.menu-grid .menu-item:hover {
+.menu-grid .menu-item:hover,
+.menu-grid .menu-item.active {
   color: var(--color-accent);
 }
