@@ -22,9 +22,9 @@ export default class Storage {
   public get = (key: string): Subject<DataValue> => {
     const subject = this.storage.get(key);
     if (!subject) {
-      const subject = new Subject<DataValue>();
-      this.storage.set(key, subject);
-      return subject;
+      const created = new Subject<DataValue>();
+      this.storage.set(key, created);
+      return created;
     }
     return subject;
   };
@@ -53,9 +53,9 @@ export default class Storage {
   public getTimerData = (key: string): Subject<TimerData> => {
     const subject = this.timerStorage.get(key);
     if (!subject) {
-      const subject = new Subject<TimerData>();
-      this.timerStorage.set(key, subject);
-      return subject;
+      const created = new Subject<TimerData>();
+      this.timerStorage.set(key, created);
+      return created;
     }
     return subject;
   };

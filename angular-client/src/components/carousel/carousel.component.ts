@@ -61,6 +61,6 @@ export class CarouselComponent {
 
   datePipe = (date: Date) => {
     date = new Date(date);
-    return `${date.toLocaleString()}`;
+    return date.toLocaleString();
   };
 }

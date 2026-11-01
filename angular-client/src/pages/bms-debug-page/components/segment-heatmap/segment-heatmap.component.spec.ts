@@ -4,7 +4,6 @@ import { DialogService } from 'primeng/dynamicdialog';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
-import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 import { SegmentHeatmapComponent } from './segment-heatmap.component';
 
@@ -13,7 +12,7 @@ const CELL = 0;
 const GREY = 'grey';
 
 const push = (storage: Storage, key: string, value: string): void => {
-  storage.addValue(key, { values: [value], time: '0', unit: '' } as DataValue);
+  storage.addValue(key, { values: [value], time: '0', unit: '' });
 };
 
 /**

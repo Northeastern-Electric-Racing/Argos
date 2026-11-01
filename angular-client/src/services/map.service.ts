@@ -77,8 +77,8 @@ export class MapService {
       if (coordinates.length === 0) return;
 
       const bounds = coordinates.reduce(
-        (bounds, coord) => {
-          return bounds.extend(coord);
+        (acc, coord) => {
+          return acc.extend(coord);
         },
         new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
       );

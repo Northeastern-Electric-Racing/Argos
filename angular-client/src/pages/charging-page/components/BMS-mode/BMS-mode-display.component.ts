@@ -38,7 +38,7 @@ export default class BMSModeDisplayComponent implements OnInit {
       .get(topics.bmsMode())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((value) => {
-        this.bmsMode = floatPipe(value.values[0]) as BMSMODE;
+        this.bmsMode = floatPipe(value.values[0]);
       });
   }
 

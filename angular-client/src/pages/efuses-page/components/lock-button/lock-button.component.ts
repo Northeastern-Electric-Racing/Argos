@@ -15,5 +15,5 @@ export class LockButtonComponent {
   locked = input<boolean>(true);
 
   /** Emitted when the user clicks the lock button */
-  pressed = output<void>();
+  pressed = output();
 }
