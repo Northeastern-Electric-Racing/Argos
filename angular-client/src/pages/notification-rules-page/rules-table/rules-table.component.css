@@ -12,7 +12,7 @@
   align-items: center;
 }
 
-/* Long topics like BMS/Status/Temp_Average break anywhere, so they never push the table wider than the screen */
+/* Long expressions and topic segments break anywhere rather than push the table past a phone screen; topics break after slashes (wbr) first */
 .wrap-anywhere {
   overflow-wrap: anywhere;
 }

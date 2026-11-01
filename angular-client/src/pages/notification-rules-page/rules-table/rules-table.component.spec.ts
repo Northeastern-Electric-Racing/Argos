@@ -40,7 +40,8 @@ describe('RulesTableComponent: phone layout', () => {
 
     expect(headers[0].style.width).toBe('2.5rem');
     expect(headers[headers.length - 1].style.width).toBe('4rem');
-    const [expr, topic] = el.querySelectorAll<HTMLElement>('tbody td.wrap-anywhere');
+    const expr = el.querySelector<HTMLElement>('tbody td.wrap-anywhere')!;
+    const topic = el.querySelector<HTMLElement>('tbody td.topic-cell')!;
     expect(expr.textContent!.trim()).toBe('a > 60');
     // Break opportunities after each slash, with no stray spaces in the topic
     expect(topic.textContent!.trim()).toBe('BMS/Status/Temp_Average');
@@ -53,5 +54,13 @@ describe('RulesTableComponent: phone layout', () => {
 
     expect(headers[0].style.width).toBe('3rem');
     expect(headers[headers.length - 1].style.width).toBe('5rem');
+  });
+
+  // PrimeNG 21 leaves row checkboxes unnamed until the first selection, then stuck on "Row Selected"
+  it('names each row selection checkbox after its rule', async () => {
+    const el = await render(false);
+    const box = el.querySelector<HTMLInputElement>('tbody input[type="checkbox"]')!;
+
+    expect(box.getAttribute('aria-label')).toBe('Select rule a > 60 on BMS/Status/Temp_Average');
   });
 });
