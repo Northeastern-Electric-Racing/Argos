@@ -1,5 +1,5 @@
 import { BMS_CONFIG } from './bms.config';
-import { Chip, chipToString, Segment } from './bms.utils';
+import { Chip, chipToString, Segment } from './bms.types';
 import { CarCommand, CarCommandRow, DataType } from './types.utils';
 
 // Group MQTT datatypes under the Calypso/Bidir namespace into per-command

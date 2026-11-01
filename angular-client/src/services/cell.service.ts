@@ -30,6 +30,12 @@ export type CellReading = {
   cellNumber: number;
 };
 
+export interface SelectedCellInfo {
+  reading: CellReading;
+  cellNum: number;
+  segment: Segment;
+}
+
 const createSegmentCells = (segment: number, chip: Chip, count: number): CellReading[] => {
   return Array.from(
     { length: count },

@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 
 import { MatIconModule } from '@angular/material/icon';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
+import { NavItem } from 'src/utils/types.utils';
 
 @Component({
   selector: 'app-nav-options-menu',

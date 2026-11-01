@@ -1,24 +1,9 @@
 import { topics } from './topic.utils';
 export { BMS_CONFIG } from './bms.config';
 import { BMS_CONFIG } from './bms.config';
-
-export enum Chip {
-  Alpha = 0,
-  Beta = 1
-}
-export const chipToString = (chip: Chip, singleLetter = false): string => {
-  switch (chip) {
-    case Chip.Alpha:
-      return singleLetter ? 'A' : 'Alpha';
-    case Chip.Beta:
-      return singleLetter ? 'B' : 'Beta';
-    default:
-      throw new Error('Invalid chip type ' + chip);
-  }
-};
-
-/** Segment is a plain numeric index (0-based). */
-export type Segment = number;
+import { Chip, chipToString, Segment } from './bms.types';
+export { Chip, chipToString } from './bms.types';
+export type { Segment } from './bms.types';
 
 export const allSegments: Segment[] = Array.from({ length: BMS_CONFIG.NUM_SEGMENTS }, (_, i) => i);
 
@@ -41,11 +26,6 @@ const segmentInfoCache = new Map<Segment, SegmentInfo>();
 
 /**
  * SegmentInfo topic keys for a segment, computed lazily and memoised.
- *
- * Computed on first access rather than at module load so that bms.utils does not read `topics`
- * from topic.utils while its module body evaluates. That eager access created a bms.utils <->
- * topic.utils import cycle that threw a TDZ error ("Cannot access 'topics' before
- * initialization") when the two modules loaded in the wrong order.
  */
 export const segmentInfo = (seg: Segment): SegmentInfo => {
   let info = segmentInfoCache.get(seg);

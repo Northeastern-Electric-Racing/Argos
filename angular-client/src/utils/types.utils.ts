@@ -108,3 +108,10 @@ export interface RuleNotification {
   values: number[];
   time: string;
 }
+
+export interface NavItem {
+  id: string;
+  label: string;
+  onClick: () => void;
+  icon: string;
+}

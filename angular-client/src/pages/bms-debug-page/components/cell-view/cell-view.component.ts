@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { SelectedCellInfo } from 'src/services/heat-map.service';
+import { SelectedCellInfo } from 'src/services/cell.service';
 import { CellReading } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
 import { ConfigTableComponent, TableRowConfig, TableColumnConfig } from 'src/components/config-table/config-table.component';
