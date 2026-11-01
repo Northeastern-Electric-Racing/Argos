@@ -1,0 +1,36 @@
+# Semgrep rules for AGLint outcomes-static (run new-vs-base, so only findings a change adds are reported).
+# AGLint's CodeQL pack (codeql/aglint-angular) already inventories every fetch / HttpClient / socket.io / WebSocket /
+# EventSource / storage sink; it does not treat route parameters as LOW-trust sources, so that taint rule lives here
+# (trust.yml's route-params tier matches its sources). Taint is intra-file only.
+rules:
+  - id: route-param-to-network
+    mode: taint
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: WARNING
+    message: Route/query parameter (LOW trust) reaches a network call ($SINK) without encoding or parsing.
+    metadata: { outcome: network, trust: low }
+    pattern-sources:
+      - pattern: $ROUTE.snapshot.paramMap.get(...)
+      - pattern: $ROUTE.snapshot.queryParamMap.get(...)
+      - pattern: $ROUTE.snapshot.queryParamMap.getAll(...)
+      - patterns:
+          - pattern-inside: $ROUTE.$MAP.pipe(...).subscribe(($P) => {...})
+          - metavariable-regex: { metavariable: $MAP, regex: '^(paramMap|queryParamMap)$' }
+          - pattern-either:
+              - pattern: $P.get(...)
+              - pattern: $P.getAll(...)
+    pattern-sanitizers:
+      - pattern: encodeURIComponent(...)
+      - pattern: Number(...)
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: fetch($SINK, ...)
+              - pattern: 'fetch($URL, {..., body: $SINK, ...})'
+              - patterns:
+                  - pattern: $SOCKET.emit($EVENT, $SINK, ...)
+                  - metavariable-regex: { metavariable: $SOCKET, regex: '(?i).*socket$' }
+          - focus-metavariable: $SINK

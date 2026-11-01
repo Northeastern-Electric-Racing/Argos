@@ -1,0 +1,14 @@
+id: no-raw-fetch
+language: TypeScript
+severity: error
+message: Network calls go through src/api/ (HTTP) or SocketService (socket.io); add a function in src/api/ instead.
+files: ['src/**/*.ts']
+ignores: ['src/api/**', 'src/**/*.spec.ts']
+rule:
+  any:
+    - pattern: fetch($$$)
+    - pattern: window.fetch($$$)
+    - pattern: globalThis.fetch($$$)
+    - pattern: new XMLHttpRequest()
+    - pattern: new WebSocket($$$)
+    - pattern: new EventSource($$$)

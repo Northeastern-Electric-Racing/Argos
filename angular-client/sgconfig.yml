@@ -1,0 +1,2 @@
+# ast-grep: the blind-spot rules written by `aglint init` (rules/blind-spots/) and Argos's no-raw-fetch chokepoint rule
+ruleDirs: [ast-grep/rules]

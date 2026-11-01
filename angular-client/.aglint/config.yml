@@ -1,0 +1,97 @@
+# AGLint project config for angular, written by `aglint init` (SPEC-v3 section 3.2).
+# Commit .aglint/; the cache/ and out/ directories are ignored.
+# capabilities: what AGLint checks besides the core (the diff and tool health); a capability not listed
+# is off. `aglint capabilities list` shows them all, docs/capabilities/<id>.md explains each.
+version: 1
+stack: angular
+root: angular-client
+base:
+  ref: origin/develop
+  mode: merge-base
+capabilities:
+  banned-apis: {}
+  # dependency-cruiser only: no Sheriff config; .dependency-cruiser.cjs holds no-circular and the network chokepoints
+  layering: {tools: [depcruise]}
+  # the whole-repo oxlint step fails above this many warnings: today's backlog, so it can only go down
+  lint: {max_warnings: 8}
+  types: {}
+  blind-spots: {}
+  purity: {}
+  outcomes-static: {}
+  # no auth SDK in Argos, so no auth hook to expect
+  runtime-trace: {hooks: [http, storage, exec]}
+  tests: {}
+package_manager: npm
+test_runner: ng-test
+app:
+  roots:
+  - src
+  vendor_roots: []
+  # the specs sit next to their code (src/**/*.spec.ts) and `ng test` runs all of them; nothing reads this list on angular
+  test_dirs:
+  - src
+  guarded: []
+# Portable tool paths: a bare name is looked up on PATH when AGLint runs (put Node 24, CodeQL, Semgrep and ast-grep
+# there; `aglint doctor` names any that are missing); node_modules/.bin paths are relative to angular-client/ (`npm ci`).
+tools:
+  codeql:
+    path: codeql
+    group: codeql
+  semgrep:
+    path: semgrep
+    group: semgrep
+  ast-grep:
+    path: ast-grep
+    group: astgrep
+  node:
+    path: node
+    group: core
+  jq:
+    path: jq
+    group: core
+  bc:
+    path: bc
+    group: core
+  tsc:
+    path: node_modules/.bin/tsc
+    group: tsc
+  ngc:
+    path: node_modules/.bin/ngc
+    group: tsc
+  oxlint:
+    path: node_modules/.bin/oxlint
+    group: oxlint
+  eslint:
+    path: node_modules/.bin/eslint
+    group: eslint
+  depcruise:
+    path: node_modules/.bin/depcruise
+    group: depcruise
+native:
+  oxlint: .oxlintrc.json
+  eslint: eslint.config.js
+  dependency_cruiser: .dependency-cruiser.cjs
+  ast_grep: sgconfig.yml
+  semgrep: semgrep
+  tsconfig: tsconfig.app.json
+  codeql_purity: codeql/aglint-angular/purity/Purity.ql
+  codeql_pack: codeql/aglint-angular
+  codeql_config: codeql/codeql-config.yml
+profiles:
+  fast:
+    skip_groups:
+    - codeql
+    required_tools: []
+  full:
+    skip_groups: []
+    required_tools: []
+default_profile: full
+outputs:
+  dir: .aglint/out
+  formats:
+  - md
+  - html
+  - sarif
+cache_dir: .aglint/cache
+warn_exit: 4
+parallel: true

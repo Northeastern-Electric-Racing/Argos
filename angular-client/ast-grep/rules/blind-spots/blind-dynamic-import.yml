@@ -1,0 +1,25 @@
+id: blind-dynamic-import
+language: TypeScript
+severity: warning
+message: >-
+  import()/require() with a non-literal specifier. Static tools (dependency-cruiser, Sheriff, CodeQL, Oxlint
+  chokepoint rules) cannot see which module is loaded; the I/O trace is the only evidence.
+note: AGLint v2 blind spot. Use a string-literal specifier so the module graph stays analysable.
+files: ['src/**/*.ts']
+ignores: ['src/**/*.spec.ts']
+metadata:
+  aglint: blind-spot
+rule:
+  any:
+    - pattern: import($ARG)
+    - pattern: import($ARG, $$$)
+    - pattern: require($ARG)
+    - pattern: require($ARG, $$$)
+constraints:
+  ARG:
+    not:
+      any:
+        - kind: string
+        - all:
+            - kind: template_string
+            - not: { has: { kind: template_substitution } }

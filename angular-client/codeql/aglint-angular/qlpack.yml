@@ -1,0 +1,8 @@
+name: aglint/angular-queries
+version: 0.1.0
+library: false
+extractor: javascript
+dependencies:
+  codeql/javascript-all: "2.10.4"
+dataExtensions:
+  - models/*.model.yml
