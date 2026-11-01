@@ -21,6 +21,11 @@ const ArgosPreset = definePreset(Aura, {
       900: '{red.900}',
       950: '{red.950}'
     },
+    // Aura rings focus in the primary red, only 2.89:1 on the #2c2c2c nav bar and cards. A light neutral ring is
+    // 11:1 there, 12:1+ on the page and popovers, and 3.8:1 beside the red pressed pills (WCAG 1.4.11 needs 3:1).
+    focusRing: {
+      color: '{surface.200}'
+    },
     colorScheme: {
       dark: {
         surface: {
@@ -80,6 +85,8 @@ const ArgosPreset = definePreset(Aura, {
     button: {
       colorScheme: {
         dark: {
+          // Primary buttons ring with the shared focus ring rather than their own red
+          root: { primary: { focusRing: { color: '{focus.ring.color}' } } },
           text: { primary: { color: '{primary.400}' } },
           outlined: { primary: { color: '{primary.400}' } },
           link: { color: '{primary.400}' }
