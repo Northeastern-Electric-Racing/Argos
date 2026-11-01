@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmFocusDirective } from 'src/utils/directives/confirm-focus.directive';
 import HalfGaugeComponent from 'src/components/half-gauge/half-gauge.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { GaugeStatComponent } from 'src/components/gauge-stat/gauge-stat.component';
@@ -24,6 +25,7 @@ import LapsTableComponent from './laps-table/laps-table.component';
     MatGridList,
     MatGridTile,
     ConfirmDialog,
+    ConfirmFocusDirective,
     HalfGaugeComponent,
     InfoBackgroundComponent,
     GaugeStatComponent,

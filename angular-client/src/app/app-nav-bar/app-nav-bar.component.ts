@@ -1,8 +1,18 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  signal,
+  viewChild,
+  ElementRef
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ArgosDialogConfig } from 'src/services/argos-dialog.service';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
@@ -21,6 +31,7 @@ import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { Popover } from 'primeng/popover';
+import { PopoverFocusDirective } from 'src/utils/directives/popover-focus.directive';
 import { Badge } from 'primeng/badge';
 import { Menu } from 'primeng/menu';
 import { Button } from 'primeng/button';
@@ -38,6 +49,7 @@ export interface NavItem {
   templateUrl: './app-nav-bar.component.html',
   styleUrls: ['./app-nav-bar.component.css'],
   imports: [
+    PopoverFocusDirective,
     Drawer,
     CurrentRunDisplayComponent,
     Button,
@@ -66,6 +78,9 @@ export class AppNavBarComponent implements OnInit {
   private sidebarService = inject(SidebarService);
   private dialogService = inject(DialogService);
   protected notificationLogService = inject(NotificationLogService);
+
+  // Edit Runs opens from the apps menu, which is gone by the time the dialog closes, so focus returns here
+  private readonly appsMenuButton = viewChild<ElementRef<HTMLButtonElement>>('appsMenuButton');
 
   ref: DynamicDialogRef | null | undefined;
   editRunRef: DynamicDialogRef | null | undefined;
@@ -128,8 +143,9 @@ export class AppNavBarComponent implements OnInit {
       width: '550px',
       header: 'Edit Run',
       closable: true,
-      closeAriaLabel: 'Close'
-    });
+      closeAriaLabel: 'Close',
+      opener: this.appsMenuButton()?.nativeElement
+    } as ArgosDialogConfig);
   };
 
   homeNavItem: NavItem = {

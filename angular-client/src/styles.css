@@ -123,5 +123,6 @@ body {
 /* Destructive entries in popup menus (MenuItem styleClass); menus are appended to body, so this is global */
 .p-menu .menu-item-danger .p-menu-item-label,
 .p-menu .menu-item-danger .p-menu-item-icon {
-  color: var(--p-red-400);
+  /* red.300 stays above 4.5:1 on the focused/hovered item (surface.700) as well as the menu (surface.800) */
+  color: var(--p-red-300);
 }

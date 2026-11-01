@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 import { DatePicker } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { Popover } from 'primeng/popover';
+import { PopoverFocusDirective } from 'src/utils/directives/popover-focus.directive';
 import { SelectButton } from 'primeng/selectbutton';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
@@ -35,6 +36,7 @@ type CustomMode = 'last-x' | 'date-range';
   styleUrl: './general-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PopoverFocusDirective,
     RunSelectorComponent,
     Button,
     SelectDropdownComponent,

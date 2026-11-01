@@ -50,7 +50,7 @@ const ArgosPreset = definePreset(Aura, {
           color: 'rgba(255,255,255,.87)',
           focusColor: 'rgba(255,255,255,.87)'
         },
-        // A red primary would make a focused field look invalid, so focus uses a blue accent (about 3.8:1 on surface.800)
+        // A red primary would make a focused field look invalid, so focus uses a blue accent (about 3.7:1 on surface.800)
         formField: {
           focusBorderColor: '{sky.600}'
         },
@@ -114,8 +114,8 @@ const ArgosPreset = definePreset(Aura, {
         }
       }
     },
-    // Toggle and select buttons look like secondary buttons, with the pressed option in the selection tint,
-    // so on and off read apart at a glance (SelectButton shares these tokens)
+    // Toggle and select buttons look like secondary buttons; the pressed option is a solid primary pill with white
+    // text, so on and off differ by more than hue (pill vs track about 3.1:1, text on pill 4.8:1). SelectButton shares these.
     togglebutton: {
       colorScheme: {
         dark: {
@@ -126,10 +126,11 @@ const ArgosPreset = definePreset(Aura, {
             borderColor: '{surface.800}',
             checkedBorderColor: '{surface.800}',
             color: '{surface.300}',
-            hoverColor: '{surface.0}'
+            hoverColor: '{surface.0}',
+            checkedColor: '{primary.contrast.color}'
           },
-          content: { checkedBackground: '{highlight.focus.background}' },
-          icon: { color: '{surface.300}', hoverColor: '{surface.0}', checkedColor: '{primary.400}' }
+          content: { checkedBackground: '{primary.color}' },
+          icon: { color: '{surface.300}', hoverColor: '{surface.0}', checkedColor: '{primary.contrast.color}' }
         }
       }
     },

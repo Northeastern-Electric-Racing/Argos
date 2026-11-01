@@ -29,6 +29,7 @@ import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmFocusDirective } from 'src/utils/directives/confirm-focus.directive';
 
 @Component({
   selector: 'car-command',
@@ -48,7 +49,8 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
     SettingToggleComponent,
     SettingInputComponent,
     CommandCardComponent,
-    ConfirmDialog
+    ConfirmDialog,
+    ConfirmFocusDirective
   ]
 })
 export default class CarCommandComponent implements OnInit {

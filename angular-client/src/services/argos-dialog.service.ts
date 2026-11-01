@@ -2,6 +2,14 @@ import { Injectable, Provider, Type } from '@angular/core';
 import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { take } from 'rxjs';
 
+export type ArgosDialogConfig<
+  DataType = unknown,
+  InputValuesType extends Record<string, unknown> = Record<string, unknown>
+> = DynamicDialogConfig<DataType, InputValuesType> & {
+  /** Where focus returns if the element focused at open time is gone by close, e.g. a popup menu's trigger */
+  opener?: HTMLElement | null;
+};
+
 /**
  * PrimeNG's DialogService with the two things every Argos dialog wants:
  * - Focus goes back to the element that opened the dialog once it closes, instead of to <body>.
@@ -11,15 +19,17 @@ import { take } from 'rxjs';
 export class ArgosDialogService extends DialogService {
   override open<T, DataType = unknown, InputValuesType extends Record<string, unknown> = Record<string, unknown>>(
     componentType: Type<T>,
-    config: DynamicDialogConfig<DataType, InputValuesType>
+    config: ArgosDialogConfig<DataType, InputValuesType>
   ): DynamicDialogRef<T> | null {
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const { opener, ...dialogConfig } = config;
+    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const ref = super.open(componentType, {
-      ...config,
-      style: { maxWidth: '100%', maxHeight: '100%', ...config.style }
+      ...dialogConfig,
+      style: { maxWidth: '100%', maxHeight: '100%', ...dialogConfig.style }
     });
     ref?.onDestroy.pipe(take(1)).subscribe(() => {
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
+      const target = focused?.isConnected && focused !== document.body ? focused : opener;
+      if (target?.isConnected) target.focus({ preventScroll: true });
     });
     return ref;
   }

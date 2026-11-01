@@ -62,7 +62,7 @@
       </button>
       <p-popover
         #notificationPanel
-        [focusOnShow]="false"
+        argosPopoverFocus
         (onShow)="onNotificationPanelShow()"
         styleClass="notification-popover"
         [dt]="notificationPopoverTokens"
@@ -72,6 +72,7 @@
         </ng-template>
       </p-popover>
       <button
+        #appsMenuButton
         type="button"
         class="navbar-menu"
         aria-label="More pages"

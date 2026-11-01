@@ -1,7 +1,7 @@
 import { ApplicationRef, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { DialogService } from 'primeng/dynamicdialog';
-import { ArgosDialogService, provideArgosDialogs } from './argos-dialog.service';
+import { ArgosDialogConfig, ArgosDialogService, provideArgosDialogs } from './argos-dialog.service';
 
 @Component({ template: '<button type="button">Inside</button>' })
 class DialogBodyComponent {}
@@ -34,6 +34,20 @@ describe('ArgosDialogService', () => {
     inside.focus();
     expect(document.activeElement).toBe(inside);
 
+    ref.destroy();
+
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  // A popup menu item opens the dialog with the mouse, then the menu (and the focused item) goes away
+  it('falls back to the given opener when the element that had focus is gone', () => {
+    const menu = document.createElement('ul');
+    menu.innerHTML = '<li tabindex="0">Edit Runs</li>';
+    document.body.appendChild(menu);
+    (menu.firstElementChild as HTMLElement).focus();
+
+    const ref = service.open(DialogBodyComponent, { header: 'Test', opener: trigger } as ArgosDialogConfig)!;
+    menu.remove();
     ref.destroy();
 
     expect(document.activeElement).toBe(trigger);

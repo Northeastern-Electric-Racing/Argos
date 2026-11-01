@@ -1,3 +1,4 @@
+import { namedTreeToggles } from 'src/theme/argos-pt';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,7 +15,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { PrimeTemplate, TreeNode } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
+import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree, TreePassThrough } from 'primeng/tree';
 import { Drawer } from 'primeng/drawer';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { take } from 'rxjs';
@@ -52,6 +53,9 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
   private dialogService = inject(DialogService);
+
+  // Full-width labels and named expand/collapse buttons
+  readonly treePt: TreePassThrough = { ...namedTreeToggles, nodeLabel: { style: { width: '100%' } } };
   private storage = inject(Storage);
   private injector = inject(Injector);
   private presetDialogRef?: DynamicDialogRef | null;

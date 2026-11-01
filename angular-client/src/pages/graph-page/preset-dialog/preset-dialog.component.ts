@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmFocusDirective } from 'src/utils/directives/confirm-focus.directive';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputText } from 'primeng/inputtext';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
@@ -21,7 +22,7 @@ interface PresetDialogData {
   styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ButtonLabel, ConfirmDialog]
+  imports: [FormsModule, InputText, ButtonDirective, ButtonLabel, ConfirmDialog, ConfirmFocusDirective]
 })
 export class PresetDialogComponent {
   private ref = inject(DynamicDialogRef);
