@@ -24,7 +24,6 @@ import {
   PointElement,
   Tooltip
 } from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
@@ -33,12 +32,10 @@ import { GraphData, GraphInfo, ObservableGraphInfo } from 'src/utils/types.utils
 import {
   buildBaseOptions,
   buildCsv,
-  buildDayBoundaryAnnotations,
   buildYScales,
   computeDataSpan,
   cursorPlugin,
   cursorPositioner,
-  DAY_MS,
   nearestPerSeries,
   SERIES_COLORS,
   SeriesDataset,
@@ -74,8 +71,7 @@ function download(href: string, extension: string): void {
         Tooltip,
         Legend,
         Decimation,
-        zoomPlugin,
-        annotationPlugin
+        zoomPlugin
       ]
     })
   ],
@@ -182,7 +178,7 @@ export default class CustomGraphComponent implements OnDestroy {
     });
   };
 
-  /** Pushes the current series, axes, x-window and annotations into Chart.js and redraws without animation. */
+  /** Pushes the current series, axes and x window into Chart.js and redraws without animation. */
   private syncChart(): void {
     const { chart } = this;
     if (!chart) return;
@@ -240,11 +236,6 @@ export default class CustomGraphComponent implements OnDestroy {
         }
       }
     }
-
-    // Multi-day historical ranges get per-day boundary annotations (the x ticks date each midnight).
-    // Realtime ranges are bounded and never multi-day.
-    const isMultiDay = !this.realTime() && !!span && span.spanMs > DAY_MS;
-    options.plugins!.annotation!.annotations = isMultiDay ? buildDayBoundaryAnnotations(span) : [];
 
     chart.update('none');
   }

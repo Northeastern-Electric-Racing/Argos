@@ -183,19 +183,19 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(c.scales['y'].max).toBe(50);
   });
 
-  it('marks day boundaries on multi-day historical ranges', async () => {
+  it('marks each local midnight as a major x tick, which gets the day-boundary grid line', async () => {
     const start = new Date(2026, 0, 1, 12).getTime();
     const c = await render({
       valuesSubject: [
         topic('V', [
           { x: start, y: 1 },
-          { x: start + 36 * 60 * 60 * 1000, y: 2 }
+          { x: start + 35 * 60 * 60 * 1000, y: 2 }
         ])
       ]
     });
 
-    const annotations = c.options.plugins?.annotation?.annotations as unknown[];
-    expect(annotations.length).toBe(1);
+    const majors = c.scales['x'].ticks.filter((t) => t.major).map((t) => t.value);
+    expect(majors).toEqual([new Date(2026, 0, 2).getTime()]);
   });
 
   it('empties the chart when the graph is cleared', async () => {

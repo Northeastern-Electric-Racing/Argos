@@ -1,11 +1,9 @@
 import {
   buildBaseOptions,
   buildCsv,
-  buildDayBoundaryAnnotations,
   buildTimeTicks,
   buildYScales,
   computeDataSpan,
-  DAY_MS,
   formatTimeTick,
   formatTooltipTime,
   HOVER_REACH_PERIODS,
@@ -32,6 +30,7 @@ describe('graph-chart utils', () => {
       expect(pickTimeStep(5 * 60_000)).toBe(60_000);
       expect(pickTimeStep(150 * 60_000)).toBe(30 * 60_000);
       expect(pickTimeStep(50 * 60 * 60_000)).toBe(12 * 60 * 60_000);
+      expect(pickTimeStep(7 * 24 * 60 * 60_000)).toBe(24 * 60 * 60_000);
     });
 
     it('puts ticks on whole multiples of the step, midnight and noon on a multi-day range', () => {
@@ -49,6 +48,12 @@ describe('graph-chart utils', () => {
         new Date(2026, 9, 18).getTime(),
         new Date(2026, 9, 18, 12).getTime()
       ]);
+    });
+
+    it('ticks every local midnight of a week, across the end of DST', () => {
+      const ticks = buildTimeTicks(new Date(2026, 9, 28, 9).getTime(), new Date(2026, 10, 4, 9).getTime());
+
+      expect(ticks).toEqual([29, 30, 31, 32, 33, 34, 35].map((day) => new Date(2026, 9, day).getTime()));
     });
 
     it('keeps ticks put as the live window slides', () => {
@@ -81,7 +86,8 @@ describe('graph-chart utils', () => {
       expect(formatTimeTick(at(13, 50, 24, 120), 200)).toBe('13:50:24.120');
       expect(formatTimeTick(at(13, 50, 25), 5_000)).toBe('13:50:25');
       expect(formatTimeTick(at(13, 50), 60_000)).toBe('13:50');
-      expect(formatTimeTick(at(0), 12 * 60 * 60_000)).toBe('10/17');
+      expect(formatTimeTick(at(0), 12 * 60 * 60_000)).toBe('Sat, 10/17');
+      expect(formatTimeTick(at(0), 5_000)).toBe('Sat, 10/17');
       expect(formatTimeTick(at(12), 12 * 60 * 60_000)).toBe('12:00');
     });
 
@@ -147,31 +153,6 @@ describe('graph-chart utils', () => {
 
       expect(span).toEqual({ minX: 2, maxX: 20, spanMs: 18 });
       expect(computeDataSpan(new Map([['A 0', []]]))).toBeNull();
-    });
-  });
-
-  describe('buildDayBoundaryAnnotations', () => {
-    it('draws a vertical line at each local midnight inside the span', () => {
-      const start = new Date(2026, 0, 1, 12).getTime();
-      const annotations = buildDayBoundaryAnnotations({ minX: start, maxX: start + 2 * DAY_MS });
-
-      expect(annotations.map((a) => a.xMin)).toEqual([new Date(2026, 0, 2).getTime(), new Date(2026, 0, 3).getTime()]);
-      expect(annotations.every((a) => a.xMin === a.xMax)).toBe(true);
-    });
-
-    it('keeps each line on its own local midnight across a DST change', () => {
-      for (const [name, minX, maxX] of [
-        ['spring forward', new Date(2026, 2, 6, 12).getTime(), new Date(2026, 2, 10, 12).getTime()],
-        ['fall back', new Date(2026, 9, 30, 12).getTime(), new Date(2026, 10, 3, 12).getTime()]
-      ] as const) {
-        const annotations = buildDayBoundaryAnnotations({ minX, maxX });
-
-        expect(
-          annotations.map((a) => new Date(a.xMin as number).getHours()),
-          name
-        ).toEqual([0, 0, 0, 0]);
-        expect(new Set(annotations.map((a) => a.label!.content)).size, name).toBe(4);
-      }
     });
   });
 

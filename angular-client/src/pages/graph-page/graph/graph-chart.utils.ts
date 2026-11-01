@@ -11,10 +11,7 @@ import type {
   TooltipPositionerFunction
 } from 'chart.js';
 import { getRelativePosition } from 'chart.js/helpers';
-import type { AnnotationOptions } from 'chartjs-plugin-annotation';
 import { GraphData } from 'src/utils/types.utils';
-
-export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * ApexCharts' default palette first, so series keep the colors users are used to, then five more that read on
@@ -36,8 +33,7 @@ export const SERIES_COLORS = [
 
 const TICK_COLOR = '#fff'; // white
 const GRID_COLOR = 'rgba(255, 255, 255, 0.1)'; // white at 10%, faint on the dark page
-/** The app's dark-teal surface and light-blue outline, as on its toolbar buttons. */
-const THEME_SURFACE = '#0c2026'; // dark teal
+/** The app's light-blue outline, as on its toolbar buttons; marks each local midnight on the x-axis. */
 const THEME_OUTLINE = '#8fcadd'; // light blue
 
 type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
@@ -143,19 +139,27 @@ export function buildCsv(data: ReadonlyMap<string, readonly GraphData[]>): strin
 const SECOND_MS = 1000;
 const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
 const MAX_X_TICKS = 6;
+/** Day steps stretch to 8 intervals, so every midnight of a week's range (an hour longer across DST's end) is a tick. */
+const MAX_DAY_TICKS = 8;
 
 const TIME_STEPS_MS = [
   ...[1, 2, 5, 10, 20, 50, 100, 200, 500],
   ...[1, 2, 5, 10, 15, 30].map((n) => n * SECOND_MS),
   ...[1, 2, 5, 10, 15, 30].map((n) => n * MINUTE_MS),
-  ...[1, 2, 3, 6, 12].map((n) => n * HOUR_MS),
-  ...[1, 2, 7].map((n) => n * DAY_MS)
+  ...[1, 2, 3, 6, 12].map((n) => n * HOUR_MS)
 ];
 
-/** The smallest clock-friendly step that fits the span in at most `maxTicks` intervals. */
+/**
+ * The smallest clock-friendly step that fits the span in at most `maxTicks` intervals, or whole days in at most
+ * MAX_DAY_TICKS, so that ticks keep landing on every midnight.
+ */
 export function pickTimeStep(spanMs: number, maxTicks = MAX_X_TICKS): number {
-  return TIME_STEPS_MS.find((step) => spanMs / step <= maxTicks) ?? Math.ceil(spanMs / maxTicks / DAY_MS) * DAY_MS;
+  return (
+    TIME_STEPS_MS.find((step) => spanMs / step <= maxTicks) ??
+    Math.max(1, Math.ceil(spanMs / MAX_DAY_TICKS / DAY_MS)) * DAY_MS
+  );
 }
 
 const tzOffsetMs = (t: number) => new Date(t).getTimezoneOffset() * MINUTE_MS;
@@ -189,7 +193,7 @@ const TIME_LABELS = {
   }),
   seconds: new Intl.DateTimeFormat('en-US', { hourCycle: 'h23', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
   minutes: new Intl.DateTimeFormat('en-US', { hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }),
-  date: new Intl.DateTimeFormat('en-US', { month: 'numeric', day: 'numeric' })
+  date: new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })
 };
 
 const TOOLTIP_TIME: Intl.DateTimeFormatOptions = {
@@ -216,49 +220,16 @@ export function formatTooltipTime(value: number, axisSpanMs: number, withDate = 
   return (pickTimeStep(axisSpanMs) < SECOND_MS ? labels.millis : labels.seconds).format(value);
 }
 
-/** An x tick label as precise as the step needs; with hour-or-longer steps, local midnights show their date. */
+/** An x tick label as precise as the step needs; a local midnight shows its date instead. */
 export function formatTimeTick(value: number, stepMs: number): string {
-  if (stepMs >= HOUR_MS && value === startOfLocalDay(value)) return TIME_LABELS.date.format(value);
+  if (isLocalMidnight(value)) return TIME_LABELS.date.format(value);
   if (stepMs < SECOND_MS) return TIME_LABELS.millis.format(value);
   if (stepMs < MINUTE_MS) return TIME_LABELS.seconds.format(value);
   return TIME_LABELS.minutes.format(value);
 }
 
-function startOfLocalDay(t: number): number {
-  const d = new Date(t);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
-/** One dashed vertical line, labelled with the date, at each local midnight inside the span. */
-export function buildDayBoundaryAnnotations(span: { minX: number; maxX: number }): AnnotationOptions<'line'>[] {
-  const annotations: AnnotationOptions<'line'>[] = [];
-  // First local midnight strictly after minX, then step by calendar day: a DST day is 23 or 25 hours long
-  const cursor = new Date(span.minX);
-  cursor.setHours(24, 0, 0, 0);
-  for (; cursor.getTime() < span.maxX; cursor.setDate(cursor.getDate() + 1)) {
-    const t = cursor.getTime();
-    annotations.push({
-      type: 'line',
-      xMin: t,
-      xMax: t,
-      borderColor: THEME_OUTLINE,
-      borderWidth: 1,
-      borderDash: [4, 4],
-      label: {
-        display: true,
-        // A vertical line runs bottom (start) to top (end); the top keeps the label off the data and x ticks
-        position: 'end',
-        color: '#fff',
-        backgroundColor: THEME_SURFACE,
-        borderColor: THEME_OUTLINE,
-        borderWidth: 1,
-        font: { size: 11 },
-        content: new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-      }
-    });
-  }
-  return annotations;
+function isLocalMidnight(t: number): boolean {
+  return new Date(t).setHours(0, 0, 0, 0) === t;
 }
 
 declare module 'chart.js' {
@@ -499,7 +470,7 @@ function setCanvasCursor(event: ChartEvent, cursor: string): void {
   if (target instanceof HTMLElement) target.style.cursor = cursor;
 }
 
-/** Base options for the graph page's line chart. Scales, windowing and annotations are filled in per frame. */
+/** Base options for the graph page's line chart. The y scales and the x window are filled in per frame. */
 export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOptions<'line'> {
   return {
     responsive: true,
@@ -527,17 +498,18 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
         // Hidden until there is data, rather than labelled 00:00:00.000 to 00:00:00.001 (see syncChart)
         display: false,
         afterBuildTicks: (scale) => {
-          scale.ticks = buildTimeTicks(scale.min, scale.max).map((value) => ({ value }));
+          // Midnights are major ticks: autoSkip keeps them, and they get the day boundary's grid line
+          scale.ticks = buildTimeTicks(scale.min, scale.max).map((value) => ({ value, major: isLocalMidnight(value) }));
         },
         ticks: {
           color: TICK_COLOR,
-          maxTicksLimit: MAX_X_TICKS,
           maxRotation: 0,
+          major: { enabled: true },
           callback(value) {
             return formatTimeTick(+value, pickTimeStep(this.max - this.min));
           }
         },
-        grid: { color: GRID_COLOR }
+        grid: { color: ({ tick }) => (tick?.major ? THEME_OUTLINE : GRID_COLOR) }
       },
       ...buildYScales([], false, { yMin: null, yMax: null })
     },
@@ -625,8 +597,7 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
         },
         // Bounds drag, ctrl-wheel and pinch zoom alike
         limits: { x: { minRange: 1000 } }
-      },
-      annotation: { annotations: [] }
+      }
     }
   };
 }
