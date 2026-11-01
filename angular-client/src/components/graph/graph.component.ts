@@ -114,7 +114,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   timeOuts: NodeJS.Timeout[] = [];
   updateChart = () => {
     // updateOptions, not updateSeries: apexcharts 5's updateSeries fast path replots the line without redrawing the axes
-    this.chart.updateOptions({
+    void this.chart.updateOptions({
       series: [
         {
           name: this.title(),
@@ -129,7 +129,7 @@ export class GraphComponent implements OnInit, OnDestroy {
 
     if (!this.isSliding && this.timeDiffMs > this.timeRangeMs()) {
       this.isSliding = true;
-      this.chart.updateOptions({
+      void this.chart.updateOptions({
         ...this.options(),
         xaxis: {
           ...this.options().xaxis,
@@ -159,7 +159,7 @@ export class GraphComponent implements OnInit, OnDestroy {
           ...this.options()
         });
 
-        this.chart.render();
+        void this.chart.render();
         this.updateChart();
       }, 100)
     );

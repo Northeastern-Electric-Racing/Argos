@@ -48,7 +48,7 @@ export class RulesTableComponent implements OnInit {
   private editRef: DynamicDialogRef | null | undefined;
 
   ngOnInit(): void {
-    this.loadRules();
+    void this.loadRules();
   }
 
   async loadRules(): Promise<void> {

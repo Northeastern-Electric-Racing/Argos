@@ -78,7 +78,14 @@ export class RunFormComponent implements OnInit {
         form.controls['driverName'].value,
         form.controls['locationName'].value,
         form.controls['notes'].value
-      );
+      )
+        .then((response) => {
+          if (!response.ok) throw new Error(`Run update failed (${response.status})`);
+          return response;
+        })
+        .catch((error: Error) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+        });
     });
   }
 

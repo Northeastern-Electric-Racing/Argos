@@ -31,6 +31,6 @@ export class NotificationListComponent {
 
   viewAll(): void {
     this.notificationLogService.markAllRead();
-    this.router.navigate([appRoutes.notificationLogRoute()]);
+    void this.router.navigate([appRoutes.notificationLogRoute()]);
   }
 }

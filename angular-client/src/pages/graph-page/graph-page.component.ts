@@ -252,7 +252,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     const selectedFaultSubscription = this.faultService.getSelectedFault();
     this.selectedFault = selectedFaultSubscription.value;
     if (!this.selectedFault) {
-      this.router.navigate([appRoutes.faultsRoute()]);
+      void this.router.navigate([appRoutes.faultsRoute()]);
     }
     selectedFaultSubscription.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((fault) => (this.selectedFault = fault));
     this.rightHeader = `Fault: ${this.selectedFault?.name}`;
@@ -408,7 +408,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
     const topics = selectedDataTypes.map((dt) => dt.name).join(',') || null;
 
-    this.router.navigate([], {
+    void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { topics },
       queryParamsHandling: 'merge',

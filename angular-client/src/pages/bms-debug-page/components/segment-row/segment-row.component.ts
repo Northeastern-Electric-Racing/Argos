@@ -67,6 +67,6 @@ export class SegmentRowComponent implements OnInit {
   }
 
   openSegmentPage = (): void => {
-    this.router.navigate([appRoutes.bmsSegmentViewRoute(this.segment())]);
+    void this.router.navigate([appRoutes.bmsSegmentViewRoute(this.segment())]);
   };
 }

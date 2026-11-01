@@ -22,7 +22,7 @@ export class SegmentSelectorComponent implements OnInit {
     {
       name: 'Accumulator',
       function: () => {
-        this.router.navigate([appRoutes.bmsRoute()]);
+        void this.router.navigate([appRoutes.bmsRoute()]);
       }
     }
   ];
@@ -35,7 +35,7 @@ export class SegmentSelectorComponent implements OnInit {
         return {
           name: `Segment ${segment + 1}`,
           function: () => {
-            this.router.navigate([appRoutes.bmsSegmentViewRoute(segment)]);
+            void this.router.navigate([appRoutes.bmsSegmentViewRoute(segment)]);
           }
         };
       })

@@ -156,7 +156,7 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
 
     if (!this.isSliding && this.timeDiffMs > this.timeRangeMs()) {
       this.isSliding = true;
-      this.chart.updateOptions({
+      void this.chart.updateOptions({
         ...this.options(),
         xaxis: {
           ...this.options().xaxis,
@@ -166,7 +166,7 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
     }
 
     // updateOptions, not updateSeries: apexcharts 5's updateSeries fast path replots the lines without redrawing the axes or legend
-    this.chart.updateOptions({ series: this.series });
+    void this.chart.updateOptions({ series: this.series });
     this.timeOuts.push(
       setTimeout(() => {
         this.updateChart();
@@ -189,7 +189,7 @@ export class DoubleLineGraphComponent implements OnInit, OnDestroy {
         ],
         ...this.options()
       });
-      this.chart.render();
+      void this.chart.render();
       this.updateChart();
     }, 100);
   }

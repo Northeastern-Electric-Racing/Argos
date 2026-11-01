@@ -5,6 +5,9 @@ import {
   ApexChart,
   ApexFill,
   ApexTitleSubtitle,
+  ApexStroke,
+  ApexLegend,
+  ApexDataLabels,
   NgApexchartsModule
 } from 'ng-apexcharts';
 import Theme from 'src/services/theme.service';
@@ -16,6 +19,10 @@ export type ChartOptions = {
   plotOptions: ApexPlotOptions;
   fill: ApexFill;
   title: ApexTitleSubtitle;
+  colors: string[];
+  stroke: ApexStroke;
+  legend: ApexLegend;
+  dataLabels: ApexDataLabels;
 };
 
 @Component({
@@ -37,8 +44,7 @@ export default class PieChartComponent implements OnInit {
   private labels = computed(() => this.data().map((item) => item.name), {
     equal: (a, b) => a.length === b.length && a.every((name, i) => name === b[i])
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public chartOptions = computed<Partial<ChartOptions> | any>(() => {
+  public chartOptions = computed<Partial<ChartOptions>>(() => {
     const labels = this.labels();
 
     if (labels.length === 0) {
@@ -61,11 +67,6 @@ export default class PieChartComponent implements OnInit {
         foreColor: '#ffffff',
         animations: {
           enabled: false
-        }
-      },
-      dataLabels: {
-        style: {
-          offset: -10
         }
       },
       labels,

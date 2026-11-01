@@ -18,7 +18,7 @@ export default class MoreDetailsComponent {
   goToGraph = () => {
     const runId = this.storage.getCurrentRunId().value;
     if (runId) {
-      this.router.navigate([`graph/true/${runId}`]);
+      void this.router.navigate([`graph/true/${runId}`]);
     } else {
       this.showRouterDisconnectedToast();
     }
