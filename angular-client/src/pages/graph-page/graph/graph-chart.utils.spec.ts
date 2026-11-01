@@ -3,7 +3,6 @@ import {
   buildCsv,
   buildTimeTicks,
   buildYScales,
-  computeDataSpan,
   formatTimeTick,
   formatTooltipTime,
   HOVER_REACH_PERIODS,
@@ -127,32 +126,6 @@ describe('graph-chart utils', () => {
         [-5, 10]
       ]);
       expect([unlimited.min, unlimited.max]).toEqual([undefined, undefined]);
-    });
-  });
-
-  describe('computeDataSpan', () => {
-    it('spans the earliest to the latest point across series, and is null with no points', () => {
-      const span = computeDataSpan(
-        new Map([
-          [
-            'A 0',
-            [
-              { x: 5, y: 0 },
-              { x: 20, y: 0 }
-            ]
-          ],
-          [
-            'B 0',
-            [
-              { x: 2, y: 0 },
-              { x: 9, y: 0 }
-            ]
-          ]
-        ])
-      );
-
-      expect(span).toEqual({ minX: 2, maxX: 20, spanMs: 18 });
-      expect(computeDataSpan(new Map([['A 0', []]]))).toBeNull();
     });
   });
 

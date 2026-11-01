@@ -38,8 +38,6 @@ const THEME_OUTLINE = '#8fcadd'; // light blue
 
 type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
 
-type DataSpan = { minX: number; maxX: number; spanMs: number };
-
 /** A series' name for people: a single-value topic's series is "<topic> 0", so it goes by the topic alone. */
 function seriesTitle(key: string): string {
   return key.replace(/ 0$/, '');
@@ -94,19 +92,6 @@ export function buildYScales(
   return scales;
 }
 
-/** Earliest and latest x across every series; series are kept sorted by x, so endpoints are the extrema. */
-export function computeDataSpan(data: Map<string, GraphData[]>): DataSpan | null {
-  let minX = Infinity;
-  let maxX = -Infinity;
-  for (const points of data.values()) {
-    if (points.length === 0) continue;
-    if (points[0].x < minX) minX = points[0].x;
-    if (points[points.length - 1].x > maxX) maxX = points[points.length - 1].x;
-  }
-  if (!isFinite(minX) || !isFinite(maxX)) return null;
-  return { minX, maxX, spanMs: maxX - minX };
-}
-
 /** A CSV field, quoted when it holds a comma, a quote or a line break. */
 const csvField = (value: string): string => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
 
@@ -143,6 +128,8 @@ const DAY_MS = 24 * HOUR_MS;
 const MAX_X_TICKS = 6;
 /** Day steps stretch to 8 intervals, so every midnight of a week's range (an hour longer across DST's end) is a tick. */
 const MAX_DAY_TICKS = 8;
+/** The narrowest x window: a lone point gets this much axis, and zooming stops here. */
+export const MIN_X_RANGE_MS = SECOND_MS;
 
 const TIME_STEPS_MS = [
   ...[1, 2, 5, 10, 20, 50, 100, 200, 500],
@@ -596,7 +583,7 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
           onPanComplete: ({ chart }) => hideCursor(chart)
         },
         // Bounds drag, ctrl-wheel and pinch zoom alike
-        limits: { x: { minRange: 1000 } }
+        limits: { x: { minRange: MIN_X_RANGE_MS } }
       }
     }
   };

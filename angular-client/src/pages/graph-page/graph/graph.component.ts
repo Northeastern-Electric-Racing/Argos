@@ -33,9 +33,9 @@ import {
   buildBaseOptions,
   buildCsv,
   buildYScales,
-  computeDataSpan,
   cursorPlugin,
   cursorPositioner,
+  MIN_X_RANGE_MS,
   nearestPerSeries,
   SERIES_COLORS,
   SeriesDataset,
@@ -63,16 +63,7 @@ function download(href: string, extension: string): void {
   // Register only what the line chart uses, so the rest of Chart.js tree-shakes out
   providers: [
     provideCharts({
-      registerables: [
-        LineController,
-        LineElement,
-        PointElement,
-        LinearScale,
-        Tooltip,
-        Legend,
-        Decimation,
-        zoomPlugin
-      ]
+      registerables: [LineController, LineElement, PointElement, LinearScale, Tooltip, Legend, Decimation, zoomPlugin]
     })
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -206,38 +197,36 @@ export default class CustomGraphComponent implements OnDestroy {
     const colors = chart.data.datasets.map((dataset) => dataset.borderColor as string);
     Object.assign(scales, buildYScales(keys, multipleYAxes, config, colors));
 
-    const span = computeDataSpan(this.data);
-    this.hasData.set(!!span);
+    const series = Array.from(this.data.values()).filter((points) => points.length > 0);
+    const hasData = series.length > 0;
+    this.hasData.set(hasData);
     // Hidden with no data (the empty state says why), but kept when every series is hidden from the legend,
     // which 'auto' would also blank. Per-series axes stay 'auto' so a hidden series takes its axis with it.
-    scales['x']!.display = !!span;
-    if (!multipleYAxes) scales['y']!.display = !!span;
+    const x = scales['x']!;
+    x.display = hasData;
+    if (!multipleYAxes) scales['y']!.display = hasData;
 
-    // Only constrain the x-axis range in real-time mode, and not while the user is zoomed in or mid-gesture
-    // (a drag-zoom box maps to the times under it on release); historical mode auto-fits all data
+    // The x window: the live range back from the latest point in real-time mode, all data in historical mode, and
+    // never under MIN_X_RANGE_MS (Chart.js would pad a lone point by 5% of its epoch value). Set as the scale's
+    // min/max rather than left to Chart.js: the y-axes fit, and decimation runs, only within those. Held while zoomed
+    // or mid-gesture, where a drag-zoom box maps to the times under it on release.
     if (!this.zoomed() && !chart.isZoomingOrPanning()) {
-      let effectiveRange: number | undefined = undefined;
-      if (this.realTime()) {
-        effectiveRange = config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
-      }
-      const x = scales['x']!;
-      if (!span) {
-        x.min = undefined;
-        x.max = undefined;
-      } else {
-        // Pin both ends to the data: left unset, Chart.js rounds linear bounds out to the next "nice" tick,
-        // leaving up to a tick step of empty axis past the latest point
-        x.min = effectiveRange !== undefined ? span.maxX - effectiveRange : span.minX;
-        x.max = span.maxX;
-        if (x.min === x.max) {
-          // A single point: give it a second of width (Chart.js would otherwise pad by 5% of the epoch value)
-          x.min -= 500;
-          x.max += 500;
-        }
-      }
+      // Series are kept sorted by x, so their ends bound the data
+      const max = Math.max(...series.map((points) => points.at(-1)!.x));
+      const min = Math.min(...series.map((points) => points[0].x));
+      const range = Math.max(this.liveRangeMs() ?? max - min, MIN_X_RANGE_MS);
+      x.min = hasData ? max - range : undefined;
+      x.max = hasData ? max : undefined;
     }
 
     chart.update('none');
+  }
+
+  /** The real-time window's length, or undefined in historical mode, which fits all data. */
+  private liveRangeMs(): number | undefined {
+    if (!this.realTime()) return undefined;
+    const config = this.graphConfig();
+    return config.rangeMode === 'time' ? config.timeRangeMs : this.timeRangeMs;
   }
 
   graphInfoCallback = (info: GraphInfo) => {
