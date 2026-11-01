@@ -18,10 +18,21 @@ beforeEach(() => {
   TestBed.configureTestingModule({
     providers: [provideZonelessChangeDetection(), MessageService, DialogService, ChipFaultPipe]
   });
+  // Unit tests never reach the network: a component that fetches on init (e.g. the run list) would
+  // otherwise send a real request, and its late rejection lands in whichever spec runs next. Keep
+  // fetch pending, as an unanswered request; a spec that needs data mocks its src/api function.
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => new Promise(() => {}))
+  );
 });
 
 // Jasmine removed every spy after each spec; Vitest keeps vi.spyOn spies until restored, and the
 // builder runs spec files in one shared environment, so restore them here to keep specs isolated.
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  // localStorage is shared by every spec file in the run; clear it so presets saved by one spec
+  // don't change what the next one loads.
+  localStorage.clear();
 });
