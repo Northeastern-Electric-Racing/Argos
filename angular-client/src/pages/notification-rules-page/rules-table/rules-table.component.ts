@@ -17,6 +17,7 @@ import {
   subscribeToRules,
   unsubscribeFromRules
 } from 'src/api/rules.api';
+import { topicBreakParts } from 'src/utils/topic.utils';
 import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
 
 @Component({
@@ -49,10 +50,7 @@ export class RulesTableComponent implements OnInit {
     { initialValue: false }
   );
 
-  /** BMS/Status/Temp_Average -> BMS/, Status/, Temp_Average, so a narrow column breaks after the slashes */
-  topicParts(topic: string): string[] {
-    return topic.split(/(?<=\/)/);
-  }
+  protected readonly topicParts = topicBreakParts;
 
   constructor() {
     effect(() => {

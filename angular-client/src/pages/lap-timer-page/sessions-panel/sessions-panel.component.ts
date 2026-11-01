@@ -53,6 +53,8 @@ export default class SessionsPanelComponent {
   }
 
   openSessionMenu(event: Event, session: LapSession): void {
+    // The row's actions button, where focus returns after a confirm the menu started
+    const trigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
     this.sessionMenuItems.set([
       { label: 'Rename', icon: 'pi pi-pencil', command: () => this.startEdit(session) },
       { label: 'Download CSV', icon: 'pi pi-download', command: () => this.onDownload(session.id) },
@@ -61,7 +63,7 @@ export default class SessionsPanelComponent {
         label: 'Delete',
         icon: 'pi pi-trash',
         styleClass: 'menu-item-danger',
-        command: () => this.onDeleteSession(session)
+        command: () => this.onDeleteSession(session, trigger)
       }
     ]);
     this.sessionMenu().toggle(event);
@@ -119,7 +121,7 @@ export default class SessionsPanelComponent {
     this.timer.selectSession(id);
   };
 
-  onDeleteSession = (session: LapSession) => {
+  onDeleteSession = (session: LapSession, trigger?: HTMLElement) => {
     if (session.laps.length === 0) {
       this.timer.deleteSession(session.id);
       this.toast('success', 'Session deleted', `"${session.name}"`);
@@ -127,6 +129,7 @@ export default class SessionsPanelComponent {
     }
     this.confirmationService.confirm({
       message: `Delete "${session.name}" and its ${session.laps.length} laps?`,
+      target: trigger,
       header: 'Delete Session',
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',

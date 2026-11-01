@@ -108,6 +108,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Long topics and value lists break rather than push the table past a phone screen */
+td.col-topic,
+td.col-values {
+  overflow-wrap: anywhere;
+}
+
 .col-time {
   width: 12%;
   font-family: 'Roboto Mono', 'Menlo', monospace;
@@ -118,6 +124,19 @@
 .col-actions {
   width: 8%;
   text-align: right;
+}
+
+/* Small caps-style column headings, as before the PrimeNG move; the cells are this template's own, so no ::ng-deep */
+th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+th.col-time {
+  font-family: inherit;
+  font-size: 0.75rem;
 }
 
 /* Table colors are datatable tokens in src/theme/argos-preset.ts; only unread emphasis is local */
@@ -145,5 +164,9 @@
 
   .col-time {
     font-size: 0.75rem;
+  }
+
+  td {
+    font-size: 0.8rem;
   }
 }

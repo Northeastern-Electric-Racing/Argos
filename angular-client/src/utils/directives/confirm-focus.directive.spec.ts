@@ -49,4 +49,18 @@ describe('ConfirmFocusDirective', () => {
 
     expect(document.activeElement).not.toBe(opener);
   });
+
+  // A popup menu item asks for confirmation; the focused menu is gone by the time the dialog closes
+  it('falls back to the confirmation target when the focused element is gone', () => {
+    const menu = document.createElement('ul');
+    menu.innerHTML = '<li tabindex="0">Delete</li>';
+    document.body.appendChild(menu);
+    (menu.firstElementChild as HTMLElement).focus();
+
+    confirmation.confirm({ message: 'Delete this session?', target: opener });
+    menu.remove();
+    dialog.onReject();
+
+    expect(document.activeElement).toBe(opener);
+  });
 });

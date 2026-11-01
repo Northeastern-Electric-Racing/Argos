@@ -26,7 +26,13 @@
     </div>
   } @else {
     <div class="log-table-wrapper">
-      <p-table [value]="entries()" stripedRows [scrollable]="true" scrollHeight="flex">
+      <p-table
+        [value]="entries()"
+        stripedRows
+        [scrollable]="true"
+        scrollHeight="flex"
+        [size]="compact() ? 'small' : undefined"
+      >
         <ng-template #header>
           <tr>
             <th class="col-rule">Rule ID</th>
@@ -44,7 +50,13 @@
                 {{ entry.notification.id }}
               </span>
             </td>
-            <td class="col-topic">{{ entry.notification.topic }}</td>
+            <td class="col-topic">
+              <!-- Line breaks go after slashes first -->
+              @for (part of topicParts(entry.notification.topic); track $index) {
+                <span>{{ part }}</span
+                ><wbr />
+              }
+            </td>
             <td class="col-values">{{ entry.notification.values.join(', ') }}</td>
             <td class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
             <td class="col-actions">

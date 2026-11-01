@@ -2,6 +2,9 @@ import { BMS_CONFIG } from './bms.config';
 import { Chip, chipToString, Segment } from './bms.utils';
 import { CarCommand, CarCommandRow, DataType } from './types.utils';
 
+/** BMS/Status/Temp_Average -> BMS/, Status/, Temp_Average, so a narrow column can break after each slash */
+export const topicBreakParts = (topic: string): string[] => topic.split(/(?<=\/)/);
+
 // Group MQTT datatypes under the Calypso/Bidir namespace into per-command
 // structures. Row label is the last topic segment; title is the one before.
 export const groupCarCommands = (dataTypes: DataType[]): CarCommand[] => {
