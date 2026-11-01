@@ -76,7 +76,9 @@ rules:
     hint: "call {sink_symbol} directly, where static tools can follow it (no dynamic import, getattr or callback in between)"
     kind: trace
     capability: runtime-trace
-    when: {check: unexplained, category: [network-write, db-write, network, auth, storage]}
+    # ARGOS: new effects only. The trace compares per-test occurrence counts too, and some Argos specs record a
+    # varying count of the same effect run to run (graph-sidebar-mobile: 3, 5 or 8 preset writes on one commit).
+    when: {check: unexplained, category: [network-write, db-write, network, auth, storage], state: [new]}
     on_unknown: warn
     verdict: fail
   - id: new-runtime-effect
@@ -85,7 +87,7 @@ rules:
     hint: "check that the new {noun} is intended, and cover it with a test that asserts it"
     kind: trace
     capability: runtime-trace
-    when: {check: effect, category: [network-write, db-write, network, auth, storage]}
+    when: {check: effect, category: [network-write, db-write, network, auth, storage], state: [new]}   # ARGOS: see above
     verdict: warn
   - id: runtime-exec
     category: blind-spots

@@ -101,12 +101,15 @@ private int effectIndex(Function owner, string api, string phase, Function fn) {
 
 /** An effect root: `<owner>>effect`, `<owner>>afterNextRender.write`, `<owner>>effect#2`, ... */
 private predicate effectRoot(Function fn, string qualname) {
-  exists(DataFlow::CallNode call, string api, string phase, Function owner, string oq, int n |
+  exists(DataFlow::CallNode call, string api, string phase, Function owner, string oq, int n, string suffix |
     effectCallback(call, api, fn, phase) and
     owner = plainOwner(call.getContainer()) and
     plainRow(owner, oq) and
     n = effectIndex(owner, api, phase, fn) and
-    qualname = oq + ">" + api + phase + (if n = 1 then "" else "#" + n.toString())
+    // ARGOS: AGLint's template wrote `(if n = 1 then "" else "#" + n.toString())`, which CodeQL 2.27.3 does not
+    // compile; same meaning, as a formula. Drop this edit once AGLint's template has the fix.
+    (n = 1 and suffix = "" or n > 1 and suffix = "#" + n.toString()) and
+    qualname = oq + ">" + api + phase + suffix
   )
 }
 
