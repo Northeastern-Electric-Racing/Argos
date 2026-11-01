@@ -22,23 +22,23 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
  * lightened to #9B87F5: as multi-axis tick text it was 3.8:1 on the page background, under WCAG AA's 4.5:1.
  */
 export const SERIES_COLORS = [
-  '#008FFB',
-  '#00E396',
-  '#FEB019',
-  '#FF4560',
-  '#9B87F5',
-  '#00D9E9',
-  '#FF66C3',
-  '#C7F464',
-  '#F86624',
-  '#A5978B'
+  '#008FFB', // blue
+  '#00E396', // green
+  '#FEB019', // amber
+  '#FF4560', // red
+  '#9B87F5', // violet
+  '#00D9E9', // cyan
+  '#FF66C3', // pink
+  '#C7F464', // lime
+  '#F86624', // orange
+  '#A5978B' // taupe
 ];
 
-const TICK_COLOR = '#fff';
-const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
+const TICK_COLOR = '#fff'; // white
+const GRID_COLOR = 'rgba(255, 255, 255, 0.1)'; // white at 10%, faint on the dark page
 /** The app's dark-teal surface and light-blue outline, as on its toolbar buttons. */
-const THEME_SURFACE = '#0c2026';
-const THEME_OUTLINE = '#8fcadd';
+const THEME_SURFACE = '#0c2026'; // dark teal
+const THEME_OUTLINE = '#8fcadd'; // light blue
 
 type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
 
