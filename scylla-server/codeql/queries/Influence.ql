@@ -22,6 +22,16 @@ predicate entrypoint(Function h) {
   (h.getCanonicalPath().regexpMatch("(.*::)?(api|handlers|routes|controllers)::.*") or h.getName().getText() = "main")
 }
 
+/** `l` is a library function performing a `kind` sink that `f` reaches (`librarySink` of an app function it reaches). */
+predicate librarySinkOf(Function f, string kind, string l) {
+  exists(Function g, Callable h |
+    reachesSink(f, kind, g) and
+    reaches(f, h) and
+    (h = g or h.(ClosureExpr).getEnclosingCallable+() = g) and
+    librarySink(h, kind, l)
+  )
+}
+
 from Function f, string msg
 where
   appFunction(f) and
@@ -30,6 +40,6 @@ where
     msg =
       symbol(f) + " => [" + kind + "] via {" + concat(Function g | reachesSink(f, kind, g) | symbol(g), ", ") +
         concat(Function v | exists(Function g | reachesSink(f, kind, g) and vendorCallee(g, v)) | ", " + symbol(v)) +
-        "}; entrypoints {" + concat(Function h | entrypoint(h) and reaches(h, f) | symbol(h), ", ") + "}"
+        concat(string l | librarySinkOf(f, kind, l) | ", " + l) + "}; entrypoints {" + concat(Function h | entrypoint(h) and reaches(h, f) | symbol(h), ", ") + "}"
   )
 select f, msg

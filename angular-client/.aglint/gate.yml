@@ -11,7 +11,7 @@ required_tools: [codeql, codeql-purity, oxlint-new, eslint, sheriff, depcruise-n
                  io-trace, behavior-auto]
 on_missing_tool: fail
 rules:
-  # v2: purity-label-changed goes BEFORE v2-inventory, which must stay the FIRST catch-all finding rule for io-trace /
+  # v2: purity-label-changed and purity-new-effect go BEFORE v2-inventory, which must stay the FIRST catch-all finding rule for io-trace /
   # codeql-purity rows (they are claimed here, so the v1 finding rules below never see them).
   - id: purity-label-changed     # a function's purity label, effect set or unresolved set changed (codeql-purity)
     category: blind-spots
@@ -20,6 +20,14 @@ rules:
     kind: finding
     capability: purity
     when: {tool: [codeql-purity], state: [changed]}
+    verdict: warn
+  - id: purity-new-effect        # a function the change adds that writes to the DB or the network, or uses auth or storage
+    category: blind-spots
+    title: "New function with an effect"
+    hint: "check that the new {fn} is meant to have this effect, and route it through the reviewed data or client layer if the project has one"
+    kind: finding
+    capability: purity
+    when: {tool: [codeql-purity], state: [new], effect: [db-write, network*, auth, storage]}
     verdict: warn
   - id: v2-inventory
     category: outcomes

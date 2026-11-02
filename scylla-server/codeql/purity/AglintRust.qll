@@ -219,6 +219,52 @@ predicate vendorCallee(Callable f, Function v) {
   exists(Call c | c.getEnclosingCallable() = f and v = c.getStaticTarget()) and vendorFile(v.getFile())
 }
 
+/**
+ * The crate-led path of a function outside the source tree, as trust.yml `package` rules match it:
+ * `<diesel_async::run_query_dsl::RunQueryDsl>::get_result` and `<_ as ...RunQueryDsl>::get_result` ->
+ * `diesel_async::run_query_dsl::RunQueryDsl::get_result`; `std::fs::write` stays as it is.
+ */
+string libraryPath(Function t) {
+  exists(string cp, string rx | cp = t.getCanonicalPath() and rx = "<(?:[^<>]* as )?([^<> ]+?)(?:<[^<>]*>)?>::.*" |
+    result = cp.regexpCapture(rx, 1) + "::" + t.getName().getText()
+    or
+    not cp.regexpMatch(rx) and result = cp
+  )
+}
+
+/**
+ * A library function (a registry crate or std, outside the source tree) that performs a direct sink of `kind` in `f`,
+ * by its `libraryPath`: the static target of the call a model-pack sink is an argument or the receiver of, or of a
+ * Diesel run call. A run call on a `table!` struct has no target: it is named `diesel::query_dsl::RunQueryDsl::<m>`.
+ * The influence rows name it last in `via`, so the crate's trust tier (and its outcome's `sink_tier`) is on the path.
+ */
+predicate librarySink(Callable f, string kind, string name) {
+  exists(Call c, Function t |
+    c.getEnclosingCallable() = f and
+    t = c.getStaticTarget() and
+    not appFile(t.getFile()) and
+    not vendorFile(t.getFile()) and
+    name = libraryPath(t)
+  |
+    exists(DataFlow::Node n |
+      sinkNode(n, kind) and
+      kind.matches("aglint-%") and
+      n.(N::Node).getCfgScope() = f and
+      not dieselRunOperand(n) and
+      n.getLocation().toString() = c.getAnArgument().getLocation().toString()
+    )
+    or
+    dieselRun(c, kind)
+  )
+  or
+  exists(MethodCallExpr mc |
+    dieselRun(mc, kind) and
+    mc.getEnclosingCallable() = f and
+    not exists(mc.getStaticTarget()) and
+    name = "diesel::query_dsl::RunQueryDsl::" + mc.getIdentifier().getText()
+  )
+}
+
 /** `f` reaches an app function with a direct sink of `kind`; `g` is that function. */
 predicate reachesSink(Function f, string kind, Function g) {
   appFunction(g) and
