@@ -14,11 +14,40 @@ capabilities:
   blind-spots: {}
   purity: {}
   outcomes-static: {}
-  # runtime-trace is off: it would prove nothing here. Postgres runs (the 8 DB-backed tests in tests/integration pass
-  # against it), but (1) that target is `test = false` in Cargo.toml and the recorder builds with `cargo test --no-run`,
-  # so `test_targets: [integration]` matches no binary; (2) with it built anyway, the recorder saw 0 events in 8 tests:
-  # diesel-async sends SQL inside Postgres protocol messages (`P...INSERT ...`), which its SQL match does not read, from
-  # the spawned drive_connection task, whose stack has no src/ frame; (3) the unit tests make no DB or network call.
+  # runtime-trace traces only the DB-backed tests (tests/integration, `test = false`; the unit tests make no DB or
+  # network call). The tests read DATABASE_URL from the environment `aglint check` runs in, and they WIPE that database,
+  # so point it at a throwaway one, not the dev stack's odyssey-db on 5432:
+  #   DATABASE_URL=postgresql://postgres:password@127.0.0.1:5433/postgres aglint check --root scylla-server
+  # setup reuses a Postgres already listening on DATABASE_URL's port (a CI service container); otherwise it starts one
+  # there, with docker (compose's postgres:17.2) when its daemon answers, else a throwaway cluster from the local Postgres
+  # binaries (pg_config --bindir; as root through `runuser -u postgres`) under /tmp/aglint-trace-pg. The tests wait for
+  # it and migrate it themselves. teardown stops only what setup started. Inline, not a script in the repo: setup also
+  # runs in the base tree, which may predate it.
+  runtime-trace:
+    test_targets: [integration]
+    setup: |
+      : "${DATABASE_URL:?set DATABASE_URL to a throwaway database, e.g. postgresql://postgres:password@127.0.0.1:5433/postgres}"
+      port=$(printf %s "$DATABASE_URL" | sed -nE 's#^[^@]*@[^:/]+:([0-9]+).*#\1#p')
+      port=${port:-5432}; D=/tmp/aglint-trace-pg
+      up() { (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; }
+      up && exit 0
+      if docker info >/dev/null 2>&1; then
+        docker run -d --rm --name aglint-trace-db -e POSTGRES_HOST_AUTH_METHOD=trust -p "127.0.0.1:$port:5432" postgres:17.2 >/dev/null || exit 1
+      else
+        B=$(pg_config --bindir) || exit 1; as=; [ "$(id -u)" = 0 ] && as="runuser -u postgres --"
+        rm -rf "$D" && mkdir -p "$D" && { [ -z "$as" ] || chown postgres "$D"; } || exit 1
+        $as "$B/initdb" -D "$D/data" -U postgres --auth=trust >/dev/null || exit 1
+        $as "$B/pg_ctl" -D "$D/data" -l "$D/log" -w -o "-p $port -k $D -c listen_addresses=127.0.0.1" start >/dev/null || exit 1
+      fi
+      for _ in $(seq 60); do up && exit 0; sleep 1; done; exit 1
+    teardown: |
+      D=/tmp/aglint-trace-pg
+      if docker info >/dev/null 2>&1; then docker rm -f aglint-trace-db >/dev/null 2>&1; fi
+      if [ -f "$D/data/postmaster.pid" ]; then
+        as=; [ "$(id -u)" = 0 ] && as="runuser -u postgres --"
+        $as "$(pg_config --bindir)/pg_ctl" -D "$D/data" -m fast stop >/dev/null
+      fi
+      rm -rf "$D"; exit 0
   behaviour: {}
   perf: {}
   tests: {}
@@ -35,7 +64,7 @@ app:
   # init guarded tower-http by its name (http); it is server middleware, not an effect crate (trust.yml)
   guarded: []
 # Portable tool paths: a bare name is looked up on PATH when AGLint runs (the Rust toolchain with clippy, CodeQL with
-# codeql/rust-all@0.2.24, ast-grep; runtime-trace would add strace and binutils). `aglint doctor` names any that are
+# codeql/rust-all@0.2.24, ast-grep, and strace plus binutils for runtime-trace). `aglint doctor` names any that are
 # missing, `aglint tools install` prints their install lines. The cargo build needs libpq (libpq-dev) for diesel.
 tools:
   cargo:
@@ -53,6 +82,15 @@ tools:
   codeql:
     path: codeql
     group: codeql
+  strace:
+    path: strace
+    group: trace
+  addr2line:
+    path: addr2line
+    group: trace
+  readelf:
+    path: readelf
+    group: trace
 native:
   clippy: clippy.toml
   layers: layers.toml
