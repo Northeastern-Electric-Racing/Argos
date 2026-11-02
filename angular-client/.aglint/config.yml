@@ -27,7 +27,7 @@ app:
   roots:
   - src
   vendor_roots: []
-  # the specs sit next to their code (src/**/*.spec.ts) and `ng test` runs all of them; nothing reads this list on angular
+  # the specs sit next to their code (src/**/*.spec.ts), so init folds them into the app root; `ng test` runs them all
   test_dirs:
   - src
   guarded: []
@@ -94,4 +94,3 @@ outputs:
   - sarif
 cache_dir: .aglint/cache
 warn_exit: 4
-parallel: true
