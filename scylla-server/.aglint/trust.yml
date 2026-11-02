@@ -151,7 +151,14 @@ outcomes:
     - runtime:db DELETE *
     - runtime:db MERGE *
     - runtime:db REPLACE *
-    sink_tier: low
+    # ARGOS: medium, not the template's low. src/services/ is the reviewed DB chokepoint, and clippy.toml bans
+    # Diesel's query calls everywhere else (new-banned-api FAILs a direct write in a controller). With low, every path
+    # through a Diesel sink was LOW, so a new handler that only calls an existing run_service write FAILed
+    # new-weak-path-db-write: the influence row of a function names the library sink beside the wrapper it goes through
+    # (`new_run_at => [aglint-db-write] via {run_service.rs#create_run, diesel_async::...::get_result}`), so no trust
+    # rule or sanitizer on src/services/ can lift it. With medium, diesel and diesel-async's own tier (medium) decides,
+    # and a new DB-writing function is still a purity-new-effect WARN.
+    sink_tier: medium
   db-read:
     aliases:
     - aglint-db-read
