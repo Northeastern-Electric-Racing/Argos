@@ -106,8 +106,7 @@ private predicate effectRoot(Function fn, string qualname) {
     owner = plainOwner(call.getContainer()) and
     plainRow(owner, oq) and
     n = effectIndex(owner, api, phase, fn) and
-    // ARGOS: AGLint's template wrote `(if n = 1 then "" else "#" + n.toString())`, which CodeQL 2.27.3 does not
-    // compile; same meaning, as a formula. Drop this edit once AGLint's template has the fix.
+    // a formula, not an `if` term: CodeQL 2.27 has no if-then-else expressions
     (n = 1 and suffix = "" or n > 1 and suffix = "#" + n.toString()) and
     qualname = oq + ">" + api + phase + suffix
   )

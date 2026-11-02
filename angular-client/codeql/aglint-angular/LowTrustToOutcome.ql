@@ -10,6 +10,14 @@
 import javascript
 import AglintAngular
 
+/**
+ * Files where a LOW-trust value may reach an outcome because that is their job, such as the interceptor that attaches
+ * the auth SDK's token to the app's own API requests. Rows (`- ["src/app/auth/auth.interceptor.ts"]`, exact
+ * repo-relative paths) live in models/low-trust-barriers.model.yml; there are none by default. List files, never a
+ * pattern such as every `*.interceptor.ts`: a new file that sends the token elsewhere must still be reported.
+ */
+extensible predicate aglintLowTrustBarrier(string file);
+
 module Cfg implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node n) { Aglint::lowTrustSource(n) }
   predicate isSink(DataFlow::Node n) {
@@ -17,10 +25,8 @@ module Cfg implements DataFlow::ConfigSig {
   }
   predicate isAdditionalFlowStep(DataFlow::Node a, DataFlow::Node b) { Aglint::step(a, b, _) }
   predicate isBarrier(DataFlow::Node n) {
-    // PROJECT-SPECIFIC: the sanctioned uses, by exact path (the auth interceptor attaching the bearer token to /api
-    // requests). Edit this list for your project; never widen it to a pattern such as `%.interceptor.ts`, or a new
-    // interceptor that sends the token elsewhere goes unreported.
-    n.getFile().getRelativePath() = ["src/app/auth/auth.interceptor.ts"]
+    // the sanctioned uses, by exact path: rows of models/low-trust-barriers.model.yml (none by default)
+    aglintLowTrustBarrier(n.getFile().getRelativePath())
   }
 }
 

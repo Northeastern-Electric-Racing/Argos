@@ -1,0 +1,7 @@
+# Barriers of LowTrustToOutcome.ql: files where a LOW-trust value may reach an outcome because that is their job (the
+# interceptor that attaches the auth SDK's token to the app's own API requests). One exact repo-relative path per row,
+# never a pattern: a new file that forwards the token elsewhere must still be reported.
+#   - ["src/app/auth/auth.interceptor.ts"]
+extensions:
+  - addsTo: { pack: aglint/angular-queries, extensible: aglintLowTrustBarrier }
+    data: []
