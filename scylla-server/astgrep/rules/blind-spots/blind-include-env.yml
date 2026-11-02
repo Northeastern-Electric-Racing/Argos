@@ -1,0 +1,16 @@
+id: blind-include-env
+language: rust
+severity: warning
+message: "`$M!` pulls in code or values at build time that static analysis of the source does not see"
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  kind: macro_invocation
+  has:
+    field: macro
+    pattern: $M
+constraints:
+  M:
+    regex: "^(std::)?(include|include_str|include_bytes|env|option_env)$"

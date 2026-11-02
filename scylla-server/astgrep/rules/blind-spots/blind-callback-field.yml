@@ -1,0 +1,17 @@
+id: blind-callback-field
+language: rust
+severity: warning
+message: "field `$N` stores a function value; calls through it are invisible to static analysis"
+note: "A struct field of fn-pointer or `dyn Fn*` type: whatever is stored there runs without a static call edge."
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  kind: field_declaration
+  has:
+    field: name
+    pattern: $N
+  any:
+    - has: {field: type, kind: function_type}
+    - has: {field: type, stopBy: end, kind: dynamic_type, regex: "Fn(Mut|Once)?\\b"}

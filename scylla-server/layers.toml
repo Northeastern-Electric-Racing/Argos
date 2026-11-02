@@ -1,0 +1,9 @@
+# AGLint crate layering, written by `aglint init` from the current workspace (checked against `cargo metadata` by the
+# runner). A crate may depend only on crates in LOWER layers (later in `order`); crates not listed are not checked. The
+# layers below are the current dependency depths, so today's graph passes; edit them to the architecture you intend.
+# A guarded crate may be a dependency only of the crates listed for it (its chokepoints). Dev-dependencies are not checked.
+[layers]
+order = [["scylla-server"]]
+
+# ARGOS: scylla-server is a single crate, so there is nothing to order; the DB chokepoint (src/services/) is in
+# clippy.toml. init also guarded tower-http here (name heuristic); it is middleware, not an effect crate.

@@ -1,0 +1,183 @@
+# AGLint core gate: rust stack (docs/design/SPEC.md section 8, SPEC-v2 section 8). Mirrors scripts/run.sh gates (cargo
+# layers, clippy banned APIs, ast-grep errors, cargo test) and adds trust propagation, the v2 trace/purity/behaviour
+# rules and the blind-spot rule. Unlike run.sh, every finding rule is diff-aware.
+version: 1
+stack: rust
+# v2 (SPEC-v2 section 8): io-trace (strace recorder), codeql-purity (always with codeql) and behavior-auto are required too.
+required_tools: [codeql, codeql-purity, clippy, cargo-layers, ast-grep, io-trace, behavior-auto]
+on_missing_tool: fail
+rules:
+  # purity-label-changed goes BEFORE v2-inventory, which must stay the FIRST catch-all finding rule for io-trace /
+  # codeql-purity rows (they are claimed here, so the v1 finding rules below never see them).
+  - id: purity-label-changed     # a function's purity label, effect set or unresolved set changed (codeql-purity)
+    category: blind-spots
+    title: "Purity label changed"
+    hint: "check that {fn} is meant to change; static analysis can no longer vouch for it as before"
+    kind: finding
+    capability: purity
+    when: {tool: [codeql-purity], state: [changed]}
+    verdict: warn
+  - id: v2-inventory
+    category: outcomes
+    title: "Runtime and purity inventory"
+    hint: "inventory only: every traced event and purity row; it never fails"
+    kind: finding
+    capability: core
+    when: {tool: [io-trace, codeql-purity]}
+    verdict: pass
+  - id: new-banned-api           # clippy disallowed_methods/types/macros (clippy.toml): a guarded API outside its chokepoint crate
+    category: boundaries
+    title: "Banned API outside its chokepoint"
+    hint: "call the chokepoint crate's wrapper instead (the clippy.toml reason names it), or move the code into that crate"
+    kind: finding
+    capability: banned-apis
+    when: {tool: [clippy], rule: ["clippy::disallowed_*"], state: [new]}
+    verdict: fail
+  - id: new-error-finding        # cargo-layers violations, ast-grep error rules (services-no-api), rustc errors
+    category: boundaries
+    title: "New error"
+    hint: "fix the finding, or suppress it with a reason in the tool's own config"
+    kind: finding
+    capability: core
+    when: {state: [new], level: [error]}
+    verdict: fail
+  - id: new-blind-spot           # blind-* ast-grep rules (fn-pointer field calls, dyn, unsafe, FFI, include!/env!, ...)
+    category: blind-spots
+    title: "New blind spot"
+    hint: "call the target directly instead of {form}, so static analysis can follow it, or review it by hand"
+    kind: finding
+    capability: blind-spots
+    when: {rule: ["blind-*"], state: [new]}
+    verdict: warn
+  - id: new-other-warning
+    category: boundaries
+    title: "New warning"
+    hint: "fix the {tool} warning, or accept it"
+    kind: finding
+    capability: core
+    when: {state: [new], level: [warning]}
+    verdict: warn
+  - id: unverified-error-finding
+    category: boundaries
+    title: "Error that cannot be compared with base"
+    hint: "re-run with a base analysis so this error can be compared, or fix it"
+    kind: finding
+    capability: core
+    when: {state: [unknown, unverified], level: [error]}
+    verdict: warn
+  # v2 trace rules (kind `trace`, SPEC-v2 section 8), before the outcome rules. Rust has no runtime import, so there is
+  # no runtime-guarded-import rule: cargo-layers (guarded-crate) and clippy own that boundary statically.
+  - id: unexplained-runtime-effect   # a recorded db/network/auth/storage effect that codeql-purity cannot explain
+    category: outcomes
+    title: "Runtime effect the code does not explain"
+    hint: "call {sink_symbol} directly, where static tools can follow it (no fn pointer, dyn callback or FFI in between)"
+    kind: trace
+    capability: runtime-trace
+    when: {check: unexplained, category: [db-write, network, auth, storage]}
+    on_unknown: warn
+    verdict: fail
+  - id: new-runtime-effect
+    category: outcomes
+    title: "New runtime effect"
+    hint: "check that the new {noun} is intended, and cover it with a test that asserts it"
+    kind: trace
+    capability: runtime-trace
+    when: {check: effect, category: [db-write, network, auth, storage]}
+    verdict: warn
+  - id: runtime-exec
+    category: blind-spots
+    title: "Runtime-started process"
+    hint: "replace the subprocess with a library call, or review it by hand"
+    kind: trace
+    capability: runtime-trace
+    when: {check: effect, category: [exec], state: [new]}
+    verdict: warn
+  - id: trace-incomplete
+    category: tool-health
+    title: "Runtime trace is incomplete"
+    hint: "fix the trace recorder setup (aglint doctor shows what is missing)"
+    kind: trace
+    capability: runtime-trace
+    when: {check: coverage}
+    verdict: warn
+  - id: pure-function-unchecked
+    category: behaviour
+    title: "Pure function not behaviour-tested"
+    hint: "add a test for {fn}, or give it plain argument types so a generator can exercise it"
+    kind: finding
+    capability: behaviour
+    when: {tool: [behavior-auto], rule: [behavior-unchecked], state: [new, unknown]}
+    verdict: warn
+  - id: new-weak-path-db-write
+    category: outcomes
+    title: "New low-trust path to a DB write"
+    hint: "route this {category} path through a reviewed wrapper, or raise the trust tier of {node} in trust.yml"
+    kind: outcome
+    capability: outcomes-static
+    when: {category: db-write, worst_below: medium, new: true}
+    verdict: fail
+  - id: new-weak-path-network
+    category: outcomes
+    title: "New low-trust path to the network"
+    hint: "route this {category} path through a reviewed wrapper, or raise the trust tier of {node} in trust.yml"
+    kind: outcome
+    capability: outcomes-static
+    when: {category: network, worst_below: medium, new: true}
+    verdict: fail
+  - id: new-weak-path-auth
+    category: outcomes
+    title: "New low-trust path to auth"
+    hint: "route this {category} path through a reviewed wrapper, or raise the trust tier of {node} in trust.yml"
+    kind: outcome
+    capability: outcomes-static
+    when: {category: auth, worst_below: medium, new: true}
+    verdict: warn
+  - id: new-weak-path-other
+    category: outcomes
+    title: "New low-trust path"
+    hint: "route this {category} path through a reviewed wrapper, or raise the trust tier of {node} in trust.yml"
+    kind: outcome
+    capability: outcomes-static
+    when: {category: [storage, exec, perf], worst_below: medium, new: true}
+    verdict: warn
+  - id: behavior-diff
+    category: behaviour
+    title: "Behaviour changed"
+    hint: "confirm the new behaviour is intended and update the tests; the counterexample above is a ready test case"
+    kind: change
+    capability: behaviour
+    when: {change_kind: [behavior]}
+    verdict: warn
+  - id: gating-step-failed
+    category: tool-health
+    title: "Gating step failed"
+    hint: "fix the failing step ({step}); its log is in the results folder"
+    kind: step
+    capability: core
+    when: {gating: true, exit_nonzero: true}
+    verdict: fail
+  - id: empty-analysis
+    category: tool-health
+    title: "Tool analysed nothing"
+    hint: "{tool} analysed no files; check its paths and config (aglint doctor)"
+    kind: run
+    capability: core
+    # diff-scoped tools legitimately analyse 0 files when nothing applicable changed
+    when: {files_analyzed: 0, exclude_tool: ["*-new", changed-lines, behavior-auto, diff-hunks]}
+    verdict: fail
+  - id: broken-run
+    category: tool-health
+    title: "Tool run is broken"
+    hint: "re-run {tool}; its output could not be read"
+    kind: run
+    capability: core
+    when: {status: [ERROR, FAILED, STALE]}
+    verdict: warn
+  - id: trust-disagreement
+    category: tool-health
+    title: "trust.yml disagrees with a tool"
+    hint: "update trust.yml to what {tool} reports, or fix the tool's config"
+    kind: trust
+    capability: core
+    when: {status: [disagree]}
+    verdict: warn

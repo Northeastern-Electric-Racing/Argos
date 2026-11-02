@@ -2,6 +2,8 @@ use chrono::serde::ts_milliseconds;
 
 pub mod controllers;
 pub mod error;
+// the DB chokepoint: the only module that may run Diesel queries (clippy.toml disallowed-methods)
+#[allow(clippy::disallowed_methods)]
 pub mod services;
 
 pub mod argos_inserter;

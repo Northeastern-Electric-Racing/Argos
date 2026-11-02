@@ -1,0 +1,10 @@
+id: blind-unsafe
+language: rust
+severity: warning
+message: "`unsafe` block: raw pointers and FFI here are outside what static analysis models"
+files: ["**/*.rs"]
+ignores: ["vendor/**", "**/tests/**"]
+metadata:
+  aglint: blind-spot
+rule:
+  kind: unsafe_block

@@ -1,0 +1,79 @@
+# AGLint project config for rust, written by `aglint init` (SPEC-v3 section 3.2).
+# Commit .aglint/; the cache/ and out/ directories are ignored.
+# capabilities: what AGLint checks besides the core (the diff and tool health); a capability not listed
+# is off. `aglint capabilities list` shows them all, docs/capabilities/<id>.md explains each.
+version: 1
+stack: rust
+root: scylla-server
+base:
+  ref: origin/develop
+  mode: merge-base
+capabilities:
+  banned-apis: {}
+  layering: {}
+  blind-spots: {}
+  purity: {}
+  outcomes-static: {}
+  # runtime-trace is off: it would prove nothing here. Postgres runs (the 8 DB-backed tests in tests/integration pass
+  # against it), but (1) that target is `test = false` in Cargo.toml and the recorder builds with `cargo test --no-run`,
+  # so `test_targets: [integration]` matches no binary; (2) with it built anyway, the recorder saw 0 events in 8 tests:
+  # diesel-async sends SQL inside Postgres protocol messages (`P...INSERT ...`), which its SQL match does not read, from
+  # the spawned drive_connection task, whose stack has no src/ frame; (3) the unit tests make no DB or network call.
+  behaviour: {}
+  perf: {}
+  tests: {}
+package_manager: cargo
+test_runner: cargo-test
+app:
+  roots:
+  - .
+  vendor_roots: []
+  test_dirs:
+  - tests
+  crates:
+  - scylla-server
+  # init guarded tower-http by its name (http); it is server middleware, not an effect crate (trust.yml)
+  guarded: []
+# Portable tool paths: a bare name is looked up on PATH when AGLint runs (the Rust toolchain with clippy, CodeQL with
+# codeql/rust-all@0.2.24, ast-grep; runtime-trace would add strace and binutils). `aglint doctor` names any that are
+# missing, `aglint tools install` prints their install lines. The cargo build needs libpq (libpq-dev) for diesel.
+tools:
+  cargo:
+    path: cargo
+    group: core
+  clippy:
+    path: cargo-clippy
+    group: lint
+  python3:
+    path: python3
+    group: core
+  ast-grep:
+    path: ast-grep
+    group: astgrep
+  codeql:
+    path: codeql
+    group: codeql
+native:
+  clippy: clippy.toml
+  layers: layers.toml
+  ast_grep: sgconfig.yml
+  codeql_queries: codeql/queries
+  codeql_models: codeql/models
+  codeql_purity: codeql/purity
+profiles:
+  fast:
+    skip_groups:
+    - codeql
+    required_tools: []
+  full:
+    skip_groups: []
+    required_tools: []
+default_profile: full
+outputs:
+  dir: .aglint/out
+  formats:
+  - md
+  - html
+  - sarif
+cache_dir: .aglint/cache
+warn_exit: 4

@@ -1,0 +1,6 @@
+# aglint purity pack (SPEC-v2 section 10): its own pack, so the directory-level analyze of codeql/queries never
+# picks Purity.ql up.
+name: aglint/rust-purity
+version: 0.0.1
+dependencies:
+  codeql/rust-all: "0.2.24"

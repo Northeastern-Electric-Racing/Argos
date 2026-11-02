@@ -1,0 +1,9 @@
+# aglint model pack for codeql/rust-all: sink kinds are AGLint outcome kinds (aglint-db-write, aglint-network, ...),
+# not the security kinds of the standard library models. A separate library pack, as CodeQL requires for extensions.
+name: aglint/rust-models
+version: 0.0.1
+library: true
+extensionTargets:
+  codeql/rust-all: "*"
+dataExtensions:
+  - "*.model.yml"

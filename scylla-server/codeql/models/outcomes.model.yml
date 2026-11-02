@@ -1,0 +1,54 @@
+# Outcome sinks (AGLint kinds), written by `aglint init` from the rust template.
+# Effect crates among the dependencies get the rows of AGLint's known-sink table, each block under a `basis:` comment
+# (diesel, diesel-async, rumqttc, socketioxide, tokio); the paths follow the crates' current layout, so check them against Cargo.lock.
+# Purity and outcomes-static see an effect only where a row names it: add rows for every crate that writes or sends.
+# Rows: [function path, input, kind, provenance].
+extensions:
+  - addsTo:
+      pack: codeql/rust-all
+      extensible: sinkModel
+    data:
+
+      # basis: dependency diesel in Cargo.toml; AGLint known-sink table (RunQueryDsl: execute writes, load / load_iter (load_stream) / first read, get_result(s) read or write by the query (insert_into / update / delete write; the purity pack reads the query chain))
+      - ["<diesel::query_dsl::RunQueryDsl>::execute", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel::query_dsl::RunQueryDsl>::get_result", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel::query_dsl::RunQueryDsl>::get_results", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel::query_dsl::RunQueryDsl>::load", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel::query_dsl::RunQueryDsl>::first", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel::query_dsl::RunQueryDsl>::load_iter", "Argument[self]", "aglint-db-read", "manual"]
+      # basis: dependency diesel-async in Cargo.toml; AGLint known-sink table (RunQueryDsl: execute writes, load / load_iter (load_stream) / first read, get_result(s) read or write by the query (insert_into / update / delete write; the purity pack reads the query chain))
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::execute", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::get_result", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::get_results", "Argument[self]", "aglint-db-write", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::load", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::first", "Argument[self]", "aglint-db-read", "manual"]
+      - ["<diesel_async::run_query_dsl::RunQueryDsl>::load_stream", "Argument[self]", "aglint-db-read", "manual"]
+      # basis: dependency rumqttc in Cargo.toml; AGLint known-sink table (AsyncClient / Client: publish, try_publish)
+      - ["<rumqttc::client::AsyncClient>::publish", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::client::AsyncClient>::try_publish", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::client::Client>::publish", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::client::Client>::try_publish", "Argument[0]", "aglint-network", "manual"]
+      # ARGOS: Argos uses rumqttc's MQTT v5 client (rumqttc::v5::AsyncClient); the known-sink table has only the v3.1.1
+      # client above, so these rows add the same functions of the v5 one (rumqttc 0.25, src/v5/client.rs)
+      - ["<rumqttc::v5::client::AsyncClient>::publish", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::v5::client::AsyncClient>::try_publish", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::v5::client::AsyncClient>::publish_bytes", "Argument[0]", "aglint-network", "manual"]
+      - ["<rumqttc::v5::client::Client>::publish", "Argument[0]", "aglint-network", "manual"]
+      # basis: dependency socketioxide in Cargo.toml; AGLint known-sink table (Socket / SocketIo / BroadcastOperators: emit)
+      - ["<socketioxide::socket::Socket>::emit", "Argument[1]", "aglint-network", "manual"]
+      - ["<socketioxide::io::SocketIo>::emit", "Argument[1]", "aglint-network", "manual"]
+      - ["<socketioxide::operators::BroadcastOperators>::emit", "Argument[1]", "aglint-network", "manual"]
+      # basis: dependency tokio in Cargo.toml; AGLint known-sink table (tokio::fs: write, remove_file, rename, create_dir_all, File::create, OpenOptions::open)
+      - ["tokio::fs::write::write", "Argument[1]", "aglint-storage", "manual"]
+      - ["tokio::fs::remove_file::remove_file", "Argument[0]", "aglint-storage", "manual"]
+      - ["tokio::fs::rename::rename", "Argument[0]", "aglint-storage", "manual"]
+      - ["tokio::fs::create_dir_all::create_dir_all", "Argument[0]", "aglint-storage", "manual"]
+      - ["<tokio::fs::file::File>::create", "Argument[0]", "aglint-storage", "manual"]
+      - ["<tokio::fs::open_options::OpenOptions>::open", "Argument[0]", "aglint-storage", "manual"]
+      - ["std::fs::write", "Argument[1]", "aglint-storage", "manual"]
+      - ["<std::fs::OpenOptions>::open", "Argument[0]", "aglint-storage", "manual"]
+      - ["std::fs::remove_file", "Argument[0]", "aglint-storage", "manual"]
+      - ["std::fs::rename", "Argument[0]", "aglint-storage", "manual"]
+      - ["<std::net::udp::UdpSocket>::send_to", "Argument[0]", "aglint-network", "manual"]
+      - ["<std::net::tcp::TcpStream>::connect", "Argument[0]", "aglint-network", "manual"]
+      - ["<std::process::Command>::new", "Argument[0]", "aglint-exec", "manual"]
