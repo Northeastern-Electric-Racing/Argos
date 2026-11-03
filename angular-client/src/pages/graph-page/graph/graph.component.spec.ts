@@ -4,7 +4,7 @@ import { Chart } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { By } from '@angular/platform-browser';
 import CustomGraphComponent from './graph.component';
-import { formatTooltipTime, nearestIndex } from './graph-chart.utils';
+import { formatTooltipDate, formatTooltipTime, nearestIndex } from './graph-chart.utils';
 import { GraphData, ObservableGraphInfo } from 'src/utils/types.utils';
 
 type GraphConfig = ReturnType<CustomGraphComponent['graphConfig']>;
@@ -522,8 +522,8 @@ describe('CustomGraphComponent (Chart.js)', () => {
 
       await hover(c, 7_500);
 
-      expect(tooltipRows(c)).toEqual(['V 0: 10']);
-      expect(c.tooltip!.title).toEqual([formatTooltipTime(10_000, 20_000)]);
+      expect(tooltipRows(c)).toEqual([`V 0: 10 (${formatTooltipTime(10_000, 20_000, false)})`]);
+      expect(c.tooltip!.title).toEqual([formatTooltipDate(10_000)]);
       expect(hoverDots(c)).toContainEqual(pixelOf(c, { x: 10_000, y: 10 }));
     });
 
@@ -539,7 +539,9 @@ describe('CustomGraphComponent (Chart.js)', () => {
         const { x } = c.scales;
         const shown = noisy[nearestIndex(noisy, x.getValueForPixel(Math.round(x.getPixelForValue(time)))!)];
 
-        expect(tooltipRows(c)).toEqual([`Noisy 0: ${shown.y.toLocaleString('en-US')}`]);
+        expect(tooltipRows(c)).toEqual([
+          `Noisy 0: ${shown.y.toLocaleString('en-US')} (${formatTooltipTime(shown.x, 20_000, false)})`
+        ]);
         expect(hoverDots(c)).toContainEqual(pixelOf(c, shown));
       }
     });
@@ -556,14 +558,14 @@ describe('CustomGraphComponent (Chart.js)', () => {
       });
 
       await hover(c, t0 + 10_000);
-      expect(tooltipRows(c)).toEqual(['Long 0: 1']);
+      expect(tooltipRows(c)).toEqual(['Long 0: 1 (13:50:10)']);
 
       // Within two sample periods of Early's last sample and of Gappy's first stretch
       await hover(c, t0 + 5_800);
-      expect(tooltipRows(c)).toEqual(['Long 0: 1', 'Early 0: 2 (13:50:05)', 'Gappy 0: 4 (13:50:04)']);
+      expect(tooltipRows(c)).toEqual(['Long 0: 1 (13:50:06)', 'Early 0: 2 (13:50:05)', 'Gappy 0: 4 (13:50:04)']);
     });
 
-    it("titles the tooltip with the nearest sample's time, and gives a row taken at another time its own", async () => {
+    it("titles the tooltip with the nearest sample's date, and gives every row its own time", async () => {
       const t0 = new Date(2026, 9, 17, 13, 50, 0).getTime();
       // A samples on whole seconds, B 700 ms later
       const c = await render({
@@ -572,13 +574,35 @@ describe('CustomGraphComponent (Chart.js)', () => {
 
       // Nearest samples: A at :02 (200 ms off), B at :01.700 (100 ms off)
       await hover(c, t0 + 1_800);
-      expect(c.tooltip!.title).toEqual(['10/17/2026, 13:50:01']);
-      expect(tooltipRows(c)).toEqual(['A 0: 1 (13:50:02)', 'B 0: 2']);
+      expect(c.tooltip!.title).toEqual(['10/17/2026']);
+      expect(tooltipRows(c)).toEqual(['A 0: 1 (13:50:02)', 'B 0: 2 (13:50:01)']);
 
       // Nearest samples: A at :05 and B at :05.700, both 13:50:05 to the second
       await hover(c, t0 + 5_300);
-      expect(c.tooltip!.title).toEqual(['10/17/2026, 13:50:05']);
-      expect(tooltipRows(c)).toEqual(['A 0: 1', 'B 0: 2']);
+      expect(c.tooltip!.title).toEqual(['10/17/2026']);
+      expect(tooltipRows(c)).toEqual(['A 0: 1 (13:50:05)', 'B 0: 2 (13:50:05)']);
+    });
+
+    it("keeps the date of a row taken on another day than the title's", async () => {
+      const midnight = new Date(2026, 9, 18, 0, 0, 0).getTime();
+      const c = await render({
+        valuesSubject: [
+          topic('A', [
+            { x: midnight - 3_000, y: 1 },
+            { x: midnight - 1_000, y: 1 }
+          ]),
+          topic('B', [
+            { x: midnight + 500, y: 2 },
+            { x: midnight + 3_000, y: 2 }
+          ])
+        ]
+      });
+
+      // A's nearest sample is 23:59:59 on the 17th, B's 00:00:00.500 on the 18th, the nearest to the pointer
+      await hover(c, midnight - 100);
+      expect(c.tooltip!.title).toEqual(['10/18/2026']);
+      expect(tooltipRows(c)[0]).toMatch(/^A 0: 1 \(10\/17\/2026, 23:59:59/);
+      expect(tooltipRows(c)[1]).toMatch(/^B 0: 2 \(00:00:00/);
     });
 
     it('flips the tooltip at the right edge by the size of what it now shows', async () => {
@@ -596,7 +620,7 @@ describe('CustomGraphComponent (Chart.js)', () => {
         ]
       });
       await hover(c, 2_000);
-      expect(tooltipRows(c)).toEqual(['V 0: 1']);
+      expect(tooltipRows(c)).toEqual([`V 0: 1 (${formatTooltipTime(0, 20_000, false)})`]);
 
       // Room for the narrow tooltip on the cursor's right, but not for the wide one that now shows
       const time = c.scales['x'].getValueForPixel(c.chartArea.right - 60)!;

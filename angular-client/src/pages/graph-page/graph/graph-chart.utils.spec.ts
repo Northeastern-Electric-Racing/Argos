@@ -5,6 +5,8 @@ import {
   buildYScales,
   formatTimeTick,
   formatTooltipTime,
+  formatTooltipDate,
+  formatRowTime,
   HOVER_REACH_PERIODS,
   hoverSample,
   nearestIndex,
@@ -94,6 +96,12 @@ describe('graph-chart utils', () => {
       expect(formatTooltipTime(at(13, 50, 24, 120), 30_000)).toBe('10/17/2026, 13:50:24');
       expect(formatTooltipTime(at(13, 50, 24, 120), 1_000)).toBe('10/17/2026, 13:50:24.120');
       expect(formatTooltipTime(at(13, 50, 24, 120), 1_000, false)).toBe('13:50:24.120');
+    });
+
+    it("dates a row's time only when its day differs from the title's", () => {
+      expect(formatTooltipDate(at(13, 50))).toBe('10/17/2026');
+      expect(formatRowTime(at(13, 50, 24, 120), at(13, 50, 25), 1_000)).toBe('13:50:24.120');
+      expect(formatRowTime(at(23, 59, 59), at(0, 0, 1) + 86_400_000, 30_000)).toBe('10/17/2026, 23:59:59');
     });
   });
 

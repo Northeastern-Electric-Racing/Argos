@@ -207,6 +207,19 @@ export function formatTooltipTime(value: number, axisSpanMs: number, withDate = 
   return (pickTimeStep(axisSpanMs) < SECOND_MS ? labels.millis : labels.seconds).format(value);
 }
 
+const TOOLTIP_DATE = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+/** A tooltip's date, as the title shows it. */
+export function formatTooltipDate(value: number): string {
+  return TOOLTIP_DATE.format(value);
+}
+
+/** A row's own sample time; carries its date too when that is not the title's day, so no point loses its day. */
+export function formatRowTime(value: number, titleValue: number, axisSpanMs: number): string {
+  const sameDay = formatTooltipDate(value) === formatTooltipDate(titleValue);
+  return formatTooltipTime(value, axisSpanMs, !sameDay);
+}
+
 /** An x tick label as precise as the step needs; a local midnight shows its date instead. */
 export function formatTimeTick(value: number, stepMs: number): string {
   if (isLocalMidnight(value)) return TIME_LABELS.date.format(value);
@@ -528,16 +541,13 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
         boxHeight: 12,
         boxPadding: 4,
         callbacks: {
-          // When the sample nearest the pointer was taken. Topics sample on their own clocks, so a row whose sample
-          // was taken at another time, as precisely as the title shows it, says when (see label)
+          // The date of the sample nearest the pointer; each row carries its own time (see label)
           title: (items) => {
             const [first] = items;
             if (!first) return '';
-            const { chart } = first;
-            const { min, max } = chart.scales['x'];
-            return formatTooltipTime(nearestHoveredSample(chart)?.x ?? first.parsed.x ?? 0, max - min);
+            return formatTooltipDate(nearestHoveredSample(first.chart)?.x ?? first.parsed.x ?? 0);
           },
-          // The series' hovered sample, where its hover dot sits
+          // The series' hovered sample, where its hover dot sits, and when it was taken
           label: (item) => {
             const { chart } = item;
             const cursor = cursors.get(chart);
@@ -546,8 +556,7 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
             const titleTime = nearestHoveredSample(chart)?.x;
             if (!sample || titleTime === undefined) return row;
             const span = chart.scales['x'].max - chart.scales['x'].min;
-            const sameTime = formatTooltipTime(sample.x, span) === formatTooltipTime(titleTime, span);
-            return sameTime ? row : `${row} (${formatTooltipTime(sample.x, span, false)})`;
+            return `${row} (${formatRowTime(sample.x, titleTime, span)})`;
           },
           labelPointStyle: () => ({ pointStyle: 'circle', rotation: 0 }),
           labelColor: ({ dataset }) => ({
