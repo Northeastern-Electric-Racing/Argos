@@ -20,7 +20,6 @@ export class InfoGraphComponent {
   title = input.required<string>();
   color = input.required<string>();
   subTitle = input<string | undefined>(undefined);
-  graphContainerId = input.required<string>();
   openDialog = () => {
     this.dialogService.open(GraphDialogComponent, {
       header: this.title(),
@@ -28,8 +27,7 @@ export class InfoGraphComponent {
         data: this.data(),
         color: this.color(),
         title: this.title(),
-        subTitle: this.subTitle(),
-        graphContainerId: this.graphContainerId() + 'big'
+        subTitle: this.subTitle()
       },
       modal: true, // makes the dialog modal
       dismissableMask: true, // enables auto-close on outside click
