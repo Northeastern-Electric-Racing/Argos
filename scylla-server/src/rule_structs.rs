@@ -12,6 +12,7 @@ use serde_with::DurationSeconds;
 use serde_with::serde_as;
 use std::borrow::Borrow;
 use std::hash::Hash;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::info;
@@ -218,8 +219,13 @@ impl Borrow<String> for Topic {
     }
 }
 
-#[derive(Serialize)]
+/// Identifies one firing of a Rule, shared by all its subscribers, so each can ack it
+#[derive(PartialEq, Eq, Hash, Display, Debug, Clone, Serialize)]
+pub struct NotificationId(pub String);
+
+#[derive(Serialize, Clone)]
 pub struct RuleNotification {
+    pub notification_id: NotificationId,
     pub id: RuleId,
     pub topic: Topic,
     pub values: Vec<f32>,
@@ -355,6 +361,9 @@ pub struct RuleManager {
     topic_index: RwLock<FxHashMap<Topic, FxHashSet<RuleId>>>,
     /// bimap<`client_id`, `rule_id`>
     subscriptions: RwLock<BiMultiMap<ClientId, RuleId>>,
+    /// prefix unique to this manager, so notification ids don't repeat across server restarts
+    notification_id_prefix: String,
+    next_notification_id: AtomicU64,
 }
 impl Default for RuleManager {
     fn default() -> Self {
@@ -369,7 +378,17 @@ impl RuleManager {
             rules: RwLock::new(FxHashMap::default()),
             topic_index: RwLock::new(FxHashMap::default()),
             subscriptions: RwLock::new(BiMultiMap::new()),
+            notification_id_prefix: Utc::now()
+                .timestamp_nanos_opt()
+                .unwrap_or_default()
+                .to_string(),
+            next_notification_id: AtomicU64::new(0),
         }
+    }
+
+    fn new_notification_id(&self) -> NotificationId {
+        let n = self.next_notification_id.fetch_add(1, Ordering::Relaxed);
+        NotificationId(format!("{}-{n}", self.notification_id_prefix))
     }
 
     /// Handles a new socket message, returning a `RuleNotification` for one to many clients if action should be taken
@@ -421,10 +440,12 @@ impl RuleManager {
             }
             info!("Rule {} triggered", rule_id);
 
+            let notification_id = self.new_notification_id();
             for client in clients {
                 notifications.push((
                     client.clone(),
                     RuleNotification {
+                        notification_id: notification_id.clone(),
                         id: rule_id.clone(),
                         topic: Topic(data.name.clone()),
                         values: data.values.clone(),
