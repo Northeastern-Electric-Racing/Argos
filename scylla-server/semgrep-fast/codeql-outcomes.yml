@@ -1,0 +1,205 @@
+# Opengrep stand-ins for the CodeQL outcome analysis (codeql/queries/Influence.ql with the sinks of
+# codeql/models/outcomes.model.yml and AglintRust.qll's Diesel tier), for the profiles that skip CodeQL.
+#
+# AGLint runs this folder (native key semgrep_fast) in step 05b ONLY when the codeql group is skipped (`aglint check
+# --fast`). The full profile runs CodeQL itself and not these rules, so one issue is never reported twice. The step diffs
+# head against base (--baseline-commit): only what a change adds is reported.
+#
+# Each rule follows request input (axum extractors: Path, Query, Json, Form, Multipart; socketioxide Data) to one kind of
+# outcome sink, and has the level the full profile gives a new path to that kind:
+#   request-input-to-db-write  WARNING  diesel insert / update / delete, or a write function of a src/services/ module
+#                                       (the DB chokepoint: clippy.toml bans Diesel everywhere else). Full: diesel is
+#                                       medium, so a new DB-writing function is purity-new-effect, a WARN.
+#   request-input-to-network   ERROR    rumqttc publish, socketioxide emit, std::net. Full: network's sink_tier is low,
+#                                       so new-weak-path-network FAILs a new path to it.
+#   request-input-to-auth      WARNING  an auth crate's call (none in scylla today). Full: new-weak-path-auth, a WARN.
+#   request-input-to-storage   WARNING  tokio::fs / std::fs writes. Full: new-weak-path-other, a WARN.
+#
+# Limits (CodeQL covers them in the full profile): one file at a time. Opengrep's --taint-intrafile follows a value
+# through the functions of that file (Semgrep CE stays inside one function). A write reached through another module is
+# seen only where it is a src/services/ write function called by name (`run_service::create_run(..)`); a value sent to
+# a channel that another task publishes (SirenSendable to the MQTT processor) is not followed, by CodeQL either.
+# The four rules share one list of sources, written out in each: Opengrep's rule parser does not resolve YAML
+# anchors (`&sources` / `*sources` read as null).
+rules:
+  - id: request-input-to-db-write
+    mode: taint
+    languages: [rust]
+    paths: { exclude: ['tests/', 'build.rs'] }
+    severity: WARNING
+    message: Request input reaches a DB write [db-write] without a reviewed check.
+    metadata: { outcome: db-write, mirrors: aglint/influence }
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., Path($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Query($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Json($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Form($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) -> $R { ... }
+          - pattern: $X
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., $X: $W<$T>, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., mut $X: $W, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., $X: $W, ...) -> $R { ... }
+          - metavariable-regex: { metavariable: $W, regex: '^(Path|Query|Json|Form|Multipart|Data)$' }
+          - pattern: $X
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: diesel::insert_into($TBL).values($SINK)
+              - pattern: diesel::update($Q).set($SINK)
+              - pattern: diesel::update($SINK)
+              - pattern: diesel::delete($SINK)
+              - pattern: insert_into($TBL).values($SINK)
+              - pattern: $Q.set($SINK)
+              - patterns:
+                  - pattern: $SVC::$F(..., $SINK, ...)
+                  - metavariable-regex: { metavariable: $SVC, regex: '^((crate::)?services::)?\w+_service$' }
+                  - metavariable-regex: { metavariable: $F, regex: '^(create|insert|update|upsert|delete|remove|add|set|edit|save|clear|reset)\w*$' }
+          - focus-metavariable: $SINK
+  - id: request-input-to-network
+    mode: taint
+    languages: [rust]
+    paths: { exclude: ['tests/', 'build.rs'] }
+    severity: ERROR
+    message: Request input reaches the network [network] (an MQTT publish, a socket.io emit or a raw socket).
+    metadata: { outcome: network, mirrors: aglint/influence }
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., Path($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Query($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Json($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Form($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) -> $R { ... }
+          - pattern: $X
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., $X: $W<$T>, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., mut $X: $W, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., $X: $W, ...) -> $R { ... }
+          - metavariable-regex: { metavariable: $W, regex: '^(Path|Query|Json|Form|Multipart|Data)$' }
+          - pattern: $X
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: $C.publish(..., $SINK, ...)
+              - pattern: $C.try_publish(..., $SINK, ...)
+              - pattern: $C.publish_bytes(..., $SINK, ...)
+              - pattern: $S.emit(..., $SINK, ...)
+              - pattern: $S.to(...).emit(..., $SINK, ...)
+              - pattern: TcpStream::connect($SINK)
+              - pattern: std::net::TcpStream::connect($SINK)
+              - pattern: $U.send_to(..., $SINK, ...)
+          - focus-metavariable: $SINK
+  - id: request-input-to-auth
+    mode: taint
+    languages: [rust]
+    paths: { exclude: ['tests/', 'build.rs'] }
+    severity: WARNING
+    message: Request input reaches an auth call [auth].
+    metadata: { outcome: auth, mirrors: aglint/influence }
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., Path($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Query($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Json($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Form($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) -> $R { ... }
+          - pattern: $X
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., $X: $W<$T>, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., mut $X: $W, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., $X: $W, ...) -> $R { ... }
+          - metavariable-regex: { metavariable: $W, regex: '^(Path|Query|Json|Form|Multipart|Data)$' }
+          - pattern: $X
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: jsonwebtoken::$F(..., $SINK, ...)
+              - pattern: argon2::$F(..., $SINK, ...)
+              - pattern: bcrypt::$F(..., $SINK, ...)
+              - pattern: oauth2::$F(..., $SINK, ...)
+              - pattern: openidconnect::$F(..., $SINK, ...)
+              - pattern: $A.verify_password(..., $SINK, ...)
+              - pattern: $A.hash_password(..., $SINK, ...)
+          - focus-metavariable: $SINK
+  - id: request-input-to-storage
+    mode: taint
+    languages: [rust]
+    paths: { exclude: ['tests/', 'build.rs'] }
+    severity: WARNING
+    message: Request input reaches a file write [storage].
+    metadata: { outcome: storage, mirrors: aglint/influence }
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., Path($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Query($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Json($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Form($X): $T, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) { ... }
+              - pattern-inside: |
+                  async fn $H(..., Data($X): $T, ...) -> $R { ... }
+          - pattern: $X
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  async fn $H(..., $X: $W<$T>, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., mut $X: $W, ...) -> $R { ... }
+              - pattern-inside: |
+                  async fn $H(..., $X: $W, ...) -> $R { ... }
+          - metavariable-regex: { metavariable: $W, regex: '^(Path|Query|Json|Form|Multipart|Data)$' }
+          - pattern: $X
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: fs::write($SINK, ...)
+              - pattern: fs::write($P, $SINK)
+              - pattern: tokio::fs::write($SINK, ...)
+              - pattern: std::fs::write($SINK, ...)
+              - pattern: File::create($SINK)
+              - pattern: fs::remove_file($SINK)
+              - pattern: fs::rename($SINK, ...)
+              - pattern: fs::create_dir_all($SINK)
+          - focus-metavariable: $SINK

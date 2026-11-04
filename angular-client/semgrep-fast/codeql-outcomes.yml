@@ -1,0 +1,339 @@
+# Opengrep stand-ins for two CodeQL outcome queries (codeql/aglint-angular), for the profiles that skip CodeQL.
+#
+# AGLint runs this folder (native key semgrep_fast) in step 18, beside semgrep/, ONLY when the codeql group is skipped
+# (`aglint check --fast`). The full profile runs the CodeQL queries themselves and not these rules, so the same issue is
+# never reported twice. Like semgrep/, the step diffs head against base (--baseline-commit): only what a change adds is
+# reported.
+#
+# What the CodeQL queries do and these rules approximate:
+#   outcome-inventory-*   OutcomeInventory.ql: every outcome sink of AglintAngular.qll `Aglint::outcome` (HttpClient
+#                         reads and writes, fetch, socket.io, WebSocket, EventSource, client-storage writes, the auth SDK),
+#                         with the same kind labels. INFO; gate.yml's new-outcome-call rule gives a new one the level a new
+#                         OutcomeInventory entry has (PASS: inventory, listed in the report, never a verdict on its own).
+#   low-trust-to-outcome  LowTrustToOutcome.ql: a value the auth SDK returns (LOW trust) reaches an outcome sink other than
+#                         the SDK itself. ERROR, as the query (@problem.severity error): new-semgrep-finding FAILs it.
+#
+# Limits (CodeQL covers them in the full profile): one file at a time. Opengrep's --taint-intrafile follows a value
+# through the functions and methods of that file (Semgrep CE stays inside one function). The HttpClient, socket and
+# WebSocket receivers are the ones the same file binds (`inject(HttpClient)` or a constructor parameter typed HttpClient,
+# a field or variable set from `io(...)` / `new WebSocket(...)`); a client handed in from another file is not seen.
+#
+# The auth SDK: trust-tiers.model.yml lists its members (none in Argos today). These rules take any package (not a
+# relative or src/ path: the app's own code is not the SDK) whose name has an auth token: the words AGLint init's trust
+# proposal classifies LOW (auth, oauth, oidc, openid, jwt, jose, saml), plus the vendor SDKs auth0, msal, okta and
+# keycloak. So an SDK a change adds is LOW here before the CodeQL rows exist; add the rows to trust-tiers.model.yml as
+# well, so the full profile sees it too.
+rules:
+  # ------------------------------------------------------------------ OutcomeInventory stand-ins (INFO)
+  - id: outcome-inventory-http-write
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network-write (HttpClient.$M)]
+    metadata: { outcome: network-write, mirrors: aglint/angular/outcome-inventory }
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      class $C { ... $H = inject(HttpClient); ... }
+                  - pattern-inside: |
+                      class $C { ... constructor(..., $H: HttpClient, ...) { ... } ... }
+              - pattern: this.$H.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  $H = inject(HttpClient);
+                  ...
+              - pattern: $H.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  function $F(..., $H: HttpClient, ...) { ... }
+              - pattern: $H.$M(...)
+      - metavariable-regex: { metavariable: $M, regex: '^(post|put|patch|delete)$' }
+  - id: outcome-inventory-http-read
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network-read (HttpClient.$M)]
+    metadata: { outcome: network, mirrors: aglint/angular/outcome-inventory }
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      class $C { ... $H = inject(HttpClient); ... }
+                  - pattern-inside: |
+                      class $C { ... constructor(..., $H: HttpClient, ...) { ... } ... }
+              - pattern: this.$H.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  $H = inject(HttpClient);
+                  ...
+              - pattern: $H.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  function $F(..., $H: HttpClient, ...) { ... }
+              - pattern: $H.$M(...)
+      - metavariable-regex: { metavariable: $M, regex: '^(get|request|head|options|jsonp)$' }
+  - id: outcome-inventory-fetch
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network-write (fetch)]
+    metadata: { outcome: network-write, mirrors: aglint/angular/outcome-inventory }
+    pattern-either:
+      - pattern: fetch(...)
+      - pattern: window.fetch(...)
+      - pattern: globalThis.fetch(...)
+      - pattern: self.fetch(...)
+  - id: outcome-inventory-socket-connect
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network (socket.io connect)]
+    metadata: { outcome: network, mirrors: aglint/angular/outcome-inventory }
+    pattern-either:
+      - patterns:
+          - pattern-inside: |
+              import { ..., $F, ... } from 'socket.io-client';
+              ...
+          - pattern: $F(...)
+          - metavariable-regex: { metavariable: $F, regex: '^(io|connect)$' }
+      - patterns:
+          - pattern-inside: |
+              import $IO from 'socket.io-client';
+              ...
+          - pattern: $IO(...)
+      - patterns:
+          - pattern-inside: |
+              import * as $IO from 'socket.io-client';
+              ...
+          - pattern-either:
+              - pattern: $IO.io(...)
+              - pattern: $IO.connect(...)
+              - pattern: $IO.default(...)
+  - id: outcome-inventory-socket-emit
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network-write (socket.$M)]
+    metadata: { outcome: network-write, mirrors: aglint/angular/outcome-inventory }
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-inside: |
+                  class $C { ... $S = $IO(...); ... }
+              - pattern: this.$S.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  class $C { ... constructor(...) { ... this.$S = $IO(...); ... } ... }
+              - pattern: this.$S.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  $S = $IO(...);
+                  ...
+              - pattern: $S.$M(...)
+      - metavariable-regex: { metavariable: $IO, regex: '^(io|connect)$' }
+      - metavariable-regex: { metavariable: $M, regex: '^(emit|emitWithAck|send)$' }
+  - id: outcome-inventory-websocket
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network (WebSocket)]
+    metadata: { outcome: network, mirrors: aglint/angular/outcome-inventory }
+    pattern: new WebSocket(...)
+  - id: outcome-inventory-websocket-send
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network-write (WebSocket.send)]
+    metadata: { outcome: network-write, mirrors: aglint/angular/outcome-inventory }
+    pattern-either:
+      - patterns:
+          - pattern-inside: |
+              class $C { ... $W = new WebSocket(...); ... }
+          - pattern: this.$W.send(...)
+      - patterns:
+          - pattern-inside: |
+              class $C { ... constructor(...) { ... this.$W = new WebSocket(...); ... } ... }
+          - pattern: this.$W.send(...)
+      - patterns:
+          - pattern-inside: |
+              $W = new WebSocket(...);
+              ...
+          - pattern: $W.send(...)
+  - id: outcome-inventory-eventsource
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [network-read (EventSource)]
+    metadata: { outcome: network, mirrors: aglint/angular/outcome-inventory }
+    pattern: new EventSource(...)
+  - id: outcome-inventory-storage
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [client-storage]
+    metadata: { outcome: storage, mirrors: aglint/angular/outcome-inventory }
+    patterns:
+      - pattern-either:
+          - pattern: $ST.setItem(...)
+          - pattern: $ST[$K] = $V
+          - pattern: $ST.$P = $V
+      - metavariable-regex: { metavariable: $ST, regex: '^((window|globalThis|self)\.)?(localStorage|sessionStorage)$' }
+  - id: outcome-inventory-auth-sdk
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: INFO
+    message: Outcome sink [auth-sdk (LOW trust)]
+    metadata: { outcome: auth, trust: low, mirrors: aglint/angular/outcome-inventory }
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-inside: |
+                  import { ..., $X, ... } from '$MOD';
+                  ...
+              - pattern-either:
+                  - pattern: $X(...)
+                  - pattern: $X.$M(...)
+                  - pattern: new $X(...).$M(...)
+          - patterns:
+              - pattern-inside: |
+                  import $X from '$MOD';
+                  ...
+              - pattern-either:
+                  - pattern: $X(...)
+                  - pattern: $X.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  import * as $X from '$MOD';
+                  ...
+              - pattern: $X.$M(...)
+          - patterns:
+              - pattern-inside: |
+                  import { ..., $X, ... } from '$MOD';
+                  ...
+              - pattern-either:
+                  - pattern-inside: |
+                      class $C { ... $A = inject($X); ... }
+                  - pattern-inside: |
+                      class $C { ... $A = new $X(...); ... }
+                  - pattern-inside: |
+                      class $C { ... constructor(..., $A: $X, ...) { ... } ... }
+              - pattern: this.$A.$M(...)
+      - metavariable-regex:
+          metavariable: $MOD
+          regex: '(?i)^(?![./]|src/)(.*[-_./@])?(auth|authn|authz|auth0|oauth|oauth2|oidc|openid|jwt|jose|saml|msal|okta|keycloak)([-_./@].*)?$'
+
+  # ------------------------------------------------------------------ LowTrustToOutcome stand-in (ERROR)
+  - id: low-trust-to-outcome
+    mode: taint
+    languages: [typescript]
+    paths: { exclude: ['*.spec.ts', 'src/test-setup.ts'] }
+    severity: ERROR
+    message: LOW-trust value from the auth SDK reaches an outcome (network, network-write or client storage).
+    metadata: { outcome: network-write, trust: low, mirrors: aglint/angular/low-trust-to-outcome }
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - patterns:
+                  - pattern-inside: |
+                      import { ..., $X, ... } from '$MOD';
+                      ...
+                  - pattern-either:
+                      - pattern: $X(...)
+                      - pattern: $X.$M(...)
+                      - pattern: new $X(...).$M(...)
+              - patterns:
+                  - pattern-inside: |
+                      import $X from '$MOD';
+                      ...
+                  - pattern-either:
+                      - pattern: $X(...)
+                      - pattern: $X.$M(...)
+              - patterns:
+                  - pattern-inside: |
+                      import * as $X from '$MOD';
+                      ...
+                  - pattern: $X.$M(...)
+              - patterns:
+                  - pattern-inside: |
+                      import { ..., $X, ... } from '$MOD';
+                      ...
+                  - pattern-either:
+                      - pattern-inside: |
+                          class $C { ... $A = inject($X); ... }
+                      - pattern-inside: |
+                          class $C { ... $A = new $X(...); ... }
+                      - pattern-inside: |
+                          class $C { ... constructor(..., $A: $X, ...) { ... } ... }
+                  - pattern-either:
+                      - pattern: this.$A.$M(...)
+                      - pattern: this.$A.$P
+          - metavariable-regex:
+              metavariable: $MOD
+              regex: '(?i)^(?![./]|src/)(.*[-_./@])?(auth|authn|authz|auth0|oauth|oauth2|oidc|openid|jwt|jose|saml|msal|okta|keycloak)([-_./@].*)?$'
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              # HttpClient (every argument: URL, body, options), as Aglint::outcome
+              - patterns:
+                  - pattern-either:
+                      - patterns:
+                          - pattern-either:
+                              - pattern-inside: |
+                                  class $C { ... $H = inject(HttpClient); ... }
+                              - pattern-inside: |
+                                  class $C { ... constructor(..., $H: HttpClient, ...) { ... } ... }
+                          - pattern: this.$H.$HM(..., $SINK, ...)
+                      - patterns:
+                          - pattern-inside: |
+                              $H = inject(HttpClient);
+                              ...
+                          - pattern: $H.$HM(..., $SINK, ...)
+                  - metavariable-regex: { metavariable: $HM, regex: '^(get|post|put|patch|delete|request|head|options|jsonp)$' }
+              # fetch: URL and init
+              - pattern: fetch(..., $SINK, ...)
+              - pattern: window.fetch(..., $SINK, ...)
+              - pattern: globalThis.fetch(..., $SINK, ...)
+              # socket.io: the connection arguments and every emit / send
+              - patterns:
+                  - pattern-inside: |
+                      import { ..., $IO, ... } from 'socket.io-client';
+                      ...
+                  - pattern: $IO(..., $SINK, ...)
+              - patterns:
+                  - pattern-either:
+                      - patterns:
+                          - pattern-inside: |
+                              class $C { ... $S = $IOF(...); ... }
+                          - pattern: this.$S.$SM(..., $SINK, ...)
+                      - patterns:
+                          - pattern-inside: |
+                              $S = $IOF(...);
+                              ...
+                          - pattern: $S.$SM(..., $SINK, ...)
+                  - metavariable-regex: { metavariable: $IOF, regex: '^(io|connect)$' }
+                  - metavariable-regex: { metavariable: $SM, regex: '^(emit|emitWithAck|send)$' }
+              # WebSocket and EventSource: the URL; WebSocket frames
+              - pattern: new WebSocket(..., $SINK, ...)
+              - pattern: new EventSource(..., $SINK, ...)
+              - patterns:
+                  - pattern-either:
+                      - patterns:
+                          - pattern-inside: |
+                              class $C { ... $W = new WebSocket(...); ... }
+                          - pattern: this.$W.send($SINK)
+                      - patterns:
+                          - pattern-inside: |
+                              $W = new WebSocket(...);
+                              ...
+                          - pattern: $W.send($SINK)
+              # client storage writes
+              - patterns:
+                  - pattern-either:
+                      - pattern: $ST.setItem(..., $SINK, ...)
+                      - pattern: $ST[$K] = $SINK
+                      - pattern: $ST.$P = $SINK
+                  - metavariable-regex: { metavariable: $ST, regex: '^((window|globalThis|self)\.)?(localStorage|sessionStorage)$' }
+          - focus-metavariable: $SINK

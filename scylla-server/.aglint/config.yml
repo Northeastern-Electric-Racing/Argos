@@ -82,6 +82,10 @@ tools:
   codeql:
     path: codeql
     group: codeql
+  # the Semgrep-rules engine (Opengrep; Semgrep CE runs the rules too): needed for semgrep-fast/
+  semgrep:
+    path: opengrep
+    group: semgrep
   strace:
     path: strace
     group: trace
@@ -98,6 +102,9 @@ native:
   codeql_queries: codeql/queries
   codeql_models: codeql/models
   codeql_purity: codeql/purity
+  # Opengrep stand-ins for the CodeQL outcome analysis: step 05b runs them only when CodeQL is skipped (--fast), so the
+  # full profile reports each issue once
+  semgrep_fast: semgrep-fast
 profiles:
   fast:
     skip_groups:

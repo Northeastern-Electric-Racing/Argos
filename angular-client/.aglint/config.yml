@@ -74,6 +74,9 @@ native:
   dependency_cruiser: .dependency-cruiser.cjs
   ast_grep: sgconfig.yml
   semgrep: semgrep
+  # Opengrep stand-ins for OutcomeInventory.ql and LowTrustToOutcome.ql: step 18 runs them only when CodeQL is
+  # skipped (--fast), so the full profile reports each issue once
+  semgrep_fast: semgrep-fast
   tsconfig: tsconfig.app.json
   codeql_purity: codeql/aglint-angular/purity/Purity.ql
   codeql_pack: codeql/aglint-angular

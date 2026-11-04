@@ -45,6 +45,14 @@ rules:
     capability: core
     when: {state: [new], level: [error]}
     verdict: fail
+  - id: new-outcome-call         # semgrep-fast/ (--fast only): OutcomeInventory's stand-in. A new OutcomeInventory row is
+    category: outcomes           # an inventory line, never a verdict (no rule matches it), so this one PASSes too; it
+    title: "New outcome call"    # must come before new-semgrep-finding, which would claim it and FAIL
+    hint: "inventory only: check that the new outcome call is meant to be there"
+    kind: finding
+    capability: outcomes-static
+    when: {state: [new], tool: [semgrep, semgrep-baseline], rule: ["outcome-inventory-*"]}
+    verdict: pass
   - id: new-semgrep-finding      # 18-semgrep --baseline-commit --error: any new finding exits 1, INFO included
     category: boundaries
     title: "New Semgrep finding"
