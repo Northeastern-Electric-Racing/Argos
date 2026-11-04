@@ -257,7 +257,7 @@ export function nearestIndex(points: readonly { x: number }[], x: number): numbe
 
 /** How far, in pixels, from a series' sample the pointer still hovers it, however short the series' period. */
 const HOVER_SNAP_PX = 8;
-/** How many sample periods of the fastest hovered series from its nearest sample the pointer still hovers a series. */
+/** How many of a series' sample periods from its nearest sample the pointer still hovers it (see hoverSample). */
 export const HOVER_REACH_PERIODS = 2;
 
 /** The median interval between a series' samples around index `i`, up to 8 either side; 0 for a lone sample. */
@@ -271,22 +271,14 @@ function typicalPeriod(points: readonly { x: number }[], i: number): number {
 }
 
 /**
- * How far from time `x` every series' hovered sample may be: HOVER_REACH_PERIODS of the fastest series' typical
- * period around `x` (or `snap`, if wider). One reach for all series, so a slow topic never shows a sample from long
- * before or after the fast ones; graphed alone, a slow topic sets the reach itself and still shows between samples.
+ * The real sample hover shows for a series at time `x`: its nearest, while that is within HOVER_REACH_PERIODS of the
+ * series' typical period around it (or `snap`, if wider). Along steady data the nearest sample is always in reach;
+ * in a gap over twice that long, and well past either end, the series has nothing to show and hover leaves it out.
  */
-export function hoverReach(series: readonly (readonly { x: number }[])[], x: number, snap = 0): number {
-  const periods = series.map((points) => typicalPeriod(points, nearestIndex(points, x))).filter((period) => period > 0);
-  return Math.max(snap, periods.length ? HOVER_REACH_PERIODS * Math.min(...periods) : 0);
-}
-
-/**
- * The real sample hover shows for a series at time `x`: its nearest, while that is within `reach` (see hoverReach).
- * In a gap longer than that, and well past either end, the series has nothing to show and hover leaves it out.
- */
-export function hoverSample(points: readonly GraphData[], x: number, reach: number): GraphData | null {
+export function hoverSample(points: readonly GraphData[], x: number, snap = 0): GraphData | null {
   const i = nearestIndex(points, x);
   if (i < 0) return null;
+  const reach = Math.max(snap, HOVER_REACH_PERIODS * typicalPeriod(points, i));
   return Math.abs(points[i].x - x) <= reach ? points[i] : null;
 }
 
@@ -302,7 +294,7 @@ function samplesOf(chart: Chart, datasetIndex: number): GraphData[] {
 type HoveredSample = { value: GraphData; x: number; y: number };
 
 /**
- * The sample a dataset shows at a canvas x, or null where it has none (see hoverReach). Its pixel is on the drawn
+ * The sample a dataset shows at a canvas x, or null where it has none (see hoverSample). Its pixel is on the drawn
  * line: a vertex, or, when decimated, inside the min-max stroke of its pixel column.
  */
 function sampleAtPixel(chart: Chart, datasetIndex: number, px: number): HoveredSample | null {
@@ -310,8 +302,7 @@ function sampleAtPixel(chart: Chart, datasetIndex: number, px: number): HoveredS
   const time = xScale.getValueForPixel(px);
   if (time === undefined) return null;
   const snap = (HOVER_SNAP_PX * (xScale.max - xScale.min)) / (xScale.width || 1);
-  const visible = chart.getSortedVisibleDatasetMetas().map(({ index }) => samplesOf(chart, index));
-  const value = hoverSample(samplesOf(chart, datasetIndex), time, hoverReach(visible, time, snap));
+  const value = hoverSample(samplesOf(chart, datasetIndex), time, snap);
   if (!value) return null;
   const yScale = chart.scales[chart.getDatasetMeta(datasetIndex).yAxisID ?? 'y'];
   return { value, x: xScale.getPixelForValue(value.x), y: yScale.getPixelForValue(value.y) };
