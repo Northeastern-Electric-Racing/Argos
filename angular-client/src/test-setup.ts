@@ -1,3 +1,4 @@
+import 'vitest-canvas-mock';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
@@ -6,6 +7,11 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 
 // A `setupFiles` entry of the unit-test builder (angular.json). The builder initialises the
 // Angular test environment itself, then runs this file before every spec file.
+
+// Run every spec in the zone the team runs the client in, whatever the machine's (CI is UTC), so
+// local-time tests such as the graph's DST ones behave the same everywhere. Set before any spec
+// imports a module that builds an Intl.DateTimeFormat, which keeps the zone it was made in.
+process.env['TZ'] = 'America/New_York';
 
 // Register globally the app-root providers that every component implicitly relies on, so specs
 // mirror the real bootstrap in main.ts and need no per-spec wiring:
@@ -25,3 +31,10 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
 });
+
+// jsdom has no ResizeObserver, which Chart.js uses to follow its container's size.
+globalThis.ResizeObserver ??= class {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+};
