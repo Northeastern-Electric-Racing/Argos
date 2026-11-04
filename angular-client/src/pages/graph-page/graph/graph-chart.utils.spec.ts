@@ -8,7 +8,8 @@ import {
   formatTooltipDate,
   formatRowTime,
   HOVER_REACH_PERIODS,
-  hoverSample,
+  hoverReach,
+  hoverSample as hoverSampleWithin,
   nearestIndex,
   nearestPerSeries,
   pickTimeStep,
@@ -155,6 +156,9 @@ describe('graph-chart utils', () => {
   });
 
   describe('hoverSample', () => {
+    /** A series' hovered sample when it is the only one on the graph. */
+    const hoverSample = (points: { x: number; y: number }[], x: number, snap = 0) =>
+      hoverSampleWithin(points, x, hoverReach([points], x, snap));
     /** Samples every `period` ms from `from` to `to` inclusive, alternating 0 and 1 like a flag topic. */
     const steady = (from: number, to: number, period = 10) =>
       Array.from({ length: (to - from) / period + 1 }, (_, i) => ({ x: from + i * period, y: i % 2 }));
@@ -194,6 +198,17 @@ describe('graph-chart utils', () => {
     it('reaches at least `snap` from a sample, so a lone sample can be hovered', () => {
       expect(hoverSample([{ x: 100, y: 5 }], 104, 5)).toEqual({ x: 100, y: 5 });
       expect(hoverSample([{ x: 100, y: 5 }], 106, 5)).toBeNull();
+    });
+
+    it("reaches by the fastest series' period for every series, so a slow one shows no sample from far away", () => {
+      const fast = steady(0, 1000);
+      const slow = steady(0, 1000, 200);
+      const reach = hoverReach([fast, slow], 300);
+
+      expect(reach).toBe(HOVER_REACH_PERIODS * 10);
+      expect(hoverSampleWithin(fast, 300, reach)).toEqual({ x: 300, y: 0 });
+      expect(hoverSampleWithin(slow, 300, reach)).toBeNull();
+      expect(hoverSampleWithin(slow, 410, reach)).toEqual({ x: 400, y: 0 });
     });
   });
 
