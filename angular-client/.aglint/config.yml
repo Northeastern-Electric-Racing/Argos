@@ -31,14 +31,15 @@ app:
   test_dirs:
   - src
   guarded: []
-# Portable tool paths: a bare name is looked up on PATH when AGLint runs (put Node 24, CodeQL, Semgrep and ast-grep
+# Portable tool paths: a bare name is looked up on PATH when AGLint runs (put Node 24, CodeQL, Opengrep and ast-grep
 # there; `aglint doctor` names any that are missing); node_modules/.bin paths are relative to angular-client/ (`npm ci`).
 tools:
   codeql:
     path: codeql
     group: codeql
+  # the Semgrep-rules engine: Opengrep (semgrep/ holds the rules; Semgrep CE runs them too)
   semgrep:
-    path: semgrep
+    path: opengrep
     group: semgrep
   ast-grep:
     path: ast-grep
