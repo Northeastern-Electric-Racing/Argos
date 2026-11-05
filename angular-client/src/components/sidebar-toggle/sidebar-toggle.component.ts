@@ -2,10 +2,10 @@ import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import SidebarService from 'src/services/sidebar.service';
 import { MatIcon } from '@angular/material/icon';
 
+/** The mobile menu button that opens the nav drawer; a real button, so focus can return to it. */
 @Component({
   selector: 'sidebar-toggle',
   templateUrl: './sidebar-toggle.component.html',
-  styleUrls: ['./sidebar-toggle.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon]
 })

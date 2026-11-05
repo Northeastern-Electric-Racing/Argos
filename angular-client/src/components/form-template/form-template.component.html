@@ -1,15 +1,17 @@
-<form class="ui-form form" [formGroup]="form">
+<form [class]="classes.form" [formGroup]="form">
   @for (field of fields(); track field) {
-    <div class="ui-field">
+    <div [class]="classes.field">
       @if (field.label) {
-        <label class="ui-label" [for]="'form-field-' + field.name">
+        <label uiLabel [for]="'form-field-' + field.name">
           {{ field.label }}
           @if (field.required) {
-            <span class="ui-required" aria-hidden="true">*</span>
+            <span [class]="classes.required" aria-hidden="true">*</span>
           }
         </label>
       }
       <input
+        uiInput
+        class="w-full"
         [id]="'form-field-' + field.name"
         [attr.placeholder]="field.placeholder"
         [formControlName]="field.name"
@@ -18,18 +20,17 @@
         [attr.aria-required]="field.required || null"
         [attr.aria-invalid]="isInvalid(field.name) || null"
         [attr.aria-describedby]="isInvalid(field.name) ? 'form-field-' + field.name + '-error' : null"
-        class="ui-input ui-input--fluid"
       />
 
       @if (isInvalid(field.name)) {
-        <small class="ui-field-error" [id]="'form-field-' + field.name + '-error'">
+        <small uiFieldError [id]="'form-field-' + field.name + '-error'">
           {{ getErrorMessage(field) }}
         </small>
       }
     </div>
   }
 
-  <div class="ui-form-actions">
-    <button class="ui-button" type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>
+  <div [class]="classes.actions">
+    <button uiButton type="button" [disabled]="!form.valid" (click)="onSubmit()">Submit</button>
   </div>
 </form>

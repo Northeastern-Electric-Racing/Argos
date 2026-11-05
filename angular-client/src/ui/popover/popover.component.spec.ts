@@ -44,11 +44,34 @@ describe('UiPopoverComponent', () => {
   it('opens a labelled dialog panel and reports it on the trigger', async () => {
     const { fixture, trigger, open } = await setup();
     await open();
-    const panel = document.querySelector<HTMLElement>('.ui-popover-panel')!;
+    const panel = document.querySelector<HTMLElement>('[role="dialog"]')!;
     expect(panel.getAttribute('role')).toBe('dialog');
     expect(panel.getAttribute('aria-label')).toBe('Range');
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(fixture.componentInstance.shown).toBe(1);
+  });
+
+  it('closes on Escape and gives focus back to the trigger', async () => {
+    const { fixture, trigger, open } = await setup();
+    await open();
+    const field = document.querySelector<HTMLElement>('.field')!;
+    field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+    await fixture.whenStable();
+    await settle();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('closes on a click outside', async () => {
+    const { fixture, open } = await setup();
+    await open();
+    const elsewhere: HTMLButtonElement = fixture.nativeElement.querySelector('.elsewhere');
+    elsewhere.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    elsewhere.click();
+    await fixture.whenStable();
+    await settle();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('gives focus back to the trigger when it closes from inside', async () => {
@@ -74,6 +97,6 @@ describe('UiPopoverComponent', () => {
   it('focuses the panel itself when it has nothing tabbable', async () => {
     const { open } = await setup(false);
     await open();
-    expect(document.activeElement).toBe(document.querySelector('.ui-popover-panel'));
+    expect(document.activeElement).toBe(document.querySelector('[role="dialog"]'));
   });
 });

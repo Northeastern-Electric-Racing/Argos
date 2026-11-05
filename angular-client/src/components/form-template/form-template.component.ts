@@ -2,6 +2,9 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
 
 type anyType = string | number | boolean | undefined;
 
@@ -25,13 +28,14 @@ export interface DynamicFormField {
   selector: 'form-template',
   templateUrl: './form-template.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ReactiveFormsModule]
+  imports: [ReactiveFormsModule, UiButtonDirective, UiInputDirective, UiLabelDirective, UiFieldErrorDirective]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
   public dialogData = inject(DIALOG_DATA);
 
   fields = input.required<DynamicFormField[]>();
+  protected readonly classes = fieldClasses;
 
   public ref = inject(DialogRef);
 
