@@ -1,11 +1,11 @@
 <ng-template #panel>
-  <div class="ui-drawer" [attr.data-position]="position()">
-    <header class="ui-drawer-header">
-      <div class="ui-drawer-title"><ng-content select="[uiDrawerHeader]" /></div>
-      <button type="button" class="ui-icon-button" aria-label="Close" (click)="close()">
+  <div [class]="classes.drawer" [attr.data-position]="position()">
+    <header class="flex items-center gap-2 pt-3 pr-3 pb-2 pl-4">
+      <div class="min-w-0 flex-1"><ng-content select="[uiDrawerHeader]" /></div>
+      <button type="button" uiIconButton aria-label="Close" (click)="close()">
         <mat-icon aria-hidden="true">close</mat-icon>
       </button>
     </header>
-    <div class="ui-drawer-body"><ng-content /></div>
+    <div class="min-h-0 flex-1 overflow-auto px-4 pb-4"><ng-content /></div>
   </div>
 </ng-template>
