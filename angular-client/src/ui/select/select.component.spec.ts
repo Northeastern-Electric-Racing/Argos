@@ -54,7 +54,8 @@ describe('UiSelectComponent', () => {
     await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
     const loader = TestbedHarnessEnvironment.loader(fixture);
-    const label = (cls: string) => fixture.nativeElement.querySelector(`.${cls} .ui-select-label`).textContent.trim();
+    const label = (cls: string) =>
+      fixture.nativeElement.querySelector(`.${cls} [role="combobox"] > span`).textContent.trim();
     return { fixture, loader, label };
   };
 
@@ -97,5 +98,38 @@ describe('UiSelectComponent', () => {
     fixture.componentInstance.initial.set(undefined);
     await fixture.whenStable();
     expect(label('by-input')).toBe('Pick a run');
+  });
+
+  it('opens from the keyboard, moves with the arrows and picks with Enter', async () => {
+    const { fixture, loader, label } = await setup();
+    const combobox = await loader.getHarness(ComboboxHarness.with({ selector: '.by-input [ngCombobox]' }));
+    const trigger: HTMLElement = fixture.nativeElement.querySelector('.by-input [role="combobox"]');
+    const key = async (key: string) => {
+      trigger.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      await fixture.whenStable();
+    };
+    trigger.focus();
+    await key('ArrowDown');
+    expect(await combobox.isOpen()).toBe(true);
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    await key('ArrowDown');
+    await key('Enter');
+    expect(fixture.componentInstance.picked).toEqual(runs[1]);
+    expect(label('by-input')).toBe('NHMS');
+    expect(await combobox.isOpen()).toBe(false);
+  });
+
+  it('jumps to an option by typing its first letters', async () => {
+    const { fixture, loader } = await setup();
+    const combobox = await loader.getHarness(ComboboxHarness.with({ selector: '.by-input [ngCombobox]' }));
+    const trigger: HTMLElement = fixture.nativeElement.querySelector('.by-input [role="combobox"]');
+    trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await fixture.whenStable();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', bubbles: true }));
+    await fixture.whenStable();
+    const listbox = await combobox.getPopupWidget(ListboxHarness);
+    const activeId = await listbox.getActiveDescendantId();
+    expect(document.getElementById(activeId!)?.textContent).toContain('NHMS');
   });
 });

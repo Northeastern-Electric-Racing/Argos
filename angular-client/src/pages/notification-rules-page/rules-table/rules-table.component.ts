@@ -2,10 +2,23 @@ import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  input,
+  OnInit,
+  output,
+  signal
+} from '@angular/core';
 import { CdkTableModule } from '@angular/cdk/table';
 import { MatIcon } from '@angular/material/icon';
 import { UiSwitchComponent } from 'src/ui/switch/switch.component';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { take } from 'rxjs';
 import {
   ClientRule,
@@ -17,19 +30,31 @@ import {
   unsubscribeFromRules
 } from 'src/api/rules.api';
 import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
+import { cellClass, checkboxClass, headerCellClass, rowClass, tableClass, tableClasses } from './table.recipe';
 
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CdkTableModule, UiSwitchComponent, MatIcon],
-  templateUrl: './rules-table.component.html',
-  styleUrls: ['./rules-table.component.css']
+  imports: [CdkTableModule, UiSwitchComponent, UiButtonDirective, MatIcon],
+  templateUrl: './rules-table.component.html'
 })
 export class RulesTableComponent implements OnInit {
   clientId = input.required<string>();
   searchTerm = input('');
 
   selectionChanged = output<ClientRule[]>();
+  /** A delete removed the last rule, so there is no next row to take focus; the page focuses its Add button. */
+  emptiedByDelete = output<void>();
+
+  protected readonly t = tableClasses;
+  protected readonly table = tableClass();
+  protected readonly th = headerCellClass('phone');
+  protected readonly td = cellClass('phone');
+  protected readonly row = rowClass({ striped: true });
+  protected readonly checkbox = checkboxClass;
+
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
 
   private messageService = inject(ToastService);
   private dialogService = inject(UiDialogService);
@@ -84,6 +109,10 @@ export class RulesTableComponent implements OnInit {
       if (response.ok) {
         const data: RulesResponse = await response.json();
         this.rules.set(data.client_rules);
+        // Drop rules that are gone (deleted here or elsewhere) from the selection, so Remove never retries them.
+        const ids = new Set(data.client_rules.map((r) => r.id));
+        const kept = this.selectedRules().filter((r) => ids.has(r.id));
+        if (kept.length !== this.selectedRules().length) this.onSelectionChange(kept);
       } else {
         this.messageService.add({ severity: 'error', summary: 'Load Error', detail: 'Failed to fetch rules' });
       }
@@ -162,14 +191,33 @@ export class RulesTableComponent implements OnInit {
     });
   }
 
+  /**
+   * The deleted row's buttons are gone (the confirm dialog handed focus back to one of them), so focus the
+   * Delete button of the row that took its place, or of the new last row, or, with no rows left, let the page
+   * focus its Add button. Nothing is left on <body>.
+   */
+  private focusAfterDelete(index: number): void {
+    afterNextRender(
+      () => {
+        const buttons = this.host.nativeElement.querySelectorAll<HTMLButtonElement>('button[data-action="delete"]');
+        const next = buttons[Math.min(Math.max(index, 0), buttons.length - 1)];
+        if (next) next.focus();
+        else this.emptiedByDelete.emit();
+      },
+      { injector: this.injector }
+    );
+  }
+
   private async deleteRule(rule: ClientRule): Promise<void> {
     try {
       const response = await deleteRule(this.clientId(), rule.id);
       if (response.ok) {
+        const index = this.filteredRules().findIndex((r) => r.id === rule.id);
         this.rules.update((rules) => rules.filter((r) => r.id !== rule.id));
         this.selectedRules.update((sel) => sel.filter((r) => r.id !== rule.id));
         this.selectionChanged.emit(this.selectedRules());
         this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `Rule "${rule.id}" removed` });
+        this.focusAfterDelete(index);
       } else {
         const text = await response.text();
         this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: text });

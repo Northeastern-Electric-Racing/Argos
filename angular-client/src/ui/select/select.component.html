@@ -1,28 +1,30 @@
 <div
   ngCombobox
   #combobox="ngCombobox"
-  class="ui-select"
-  [class.ui-select--sm]="size() === 'sm'"
+  [class]="triggerClass()"
   [id]="inputId()"
   [attr.aria-label]="ariaLabel() ?? placeholder()"
   [disabled]="disabled()"
   [(expanded)]="expanded"
   [preserveContent]="true"
 >
-  <span class="ui-select-label" [class.placeholder]="display() === undefined">{{ display() ?? placeholder() }}</span>
-  <mat-icon class="ui-select-arrow" aria-hidden="true">expand_more</mat-icon>
+  <span class="pointer-events-none truncate" [class.text-fg-muted]="display() === undefined">{{
+    display() ?? placeholder()
+  }}</span>
+  <span [class]="arrowClass" aria-hidden="true"><mat-icon [class]="arrowIcon">expand_more</mat-icon></span>
 </div>
 
 <ng-template
-  [cdkConnectedOverlay]="{ origin: combobox.element, usePopover: 'inline', matchWidth: true }"
+  [cdkConnectedOverlay]="{ origin: combobox.element, usePopover: 'inline', minWidth: popupMinWidth() }"
   [cdkConnectedOverlayOpen]="expanded()"
 >
   <ng-template ngComboboxPopup [combobox]="combobox">
-    <div class="ui-listbox-popup ui-listbox-popup--grow" [class.ui-listbox-popup--sm]="size() === 'sm'">
+    <div [class]="popupClass()">
       <div
         #listbox="ngListbox"
         ngListbox
         ngComboboxWidget
+        [class]="lb.listbox"
         [tabindex]="-1"
         focusMode="activedescendant"
         selectionMode="explicit"
@@ -34,12 +36,12 @@
         (keydown.space)="commit()"
       >
         @for (option of options(); track $index) {
-          <div ngOption [value]="option" [label]="labelOf(option)" [title]="labelOf(option)">
-            <span class="ui-option-text">{{ labelOf(option) }}</span>
-            <mat-icon class="ui-option-check" aria-hidden="true">check</mat-icon>
+          <div ngOption [class]="lb.option" [value]="option" [label]="labelOf(option)" [title]="labelOf(option)">
+            <span [class]="lb.optionText">{{ labelOf(option) }}</span>
+            <mat-icon [class]="checkClass" aria-hidden="true">check</mat-icon>
           </div>
         } @empty {
-          <div class="ui-listbox-empty">No options</div>
+          <div [class]="lb.empty">No options</div>
         }
       </div>
     </div>

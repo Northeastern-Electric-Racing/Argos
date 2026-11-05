@@ -20,11 +20,27 @@ import { getAllDatatypes } from 'src/api/datatype.api';
 import APIService from 'src/services/api.service';
 import { DataType } from 'src/utils/types.utils';
 import { filter, take } from 'rxjs';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
+import { listboxClasses, listboxPopupClass } from 'src/ui/select/listbox.recipe';
 
 @Component({
   selector: 'add-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, Combobox, ComboboxPopup, ComboboxWidget, Listbox, Option, OverlayModule],
+  imports: [
+    ReactiveFormsModule,
+    Combobox,
+    ComboboxPopup,
+    ComboboxWidget,
+    Listbox,
+    Option,
+    OverlayModule,
+    UiButtonDirective,
+    UiInputDirective,
+    UiLabelDirective,
+    UiFieldErrorDirective
+  ],
   templateUrl: './add-rule-dialog.component.html'
 })
 export class AddRuleDialogComponent implements OnInit {
@@ -32,6 +48,10 @@ export class AddRuleDialogComponent implements OnInit {
   private ref = inject(DialogRef);
   private fb = inject(FormBuilder);
   private serverService = inject(APIService);
+
+  protected readonly f = fieldClasses;
+  protected readonly lb = listboxClasses;
+  protected readonly popup = listboxPopupClass('fill');
 
   private allTopics = signal<string[]>([]);
   private listbox = viewChild(Listbox);

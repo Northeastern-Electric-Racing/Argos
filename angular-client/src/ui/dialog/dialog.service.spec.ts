@@ -27,7 +27,7 @@ describe('UiDialogService', () => {
     const el = dialog()!;
     expect(el.getAttribute('role')).toBe('dialog');
     // Modal: a backdrop, and the CDK hides the page behind from assistive tech.
-    expect(document.querySelector('.ui-dialog-backdrop')).not.toBeNull();
+    expect(document.querySelector('.cdk-overlay-backdrop')).not.toBeNull();
     expect(document.getElementById(el.getAttribute('aria-labelledby')!)?.textContent).toBe('Edit Rule');
     expect(el.querySelector('.data')?.textContent).toBe('payload');
     expect(el.querySelector('button[aria-label="Close"]')).not.toBeNull();
@@ -67,6 +67,18 @@ describe('UiDialogService', () => {
     expect(dialog()!.getAttribute('aria-describedby')).toBe('msg');
   });
 
+  // Initial focus on the first field needs layout (the CDK skips invisible elements); focus-walk.js checks it.
+  it('gives focus back to the trigger when it closes', async () => {
+    const trigger = document.body.appendChild(document.createElement('button'));
+    trigger.focus();
+    service.open(Content, { header: 'Add' });
+    await settle();
+    escape(dialog()!);
+    await settle();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
   describe('openPanel', () => {
     it('opens a non-modal dialog the page stays usable behind, closed by Escape', async () => {
       const ref: UiPanelRef = service.openPanel(Content, { header: 'Graph', data: 'p' });
@@ -82,6 +94,17 @@ describe('UiDialogService', () => {
       await settle();
       expect(closed).toHaveBeenCalledTimes(1);
       expect(document.querySelector('ui-panel')).toBeNull();
+    });
+
+    it('can be compact, with the same header, close button and labelling', async () => {
+      const ref = service.openPanel(Content, { header: 'Cell Comparison', compact: true, draggable: true });
+      await settle();
+      const panel = document.querySelector<HTMLElement>('ui-panel')!;
+      expect(document.getElementById(panel.getAttribute('aria-labelledby')!)?.textContent).toBe('Cell Comparison');
+      panel.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+      await settle();
+      expect(document.querySelector('ui-panel')).toBeNull();
+      ref.close();
     });
   });
 });

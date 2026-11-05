@@ -2,7 +2,9 @@ import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Subject } from 'rxjs';
 import NotificationRulesPageComponent from './notification-rules-page.component';
+import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 
 describe('NotificationRulesPageComponent', () => {
   let component: NotificationRulesPageComponent;
@@ -80,6 +82,82 @@ describe('NotificationRulesPageComponent', () => {
       options.accept?.();
       await new Promise((resolve) => setTimeout(resolve));
       expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/delete')).length).toBe(2);
+      vi.unstubAllGlobals();
+    });
+
+    it('clears the selection and moves focus to Add once the rules are deleted', async () => {
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'confirm').mockReturnValue(undefined);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ client_rules: [] }) }))
+      );
+      component.selectedRules.set(selected);
+      fixture.detectChanges();
+
+      component.onRemoveSelected();
+      confirm.mock.calls[0][0].accept?.();
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+
+      expect(component.selectedRules()).toEqual([]);
+      expect(document.activeElement?.textContent?.trim()).toBe('Add');
+      expect(fixture.nativeElement.querySelector('argos-button[label="Remove"] button')?.disabled).toBe(true);
+      vi.unstubAllGlobals();
+    });
+
+    it('keeps the rules that failed selected, so the user can retry', async () => {
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'confirm').mockReturnValue(undefined);
+      const add = vi.spyOn(messageService, 'add').mockReturnValue(undefined);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((url: string) =>
+          Promise.resolve({ ok: !String(url).includes('/delete/b'), json: () => Promise.resolve({ client_rules: [] }) })
+        )
+      );
+      component.selectedRules.set(selected);
+      component.onRemoveSelected();
+      confirm.mock.calls[0][0].accept?.();
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(component.selectedRules().map((r) => r.id)).toEqual(['b']);
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', summary: 'Delete Error' }));
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe('Add rule', () => {
+    it('opens the add dialog, and posts the rule it closes with, then reloads the table', async () => {
+      const closed = new Subject<unknown>();
+      const open = vi.spyOn(TestBed.inject(UiDialogService), 'open').mockReturnValue({ closed } as never);
+      const fetchMock = vi.fn((url: string, init?: RequestInit) =>
+        Promise.resolve({ ok: true, url, init, json: () => Promise.resolve({ client_rules: [] }), text: () => '' })
+      );
+      vi.stubGlobal('fetch', fetchMock);
+      const reload = vi.spyOn(component.rulesTable()!, 'loadRules');
+      const add = vi.spyOn(messageService, 'add').mockReturnValue(undefined);
+
+      component.onAddRule();
+      expect(open).toHaveBeenCalledWith(AddRuleDialogComponent, expect.objectContaining({ header: 'Add New Rule' }));
+      closed.next({ id: 'hot', topic: 'BMS/Pack/Voltage', expr: 'a > 1', debounce_time: 5 });
+      await new Promise((resolve) => setTimeout(resolve));
+
+      const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT');
+      expect(post).toBeDefined();
+      expect(JSON.parse(String(post![1]!.body))).toEqual(expect.objectContaining({ id: 'hot', topic: 'BMS/Pack/Voltage' }));
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Rule Added' }));
+      expect(reload).toHaveBeenCalled();
+      vi.unstubAllGlobals();
+    });
+
+    it('posts nothing when the dialog is cancelled', async () => {
+      const closed = new Subject<unknown>();
+      vi.spyOn(TestBed.inject(UiDialogService), 'open').mockReturnValue({ closed } as never);
+      const fetchMock = vi.fn(() => Promise.resolve({ ok: true }));
+      vi.stubGlobal('fetch', fetchMock);
+      fetchMock.mockClear();
+      component.onAddRule();
+      closed.next(null);
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(fetchMock).not.toHaveBeenCalled();
       vi.unstubAllGlobals();
     });
   });

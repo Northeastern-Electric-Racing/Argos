@@ -1,4 +1,7 @@
+import { ComboboxHarness } from '@angular/aria/combobox/testing';
+import { ListboxHarness } from '@angular/aria/listbox/testing';
 import { DialogRef } from '@angular/cdk/dialog';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AddRuleDialogComponent } from './add-rule-dialog.component';
 
@@ -51,5 +54,59 @@ describe('AddRuleDialogComponent', () => {
       expect(input(id).getAttribute('aria-invalid')).toBe('true');
       expect(document.getElementById(input(id).getAttribute('aria-describedby')!)?.textContent?.trim()).toBe(messages[id]);
     }
+  });
+
+  describe('topic autocomplete', () => {
+    const topics = ['BMS/Pack/Voltage', 'BMS/Pack/Current', 'BMS/Status/Temp_Average', 'VCU/Speed'];
+
+    const setupWithTopics = async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(topics.map((name) => ({ name, unit: '' }))) }))
+      );
+      TestBed.resetTestingModule();
+      Element.prototype.scrollIntoView ??= () => undefined;
+      await TestBed.configureTestingModule({
+        imports: [AddRuleDialogComponent],
+        providers: [{ provide: DialogRef, useValue: { close } }]
+      }).compileComponents();
+      fixture = TestBed.createComponent(AddRuleDialogComponent);
+      fixture.autoDetectChanges();
+      await new Promise((resolve) => setTimeout(resolve));
+      await fixture.whenStable();
+      const loader = TestbedHarnessEnvironment.documentRootLoader(fixture);
+      return loader.getHarness(ComboboxHarness.with({ selector: '#rule-topic' }));
+    };
+
+    it('suggests the DataTypes that match what is typed, by any path segment', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('pack');
+      expect(await combobox.isOpen()).toBe(true);
+      const listbox = await combobox.getPopupWidget(ListboxHarness);
+      const texts = await Promise.all((await listbox.getOptions()).map((o) => o.getText()));
+      expect(texts).toEqual(['BMS/Pack/Voltage', 'BMS/Pack/Current']);
+    });
+
+    it('sets the topic only to a picked suggestion', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('speed');
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('');
+      const listbox = await combobox.getPopupWidget(ListboxHarness);
+      const [option] = await listbox.getOptions({ text: 'VCU/Speed' });
+      await option.click();
+      await fixture.whenStable();
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('VCU/Speed');
+      expect(await combobox.getValue()).toBe('VCU/Speed');
+    });
+
+    it('clears free text that is not a topic when the field loses focus (forceSelection)', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('BMS/Nope');
+      await combobox.blur();
+      await fixture.whenStable();
+      expect(await combobox.getValue()).toBe('');
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('');
+      expect(input('rule-topic').getAttribute('aria-invalid')).toBe('true');
+    });
   });
 });

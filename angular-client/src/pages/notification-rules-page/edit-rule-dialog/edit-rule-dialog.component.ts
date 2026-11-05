@@ -1,6 +1,9 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
 
 export interface EditRuleResult {
   expr: string;
@@ -10,10 +13,11 @@ export interface EditRuleResult {
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, UiButtonDirective, UiInputDirective, UiLabelDirective, UiFieldErrorDirective],
   templateUrl: './edit-rule-dialog.component.html'
 })
 export class EditRuleDialogComponent {
+  protected readonly f = fieldClasses;
   private ref = inject(DialogRef);
   private dialogData = inject(DIALOG_DATA);
   private fb = inject(FormBuilder);
