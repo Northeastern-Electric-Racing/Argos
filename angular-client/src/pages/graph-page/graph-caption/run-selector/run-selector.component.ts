@@ -12,7 +12,6 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 @Component({
   selector: 'run-selector',
   templateUrl: './run-selector.component.html',
-  styleUrls: ['./run-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ButtonComponent]
 })

@@ -30,7 +30,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 @Component({
   selector: 'graph',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class CustomGraphComponent implements OnInit, OnDestroy {
