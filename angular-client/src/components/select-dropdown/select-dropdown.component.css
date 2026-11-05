@@ -1,9 +1,0 @@
-:host {
-  display: inline-block;
-}
-
-.small-grey-select {
-  width: 10vw;
-  min-width: 8rem;
-  max-width: 100%;
-}

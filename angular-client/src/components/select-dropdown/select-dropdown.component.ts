@@ -15,8 +15,8 @@ export interface DropdownOption {
 @Component({
   selector: 'select-dropdown',
   templateUrl: './select-dropdown.component.html',
-  styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'inline-block' },
   imports: [UiSelectComponent, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
