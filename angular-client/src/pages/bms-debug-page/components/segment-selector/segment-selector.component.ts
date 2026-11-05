@@ -12,7 +12,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'segment-selector',
   templateUrl: './segment-selector.component.html',
-  styleUrl: './segment-selector.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, SelectDropdownComponent, TypographyComponent, VStackComponent]
 })

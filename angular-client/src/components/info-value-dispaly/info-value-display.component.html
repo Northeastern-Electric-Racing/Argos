@@ -5,9 +5,9 @@
       <typography variant="info-unit" [content]="this.unit()" [additionalStyles]="this.unitStyle()" />
     } @else {
       <typography
+        class="-mb-2.5"
         variant="info-value"
         [content]="this.formattedValue()"
-        style="margin-bottom: -10px"
         [additionalStyles]="this.valueStyle()"
       />
       <typography variant="info-unit" [content]="this.unit()" [additionalStyles]="this.unitStyle()" />
@@ -16,7 +16,7 @@
     @if (this.enableWidget() && this.widget(); as widget) {
       @switch (widget.type) {
         @case ('thermometer-config') {
-          <div class="thermometer-container">
+          <div class="flex h-22.5 w-8.75 items-center justify-center self-start">
             <thermometer [temperature]="widget.currentValue" [min]="widget.min" [max]="widget.max" />
           </div>
         }
@@ -25,9 +25,9 @@
         }
         @case ('connection-dot-config') {
           <connection-dot-with-message
+            class="ml-1.25"
             [getStatusColor]="widget.getStatusColor"
             [getStatusMessage]="this.getStatusMessage(widget)"
-            style="margin-left: 5px"
           />
         }
       }
@@ -35,6 +35,11 @@
   </hstack>
 
   @if (this.subtitle() !== '') {
-    <typography variant="info-subtitle" [content]="subtitle()" [additionalStyles]="this.getSubtitleStyle()" />
+    <typography
+      variant="info-subtitle"
+      [content]="subtitle()"
+      [textClass]="this.subtitleClass()"
+      [additionalStyles]="this.subtitleStyle()"
+    />
   }
 </vstack>

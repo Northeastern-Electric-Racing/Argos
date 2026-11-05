@@ -1,21 +1,21 @@
 <info-background [title]="this.title" svgIcon="battery_charging_2">
-  <div class="ui-table-wrapper chip-faults-table">
-    <table cdk-table class="ui-table ui-table--striped ui-table--hover" [dataSource]="this.chipFaults()">
+  <div [class]="t.wrapper">
+    <table cdk-table [class]="t.table" [dataSource]="this.chipFaults()">
       <ng-container cdkColumnDef="name">
-        <th cdk-header-cell *cdkHeaderCellDef>Name</th>
-        <td cdk-cell *cdkCellDef="let fault">
-          <button type="button" class="ui-cell-button" (click)="onRowSelect(fault); $event.stopPropagation()">
+        <th cdk-header-cell *cdkHeaderCellDef [class]="t.th">Name</th>
+        <td cdk-cell *cdkCellDef="let fault" [class]="t.td">
+          <button type="button" [class]="t.cellButton" (click)="onRowSelect(fault); $event.stopPropagation()">
             {{ fault.name }}
           </button>
         </td>
       </ng-container>
       <ng-container cdkColumnDef="occurredAt">
-        <th cdk-header-cell *cdkHeaderCellDef>Occurred At</th>
-        <td cdk-cell *cdkCellDef="let fault">{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+        <th cdk-header-cell *cdkHeaderCellDef [class]="t.th">Occurred At</th>
+        <td cdk-cell *cdkCellDef="let fault" [class]="t.td">{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
       </ng-container>
       <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
       <!-- The whole row is a mouse target; keyboard and screen-reader users get the Name button. -->
-      <tr cdk-row *cdkRowDef="let fault; columns: columns" (click)="onRowSelect(fault)"></tr>
+      <tr cdk-row *cdkRowDef="let fault; columns: columns" [class]="t.row" (click)="onRowSelect(fault)"></tr>
     </table>
   </div>
 </info-background>

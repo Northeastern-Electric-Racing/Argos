@@ -1,5 +1,6 @@
-<div class="hex-grid-zone">
-  <div class="hex-row beta-row">
+<div class="flex min-w-0 flex-col items-start overflow-visible py-1">
+  <!-- Beta (top) row, offset half a hex right for the honeycomb stagger -->
+  <div class="ml-(--row-offset) flex flex-nowrap gap-(--hex-gap)">
     @for (cell of betaDisplayCells; track $index) {
       <hex-tile
         [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"
@@ -13,7 +14,8 @@
       />
     }
   </div>
-  <div class="hex-row alpha-row">
+  <!-- Alpha (bottom) row, pulled up to interlock with the beta row -->
+  <div class="mt-(--row-gap) flex flex-nowrap gap-(--hex-gap)">
     @for (cell of alphaDisplayCells; track $index) {
       <hex-tile
         [variant]="cell.cellCount > 1 ? 'heatmap-cell-double' : 'heatmap-cell'"

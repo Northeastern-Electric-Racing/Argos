@@ -1,21 +1,23 @@
 @if (headerLabel()) {
-  <div class="header">
+  <div class="mb-1 flex items-center gap-1.5 whitespace-nowrap">
     @if (headerIcon()) {
-      <mat-icon aria-hidden="false" [svgIcon]="headerIcon()" class="header-icon" />
+      <span class="flex h-4.25 w-3.25 shrink-0"
+        ><mat-icon aria-hidden="false" [svgIcon]="headerIcon()" [inline]="true"
+      /></span>
     }
-    <span class="header-label">{{ headerLabel() }}</span>
+    <span class="font-sans text-sm font-normal whitespace-nowrap text-fg">{{ headerLabel() }}</span>
   </div>
 }
 
-<div class="value-row">
-  <span class="value">{{ formattedValue() }}</span>
-  <span class="unit" [class.unit-below]="unitBelow()">{{ unit() }}</span>
+<div [class]="valueRowClass()">
+  <span class="m-0 font-sans text-xl leading-none font-extrabold text-fg">{{ formattedValue() }}</span>
+  <span [class]="unitClass()">{{ unit() }}</span>
   @if (connectionDotStatusColor(); as statusColor) {
-    <connection-dot-with-message [getStatusColor]="statusColor" style="margin-left: 5px" />
+    <connection-dot-with-message class="ml-1.25" [getStatusColor]="statusColor" />
   }
   <ng-content />
 </div>
 
 @if (subtitle()) {
-  <span class="subtitle">{{ subtitle() }}</span>
+  <span class="mt-0.5 text-center font-sans text-sm font-bold whitespace-nowrap text-fg-label">{{ subtitle() }}</span>
 }

@@ -7,8 +7,8 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 @Component({
   selector: 'glance-thermometer',
   templateUrl: './glance-thermometer.component.html',
-  styleUrl: './glance-thermometer.component.css',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'inline-flex shrink-0 self-center' }
 })
 export class GlanceThermometerComponent {
   temperature = input<number>(0);
