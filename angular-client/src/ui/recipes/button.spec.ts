@@ -1,6 +1,7 @@
 import {
   BUTTON_SIZES,
   BUTTON_VARIANTS,
+  buttonBaseClass,
   buttonClass,
   buttonSizeClasses,
   buttonVariantClasses,
@@ -81,5 +82,11 @@ describe('button recipe', () => {
     expect(all).not.toMatch(/(^|\s)[a-z:-]*(gray|zinc|neutral-\d|red-\d|blue-\d|white|black)\b/);
     expect(all).not.toMatch(/-\[#/);
     expect(all).not.toMatch(/(^|\s|:)text-[a-z-]+\/\d+/);
+  });
+
+  it('leaves the footprint to the size, so a consumer can compose the base and a variant with its own size', () => {
+    const footprint = /^(gap|min-h|h|w|min-w|p|px|py|rounded|text-(xs|sm|ctrl|ctrl-sm|ctrl-lg|\[))(-|$)/;
+    expect(buttonBaseClass.split(/\s+/).filter((c) => footprint.test(c))).toEqual([]);
+    for (const s of BUTTON_SIZES) expect(buttonSizeClasses[s].split(/\s+/)).toContain('gap-2');
   });
 });

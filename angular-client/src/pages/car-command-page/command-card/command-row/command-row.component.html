@@ -1,10 +1,9 @@
 <label class="self-center text-sm text-fg" [for]="inputId()">{{ row().label }}</label>
 <span class="self-center text-sm text-fg-muted tabular-nums">{{ currentValue() ?? '--' }}</span>
-<!-- Fills its grid cell, so not the number-input recipe's fixed widths; its tabular figures. -->
 <input
   uiInput
   type="number"
-  class="w-full tabular-nums"
+  [class]="numberInput"
   [(ngModel)]="value"
   [id]="inputId()"
   min="-1000000"
