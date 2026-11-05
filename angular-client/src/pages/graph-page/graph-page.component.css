@@ -3,7 +3,7 @@
   height: calc(100vh - 60px); /* 60px = app nav bar height */
 }
 
-.container {
+.graph-container {
   display: flex;
   flex-flow: column;
   height: 100%;
