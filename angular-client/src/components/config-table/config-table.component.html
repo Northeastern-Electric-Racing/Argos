@@ -13,7 +13,7 @@
   @for (item of columns(); track $index) {
     <div class="flex min-w-32.5 flex-col border-l border-solid border-border">
       <div class="flex h-14.5 flex-col justify-center border-b border-solid border-border bg-surface-3 px-4.5 py-2">
-        <span class="font-sans text-title leading-[1.1] font-bold text-fg">{{ columnConfig().title(item) }}</span>
+        <span class="font-sans text-title leading-control font-bold text-fg">{{ columnConfig().title(item) }}</span>
         @if (columnConfig().subtitle) {
           <span class="font-sans text-sm leading-none font-medium text-fg-muted">{{ columnConfig().subtitle!(item) }}</span>
         }

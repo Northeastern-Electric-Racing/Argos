@@ -1,7 +1,7 @@
 <info-background svgIcon="timer" title="Lap Timer" [topRightInfo]="timer.activeSession()?.name" class="h-full w-full">
   <div class="flex w-full flex-col items-center gap-2 py-2">
     <div [class]="cls.heroLabel">TOTAL</div>
-    <div [class]="cls.numeral">{{ timer.formattedTotal() }}</div>
+    <div [class]="cls.total">{{ timer.formattedTotal() }}</div>
     <div [class]="dividerClass"></div>
     <div class="grid w-4/5 grid-cols-[auto_1fr_auto] items-baseline gap-3">
       <div [class]="cls.heroLabel">LAP {{ timer.lapCount() + 1 }}</div>
