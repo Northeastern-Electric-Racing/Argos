@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, RouterOutlet } from '@angular/router';
 import SidebarService from 'src/services/sidebar.service';
@@ -13,6 +13,16 @@ class Blank {}
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 class WithToggle {}
+
+/** A page whose button navigates in-app and leaves with the page (BMS "See more", the segment selector). */
+let linkTarget = '/graph';
+@Component({ template: '<button type="button" (click)="go()">See more</button>' })
+class Linker {
+  private router = inject(Router);
+  go() {
+    void this.router.navigateByUrl(linkTarget);
+  }
+}
 
 /** The nav bar and the routed page in their main region, as app-context lays them out. */
 @Component({
@@ -37,7 +47,10 @@ describe('AppNavBarComponent on a phone', () => {
         provideRouter([
           { path: 'landing', component: Blank },
           { path: 'graph', component: Blank },
-          { path: 'charging', component: WithToggle }
+          { path: 'charging', component: WithToggle },
+          { path: 'link', component: Linker },
+          { path: 'notification-log', component: Blank },
+          { path: 'bms/segment/:id', component: Blank }
         ])
       ]
     });
@@ -104,9 +117,14 @@ describe('AppNavBarComponent on a phone', () => {
     const page = main.querySelector<HTMLElement>('router-outlet + *')!;
     expect(document.activeElement).not.toBe(document.body);
     expect(document.activeElement).toBe(page);
-    // focusable only while it holds focus, like a skip link's target
+    // named after the chosen page while it holds focus, not after its whole content (wave 1 review N11)
+    expect(page.getAttribute('role')).toBe('group');
+    expect(page.getAttribute('aria-label')).toBe('Graph');
+    // focusable and named only while it holds focus, like a skip link's target
     page.blur();
     expect(page.hasAttribute('tabindex')).toBe(false);
+    expect(page.hasAttribute('aria-label')).toBe(false);
+    expect(page.hasAttribute('role')).toBe(false);
   });
 
   it("moves focus to the new page's menu button when it has one", async () => {
@@ -118,6 +136,96 @@ describe('AppNavBarComponent on a phone', () => {
     const toggle = document.querySelector<HTMLElement>('sidebar-toggle button');
     expect(toggle).not.toBeNull();
     expect(document.activeElement).toBe(toggle);
+  });
+});
+
+describe('AppNavBarComponent after an in-app navigation', () => {
+  afterEach(() => document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = '')));
+
+  const setup = async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([
+          { path: 'landing', component: Blank },
+          { path: 'graph', component: Blank },
+          { path: 'charging', component: WithToggle },
+          { path: 'link', component: Linker },
+          { path: 'notification-log', component: Blank },
+          { path: 'bms/segment/:id', component: Blank }
+        ])
+      ]
+    });
+    const fixture = TestBed.createComponent(Shell);
+    document.body.appendChild(fixture.nativeElement);
+    const main = fixture.nativeElement.querySelector('main') as HTMLElement;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/landing');
+    await fixture.whenStable();
+    /** Opens the Linker page and presses its button, which navigates to `to` and leaves with the page. */
+    const follow = async (to: string) => {
+      linkTarget = to;
+      await router.navigateByUrl('/link');
+      await fixture.whenStable();
+      const button = main.querySelector<HTMLButtonElement>('button')!;
+      button.focus();
+      button.click();
+      await fixture.whenStable();
+      await settle();
+      expect(router.url).toBe(to);
+    };
+    const page = () => main.querySelector<HTMLElement>('router-outlet + *')!;
+    return { fixture, router, follow, page, main };
+  };
+
+  it('moves focus from a control that left with the old page to the new page, named after it', async () => {
+    const { follow, page } = await setup();
+    await follow('/graph');
+    expect(document.activeElement).toBe(page());
+    expect(page().getAttribute('aria-label')).toBe('Graph');
+    page().blur();
+    expect(page().hasAttribute('tabindex')).toBe(false);
+    expect(page().hasAttribute('aria-label')).toBe(false);
+  });
+
+  it('names a page outside the nav after the page (notification log, a BMS segment)', async () => {
+    const { follow, page } = await setup();
+    await follow('/notification-log');
+    expect(page().getAttribute('aria-label')).toBe('Notification Log');
+    await follow('/bms/segment/3');
+    expect(page().getAttribute('aria-label')).toBe('BMS Segment 3');
+  });
+
+  it("moves focus to the new page's menu button when it has one", async () => {
+    const { follow } = await setup();
+    await follow('/charging');
+    expect(document.activeElement).toBe(document.querySelector('sidebar-toggle button'));
+  });
+
+  it('leaves focus alone when it is still on something that stayed (the nav bar, a control of the page)', async () => {
+    const { fixture, router } = await setup();
+    const kept = document.createElement('button');
+    document.body.appendChild(kept);
+    kept.focus();
+    await router.navigateByUrl('/graph');
+    await fixture.whenStable();
+    await settle();
+    expect(document.activeElement).toBe(kept);
+    kept.remove();
+  });
+
+  it('leaves focus alone on the first navigation (page load)', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'graph', component: Blank }])] });
+    const fixture = TestBed.createComponent(Shell);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    (document.activeElement as HTMLElement | null)?.blur();
+    await TestBed.inject(Router).navigateByUrl('/graph');
+    await fixture.whenStable();
+    await settle();
+    expect(document.activeElement).toBe(document.body);
   });
 });
 
