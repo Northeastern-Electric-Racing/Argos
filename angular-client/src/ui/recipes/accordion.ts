@@ -1,4 +1,4 @@
-import { tw } from 'src/ui/recipes/tw';
+import { tw } from './tw';
 
 /**
  * The accordion recipe, for Angular Aria's accordion: `ngAccordionGroup` (group), then per panel an `<h3>`
@@ -11,7 +11,7 @@ import { tw } from 'src/ui/recipes/tw';
  *            the solid focus ring inset
  *   icon     the chevron, turned while its trigger is expanded
  *   body     the panel's padding
- * Only the fault page uses it so far; it moves to src/ui/recipes when a second page does.
+ * The fault page's CAN-node panels use it.
  */
 export const accordionClasses = {
   group: tw('overflow-hidden rounded-md border border-solid border-border bg-surface-1 empty:hidden'),

@@ -1,6 +1,8 @@
 import { dialogBackdropClass, dialogClasses, headerlessContentClass } from '../dialog/dialog.recipe';
+import { accordionClasses } from './accordion';
 import { BUTTON_SIZES, BUTTON_VARIANTS, buttonClass, ICON_BUTTON_SIZES, iconButtonClass } from './button';
 import { cardClass } from './card';
+import { cellButtonClass } from './cell-button';
 import { fieldClasses, INPUT_SIZES, inputClass } from './field';
 import { iconClasses } from './icon';
 import { listboxClasses, listboxPopupClass, LISTBOX_SIZES, LISTBOX_WIDTHS } from './listbox';
@@ -36,6 +38,8 @@ const everyRecipeList = (): [string, string][] => {
   const add = (name: string, value: unknown) => strings(value).forEach((s, i) => lists.push([`${name}#${i}`, s]));
   for (const v of BUTTON_VARIANTS) for (const s of BUTTON_SIZES) add(`button ${v} ${s}`, buttonClass(v, s));
   for (const s of ICON_BUTTON_SIZES) add(`icon button ${s}`, iconButtonClass(s));
+  add('accordion', accordionClasses);
+  add('cell button', cellButtonClass);
   for (const fill of [false, true]) for (const sliced of [false, true]) add('card', cardClass({ fill, sliced }));
   for (const s of INPUT_SIZES) for (const e of ['input', 'textarea'] as const) add(`input ${s} ${e}`, inputClass(s, e));
   add('field', fieldClasses);

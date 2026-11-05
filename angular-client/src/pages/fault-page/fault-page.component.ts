@@ -12,8 +12,8 @@ import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { cellClass, headerCellClass, rowClass, tableClass } from 'src/ui/recipes/table';
-import { accordionClasses } from './accordion.recipe';
-import { cellButtonClass } from './cell-button.recipe';
+import { accordionClasses } from 'src/ui/recipes/accordion';
+import { cellButtonClass } from 'src/ui/recipes/cell-button';
 
 function groupByNode(faults: FaultData[]): FaultNode[] {
   const nodes = new Map<string, FaultNode>();
