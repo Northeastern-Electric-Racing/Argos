@@ -1,11 +1,10 @@
 <!-- 814's 6-column mat-grid-list (1.5rem rows, 15px gutters); these tiles let their content overflow -->
 <div class="grid auto-rows-6 grid-cols-6 gap-3.75">
   <div class="col-span-3 row-span-3 flex items-center justify-center">
-    <!-- 814 drew the title at 6rem; the nearest type step is text-numeral (85px) -->
     <typography
       class="mb-2.5 ml-7.5 grid h-full w-full items-center text-ellipsis whitespace-nowrap"
       variant="x-large-title"
-      textClass="m-0 mt-2.5 text-left text-numeral leading-0 tracking-[0.2rem] [word-spacing:0.2rem]"
+      textClass="m-0 mt-2.5 text-left text-banner leading-0 tracking-[0.2rem] [word-spacing:0.2rem]"
       [content]="this.pageTitle()"
     />
   </div>

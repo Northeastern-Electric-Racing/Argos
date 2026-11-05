@@ -19,7 +19,7 @@ export default class SessionSummaryComponent {
   readonly timer = inject(LapTimerService);
 
   protected readonly cls = lapTimerClasses;
-  protected readonly lapsClass = cx(lapTimerClasses.numeral, tw('text-center'));
+  protected readonly lapsClass = lapTimerClasses.lapCount;
   protected readonly dividerClass = cx(lapTimerClasses.divider, tw('my-2'));
   protected readonly statRow = tw('flex items-baseline justify-between');
   /** Best, Avg, Energy, Run: fg-muted, AA on the card. */

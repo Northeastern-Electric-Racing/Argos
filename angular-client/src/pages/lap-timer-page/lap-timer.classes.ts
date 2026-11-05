@@ -8,8 +8,10 @@ import { tw } from 'src/ui/recipes/tw';
 export const lapTimerClasses = {
   /** TOTAL, LAP n, LAPS: 12px semibold uppercase, fg-muted (AA on the panel). */
   heroLabel: tw('font-sans text-xs font-semibold tracking-[2px] text-fg-muted uppercase'),
-  /** The big total and lap count (64px and 56px on #909: no step on the type scale yet, see the 2A report). */
-  numeral: tw('font-sans text-2xl leading-none font-bold text-fg tabular-nums'),
+  /** The hero's total (64px, as on #909). */
+  total: tw('font-sans text-timer leading-none font-bold text-fg tabular-nums'),
+  /** The session summary's lap count (56px, as on #909). */
+  lapCount: tw('text-center font-sans text-timer-sm leading-none font-bold text-fg tabular-nums'),
   divider: tw('border-t border-solid border-border'),
   /**
    * The scroll box of a table: it fills the card and scrolls both ways inside it, never the page (Spartan).
