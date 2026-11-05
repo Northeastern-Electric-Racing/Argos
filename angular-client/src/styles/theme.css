@@ -81,6 +81,14 @@
   --text-lg: 1.25rem; /* 20px */
   --text-xl: 2.125rem; /* 34px */
   --text-2xl: 3rem; /* 48px */
+  /*
+   * Display sizes, one step each, so 24 · 34 · 40 · 48 · 85 · 120 is the whole ladder above 20px. A legacy
+   * size within about 6% of a step takes that step (25px values and 32/36px headers, 2rem, read the same).
+   */
+  --text-title: 1.5rem; /* 24px: card units, phone values, the graph page's title */
+  --text-display: 2.5rem; /* 40px: page titles */
+  --text-numeral: 5.3125rem; /* 85px: the big value readout */
+  --text-hero: 7.5rem; /* 120px: the landing title, the camera alert */
   /* Controls and chrome: buttons, inputs, selects, menus line up on these. */
   --text-badge: 0.7rem;
   --text-ctrl-sm: 0.8125rem;
