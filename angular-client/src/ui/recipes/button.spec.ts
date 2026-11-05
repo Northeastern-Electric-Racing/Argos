@@ -47,13 +47,20 @@ describe('button recipe', () => {
     expect(buttonClass('primary', 'md')).toContain('focus-visible:focus-ring');
   });
 
-  it('keeps lg at the legacy 140x45 footprint on wide screens and lets it fit its label on phones, with no hooks', () => {
+  it('keeps lg at the legacy 140x45 footprint at every width, 44px tall on phones, with no hooks', () => {
     const lg = buttonSizeClasses.lg.split(/\s+/);
-    expect(lg).toEqual(
-      expect.arrayContaining(['min-h-11.25', 'min-w-35', 'max-md:min-h-11', 'max-md:min-w-0', 'max-md:px-3'])
-    );
+    expect(lg).toEqual(expect.arrayContaining(['min-h-11.25', 'min-w-35', 'max-md:min-h-11']));
+    // pages laid out around the 140px minimum (the lap timer's hero) keep it on phones
+    expect(lg.filter((c) => c.startsWith('max-md:min-w') || c.startsWith('max-md:px'))).toEqual([]);
     // pages used to resize lg through --ui-button-* custom properties; the size owns its footprint now
     expect(buttonSizeClasses.lg).not.toMatch(/var\(--ui-/);
+  });
+
+  it('has an lg-fluid size: lg on wide screens, as wide as its label on phones', () => {
+    const fluid = buttonSizeClasses['lg-fluid'].split(/\s+/);
+    expect(fluid).toEqual(
+      expect.arrayContaining(['min-h-11.25', 'min-w-35', 'max-md:min-h-11', 'max-md:min-w-0', 'max-md:px-3'])
+    );
   });
 
   it('composes the shared base, the variant and the size', () => {

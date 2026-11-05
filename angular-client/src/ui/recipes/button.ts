@@ -14,8 +14,9 @@ import { cx, tw } from './tw';
  *   danger       orange edge, never filled, for destructive actions
  *   danger-text  orange text with no edge, for a destructive action in a row or list (Clear, Delete)
  * Sizes: md is the default control height (36px); sm is compact (28px, 32px on phones); lg is the legacy
- * 140x45 footprint, and on phones 44px tall and as wide as its label (12px padding), so a row of them wraps
- * less; icon is a 32px square for an icon-only button.
+ * 140x45 footprint (44px tall on phones), which some pages are laid out around; lg-fluid is lg on wide
+ * screens and as wide as its label on phones (12px padding), so a row of them wraps less (the rules page);
+ * icon is a 32px square for an icon-only button.
  */
 export const BUTTON_VARIANTS = [
   'primary',
@@ -31,7 +32,7 @@ export const BUTTON_VARIANTS = [
 ] as const;
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
-export const BUTTON_SIZES = ['sm', 'md', 'lg', 'icon'] as const;
+export const BUTTON_SIZES = ['sm', 'md', 'lg', 'lg-fluid', 'icon'] as const;
 export type ButtonSize = (typeof BUTTON_SIZES)[number];
 
 const buttonBase = tw(
@@ -64,7 +65,8 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
 export const buttonSizeClasses: Record<ButtonSize, string> = {
   sm: tw('min-h-7 rounded-sm px-3 text-xs max-md:min-h-8'),
   md: tw('min-h-9 rounded-md px-4 text-ctrl'),
-  lg: tw('min-h-11.25 min-w-35 rounded-md px-4 text-ctrl max-md:min-h-11 max-md:min-w-0 max-md:px-3'),
+  lg: tw('min-h-11.25 min-w-35 rounded-md px-4 text-ctrl max-md:min-h-11'),
+  'lg-fluid': tw('min-h-11.25 min-w-35 rounded-md px-4 text-ctrl max-md:min-h-11 max-md:min-w-0 max-md:px-3'),
   icon: tw('min-h-8 w-8 rounded-md p-0 text-ctrl')
 };
 
