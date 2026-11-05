@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
@@ -11,6 +11,9 @@ import { CdkTableModule } from '@angular/cdk/table';
 import { MatIcon } from '@angular/material/icon';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
+import { cellClass, headerCellClass, rowClass, tableClass } from 'src/ui/recipes/table';
+import { accordionClasses } from './accordion.recipe';
+import { cellButtonClass } from './cell-button.recipe';
 
 function groupByNode(faults: FaultData[]): FaultNode[] {
   const nodes = new Map<string, FaultNode>();
@@ -24,7 +27,6 @@ function groupByNode(faults: FaultData[]): FaultNode[] {
 
 @Component({
   selector: 'fault-page',
-  styleUrls: ['./fault-page.component.css'],
   templateUrl: './fault-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -45,8 +47,28 @@ export default class FaultPageComponent {
    * Faults grouped by CAN node, sorted by node. A signal under OnPush: new accordion items then render
    * in a reactive pass, so each trigger's [panel] reference resolves before it is checked.
    */
-  readonly nodeArray = toSignal(this.faultService.getFaults().pipe(map(groupByNode)), { initialValue: [] });
+  readonly nodeArray = toSignal(
+    this.faultService.getFaults().pipe(
+      map(groupByNode),
+      tap((nodes) => (this.firstNode ??= nodes[0]?.node))
+    ),
+    { initialValue: [] }
+  );
   readonly columns = ['name', 'occurredAt', 'lastSeen', 'expired'];
+
+  /**
+   * The node whose panel opens by default: the first in the first message (p-accordion's `[value]="0"`). Its
+   * binding never changes afterwards, so later messages leave every panel as the user left it.
+   */
+  private firstNode?: string;
+  protected opensByDefault = (node: string) => node === this.firstNode;
+
+  protected readonly accordion = accordionClasses;
+  protected readonly cellButton = cellButtonClass;
+  protected readonly table = tableClass();
+  protected readonly th = headerCellClass('phone');
+  protected readonly td = cellClass('phone');
+  protected readonly row = rowClass({ striped: true, hover: true });
 
   /** Every socket message rebuilds the faults, so rows are matched by fault, not object, and keep their focus. */
   trackFault = (_: number, fault: FaultData) => `${fault.node}/${fault.name}`;

@@ -13,13 +13,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import Storage from 'src/services/storage.service';
 import { CarCommandRow } from 'src/utils/types.utils';
+import { UiInputDirective } from 'src/ui/field/field.directive';
 
 @Component({
   selector: 'command-row',
   templateUrl: './command-row.component.html',
-  styleUrls: ['./command-row.component.css'],
+  host: { class: 'contents' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule]
+  imports: [FormsModule, UiInputDirective]
 })
 export default class CommandRowComponent implements OnInit {
   private storage = inject(Storage);
