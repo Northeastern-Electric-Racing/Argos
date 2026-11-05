@@ -1,9 +1,0 @@
-/*
- * Legacy #909 styles for the CDK dialog backdrop, split from src/ui/ui.css and imported into layer(legacy), so any
- * utility beats them. Owner: 1B (ui/dialog). The dialog and panel moved to ui/dialog/dialog.recipe.ts in wave 1
- * (backdrop bg-scrim, pane max-h-screen); only ui-drawer (1A) still passes backdropClass 'ui-dialog-backdrop'.
- * Delete this file once it doesn't (see tw-spike primitives.md); until then only compat fixes go in.
- */
-.ui-dialog-backdrop {
-  background: var(--ui-scrim);
-}

@@ -1,4 +1,0 @@
-/*
- * Empty: nothing uses these legacy classes any more (slice 1A moved them to utilities). The file stays only
- * because src/styles.css imports it; the integrator deletes it together with that import.
- */

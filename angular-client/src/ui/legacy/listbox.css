@@ -1,5 +1,0 @@
-/*
- * Emptied by 1B in wave 1: nothing uses these #909 classes any more (the rules table, select and autocomplete
- * moved to the recipes in rules-table/table.recipe.ts and ui/select/listbox.recipe.ts). styles.css still imports
- * this file, so the integrator deletes it together with its import line in the fix step.
- */
