@@ -1,15 +1,16 @@
-<div class="image-container" style="margin-right: 16px; margin-left: 16px">
+<div class="mx-4 block">
   @if (isMobile) {
     <!-- TODO: Add mobile display component -->
   } @else {
-    <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem" style="margin-top: -20px">
-      <mat-grid-tile [colspan]="6" rowspan="3">
-        <bms-header style="width: 100%" [pageTitle]="this.windowSize < 1300 ? 'ACCU' : 'Accumulator'" />
-      </mat-grid-tile>
-      <mat-grid-tile [colspan]="6" rowspan="3">
-        <bms-at-a-glance style="height: 100%; width: 100%" />
-      </mat-grid-tile>
-    </mat-grid-list>
+    <!-- 814's 6-column mat-grid-list: 1.5rem rows, 15px gutters, each tile a centred cell that clips -->
+    <div class="-mt-5 grid auto-rows-6 grid-cols-6 gap-3.75">
+      <div [class]="tile.header">
+        <bms-header class="w-full" [pageTitle]="this.windowSize < 1300 ? 'ACCU' : 'Accumulator'" />
+      </div>
+      <div [class]="tile.header">
+        <bms-at-a-glance class="h-full w-full" />
+      </div>
+    </div>
 
     <!-- Section header with "Set ALL Maps" dropdown -->
     <section-header
@@ -19,7 +20,7 @@
     />
 
     <!-- Unified segment rows -->
-    <div class="segment-rows">
+    <div class="flex flex-col gap-[clamp(2px,0.35vw,8px)]">
       @for (segment of segments; track segment) {
         <segment-row [segment]="segment" />
       }

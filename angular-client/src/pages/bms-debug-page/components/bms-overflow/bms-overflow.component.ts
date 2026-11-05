@@ -10,7 +10,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'bms-overflow',
   templateUrl: './bms-overflow.component.html',
-  styleUrl: './bms-overflow.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })

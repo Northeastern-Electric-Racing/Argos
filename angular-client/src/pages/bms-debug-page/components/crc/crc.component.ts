@@ -10,7 +10,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'crc',
   templateUrl: './crc.component.html',
-  styleUrl: './crc.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent, VStackComponent]
 })
