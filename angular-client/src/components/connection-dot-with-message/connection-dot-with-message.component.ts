@@ -5,7 +5,6 @@ import HStackComponent from '../hstack/hstack.component';
 @Component({
   selector: 'connection-dot-with-message',
   templateUrl: './connection-dot-with-message.component.html',
-  styleUrl: './connection-dot-with-message.component.css',
   imports: [TypographyComponent, HStackComponent],
   changeDetection: ChangeDetectionStrategy.Eager
 })

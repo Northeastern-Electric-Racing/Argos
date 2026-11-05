@@ -1,4 +1,12 @@
-<div class="glass"></div>
-<div class="bulb-container"></div>
-<div class="bulb" [style.--mercury-color]="mapColor(temperature(), min(), max())"></div>
-<div class="mercury" [style.--mercury-color]="mapColor(temperature(), min(), max())"></div>
+<div class="absolute top-0 h-[90%] w-3/5 rounded-t-[25px] bg-widget-glass"></div>
+<div class="absolute bottom-0 h-2/5 w-full rounded-[50%] bg-widget-glass"></div>
+<div
+  data-mercury
+  class="absolute bottom-[5%] h-[30%] w-4/5 rounded-[50%]"
+  [style.background-color]="mapColor(temperature(), min(), max())"
+></div>
+<div
+  data-mercury
+  class="absolute bottom-[10%] h-3/4 w-2/5 rounded-t-[5px]"
+  [style.background-color]="mapColor(temperature(), min(), max())"
+></div>
