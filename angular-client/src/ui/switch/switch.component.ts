@@ -4,12 +4,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 /**
  * On/off switch: a native button with role="switch" and aria-checked (WAI-ARIA switch pattern).
  * Angular Aria has no switch, so this is ours. Works with ngModel or `[(checked)]`.
+ * Controlled: it shows `checked` and asks to change it through `checkedChange`, so a parent can set it back
+ * (an optimistic toggle that reverts when the server refuses, lesson 4). Track and thumb read aria-checked.
  */
 @Component({
   selector: 'ui-switch',
   templateUrl: './switch.component.html',
-  styleUrls: ['./switch.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'inline-flex' },
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => UiSwitchComponent), multi: true }]
 })
 export class UiSwitchComponent implements ControlValueAccessor {

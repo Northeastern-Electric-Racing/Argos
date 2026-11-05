@@ -1,12 +1,15 @@
 <button
   type="button"
   role="switch"
-  class="ui-switch"
+  class="group/switch relative h-6 w-10 shrink-0 cursor-pointer rounded-full border-0 bg-control-off p-0 transition-colors duration-120 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-checked:bg-accent not-disabled:aria-checked:hover:bg-accent-hover not-disabled:aria-[checked=false]:hover:bg-control-off-hover"
   [id]="inputId()"
   [attr.aria-checked]="checked()"
   [attr.aria-label]="ariaLabel()"
   [disabled]="disabled()"
   (click)="toggle()"
 >
-  <span class="ui-switch-thumb" aria-hidden="true"></span>
+  <span
+    class="absolute top-1 left-1 size-4 rounded-full bg-on-accent transition-transform duration-180 ease-out group-aria-checked/switch:translate-x-4"
+    aria-hidden="true"
+  ></span>
 </button>

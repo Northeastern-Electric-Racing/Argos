@@ -53,4 +53,16 @@ describe('UiSwitchComponent', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.model).toBe(true);
   });
+
+  it('ignores clicks while the form disables it', async () => {
+    const { fixture, el } = await setup();
+    const model = fixture.debugElement.query((d) => d.nativeElement.classList?.contains('model'));
+    (model.componentInstance as UiSwitchComponent).setDisabledState(true);
+    await fixture.whenStable();
+    expect(el('model').disabled).toBe(true);
+    (model.componentInstance as UiSwitchComponent).toggle();
+    await fixture.whenStable();
+    expect(el('model').getAttribute('aria-checked')).toBe('false');
+    expect(fixture.componentInstance.model).toBe(false);
+  });
 });
