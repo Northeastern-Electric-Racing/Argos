@@ -13,10 +13,7 @@
     <div class="flex min-w-0 flex-1 flex-col">
       <div class="mb-5 flex items-center gap-5 max-md:flex-col max-md:items-start max-md:gap-3">
         <typography variant="x-large-title" content="Notification Rules" />
-        <!-- The lg buttons shrink on phones through the recipe's legacy hooks (see the 1B report's handoff). -->
-        <div
-          class="ml-auto flex items-center gap-2.5 max-md:ml-0 max-md:w-full max-md:flex-wrap max-md:[--ui-button-lg-min-width:100px]"
-        >
+        <div class="ml-auto flex items-center gap-2.5 max-md:ml-0 max-md:w-full max-md:flex-wrap">
           <argos-button label="View Log" [onClick]="onViewLog" variant="outlined" />
           <argos-button label="Upload" [onClick]="onUpload" variant="neutral" />
           <argos-button label="Download" [onClick]="onDownload" variant="neutral" />
@@ -25,9 +22,7 @@
 
       <div class="mb-4 flex flex-wrap items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-2.5">
         <typography variant="header" content="Rules" />
-        <div
-          class="flex flex-wrap items-center gap-2 max-md:gap-1.5 max-md:[--ui-button-lg-min-width:70px] max-md:[--ui-button-padding-x:0.75rem]"
-        >
+        <div class="flex flex-wrap items-center gap-2 max-md:gap-1.5">
           <argos-button #addButton label="Add" [onClick]="onAddRule" />
           <argos-button label="Remove" variant="danger" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
           <argos-button

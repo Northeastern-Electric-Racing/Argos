@@ -47,6 +47,15 @@ describe('button recipe', () => {
     expect(buttonClass('primary', 'md')).toContain('focus-visible:focus-ring');
   });
 
+  it('keeps lg at the legacy 140x45 footprint on wide screens and lets it fit its label on phones, with no hooks', () => {
+    const lg = buttonSizeClasses.lg.split(/\s+/);
+    expect(lg).toEqual(
+      expect.arrayContaining(['min-h-11.25', 'min-w-35', 'max-md:min-h-11', 'max-md:min-w-0', 'max-md:px-3'])
+    );
+    // pages used to resize lg through --ui-button-* custom properties; the size owns its footprint now
+    expect(buttonSizeClasses.lg).not.toMatch(/var\(--ui-/);
+  });
+
   it('composes the shared base, the variant and the size', () => {
     const c = buttonClass('neutral', 'sm');
     expect(c).toContain(buttonVariantClasses.neutral);
