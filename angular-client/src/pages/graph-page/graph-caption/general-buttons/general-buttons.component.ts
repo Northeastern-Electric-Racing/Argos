@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { UiDateTimeInputComponent } from 'src/ui/datetime/datetime-input.component';
+import { segmentedClasses } from 'src/ui/datetime/recipes';
+import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -31,14 +34,16 @@ type CustomMode = 'last-x' | 'date-range';
 @Component({
   selector: 'general-buttons',
   templateUrl: './general-buttons.component.html',
-  styleUrl: './general-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'flex h-full flex-col justify-between py-0.5 mr-1.25 ml-3.75 max-md:m-0 max-md:w-full' },
   imports: [
     RunSelectorComponent,
     ButtonComponent,
     SelectDropdownComponent,
     UiPopoverComponent,
     UiDateTimeInputComponent,
+    UiInputDirective,
+    UiLabelDirective,
     FormsModule,
     Tabs,
     TabList,
@@ -49,6 +54,8 @@ type CustomMode = 'last-x' | 'date-range';
 })
 export class GeneralButtonsComponent {
   private toastService = inject(ToastService);
+  protected readonly segmented = segmentedClasses;
+  protected readonly field = fieldClasses;
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
