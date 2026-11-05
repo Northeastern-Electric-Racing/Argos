@@ -16,7 +16,7 @@ class WithToggle {}
 
 /** The nav bar and the routed page in their main region, as app-context lays them out. */
 @Component({
-  template: '<app-nav-bar /><main tabindex="-1"><router-outlet /></main>',
+  template: '<app-nav-bar /><main class="contents"><router-outlet /></main>',
   imports: [AppNavBarComponent, RouterOutlet]
 })
 class Shell {}
@@ -96,13 +96,17 @@ describe('AppNavBarComponent on a phone', () => {
     expect(drawer()).toBeNull();
   });
 
-  it("moves focus to the new page's main region when that page has no menu button", async () => {
+  it('moves focus to the new page in the main region when that page has no menu button', async () => {
     const { drawer, open, choose, main } = await setup();
     await open();
     await choose('Graph');
     expect(drawer()).toBeNull();
+    const page = main.querySelector<HTMLElement>('router-outlet + *')!;
     expect(document.activeElement).not.toBe(document.body);
-    expect(document.activeElement).toBe(main);
+    expect(document.activeElement).toBe(page);
+    // focusable only while it holds focus, like a skip link's target
+    page.blur();
+    expect(page.hasAttribute('tabindex')).toBe(false);
   });
 
   it("moves focus to the new page's menu button when it has one", async () => {

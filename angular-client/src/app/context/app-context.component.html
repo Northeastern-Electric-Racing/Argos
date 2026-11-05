@@ -1,4 +1,7 @@
 <ui-toast-host />
 <app-nav-bar />
-<!-- The routed page's landmark, and where focus goes when its trigger leaves with the old page (the nav drawer). -->
-<main class="block h-full outline-none" tabindex="-1"><router-outlet /></main>
+<!--
+  The routed page's landmark. No box of its own (contents), so pages keep sizing against body as before; the nav
+  drawer focuses the page inside it when the drawer's trigger left with the old page.
+-->
+<main class="contents"><router-outlet /></main>
