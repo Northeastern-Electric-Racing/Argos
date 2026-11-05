@@ -1,0 +1,19 @@
+<button
+  type="button"
+  [class]="classes.bell"
+  [attr.aria-label]="'Notifications, ' + notificationLogService.unreadCount() + ' unread'"
+  aria-haspopup="dialog"
+  [attr.aria-expanded]="notificationPanel.isOpen()"
+  (click)="notificationPanel.toggle($event)"
+>
+  <span class="inline-flex size-8 text-[32px]"
+    ><mat-icon [svgIcon]="'notifications'" [inline]="true" aria-hidden="true"
+  /></span>
+  @if (notificationLogService.unreadCount() > 0) {
+    <!-- The bell's name carries the count; the badge is its visual copy. -->
+    <span data-badge [class]="classes.badge" aria-hidden="true">{{ notificationLogService.unreadCount() }}</span>
+  }
+</button>
+<ui-popover #notificationPanel (shown)="notificationLogService.markAllRead()" ariaLabel="Notifications">
+  <notification-list variant="popover" />
+</ui-popover>
