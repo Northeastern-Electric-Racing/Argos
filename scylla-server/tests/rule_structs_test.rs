@@ -1110,3 +1110,38 @@ async fn test_subscribe_rules_concurrent() -> Result<(), RuleManagerError> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_handle_msg_gives_each_firing_a_unique_notification_id() -> Result<(), RuleManagerError>
+{
+    let client_data = ClientData {
+        run_id: 1,
+        name: "test/topic".to_string(),
+        unit: "test_unit".to_string(),
+        values: vec![15.0],
+        timestamp: Utc::now(),
+    };
+    let mut ids = Vec::new();
+    // a second manager stands in for a server restart, whose ids must not repeat the first's
+    for _ in 0..2 {
+        let rule_manager = RuleManager::new();
+        for rule_id in ["rule_1", "rule_2"] {
+            let rule = Rule::new(
+                RuleId(rule_id.to_string()),
+                Topic("test/topic".to_string()),
+                core::time::Duration::ZERO,
+                "a > 10".to_owned(),
+            );
+            rule_manager
+                .add_rule(ClientId("test_client".to_string()), rule)
+                .await?;
+        }
+        let notifications = rule_manager.handle_msg(&client_data).await?.unwrap();
+        assert_eq!(notifications.len(), 2);
+        ids.extend(notifications.into_iter().map(|n| n.1.notification_id));
+    }
+
+    let unique: std::collections::HashSet<_> = ids.iter().collect();
+    assert_eq!(unique.len(), ids.len(), "duplicate ids in {ids:?}");
+    Ok(())
+}

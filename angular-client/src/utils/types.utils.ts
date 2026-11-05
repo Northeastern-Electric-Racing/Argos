@@ -103,6 +103,8 @@ export interface Timing {
 }
 
 export interface RuleNotification {
+  /** Unique per firing; acked back to the server and used to drop resent duplicates */
+  notification_id: string;
   id: string;
   topic: string;
   values: number[];

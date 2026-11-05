@@ -3,15 +3,15 @@ use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
 use serde::Serialize;
-use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::SocketRef;
 use socketioxide::handler::{FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
+use socketioxide::{AckError, SocketIo};
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
-use tokio::sync::{RwLock, broadcast};
+use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
@@ -21,7 +21,8 @@ use crate::metadata_structs::{
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
     map_dti_flt,
 };
-use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::notification_outbox::NotificationOutbox;
+use crate::rule_structs::{ClientId, RULE_SOCKET_KEY, RuleManager, RuleNotification};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -102,6 +103,11 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
 /// Cadence at which `Argos/Message_Rate` is recomputed and emitted.
 const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
 
+/// How long a client with unacked notifications may stay offline before its subscriptions are deleted
+const OFFLINE_GRACE: Duration = Duration::from_mins(5);
+/// Cadence at which clients offline past [`OFFLINE_GRACE`] are expired
+const OUTBOX_EXPIRE_INTERVAL: Duration = Duration::from_secs(10);
+
 ///
 /// # Panics
 /// Panics if Regex is invalid
@@ -122,6 +128,7 @@ pub async fn socket_handler_with_metadata(
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
     let mut message_rate_interval = tokio::time::interval(MESSAGE_RATE_INTERVAL);
+    let mut outbox_expire_interval = tokio::time::interval(OUTBOX_EXPIRE_INTERVAL);
 
     // init timers
     let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
@@ -154,6 +161,10 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
+    // notifications not yet acked by their client, resent when it reconnects
+    let outbox: Arc<Mutex<NotificationOutbox>> =
+        Arc::new(Mutex::new(NotificationOutbox::default()));
+    let connect_outbox = outbox.clone();
     io.ns(
         "/",
         |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
@@ -171,8 +182,35 @@ pub async fn socket_handler_with_metadata(
             owned.insert(client_id.clone(), socket.id);
             drop(owned);
 
+            let client = ClientId(client_id.clone());
+            let pending = {
+                let mut outbox = connect_outbox.lock().await;
+                outbox.mark_online(&client);
+                outbox.pending(&client)
+            };
+            if !pending.is_empty() {
+                info!(
+                    "Resending {} unacked notifications to {}",
+                    pending.len(),
+                    client
+                );
+            }
+            for notification in pending {
+                send_notification(&socket, client.clone(), notification, &connect_outbox);
+            }
+
+            let sid = socket.id;
             socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id);
+                let mut socket_map = writable_socket_map.write().await;
+                // a reconnect may have already replaced this socket with a newer one
+                if socket_map.get(&client_id) == Some(&sid) {
+                    socket_map.remove(&client_id);
+                    drop(socket_map);
+                    connect_outbox
+                        .lock()
+                        .await
+                        .mark_offline(ClientId(client_id), tokio::time::Instant::now());
+                }
             });
         },
     );
@@ -216,7 +254,7 @@ pub async fn socket_handler_with_metadata(
                         //     );
                         // }
                         handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &outbox, &io).await;
                     }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
@@ -268,6 +306,13 @@ pub async fn socket_handler_with_metadata(
                         METADATA_SOCKET_KEY,
                     ).await;
             },
+            _ = outbox_expire_interval.tick() => {
+                let expired = outbox.lock().await.expire(tokio::time::Instant::now(), OFFLINE_GRACE);
+                for client in expired {
+                    warn!("Client {} offline with unacked notifications for {:?}, deleting client", client, OFFLINE_GRACE);
+                    let _ = rules_manager.delete_client(client).await;
+                }
+            }
             _ = message_rate_interval.tick() => {
                 let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
                 debug!("Updating message rate to be {} msg/sec", rate);
@@ -306,47 +351,82 @@ async fn handle_rule_processing(
     data: &ClientData,
     rule_manager: &Arc<RuleManager>,
     client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
+    outbox: &Arc<Mutex<NotificationOutbox>>,
     io: &SocketIo,
 ) {
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
 
-    for notification in notifs {
+    for (client, notification) in notifs {
+        outbox
+            .lock()
+            .await
+            .push(client.clone(), notification.clone());
         // Copy the sid and drop the read lock before any async work
         let sid_opt = {
             let read_clients = client_socket_map.read().await;
-            read_clients.get(&notification.0.0).copied()
+            read_clients.get(&client.0).copied()
         };
-        let Some(sid) = sid_opt else {
-            warn!(
-                "Could not find client to deliver notification, deleting client {}",
-                notification.0.0
+        let Some(socket) = sid_opt.and_then(|sid| io.get_socket(sid)) else {
+            info!(
+                "Client {} not connected, holding notification until it reconnects",
+                client
             );
-            let _ = rule_manager.delete_client(notification.0).await;
+            outbox
+                .lock()
+                .await
+                .mark_offline(client, tokio::time::Instant::now());
             continue;
         };
         debug!(
             "Sending notification of {} to {}",
-            notification.1.topic, notification.0
+            notification.topic, client
         );
-        let Some(socket) = io.get_socket(sid) else {
-            warn!(
-                "Could not find client socket, deleting client {}",
-                notification.0.0
-            );
-            let _ = rule_manager.delete_client(notification.0).await;
-            continue;
-        };
-        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
+        send_notification(&socket, client, notification, outbox);
+    }
+}
+
+/// Emits a rule notification and acks it in the outbox once the client confirms it, waiting on
+/// the ack in its own task so the delivery loop never stalls. A timeout or closed socket leaves
+/// the notification pending, to be resent when the client reconnects.
+fn send_notification(
+    socket: &SocketRef,
+    client: ClientId,
+    notification: RuleNotification,
+    outbox: &Arc<Mutex<NotificationOutbox>>,
+) {
+    let ack = match socket.emit_with_ack::<_, serde::de::IgnoredAny>(RULE_SOCKET_KEY, &notification)
+    {
+        Ok(ack) => ack,
+        Err(err) => {
             warn!(
                 "Could not send rule notification to {}, err {}",
-                notification.0, err
+                client, err
             );
-        } else {
-            debug!("Successfully sent notification to {}", notification.0);
+            return;
         }
-    }
+    };
+    let outbox = outbox.clone();
+    tokio::spawn(async move {
+        match ack.await {
+            // any reply proves receipt; an argument-less ack() has nothing to decode
+            Ok(_) | Err(AckError::Decode(_)) => {
+                outbox
+                    .lock()
+                    .await
+                    .ack(&client, &notification.notification_id);
+                debug!(
+                    "Client {} acked notification {}",
+                    client, notification.notification_id
+                );
+            }
+            Err(err) => warn!(
+                "Client {} did not ack notification {}, err {}",
+                client, notification.notification_id, err
+            ),
+        }
+    });
 }
 
 /// Handles parsing and creating metadata for a newly received socket message.
