@@ -1,15 +1,16 @@
-<div class="ui-dialog-surface" cdkDrag cdkDragRootElement=".cdk-overlay-pane" [cdkDragDisabled]="!_config.uiDraggable">
+<div [class]="classes.surface" cdkDrag cdkDragRootElement=".cdk-overlay-pane" [cdkDragDisabled]="!_config.uiDraggable">
   @if (_config.uiShowHeader) {
-    <header class="ui-dialog-header" cdkDragHandle [class.draggable]="_config.uiDraggable">
-      <h2 class="ui-dialog-title" [id]="_config.uiTitleId">{{ _config.uiHeader }}</h2>
+    <header [class]="classes.header" cdkDragHandle [class.cursor-move]="_config.uiDraggable">
+      <h2 [class]="classes.title" [id]="_config.uiTitleId">{{ _config.uiHeader }}</h2>
     </header>
   }
-  <div class="ui-dialog-content" [class.headerless]="!_config.uiShowHeader">
+  <div [class]="_config.uiShowHeader ? classes.content : headerlessContent">
     <ng-template cdkPortalOutlet />
   </div>
-  <!-- After the content in DOM order, so the CDK's first-tabbable focus lands on the content. -->
+  <!-- After the content in DOM order, so the CDK's first-tabbable focus lands on the content.
+       ui-dialog-close is a hook for run-form's focus check, not a style. -->
   @if (_config.uiShowHeader && _config.uiClosable) {
-    <button type="button" class="ui-icon-button ui-dialog-close" aria-label="Close" (click)="close()">
+    <button type="button" uiIconButton class="ui-dialog-close" [class]="classes.close" aria-label="Close" (click)="close()">
       <mat-icon aria-hidden="true">close</mat-icon>
     </button>
   }

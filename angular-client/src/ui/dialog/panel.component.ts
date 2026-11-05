@@ -3,6 +3,8 @@ import { NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, InjectionToken, Injector, Type, inject } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { Observable, Subject } from 'rxjs';
+import { UiIconButtonDirective } from '../button/button.directive';
+import { DialogDensity, dialogClasses } from './dialog.recipe';
 
 /** Handle to a non-modal panel from UiDialogService.openPanel; the same shape callers use on a DialogRef. */
 export class UiPanelRef<R = unknown> {
@@ -29,6 +31,7 @@ export interface UiPanelConfig {
   header?: string;
   titleId: string;
   draggable: boolean;
+  density: DialogDensity;
   component: Type<unknown>;
 }
 
@@ -42,17 +45,17 @@ export const UI_PANEL_CONFIG = new InjectionToken<UiPanelConfig>('UI_PANEL_CONFI
 @Component({
   selector: 'ui-panel',
   templateUrl: './panel.component.html',
-  styleUrls: ['./dialog-container.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgComponentOutlet, CdkDrag, CdkDragHandle, MatIcon],
+  imports: [NgComponentOutlet, CdkDrag, CdkDragHandle, MatIcon, UiIconButtonDirective],
   host: {
-    class: 'ui-dialog',
+    class: 'block size-full max-h-[inherit] min-h-[inherit] outline-none',
     role: 'dialog',
     '[attr.aria-labelledby]': 'config.header ? config.titleId : null'
   }
 })
 export class UiPanelComponent {
   protected config = inject(UI_PANEL_CONFIG);
+  protected readonly classes = dialogClasses[this.config.density];
   protected injector = inject(Injector);
   private ref = inject(UiPanelRef);
 
