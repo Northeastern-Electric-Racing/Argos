@@ -36,22 +36,13 @@ import {
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
 @Component({
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
-  styleUrls: ['./graph-sidebar-desktop.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [
-    ButtonComponent,
-    TopicTreeComponent,
-    TypographyComponent,
-    UiSwitchComponent,
-    FormsModule,
-    SelectDropdownComponent
-  ]
+  imports: [ButtonComponent, TopicTreeComponent, UiSwitchComponent, FormsModule, SelectDropdownComponent]
 })
 export default class GraphSidebarDesktopComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);

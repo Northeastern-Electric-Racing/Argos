@@ -1,18 +1,22 @@
-<div class="general-buttons-row">
+<div class="flex flex-row flex-wrap items-center gap-2 max-md:w-full max-md:gap-1.5">
   <run-selector [selectRun]="onRunSelected()" />
   @if (historicalOn()) {
     <argos-button [onClick]="onSetRealTime()" label="Realtime" size="sm" />
   }
   <argos-button [onClick]="onClearDataType()" label="Clear Graph" size="sm" variant="tonal" />
 
-  <div class="historical-section">
-    <span class="historical-label">Historical:</span>
+  <div
+    class="flex flex-row items-center gap-1.5 border-l border-solid border-secondary-border/25 pl-2.5 max-md:flex-wrap max-md:border-l-0 max-md:pl-0"
+  >
+    <span class="text-xs font-semibold tracking-[0.04em] text-secondary-border uppercase">Historical:</span>
+    <!-- The Quick Select at the sm Custom button's font size, through the select's own size hook. -->
     <select-dropdown
+      class="[--ui-select-font-size:var(--text-xs)] max-md:min-w-32.5"
       [options]="quickSelectConfig().options"
       [placeholder]="quickSelectConfig().placeholder"
       [defaultValue]="selectedPresetLabel()"
     />
-    <div class="custom-stack">
+    <div class="flex flex-col items-start gap-0.5">
       <argos-button
         [onClick]="toggleCustomPopover"
         label="Custom"
@@ -22,32 +26,33 @@
         [ariaExpanded]="customPopover.isOpen()"
       />
       @if (customActive() && customCaption()) {
-        <span class="custom-caption">{{ customCaption() }}</span>
+        <span class="text-badge leading-none whitespace-nowrap text-secondary-border">{{ customCaption() }}</span>
       }
     </div>
   </div>
 
-  <ui-popover #customPopover panelClass="custom-range-popover" ariaLabel="Custom time range" (shown)="onCustomPopoverShow()">
-    <div class="custom-popover-body" ngTabs>
+  <ui-popover #customPopover ariaLabel="Custom time range" (shown)="onCustomPopoverShow()">
+    <div class="flex min-w-65 flex-col gap-3 p-4" ngTabs>
       <div
         ngTabList
-        class="ui-segmented"
+        [class]="segmented.list"
         aria-label="Range type"
         [selectedTab]="customMode()"
         (selectedTabChange)="setCustomMode($event)"
       >
-        <div ngTab value="last-x">Last X</div>
-        <div ngTab value="date-range">Date Range</div>
+        <div ngTab value="last-x" [class]="segmented.item">Last X</div>
+        <div ngTab value="date-range" [class]="segmented.item">Date Range</div>
       </div>
 
-      <div ngTabPanel value="last-x" class="mode-body">
+      <div ngTabPanel value="last-x" [class]="segmented.panel">
         <ng-template ngTabContent>
-          <div class="ui-field">
-            <label class="ui-label" for="custom-hours">Hours</label>
+          <div [class]="field.field">
+            <label uiLabel for="custom-hours">Hours</label>
             <input
               id="custom-hours"
               type="number"
-              class="ui-input ui-input--sm"
+              uiInput="sm"
+              class="tabular-nums"
               [ngModel]="customHours()"
               (ngModelChange)="customHours.set($event)"
               min="0"
@@ -55,12 +60,13 @@
               placeholder="0"
             />
           </div>
-          <div class="ui-field">
-            <label class="ui-label" for="custom-minutes">Minutes</label>
+          <div [class]="field.field">
+            <label uiLabel for="custom-minutes">Minutes</label>
             <input
               id="custom-minutes"
               type="number"
-              class="ui-input ui-input--sm"
+              uiInput="sm"
+              class="tabular-nums"
               [ngModel]="customMinutes()"
               (ngModelChange)="customMinutes.set($event)"
               min="0"
@@ -72,10 +78,10 @@
         </ng-template>
       </div>
 
-      <div ngTabPanel value="date-range" class="mode-body">
+      <div ngTabPanel value="date-range" [class]="segmented.panel">
         <ng-template ngTabContent>
-          <div class="ui-field">
-            <label class="ui-label" for="custom-from">From</label>
+          <div [class]="field.field">
+            <label uiLabel for="custom-from">From</label>
             <ui-datetime-input
               inputId="custom-from"
               [ngModel]="customFromDate()"
@@ -83,8 +89,8 @@
               [maxDate]="maxDate()"
             />
           </div>
-          <div class="ui-field">
-            <label class="ui-label" for="custom-to">To</label>
+          <div [class]="field.field">
+            <label uiLabel for="custom-to">To</label>
             <ui-datetime-input
               inputId="custom-to"
               [ngModel]="customToDate()"

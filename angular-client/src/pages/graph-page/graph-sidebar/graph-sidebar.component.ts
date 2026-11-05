@@ -11,7 +11,6 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
 @Component({
   selector: 'graph-sidebar',
   templateUrl: './graph-sidebar.component.html',
-  styleUrls: ['./graph-sidebar.component.css'],
   imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {

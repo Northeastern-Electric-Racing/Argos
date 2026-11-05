@@ -1,6 +1,5 @@
 import { Component, input, OnInit } from '@angular/core';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 
 /**
  * Graph Header Component to display the graph page header.
@@ -9,8 +8,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'graph-header',
   templateUrl: './graph-header.component.html',
-  styleUrls: ['./graph-header.component.css'],
-  imports: [TypographyComponent, SidebarToggleComponent],
+  imports: [SidebarToggleComponent],
   host: {
     '(window:resize)': 'onResize()'
   }
