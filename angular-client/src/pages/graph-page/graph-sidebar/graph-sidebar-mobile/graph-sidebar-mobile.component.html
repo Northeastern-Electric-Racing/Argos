@@ -37,13 +37,15 @@
         <ui-switch [checked]="flattenMode()" (checkedChange)="toggleFlattenMode($event)" ariaLabel="Flatten topic tree" />
       </label>
     </div>
+    <!-- The tree takes the drawer's remaining height and scrolls inside it. -->
     <topic-tree
+      class="min-h-0 flex-1"
       [nodes]="activeNodes()"
       [selectedKeys]="selectedKeys()"
       (nodeSelect)="nodeSelect($event)"
       (nodeUnselect)="onNodeUnselect($event)"
       filterPlaceholder="Search topics..."
-      height="calc(100vh - 220px)"
+      height="100%"
     />
   </div>
 </ui-drawer>
