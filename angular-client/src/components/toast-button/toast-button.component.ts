@@ -1,14 +1,16 @@
 import { ToastService } from 'src/ui/toast/toast.service';
-import { Component, inject, input, ChangeDetectionStrategy, computed } from '@angular/core';
-import { buttonClass, ButtonVariant } from '../argos-button/argos-button.component';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { ButtonVariant } from 'src/ui/recipes/button';
 
 export type toastSeverity = 'success' | 'info' | 'warn' | 'error';
 
-/** A design-system button that also confirms its action with a toast. */
+/** A button (the lg button recipe) that also confirms its action with a toast. */
 @Component({
   selector: 'toast-button',
   templateUrl: './toast-button.component.html',
-  styleUrls: ['./toast-button.component.css'],
+  imports: [UiButtonDirective],
+  host: { class: 'inline-flex' },
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ToastButtonComponent {
@@ -23,7 +25,6 @@ export class ToastButtonComponent {
   onClick = input.required<() => void>();
   /** Layout tweaks only (size, margins); the look comes from `variant`. */
   additionalStyles = input<string>('');
-  protected cssClass = computed(() => buttonClass(this.variant(), 'lg'));
 
   handleClick() {
     // the first () is to access the signal value,

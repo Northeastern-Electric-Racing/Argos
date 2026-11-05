@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { buttonClass, ButtonComponent } from './argos-button.component';
+import { buttonClass } from 'src/ui/recipes/button';
+import { ButtonComponent } from './argos-button.component';
+
+// Angular's [class] binding may reorder classes, so compare them as sorted sets.
+const sorted = (classes: string): string[] => [...new Set(classes.split(/\s+/).filter(Boolean))].sort();
 
 describe('ButtonComponent', () => {
   let component: ButtonComponent;
@@ -24,21 +28,26 @@ describe('ButtonComponent', () => {
 
   const button = (): HTMLButtonElement => fixture.nativeElement.querySelector('button');
 
-  it('renders a primary design-system button at the legacy 140x45 footprint by default', () => {
-    expect(button().className).toBe('ui-button ui-button--lg');
+  const classes = (): string[] => sorted(button().className);
+
+  it('renders a primary button from the recipe at the legacy 140x45 footprint (lg) by default', () => {
+    expect(classes()).toEqual(sorted(buttonClass('primary', 'lg')));
+    expect(button().dataset['variant']).toBe('primary');
+    expect(button().dataset['size']).toBe('lg');
   });
 
   it('renders the compact size without the legacy footprint', () => {
     fixture.componentRef.setInput('size', 'sm');
     fixture.detectChanges();
-    expect(button().className).toBe('ui-button ui-button--sm');
+    expect(classes()).toEqual(sorted(buttonClass('primary', 'sm')));
   });
 
-  it('maps each variant to its design-system modifier', () => {
+  it('maps each variant to its recipe', () => {
     fixture.componentRef.setInput('variant', 'tonal');
     fixture.componentRef.setInput('size', 'sm');
     fixture.detectChanges();
-    expect(button().className).toBe('ui-button ui-button--sm ui-button--tonal');
+    expect(classes()).toEqual(sorted(buttonClass('tonal', 'sm')));
+    expect(button().dataset['variant']).toBe('tonal');
   });
 
   it('applies additionalStyles for layout tweaks', () => {
@@ -63,11 +72,6 @@ describe('ButtonComponent', () => {
     button.click();
     expect(received).toBeDefined();
     expect(received instanceof Event).toBe(true);
-  });
-
-  it('buttonClass gives primary the plain button and other variants their modifier', () => {
-    expect(buttonClass('primary', 'lg')).toBe('ui-button ui-button--lg');
-    expect(buttonClass('danger', 'sm')).toBe('ui-button ui-button--sm ui-button--danger');
   });
 
   it('reports an on/off toggle through aria-pressed, and leaves it off plain buttons', () => {
