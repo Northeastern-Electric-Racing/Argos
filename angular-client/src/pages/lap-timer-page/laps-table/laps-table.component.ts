@@ -4,19 +4,50 @@ import { MatIcon } from '@angular/material/icon';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
+import { iconClasses } from 'src/ui/recipes/icon';
+import { cellClass } from 'src/ui/recipes/table';
+import { cx, tw } from 'src/ui/recipes/tw';
 import { formatDeltaMs, formatMs, Lap } from 'src/utils/lap-timer.types';
+import { lapHeaderClass, lapTimerClasses } from '../lap-timer.classes';
+
+/** Every column is numeric and right-aligned; times use tabular figures so they line up. */
+const plain = cx(cellClass(), tw('text-right'));
+const mono = cx(plain, tw('tabular-nums'));
+/** The best and worst laps carry a 3px green or red edge on their first cell. */
+const edges = {
+  best: tw('border-l-3 border-l-battery-high'),
+  worst: tw('border-l-3 border-l-battery-low')
+} as const;
 
 @Component({
   selector: 'laps-table',
   templateUrl: './laps-table.component.html',
-  styleUrl: './laps-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'flex h-full w-full' },
   imports: [DatePipe, DecimalPipe, MatIcon, InfoBackgroundComponent, TypographyComponent]
 })
 export default class LapsTableComponent {
   readonly timer = inject(LapTimerService);
 
   readonly lapsNewestFirst: Signal<Lap[]> = computed(() => this.timer.laps().slice().reverse());
+
+  protected readonly cls = lapTimerClasses;
+  protected readonly iconXs = iconClasses.xs;
+  protected readonly rowClass = tw('hover:bg-fg/4');
+  protected readonly headers = {
+    num: cx(lapHeaderClass('right'), tw('w-14')),
+    dur: cx(lapHeaderClass('right'), tw('w-25')),
+    delta: cx(lapHeaderClass('right'), tw('w-27.5')),
+    time: cx(lapHeaderClass('right'), tw('w-32.5')),
+    run: cx(lapHeaderClass('right'), tw('w-16')),
+    stat: cx(lapHeaderClass('right'), tw('w-25'))
+  };
+  /** A slower lap's delta to the best is positive: red text (accent-fg, AA on the card). */
+  protected readonly cells = { plain, mono, slower: cx(mono, tw('text-accent-fg')) };
+
+  numCellClass(lap: Lap): string {
+    return cx(plain, this.isBestLap(lap) && edges.best, this.isWorstLap(lap) && edges.worst);
+  }
 
   formatLapMs(ms: number): string {
     return formatMs(ms);

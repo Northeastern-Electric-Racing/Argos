@@ -1,8 +1,9 @@
-<div class="gauge-container">
-  <svg class="gauge-svg" [attr.viewBox]="viewBox()" preserveAspectRatio="xMidYMid meet">
-    <path class="gauge-track" [attr.d]="arcPath()" [attr.stroke-width]="stroke()" fill="none" stroke-linecap="round" />
+<div class="relative flex h-full w-full items-center justify-center">
+  <svg class="h-full w-full" [attr.viewBox]="viewBox()" preserveAspectRatio="xMidYMid meet">
+    <path class="stroke-surface-1" [attr.d]="arcPath()" [attr.stroke-width]="stroke()" fill="none" stroke-linecap="round" />
+    <!-- the arc eases between value updates without re-rendering -->
     <path
-      class="gauge-arc"
+      class="transition-[stroke-dashoffset] duration-100 ease-linear"
       [attr.d]="arcPath()"
       [attr.stroke]="color()"
       [attr.stroke-width]="stroke()"
@@ -12,5 +13,9 @@
       stroke-linecap="butt"
     />
   </svg>
-  <span class="gauge-value" [style.font-size.px]="fontSizePx()">{{ label() }}</span>
+  <span
+    class="pointer-events-none absolute inset-x-0 bottom-[12%] flex justify-center font-light text-fg"
+    [style.font-size.px]="fontSizePx()"
+    >{{ label() }}</span
+  >
 </div>
