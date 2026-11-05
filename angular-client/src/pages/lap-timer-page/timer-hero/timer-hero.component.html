@@ -1,19 +1,16 @@
-<info-background
-  svgIcon="timer"
-  title="Lap Timer"
-  [topRightInfo]="timer.activeSession()?.name"
-  style="width: 100%; height: 100%"
->
-  <div class="timer-hero">
-    <div class="hero-label">TOTAL</div>
-    <div class="hero-total">{{ timer.formattedTotal() }}</div>
-    <div class="hero-divider"></div>
-    <div class="hero-current-row">
-      <div class="hero-label">LAP {{ timer.lapCount() + 1 }}</div>
-      <div class="hero-current-time">{{ timer.formattedCurrentLap() }}</div>
-      <div class="hero-current-delta" [class]="currentLapDeltaClass()">{{ currentLapDeltaText() }}</div>
+<info-background svgIcon="timer" title="Lap Timer" [topRightInfo]="timer.activeSession()?.name" class="h-full w-full">
+  <div class="flex w-full flex-col items-center gap-2 py-2">
+    <div [class]="cls.heroLabel">TOTAL</div>
+    <div [class]="cls.numeral">{{ timer.formattedTotal() }}</div>
+    <div [class]="dividerClass"></div>
+    <div class="grid w-4/5 grid-cols-[auto_1fr_auto] items-baseline gap-3">
+      <div [class]="cls.heroLabel">LAP {{ timer.lapCount() + 1 }}</div>
+      <div class="text-center font-sans text-xl font-semibold text-fg-label tabular-nums">
+        {{ timer.formattedCurrentLap() }}
+      </div>
+      <div [class]="currentLapDeltaClass()">{{ currentLapDeltaText() }}</div>
     </div>
-    <div class="hero-actions" #actions>
+    <div class="mt-2 flex flex-wrap justify-center gap-3" #actions role="group" aria-label="Timer controls">
       @if (!timer.activeSession()) {
         <argos-button label="Start" [onClick]="onStart" variant="success" />
       } @else if (timer.isIdle()) {

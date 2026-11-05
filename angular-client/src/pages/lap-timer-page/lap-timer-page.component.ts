@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import HalfGaugeComponent from 'src/components/half-gauge/half-gauge.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import { GaugeStatComponent } from 'src/components/gauge-stat/gauge-stat.component';
@@ -10,15 +9,13 @@ import SessionsPanelComponent from './sessions-panel/sessions-panel.component';
 import TimerHeroComponent from './timer-hero/timer-hero.component';
 import SessionSummaryComponent from './session-summary/session-summary.component';
 import LapsTableComponent from './laps-table/laps-table.component';
+import { tw } from 'src/ui/recipes/tw';
 
 @Component({
   selector: 'lap-timer-page',
   templateUrl: './lap-timer-page.component.html',
-  styleUrl: './lap-timer-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MatGridList,
-    MatGridTile,
     HalfGaugeComponent,
     InfoBackgroundComponent,
     GaugeStatComponent,
@@ -31,6 +28,9 @@ import LapsTableComponent from './laps-table/laps-table.component';
 export default class LapTimerPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+
+  /** A grid tile, as mat-grid-tile drew it: its card centred, anything larger clipped. */
+  protected readonly tile = tw('flex items-center justify-center overflow-hidden');
 
   readonly liveSpeed = signal(0);
   readonly liveMotorTemp = signal(0);
@@ -47,7 +47,7 @@ export default class LapTimerPageComponent implements OnInit {
 
   readonly motorTempColor = computed(() => {
     const t = this.liveMotorTemp();
-    if (t < 60) return 'var(--color-text-primary)';
+    if (t < 60) return 'var(--color-fg)';
     if (t < 80) return 'var(--color-battery-med)';
     return 'var(--color-battery-low)';
   });
