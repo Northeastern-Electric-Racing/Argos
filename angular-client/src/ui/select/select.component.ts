@@ -16,7 +16,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { iconClasses } from '../recipes/icon';
 import { cx, tw } from '../recipes/tw';
-import { listboxClasses, listboxPopupClass } from './listbox.recipe';
+import { listboxClasses, listboxPopupClass } from '../recipes/listbox';
 
 /*
  * The trigger. Pages restyle it through custom properties set on ui-select or any ancestor, instead of piercing

@@ -23,7 +23,7 @@ import { filter, take } from 'rxjs';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 import { fieldClasses } from 'src/ui/recipes/field';
-import { listboxClasses, listboxPopupClass } from 'src/ui/select/listbox.recipe';
+import { listboxClasses, listboxPopupClass } from 'src/ui/recipes/listbox';
 
 @Component({
   selector: 'add-rule-dialog',

@@ -30,7 +30,7 @@ import {
   unsubscribeFromRules
 } from 'src/api/rules.api';
 import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
-import { cellClass, checkboxClass, headerCellClass, rowClass, tableClass, tableClasses } from './table.recipe';
+import { cellClass, checkboxClass, headerCellClass, rowClass, tableClass, tableClasses } from 'src/ui/recipes/table';
 
 @Component({
   selector: 'rules-table',

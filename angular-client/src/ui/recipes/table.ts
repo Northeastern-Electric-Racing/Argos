@@ -1,10 +1,9 @@
-import { cx, tw } from 'src/ui/recipes/tw';
+import { cx, tw } from './tw';
 
 /*
  * The data-table and checkbox recipes, for CDK tables (`<table cdk-table>`, `*cdkHeaderRowDef="cols; sticky: true"`
- * for a sticky header, `[trackBy]`, `*cdkNoDataRow` for the empty row) and plain tables alike. They live
- * next to their first consumer until the fix step moves them to src/ui/recipes/table.ts (1B handoff); wave 2's
- * tables (lap timer, BMS chip faults, faults, notification log) consume them from there.
+ * for a sticky header, `[trackBy]`, `*cdkNoDataRow` for the empty row) and plain tables alike: the rules
+ * table, the upload preview, and wave 2's lap timer, BMS chip faults, faults and notification log tables.
  *
  *   wrapper   the scroll box; add the height cap (max-h-*) for a sticky header to stick inside
  *   table     md (0.9rem) or sm (0.8125rem) text

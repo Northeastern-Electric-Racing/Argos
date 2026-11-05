@@ -1,6 +1,6 @@
 /**
  * Colour constants for code that paints from TypeScript (backgrounds, battery levels). They match the theme
- * tokens in src/styles/theme.css. Text styles live in the typography recipe (components/typography).
+ * tokens in src/styles/theme.css. Text styles live in the typography recipe (src/ui/recipes/typography.ts).
  */
 export default class Theme {
   static readonly battteryLow: string = '#f50905';

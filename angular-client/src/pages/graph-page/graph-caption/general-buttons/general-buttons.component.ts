@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { UiDateTimeInputComponent } from 'src/ui/datetime/datetime-input.component';
-import { segmentedClasses } from 'src/ui/datetime/recipes';
+import { segmentedClasses } from 'src/ui/recipes/segmented';
 import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 import { fieldClasses } from 'src/ui/recipes/field';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';

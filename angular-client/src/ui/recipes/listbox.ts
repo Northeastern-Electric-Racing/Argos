@@ -1,4 +1,4 @@
-import { cx, tw } from '../recipes/tw';
+import { cx, tw } from './tw';
 
 /**
  * The listbox popup shared by ui-select and the add-rule topic autocomplete (Aria combobox + listbox in a
