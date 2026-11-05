@@ -22,11 +22,12 @@
         <button
           type="button"
           uiIconButton
-          class="relative z-10 -my-1"
+          class="relative z-10 -my-0.5"
           [attr.aria-label]="btn.ariaLabel ?? 'Reset'"
           (click)="btn.onClick()"
         >
-          <mat-icon aria-hidden="true" [fontIcon]="btn.icon" />
+          <!-- the icon keeps #909's white (the button's own colour is muted); -my-0.5 keeps the 28px title row -->
+          <span class="flex text-fg"><mat-icon aria-hidden="true" [fontIcon]="btn.icon" /></span>
         </button>
       }
       @if (this.selectorConfigs().length !== 0) {
