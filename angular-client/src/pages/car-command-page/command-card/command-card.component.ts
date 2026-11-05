@@ -7,7 +7,7 @@ import CommandRowComponent from './command-row/command-row.component';
 @Component({
   selector: 'command-card',
   templateUrl: './command-card.component.html',
-  styleUrls: ['./command-card.component.css'],
+  host: { class: 'block h-full' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [InfoBackgroundComponent, ButtonComponent, CommandRowComponent]
 })
