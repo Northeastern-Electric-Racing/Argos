@@ -23,10 +23,10 @@ import { listboxClasses, listboxPopupClass } from '../recipes/listbox';
  * encapsulation: --ui-select-height, -radius, -bg, -color, -font-size, -font-weight and -padding-left (BMS
  * segment rows and the graph caption use them). Each falls back to the token the size would use. Hover lays a
  * 6% text-colour tint over whatever the background is; focus and open show the neutral focus edge, 2px
- * thick (the border plus a 1px outline outside it).
+ * thick (the border plus a 1px outline outside it). The rest edge is control-border, 3:1 on every surface.
  */
 const triggerBase = tw(
-  'group/trigger relative box-border flex w-full cursor-pointer items-center border border-solid border-border bg-[color:var(--ui-select-bg,var(--color-surface-3))] pr-9 [font-weight:var(--ui-select-font-weight,inherit)] text-[color:var(--ui-select-color,var(--color-fg))] transition-[border-color] duration-120 select-none hover:border-border-strong hover:bg-linear-to-r hover:from-fg/6 hover:to-fg/6 focus-visible:border-focus focus-visible:outline-1 focus-visible:outline-focus aria-disabled:cursor-default aria-disabled:opacity-55 aria-expanded:border-focus aria-expanded:outline-1 aria-expanded:outline-focus'
+  'group/trigger relative box-border flex w-full cursor-pointer items-center border border-solid border-control-border bg-[color:var(--ui-select-bg,var(--color-surface-3))] pr-9 [font-weight:var(--ui-select-font-weight,inherit)] text-[color:var(--ui-select-color,var(--color-fg))] transition-[border-color] duration-120 select-none hover:border-control-border-hover hover:bg-linear-to-r hover:from-fg/6 hover:to-fg/6 focus-visible:border-focus focus-visible:outline-1 focus-visible:outline-focus aria-disabled:cursor-default aria-disabled:opacity-55 aria-expanded:border-focus aria-expanded:outline-1 aria-expanded:outline-focus'
 );
 const triggerSizeClasses = {
   md: tw(

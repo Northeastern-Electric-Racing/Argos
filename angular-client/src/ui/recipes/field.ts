@@ -12,10 +12,11 @@ export type InputSize = (typeof INPUT_SIZES)[number];
 /*
  * The base sets no padding, height or radius: Tailwind orders utilities by its own rules, not by their order in
  * `class`, so a base `px-3` beside a size's `px-2` is decided by the stylesheet. Each size sets all three.
- * Focus is the neutral edge plus a 1px outline outside it (2px in all), as on ui-select.
+ * Focus is the neutral edge plus a 1px outline outside it (2px in all), as on ui-select. The edge is control-border,
+ * 3:1 on every surface up to surface-3 (WCAG 1.4.11; #909's hairline border measured 1.24 to 1.86).
  */
 const inputBase = tw(
-  'border border-solid border-border bg-surface-1 font-sans text-fg transition-[border-color] duration-120 placeholder:text-fg-muted hover:border-border-strong focus:border-focus focus:outline-1 focus:outline-focus disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-danger aria-invalid:focus:outline-danger [&.ng-invalid.ng-touched]:border-danger [&.ng-invalid.ng-touched]:focus:outline-danger'
+  'border border-solid border-control-border bg-surface-1 font-sans text-fg transition-[border-color] duration-120 placeholder:text-fg-muted hover:border-control-border-hover focus:border-focus focus:outline-1 focus:outline-focus disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-danger aria-invalid:focus:outline-danger [&.ng-invalid.ng-touched]:border-danger [&.ng-invalid.ng-touched]:focus:outline-danger'
 );
 const inputSizeClasses: Record<InputSize, Record<'input' | 'textarea', string>> = {
   sm: { input: tw('h-7 rounded-sm px-2 text-ctrl-sm'), textarea: tw('h-auto rounded-sm px-2 py-2 text-ctrl-sm') },

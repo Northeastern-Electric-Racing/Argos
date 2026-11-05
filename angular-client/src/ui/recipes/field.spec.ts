@@ -1,11 +1,13 @@
 import { fieldClasses, INPUT_SIZES, inputClass } from './field';
 
 describe('field recipe', () => {
-  it('has a non-empty input class list for every size, on the surface and hairline tokens', () => {
+  it('has a non-empty input class list for every size, on the surface and the 3:1 control edge tokens', () => {
     for (const s of INPUT_SIZES) {
       const c = inputClass(s).split(/\s+/);
       expect(c).toContain('bg-surface-1');
-      expect(c).toContain('border-border');
+      // the hairline border-border measured 1.24 to 1.86 against the surfaces (WCAG 1.4.11 wants 3:1)
+      expect(c).toEqual(expect.arrayContaining(['border-control-border', 'hover:border-control-border-hover']));
+      expect(c).not.toContain('border-border');
     }
     expect(inputClass('sm')).not.toBe(inputClass('md'));
   });
