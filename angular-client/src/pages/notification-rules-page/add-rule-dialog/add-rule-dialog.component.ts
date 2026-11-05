@@ -31,7 +31,8 @@ export class AddRuleDialogComponent implements OnInit {
     id: ['', Validators.required],
     topic: ['', Validators.required],
     expr: ['', Validators.required],
-    debounce_time: [60, [Validators.required, Validators.min(0)]]
+    debounce_time: [60, [Validators.required, Validators.min(0)]],
+    description: ['']
   });
 
   ngOnInit(): void {
@@ -68,7 +69,8 @@ export class AddRuleDialogComponent implements OnInit {
       id: value.id!,
       topic: value.topic!,
       expr: value.expr!,
-      debounce_time: Number(value.debounce_time)
+      debounce_time: Number(value.debounce_time),
+      ...(value.description?.trim() && { description: value.description.trim() })
     };
 
     this.ref.close(rule);

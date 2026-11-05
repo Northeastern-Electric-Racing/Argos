@@ -7,6 +7,7 @@ import { ButtonDirective } from 'primeng/button';
 export interface EditRuleResult {
   expr: string;
   debounce_time: number;
+  description: string;
 }
 
 @Component({
@@ -23,7 +24,8 @@ export class EditRuleDialogComponent {
 
   form = this.fb.group({
     expr: [this.config.data.expr as string, Validators.required],
-    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]]
+    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]],
+    description: [(this.config.data.description as string | null) ?? '']
   });
 
   onSubmit(): void {
@@ -35,7 +37,8 @@ export class EditRuleDialogComponent {
     const value = this.form.getRawValue();
     const result: EditRuleResult = {
       expr: value.expr!,
-      debounce_time: Number(value.debounce_time)
+      debounce_time: Number(value.debounce_time),
+      description: value.description?.trim() ?? ''
     };
 
     this.ref.close(result);
