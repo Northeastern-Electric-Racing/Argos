@@ -32,9 +32,12 @@ export function listboxPopupClass(width: ListboxWidth = 'fill', size: ListboxSiz
 export const listboxClasses = {
   /** The `ngListbox` element inside the popup. */
   listbox: tw('flex flex-col gap-0.5 outline-none'),
-  /** One `ngOption`. A `group/option`, so its check mark can follow aria-selected. */
+  /**
+   * One `ngOption`. A `group/option`, so its check mark can follow aria-selected. No `outline-none`: options never
+   * take DOM focus (activedescendant), and it would clear the style the data-active `outline-2` draws with.
+   */
   option: tw(
-    'group/option flex min-h-8 cursor-pointer items-center gap-2 truncate rounded-sm px-3 outline-none hover:bg-fg/8 aria-selected:bg-accent/18 aria-selected:text-accent-text data-[active=true]:outline-2 data-[active=true]:-outline-offset-2 data-[active=true]:outline-focus'
+    'group/option flex min-h-8 cursor-pointer items-center gap-2 truncate rounded-sm px-3 hover:bg-fg/8 aria-selected:bg-accent/18 aria-selected:text-accent-text data-[active=true]:outline-2 data-[active=true]:-outline-offset-2 data-[active=true]:outline-focus'
   ),
   /** The option's label, ellipsed when it doesn't fit. */
   optionText: tw('truncate'),
