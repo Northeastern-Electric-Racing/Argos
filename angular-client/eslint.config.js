@@ -155,10 +155,9 @@ module.exports = tseslint.config(
       'better-tailwindcss/no-unknown-classes': [
         'error',
         {
-          // Not Tailwind's to know: #909's legacy ui-* classes (tw-lint flags them for their owners), the CDK's
-          // own classes, and three hook classes in CSS-less templates (form-template, add-rule-dialog, ui-panel)
-          // that slices 1A and 1B remove when they migrate those files.
-          ignore: ['^ui-', '^cdk-', '^(form|topic-autocomplete|draggable)$']
+          // Not Tailwind's to know: #909's legacy ui-* classes (tw-lint flags them for their owners) and the
+          // CDK's own classes.
+          ignore: ['^ui-', '^cdk-']
         }
       ]
     }
