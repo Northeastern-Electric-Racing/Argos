@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 
 @Component({
   selector: 'setting-input',
   templateUrl: './setting-input.component.html',
-  styleUrls: ['./setting-input.component.css'],
+  host: { class: 'block w-full' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule]
+  imports: [FormsModule, UiInputDirective, UiLabelDirective]
 })
 export default class SettingInputComponent {
   label = input.required<string>();

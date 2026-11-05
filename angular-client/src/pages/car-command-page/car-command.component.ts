@@ -1,6 +1,18 @@
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  OnInit,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   authenticatePw,
@@ -27,11 +39,11 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 
 @Component({
   selector: 'car-command',
   templateUrl: './car-command.component.html',
-  styleUrls: ['./car-command.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
@@ -42,7 +54,10 @@ import CommandCardComponent from './command-card/command-card.component';
     InfoBackgroundComponent,
     SettingToggleComponent,
     SettingInputComponent,
-    CommandCardComponent
+    CommandCardComponent,
+    UiInputDirective,
+    UiLabelDirective,
+    UiFieldErrorDirective
   ]
 })
 export default class CarCommandComponent implements OnInit {
@@ -50,6 +65,8 @@ export default class CarCommandComponent implements OnInit {
   private toastService = inject(ToastService);
   private confirmationService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
+  private injector = inject(Injector);
+  private commandsHeader = viewChild<ElementRef<HTMLElement>>('commandsHeader');
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);
   private allDataTypes = toSignal(this.dataTypesResponse.data, { initialValue: [] as DataType[] });
@@ -124,9 +141,19 @@ export default class CarCommandComponent implements OnInit {
       }
     });
     authenticationQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
-      if (data) this.isAuthenticated.set(true);
+      if (data) {
+        this.isAuthenticated.set(true);
+        this.focusCommands();
+      }
     });
   };
+
+  /** The password form leaves with the Authenticate button; focus goes to the commands' first control, not <body>. */
+  private focusCommands() {
+    afterNextRender(() => this.commandsHeader()?.nativeElement.querySelector('button')?.focus(), {
+      injector: this.injector
+    });
+  }
 
   onUpdateVideosPressed = () => {
     const updateVideoQueryResponse = this.serverService.query(() => updateVideos(), { invalidates: ['videos'] });
