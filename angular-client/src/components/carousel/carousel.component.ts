@@ -2,9 +2,8 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { Component, DestroyRef, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Run } from 'src/utils/types.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { MatIcon } from '@angular/material/icon';
-import TypographyComponent from '../typography/typography.component';
+import { UiButtonDirective, UiIconButtonDirective } from 'src/ui/button/button.directive';
 
 // the data for the dialog, basically just all the runs
 export interface DialogData {
@@ -23,9 +22,8 @@ const AUTOPLAY_MS = 3000;
 @Component({
   selector: 'carousel',
   templateUrl: 'carousel.component.html',
-  styleUrls: ['carousel.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatGridList, MatGridTile, MatIcon, TypographyComponent]
+  imports: [MatIcon, UiButtonDirective, UiIconButtonDirective]
 })
 export class CarouselComponent {
   public dialogRef = inject(DialogRef);
