@@ -10,6 +10,10 @@ describe('number input recipe', () => {
     }
     expect(numberInputClass('xs')).not.toBe(numberInputClass('sm'));
   });
+
+  it('fills its container at the fill width, on any input size', () => {
+    expect(numberInputClass('fill').split(/\s+/)).toEqual(expect.arrayContaining(['w-full', 'tabular-nums']));
+  });
 });
 
 describe('slice 1C recipes', () => {

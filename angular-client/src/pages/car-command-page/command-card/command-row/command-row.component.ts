@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import Storage from 'src/services/storage.service';
 import { CarCommandRow } from 'src/utils/types.utils';
 import { UiInputDirective } from 'src/ui/field/field.directive';
+import { numberInputClass } from 'src/ui/recipes/number-input';
 
 @Component({
   selector: 'command-row',
@@ -28,6 +29,8 @@ export default class CommandRowComponent implements OnInit {
 
   row = input.required<CarCommandRow>();
   value = model<number>(0);
+  /** Fills its grid cell, with tabular figures. */
+  protected readonly numberInput = numberInputClass('fill');
 
   protected inputId = computed(() => this.row().dataType.name.replaceAll('/', '-') + '-input');
   protected currentValue = signal<string | undefined>(undefined);

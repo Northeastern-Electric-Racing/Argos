@@ -2,7 +2,7 @@
   <label uiLabel [for]="label() + '-input'">{{ label() }}</label>
   <input
     uiInput
-    class="w-full tabular-nums"
+    [class]="numberInput"
     type="number"
     [id]="label() + '-input'"
     [(ngModel)]="value"
