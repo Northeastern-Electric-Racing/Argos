@@ -1,4 +1,4 @@
-import { headerCellClass, TABLE_DENSITIES } from './table';
+import { headerCellClass, lightHeaderCellClass, TABLE_ALIGNS, TABLE_DENSITIES, tableClasses } from './table';
 
 // jsdom runs without Tailwind, so this checks the recipe's shape; the audit kit checks how it looks.
 describe('table recipe', () => {
@@ -18,5 +18,19 @@ describe('table recipe', () => {
     expect(classes(headerCellClass('md', { sticky: true }))).toEqual(
       expect.arrayContaining(['sticky', 'top-0', 'bg-surface-3'])
     );
+  });
+
+  it('positions the scroll box, so sr-only cell labels stay inside it instead of widening the page', () => {
+    expect(classes(tableClasses.wrapper)).toEqual(expect.arrayContaining(['relative', 'overflow-auto']));
+  });
+
+  it('has a light header: no fill, 12px uppercase muted labels, aligned once', () => {
+    for (const align of TABLE_ALIGNS) {
+      const c = classes(lightHeaderCellClass({ align }));
+      expect(c).toEqual(expect.arrayContaining(['text-xs', 'uppercase', 'text-fg-muted', `text-${align}`]));
+      expect(c.filter((x) => /^text-(left|right|center)$/.test(x))).toHaveLength(1);
+      expect(c.some((x) => x.startsWith('bg-'))).toBe(false);
+    }
+    expect(classes(lightHeaderCellClass())).toContain('text-left');
   });
 });

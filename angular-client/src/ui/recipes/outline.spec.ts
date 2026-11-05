@@ -14,7 +14,9 @@ import {
   cellClass,
   checkboxClass,
   headerCellClass,
+  lightHeaderCellClass,
   rowClass,
+  TABLE_ALIGNS,
   TABLE_DENSITIES,
   TABLE_SIZES,
   tableClass,
@@ -52,6 +54,7 @@ const everyRecipeList = (): [string, string][] => {
   add('spinner', spinnerClass);
   for (const s of TABLE_SIZES) add(`table ${s}`, tableClass(s));
   for (const d of TABLE_DENSITIES) add(`table cells ${d}`, [headerCellClass(d), cellClass(d)]);
+  for (const align of TABLE_ALIGNS) add(`light header ${align}`, lightHeaderCellClass({ align }));
   for (const striped of [false, true]) for (const hover of [false, true]) add('row', rowClass({ striped, hover }));
   add('table', [tableClasses, checkboxClass]);
   add('dialog', [dialogBackdropClass, dialogClasses, headerlessContentClass]);

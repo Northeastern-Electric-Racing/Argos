@@ -11,11 +11,11 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import LapTimerService from 'src/services/lap-timer.service';
 import { UiInputDirective } from 'src/ui/field/field.directive';
 import { iconClasses } from 'src/ui/recipes/icon';
-import { rowClass } from 'src/ui/recipes/table';
+import { lightHeaderCellClass, rowClass } from 'src/ui/recipes/table';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { formatMs, LapSession } from 'src/utils/lap-timer.types';
 import { injectFocusAfterRender } from '../focus-after-render';
-import { lapHeaderClass, lapTimerClasses } from '../lap-timer.classes';
+import { lapTimerClasses } from '../lap-timer.classes';
 
 /** Body cells: 6px rows (tighter than the laps table), the state column hugging its icon. */
 const cell = tw('border-b border-solid border-border px-3 py-1.5');
@@ -53,11 +53,11 @@ export default class SessionsPanelComponent {
   protected readonly rowClass = cx(rowClass({ hover: true }), tw('data-[active=true]:bg-fg/4'));
   protected readonly headers = {
     state: tw('w-8 border-b border-solid border-border py-2 pr-0 pl-2'),
-    name: lapHeaderClass('left'),
-    started: cx(lapHeaderClass('left'), tw('w-35 whitespace-nowrap')),
-    laps: cx(lapHeaderClass('right'), tw('w-15')),
-    best: cx(lapHeaderClass('right'), tw('w-22.5')),
-    run: cx(lapHeaderClass('right'), tw('w-15')),
+    name: lightHeaderCellClass(),
+    started: cx(lightHeaderCellClass(), tw('w-35 whitespace-nowrap')),
+    laps: cx(lightHeaderCellClass({ align: 'right' }), tw('w-15')),
+    best: cx(lightHeaderCellClass({ align: 'right' }), tw('w-22.5')),
+    run: cx(lightHeaderCellClass({ align: 'right' }), tw('w-15')),
     actions: tw('w-10 border-b border-solid border-border px-3 py-2')
   };
   protected readonly cells = {
