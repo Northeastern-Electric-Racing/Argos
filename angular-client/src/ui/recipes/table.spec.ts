@@ -25,9 +25,10 @@ describe('table recipe', () => {
   });
 
   it('has a light header: no fill, 12px uppercase muted labels, aligned once', () => {
+    const alignClass = { left: 'text-left', right: 'text-right' } as const;
     for (const align of TABLE_ALIGNS) {
       const c = classes(lightHeaderCellClass({ align }));
-      expect(c).toEqual(expect.arrayContaining(['text-xs', 'uppercase', 'text-fg-muted', `text-${align}`]));
+      expect(c).toEqual(expect.arrayContaining(['text-xs', 'uppercase', 'text-fg-muted', alignClass[align]]));
       expect(c.filter((x) => /^text-(left|right|center)$/.test(x))).toHaveLength(1);
       expect(c.some((x) => x.startsWith('bg-'))).toBe(false);
     }
