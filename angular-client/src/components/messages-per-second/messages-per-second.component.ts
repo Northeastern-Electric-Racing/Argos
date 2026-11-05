@@ -28,7 +28,7 @@ export class MessagesPerSecondComponent {
   }
 
   /** Small, muted text: the rate is chrome next to the clock, not a reading. */
-  textClass = computed(() => (this.small() ? 'text-xs text-fg-muted' : 'text-[15px] text-fg-muted'));
+  textClass = computed(() => (this.small() ? 'text-xs text-fg-muted' : 'text-sm text-fg-muted'));
 
   getDisplayNumber = () => {
     return this.messagesPerSecond !== undefined ? this.messagesPerSecond.toString() : 'N/A';

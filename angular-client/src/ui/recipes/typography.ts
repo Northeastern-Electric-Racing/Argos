@@ -9,7 +9,7 @@ import { StyleVariant } from 'src/utils/style-variant';
  *
  * Each variant is split into families (size, weight, colour, ...), each a complete literal class list, so that
  * extra classes from a consumer can replace a family instead of fighting it: Tailwind orders utilities by its
- * own rules, not by their order in `class`, so `text-lg text-[36px]` on one element is a coin toss.
+ * own rules, not by their order in `class`, so `text-lg text-xl` on one element is a coin toss.
  */
 export const TYPOGRAPHY_VARIANTS = [
   'header',
@@ -43,30 +43,30 @@ const variants: Record<StyleVariant, Parts> = {
   },
   subheader: { size: tw('text-base'), color: tw('text-fg'), margin: tw('my-[1em]') },
   'xx-large-title': {
-    size: tw('text-[7.5rem]'),
+    size: tw('text-hero'),
     weight: tw('font-bold'),
     color: tw('text-fg'),
     margin: tw('m-0'),
     padding: tw('p-0')
   },
   'large-secondary-header': {
-    size: tw('text-[2rem]'),
+    size: tw('text-xl'),
     weight: tw('font-bold'),
     color: tw('text-fg-muted'),
     margin: tw('my-[1em]')
   },
-  'large-header': { size: tw('text-[2rem]'), weight: tw('font-bold'), color: tw('text-fg'), margin: tw('my-[1em]') },
+  'large-header': { size: tw('text-xl'), weight: tw('font-bold'), color: tw('text-fg'), margin: tw('my-[1em]') },
   'info-title': { size: tw('text-lg'), weight: tw('font-normal'), color: tw('text-fg'), margin: tw('m-0') },
   'info-subtitle': { size: tw('text-ctrl'), color: tw('text-fg-label'), align: tw('text-center'), margin: tw('m-0') },
   value: {
-    size: tw('text-[85px]'),
+    size: tw('text-numeral'),
     weight: tw('font-bold'),
     color: tw('text-fg'),
     margin: tw('m-0'),
     padding: tw('p-0')
   },
   'info-value-mobile': {
-    size: tw('text-[25px]'),
+    size: tw('text-title'),
     weight: tw('font-bold'),
     color: tw('text-fg'),
     margin: tw('m-0'),
@@ -79,11 +79,11 @@ const variants: Record<StyleVariant, Parts> = {
     margin: tw('m-0'),
     self: tw('self-center')
   },
-  'info-unit': { size: tw('text-[1.5rem]'), color: tw('text-fg-muted'), margin: tw('my-[1em]'), padding: tw('pt-5.5') },
+  'info-unit': { size: tw('text-title'), color: tw('text-fg-muted'), margin: tw('my-[1em]'), padding: tw('pt-5.5') },
   // No colour: the label takes its parent's (the nav chips colour it on hover and when active).
   'sidebar-label': { size: tw('text-base'), weight: tw('font-bold'), margin: tw('m-0') },
   'x-large-title': {
-    size: tw('text-[2.5rem]'),
+    size: tw('text-display'),
     weight: tw('font-bold'),
     color: tw('text-fg'),
     margin: tw('m-0'),
@@ -91,7 +91,7 @@ const variants: Record<StyleVariant, Parts> = {
   }
 };
 
-const textSizes = 'xs|sm|base|lg|xl|2xl|badge|ctrl|ctrl-sm|ctrl-lg';
+const textSizes = 'xs|sm|base|lg|title|xl|display|2xl|numeral|hero|badge|ctrl|ctrl-sm|ctrl-lg';
 // Order matters: size and alignment are text-* too, so they are matched before colour.
 const families: [Family, RegExp][] = [
   ['size', new RegExp(`^text-(${textSizes}|\\[(length:.+|[\\d.]+(px|r?em|vw|vh|%)|(x|xx)-large)\\])$`)],
@@ -116,7 +116,7 @@ function familiesOf(extra: string): Set<Family> {
 
 /**
  * The classes for a typography variant. `extra` (layout, alignment, or a size/colour/margin override) is
- * appended, and any variant family it sets is dropped: `text-[36px]` replaces the variant's size, `m-0` its
+ * appended, and any variant family it sets is dropped: `text-xl` replaces the variant's size, `m-0` its
  * margins, `text-inherit` its colour. Responsive and state variants (`max-md:…`) layer on top instead.
  */
 export function typographyClass(variant: StyleVariant, extra = ''): string {
