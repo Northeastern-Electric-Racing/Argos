@@ -1,0 +1,24 @@
+/*
+ * Legacy #909 styles for the popover panel, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1A (ui/popover). Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Floating surfaces: popover, listbox popup, menu ---------- */
+.ui-popover-panel {
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  animation: var(--animate-pop-in);
+}
+
+/* ---------- Popover (CDK connected overlay) ---------- */
+.ui-popover-panel {
+  margin-top: var(--ui-space-2);
+}
+/* A popover with nothing tabbable focuses the panel itself; like the drawer, it needs no outline. */
+.ui-popover-panel:focus {
+  outline: none;
+}

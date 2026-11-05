@@ -1,0 +1,11 @@
+/*
+ * Legacy #909 styles for the drawer pane, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1A (ui/drawer). Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Drawer ---------- */
+/* The drawer focuses its container on open; the panel itself needs no focus outline. */
+.ui-drawer-pane .cdk-dialog-container:focus {
+  outline: none;
+}

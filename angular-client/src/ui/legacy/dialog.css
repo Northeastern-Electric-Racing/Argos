@@ -1,0 +1,17 @@
+/*
+ * Legacy #909 styles for the CDK dialog backdrop and pane, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1B (ui/dialog). Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Dialog (CDK dialog + our container) ---------- */
+.ui-dialog-backdrop {
+  background: var(--ui-scrim);
+}
+.ui-dialog-pane {
+  /* The 16px gutter each side on phones comes from the maxWidth the dialog service passes. */
+  max-height: 100vh;
+}
+.ui-dialog-pane--modeless {
+  pointer-events: auto;
+}
