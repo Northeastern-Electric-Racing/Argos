@@ -10,7 +10,7 @@ const entry = (id: number, read: boolean) => ({
   notification: {
     id: `rule-${id}`,
     topic: 'BMS/Pack/Voltage',
-    time: new Date(Date.UTC(2026, 0, 15, 12, 0, id)),
+    time: new Date(Date.UTC(2026, 0, 15, 12, 0, id)).toISOString(),
     values: [401, 402]
   }
 });
