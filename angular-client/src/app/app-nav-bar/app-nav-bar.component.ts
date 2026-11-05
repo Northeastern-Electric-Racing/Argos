@@ -92,13 +92,18 @@ export class AppNavBarComponent implements OnInit {
       )
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
-        // A nav item was chosen in the drawer: close it. Its trigger left with the old page, so focus goes
-        // to the new page's menu button (when it has one) instead of dropping to <body>.
+        // A nav item was chosen in the drawer: close it. Its trigger left with the old page, so focus goes to
+        // the new page's menu button when it has one, and otherwise to the page's main region (app-context's
+        // <main tabindex="-1">, which draws no ring), never to <body>.
         if (this.sidebarVisible()) {
           this.sidebarVisible.set(false);
-          afterNextRender(() => document.querySelector<HTMLElement>('sidebar-toggle button')?.focus(), {
-            injector: this.injector
-          });
+          afterNextRender(
+            () =>
+              (
+                document.querySelector<HTMLElement>('sidebar-toggle button') ?? document.querySelector<HTMLElement>('main')
+              )?.focus(),
+            { injector: this.injector }
+          );
         }
       });
   }
