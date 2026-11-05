@@ -2,24 +2,13 @@ use axum::{Extension, Json, extract::Path, http::StatusCode};
 use serde::Deserialize;
 
 use crate::{
-    ArgosPoolHandle, error::ScyllaError, lap_timing::TimingLine, models::TrackLines,
-    services::track_service, transformers::track_transformer::PublicTrack,
+    ArgosPoolHandle,
+    error::ScyllaError,
+    lap_timing::{LineKind, TimingLine},
+    services::track_service,
+    track_handler::TracksChanged,
+    transformers::track_transformer::PublicTrack,
 };
-
-/// get every track
-pub async fn get_all_tracks(
-    Extension(argos_pool): Extension<ArgosPoolHandle>,
-) -> Result<Json<Vec<PublicTrack>>, ScyllaError> {
-    let mut db = argos_pool.get().await?;
-    let tracks = track_service::get_all_tracks(&mut db).await?;
-
-    Ok(Json::from(
-        tracks
-            .into_iter()
-            .map(PublicTrack::from)
-            .collect::<Vec<_>>(),
-    ))
-}
 
 #[derive(Deserialize)]
 pub struct AddTrackPayload {
@@ -29,36 +18,24 @@ pub struct AddTrackPayload {
 /// add a track with no lines
 pub async fn add_track(
     Extension(argos_pool): Extension<ArgosPoolHandle>,
+    Extension(TracksChanged(tracks_changed)): Extension<TracksChanged>,
     Json(AddTrackPayload { name }): Json<AddTrackPayload>,
 ) -> Result<Json<PublicTrack>, ScyllaError> {
     let mut db = argos_pool.get().await?;
     let added = track_service::add_track(&mut db, name).await?;
+    tracks_changed.notify_one();
 
     Ok(Json::from(PublicTrack::from(added)))
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct EditTrackPayload {
-    #[serde(rename = "startLine")]
-    pub start_line: Option<TimingLine>,
-    #[serde(rename = "finishLine")]
-    pub finish_line: Option<TimingLine>,
-}
-
-/// replace both lines of the track with the given id
-pub async fn edit_track(
+/// replace one line of the track with the given id, or clear it with null
+pub async fn edit_track_line(
     Extension(argos_pool): Extension<ArgosPoolHandle>,
-    Path(track_id): Path<i32>,
-    Json(EditTrackPayload {
-        start_line,
-        finish_line,
-    }): Json<EditTrackPayload>,
+    Extension(TracksChanged(tracks_changed)): Extension<TracksChanged>,
+    Path((track_id, kind)): Path<(i32, LineKind)>,
+    Json(line): Json<Option<TimingLine>>,
 ) -> Result<Json<PublicTrack>, ScyllaError> {
-    let out_of_range = [start_line, finish_line]
-        .into_iter()
-        .flatten()
-        .any(|line| !line.a.is_in_range() || !line.b.is_in_range());
-    if out_of_range {
+    if line.is_some_and(|line| !line.a.is_in_range() || !line.b.is_in_range()) {
         return Err(ScyllaError::HttpError(
             StatusCode::BAD_REQUEST,
             "Line coordinates must be finite with |lat| <= 90 and |lon| <= 180".to_owned(),
@@ -66,10 +43,10 @@ pub async fn edit_track(
     }
 
     let mut db = argos_pool.get().await?;
-    let edited =
-        track_service::edit_track(&mut db, track_id, TrackLines::new(start_line, finish_line))
-            .await?
-            .ok_or(ScyllaError::EmptyResult)?;
+    let edited = track_service::edit_track_line(&mut db, track_id, kind, line)
+        .await?
+        .ok_or(ScyllaError::EmptyResult)?;
+    tracks_changed.notify_one();
 
     Ok(Json::from(PublicTrack::from(edited)))
 }
@@ -77,12 +54,14 @@ pub async fn edit_track(
 /// delete a track given its id
 pub async fn delete_track(
     Extension(argos_pool): Extension<ArgosPoolHandle>,
+    Extension(TracksChanged(tracks_changed)): Extension<TracksChanged>,
     Path(track_id): Path<i32>,
 ) -> Result<Json<String>, ScyllaError> {
     let mut db = argos_pool.get().await?;
     if !track_service::delete_track(&mut db, track_id).await? {
         return Err(ScyllaError::EmptyResult);
     }
+    tracks_changed.notify_one();
 
     Ok(Json::from("Track deleted!".to_owned()))
 }

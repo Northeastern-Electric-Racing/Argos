@@ -1,12 +1,12 @@
 import { Component, input, output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { EnvService } from 'src/services/env.service';
 import Storage from 'src/services/storage.service';
 import { LINES } from 'src/utils/map.utils';
 import { topics } from 'src/utils/topic.utils';
-import { LapsSince, Run, TimedLap, Track } from 'src/utils/types.utils';
+import { Run, TimedLap, Track } from 'src/utils/types.utils';
 import MapCanvasComponent from './map-canvas/map-canvas.component';
 import MapComponent from './map.component';
 
@@ -16,6 +16,7 @@ const json = (body: unknown) => ({ ok: true, json: () => Promise.resolve(body) }
 const fix = (lat: string, time: string) => ({ values: [lat, '-84'], time, unit: 'deg' });
 const historyUrl = `/data/${encodeURIComponent(topics.gpsLocation())}/1`;
 const pending = new Promise<Response>(() => undefined);
+const failed = { ok: false, status: 500, statusText: 'Down', text: () => Promise.resolve('Down') } as Response;
 const settle = () => new Promise((resolve) => setTimeout(resolve));
 @Component({ selector: 'map-canvas', standalone: true, template: '' })
 class StubMapCanvasComponent {
@@ -63,11 +64,10 @@ describe('MapComponent run', () => {
 
   it('clears the trace and laps when the run changes', async () => {
     const laps: TimedLap[] = [{ startMs: 0, endMs: 72500, durationMs: 72500 }];
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
-      String(url).endsWith('/laps/1/7?since=0') ? Promise.resolve(json({ laps, resumeMs: 0 })) : pending
-    );
     storage.setCurrentRunId(1);
-    map.selectedTrack.set(track(7));
+    storage.setTracks([track(7)]);
+    map.selectedTrackId.set(7);
+    storage.setLiveLaps({ runId: 1, laps: { 7: laps } });
     fixture.detectChanges();
     storage.addValue(topics.gpsLocation(), { values: ['42', '-84'], time: '1000', unit: 'deg' });
     await settle();
@@ -150,77 +150,133 @@ describe('MapComponent run', () => {
     expect(map.trace()).toEqual([{ lat: 42, lon: -84, timeMs: 1000 }]);
   });
 
-  it("polls a live run from the server's resume cursor and replaces the laps it re-times", async () => {
-    const realSetTimeout = window.setTimeout.bind(window);
-    const flush = () => new Promise((resolve) => realSetTimeout(resolve));
-    const lapsByUrl = new Map<string, LapsSince>([
-      [
-        '/laps/1/7?since=0',
-        {
-          laps: [
-            { startMs: 0, endMs: 72500, durationMs: 72500 },
-            { startMs: 72500, endMs: 120000, durationMs: 47500 }
-          ],
-          resumeMs: 70000
-        }
-      ],
-      [
-        '/laps/1/7?since=70000',
-        {
-          laps: [
-            { startMs: 72500, endMs: 119000, durationMs: 46500 },
-            { startMs: 119000, endMs: 190000, durationMs: 71000 }
-          ],
-          resumeMs: 130000
-        }
-      ]
-    ]);
-    fetchSpy.and.callFake((url: RequestInfo | URL) => {
-      const laps = lapsByUrl.get(String(url).replace(/.*(?=\/laps\/)/, ''));
-      return laps ? Promise.resolve(json(laps)) : pending;
-    });
-    jasmine.clock().install();
+  it('shows the live laps of the selected track on the live run only', () => {
+    const laps: TimedLap[] = [{ startMs: 0, endMs: 72500, durationMs: 72500 }];
     storage.setCurrentRunId(1);
-    map.selectedTrack.set(track(7));
-    fixture.detectChanges();
-    jasmine.clock().tick(0);
-    await flush();
-    jasmine.clock().tick(3000);
-    await flush();
-    jasmine.clock().uninstall();
+    storage.setTracks([track(7), track(8)]);
+    map.selectedTrackId.set(7);
 
-    const lapUrls = fetchSpy.calls
-      .allArgs()
-      .map(([url]) => String(url))
-      .filter((url) => url.includes('/laps/'));
-    expect(lapUrls.map((url) => url.replace(/.*(?=\/laps\/)/, ''))).toEqual(['/laps/1/7?since=0', '/laps/1/7?since=70000']);
-    expect(map.lapTable()).toEqual({
-      best: '00:46.50',
-      rows: [
-        { number: 1, time: '01:12.50', deltaToBest: '+00:26.00', isBest: false },
-        { number: 2, time: '00:46.50', deltaToBest: '±00:00.00', isBest: true },
-        { number: 3, time: '01:11.00', deltaToBest: '+00:24.50', isBest: false }
-      ]
-    });
+    storage.setLiveLaps({ runId: 1, laps: { 8: laps } });
+    expect(map.lapTable()).toBeNull();
+
+    storage.setLiveLaps({ runId: 2, laps: { 7: laps } });
+    expect(map.lapTable()).toBeNull();
+
+    storage.setLiveLaps({ runId: 1, laps: { 7: laps, 8: [] } });
+    expect(map.lapTable()?.best).toBe('01:12.50');
+  });
+
+  it("fetches a recorded run's laps on the selected track", async () => {
+    const laps: TimedLap[] = [{ startMs: 0, endMs: 72500, durationMs: 72500 }];
+    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+      String(url).endsWith('/laps/1/7') ? Promise.resolve(json(laps)) : pending
+    );
+    storage.setCurrentRunId(2);
+    storage.setTracks([track(7)]);
+    map.selectedTrackId.set(7);
+    map.onRunSelected(run(1));
+    fixture.detectChanges();
+    await settle();
+
+    expect(map.lapTable()?.best).toBe('01:12.50');
+  });
+
+  it("covers the map with the error when a recorded run's history fails", async () => {
+    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+      String(url).endsWith(historyUrl) ? Promise.resolve(failed) : pending
+    );
+    storage.setCurrentRunId(2);
+    map.onRunSelected(run(1));
+    fixture.detectChanges();
+    await settle();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('error-page')).not.toBeNull();
+  });
+
+  it("toasts a recorded run's failed laps", async () => {
+    const toast = spyOn(TestBed.inject(MessageService), 'add');
+    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+      String(url).endsWith('/laps/1/7') ? Promise.resolve(failed) : pending
+    );
+    storage.setCurrentRunId(2);
+    storage.setTracks([track(7)]);
+    map.selectedTrackId.set(7);
+    map.onRunSelected(run(1));
+    fixture.detectChanges();
+    await settle();
+
+    expect(toast).toHaveBeenCalledOnceWith({ severity: 'error', summary: 'Laps Unavailable', detail: 'Down' });
   });
 });
 
-describe('MapComponent placing', () => {
+describe('MapComponent selected track', () => {
+  let storage: Storage;
+  let fixture: ComponentFixture<MapComponent>;
   let map: MapComponent;
+  let fetchSpy: jasmine.Spy;
 
   beforeEach(() => {
-    spyOn(window, 'fetch').and.returnValue(pending);
+    fetchSpy = spyOn(window, 'fetch').and.returnValue(pending);
     configure();
-    map = TestBed.createComponent(MapComponent).componentInstance;
-    map.tracks.set([track(7)]);
-    map.selectedTrack.set(track(7));
+    storage = TestBed.inject(Storage);
+    fixture = TestBed.createComponent(MapComponent);
+    map = fixture.componentInstance;
+    storage.setTracks([track(7), track(8)]);
+    map.selectedTrackId.set(7);
+  });
+
+  it('keeps the same selected track when the server resends unchanged tracks', () => {
+    const shown = map.selectedTrack();
+    storage.setTracks([track(7), track(8)]);
+
+    expect(map.selectedTrack()).toBe(shown);
   });
 
   it('stops placing when another track is selected', () => {
     map.togglePlacing(LINES[0]);
-    map.selectedTrack.set(track(8));
+    map.selectedTrackId.set(8);
 
     expect(map.placing()).toBeNull();
+  });
+
+  it('stops placing when the selected track is deleted', () => {
+    map.togglePlacing(LINES[0]);
+    storage.setTracks([track(8)]);
+
+    expect(map.selectedTrack()).toBeNull();
+    expect(map.placing()).toBeNull();
+  });
+
+  it('saves the line placed by two map clicks, and only that line', () => {
+    const clicks: ((event: { lngLat: { lng: number; lat: number } }) => void)[] = [];
+    map.onMapLoaded({
+      addSource: () => undefined,
+      addLayer: () => undefined,
+      getSource: () => undefined,
+      getCanvas: () => ({ style: {} }),
+      on: (type: string, handler: (typeof clicks)[number]) => type === 'click' && clicks.push(handler)
+    } as unknown as MapLibreMap);
+    map.togglePlacing(LINES[0]);
+    clicks[0]({ lngLat: { lng: -84, lat: 42 } });
+    clicks[0]({ lngLat: { lng: -84, lat: 42.001 } });
+
+    expect(fetchSpy).toHaveBeenCalledOnceWith(jasmine.stringMatching(/\/tracks\/edit\/7\/start$/), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ a: { lat: 42, lon: -84 }, b: { lat: 42.001, lon: -84 } })
+    });
+  });
+
+  it('deletes a track once the dialog confirms it', () => {
+    const confirmation = fixture.debugElement.injector.get(ConfirmationService);
+    spyOn(confirmation, 'confirm').and.callFake(({ accept }) => {
+      accept?.();
+      return confirmation;
+    });
+    map.confirmDelete(track(7));
+
+    expect(fetchSpy).toHaveBeenCalledOnceWith(jasmine.stringMatching(/\/tracks\/delete\/7$/), { method: 'POST' });
   });
 });
 
@@ -255,7 +311,7 @@ describe('MapComponent new track', () => {
     await settle();
 
     expect(nameInput.value).toBe('');
-    expect(fixture.componentInstance.tracks()).toEqual([track(9, 'Gainesville')]);
+    expect(fixture.componentInstance.selectedTrackId()).toBe(9);
   });
 
   it('keeps the name when the create fails', async () => {
@@ -264,7 +320,7 @@ describe('MapComponent new track', () => {
     await settle();
 
     expect(nameInput.value).toBe('Gainesville');
-    expect(fixture.componentInstance.tracks()).toEqual([]);
+    expect(fixture.componentInstance.selectedTrackId()).toBeNull();
   });
 
   it('ignores Enter while a create is in flight', async () => {
@@ -289,7 +345,6 @@ describe('MapComponent new track', () => {
     await settle();
 
     expect(nameInput.value).toBe('Michigan');
-    expect(fixture.componentInstance.tracks()).toEqual([track(9, 'Gainesville')]);
   });
 });
 
@@ -321,8 +376,8 @@ describe('MapComponent saving', () => {
     configure();
     fixture = TestBed.createComponent(MapComponent);
     map = fixture.componentInstance;
-    map.tracks.set([placed]);
-    map.selectedTrack.set(placed);
+    TestBed.inject(Storage).setTracks([placed]);
+    map.selectedTrackId.set(7);
     fixture.detectChanges();
     await fixture.whenStable();
   });
@@ -338,7 +393,6 @@ describe('MapComponent saving', () => {
     fixture.detectChanges();
 
     expect(trackControlsDisabled()).toEqual({ place: false, delete: false, trackSelect: false });
-    expect(map.selectedTrack()).toEqual(track(7));
   });
 
   it('re-enables the controls and keeps the saved track when the save fails', async () => {

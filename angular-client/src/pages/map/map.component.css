@@ -41,8 +41,7 @@
   transform: translateX(-50%);
 }
 .secondary,
-.hint,
-h2 {
+.hint {
   color: var(--color-text-subtitle);
 }
 .dot {
@@ -66,11 +65,9 @@ h2 {
   display: block;
   margin-top: 24px;
 }
-h2 {
+.section {
+  display: block;
   margin: 24px 0 8px;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  text-transform: uppercase;
 }
 .readout {
   bottom: 20px;

@@ -1,4 +1,4 @@
-import { Timing } from 'src/utils/types.utils';
+import { LineKind, Timing } from 'src/utils/types.utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const baseURL = (window as any).__env?.BACKEND_URL;
@@ -44,13 +44,12 @@ const subscribeToRule = () => `${baseURL}/rules/subscribe`;
 const unsubscribeFromRule = () => `${baseURL}/rules/unsubscribe`;
 
 /* Tracks */
-const getAllTracks = () => `${baseURL}/tracks`;
 const addTrack = () => `${baseURL}/tracks/add`;
-const editTrack = (id: number) => `${baseURL}/tracks/edit/${id}`;
+const editTrackLine = (id: number, kind: LineKind) => `${baseURL}/tracks/edit/${id}/${kind}`;
 const deleteTrack = (id: number) => `${baseURL}/tracks/delete/${id}`;
 
 /* Laps */
-const getLaps = (runId: number, trackId: number, since: number) => `${baseURL}/laps/${runId}/${trackId}?since=${since}`;
+const getLaps = (runId: number, trackId: number) => `${baseURL}/laps/${runId}/${trackId}`;
 
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
@@ -92,9 +91,8 @@ export const urls = {
   subscribeToRule,
   unsubscribeFromRule,
 
-  getAllTracks,
   addTrack,
-  editTrack,
+  editTrackLine,
   deleteTrack,
 
   getLaps,

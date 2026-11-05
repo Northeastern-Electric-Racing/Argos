@@ -66,13 +66,13 @@ describe('traceGeoJson', () => {
     });
   });
 
-  it('breaks the line where fixes are more than 2 s apart', () => {
+  it('breaks the line where GPS is missing for over 2 s and 3 times the spacing beside it', () => {
     expect(
       traceGeoJson([
         { lat: 1, lon: 10, timeMs: 0 },
         { lat: 2, lon: 20, timeMs: 1000 },
-        { lat: 3, lon: 30, timeMs: 3001 },
-        { lat: 4, lon: 40, timeMs: 4000 }
+        { lat: 3, lon: 30, timeMs: 4001 },
+        { lat: 4, lon: 40, timeMs: 5000 }
       ]).geometry.coordinates
     ).toEqual([
       [
@@ -80,6 +80,24 @@ describe('traceGeoJson', () => {
         [20, 2]
       ],
       [
+        [30, 3],
+        [40, 4]
+      ]
+    ]);
+  });
+
+  it("keeps a long Run's sparser averaged history as one line", () => {
+    expect(
+      traceGeoJson([
+        { lat: 1, lon: 10, timeMs: 0 },
+        { lat: 2, lon: 20, timeMs: 5000 },
+        { lat: 3, lon: 30, timeMs: 10000 },
+        { lat: 4, lon: 40, timeMs: 15000 }
+      ]).geometry.coordinates
+    ).toEqual([
+      [
+        [10, 1],
+        [20, 2],
         [30, 3],
         [40, 4]
       ]

@@ -22,13 +22,18 @@ export const toFix = (point: DataValue): Fix => ({
 // The DB returns a run's points in no particular order.
 export const traceFromPoints = (points: DataValue[]): Fix[] => points.map(toFix).sort((a, b) => a.timeMs - b.timeMs);
 
-// Don't draw a straight line across missing GPS, e.g. a dropout or the hole left by batched DB writes.
-const MAX_FIX_GAP_MS = 2_000;
+// Don't draw a straight line across missing GPS, e.g. a dropout or the hole left by batched DB writes. A long Run's
+// history comes back averaged into sparser points, so a gap only counts as missing GPS if it is well over its neighbours.
+const MIN_MISSING_GPS_MS = 2_000;
+const MISSING_GPS_SPACINGS = 3;
 
 export const traceGeoJson = (trace: Fix[]) => {
+  const gapsMs = trace.slice(1).map((fix, index) => fix.timeMs - trace[index].timeMs);
   const lines: [number, number][][] = [];
   trace.forEach((fix, index) => {
-    if (index === 0 || fix.timeMs - trace[index - 1].timeMs > MAX_FIX_GAP_MS) lines.push([]);
+    const neighbourGapMs = Math.min(gapsMs[index - 2] ?? Infinity, gapsMs[index] ?? Infinity);
+    if (index === 0 || gapsMs[index - 1] > Math.max(MIN_MISSING_GPS_MS, MISSING_GPS_SPACINGS * neighbourGapMs))
+      lines.push([]);
     lines.at(-1)?.push(toLngLat(fix));
   });
   return { type: 'Feature' as const, properties: {}, geometry: { type: 'MultiLineString' as const, coordinates: lines } };

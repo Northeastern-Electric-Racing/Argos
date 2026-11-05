@@ -37,6 +37,20 @@ pub struct GpsFix {
     pub time_ms: f64,
 }
 
+impl GpsFix {
+    /// A fix as scylla receives and stores it: degrees as f32, and microseconds since epoch
+    #[must_use]
+    pub fn new(lat: f32, lon: f32, time_us: i64) -> Self {
+        GpsFix {
+            point: GeoPoint {
+                lat: f64::from(lat),
+                lon: f64::from(lon),
+            },
+            time_ms: time_us as f64 / 1000.0,
+        }
+    }
+}
+
 #[derive(Serialize, Debug, PartialEq)]
 pub struct Lap {
     #[serde(rename = "startMs")]
@@ -88,14 +102,15 @@ impl LocalProjection {
     }
 }
 
-struct ProjectedLine {
+pub struct ProjectedLine {
     projection: LocalProjection,
     a: Metres,
     b: Metres,
 }
 
 impl ProjectedLine {
-    fn new(line: TimingLine) -> Self {
+    #[must_use]
+    pub fn new(line: TimingLine) -> Self {
         let projection = LocalProjection::around(GeoPoint {
             lat: f64::midpoint(line.a.lat, line.b.lat),
             lon: f64::midpoint(line.a.lon, line.b.lon),
@@ -108,21 +123,22 @@ impl ProjectedLine {
     }
 
     /// The interpolated time the car crossed the line going from `from` to `to`, if it did
-    fn crossing_time_ms(&self, from: GpsFix, to: GpsFix) -> Option<f64> {
-        let p0 = self.projection.project(from.point);
-        let p1 = self.projection.project(to.point);
+    #[must_use]
+    pub fn crossing_time_ms(&self, from: GpsFix, to: GpsFix) -> Option<f64> {
+        let from_point = self.projection.project(from.point);
+        let to_point = self.projection.project(to.point);
         let line_direction = self.b.minus(self.a);
-        let side_from = line_direction.cross(p0.minus(self.a));
-        let side_to = line_direction.cross(p1.minus(self.a));
+        let side_from = line_direction.cross(from_point.minus(self.a));
+        let side_to = line_direction.cross(to_point.minus(self.a));
         // a fix on the line ends one crossing and must not start another
         if side_from == 0.0 || side_from * side_to > 0.0 {
             return None;
         }
 
-        let travel = p1.minus(p0);
+        let travel = to_point.minus(from_point);
         let denominator = travel.cross(line_direction);
-        let fraction_along_travel = self.a.minus(p0).cross(line_direction) / denominator;
-        let fraction_along_line = self.a.minus(p0).cross(travel) / denominator;
+        let fraction_along_travel = self.a.minus(from_point).cross(line_direction) / denominator;
+        let fraction_along_line = self.a.minus(from_point).cross(travel) / denominator;
         if !(0.0..=1.0).contains(&fraction_along_line) {
             return None;
         }
@@ -131,110 +147,84 @@ impl ProjectedLine {
     }
 }
 
-/// Every crossing time of `line` by the time-sorted `fixes`
-#[must_use]
-pub fn crossing_times_ms(fixes: &[GpsFix], line: TimingLine) -> Vec<f64> {
-    let projected = ProjectedLine::new(line);
-    fixes
-        .windows(2)
-        .filter_map(|pair| projected.crossing_time_ms(pair[0], pair[1]))
-        .collect()
-}
-
-enum LineKind {
+/// Which of a track's lines, as the client names it
+#[derive(Deserialize, Debug, Clone, Copy, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum LineKind {
     Finish,
     Start,
 }
 
-impl LineKind {
-    /// Finish before start at equal times so a shared line closes one lap and opens the next
-    fn rank_at_equal_times(&self) -> u8 {
-        match self {
-            LineKind::Finish => 0,
-            LineKind::Start => 1,
-        }
-    }
+/// Times laps from GPS fixes as they arrive, oldest first.
+///
+/// A start crossing opens a lap (restarting any open one) and the next finish crossing closes it.
+/// Without a finish line the start line is also the finish, so consecutive start crossings bound each lap.
+pub struct LapTimer {
+    start: ProjectedLine,
+    finish: ProjectedLine,
+    last_fix: Option<GpsFix>,
+    open_lap_start_ms: Option<f64>,
+    laps: Vec<Lap>,
 }
 
-/// The laps timed by the time-sorted `fixes`.
-///
-/// Without a finish line, consecutive start crossings bound each lap.
-/// With one, a start crossing opens a lap (restarting any open one) and the next finish crossing closes it.
-#[must_use]
-pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> Vec<Lap> {
-    let start_crossings = crossing_times_ms(fixes, start);
-    let Some(finish) = finish else {
-        return start_crossings
-            .windows(2)
-            .filter_map(|pair| lap(pair[0], pair[1]))
-            .collect();
-    };
+impl LapTimer {
+    #[must_use]
+    pub fn new(start: TimingLine, finish: Option<TimingLine>) -> Self {
+        LapTimer {
+            start: ProjectedLine::new(start),
+            finish: ProjectedLine::new(finish.unwrap_or(start)),
+            last_fix: None,
+            open_lap_start_ms: None,
+            laps: Vec::new(),
+        }
+    }
 
-    let mut crossings: Vec<(f64, LineKind)> = start_crossings
+    /// A timer that has timed the time-sorted `fixes`
+    #[must_use]
+    pub fn from_fixes(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> Self {
+        let mut timer = LapTimer::new(start, finish);
+        for &fix in fixes {
+            timer.push(fix);
+        }
+        timer
+    }
+
+    /// Times the crossings since the previous fix
+    pub fn push(&mut self, fix: GpsFix) {
+        let Some(last_fix) = self.last_fix.replace(fix) else {
+            return;
+        };
+        let mut crossings: Vec<(f64, LineKind)> = [
+            (&self.finish, LineKind::Finish),
+            (&self.start, LineKind::Start),
+        ]
         .into_iter()
-        .map(|time| (time, LineKind::Start))
-        .chain(
-            crossing_times_ms(fixes, finish)
-                .into_iter()
-                .map(|time| (time, LineKind::Finish)),
-        )
+        .filter_map(|(line, kind)| Some((line.crossing_time_ms(last_fix, fix)?, kind)))
         .collect();
-    crossings.sort_by(|(left_time, left_kind), (right_time, right_kind)| {
-        left_time.total_cmp(right_time).then(
-            left_kind
-                .rank_at_equal_times()
-                .cmp(&right_kind.rank_at_equal_times()),
-        )
-    });
-
-    let mut timed = Vec::new();
-    let mut open_start = None;
-    for (time, kind) in crossings {
-        match kind {
-            LineKind::Start => open_start = Some(time),
-            LineKind::Finish => {
-                if let Some(start_ms) = open_start.take() {
-                    timed.extend(lap(start_ms, time));
+        // stable, so at equal times the finish stays first and a shared line closes one lap before opening the next
+        crossings.sort_by(|(left_ms, _), (right_ms, _)| left_ms.total_cmp(right_ms));
+        for (time_ms, kind) in crossings {
+            match kind {
+                LineKind::Start => self.open_lap_start_ms = Some(time_ms),
+                LineKind::Finish => {
+                    if let Some(start_ms) = self.open_lap_start_ms.take() {
+                        self.laps.extend(lap(start_ms, time_ms));
+                    }
                 }
             }
         }
     }
-    timed
+
+    #[must_use]
+    pub fn laps(&self) -> &[Lap] {
+        &self.laps
+    }
 }
 
-/// Where to time laps from so every lap not yet settled is timed again: the start of the `laps` lap, or lap still in
-/// progress, holding `settled_ms`, else `settled_ms` itself
+/// The laps timed by the time-sorted `fixes`
 #[must_use]
-pub fn resume_ms(
-    fixes: &[GpsFix],
-    start: TimingLine,
-    finish: Option<TimingLine>,
-    laps: &[Lap],
-    settled_ms: f64,
-) -> f64 {
-    let in_progress = open_lap_start_ms(fixes, start, finish)
-        .filter(|&start_ms| settled_ms - start_ms < MAX_LAP_MS)
-        .map(|start_ms| (start_ms, f64::INFINITY));
-    laps.iter()
-        .map(|lap| (lap.start_ms, lap.end_ms))
-        .chain(in_progress)
-        .find(|&(start_ms, end_ms)| start_ms <= settled_ms && settled_ms < end_ms)
-        .map_or(settled_ms, |(start_ms, _)| start_ms)
-}
-
-/// When the lap still in progress started, if one is: the last start crossing, unless a later finish crossing closed it
-fn open_lap_start_ms(
-    fixes: &[GpsFix],
-    start: TimingLine,
-    finish: Option<TimingLine>,
-) -> Option<f64> {
-    let last_start_ms = *crossing_times_ms(fixes, start).last()?;
-    let closed = finish.is_some_and(|finish| {
-        crossing_times_ms(fixes, finish)
-            .last()
-            .is_some_and(|&last_finish_ms| last_finish_ms > last_start_ms)
-    });
-    (!closed).then_some(last_start_ms)
+pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> Vec<Lap> {
+    LapTimer::from_fixes(fixes, start, finish).laps
 }
 
 fn lap(start_ms: f64, end_ms: f64) -> Option<Lap> {

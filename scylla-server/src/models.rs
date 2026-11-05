@@ -72,7 +72,7 @@ pub struct Track {
     pub finishBLon: Option<f64>,
 }
 
-type LineColumns = (Option<f64>, Option<f64>, Option<f64>, Option<f64>);
+pub type LineColumns = (Option<f64>, Option<f64>, Option<f64>, Option<f64>);
 
 /// A line's `(a_lat, a_lon, b_lat, b_lon)` columns; any NULL column means no line
 fn line_from_columns(columns: LineColumns) -> Option<TimingLine> {
@@ -92,7 +92,8 @@ fn line_from_columns(columns: LineColumns) -> Option<TimingLine> {
 }
 
 /// The inverse of `line_from_columns`: no line means all four columns NULL
-fn columns_from_line(line: Option<TimingLine>) -> LineColumns {
+#[must_use]
+pub fn columns_from_line(line: Option<TimingLine>) -> LineColumns {
     (
         line.map(|line| line.a.lat),
         line.map(|line| line.a.lon),
@@ -118,41 +119,5 @@ impl Track {
                 self.finishBLon,
             )),
         )
-    }
-}
-
-/// Use this struct when editing a track's lines.
-///
-/// None columns are written as NULL so an edit can clear a line.
-#[derive(AsChangeset)]
-#[diesel(table_name = crate::argos_schema::track)]
-#[diesel(treat_none_as_null = true)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct TrackLines {
-    pub startALat: Option<f64>,
-    pub startALon: Option<f64>,
-    pub startBLat: Option<f64>,
-    pub startBLon: Option<f64>,
-    pub finishALat: Option<f64>,
-    pub finishALon: Option<f64>,
-    pub finishBLat: Option<f64>,
-    pub finishBLon: Option<f64>,
-}
-
-impl TrackLines {
-    #[must_use]
-    pub fn new(start_line: Option<TimingLine>, finish_line: Option<TimingLine>) -> Self {
-        let start = columns_from_line(start_line);
-        let finish = columns_from_line(finish_line);
-        TrackLines {
-            startALat: start.0,
-            startALon: start.1,
-            startBLat: start.2,
-            startBLon: start.3,
-            finishALat: finish.0,
-            finishALon: finish.1,
-            finishBLat: finish.2,
-            finishBLon: finish.3,
-        }
     }
 }

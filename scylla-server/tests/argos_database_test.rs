@@ -30,6 +30,11 @@ fn database_url_without_a_database_gains_one() {
     );
 }
 
+#[test]
+fn database_url_that_is_not_a_url_is_an_error() {
+    assert!(database_url_with_name("not a url", ARGOS_DATABASE_NAME).is_err());
+}
+
 #[tokio::test]
 async fn an_unavailable_argos_database_is_service_unavailable() {
     let connection = ArgosPoolHandle(None).get().await;

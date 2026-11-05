@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, linkedSignal, signal } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -9,26 +9,14 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import {
-  EMPTY,
-  Observable,
-  asyncScheduler,
-  exhaustMap,
-  first,
-  from,
-  merge,
-  of,
-  switchMap,
-  tap,
-  throttleTime,
-  timer
-} from 'rxjs';
+import { EMPTY, asyncScheduler, first, from, merge, switchMap, tap, throttleTime } from 'rxjs';
 import { getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getLaps } from 'src/api/lap.api';
-import { addTrack, deleteTrack, editTrack, getAllTracks } from 'src/api/track.api';
+import { addTrack, deleteTrack, editTrackLine } from 'src/api/track.api';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import TypographyComponent from 'src/components/typography/typography.component';
 import APIService from 'src/services/api.service';
 import { EnvService } from 'src/services/env.service';
 import Storage from 'src/services/storage.service';
@@ -52,17 +40,18 @@ import { lapTable } from 'src/utils/lap-timer.types';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 import { isValidCoordinate, lineLengthMetres, snapFix } from 'src/utils/track.utils';
-import { Coordinate, Fix, LapsSince, Run, TimedLap, TimingLine, Track } from 'src/utils/types.utils';
+import { Coordinate, Fix, Run, TimedLap, TimingLine, Track } from 'src/utils/types.utils';
 import MapCanvasComponent from './map-canvas/map-canvas.component';
 import { RunSelectorComponent } from '../graph-page/graph-caption/run-selector/run-selector.component';
 
-const LAP_POLL_MS = 3000;
 const FIT_PADDING_PX = 60;
 const MAX_FIT_ZOOM = 19;
 // MapLibre re-tiles the whole trace on each redraw, too costly at the 10 Hz GPS rate.
 const TRACE_REDRAW_MS = 1_000;
 
 type Cursor = { point: Coordinate; fix: Fix | null; target: Coordinate };
+
+const sameJson = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
 @Component({
   selector: 'map',
@@ -75,6 +64,7 @@ type Cursor = { point: Coordinate; fix: Fix | null; target: Coordinate };
     LoadingPageComponent,
     ErrorPageComponent,
     SidebarToggleComponent,
+    TypographyComponent,
     FormsModule,
     ReactiveFormsModule,
     MapCanvasComponent,
@@ -110,18 +100,26 @@ export default class MapComponent {
   private pickedRunId = signal<number | undefined>(undefined);
   runId = computed(() => this.pickedRunId() ?? this.currentRunId());
   isLive = computed(() => this.runId() !== undefined && this.runId() === this.currentRunId());
-  tracks = signal<Track[]>([]);
-  selectedTrack = signal<Track | null>(null);
+  // scylla sends the tracks and live laps every second; an unchanged copy must not redraw the map under a drag.
+  tracks = toSignal(this.storage.getTracks(), { requireSync: true, equal: sameJson });
+  selectedTrackId = signal<number | null>(null);
+  selectedTrack = computed(() => this.tracks().find((track) => track.id === this.selectedTrackId()) ?? null, {
+    equal: sameJson
+  });
+  private liveLaps = toSignal(this.storage.getLiveLaps(), { requireSync: true, equal: sameJson });
   // A FormControl updates the input immediately; a reset signal only reaches it on the next render.
   newTrackName = new FormControl('', { nonNullable: true });
   private newTrackNameValue = toSignal(this.newTrackName.valueChanges, { initialValue: '' });
   saving = signal(false);
   canCreateTrack = computed(() => !this.saving() && !!this.newTrackNameValue().trim());
-  placing = linkedSignal<Track | null, LineSpec | null>({ source: this.selectedTrack, computation: () => null });
+  placing = linkedSignal<number | undefined, LineSpec | null>({
+    source: () => this.selectedTrack()?.id,
+    computation: () => null
+  });
   pendingEnd = linkedSignal<LineSpec | null, Coordinate | null>({ source: this.placing, computation: () => null });
   cursor = signal<Cursor | null>(null);
-  private dragging = signal(false);
-  snapTarget = computed(() => (this.placing() || this.dragging() ? this.cursor()?.fix ?? null : null));
+  private draggedMarker = signal<Marker | null>(null);
+  snapTarget = computed(() => (this.placing() || this.draggedMarker() ? this.cursor()?.fix ?? null : null));
   readonly lineEnds: (keyof TimingLine)[] = ['a', 'b'];
   lineRows = computed(() =>
     LINES.map((spec) => {
@@ -129,7 +127,13 @@ export default class MapComponent {
       return { spec, line, lengthMetres: line && lineLengthMetres(line) };
     })
   );
-  private laps = signal<TimedLap[]>([]);
+  private recordedLaps = signal<TimedLap[]>([]);
+  private laps = computed(() => {
+    if (!this.isLive()) return this.recordedLaps();
+    const live = this.liveLaps();
+    const track = this.selectedTrack();
+    return live && track && live.runId === this.runId() ? live.laps[track.id] ?? [] : [];
+  });
   lapTable = computed(() => lapTable(this.laps()));
   isLoading = signal(false);
   historyError = signal<Error | null>(null);
@@ -137,8 +141,6 @@ export default class MapComponent {
   private lineEndMarkers = new Map<string, Marker>();
 
   constructor() {
-    this.request<Track[]>('Tracks Unavailable', getAllTracks).then((tracks) => tracks && this.tracks.set(tracks));
-
     toObservable(computed(() => ({ runId: this.runId(), isLive: this.isLive() })))
       .pipe(
         switchMap(({ runId, isLive }) => {
@@ -156,12 +158,13 @@ export default class MapComponent {
     toObservable(computed(() => ({ runId: this.runId(), track: this.selectedTrack(), isLive: this.isLive() })))
       .pipe(
         switchMap(({ runId, track, isLive }) => {
-          this.laps.set([]);
-          return runId === undefined || !track ? EMPTY : this.pollLaps(runId, track.id, isLive);
+          this.recordedLaps.set([]);
+          if (isLive || runId === undefined || !track) return EMPTY;
+          return from(this.request<TimedLap[]>('Laps Unavailable', () => getLaps(runId, track.id)));
         }),
         takeUntilDestroyed()
       )
-      .subscribe();
+      .subscribe((laps) => laps && this.recordedLaps.set(laps));
 
     toObservable(computed(() => ({ map: this.map(), trace: this.trace() })))
       .pipe(throttleTime(TRACE_REDRAW_MS, asyncScheduler, { leading: true, trailing: true }), takeUntilDestroyed())
@@ -172,16 +175,21 @@ export default class MapComponent {
       const track = this.selectedTrack();
       if (!map) return;
       setOverlay(map, 'lines', linesGeoJson(track));
+      // Another engineer's save must not pull the end being dragged out from under the cursor.
+      const dragged = untracked(this.draggedMarker);
       LINES.forEach((spec) =>
         this.lineEnds.forEach((end) => {
           const key = `${spec.kind}-${end}`;
           const line = track?.[spec.field];
           const marker = this.lineEndMarkers.get(key);
           if (!line) {
+            // A removed marker never fires dragend.
+            if (marker === dragged) this.draggedMarker.set(null);
             marker?.remove();
             this.lineEndMarkers.delete(key);
-          } else if (marker) marker.setLngLat(line[end]);
-          else this.lineEndMarkers.set(key, this.lineEndMarker(map, spec, end).setLngLat(line[end]).addTo(map));
+          } else if (!marker)
+            this.lineEndMarkers.set(key, this.lineEndMarker(map, spec, end).setLngLat(line[end]).addTo(map));
+          else if (marker !== dragged) marker.setLngLat(line[end]);
         })
       );
     });
@@ -193,7 +201,7 @@ export default class MapComponent {
     effect(() => setOverlay(this.map(), 'snap', pointGeoJson(this.snapTarget())));
     effect(() => {
       const map = this.map();
-      if (map) map.getCanvas().style.cursor = this.placing() ? 'crosshair' : this.dragging() ? 'grabbing' : '';
+      if (map) map.getCanvas().style.cursor = this.placing() ? 'crosshair' : this.draggedMarker() ? 'grabbing' : '';
     });
   }
 
@@ -218,13 +226,19 @@ export default class MapComponent {
     const name = this.newTrackName.value.trim();
     if (!name || this.saving()) return;
     this.placing.set(null);
-    if ((await this.saveTrack(() => addTrack(name))) && this.newTrackName.value.trim() === name) this.newTrackName.reset();
+    const added = await this.write<Track>('Save Failed', () => addTrack(name));
+    if (!added) return;
+    this.selectedTrackId.set(added.id);
+    if (this.newTrackName.value.trim() === name) this.newTrackName.reset();
   }
 
   async moveLineEnd(spec: LineSpec, end: keyof TimingLine, axis: keyof Coordinate, input: HTMLInputElement) {
     const value = input.valueAsNumber;
-    if (isValidCoordinate(axis, value))
-      await this.editLine(spec, (line) => line && { ...line, [end]: { ...line[end], [axis]: value } });
+    if (
+      isValidCoordinate(axis, value) &&
+      (await this.editLine(spec, (line) => line && { ...line, [end]: { ...line[end], [axis]: value } }))
+    )
+      return;
     const shown = this.selectedTrack()?.[spec.field]?.[end];
     if (shown) input.value = shown[axis].toFixed(6);
   }
@@ -239,11 +253,7 @@ export default class MapComponent {
       message: `Delete "${track.name}" and its timing lines?`,
       acceptButtonProps: { label: 'Delete', severity: 'danger' },
       rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
-      accept: async () => {
-        if ((await this.write<string>('Delete Failed', () => deleteTrack(track.id))) === null) return;
-        this.tracks.update((tracks) => tracks.filter((other) => other.id !== track.id));
-        this.selectedTrack.set(null);
-      }
+      accept: () => this.write<string>('Delete Failed', () => deleteTrack(track.id))
     });
   }
 
@@ -314,29 +324,6 @@ export default class MapComponent {
     );
   }
 
-  private pollLaps(runId: number, trackId: number, isLive: boolean) {
-    let lastError: string | null = null;
-    let since = 0;
-    return (isLive ? timer(0, LAP_POLL_MS) : of(0)).pipe(
-      exhaustMap(() => this.fetchLaps(runId, trackId, since)),
-      tap((result) => {
-        if (!(result instanceof Error)) {
-          lastError = null;
-          this.laps.update((laps) => [...laps.filter((lap) => lap.startMs < since), ...result.laps]);
-          since = result.resumeMs;
-        } else if (result.message !== lastError) {
-          lastError = result.message;
-          this.messageService.add({ severity: 'error', summary: 'Laps Unavailable', detail: result.message });
-        }
-      })
-    );
-  }
-
-  private fetchLaps(runId: number, trackId: number, since: number): Observable<LapsSince | Error> {
-    const query = this.apiService.query<LapsSince>(() => getLaps(runId, trackId, since));
-    return merge(query.error, query.data).pipe(first((result): result is LapsSince | Error => result !== null));
-  }
-
   private placeEnd(end: Coordinate) {
     const spec = this.placing();
     const a = this.pendingEnd();
@@ -353,7 +340,7 @@ export default class MapComponent {
     const markerCursor = () => this.cursorAt(map, fromLngLat(marker.getLngLat()));
     marker.on('dragstart', () => {
       element.classList.add('dragging');
-      this.dragging.set(true);
+      this.draggedMarker.set(marker);
     });
     marker.on('drag', () => {
       const cursor = markerCursor();
@@ -365,8 +352,9 @@ export default class MapComponent {
     });
     marker.on('dragend', async () => {
       element.classList.remove('dragging');
-      this.dragging.set(false);
+      this.draggedMarker.set(null);
       const { target } = markerCursor();
+      marker.setLngLat(target);
       if (await this.editLine(spec, (line) => line && { ...line, [end]: target })) return;
       const track = this.selectedTrack();
       const line = track?.[spec.field];
@@ -380,19 +368,7 @@ export default class MapComponent {
     const track = this.selectedTrack();
     if (!track || this.saving()) return false;
     this.placing.set(null);
-    return !!(await this.saveTrack(() => editTrack({ ...track, [spec.field]: edit(track[spec.field]) })));
-  }
-
-  private async saveTrack(send: () => Promise<Response>): Promise<Track | null> {
-    const saved = await this.write<Track>('Save Failed', send);
-    if (!saved) return null;
-    this.tracks.update((tracks) =>
-      tracks.some((other) => other.id === saved.id)
-        ? tracks.map((other) => (other.id === saved.id ? saved : other))
-        : [...tracks, saved]
-    );
-    this.selectedTrack.set(saved);
-    return saved;
+    return !!(await this.write<Track>('Save Failed', () => editTrackLine(track.id, spec.kind, edit(track[spec.field]))));
   }
 
   // One write at a time; a drag already in progress or an unblurred input can still try to start a second.

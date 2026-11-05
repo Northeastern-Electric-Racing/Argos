@@ -1,9 +1,5 @@
-import { Track } from 'src/utils/types.utils';
+import { LineKind, TimingLine } from 'src/utils/types.utils';
 import { urls } from './urls';
-
-export const getAllTracks = (): Promise<Response> => {
-  return fetch(urls.getAllTracks());
-};
 
 export const addTrack = (name: string): Promise<Response> => {
   return fetch(urls.addTrack(), {
@@ -13,11 +9,11 @@ export const addTrack = (name: string): Promise<Response> => {
   });
 };
 
-export const editTrack = ({ id, startLine, finishLine }: Track): Promise<Response> => {
-  return fetch(urls.editTrack(id), {
+export const editTrackLine = (id: number, kind: LineKind, line: TimingLine | null): Promise<Response> => {
+  return fetch(urls.editTrackLine(id, kind), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ startLine, finishLine })
+    body: JSON.stringify(line)
   });
 };
 

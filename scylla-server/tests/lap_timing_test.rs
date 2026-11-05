@@ -1,5 +1,5 @@
 use scylla_server::lap_timing::{
-    GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine, crossing_times_ms, laps, resume_ms,
+    GeoPoint, GpsFix, Lap, LapTimer, METRES_PER_DEGREE, ProjectedLine, TimingLine, laps,
 };
 
 const REFERENCE: GeoPoint = GeoPoint {
@@ -35,6 +35,14 @@ fn finish_line() -> TimingLine {
         a: offset(-6.0, 0.0),
         b: offset(6.0, 0.0),
     }
+}
+
+fn crossing_times_ms(fixes: &[GpsFix], line: TimingLine) -> Vec<f64> {
+    let projected = ProjectedLine::new(line);
+    fixes
+        .windows(2)
+        .filter_map(|pair| projected.crossing_time_ms(pair[0], pair[1]))
+        .collect()
 }
 
 fn lap(start_ms: f64, end_ms: f64) -> Lap {
@@ -342,43 +350,16 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
 }
 
 #[test]
-fn start_line_only_resumes_at_the_lap_holding_the_settled_time_unless_it_spans_a_stop() {
-    let fixes: Vec<GpsFix> = [
-        cross_start(1000.0),
-        cross_start(5000.0),
-        cross_start(9000.0),
-    ]
-    .concat();
-    let timed = laps(&fixes, start_line(), None);
-    let resumes: Vec<f64> = [500.0, 6000.0, 9500.0, 400_000.0]
-        .iter()
-        .map(|&settled_ms| resume_ms(&fixes, start_line(), None, &timed, settled_ms))
-        .collect();
+fn lap_timer_times_a_lap_once_the_fix_after_its_last_crossing_arrives() {
+    let fixes: Vec<GpsFix> = [cross_start(1000.0), cross_start(5000.0)].concat();
+    let mut timer = LapTimer::new(start_line(), None);
+    // the second crossing is between the 7th and 8th fixes
+    for &fix in &fixes[..7] {
+        timer.push(fix);
+    }
+    assert_eq!(timer.laps(), []);
 
-    assert_eq!(resumes, vec![500.0, 5000.0, 9000.0, 400_000.0]);
-}
+    timer.push(fixes[7]);
 
-#[test]
-fn separate_finish_line_resumes_at_the_start_of_the_run_holding_the_settled_time() {
-    let fixes: Vec<GpsFix> = [
-        cross_start(1000.0),
-        cross_finish(4000.0),
-        cross_start(9000.0),
-    ]
-    .concat();
-    let timed = laps(&fixes, start_line(), Some(finish_line()));
-    let resumes: Vec<f64> = [500.0, 2000.0, 6000.0, 9500.0]
-        .iter()
-        .map(|&settled_ms| {
-            resume_ms(
-                &fixes,
-                start_line(),
-                Some(finish_line()),
-                &timed,
-                settled_ms,
-            )
-        })
-        .collect();
-
-    assert_eq!(resumes, vec![500.0, 1000.0, 6000.0, 9000.0]);
+    assert_eq!(timer.laps(), [lap(1000.0, 5000.0)]);
 }

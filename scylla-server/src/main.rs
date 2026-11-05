@@ -36,6 +36,7 @@ use scylla_server::{
     mqtt_processor::pub_handle,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
+    track_handler::{TracksChanged, track_handler},
     zenoh_processor::ZenohProcessor,
 };
 use scylla_server::{
@@ -285,6 +286,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let task_tracker = TaskTracker::new();
     let token = CancellationToken::new();
 
+    let tracks_changed = TracksChanged::default();
+    let fut = track_handler(
+        token.clone(),
+        mqtt_send_socket.subscribe(),
+        ArgosPoolHandle(argos_pool.clone()),
+        tracks_changed.clone(),
+        io.clone(),
+    );
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(fut).await;
+        warn!(task = "track_handler", "task ended: {:?}", res);
+    });
+
     if cli.no_metadata {
         let fut = socket_handler(token.clone(), mqtt_receive_socket, io);
         task_tracker.spawn(async move {
@@ -385,12 +399,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(
             Router::new()
                 // TRACKS AND LAPS
-                .route("/tracks", get(track_controller::get_all_tracks))
                 .route("/tracks/add", put(track_controller::add_track))
-                .route("/tracks/edit/{id}", put(track_controller::edit_track))
+                .route(
+                    "/tracks/edit/{id}/{line}",
+                    put(track_controller::edit_track_line),
+                )
                 .route("/tracks/delete/{id}", post(track_controller::delete_track))
                 .route("/laps/{runId}/{trackId}", get(lap_controller::get_laps))
-                .layer(Extension(ArgosPoolHandle(argos_pool))),
+                .layer(Extension(ArgosPoolHandle(argos_pool)))
+                .layer(Extension(tracks_changed)),
         )
         .merge(
             Router::new()

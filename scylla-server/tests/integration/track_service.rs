@@ -1,11 +1,13 @@
+use std::time::Duration;
+
 use crate::test_utils::cleanup_and_prepare;
 use axum::{Extension, Json, extract::Path, http::StatusCode};
 use scylla_server::{
-    controllers::track_controller::{self, EditTrackPayload},
+    controllers::track_controller::{self, AddTrackPayload},
     error::ScyllaError,
-    lap_timing::{GeoPoint, TimingLine},
-    models::TrackLines,
+    lap_timing::{GeoPoint, LineKind, TimingLine},
     services::track_service,
+    track_handler::TracksChanged,
     transformers::track_transformer::PublicTrack,
 };
 
@@ -56,23 +58,23 @@ async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Er
 }
 
 #[tokio::test]
-async fn test_edit_track_overwrites_both_lines() -> Result<(), diesel::result::Error> {
+async fn test_edit_track_line_replaces_only_that_line() -> Result<(), diesel::result::Error> {
     let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
     let mut db = argos_pool.get().await.unwrap();
 
     let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
-    track_service::edit_track(
-        &mut db,
-        added.id,
-        TrackLines::new(Some(line(42.1, -71.1)), Some(line(42.338_5, -71.087_5))),
-    )
-    .await?;
+    for (kind, placed) in [
+        (LineKind::Start, line(42.1, -71.1)),
+        (LineKind::Finish, line(42.338_5, -71.087_5)),
+    ] {
+        track_service::edit_track_line(&mut db, added.id, kind, Some(placed)).await?;
+    }
     let precise_line = line(42.337_812_345_678, -71.086_712_345_678);
 
-    let edited =
-        track_service::edit_track(&mut db, added.id, TrackLines::new(Some(precise_line), None))
-            .await?
-            .expect("track should exist");
+    track_service::edit_track_line(&mut db, added.id, LineKind::Start, Some(precise_line)).await?;
+    let edited = track_service::edit_track_line(&mut db, added.id, LineKind::Finish, None)
+        .await?
+        .expect("track should exist");
 
     let expected = PublicTrack {
         id: added.id,
@@ -95,13 +97,11 @@ async fn test_edit_track_overwrites_both_lines() -> Result<(), diesel::result::E
 async fn test_edit_unknown_track_is_empty_result() {
     let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
 
-    let edited = track_controller::edit_track(
+    let edited = track_controller::edit_track_line(
         Extension(argos_pool),
-        Path(1),
-        Json(EditTrackPayload {
-            start_line: None,
-            finish_line: None,
-        }),
+        Extension(TracksChanged::default()),
+        Path((1, LineKind::Start)),
+        Json(None),
     )
     .await;
 
@@ -112,7 +112,12 @@ async fn test_edit_unknown_track_is_empty_result() {
 async fn test_delete_unknown_track_is_empty_result() {
     let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
 
-    let deleted = track_controller::delete_track(Extension(argos_pool), Path(1)).await;
+    let deleted = track_controller::delete_track(
+        Extension(argos_pool),
+        Extension(TracksChanged::default()),
+        Path(1),
+    )
+    .await;
 
     assert!(matches!(deleted, Err(ScyllaError::EmptyResult)));
 }
@@ -134,13 +139,11 @@ async fn test_edit_track_accepts_boundary_coordinates() -> Result<(), ScyllaErro
         },
     };
 
-    let edited = track_controller::edit_track(
+    let edited = track_controller::edit_track_line(
         Extension(argos_pool),
-        Path(added.id),
-        Json(EditTrackPayload {
-            start_line: Some(corners),
-            finish_line: Some(line(42.1, -71.1)),
-        }),
+        Extension(TracksChanged::default()),
+        Path((added.id, LineKind::Start)),
+        Json(Some(corners)),
     )
     .await?;
 
@@ -150,7 +153,7 @@ async fn test_edit_track_accepts_boundary_coordinates() -> Result<(), ScyllaErro
             id: added.id,
             name: "Accel".to_owned(),
             start_line: Some(corners),
-            finish_line: Some(line(42.1, -71.1)),
+            finish_line: None,
         }
     );
     Ok(())
@@ -177,13 +180,11 @@ async fn test_edit_track_rejects_out_of_range_coordinates() -> Result<(), Scylla
             },
             b: GeoPoint { lat, lon },
         };
-        let edited = track_controller::edit_track(
+        let edited = track_controller::edit_track_line(
             Extension(argos_pool.clone()),
-            Path(added.id),
-            Json(EditTrackPayload {
-                start_line: Some(line(42.1, -71.1)),
-                finish_line: Some(bad_point),
-            }),
+            Extension(TracksChanged::default()),
+            Path((added.id, LineKind::Finish)),
+            Json(Some(bad_point)),
         )
         .await;
 
@@ -227,5 +228,28 @@ async fn test_delete_track() -> Result<(), diesel::result::Error> {
         .collect();
     assert_eq!(remaining, vec![kept.id]);
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_added_track_wakes_the_track_handler() -> Result<(), ScyllaError> {
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let tracks_changed = TracksChanged::default();
+
+    let added = track_controller::add_track(
+        Extension(argos_pool),
+        Extension(tracks_changed.clone()),
+        Json(AddTrackPayload {
+            name: "Accel".to_owned(),
+        }),
+    )
+    .await?;
+
+    assert_eq!(added.name, "Accel");
+    assert!(
+        tokio::time::timeout(Duration::ZERO, tracks_changed.0.notified())
+            .await
+            .is_ok()
+    );
     Ok(())
 }

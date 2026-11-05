@@ -63,6 +63,8 @@ export type TimingLine = {
   b: Coordinate;
 };
 
+export type LineKind = 'start' | 'finish';
+
 export type Track = {
   id: number;
   name: string;
@@ -76,7 +78,7 @@ export type TimedLap = {
   durationMs: number;
 };
 
-export type LapsSince = { laps: TimedLap[]; resumeMs: number };
+export type RunLaps = { runId: number; laps: Record<number, TimedLap[]> };
 
 export type GraphData = {
   x: number;

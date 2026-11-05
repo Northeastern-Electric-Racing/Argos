@@ -38,14 +38,15 @@
   </div>
 
   <aside class="panel">
-    <h2>Run</h2>
+    <typography class="section" variant="sidebar-label" content="Run" />
     <run-selector [selectRun]="onRunSelected" />
 
-    <h2>Track</h2>
+    <typography class="section" variant="sidebar-label" content="Track" />
     <p-select
       [options]="tracks()"
-      [(ngModel)]="selectedTrack"
+      [(ngModel)]="selectedTrackId"
       optionLabel="name"
+      optionValue="id"
       placeholder="Select a track"
       [disabled]="saving()"
       appendTo="body"
@@ -81,7 +82,7 @@
       </div>
     }
 
-    <h2>Timing lines</h2>
+    <typography class="section" variant="sidebar-label" content="Timing lines" />
     @for (row of lineRows(); track row.spec.kind) {
       <div class="row line-row">
         <div class="grow">
@@ -151,7 +152,7 @@
     }
     <p class="hint">Start only: every crossing is a lap. Add a finish for accel and autocross.</p>
 
-    <h2>Laps</h2>
+    <typography class="section" variant="sidebar-label" content="Laps" />
     @if (lapTable(); as table) {
       <p class="best">
         Best <span>{{ table.best }}</span>
