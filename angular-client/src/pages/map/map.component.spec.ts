@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { Component, input, output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
@@ -35,10 +36,10 @@ describe('MapComponent run', () => {
   let storage: Storage;
   let fixture: ComponentFixture<MapComponent>;
   let map: MapComponent;
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: MockInstance<typeof window.fetch>;
 
   beforeEach(() => {
-    fetchSpy = spyOn(window, 'fetch').and.returnValue(pending);
+    fetchSpy = vi.spyOn(window, 'fetch').mockReturnValue(pending);
     configure();
     storage = TestBed.inject(Storage);
     fixture = TestBed.createComponent(MapComponent);
@@ -50,7 +51,7 @@ describe('MapComponent run', () => {
     storage.setCurrentRunId(2);
 
     expect(map.runId()).toBe(2);
-    expect(map.isLive()).toBeTrue();
+    expect(map.isLive()).toBe(true);
   });
 
   it('stays on the picked run when a new run starts', () => {
@@ -59,7 +60,7 @@ describe('MapComponent run', () => {
     storage.setCurrentRunId(3);
 
     expect(map.runId()).toBe(1);
-    expect(map.isLive()).toBeFalse();
+    expect(map.isLive()).toBe(false);
   });
 
   it('clears the trace and laps when the run changes', async () => {
@@ -86,7 +87,7 @@ describe('MapComponent run', () => {
   });
 
   it("shows a live run's stored history, then appends only newer live fixes", async () => {
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+    fetchSpy.mockImplementation((url: RequestInfo | URL) =>
       String(url).endsWith(historyUrl) ? Promise.resolve(json([fix('42', '1000'), fix('42.1', '2000')])) : pending
     );
     storage.setCurrentRunId(1);
@@ -111,7 +112,7 @@ describe('MapComponent run', () => {
 
   it("keeps the live fixes newer than a live run's stored history when it arrives", async () => {
     let finishHistory: (response: Response) => void = () => undefined;
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+    fetchSpy.mockImplementation((url: RequestInfo | URL) =>
       String(url).endsWith(historyUrl) ? new Promise<Response>((resolve) => (finishHistory = resolve)) : pending
     );
     storage.setCurrentRunId(1);
@@ -129,9 +130,9 @@ describe('MapComponent run', () => {
   });
 
   it("toasts a live run's failed history without covering the map and keeps drawing live fixes", async () => {
-    const toast = spyOn(TestBed.inject(MessageService), 'add');
+    const toast = vi.spyOn(TestBed.inject(MessageService), 'add');
     let failHistory: (response: Response) => void = () => undefined;
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+    fetchSpy.mockImplementation((url: RequestInfo | URL) =>
       String(url).endsWith(historyUrl) ? new Promise<Response>((resolve) => (failHistory = resolve)) : pending
     );
     const overlay = () => fixture.nativeElement.querySelector('loading-page, error-page');
@@ -145,7 +146,7 @@ describe('MapComponent run', () => {
     storage.addValue(topics.gpsLocation(), fix('42', '1000'));
     fixture.detectChanges();
 
-    expect(toast).toHaveBeenCalledOnceWith({ severity: 'error', summary: 'GPS History Unavailable', detail: 'Down' });
+    expect(toast).toHaveBeenCalledExactlyOnceWith({ severity: 'error', summary: 'GPS History Unavailable', detail: 'Down' });
     expect(overlay()).toBeNull();
     expect(map.trace()).toEqual([{ lat: 42, lon: -84, timeMs: 1000 }]);
   });
@@ -168,7 +169,7 @@ describe('MapComponent run', () => {
 
   it("fetches a recorded run's laps on the selected track", async () => {
     const laps: TimedLap[] = [{ startMs: 0, endMs: 72500, durationMs: 72500 }];
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+    fetchSpy.mockImplementation((url: RequestInfo | URL) =>
       String(url).endsWith('/laps/1/7') ? Promise.resolve(json(laps)) : pending
     );
     storage.setCurrentRunId(2);
@@ -182,7 +183,7 @@ describe('MapComponent run', () => {
   });
 
   it("covers the map with the error when a recorded run's history fails", async () => {
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+    fetchSpy.mockImplementation((url: RequestInfo | URL) =>
       String(url).endsWith(historyUrl) ? Promise.resolve(failed) : pending
     );
     storage.setCurrentRunId(2);
@@ -195,8 +196,8 @@ describe('MapComponent run', () => {
   });
 
   it("toasts a recorded run's failed laps", async () => {
-    const toast = spyOn(TestBed.inject(MessageService), 'add');
-    fetchSpy.and.callFake((url: RequestInfo | URL) =>
+    const toast = vi.spyOn(TestBed.inject(MessageService), 'add');
+    fetchSpy.mockImplementation((url: RequestInfo | URL) =>
       String(url).endsWith('/laps/1/7') ? Promise.resolve(failed) : pending
     );
     storage.setCurrentRunId(2);
@@ -206,7 +207,7 @@ describe('MapComponent run', () => {
     fixture.detectChanges();
     await settle();
 
-    expect(toast).toHaveBeenCalledOnceWith({ severity: 'error', summary: 'Laps Unavailable', detail: 'Down' });
+    expect(toast).toHaveBeenCalledExactlyOnceWith({ severity: 'error', summary: 'Laps Unavailable', detail: 'Down' });
   });
 });
 
@@ -214,10 +215,10 @@ describe('MapComponent selected track', () => {
   let storage: Storage;
   let fixture: ComponentFixture<MapComponent>;
   let map: MapComponent;
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: MockInstance<typeof window.fetch>;
 
   beforeEach(() => {
-    fetchSpy = spyOn(window, 'fetch').and.returnValue(pending);
+    fetchSpy = vi.spyOn(window, 'fetch').mockReturnValue(pending);
     configure();
     storage = TestBed.inject(Storage);
     fixture = TestBed.createComponent(MapComponent);
@@ -261,7 +262,7 @@ describe('MapComponent selected track', () => {
     clicks[0]({ lngLat: { lng: -84, lat: 42 } });
     clicks[0]({ lngLat: { lng: -84, lat: 42.001 } });
 
-    expect(fetchSpy).toHaveBeenCalledOnceWith(jasmine.stringMatching(/\/tracks\/edit\/7\/start$/), {
+    expect(fetchSpy).toHaveBeenCalledExactlyOnceWith(expect.stringMatching(/\/tracks\/edit\/7\/start$/), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ a: { lat: 42, lon: -84 }, b: { lat: 42.001, lon: -84 } })
@@ -270,13 +271,13 @@ describe('MapComponent selected track', () => {
 
   it('deletes a track once the dialog confirms it', () => {
     const confirmation = fixture.debugElement.injector.get(ConfirmationService);
-    spyOn(confirmation, 'confirm').and.callFake(({ accept }) => {
+    vi.spyOn(confirmation, 'confirm').mockImplementation(({ accept }) => {
       accept?.();
       return confirmation;
     });
     map.confirmDelete(track(7));
 
-    expect(fetchSpy).toHaveBeenCalledOnceWith(jasmine.stringMatching(/\/tracks\/delete\/7$/), { method: 'POST' });
+    expect(fetchSpy).toHaveBeenCalledExactlyOnceWith(expect.stringMatching(/\/tracks\/delete\/7$/), { method: 'POST' });
   });
 });
 
@@ -284,7 +285,7 @@ describe('MapComponent new track', () => {
   let fixture: ComponentFixture<MapComponent>;
   let nameInput: HTMLInputElement;
   let addResponse: Promise<Response>;
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: MockInstance<typeof window.fetch>;
   const pressEnter = () => nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   // Synchronous, so the create settles in microtasks before any render can run.
   const submit = (name: string) => {
@@ -292,12 +293,12 @@ describe('MapComponent new track', () => {
     nameInput.dispatchEvent(new Event('input'));
     pressEnter();
   };
-  const addCalls = () => fetchSpy.calls.allArgs().filter(([url]) => String(url).endsWith('/tracks/add')).length;
+  const addCalls = () => fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/tracks/add')).length;
 
   beforeEach(async () => {
-    fetchSpy = spyOn(window, 'fetch').and.callFake((url: RequestInfo | URL) =>
-      String(url).endsWith('/tracks/add') ? addResponse : pending
-    );
+    fetchSpy = vi
+      .spyOn(window, 'fetch')
+      .mockImplementation((url: RequestInfo | URL) => (String(url).endsWith('/tracks/add') ? addResponse : pending));
     configure();
     fixture = TestBed.createComponent(MapComponent);
     fixture.detectChanges();
@@ -354,7 +355,7 @@ describe('MapComponent saving', () => {
   let fixture: ComponentFixture<MapComponent>;
   let map: MapComponent;
   let finishSave: (response: Response) => void;
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: MockInstance<typeof window.fetch>;
   const element = (selector: string): HTMLElement => fixture.nativeElement.querySelector(selector);
   const button = (label: string) => element(`p-button[label="${label}"] button`) as HTMLButtonElement;
   const disabled = () => ({
@@ -367,12 +368,14 @@ describe('MapComponent saving', () => {
     delete: button('Delete').disabled,
     trackSelect: element('p-select').classList.contains('p-disabled')
   });
-  const writeCalls = () => fetchSpy.calls.allArgs().filter(([url]) => /\/tracks\/(add|edit)/.test(String(url))).length;
+  const writeCalls = () => fetchSpy.mock.calls.filter(([url]) => /\/tracks\/(add|edit)/.test(String(url))).length;
 
   beforeEach(async () => {
-    fetchSpy = spyOn(window, 'fetch').and.callFake((url: RequestInfo | URL) =>
-      /\/tracks\/(add|edit)/.test(String(url)) ? new Promise<Response>((resolve) => (finishSave = resolve)) : pending
-    );
+    fetchSpy = vi
+      .spyOn(window, 'fetch')
+      .mockImplementation((url: RequestInfo | URL) =>
+        /\/tracks\/(add|edit)/.test(String(url)) ? new Promise<Response>((resolve) => (finishSave = resolve)) : pending
+      );
     configure();
     fixture = TestBed.createComponent(MapComponent);
     map = fixture.componentInstance;
@@ -390,7 +393,7 @@ describe('MapComponent saving', () => {
 
     finishSave(json(track(7)));
     await settle();
-    fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(trackControlsDisabled()).toEqual({ place: false, delete: false, trackSelect: false });
   });
@@ -400,7 +403,7 @@ describe('MapComponent saving', () => {
     fixture.detectChanges();
     finishSave({ ok: false, text: () => Promise.resolve('Down') } as Response);
     await settle();
-    fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(disabled()).toEqual({ clear: false, place: false, delete: false, latitude: false, trackSelect: false });
     expect(map.selectedTrack()).toEqual(placed);
