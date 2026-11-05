@@ -218,7 +218,7 @@ impl Borrow<String> for Topic {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct RuleNotification {
     pub id: RuleId,
     pub topic: Topic,

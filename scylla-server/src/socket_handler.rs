@@ -5,13 +5,13 @@ use rustc_hash::FxHashMap;
 use serde::Serialize;
 use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
-use socketioxide::extract::SocketRef;
+use socketioxide::extract::{Data, SocketRef};
 use socketioxide::handler::{FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::{sync::atomic::Ordering, time::Duration};
-use tokio::sync::{RwLock, broadcast};
+use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
@@ -21,7 +21,8 @@ use crate::metadata_structs::{
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
     map_dti_flt,
 };
-use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::notification_queue::{CheckIn, NotificationQueue};
+use crate::rule_structs::{ClientId, RULE_SOCKET_KEY, RuleManager};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -102,6 +103,16 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
 /// Cadence at which `Argos/Message_Rate` is recomputed and emitted.
 const MESSAGE_RATE_INTERVAL: Duration = Duration::from_millis(500);
 
+/// Event a client sends regularly with the last notification it received
+const CHECK_IN_SOCKET_KEY: &str = "rule_checkin";
+/// A client that has not checked in for this long is gone: its queue and subscriptions are dropped.
+/// Three missed check-ins at the client's 5s interval.
+const CHECK_IN_TIMEOUT: Duration = Duration::from_secs(15);
+/// How long after sending a notification a check-in that has not reported it resends it
+const RESEND_AFTER: Duration = Duration::from_secs(2);
+/// Cadence at which clients past [`CHECK_IN_TIMEOUT`] are given up on
+const QUEUE_EXPIRE_INTERVAL: Duration = Duration::from_secs(1);
+
 ///
 /// # Panics
 /// Panics if Regex is invalid
@@ -122,6 +133,7 @@ pub async fn socket_handler_with_metadata(
     let mut timers_interval = tokio::time::interval(Duration::from_secs(1));
     let mut recent_faults_interval = tokio::time::interval(Duration::from_secs(1));
     let mut message_rate_interval = tokio::time::interval(MESSAGE_RATE_INTERVAL);
+    let mut queue_expire_interval = tokio::time::interval(QUEUE_EXPIRE_INTERVAL);
 
     // init timers
     let mut timer_map: FxHashMap<String, TimerData> = FxHashMap::default();
@@ -154,6 +166,15 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
+    // numbered notifications not yet reported received by their client
+    let queue = Arc::new(Mutex::new(NotificationQueue::new(
+        Utc::now()
+            .timestamp_nanos_opt()
+            .unwrap_or_default()
+            .to_string(),
+        RESEND_AFTER,
+    )));
+    let connect_queue = queue.clone();
     io.ns(
         "/",
         |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
@@ -170,6 +191,33 @@ pub async fn socket_handler_with_metadata(
             );
             owned.insert(client_id.clone(), socket.id);
             drop(owned);
+
+            let check_in_client = ClientId(client_id.clone());
+            socket.on(
+                CHECK_IN_SOCKET_KEY,
+                async move |socket: SocketRef, Data(check_in): Data<CheckIn>| {
+                    let resend = connect_queue.lock().await.check_in(
+                        check_in_client.clone(),
+                        &check_in,
+                        tokio::time::Instant::now(),
+                    );
+                    if !resend.is_empty() {
+                        info!(
+                            "Resending {} unreported notifications to {}",
+                            resend.len(),
+                            check_in_client
+                        );
+                    }
+                    for notification in resend {
+                        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification) {
+                            warn!(
+                                "Could not resend rule notification to {}, err {}",
+                                check_in_client, err
+                            );
+                        }
+                    }
+                },
+            );
 
             socket.on_disconnect(async move || {
                 writable_socket_map.write().await.remove(&client_id);
@@ -216,7 +264,7 @@ pub async fn socket_handler_with_metadata(
                         //     );
                         // }
                         handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
-                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                        handle_rule_processing(&data, &rules_manager, &client_socket_map, &queue, &io).await;
                     }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
@@ -268,6 +316,13 @@ pub async fn socket_handler_with_metadata(
                         METADATA_SOCKET_KEY,
                     ).await;
             },
+            _ = queue_expire_interval.tick() => {
+                let expired = queue.lock().await.expire(tokio::time::Instant::now(), CHECK_IN_TIMEOUT);
+                for client in expired {
+                    warn!("Client {} missed its check-ins for {:?}, deleting client", client, CHECK_IN_TIMEOUT);
+                    let _ = rules_manager.delete_client(client).await;
+                }
+            }
             _ = message_rate_interval.tick() => {
                 let rate = (msg_cnt as f32 / (tokio::time::Instant::now() - last_instant).as_millis() as f32) * 1000f32;
                 debug!("Updating message rate to be {} msg/sec", rate);
@@ -306,45 +361,43 @@ async fn handle_rule_processing(
     data: &ClientData,
     rule_manager: &Arc<RuleManager>,
     client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
+    queue: &Arc<Mutex<NotificationQueue>>,
     io: &SocketIo,
 ) {
     let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
         return;
     };
 
-    for notification in notifs {
+    for (client, notification) in notifs {
+        // held until the client reports it, and resent on a later check-in if not
+        let queued =
+            queue
+                .lock()
+                .await
+                .push(client.clone(), notification, tokio::time::Instant::now());
         // Copy the sid and drop the read lock before any async work
         let sid_opt = {
             let read_clients = client_socket_map.read().await;
-            read_clients.get(&notification.0.0).copied()
+            read_clients.get(&client.0).copied()
         };
-        let Some(sid) = sid_opt else {
-            warn!(
-                "Could not find client to deliver notification, deleting client {}",
-                notification.0.0
+        let Some(socket) = sid_opt.and_then(|sid| io.get_socket(sid)) else {
+            info!(
+                "Client {} not connected, holding notification until it checks in",
+                client
             );
-            let _ = rule_manager.delete_client(notification.0).await;
             continue;
         };
         debug!(
             "Sending notification of {} to {}",
-            notification.1.topic, notification.0
+            queued.notification.topic, client
         );
-        let Some(socket) = io.get_socket(sid) else {
-            warn!(
-                "Could not find client socket, deleting client {}",
-                notification.0.0
-            );
-            let _ = rule_manager.delete_client(notification.0).await;
-            continue;
-        };
-        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {
+        if let Err(err) = socket.emit(RULE_SOCKET_KEY, &queued) {
             warn!(
                 "Could not send rule notification to {}, err {}",
-                notification.0, err
+                client, err
             );
         } else {
-            debug!("Successfully sent notification to {}", notification.0);
+            debug!("Successfully sent notification to {}", client);
         }
     }
 }
