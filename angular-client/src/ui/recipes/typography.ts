@@ -91,7 +91,7 @@ const variants: Record<StyleVariant, Parts> = {
   }
 };
 
-const textSizes = 'xs|sm|base|lg|title|xl|display|2xl|numeral|hero|badge|ctrl|ctrl-sm|ctrl-lg';
+const textSizes = 'xs|sm|base|lg|title|readout|xl|display|2xl|numeral|hero|badge|ctrl|ctrl-sm|ctrl-lg';
 // Order matters: size and alignment are text-* too, so they are matched before colour.
 const families: [Family, RegExp][] = [
   ['size', new RegExp(`^text-(${textSizes}|\\[(length:.+|[\\d.]+(px|r?em|vw|vh|%)|(x|xx)-large)\\])$`)],

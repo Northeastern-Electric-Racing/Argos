@@ -116,3 +116,27 @@ describe('AppNavBarComponent on a phone', () => {
     expect(document.activeElement).toBe(toggle);
   });
 });
+
+describe('AppNavBarComponent on a desktop', () => {
+  const realWidth = window.innerWidth;
+  beforeEach(() => Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1440 }));
+  afterEach(() => Object.defineProperty(window, 'innerWidth', { configurable: true, value: realWidth }));
+
+  it('draws the clock and its "Run #N" partner on one readout size, as 814 drew both at 36px', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AppNavBarComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const nav: HTMLElement = fixture.nativeElement.querySelector('nav');
+    const run = [...nav.querySelectorAll<HTMLElement>('current-run-display p')];
+    const clock = [...nav.querySelectorAll<HTMLElement>('typography p')].find((p) =>
+      /^\d\d:\d\d:\d\d$/.test(p.textContent!.trim())
+    )!;
+    expect(run.map((p) => p.textContent?.trim())).toEqual(['Run', '#0']);
+    expect(clock).toBeDefined();
+    for (const p of [clock, ...run]) {
+      expect(p.classList).toContain('text-readout');
+      expect(p.getAttribute('style') ?? '').not.toMatch(/font-?size/i);
+    }
+  });
+});
