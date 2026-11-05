@@ -1,4 +1,6 @@
-<div class="gauge-stat">
-  <span class="gauge-value" [style.color]="color()">{{ value() | number: digitsInfo() }}</span>
-  <span class="gauge-unit">{{ unit() }}</span>
+<div class="flex items-baseline justify-center gap-1 py-2">
+  <span class="font-sans text-2xl font-bold text-fg tabular-nums" [style.color]="color()">{{
+    value() | number: digitsInfo()
+  }}</span>
+  <span class="text-sm text-fg-muted">{{ unit() }}</span>
 </div>
