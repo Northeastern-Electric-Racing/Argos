@@ -7,10 +7,9 @@
   <div [class]="_config.uiShowHeader ? classes.content : headerlessContent">
     <ng-template cdkPortalOutlet />
   </div>
-  <!-- After the content in DOM order, so the CDK's first-tabbable focus lands on the content.
-       ui-dialog-close is a hook for run-form's focus check, not a style. -->
+  <!-- After the content in DOM order, so the CDK's first-tabbable focus lands on the content. -->
   @if (_config.uiShowHeader && _config.uiClosable) {
-    <button type="button" uiIconButton class="ui-dialog-close" [class]="classes.close" aria-label="Close" (click)="close()">
+    <button type="button" uiIconButton [class]="classes.close" aria-label="Close" (click)="close()">
       <mat-icon aria-hidden="true">close</mat-icon>
     </button>
   }

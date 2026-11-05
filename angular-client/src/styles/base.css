@@ -57,7 +57,7 @@ body {
 
 /* Users who ask for less motion get state changes without the slides and fades (spinners keep turning). */
 @media (prefers-reduced-motion: reduce) {
-  :not(.ui-spinner, .animate-spin),
+  :not(.animate-spin),
   ::before,
   ::after {
     animation-duration: 1ms !important;

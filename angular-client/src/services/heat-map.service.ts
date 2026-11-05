@@ -70,7 +70,7 @@ export class HeatMapService {
         data: { cells: this.selectedCells },
         header: 'Cell Comparison',
         draggable: true,
-        panelClass: 'cell-compare-dialog'
+        compact: true
       });
       this.dialogRef?.closed.subscribe(() => {
         this.clearSelection();
