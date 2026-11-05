@@ -5,11 +5,14 @@ import { cx, tw } from './tw';
  * for a sticky header, `[trackBy]`, `*cdkNoDataRow` for the empty row) and plain tables alike: the rules
  * table, the upload preview, and wave 2's lap timer, BMS chip faults, faults and notification log tables.
  *
- *   wrapper   the scroll box; add the height cap (max-h-*) for a sticky header to stick inside: a CDK table's
+ *   wrapper   the scroll box, positioned (sr-only labels in its cells are absolute, and would otherwise escape it
+ *             and widen the page); add the height cap (max-h-*) for a sticky header to stick inside: a CDK table's
  *             `sticky: true` header row, or `headerCellClass(density, { sticky: true })` on a plain table's <th>s
  *   table     md (0.9rem) or sm (0.8125rem) text
  *   th / td   md, or phone (tighter 6px cells and smaller text below 768px, long values wrap); a header cell
  *             aligns left or right (numbers), and can stick to the top of the wrapper
+ *   light th  the lap timer's header: no fill, 12px semibold uppercase fg-muted labels on the card (#909's
+ *             lap tables); not sticky, since rows would show through it
  *   row       striped and/or hover; selected from data-selected="true", focus from a solid inset ring
  *   empty     the cell of the empty (or loading) row
  */
@@ -31,6 +34,9 @@ const headerCellClasses: Record<TableDensity, string> = {
   phone: tw('border-b border-solid border-border bg-surface-3 p-3 font-semibold max-md:p-1.5 max-md:text-ctrl-sm')
 };
 const headerAlignClasses: Record<TableAlign, string> = { left: tw('text-left'), right: tw('text-right') };
+const lightHeaderCellBase = tw(
+  'border-b border-solid border-border px-3 py-2 text-xs font-semibold tracking-[0.04em] text-fg-muted uppercase'
+);
 /** A plain table's sticky header cell; its opaque surface-3 fill covers the rows scrolling under it. */
 const stickyHeaderCell = tw('sticky top-0 z-1');
 
@@ -44,7 +50,7 @@ const rowBase = tw(
 );
 
 export const tableClasses = {
-  wrapper: tw('overflow-auto rounded-md'),
+  wrapper: tw('relative overflow-auto rounded-md'),
   empty: tw('border-b border-solid border-border p-8 text-center text-fg-muted')
 } as const;
 
@@ -57,6 +63,11 @@ export function headerCellClass(
   { align = 'left', sticky = false }: { align?: TableAlign; sticky?: boolean } = {}
 ): string {
   return cx(headerCellClasses[density], headerAlignClasses[align], sticky && stickyHeaderCell);
+}
+
+/** The light header cell (no fill, small uppercase muted labels), aligned like its column. */
+export function lightHeaderCellClass({ align = 'left' }: { align?: TableAlign } = {}): string {
+  return cx(lightHeaderCellBase, headerAlignClasses[align]);
 }
 
 export function cellClass(density: TableDensity = 'md'): string {

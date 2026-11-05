@@ -5,10 +5,10 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { iconClasses } from 'src/ui/recipes/icon';
-import { cellClass } from 'src/ui/recipes/table';
+import { cellClass, lightHeaderCellClass } from 'src/ui/recipes/table';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { formatDeltaMs, formatMs, Lap } from 'src/utils/lap-timer.types';
-import { lapHeaderClass, lapTimerClasses } from '../lap-timer.classes';
+import { lapTimerClasses } from '../lap-timer.classes';
 
 /** Every column is numeric and right-aligned; times use tabular figures so they line up. */
 const plain = cx(cellClass(), tw('text-right'));
@@ -35,12 +35,12 @@ export default class LapsTableComponent {
   protected readonly iconXs = iconClasses.xs;
   protected readonly rowClass = tw('hover:bg-fg/4');
   protected readonly headers = {
-    num: cx(lapHeaderClass('right'), tw('w-14')),
-    dur: cx(lapHeaderClass('right'), tw('w-25')),
-    delta: cx(lapHeaderClass('right'), tw('w-27.5')),
-    time: cx(lapHeaderClass('right'), tw('w-32.5')),
-    run: cx(lapHeaderClass('right'), tw('w-16')),
-    stat: cx(lapHeaderClass('right'), tw('w-25'))
+    num: cx(lightHeaderCellClass({ align: 'right' }), tw('w-14')),
+    dur: cx(lightHeaderCellClass({ align: 'right' }), tw('w-25')),
+    delta: cx(lightHeaderCellClass({ align: 'right' }), tw('w-27.5')),
+    time: cx(lightHeaderCellClass({ align: 'right' }), tw('w-32.5')),
+    run: cx(lightHeaderCellClass({ align: 'right' }), tw('w-16')),
+    stat: cx(lightHeaderCellClass({ align: 'right' }), tw('w-25'))
   };
   /** A slower lap's delta to the best is positive: red text (accent-fg, AA on the card). */
   protected readonly cells = { plain, mono, slower: cx(mono, tw('text-accent-fg')) };
