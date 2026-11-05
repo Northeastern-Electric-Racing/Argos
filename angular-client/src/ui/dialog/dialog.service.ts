@@ -4,7 +4,7 @@ import { ComponentPortal, ComponentType } from '@angular/cdk/portal';
 import { Injectable, Injector, inject } from '@angular/core';
 import { createGlobalPositionStrategy, createOverlayRef } from '@angular/cdk/overlay';
 import { UiDialogContainerComponent } from './dialog-container.component';
-import { dialogBackdropClass, DialogDensity, dialogPaneClass } from './dialog.recipe';
+import { dialogBackdropClass, DialogDensity } from './dialog.recipe';
 import { UI_PANEL_CONFIG, UiPanelComponent, UiPanelConfig, UiPanelRef } from './panel.component';
 
 /** Options for {@link UiDialogService.open}, on top of the CDK's own DialogConfig. */
@@ -25,8 +25,11 @@ export interface UiDialogOptions<D = unknown> {
   dismissableMask?: boolean;
   /** Let the user drag the dialog by its header. Default false. */
   draggable?: boolean;
-  /** Extra classes on the overlay pane, for global positioning tweaks. */
-  panelClass?: string;
+  /**
+   * Extra classes on the overlay pane: a recipe string (split on whitespace) or a list. Utilities lose to the CDK's
+   * unlayered pane rules for position, display, max size, pointer-events and z-index; size the content instead.
+   */
+  panelClass?: string | string[];
   /** Pin the dialog to the viewport edges instead of centring it. */
   position?: { top?: string; right?: string; bottom?: string; left?: string };
   /** ARIA role; use 'alertdialog' for confirmations. Default 'dialog'. */
@@ -44,6 +47,10 @@ export interface UiDialogConfig<D = unknown> extends DialogConfig<D> {
   uiDraggable: boolean;
   uiDensity: DialogDensity;
 }
+
+/** The CDK adds pane classes one by one (`classList.add`), so a string with spaces would throw: one class per item. */
+const paneClasses = (panelClass: string | string[] = []): string[] =>
+  (Array.isArray(panelClass) ? panelClass : [panelClass]).flatMap((c) => c.split(/\s+/)).filter(Boolean);
 
 let nextTitleId = 0;
 const newTitleId = () => `ui-dialog-title-${nextTitleId++}`;
@@ -69,7 +76,7 @@ export class UiDialogService {
       width: options.width,
       maxWidth: 'calc(100vw - 32px)',
       backdropClass: dialogBackdropClass,
-      panelClass: [dialogPaneClass, ...(options.panelClass ? [options.panelClass] : [])],
+      panelClass: paneClasses(options.panelClass),
       // We decide ourselves when Escape / backdrop clicks close (PrimeNG-compatible defaults).
       disableClose: true,
       role: options.role ?? 'dialog',
@@ -118,7 +125,7 @@ export class UiDialogService {
       hasBackdrop: false,
       width: options.width,
       maxWidth: 'calc(100vw - 32px)',
-      panelClass: [dialogPaneClass, ...(options.panelClass ? [options.panelClass] : [])]
+      panelClass: paneClasses(options.panelClass)
     });
     const panelConfig: UiPanelConfig = {
       header: options.header,
