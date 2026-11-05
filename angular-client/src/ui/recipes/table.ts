@@ -5,9 +5,11 @@ import { cx, tw } from './tw';
  * for a sticky header, `[trackBy]`, `*cdkNoDataRow` for the empty row) and plain tables alike: the rules
  * table, the upload preview, and wave 2's lap timer, BMS chip faults, faults and notification log tables.
  *
- *   wrapper   the scroll box; add the height cap (max-h-*) for a sticky header to stick inside
+ *   wrapper   the scroll box; add the height cap (max-h-*) for a sticky header to stick inside: a CDK table's
+ *             `sticky: true` header row, or `headerCellClass(density, { sticky: true })` on a plain table's <th>s
  *   table     md (0.9rem) or sm (0.8125rem) text
- *   th / td   md, or phone (tighter 6px cells and smaller text below 768px, long values wrap)
+ *   th / td   md, or phone (tighter 6px cells and smaller text below 768px, long values wrap); a header cell
+ *             aligns left or right (numbers), and can stick to the top of the wrapper
  *   row       striped and/or hover; selected from data-selected="true", focus from a solid inset ring
  *   empty     the cell of the empty (or loading) row
  */
@@ -21,10 +23,16 @@ const tableSizeClasses: Record<TableSize, string> = {
   sm: tw('w-full border-collapse text-ctrl-sm text-fg')
 };
 
+export const TABLE_ALIGNS = ['left', 'right'] as const;
+export type TableAlign = (typeof TABLE_ALIGNS)[number];
+
 const headerCellClasses: Record<TableDensity, string> = {
-  md: tw('border-b border-solid border-border bg-surface-3 p-3 text-left font-semibold'),
-  phone: tw('border-b border-solid border-border bg-surface-3 p-3 text-left font-semibold max-md:p-1.5 max-md:text-ctrl-sm')
+  md: tw('border-b border-solid border-border bg-surface-3 p-3 font-semibold'),
+  phone: tw('border-b border-solid border-border bg-surface-3 p-3 font-semibold max-md:p-1.5 max-md:text-ctrl-sm')
 };
+const headerAlignClasses: Record<TableAlign, string> = { left: tw('text-left'), right: tw('text-right') };
+/** A plain table's sticky header cell; its opaque surface-3 fill covers the rows scrolling under it. */
+const stickyHeaderCell = tw('sticky top-0 z-1');
 
 const cellClasses: Record<TableDensity, string> = {
   md: tw('border-b border-solid border-border px-3 py-2'),
@@ -44,8 +52,11 @@ export function tableClass(size: TableSize = 'md'): string {
   return tableSizeClasses[size];
 }
 
-export function headerCellClass(density: TableDensity = 'md'): string {
-  return headerCellClasses[density];
+export function headerCellClass(
+  density: TableDensity = 'md',
+  { align = 'left', sticky = false }: { align?: TableAlign; sticky?: boolean } = {}
+): string {
+  return cx(headerCellClasses[density], headerAlignClasses[align], sticky && stickyHeaderCell);
 }
 
 export function cellClass(density: TableDensity = 'md'): string {
@@ -60,7 +71,7 @@ export function rowClass({ striped = false, hover = false }: { striped?: boolean
 /**
  * A native checkbox (`<input type="checkbox">`) drawn in the tokens: a grey edge, the accent fill and a white
  * tick when checked, a white dash when indeterminate (set `[indeterminate]`), the solid focus ring. The edge is
- * fg-muted, not control-border, so it reaches 3:1 on the surface-3 table header (#7a7a7a measured 2.94:1).
+ * fg-muted (5:1 on the surface-3 table header), a step lighter than control-border's 3.2:1 there.
  * The box is 18px like #909's; as a table-cell control it meets WCAG 2.5.8 through the spacing exception.
  */
 export const checkboxClass = tw(
