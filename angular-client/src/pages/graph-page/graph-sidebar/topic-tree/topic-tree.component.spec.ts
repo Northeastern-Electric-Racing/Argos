@@ -57,6 +57,34 @@ describe('TopicTreeComponent', () => {
     expect(await items[0].isSelected()).toBe(false);
   });
 
+  it('expands and collapses a branch, hiding its group when collapsed', async () => {
+    const [bms] = await (await tree()).getItems({ text: /BMS/ });
+    expect(await bms.isExpanded()).toBe(false);
+    await bms.click();
+    expect(await bms.isExpanded()).toBe(true);
+    await bms.click();
+    expect(await bms.isExpanded()).toBe(false);
+  });
+
+  it('selects several leaves without a modifier key, and unselects on a second click', async () => {
+    await (await (await tree()).getItems({ text: /BMS/ }))[0].click();
+    await (await (await tree()).getItems({ text: /Voltage/ }))[0].click();
+    fixture.componentRef.setInput('selectedKeys', ['BMS/Status/Temp_Average', 'BMS/Pack/Voltage']);
+    await fixture.whenStable();
+    const items = await (await tree()).getItems({ level: 2 });
+    expect(await Promise.all(items.map((i) => i.isSelected()))).toEqual([true, true]);
+    await items[0].click();
+    expect(unselected).toEqual(['BMS/Pack/Voltage']);
+  });
+
+  it('labels the filter box with its placeholder', () => {
+    fixture.componentRef.setInput('filterPlaceholder', 'Select Data Type');
+    fixture.detectChanges();
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input[type="search"]');
+    expect(input.getAttribute('aria-label')).toBe('Select Data Type');
+    expect(input.placeholder).toBe('Select Data Type');
+  });
+
   it('emits nodeSelect when a leaf is clicked', async () => {
     await (await (await tree()).getItems({ text: /BMS/ }))[0].click();
     await (await (await tree()).getItems({ text: /Voltage/ }))[0].click();

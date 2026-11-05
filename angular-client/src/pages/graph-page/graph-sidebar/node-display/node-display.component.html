@@ -1,4 +1,4 @@
-<div [class]="isDesktop() ? '' : 'mobile-subcontainer'">
+<div [class]="isDesktop() ? '' : row">
   <sidebar-card
     [title]="node().name"
     (click)="onSelect(node())"
@@ -8,11 +8,11 @@
     [isDesktop]="isDesktop()"
   />
   @if (node().subnodesVisible) {
-    <div [class]="isDesktop() ? '' : 'mobile-subcontainer'">
+    <div [class]="isDesktop() ? '' : row">
       @for (subNode of node().nodes | async | nodeFilter: 'name' : searchFilter(); track subNode) {
-        <div [class]="isDesktop() ? 'desktop-subcontainer' : 'mobile-subcontainer'">
+        <div [class]="isDesktop() ? centred : row">
           <node-display
-            [style]="isDesktop() ? 'width: 95%; margin-left: 30px' : ''"
+            [class]="isDesktop() ? indented : ''"
             [node]="subNode"
             [searchFilter]="searchFilter()"
             [isDesktop]="isDesktop()"

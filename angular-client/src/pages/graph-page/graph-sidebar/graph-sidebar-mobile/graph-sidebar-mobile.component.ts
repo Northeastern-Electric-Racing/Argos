@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { TopicTreeComponent } from '../topic-tree/topic-tree.component';
 import { UiDrawerComponent } from 'src/ui/drawer/drawer.component';
 import { UiSwitchComponent } from 'src/ui/switch/switch.component';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -37,20 +38,18 @@ import {
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
 @Component({
   selector: 'graph-sidebar-mobile',
   templateUrl: './graph-sidebar-mobile.component.html',
-  styleUrls: ['./graph-sidebar-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     UiDrawerComponent,
     TopicTreeComponent,
     ButtonComponent,
-    TypographyComponent,
     UiSwitchComponent,
+    UiButtonDirective,
     FormsModule,
     SelectDropdownComponent
   ]
