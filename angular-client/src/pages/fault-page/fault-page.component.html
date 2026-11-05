@@ -1,50 +1,56 @@
-<div class="fault-container">
+<div class="flex h-full flex-col p-2">
+  <!-- 814's fluid 4vw title, letter- and word-spaced, pulled up into the page padding -->
   <typography
-    class="title-style"
+    class="-mt-5 grid items-center"
     variant="x-large-title"
     content="Faults"
-    additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
+    textClass="text-[4vw] text-left tracking-[0.2rem] [word-spacing:0.2rem]"
   />
-  <div ngAccordionGroup class="accordion" [multiExpandable]="true">
+  <div ngAccordionGroup [class]="accordion.group" [multiExpandable]="true">
     @for (node of nodeArray(); track node.node) {
-      <h3 class="accordion-heading">
-        <span ngAccordionTrigger [panel]="panel" #trigger="ngAccordionTrigger" class="accordion-trigger">
+      <h3 [class]="accordion.heading">
+        <span
+          ngAccordionTrigger
+          [panel]="panel"
+          [expanded]="opensByDefault(node.node)"
+          #trigger="ngAccordionTrigger"
+          [class]="accordion.trigger"
+        >
           {{ node.node }}
-          <mat-icon class="expand-icon" aria-hidden="true">expand_more</mat-icon>
+          <mat-icon [class]="accordion.icon" aria-hidden="true">expand_more</mat-icon>
         </span>
       </h3>
-      <div ngAccordionPanel #panel="ngAccordionPanel" class="accordion-panel">
+      <div ngAccordionPanel #panel="ngAccordionPanel">
         <ng-template ngAccordionContent>
-          <div class="accordion-body">
-            <table
-              cdk-table
-              class="ui-table ui-table--striped ui-table--hover"
-              [dataSource]="node.data"
-              [trackBy]="trackFault"
-            >
+          <div [class]="accordion.body">
+            <table cdk-table [class]="table" [dataSource]="node.data" [trackBy]="trackFault">
               <ng-container cdkColumnDef="name">
-                <th cdk-header-cell *cdkHeaderCellDef>Name</th>
-                <td cdk-cell *cdkCellDef="let fault">
-                  <button type="button" class="ui-cell-button" (click)="onRowSelect(fault); $event.stopPropagation()">
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Name</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td">
+                  <button type="button" [class]="cellButton" (click)="onRowSelect(fault); $event.stopPropagation()">
                     {{ fault.name }}
                   </button>
                 </td>
               </ng-container>
               <ng-container cdkColumnDef="occurredAt">
-                <th cdk-header-cell *cdkHeaderCellDef>Occurred At</th>
-                <td cdk-cell *cdkCellDef="let fault">{{ fault.occurredAt | date: 'HH:mm:ss' }}</td>
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Occurred At</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td" class="whitespace-nowrap">
+                  {{ fault.occurredAt | date: 'HH:mm:ss' }}
+                </td>
               </ng-container>
               <ng-container cdkColumnDef="lastSeen">
-                <th cdk-header-cell *cdkHeaderCellDef>Last Seen</th>
-                <td cdk-cell *cdkCellDef="let fault">{{ fault.lastSeen | date: 'HH:mm:ss' }}</td>
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Last Seen</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td" class="whitespace-nowrap">
+                  {{ fault.lastSeen | date: 'HH:mm:ss' }}
+                </td>
               </ng-container>
               <ng-container cdkColumnDef="expired">
-                <th cdk-header-cell *cdkHeaderCellDef>Expired?</th>
-                <td cdk-cell *cdkCellDef="let fault">{{ fault.expired ? 'Yes' : 'No' }}</td>
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Expired?</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td">{{ fault.expired ? 'Yes' : 'No' }}</td>
               </ng-container>
               <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
               <!-- The whole row is a mouse target; keyboard and screen-reader users get the Name button. -->
-              <tr cdk-row *cdkRowDef="let fault; columns: columns" (click)="onRowSelect(fault)"></tr>
+              <tr cdk-row *cdkRowDef="let fault; columns: columns" [class]="row" (click)="onRowSelect(fault)"></tr>
             </table>
           </div>
         </ng-template>
