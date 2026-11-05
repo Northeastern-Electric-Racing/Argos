@@ -2,7 +2,8 @@ import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
+import { BehaviorSubject, map, Subject } from 'rxjs';
 import NotificationRulesPageComponent from './notification-rules-page.component';
 import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.component';
 
@@ -160,5 +161,33 @@ describe('NotificationRulesPageComponent', () => {
       expect(fetchMock).not.toHaveBeenCalled();
       vi.unstubAllGlobals();
     });
+  });
+});
+
+describe('NotificationRulesPageComponent stream rail across the phone breakpoint', () => {
+  it('shows a live, reachable stream on a phone even after it was hidden on a desktop', async () => {
+    localStorage.setItem('notification_rules_client_id', 'test-client-id');
+    const phone = new BehaviorSubject(false);
+    const breakpoints: Partial<BreakpointObserver> = {
+      observe: () => phone.pipe(map((matches): BreakpointState => ({ matches, breakpoints: {} })))
+    };
+    await TestBed.configureTestingModule({
+      imports: [NotificationRulesPageComponent],
+      providers: [ToastService, UiDialogService, { provide: BreakpointObserver, useValue: breakpoints }]
+    }).compileComponents();
+    const fixture = TestBed.createComponent(NotificationRulesPageComponent);
+    fixture.detectChanges();
+    const rail = (): HTMLElement => fixture.nativeElement.querySelector('aside[aria-label="Live notification stream"]');
+
+    fixture.componentInstance.toggleStreamRail();
+    fixture.detectChanges();
+    expect(rail().getAttribute('aria-hidden')).toBe('true');
+    expect(rail().inert).toBe(true);
+
+    // narrowed to a phone: there is no toggle there, and the rail is shown, so it must be live too
+    phone.next(true);
+    fixture.detectChanges();
+    expect(rail().getAttribute('aria-hidden')).toBe('false');
+    expect(rail().inert).toBe(false);
   });
 });

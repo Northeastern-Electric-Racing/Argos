@@ -1,11 +1,13 @@
 import { DialogRef } from '@angular/cdk/dialog';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
-import { take } from 'rxjs';
+import { map, take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
@@ -54,6 +56,15 @@ export default class NotificationRulesPageComponent implements OnInit {
   selectedRules = signal<ClientRule[]>([]);
   /** Whether the right-side notification stream rail is visible. */
   protected streamRailOpen = signal(true);
+  /** Below Tailwind's md (768px) the rail is always shown and has no toggle. */
+  private isPhone = toSignal(
+    inject(BreakpointObserver)
+      .observe('(max-width: 767.98px)')
+      .pipe(map((state) => state.matches)),
+    { initialValue: false }
+  );
+  /** Whether the rail is on screen, so aria-hidden and inert follow what is drawn (hidden on a desktop only). */
+  protected streamRailShown = computed(() => this.streamRailOpen() || this.isPhone());
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   private addButton = viewChild('addButton', { read: ElementRef });

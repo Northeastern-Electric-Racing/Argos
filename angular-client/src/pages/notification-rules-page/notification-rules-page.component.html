@@ -76,8 +76,8 @@
          shown on phones, which have no toggle. -->
     <aside
       class="-mr-5 flex w-[clamp(200px,16.66vw,280px)] shrink-0 overflow-hidden transition-[width,margin-left,opacity] duration-250 ease-out aria-hidden:pointer-events-none aria-hidden:-ml-5 aria-hidden:w-0 aria-hidden:opacity-0 max-md:mr-0 max-md:max-h-80 max-md:w-full max-md:aria-hidden:pointer-events-auto max-md:aria-hidden:ml-0 max-md:aria-hidden:w-full max-md:aria-hidden:opacity-100"
-      [attr.aria-hidden]="!streamRailOpen()"
-      [inert]="!streamRailOpen()"
+      [attr.aria-hidden]="!streamRailShown()"
+      [inert]="!streamRailShown()"
       aria-label="Live notification stream"
     >
       <notification-list class="min-w-0 flex-1" variant="stream" />
