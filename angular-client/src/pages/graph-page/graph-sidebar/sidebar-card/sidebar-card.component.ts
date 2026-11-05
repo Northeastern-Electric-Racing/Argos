@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { MatIcon } from '@angular/material/icon';
-import { NgStyle } from '@angular/common';
-import TypographyComponent from 'src/components/typography/typography.component';
+import { iconClasses } from 'src/ui/recipes/icon';
+import { tw } from 'src/ui/recipes/tw';
 
 /**
  * Sidebar Card Component to display a card in the sidebar.
@@ -14,9 +14,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'sidebar-card',
   templateUrl: './sidebar-card.component.html',
-  styleUrls: ['./sidebar-card.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatIcon, NgStyle, TypographyComponent]
+  imports: [MatIcon]
 })
 export default class SidebarCardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -29,6 +28,9 @@ export default class SidebarCardComponent implements OnInit {
   topicName = input.required<string>();
   isDesktop = input<boolean>(true);
   iconId = computed(() => `${this.title()}-icon`);
+  protected readonly icon = iconClasses;
+  protected readonly titleWithIcon = tw('my-1.25 ml-8.75');
+  protected readonly titleCentred = tw('mx-1.25 text-center');
 
   ngOnInit(): void {
     this.storage

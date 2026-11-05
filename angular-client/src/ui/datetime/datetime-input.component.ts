@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { UiInputDirective } from '../field/field.directive';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -14,12 +15,14 @@ export function toLocalInputValue(date: Date | null | undefined): string {
 
 /**
  * Date + time (to the second) picker: the browser's native datetime-local input, bound to a Date.
- * Neither Angular Aria nor the CDK has a datepicker; the native control is accessible as-is.
+ * Neither Angular Aria nor the CDK has a datepicker; the native control is accessible as-is, and its picker
+ * icon follows the dark colour scheme. It fills its field's width on the uiInput atom (sm).
  */
 @Component({
   selector: 'ui-datetime-input',
   templateUrl: './datetime-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [UiInputDirective],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => UiDateTimeInputComponent), multi: true }]
 })
 export class UiDateTimeInputComponent implements ControlValueAccessor {

@@ -177,7 +177,9 @@ describe('GeneralButtonsComponent — custom range validation', () => {
 
   describe('custom range tabs', () => {
     const openPopover = async () => {
-      const trigger: HTMLButtonElement = fixture.nativeElement.querySelector('.custom-stack button');
+      const trigger = [...fixture.nativeElement.querySelectorAll('button')].find(
+        (b: HTMLButtonElement) => b.textContent?.trim() === 'Custom'
+      ) as HTMLButtonElement;
       trigger.click();
       fixture.detectChanges();
       await fixture.whenStable();
@@ -207,16 +209,27 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(document.getElementById('custom-from')).not.toBeNull();
     });
 
-    it('does not give the hidden panel a display of its own (ui.css hides inert panels)', async () => {
+    it('keeps one panel live: the unselected one is inert, so inert:hidden takes it out of the layout', async () => {
       await openPopover();
       await (await tabs()).selectTab({ title: 'Date Range' });
       await fixture.whenStable();
-      const hidden = document.querySelector<HTMLElement>('[ngTabPanel][inert]')!;
-      expect(hidden).not.toBeNull();
-      // Global styles are not loaded in unit tests; the component's flex column must not apply.
-      expect(getComputedStyle(hidden).display).not.toBe('flex');
-      const shown = document.querySelector<HTMLElement>('[ngTabPanel]:not([inert])')!;
-      expect(getComputedStyle(shown).display).toBe('flex');
+      const panels = [...document.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+      expect(panels.length).toBe(2);
+      const inert = panels.filter((p) => p.hasAttribute('inert'));
+      expect(inert.length).toBe(1);
+      expect(inert[0].querySelector('#custom-hours')).toBeNull();
+      expect(panels.find((p) => !p.hasAttribute('inert'))!.querySelector('#custom-from')).not.toBeNull();
+    });
+
+    it('labels every custom range field', async () => {
+      await openPopover();
+      for (const id of ['custom-hours', 'custom-minutes']) {
+        expect(document.querySelector(`label[for="${id}"]`)?.textContent?.trim()).toBeTruthy();
+      }
+      const hours = document.getElementById('custom-hours') as HTMLInputElement;
+      expect(hours.type).toBe('number');
+      expect(hours.min).toBe('0');
+      expect(hours.step).toBe('1');
     });
 
     it('ignores tab values that are not a custom mode', () => {

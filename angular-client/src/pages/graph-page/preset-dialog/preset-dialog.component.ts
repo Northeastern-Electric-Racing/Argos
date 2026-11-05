@@ -1,13 +1,26 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  computed,
+  inject,
+  signal,
+  viewChild
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { DataType } from 'src/utils/types.utils';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
 
 interface PresetDialogData {
   dataTypes: DataType[];
@@ -16,9 +29,8 @@ interface PresetDialogData {
 @Component({
   selector: 'preset-dialog',
   templateUrl: './preset-dialog.component.html',
-  styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule]
+  imports: [FormsModule, UiButtonDirective, UiInputDirective, UiLabelDirective]
 })
 export class PresetDialogComponent {
   private ref = inject(DialogRef);
@@ -27,6 +39,9 @@ export class PresetDialogComponent {
   private topicSelectionService = inject(TopicSelectionService);
   private messageService = inject(ToastService);
   private confirmationService = inject(ConfirmService);
+  private injector = inject(Injector);
+  private host: HTMLElement = inject(ElementRef).nativeElement;
+  protected readonly field = fieldClasses;
 
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
@@ -37,6 +52,7 @@ export class PresetDialogComponent {
   newPresetName = signal('');
   hasSelection = computed(() => this.currentSelection().length > 0);
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  private nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
 
   onSaveCurrent(): void {
     const name = this.newPresetName().trim();
@@ -128,10 +144,27 @@ export class PresetDialogComponent {
       rejectLabel: 'Cancel',
       danger: true,
       accept: () => {
+        const index = this.presets().findIndex((p) => p.id === preset.id);
         this.presetService.deletePreset(preset.id);
         this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
+        this.focusAfterDelete(index);
       }
     });
+  }
+
+  /**
+   * The deleted row's button is gone, so focus would drop to <body>: move it to the Delete button of the row
+   * that took its place (or the new last row), or to the name field once the list is empty.
+   */
+  private focusAfterDelete(index: number): void {
+    afterNextRender(
+      () => {
+        const deletes = this.host.querySelectorAll<HTMLButtonElement>('[data-preset-delete]');
+        const target = deletes[Math.min(Math.max(index, 0), deletes.length - 1)] ?? this.nameInput()?.nativeElement;
+        target?.focus();
+      },
+      { injector: this.injector }
+    );
   }
 
   private confirmReplace(name: string, onAccept: () => void): void {

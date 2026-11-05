@@ -8,10 +8,12 @@
       <loading-page />
     </div>
   } @else {
-    <div class="graph-container">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <div class="toolbar-group">
+    <div class="flex h-full flex-col">
+      <div
+        class="flex w-full items-center justify-between self-start max-md:flex-col max-md:items-stretch max-md:gap-1.5 max-md:px-2 max-md:py-1"
+      >
+        <div class="flex flex-wrap items-center gap-1 max-md:flex-col max-md:items-stretch max-md:gap-1.5">
+          <div class="flex items-center gap-1.25 max-md:flex-wrap max-md:gap-1.5">
             <argos-button
               [onClick]="this.toggleSideBar"
               label="Tog Sidebar"
@@ -33,20 +35,21 @@
 
           <!-- Graph Configuration Inputs -->
           @if (this.realTime === true) {
-            <div class="toolbar-group config-group">
+            <div class="ml-3.75 flex items-center gap-1.25 max-md:ml-0 max-md:flex-wrap max-md:gap-1.5">
               <argos-button
                 [onClick]="this.toggleRangeMode"
                 [label]="rangeMode === 'time' ? 'Time Range' : 'Point Range'"
                 size="sm"
                 variant="tonal"
               />
-              <label class="input-label" for="graph-range-value">{{
+              <label class="text-xs whitespace-nowrap text-fg" for="graph-range-value">{{
                 rangeMode === 'time' ? 'X (sec):' : 'X (points):'
               }}</label>
               <input
                 id="graph-range-value"
                 type="number"
-                class="ui-input ui-input--sm time-range-input"
+                uiInput="sm"
+                [class]="rangeInputClass"
                 [(ngModel)]="rangeValue"
                 min="1"
                 step="1"
@@ -56,23 +59,25 @@
             </div>
           }
 
-          <div class="toolbar-group config-group">
-            <label class="input-label" for="graph-y-min">Y Min:</label>
+          <div class="ml-3.75 flex items-center gap-1.25 max-md:ml-0 max-md:flex-wrap max-md:gap-1.5">
+            <label class="text-xs whitespace-nowrap text-fg" for="graph-y-min">Y Min:</label>
             <input
               id="graph-y-min"
               type="number"
-              class="ui-input ui-input--sm y-axis-input"
+              uiInput="sm"
+              [class]="yAxisInputClass"
               [(ngModel)]="yAxisMin"
               step="any"
               placeholder="Auto"
               (ngModelChange)="onGraphConfigChange()"
             />
 
-            <label class="input-label" for="graph-y-max">Y Max:</label>
+            <label class="text-xs whitespace-nowrap text-fg" for="graph-y-max">Y Max:</label>
             <input
               id="graph-y-max"
               type="number"
-              class="ui-input ui-input--sm y-axis-input"
+              uiInput="sm"
+              [class]="yAxisInputClass"
               [(ngModel)]="yAxisMax"
               step="any"
               placeholder="Auto"
@@ -80,7 +85,7 @@
             />
           </div>
 
-          <div class="toolbar-group">
+          <div class="flex items-center gap-1.25 max-md:flex-wrap max-md:gap-1.5">
             @if (onFaultPage) {
               <fault-buttons [onClearData]="clearDataType" />
             } @else {
@@ -103,35 +108,36 @@
           </div>
         </div>
 
-        <typography
-          variant="large-header"
-          class="toolbar-header"
-          [content]="this.rightHeader"
-          additionalStyles="margin: 0; font-size: 1.5rem;"
-        />
+        <p
+          class="m-0 shrink-0 pr-3.75 font-sans text-lg font-bold text-fg select-none max-md:mt-0.5 max-md:pr-0 max-md:text-center"
+        >
+          {{ this.rightHeader }}
+        </p>
       </div>
 
       @if (selectedDataTypes.length > 0) {
-        <live-value-strip [dataTypes]="selectedDataTypes" class="mobile-value-strip" />
+        <live-value-strip [dataTypes]="selectedDataTypes" class="hidden max-md:block" />
       }
 
-      <div class="content-div">
+      <div class="flex w-full flex-auto flex-row max-md:flex-col">
         @if (this.showSideBar) {
-          <graph-sidebar [dataTypes]="dataTypes" class="desktop-sidebar" />
+          <graph-sidebar [dataTypes]="dataTypes" class="flex-[0_1_auto] max-md:hidden" />
         }
-        <div class="right-container">
+        <div
+          class="flex min-h-0 flex-auto flex-col overflow-hidden pr-4 pb-10 max-md:h-[50vh] max-md:min-h-62.5 max-md:px-2"
+        >
           <graph
             [limitRange]="realTime === true"
             [realTime]="this.realTime === true"
             [valuesSubject]="selectedDataTypeValuesSubject"
-            class="graph"
+            class="flex-auto"
             [showMultipleYAxes]="this.showMultiYaxis"
             [isPaused]="this.isPaused"
             [clearGraph]="this.clearGraph"
             [graphConfig]="this.graphConfig"
           />
         </div>
-        <graph-sidebar [dataTypes]="dataTypes!" class="mobile-sidebar" />
+        <graph-sidebar [dataTypes]="dataTypes!" class="hidden max-md:block" />
       </div>
     </div>
   }
