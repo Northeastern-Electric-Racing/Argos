@@ -5,7 +5,7 @@
   <div [class]="classes.content">
     <ng-container *ngComponentOutlet="config.component; injector: injector" />
   </div>
-  <button type="button" uiIconButton class="ui-dialog-close" [class]="classes.close" aria-label="Close" (click)="close()">
+  <button type="button" uiIconButton [class]="classes.close" aria-label="Close" (click)="close()">
     <mat-icon aria-hidden="true">close</mat-icon>
   </button>
 </div>
