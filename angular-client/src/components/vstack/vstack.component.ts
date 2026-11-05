@@ -1,12 +1,10 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { NgStyle } from '@angular/common';
 
+/** A column of children; gap and alignment are inputs, so they stay style bindings. */
 @Component({
   selector: 'vstack',
   templateUrl: './vstack.component.html',
-  styleUrls: ['./vstack.component.css'],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [NgStyle]
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class VStackComponent {
   spacing = input<string>('5px');

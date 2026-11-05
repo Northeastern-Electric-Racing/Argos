@@ -1,81 +1,49 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import Theme from 'src/services/theme.service';
 import { StyleVariant } from 'src/utils/style-variant';
+import { typographyClass } from './typography.recipe';
 
 /**
- * Custom typography component that allows for the use of different styles of text.
- * @param variant - The variant of the typography component.
- * @param content - The content of the typography component.
- * @param additionalStyles - Additional styles to apply to the typography component.
+ * 814 parity (plan 2.2, the fontSize trap). Theme wrote these variants' size as `fontSize: …`; Angular's style
+ * binding applies that key after a caller's `font-size: …`, so on 814 those overrides never rendered. They are
+ * dropped here so every page keeps 814's sizes; a caller that really wants the size uses textClass (or fontSize).
+ */
+const SIZE_BEAT_DASH_CASE_OVERRIDES = new Set<StyleVariant>([
+  'header',
+  'secondary-header',
+  'subheader',
+  'info-title',
+  'info-subtitle',
+  'value',
+  'info-value',
+  'info-value-mobile'
+]);
+const dashCaseFontSize = /(^|;)\s*font-size\s*:[^;]*;?/gi;
+
+/**
+ * Text in one of the app's type styles (typography.recipe.ts).
+ * @param variant - The type style.
+ * @param content - The text.
+ * @param textClass - Tailwind classes for the paragraph: layout, alignment, or a size, colour or margin override
+ *   (an override replaces the variant's own class for that property).
+ * @param additionalStyles - Legacy inline CSS for callers not yet migrated to `textClass`; it beats every class.
  * @example
- * <typography variant="header" content="Hello World!" additionalStyles="color: red;"/>
- * Add general styles to the Theme Service and classify it as a StyleVariant and link it in the switch statement.
+ * <typography variant="header" content="Hello World!" textClass="m-0 text-accent-fg" />
  */
 @Component({
   selector: 'typography',
   templateUrl: './typography.component.html',
-  styleUrls: ['./typography.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class TypographyComponent {
   variant = input.required<StyleVariant>();
   content = input<string | string[] | null>();
+  textClass = input<string>('');
   additionalStyles = input<string>('');
 
-  style = computed(() => {
-    let baseStyle: string;
-
-    switch (this.variant()) {
-      case 'header':
-        baseStyle = Theme.header;
-        break;
-      case 'secondary-header':
-        baseStyle = Theme.secondaryHeader;
-        break;
-      case 'xx-large-title':
-        baseStyle = Theme.xxLargeHeader;
-        break;
-      case 'large-header':
-        baseStyle = Theme.largeHeader;
-        break;
-      case 'large-secondary-header':
-        baseStyle = Theme.largeSecondaryHeader;
-        break;
-      case 'subheader':
-        baseStyle = Theme.subheader;
-        break;
-      case 'info-title':
-        baseStyle = Theme.infoTitle;
-        break;
-      case 'info-subtitle':
-        baseStyle = Theme.infoSubtitle;
-        break;
-      case 'value':
-        baseStyle = Theme.value;
-        break;
-      case 'info-value-mobile':
-        baseStyle = Theme.infoValueMobile;
-        break;
-      case 'info-value':
-        baseStyle = Theme.infoValue;
-        break;
-      case 'info-unit':
-        baseStyle = Theme.infoUnit;
-        break;
-      case 'sidebar-label':
-        baseStyle = Theme.sidebarLabel;
-        break;
-      case 'x-large-title':
-        baseStyle = Theme.xLargeHeader;
-        break;
-      default:
-        baseStyle = '';
-        break;
-    }
-
-    if (this.additionalStyles()) {
-      baseStyle += this.additionalStyles();
-    }
-    return baseStyle;
-  });
+  protected classes = computed(() => typographyClass(this.variant(), this.textClass()));
+  protected inlineStyle = computed(() =>
+    SIZE_BEAT_DASH_CASE_OVERRIDES.has(this.variant())
+      ? this.additionalStyles().replace(dashCaseFontSize, '$1')
+      : this.additionalStyles()
+  );
 }

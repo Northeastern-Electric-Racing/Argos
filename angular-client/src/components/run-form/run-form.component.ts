@@ -26,7 +26,6 @@ import LoadingPageComponent from '../loading-page/loading-page.component';
 @Component({
   selector: 'run-form',
   templateUrl: './run-form.component.html',
-  styleUrl: './run-form.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
 })
@@ -90,9 +89,13 @@ export class RunFormComponent implements OnInit {
       this.focusedFirstField = true;
       afterNextRender(
         () => {
+          // Move focus only while it is on <body> or still on the dialog's own chrome (its Close button).
+          const host = this.host.nativeElement;
           const active = document.activeElement;
-          if (active && active !== document.body && !active.classList.contains('ui-dialog-close')) return;
-          this.host.nativeElement.querySelector<HTMLElement>('[role="combobox"], input')?.focus();
+          const onChrome =
+            !!active && !host.contains(active) && active.closest('[role="dialog"]') === host.closest('[role="dialog"]');
+          if (active && active !== document.body && !onChrome) return;
+          host.querySelector<HTMLElement>('[role="combobox"], input')?.focus();
         },
         { injector: this.injector }
       );

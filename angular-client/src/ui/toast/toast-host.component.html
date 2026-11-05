@@ -1,24 +1,29 @@
-<div #stack class="toast-stack" popover="manual">
+<div #stack [class]="classes.stack" popover="manual">
   @for (toast of toastService.toasts(); track toast.id) {
     <!-- Announced through LiveAnnouncer in ToastService, so this is visual only. -->
-    <div class="toast" [attr.data-severity]="toast.severity">
-      <mat-icon class="toast-icon" aria-hidden="true">{{ icons[toast.severity] }}</mat-icon>
-      <div class="toast-text">
-        @if (toast.summary) {
-          <div class="toast-summary">{{ toast.summary }}</div>
-        }
-        @if (toast.detail) {
-          <div class="toast-detail">{{ toast.detail }}</div>
-        }
+    <div [class]="classes.toast" [attr.data-severity]="toast.severity">
+      <div [class]="severityClasses[toast.severity]">
+        <span [class]="iconTone[toast.severity]">
+          <mat-icon aria-hidden="true">{{ icons[toast.severity] }}</mat-icon>
+        </span>
+        <div class="min-w-0 flex-1 text-ctrl-sm wrap-anywhere">
+          @if (toast.summary) {
+            <div class="mb-[0.15rem] font-semibold">{{ toast.summary }}</div>
+          }
+          @if (toast.detail) {
+            <div>{{ toast.detail }}</div>
+          }
+        </div>
+        <button
+          type="button"
+          uiIconButton
+          size="sm"
+          aria-label="Dismiss notification"
+          (click)="toastService.remove(toast.id)"
+        >
+          <mat-icon aria-hidden="true">close</mat-icon>
+        </button>
       </div>
-      <button
-        type="button"
-        class="ui-icon-button ui-icon-button--sm"
-        aria-label="Dismiss notification"
-        (click)="toastService.remove(toast.id)"
-      >
-        <mat-icon aria-hidden="true">close</mat-icon>
-      </button>
     </div>
   }
 </div>

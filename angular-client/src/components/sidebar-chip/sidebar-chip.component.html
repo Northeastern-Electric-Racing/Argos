@@ -1,11 +1,5 @@
 <!-- A native button, so every nav item is reachable and operable from the keyboard; the host's (click) handles it. -->
-<button type="button" class="chip" [class.active]="active()" [attr.aria-current]="active() ? 'page' : null">
-  <mat-icon
-    class="chip-icon"
-    aria-hidden="true"
-    [svgIcon]="icon()"
-    [style.width]="small() ? '24px' : '36px'"
-    [style.height]="small() ? '24px' : '36px'"
-  />
-  <typography class="label" [variant]="small() ? 'sidebar-label' : 'header'" [content]="value()" />
+<button type="button" [class]="classes.chip" [attr.aria-current]="active() ? 'page' : null">
+  <mat-icon [class]="small() ? classes.iconSmall : classes.icon" aria-hidden="true" [svgIcon]="icon()" />
+  <typography textClass="text-inherit" [variant]="small() ? 'sidebar-label' : 'header'" [content]="value()" />
 </button>

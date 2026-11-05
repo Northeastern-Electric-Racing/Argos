@@ -1,32 +1,33 @@
 <div
-  class="info-container"
+  [class]="containerClass()"
   (click)="onClick()?.()"
-  [style]="{ 'background-color': this.backgroundColor() }"
-  [class.sliced-left-corner]="this.slicedLeftCorner()"
-  [class.fill]="this.fill()"
-  [style.--slice-x]="this.slicePercentage() + 'px'"
-  [style.--slice-y]="this.slicePercentage() + 20 + 'px'"
+  [style.background-color]="this.backgroundColor()"
+  [style.clip-path]="clipPath()"
 >
   @if (this.title(); as title) {
-    <div class="title-container">
-      <div class="title" [class.sliced-left-corner]="this.slicedLeftCorner()">
+    <div class="flex flex-row items-center justify-between">
+      <div
+        class="flex flex-row items-center text-fg"
+        [style.padding-left.px]="this.slicedLeftCorner() ? this.slicePercentage() : null"
+      >
         @if (this.icon(); as icon) {
-          <mat-icon aria-hidden="false" [fontIcon]="icon" />
+          <mat-icon class="mr-3" aria-hidden="false" [fontIcon]="icon" />
         }
         @if (this.svgIcon(); as svgIcon) {
-          <mat-icon aria-hidden="false" [svgIcon]="svgIcon" />
+          <mat-icon class="mr-3" aria-hidden="false" [svgIcon]="svgIcon" />
         }
         <typography variant="info-title" content="{{ title }}" />
       </div>
       @if (button(); as btn) {
-        <div>
-          <mat-icon
-            aria-hidden="false"
-            (click)="btn.onClick()"
-            [fontIcon]="btn.icon"
-            style="position: relative; z-index: 10"
-          />
-        </div>
+        <button
+          type="button"
+          uiIconButton
+          class="relative z-10 -my-1"
+          [attr.aria-label]="btn.ariaLabel ?? 'Reset'"
+          (click)="btn.onClick()"
+        >
+          <mat-icon aria-hidden="true" [fontIcon]="btn.icon" />
+        </button>
       }
       @if (this.selectorConfigs().length !== 0) {
         <hstack>
@@ -40,7 +41,7 @@
         </hstack>
       }
       @if (this.topRightInfo(); as topRightInfo) {
-        <div class="top-right-info">
+        <div>
           <typography
             variant="info-subtitle"
             [content]="topRightInfo"
@@ -51,7 +52,7 @@
     </div>
   }
   @if (this.onClick(); as onClick) {
-    <typography additionalStyles="text-align: left;" variant="info-subtitle" content="Click for more details" />
+    <typography textClass="text-left" variant="info-subtitle" content="Click for more details" />
   }
   <ng-content />
 </div>
