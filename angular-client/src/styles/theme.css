@@ -151,11 +151,7 @@
 
   --font-family: var(--font-sans);
   --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-md: 16px;
   --font-size-lg: 20px;
-  --font-size-xl: 34px;
-  --font-size-xxl: 48px;
   --border-radius-panel: var(--radius-md);
 
   --ui-accent: var(--color-accent);
@@ -179,22 +175,18 @@
   --ui-text-unlit: var(--color-fg-unlit);
 
   --ui-surface-1: var(--color-surface-1);
-  --ui-surface-2: var(--color-surface-2);
   --ui-surface-3: var(--color-surface-3);
   --ui-border: var(--color-border);
   --ui-border-strong: var(--color-border-strong);
-  --ui-control-off: var(--color-control-off);
   --ui-text: var(--color-fg);
   --ui-text-muted: var(--color-fg-muted);
   --ui-label: var(--color-fg-label);
   --ui-hover: color-mix(in srgb, var(--color-fg) 8%, transparent);
-  --ui-stripe: color-mix(in srgb, var(--color-fg) 4%, transparent);
 
   --ui-space-1: 0.25rem;
   --ui-space-2: 0.5rem;
   --ui-space-3: 0.75rem;
   --ui-space-4: 1rem;
-  --ui-space-8: 2rem;
 
   --ui-font: var(--font-sans);
   --ui-font-xs: var(--text-xs);
@@ -208,11 +200,9 @@
   --ui-radius-sm: var(--radius-sm);
   --ui-radius: var(--radius-md);
   --ui-radius-full: 999px;
-  --ui-shadow: var(--shadow-overlay);
 
   --ui-focus-color: var(--color-focus);
   --ui-focus-ring: 2px solid color-mix(in srgb, var(--color-focus) 80%, transparent);
 
   --ui-duration-fast: 120ms;
-  --ui-duration: 180ms;
 }
