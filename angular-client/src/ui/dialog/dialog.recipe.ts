@@ -11,8 +11,6 @@ import { tw } from '../recipes/tw';
 export const DIALOG_DENSITIES = ['md', 'compact'] as const;
 export type DialogDensity = (typeof DIALOG_DENSITIES)[number];
 
-/** On the CDK overlay pane: never taller than the viewport (the width cap comes from the service's maxWidth). */
-export const dialogPaneClass = tw('max-h-screen');
 /** On the modal backdrop. */
 export const dialogBackdropClass = tw('bg-scrim');
 

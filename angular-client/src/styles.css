@@ -14,8 +14,12 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import './styles/base.css' layer(base);
 
-/* The CDK ships no theme, only structure: overlay positioning and .cdk-visually-hidden. */
-@import '@angular/cdk/overlay-prebuilt.css' layer(cdk);
+/*
+ * The CDK ships no theme, only structure. Its overlay structure is not imported: the CDK injects it itself,
+ * unlayered, when the first overlay opens, so a layered copy never won (and utilities on .cdk-overlay-pane,
+ * backdrop or container lose for position, display, max size, pointer-events and z-index). a11y gives
+ * .cdk-visually-hidden.
+ */
 @import '@angular/cdk/a11y-prebuilt.css' layer(cdk);
 
 /* #909's ui.css, one file per primitive; each owner deletes its file once nothing uses those classes. */

@@ -1,4 +1,4 @@
-import { dialogBackdropClass, dialogClasses, dialogPaneClass, headerlessContentClass } from '../dialog/dialog.recipe';
+import { dialogBackdropClass, dialogClasses, headerlessContentClass } from '../dialog/dialog.recipe';
 import { BUTTON_SIZES, BUTTON_VARIANTS, buttonClass, ICON_BUTTON_SIZES, iconButtonClass } from './button';
 import { cardClass } from './card';
 import { fieldClasses, INPUT_SIZES, inputClass } from './field';
@@ -50,13 +50,13 @@ const everyRecipeList = (): [string, string][] => {
   for (const d of TABLE_DENSITIES) add(`table cells ${d}`, [headerCellClass(d), cellClass(d)]);
   for (const striped of [false, true]) for (const hover of [false, true]) add('row', rowClass({ striped, hover }));
   add('table', [tableClasses, checkboxClass]);
-  add('dialog', [dialogPaneClass, dialogBackdropClass, dialogClasses, headerlessContentClass]);
+  add('dialog', [dialogBackdropClass, dialogClasses, headerlessContentClass]);
   return lists;
 };
 
 describe('recipe outlines', () => {
   it('draws the keyboard-active listbox option a solid ring (no outline-none beside the data-active outline)', () => {
-    const option = listboxClasses.option;
+    const { option } = listboxClasses;
     expect(option).toMatch(/data-\[active=true\]:outline-2/);
     expect(clearsOutlineStyle(option)).toBe(false);
   });
