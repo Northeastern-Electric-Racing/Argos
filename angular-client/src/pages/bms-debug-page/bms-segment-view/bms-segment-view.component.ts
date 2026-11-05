@@ -2,7 +2,6 @@ import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { allSegments, Chip, Segment } from 'src/utils/bms.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from '../components/bms-header/bms-header.component';
 import { SegmentAtAGlanceComponent } from '../components/segment-at-a-glance/segment-at-a-glance.component';
 import { SegmentHeatmapComponent } from '../components/segment-heatmap/segment-heatmap.component';
@@ -11,6 +10,7 @@ import { ChipFaultsComponent } from '../components/chip-faults/chip-faults.compo
 import { InfoBackgroundComponent } from '../../../components/info-background/info-background.component';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
+import { bmsTile } from '../bms-grid';
 
 const formatAllSelectorName = (name: string) => {
   return 'Set ALL Maps: ' + name;
@@ -19,14 +19,11 @@ const formatAllSelectorName = (name: string) => {
 @Component({
   selector: 'bms-segment-view',
   templateUrl: './bms-segment-view.component.html',
-  styleUrl: './bms-segment-view.component.css',
   host: {
     '(window:resize)': 'onResize()'
   },
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
-    MatGridList,
-    MatGridTile,
     BmsHeaderComponent,
     SegmentAtAGlanceComponent,
     SegmentHeatmapComponent,
@@ -49,6 +46,7 @@ export class BmsSegmentViewComponent implements OnInit {
   segmentId!: Segment;
   chipAlpha: Chip = Chip.Alpha;
   chipBeta: Chip = Chip.Beta;
+  protected readonly tile = bmsTile;
 
   cellViewSelectOptions: DropdownOption[] = [
     {

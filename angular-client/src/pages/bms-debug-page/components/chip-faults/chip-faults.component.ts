@@ -12,11 +12,25 @@ import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import { CdkTableModule } from '@angular/cdk/table';
 import { DatePipe } from '@angular/common';
+import { cellClass, headerCellClass, rowClass, tableClass, tableClasses } from 'src/ui/recipes/table';
+import { cx, tw } from 'src/ui/recipes/tw';
+
+/** The chip-faults table: striped, hoverable rows in a 300px scroll box under a sticky header. */
+const chipFaultsTable = {
+  wrapper: cx(tableClasses.wrapper, tw('mt-5 max-h-75')),
+  table: tableClass(),
+  th: headerCellClass(),
+  td: cellClass(),
+  row: rowClass({ striped: true, hover: true }),
+  /** The Name cell's button: the cell's own text, underlined on hover, with the focus ring (was .ui-cell-button). */
+  cellButton: tw(
+    'cursor-pointer rounded-xs border-0 bg-transparent p-0 text-left text-inherit [font:inherit] hover:underline focus-visible:focus-ring'
+  )
+} as const;
 
 @Component({
   selector: 'chip-faults',
   templateUrl: './chip-faults.component.html',
-  styleUrl: './chip-faults.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, CdkTableModule, DatePipe]
 })
@@ -32,6 +46,7 @@ export class ChipFaultsComponent implements OnInit {
   /** Newest first, capped at 50. A new array on each fault, since the CDK table only re-renders an array source when its reference changes. */
   readonly chipFaults = signal<FaultData[]>([]);
   readonly columns = ['name', 'occurredAt'];
+  protected readonly t = chipFaultsTable;
   private router = inject(Router);
   chipFaultPipe = inject(ChipFaultPipe);
 
