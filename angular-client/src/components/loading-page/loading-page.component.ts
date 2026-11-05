@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { spinnerClass } from 'src/ui/recipes/spinner';
 
 /**
  * Loading Page Component to display while loading information from the backend.
@@ -6,8 +7,9 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'loading-page',
   templateUrl: './loading-page.component.html',
-  styleUrls: ['./loading-page.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: []
 })
-export default class LoadingPageComponent {}
+export default class LoadingPageComponent {
+  protected readonly spinnerClass = spinnerClass;
+}
