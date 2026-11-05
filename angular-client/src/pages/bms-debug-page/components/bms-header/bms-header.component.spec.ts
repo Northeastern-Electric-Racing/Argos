@@ -22,7 +22,7 @@ describe('BmsHeaderComponent', () => {
   });
 
   it('should call onResize and update windowSize on window resize', () => {
-    spyOn(component, 'onResize').and.callThrough();
+    vi.spyOn(component, 'onResize');
     component.windowSize = -1;
 
     window.dispatchEvent(new Event('resize'));
