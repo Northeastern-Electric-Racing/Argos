@@ -1,5 +1,5 @@
 import { StyleVariant } from 'src/utils/style-variant';
-import { TYPOGRAPHY_VARIANTS, typographyClass } from './typography.recipe';
+import { TYPOGRAPHY_VARIANTS, typographyClass } from './typography';
 
 const classSet = (classes: string) => new Set(classes.split(' ').filter(Boolean));
 

@@ -5,7 +5,7 @@ import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/sele
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
-import { cardClass } from './card.recipe';
+import { cardClass } from 'src/ui/recipes/card';
 
 /**
  * Component that is essentially the template/background for

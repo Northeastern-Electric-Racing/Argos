@@ -1,4 +1,4 @@
-import { cx, tw } from 'src/ui/recipes/tw';
+import { cx, tw } from './tw';
 
 /**
  * The card (info-background): a rounded panel that fills its grid tile. The fill colour is the component's

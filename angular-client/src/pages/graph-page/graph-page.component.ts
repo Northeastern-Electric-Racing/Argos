@@ -31,7 +31,7 @@ import CustomGraphComponent from './graph/graph.component';
 import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
-import { numberInputClass } from 'src/ui/datetime/recipes';
+import { numberInputClass } from 'src/ui/recipes/number-input';
 import { UiInputDirective } from 'src/ui/field/field.directive';
 import { FormsModule } from '@angular/forms';
 

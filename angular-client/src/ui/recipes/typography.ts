@@ -1,4 +1,4 @@
-import { cx, tw } from 'src/ui/recipes/tw';
+import { cx, tw } from './tw';
 import { StyleVariant } from 'src/utils/style-variant';
 
 /**

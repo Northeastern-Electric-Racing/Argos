@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { StyleVariant } from 'src/utils/style-variant';
-import { typographyClass } from './typography.recipe';
+import { typographyClass } from 'src/ui/recipes/typography';
 
 /**
  * 814 parity (plan 2.2, the fontSize trap). Theme wrote these variants' size as `fontSize: …`; Angular's style
@@ -20,7 +20,7 @@ const SIZE_BEAT_DASH_CASE_OVERRIDES = new Set<StyleVariant>([
 const dashCaseFontSize = /(^|;)\s*font-size\s*:[^;]*;?/gi;
 
 /**
- * Text in one of the app's type styles (typography.recipe.ts).
+ * Text in one of the app's type styles (src/ui/recipes/typography.ts).
  * @param variant - The type style.
  * @param content - The text.
  * @param textClass - Tailwind classes for the paragraph: layout, alignment, or a size, colour or margin override

@@ -1,4 +1,4 @@
-import { tw } from 'src/ui/recipes/tw';
+import { tw } from './tw';
 
 /**
  * The menu recipe: the floating surface of an Angular Aria `ngMenu` and its `ngMenuItem`s. Aria sets

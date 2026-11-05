@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RulePayload } from 'src/api/rules.api';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { fieldClasses } from 'src/ui/recipes/field';
-import { cellClass, headerCellClass, rowClass, tableClass } from '../rules-table/table.recipe';
+import { cellClass, headerCellClass, rowClass, tableClass } from 'src/ui/recipes/table';
 
 @Component({
   selector: 'upload-confirm-dialog',

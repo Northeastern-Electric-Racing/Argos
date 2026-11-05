@@ -3,7 +3,7 @@ import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
 import { ChangeDetectionStrategy, Component, input, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
-import { appsMenuClasses } from './menu.recipe';
+import { appsMenuClasses } from 'src/ui/recipes/menu';
 
 /**
  * The navbar's "more pages" menu: an Angular Aria MenuTrigger + Menu in a CDK connected overlay,
