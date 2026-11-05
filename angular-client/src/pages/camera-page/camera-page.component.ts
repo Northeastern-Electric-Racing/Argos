@@ -7,14 +7,12 @@ import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
 import MediaMTXWebRTCReader from 'src/utils/MediaMTXReader';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
   selector: 'camera-page',
   templateUrl: './camera-page.component.html',
-  styleUrl: './camera-page.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [UiSelectComponent, ReactiveFormsModule, FormsModule, TypographyComponent]
+  imports: [UiSelectComponent, ReactiveFormsModule, FormsModule]
 })
 export class CameraPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

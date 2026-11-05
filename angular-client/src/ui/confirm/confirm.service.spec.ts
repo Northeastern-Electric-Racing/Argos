@@ -27,7 +27,7 @@ describe('ConfirmService', () => {
 
     service.confirm({ message: 'Sure?', acceptLabel: 'Delete', rejectLabel: 'Cancel', danger: true, accept, reject });
     await settle();
-    expect(button('Delete').classList).toContain('ui-button--danger');
+    expect(button('Delete').getAttribute('data-variant')).toBe('danger');
     button('Delete').click();
     await settle();
     expect(accept).toHaveBeenCalledTimes(1);

@@ -1,8 +1,9 @@
-<form class="ui-form" [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="ui-field">
-    <label class="ui-label" for="rule-id">Rule ID</label>
+<form [class]="f.form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div [class]="f.field">
+    <label uiLabel for="rule-id">Rule ID</label>
     <input
-      class="ui-input ui-input--fluid"
+      uiInput
+      class="w-full"
       id="rule-id"
       formControlName="id"
       placeholder="e.g. high-voltage-alert"
@@ -11,18 +12,19 @@
       [attr.aria-describedby]="invalid('id') ? 'rule-id-error' : null"
     />
     @if (form.get('id')?.touched && form.get('id')?.hasError('required')) {
-      <small class="ui-field-error" role="alert" id="rule-id-error">Rule ID is required</small>
+      <small uiFieldError role="alert" id="rule-id-error">Rule ID is required</small>
     }
   </div>
 
-  <div class="ui-field">
-    <label class="ui-label" for="rule-topic">Topic</label>
-    <div #origin class="topic-autocomplete">
+  <div [class]="f.field">
+    <label uiLabel for="rule-topic">Topic</label>
+    <div #origin>
       <input
         id="rule-topic"
         #combobox="ngCombobox"
         ngCombobox
-        class="ui-input ui-input--fluid"
+        uiInput
+        class="w-full"
         placeholder="e.g. BMS/Pack/Voltage"
         aria-required="true"
         [attr.aria-invalid]="invalid('topic') || null"
@@ -41,7 +43,7 @@
       [cdkConnectedOverlayOpen]="popupExpanded() && filteredTopics().length > 0"
     >
       <ng-template ngComboboxPopup [combobox]="combobox">
-        <div class="ui-listbox-popup">
+        <div [class]="popup">
           <div
             #listbox="ngListbox"
             ngListbox
@@ -51,25 +53,29 @@
             [tabindex]="-1"
             [activeDescendant]="listbox.activeDescendant()"
             [(value)]="selectedTopic"
+            [class]="lb.listbox"
             (click)="onCommit()"
             (keydown.enter)="onCommit()"
           >
             @for (topic of filteredTopics(); track topic) {
-              <div ngOption [value]="topic" [label]="topic" [title]="topic">{{ topic }}</div>
+              <div ngOption [class]="lb.option" [value]="topic" [label]="topic" [title]="topic">
+                <span [class]="lb.optionText">{{ topic }}</span>
+              </div>
             }
           </div>
         </div>
       </ng-template>
     </ng-template>
     @if (form.get('topic')?.touched && form.get('topic')?.hasError('required')) {
-      <small class="ui-field-error" role="alert" id="rule-topic-error">Topic is required</small>
+      <small uiFieldError role="alert" id="rule-topic-error">Topic is required</small>
     }
   </div>
 
-  <div class="ui-field">
-    <label class="ui-label" for="rule-expr">Expression</label>
+  <div [class]="f.field">
+    <label uiLabel for="rule-expr">Expression</label>
     <input
-      class="ui-input ui-input--fluid"
+      uiInput
+      class="w-full"
       id="rule-expr"
       formControlName="expr"
       placeholder="e.g. a > 5.0 || a < 1.0"
@@ -78,14 +84,15 @@
       [attr.aria-describedby]="invalid('expr') ? 'rule-expr-error' : null"
     />
     @if (form.get('expr')?.touched && form.get('expr')?.hasError('required')) {
-      <small class="ui-field-error" role="alert" id="rule-expr-error">Expression is required</small>
+      <small uiFieldError role="alert" id="rule-expr-error">Expression is required</small>
     }
   </div>
 
-  <div class="ui-field">
-    <label class="ui-label" for="rule-debounce">Debounce Time (seconds)</label>
+  <div [class]="f.field">
+    <label uiLabel for="rule-debounce">Debounce Time (seconds)</label>
     <input
-      class="ui-input ui-input--fluid"
+      uiInput
+      class="w-full"
       id="rule-debounce"
       formControlName="debounce_time"
       type="number"
@@ -95,15 +102,15 @@
       [attr.aria-describedby]="invalid('debounce_time') ? 'rule-debounce-error' : null"
     />
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('required')) {
-      <small class="ui-field-error" role="alert" id="rule-debounce-error">Debounce time is required</small>
+      <small uiFieldError role="alert" id="rule-debounce-error">Debounce time is required</small>
     }
     @if (form.get('debounce_time')?.touched && form.get('debounce_time')?.hasError('min')) {
-      <small class="ui-field-error" role="alert" id="rule-debounce-error">Must be 0 or greater</small>
+      <small uiFieldError role="alert" id="rule-debounce-error">Must be 0 or greater</small>
     }
   </div>
 
-  <div class="ui-form-actions">
-    <button class="ui-button ui-button--text" type="button" (click)="onCancel()">Cancel</button>
-    <button class="ui-button" type="submit">Add Rule</button>
+  <div [class]="f.actions">
+    <button uiButton variant="text" type="button" (click)="onCancel()">Cancel</button>
+    <button uiButton type="submit">Add Rule</button>
   </div>
 </form>

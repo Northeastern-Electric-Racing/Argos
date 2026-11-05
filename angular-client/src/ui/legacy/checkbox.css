@@ -1,46 +1,5 @@
 /*
- * Legacy #909 styles for .ui-checkbox, split from src/ui/ui.css and imported into layer(legacy), so any
- * utility beats them. Owner: 1B (rules table). Delete this file once no template uses these classes
- * (see tw-spike primitives.md); until then only compat fixes go in.
+ * Emptied by 1B in wave 1: nothing uses these #909 classes any more (the rules table, select and autocomplete
+ * moved to the recipes in rules-table/table.recipe.ts and ui/select/listbox.recipe.ts). styles.css still imports
+ * this file, so the integrator deletes it together with its import line in the fix step.
  */
-
-/* ---------- Checkbox ---------- */
-.ui-checkbox {
-  appearance: none;
-  width: 1.15rem;
-  height: 1.15rem;
-  margin: 0;
-  border: 1.5px solid var(--ui-control-border);
-  border-radius: 4px;
-  background: transparent;
-  display: inline-grid;
-  place-content: center;
-  cursor: pointer;
-  vertical-align: middle;
-}
-.ui-checkbox::before {
-  content: '';
-  width: 0.6rem;
-  height: 0.35rem;
-  border-left: 2px solid var(--ui-on-accent);
-  border-bottom: 2px solid var(--ui-on-accent);
-  transform: translateY(-1px) rotate(-45deg) scale(0);
-  transition: transform var(--ui-duration-fast) ease;
-}
-.ui-checkbox:checked,
-.ui-checkbox:indeterminate {
-  background: var(--ui-accent);
-  border-color: var(--ui-accent);
-}
-.ui-checkbox:checked::before {
-  transform: translateY(-1px) rotate(-45deg) scale(1);
-}
-.ui-checkbox:indeterminate::before {
-  border-left: none;
-  height: 0;
-  transform: none;
-}
-.ui-checkbox:focus-visible {
-  outline: var(--ui-focus-ring);
-  outline-offset: 2px;
-}
