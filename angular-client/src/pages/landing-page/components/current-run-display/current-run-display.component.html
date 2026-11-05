@@ -3,12 +3,14 @@
     <typography
       [variant]="small() ? 'sidebar-label' : 'large-header'"
       content="Run"
-      additionalStyles="margin: 0px; color: #ef4345; fontSize: 36px"
+      textClass="text-readout"
+      additionalStyles="margin: 0px; color: #ef4345"
     />
     <typography
       [variant]="small() ? 'sidebar-label' : 'large-header'"
       content="#{{ currentRun }}"
-      additionalStyles="margin: 0px; color: #ef4345; fontSize: 36px;"
+      textClass="text-readout"
+      additionalStyles="margin: 0px; color: #ef4345"
     />
   </hstack>
 } @else {

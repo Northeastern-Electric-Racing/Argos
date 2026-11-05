@@ -61,6 +61,13 @@ describe('typographyClass', () => {
     for (const c of ['text-xl', 'text-inherit', 'm-0', 'text-left']) expect(classes.has(c)).toBe(true);
   });
 
+  it('treats the readout step as a size, so it replaces the variant size (the nav clock and "Run #N")', () => {
+    const classes = classSet(typographyClass('large-header', 'text-readout'));
+    expect(classes.has('text-xl')).toBe(false);
+    expect(classes.has('text-readout')).toBe(true);
+    expect(classes.has('text-fg')).toBe(true);
+  });
+
   it('keeps variant classes when extra classes only add a responsive or state variant', () => {
     const classes = classSet(typographyClass('info-value', 'max-md:text-lg'));
     expect(classes.has('text-2xl')).toBe(true);

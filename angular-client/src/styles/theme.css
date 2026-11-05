@@ -82,10 +82,12 @@
   --text-xl: 2.125rem; /* 34px */
   --text-2xl: 3rem; /* 48px */
   /*
-   * Display sizes, one step each, so 24 · 34 · 40 · 48 · 85 · 120 is the whole ladder above 20px. A legacy
-   * size within about 6% of a step takes that step (25px values and 32/36px headers, 2rem, read the same).
+   * Display sizes, one step each, so 24 · 34 · 36 · 40 · 48 · 85 · 120 is the whole ladder above 20px. A legacy
+   * size within about 6% of a step takes that step (25px values, 32px headers and 2rem read the same).
+   * Sizes 814 drew side by side move together: one never snaps to a step its neighbour doesn't take.
    */
   --text-title: 1.5rem; /* 24px: card units, phone values, the graph page's title */
+  --text-readout: 2.25rem; /* 36px: the nav bar's clock and its "Run #N" partner, always the same size */
   --text-display: 2.5rem; /* 40px: page titles */
   --text-numeral: 5.3125rem; /* 85px: the big value readout */
   --text-hero: 7.5rem; /* 120px: the landing title, the camera alert */

@@ -42,7 +42,7 @@
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
         content="{{ time$ | async | date: 'HH:mm:ss' }}"
-        textClass="text-xl"
+        textClass="text-readout"
       />
       <messages-per-second />
       <notification-bell />
