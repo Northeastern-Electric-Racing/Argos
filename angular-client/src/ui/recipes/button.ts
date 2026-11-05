@@ -14,7 +14,8 @@ import { cx, tw } from './tw';
  *   danger       orange edge, never filled, for destructive actions
  *   danger-text  orange text with no edge, for a destructive action in a row or list (Clear, Delete)
  * Sizes: md is the default control height (36px); sm is compact (28px, 32px on phones); lg is the legacy
- * 140x45 footprint and 44px tall on phones; icon is a 32px square for an icon-only button.
+ * 140x45 footprint, and on phones 44px tall and as wide as its label (12px padding), so a row of them wraps
+ * less; icon is a 32px square for an icon-only button.
  */
 export const BUTTON_VARIANTS = [
   'primary',
@@ -60,17 +61,10 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   'danger-text': tw('border-transparent bg-transparent text-danger not-disabled:hover:bg-danger/16')
 };
 
-/*
- * lg reads three legacy custom properties (--ui-button-lg-min-width, --ui-button-lg-min-height and
- * --ui-button-padding-x) that the rules page sets to shrink its buttons on phones. They go when that page
- * migrates (slice 1B); nothing new may set them.
- */
 export const buttonSizeClasses: Record<ButtonSize, string> = {
   sm: tw('min-h-7 rounded-sm px-3 text-xs max-md:min-h-8'),
   md: tw('min-h-9 rounded-md px-4 text-ctrl'),
-  lg: tw(
-    'min-h-[var(--ui-button-lg-min-height,45px)] min-w-[var(--ui-button-lg-min-width,140px)] rounded-md px-[var(--ui-button-padding-x,1rem)] text-ctrl max-md:min-h-[max(44px,var(--ui-button-lg-min-height,44px))]'
-  ),
+  lg: tw('min-h-11.25 min-w-35 rounded-md px-4 text-ctrl max-md:min-h-11 max-md:min-w-0 max-md:px-3'),
   icon: tw('min-h-8 w-8 rounded-md p-0 text-ctrl')
 };
 
