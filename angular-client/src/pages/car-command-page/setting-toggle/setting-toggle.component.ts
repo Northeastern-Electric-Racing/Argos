@@ -7,7 +7,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'setting-toggle',
   templateUrl: './setting-toggle.component.html',
-  styleUrls: ['./setting-toggle.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TypographyComponent, FormsModule, UiSwitchComponent, HStackComponent]
 })

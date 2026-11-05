@@ -1,7 +1,8 @@
-<div class="setting-input-wrapper">
-  <label [for]="label() + '-input'" class="setting-label">{{ label() }}</label>
+<div class="flex flex-col gap-1.5">
+  <label uiLabel [for]="label() + '-input'">{{ label() }}</label>
   <input
-    class="ui-input"
+    uiInput
+    class="w-full tabular-nums"
     type="number"
     [id]="label() + '-input'"
     [(ngModel)]="value"
