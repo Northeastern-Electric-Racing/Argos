@@ -10,8 +10,8 @@ export interface StatConfig {
 @Component({
   selector: 'stat-summary',
   templateUrl: './stat-summary.component.html',
-  styleUrl: './stat-summary.component.css',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'flex h-full w-full items-center justify-center' }
 })
 export class StatSummaryComponent {
   configs = input.required<StatConfig[]>();

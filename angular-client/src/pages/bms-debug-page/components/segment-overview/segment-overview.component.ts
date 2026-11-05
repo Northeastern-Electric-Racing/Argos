@@ -15,9 +15,9 @@ const SEGMENT_TOPIC_KEYS: (keyof SegmentInfo)[] = ['segmentTempKey', 'voltageKey
 @Component({
   selector: 'segment-overview',
   templateUrl: './segment-overview.component.html',
-  styleUrl: './segment-overview.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [StatSummaryComponent]
+  imports: [StatSummaryComponent],
+  host: { class: 'flex h-full w-full items-center justify-center' }
 })
 export class SegmentOverviewComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
