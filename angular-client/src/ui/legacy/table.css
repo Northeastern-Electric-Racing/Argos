@@ -1,6 +1,7 @@
 /*
  * Legacy #909 styles for .ui-table, split from src/ui/ui.css and imported into layer(legacy), so any
- * utility beats them. Owner: 1B (table recipe). Delete this file once no template uses these classes
+ * utility beats them. Owner: 1B (table recipe). The rules table and upload preview moved to the
+ * recipe in wave 1; the preset dialog (1C), chip faults, faults and notification log (wave 2) still use it. Delete this file once no template uses these classes
  * (see tw-spike primitives.md); until then only compat fixes go in.
  */
 
@@ -33,9 +34,6 @@
 .ui-table--hover tbody tr:hover {
   background: var(--ui-hover);
   cursor: pointer;
-}
-.ui-table tbody tr.ui-row-selected {
-  background: var(--ui-accent-soft);
 }
 .ui-table tbody tr:focus-visible {
   outline: var(--ui-focus-ring);

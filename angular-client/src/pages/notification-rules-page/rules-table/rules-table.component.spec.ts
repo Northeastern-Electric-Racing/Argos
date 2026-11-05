@@ -116,4 +116,93 @@ describe('RulesTableComponent', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fixture.componentInstance.rules().length).toBe(1);
   });
+
+  describe('focus after a delete', () => {
+    const accept = async () => {
+      fetchMock.mockImplementationOnce(() => json({}));
+      confirm.confirm.mock.calls.at(-1)![0].accept?.();
+      await settle();
+    };
+    const deleteButton = (id: string): HTMLButtonElement =>
+      fixture.nativeElement.querySelector(`[aria-label="Delete rule ${id}"]`);
+
+    it('moves to the next row, or the new last row, so focus never drops to the page', async () => {
+      fixture.componentInstance.rules.set([rule('a', false), rule('b', false), rule('c', false)]);
+      await settle();
+
+      deleteButton('a').focus();
+      deleteButton('a').click();
+      await accept();
+      expect(document.activeElement).toBe(deleteButton('b'));
+
+      deleteButton('c').click();
+      await accept();
+      expect(document.activeElement).toBe(deleteButton('b'));
+    });
+
+    it('asks the page to take focus when the last rule is gone', async () => {
+      const emptied = vi.fn();
+      fixture.componentInstance.emptiedByDelete.subscribe(emptied);
+      deleteButton('hot').click();
+      await accept();
+      expect(emptied).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('selects rows from their checkboxes, and the header checkbox shows some, all or none', async () => {
+    fixture.componentInstance.rules.set([rule('a', false), rule('b', false)]);
+    await settle();
+    const selected = vi.fn();
+    fixture.componentInstance.selectionChanged.subscribe(selected);
+    const box = (label: string): HTMLInputElement => fixture.nativeElement.querySelector(`[aria-label="${label}"]`);
+
+    box('Select rule a').click();
+    await settle();
+    expect(box('Select all rules').indeterminate).toBe(true);
+    expect(box('Select all rules').checked).toBe(false);
+    expect(selected).toHaveBeenLastCalledWith([expect.objectContaining({ id: 'a' })]);
+
+    box('Select all rules').click();
+    await settle();
+    expect(box('Select all rules').checked).toBe(true);
+    expect(box('Select all rules').indeterminate).toBe(false);
+    expect(box('Select rule b').checked).toBe(true);
+    expect(fixture.nativeElement.querySelector('[aria-label="Select rule b"]').closest('tr').dataset.selected).toBe('true');
+
+    box('Select all rules').click();
+    await settle();
+    expect(selected).toHaveBeenLastCalledWith([]);
+  });
+
+  it('filters on expression, topic and id from the search term', async () => {
+    fixture.componentInstance.rules.set([
+      { ...rule('volts', false), topic: 'BMS/Pack/Voltage', expr: 'a > 400' },
+      { ...rule('temp', false), topic: 'BMS/Status/Temp_Average', expr: 'a > 60' }
+    ]);
+    const ids = () => fixture.componentInstance.filteredRules().map((r) => r.id);
+    for (const [term, expected] of [
+      ['400', ['volts']],
+      ['temp_avg', []],
+      ['TEMP', ['temp']],
+      ['volts', ['volts']]
+    ] as const) {
+      fixture.componentRef.setInput('searchTerm', term);
+      await settle();
+      expect(ids()).toEqual(expected);
+    }
+    fixture.componentRef.setInput('searchTerm', 'nothing');
+    await settle();
+    expect(fixture.nativeElement.textContent).toContain('No rules match your search.');
+  });
+
+  it('drops rules that are gone from the selection when it reloads', async () => {
+    const selected = vi.fn();
+    fixture.componentInstance.selectionChanged.subscribe(selected);
+    (fixture.nativeElement.querySelector('[aria-label="Select rule hot"]') as HTMLInputElement).click();
+    await settle();
+    fetchMock.mockImplementationOnce(() => json({ requesting_client_id: 'c', client_rules: [rule('cold', false)] }));
+    await fixture.componentInstance.loadRules();
+    expect(fixture.componentInstance.selectedRules()).toEqual([]);
+    expect(selected).toHaveBeenLastCalledWith([]);
+  });
 });
