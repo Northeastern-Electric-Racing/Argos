@@ -25,9 +25,6 @@
 /* #909's ui.css, one file per primitive; each owner deletes its file once nothing uses those classes. */
 @import './ui/legacy/button.css' layer(legacy);
 @import './ui/legacy/field.css' layer(legacy);
-@import './ui/legacy/table.css' layer(legacy);
-@import './ui/legacy/menu.css' layer(legacy);
-@import './ui/legacy/cell-button.css' layer(legacy);
 
 /*
  * Utilities, generated from the class names in the .ts and .html files under src. Specs, assets and CSS are not
