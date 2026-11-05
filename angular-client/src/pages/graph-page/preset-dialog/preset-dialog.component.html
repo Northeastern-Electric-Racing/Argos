@@ -49,28 +49,24 @@
         <small class="text-ctrl-sm">Save your current topic selection or upload a JSON of your preset</small>
       </div>
     } @else {
-      <table class="w-full table-fixed border-collapse text-ctrl text-fg">
+      <table [class]="table.table">
         <thead>
           <tr>
-            <th class="border-b border-solid border-border bg-surface-3 p-3 text-left font-semibold">Name</th>
-            <th class="w-17.5 border-b border-solid border-border bg-surface-3 p-3 text-right font-semibold">Topics</th>
-            <th
-              class="w-60 border-b border-solid border-border bg-surface-3 p-3 text-right font-semibold max-[600px]:w-auto"
-            >
-              Actions
-            </th>
+            <th [class]="table.nameHead">Name</th>
+            <th [class]="table.topicsHead">Topics</th>
+            <th [class]="table.actionsHead">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (preset of presets(); track preset.id) {
             <tr>
-              <td class="border-b border-solid border-border px-3 py-2" [title]="preset.name">
+              <td [class]="table.cell" [title]="preset.name">
                 <span class="block truncate">{{ preset.name }}</span>
               </td>
-              <td class="border-b border-solid border-border px-3 py-2 text-right tabular-nums">
+              <td [class]="table.numberCell">
                 {{ preset.topicNames.length }}
               </td>
-              <td class="border-b border-solid border-border px-3 py-2">
+              <td [class]="table.cell">
                 <div class="flex flex-wrap justify-end gap-1">
                   <button uiButton size="sm" type="button" (click)="onApply(preset)">Apply</button>
                   <button uiButton size="sm" variant="neutral" type="button" (click)="onDownload(preset)">Download</button>

@@ -21,6 +21,8 @@ import { DataType } from 'src/utils/types.utils';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 import { fieldClasses } from 'src/ui/recipes/field';
+import { cellClass, headerCellClass, tableClass } from 'src/ui/recipes/table';
+import { cx, tw } from 'src/ui/recipes/tw';
 
 interface PresetDialogData {
   dataTypes: DataType[];
@@ -42,6 +44,15 @@ export class PresetDialogComponent {
   private injector = inject(Injector);
   private host: HTMLElement = inject(ElementRef).nativeElement;
   protected readonly field = fieldClasses;
+  /** The table recipe, with this table's fixed column widths. */
+  protected readonly table = {
+    table: cx(tableClass(), tw('table-fixed')),
+    nameHead: headerCellClass(),
+    topicsHead: cx(headerCellClass('md', { align: 'right' }), tw('w-17.5')),
+    actionsHead: cx(headerCellClass('md', { align: 'right' }), tw('w-60 max-[600px]:w-auto')),
+    cell: cellClass(),
+    numberCell: cx(cellClass(), tw('text-right tabular-nums'))
+  };
 
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
