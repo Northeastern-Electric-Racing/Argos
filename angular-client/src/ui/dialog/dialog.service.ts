@@ -4,6 +4,7 @@ import { ComponentPortal, ComponentType } from '@angular/cdk/portal';
 import { Injectable, Injector, inject } from '@angular/core';
 import { createGlobalPositionStrategy, createOverlayRef } from '@angular/cdk/overlay';
 import { UiDialogContainerComponent } from './dialog-container.component';
+import { dialogBackdropClass, DialogDensity, dialogPaneClass } from './dialog.recipe';
 import { UI_PANEL_CONFIG, UiPanelComponent, UiPanelConfig, UiPanelRef } from './panel.component';
 
 /** Options for {@link UiDialogService.open}, on top of the CDK's own DialogConfig. */
@@ -30,6 +31,8 @@ export interface UiDialogOptions<D = unknown> {
   position?: { top?: string; right?: string; bottom?: string; left?: string };
   /** ARIA role; use 'alertdialog' for confirmations. Default 'dialog'. */
   role?: 'dialog' | 'alertdialog';
+  /** A tighter header and padding, for small modeless panels such as the BMS cell comparison. Default false. */
+  compact?: boolean;
 }
 
 /** DialogConfig as our container sees it: the CDK config plus our header options. */
@@ -39,6 +42,7 @@ export interface UiDialogConfig<D = unknown> extends DialogConfig<D> {
   uiShowHeader: boolean;
   uiClosable: boolean;
   uiDraggable: boolean;
+  uiDensity: DialogDensity;
 }
 
 let nextTitleId = 0;
@@ -64,8 +68,8 @@ export class UiDialogService {
       data: options.data,
       width: options.width,
       maxWidth: 'calc(100vw - 32px)',
-      backdropClass: 'ui-dialog-backdrop',
-      panelClass: ['ui-dialog-pane', ...(options.panelClass ? [options.panelClass] : [])],
+      backdropClass: dialogBackdropClass,
+      panelClass: [dialogPaneClass, ...(options.panelClass ? [options.panelClass] : [])],
       // We decide ourselves when Escape / backdrop clicks close (PrimeNG-compatible defaults).
       disableClose: true,
       role: options.role ?? 'dialog',
@@ -81,7 +85,8 @@ export class UiDialogService {
       uiTitleId: titleId,
       uiShowHeader: showHeader,
       uiClosable: closable,
-      uiDraggable: options.draggable ?? false
+      uiDraggable: options.draggable ?? false,
+      uiDensity: options.compact ? 'compact' : 'md'
     };
     const ref = this.dialog.open<R, D>(component, config as DialogConfig<D, DialogRef<R>>);
 
@@ -105,7 +110,7 @@ export class UiDialogService {
    */
   openPanel<R = unknown, D = unknown>(
     component: ComponentType<unknown>,
-    options: Pick<UiDialogOptions<D>, 'header' | 'data' | 'width' | 'draggable' | 'panelClass'> = {}
+    options: Pick<UiDialogOptions<D>, 'header' | 'data' | 'width' | 'draggable' | 'panelClass' | 'compact'> = {}
   ): UiPanelRef<R> {
     const ref = new UiPanelRef<R>();
     const overlayRef = createOverlayRef(this.injector, {
@@ -113,12 +118,13 @@ export class UiDialogService {
       hasBackdrop: false,
       width: options.width,
       maxWidth: 'calc(100vw - 32px)',
-      panelClass: ['ui-dialog-pane', 'ui-dialog-pane--modeless', ...(options.panelClass ? [options.panelClass] : [])]
+      panelClass: [dialogPaneClass, ...(options.panelClass ? [options.panelClass] : [])]
     });
     const panelConfig: UiPanelConfig = {
       header: options.header,
       titleId: newTitleId(),
       draggable: options.draggable ?? false,
+      density: options.compact ? 'compact' : 'md',
       component
     };
     const injector = Injector.create({

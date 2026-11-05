@@ -1,5 +1,6 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { UiButtonDirective } from '../button/button.directive';
 
 export interface ConfirmDialogData {
   message: string;
@@ -13,8 +14,8 @@ export interface ConfirmDialogData {
 @Component({
   selector: 'ui-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
-  styleUrls: ['./confirm-dialog.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [UiButtonDirective]
 })
 export class ConfirmDialogComponent {
   protected data = inject<ConfirmDialogData>(DIALOG_DATA);
