@@ -6,6 +6,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  * Angular Aria has no switch, so this is ours. Works with ngModel or `[(checked)]`.
  * Controlled: it shows `checked` and asks to change it through `checkedChange`, so a parent can set it back
  * (an optimistic toggle that reverts when the server refuses, lesson 4). Track and thumb read aria-checked.
+ * Off is an outlined track (control-border, 3:1 on the surface), on a filled accent track: the states differ by fill
+ * versus outline and by the thumb's side, since no grey can be 3:1 from both the surface and the accent (WCAG 1.4.11).
  */
 @Component({
   selector: 'ui-switch',
