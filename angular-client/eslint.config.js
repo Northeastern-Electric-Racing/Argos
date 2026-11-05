@@ -28,6 +28,10 @@ const restrictedClasses = [
     message: 'Arbitrary colours bypass the AA-vetted tokens; use a theme colour.'
   },
   { pattern: '^(.*:)?text-[a-z][a-z0-9-]*/\\d+$', message: 'No opacity on text colour (it broke AA on #909); pick a text token.' },
+  {
+    pattern: '^(.*:)?(container|ring|filter)$',
+    message: 'styles.css excludes these utilities (the scanner found them in prose); focus rings are focus-ring outlines.'
+  },
   { pattern: '^(.*!|!.*)$', message: 'No important modifier; mat-icon sizes come from iconClasses (src/ui/recipes/icon.ts).' }
 ];
 

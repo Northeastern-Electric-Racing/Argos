@@ -125,7 +125,8 @@
 
 /*
  * Legacy aliases, kept until wave 4 so component CSS and src/ui/legacy/*.css keep working while they
- * are migrated. Nothing new may use them: use the theme tokens (utilities) above.
+ * are migrated. Nothing new may use them: use the theme tokens (utilities) above. An alias goes as soon as
+ * nothing references it (the fix step after each wave drops those).
  */
 :root {
   --color-text-primary: var(--color-fg);
@@ -150,7 +151,6 @@
   --ui-accent-strong-hover: var(--color-accent-strong-hover);
   --ui-accent-fg: var(--color-accent-fg);
   --ui-accent-soft: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  --ui-accent-text: var(--color-accent-text);
   --ui-on-accent: var(--color-on-accent);
   --ui-secondary: var(--color-secondary);
   --ui-secondary-hover: var(--color-secondary-hover);
@@ -160,7 +160,6 @@
   --ui-danger-soft: color-mix(in srgb, var(--color-danger) 16%, transparent);
   --ui-success: var(--color-success);
   --ui-warn: var(--color-warn);
-  --ui-info: var(--color-info);
   --ui-on-status: var(--color-on-status);
   --ui-success-fg: var(--color-success-fg);
   --ui-text-dim: var(--color-fg-dim);
@@ -170,31 +169,24 @@
   --ui-surface-2: var(--color-surface-2);
   --ui-surface-3: var(--color-surface-3);
   --ui-border: var(--color-border);
-  --ui-border-subtle: color-mix(in srgb, var(--color-border) 50%, transparent);
   --ui-border-strong: var(--color-border-strong);
-  --ui-control-border: var(--color-control-border);
   --ui-control-off: var(--color-control-off);
-  --ui-control-off-hover: var(--color-control-off-hover);
   --ui-text: var(--color-fg);
   --ui-text-muted: var(--color-fg-muted);
   --ui-label: var(--color-fg-label);
   --ui-hover: color-mix(in srgb, var(--color-fg) 8%, transparent);
-  --ui-hover-strong: color-mix(in srgb, var(--color-fg) 10%, transparent);
   --ui-stripe: color-mix(in srgb, var(--color-fg) 4%, transparent);
 
   --ui-space-1: 0.25rem;
   --ui-space-2: 0.5rem;
   --ui-space-3: 0.75rem;
   --ui-space-4: 1rem;
-  --ui-space-5: 1.25rem;
-  --ui-space-6: 1.5rem;
   --ui-space-8: 2rem;
 
   --ui-font: var(--font-sans);
   --ui-font-xs: var(--text-xs);
   --ui-font-sm: var(--text-ctrl-sm);
   --ui-font-md: var(--text-ctrl);
-  --ui-font-lg: var(--text-ctrl-lg);
   --ui-weight-bold: 600;
 
   --ui-control-height: 2.25rem;
@@ -202,15 +194,12 @@
 
   --ui-radius-sm: var(--radius-sm);
   --ui-radius: var(--radius-md);
-  --ui-radius-lg: var(--radius-lg);
   --ui-radius-full: 999px;
   --ui-shadow: var(--shadow-overlay);
-  --ui-scrim: var(--color-scrim);
 
   --ui-focus-color: var(--color-focus);
   --ui-focus-ring: 2px solid color-mix(in srgb, var(--color-focus) 80%, transparent);
 
   --ui-duration-fast: 120ms;
   --ui-duration: 180ms;
-  --ui-ease-out: var(--ease-out);
 }

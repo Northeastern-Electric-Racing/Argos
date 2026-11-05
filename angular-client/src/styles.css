@@ -33,4 +33,10 @@
 @source './**/*.{ts,html}';
 @source not './**/*.spec.ts';
 @source not './test-setup.ts';
+/*
+ * Words the scanner finds in comments and identifiers (the topic `filter`, the dialog `container`, a focus `ring`)
+ * that would emit utilities no template uses, ~2 kB with their @property rules. The spike bans them as classes
+ * anyway (eslint no-restricted-classes): Tailwind's container clashes with our naming, rings are outlines here.
+ */
+@source not inline('container ring filter');
 @import './styles/utilities.css';
