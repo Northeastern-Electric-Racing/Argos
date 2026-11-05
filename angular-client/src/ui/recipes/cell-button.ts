@@ -1,7 +1,7 @@
-import { tw } from 'src/ui/recipes/tw';
+import { tw } from './tw';
 
 /**
- * A table cell's action as a real button (the fault tables' Name cell): it reads as the cell's text, underlines
+ * A table cell's action as a real button (the Name cell of the fault tables and BMS chip faults): it reads as the cell's text, underlines
  * on hover, tints while pressed (p-ripple's stand-in, Q8) and takes the solid focus ring, so keyboard and
  * screen-reader users reach what a row click does. It sets the cell's font itself, since the base shim gives
  * unmigrated buttons the browser's control font. 6px of padding, taken back by a negative margin, makes it a
