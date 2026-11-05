@@ -1,0 +1,50 @@
+/*
+ * Legacy #909 styles for .ui-segmented tabs and inert tab panels, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1C (graph page tabs). Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Segmented tabs (Angular Aria ngTabList / ngTab) ---------- */
+.ui-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface-1);
+}
+.ui-segmented [ngTab] {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--ui-control-height-sm) - 4px);
+  padding: 0 var(--ui-space-3);
+  border-radius: calc(var(--ui-radius) - 2px);
+  color: var(--ui-text-muted);
+  font-size: var(--ui-font-sm);
+  font-weight: var(--ui-weight-bold);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--ui-duration-fast) ease,
+    color var(--ui-duration-fast) ease;
+}
+.ui-segmented [ngTab]:hover {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+}
+.ui-segmented [ngTab][aria-selected='true'] {
+  background: var(--ui-secondary);
+  color: var(--ui-on-accent);
+}
+.ui-segmented [ngTab]:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 1px;
+}
+/* Aria marks hidden tab panels inert; they also leave the layout. A panel that sets its own
+   display must scope it to :not([inert]), or it ties this rule and wins. */
+[ngTabPanel][inert] {
+  display: none;
+}

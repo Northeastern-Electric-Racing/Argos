@@ -1,0 +1,208 @@
+/*
+ * Design tokens: the only place colours, type sizes, radii, shadows and motion are defined.
+ *
+ * Every token is a Tailwind theme variable, so utilities read `bg-surface-2`, `text-fg-muted`,
+ * `border-border`, `rounded-dialog`, `text-ctrl`. `--color-*: initial` drops Tailwind's default palette:
+ * only the AA-vetted colours below exist, so `text-gray-500` is not a class.
+ *
+ * Contrast (WCAG AA, measured on #909): text tokens reach 4.5:1 on every surface up to surface-3,
+ * marks reach 3:1. The NER red comes in three strengths: `accent` for marks and edges, `accent-strong`
+ * for fills under white text (4.98:1), `accent-fg` for red text on dark surfaces (4.57:1 or better).
+ *
+ * The client is dark-only: base.css sets `color-scheme: dark`; never use the `dark:` variant.
+ * `static` emits every token even when no utility uses it, so legacy CSS, inline [style] bindings
+ * and the --ui-* aliases below can always reference them.
+ */
+@theme static {
+  --color-*: initial;
+
+  /* Surfaces */
+  --color-page: #101010;
+  --color-surface-1: #1c1c1c;
+  --color-surface-2: #262626; /* PrimeNG's dialog grey */
+  --color-surface-3: #333333;
+  --color-surface-3-hover: color-mix(in srgb, var(--color-fg) 12%, var(--color-surface-3));
+  --color-panel: #2c2c2c; /* info-background cards */
+  --color-scrim: rgb(0 0 0 / 0.55);
+
+  /* Text */
+  --color-fg: #efefef;
+  --color-fg-muted: #a3a3a3; /* not the old #797a7a: AA on every surface up to #333 */
+  --color-fg-label: #cacaca;
+  --color-fg-dim: #8a8a8a; /* live controls drawn as unlit panel switches, AA on #1a1a1a */
+  --color-fg-unlit: #666; /* decorative only: an unlit annunciator legend at 3:1 */
+
+  /* Lines and controls */
+  --color-border: #414141;
+  --color-border-strong: #5a5a5a; /* hovered field borders */
+  --color-control-border: #7a7a7a; /* unchecked checkbox outlines */
+  --color-control-off: #555; /* the track of an off switch */
+  --color-control-off-hover: #666;
+  --color-focus: #d4d4d4; /* neutral, so a focused field never reads as a red validation error */
+
+  /* Brand */
+  --color-accent: #ef4343;
+  --color-accent-hover: #f26b6b;
+  --color-accent-strong: #d32f2f;
+  --color-accent-strong-hover: #b71c1c;
+  --color-accent-fg: #f87171;
+  --color-accent-text: #ffb4b4; /* text on an accent tint, such as a selected option */
+  --color-on-accent: #fff;
+  --color-secondary: #0270c2; /* telemetry blue, deep enough for white text (5.12:1) */
+  --color-secondary-hover: #025fa5;
+  --color-secondary-border: #8fcadd;
+  /* Opaque blue tints over surface-1 (the tonal button); transparent tints use opacity modifiers instead. */
+  --color-secondary-soft: color-mix(in srgb, var(--color-secondary) 16%, var(--color-surface-1));
+  --color-secondary-soft-hover: color-mix(in srgb, var(--color-secondary) 30%, var(--color-surface-1));
+
+  /* Status. NER red is the accent, so danger takes orange and destructive buttons are never filled. */
+  --color-danger: #fb923c;
+  --color-success: #4ade80;
+  --color-success-hover: color-mix(in srgb, var(--color-success) 82%, #fff);
+  --color-success-fg: #5fc04f; /* lit-lamp text on the eFuses plates */
+  --color-warn: #fbbf24;
+  --color-warn-hover: color-mix(in srgb, var(--color-warn) 82%, #fff);
+  --color-info: #60a5fa;
+  --color-on-status: #000; /* dark text on bright fills: success, warn, heat-map tiles */
+  --color-battery-low: #f50905;
+  --color-battery-med: #ffea00;
+  --color-battery-high: #1ae824;
+  --color-battery-shell: #efefed;
+  --color-widget-glass: #ffffff;
+
+  /* Type. Sizes carry no line-height: the app sets line-height: normal (base.css), use leading-* to change it. */
+  --font-sans: 'Roboto', sans-serif;
+  --font-segment7: 'Segment7', monospace;
+  --font-highway: 'Highway Gothic', sans-serif;
+  --text-*: initial;
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.25rem; /* 20px */
+  --text-xl: 2.125rem; /* 34px */
+  --text-2xl: 3rem; /* 48px */
+  /* Controls and chrome: buttons, inputs, selects, menus line up on these. */
+  --text-badge: 0.7rem;
+  --text-ctrl-sm: 0.8125rem;
+  --text-ctrl: 0.9rem;
+  --text-ctrl-lg: 1.15rem;
+  --leading-control: 1.1;
+
+  /* Shape and depth */
+  --radius-*: initial;
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 8px; /* panels, cards, controls */
+  --radius-lg: 16px;
+  --radius-dialog: 20px; /* PrimeNG dialog parity */
+  --shadow-overlay: 0 8px 28px rgba(0, 0, 0, 0.55);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --animate-spin: spin 0.9s linear infinite;
+  --animate-pop-in: pop-in 120ms cubic-bezier(0.2, 0, 0, 1);
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+}
+
+/*
+ * Legacy aliases, kept until wave 4 so component CSS and src/ui/legacy/*.css keep working while they
+ * are migrated. Nothing new may use them: use the theme tokens (utilities) above.
+ */
+:root {
+  --color-text-primary: var(--color-fg);
+  --color-text-secondary: var(--color-fg-muted);
+  --color-text-subtitle: var(--color-fg-label);
+  --color-background-info: var(--color-panel);
+  --color-background-page: var(--color-page);
+  --color-divider: var(--color-border);
+
+  --font-family: var(--font-sans);
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 34px;
+  --font-size-xxl: 48px;
+  --border-radius-panel: var(--radius-md);
+
+  --ui-accent: var(--color-accent);
+  --ui-accent-hover: var(--color-accent-hover);
+  --ui-accent-strong: var(--color-accent-strong);
+  --ui-accent-strong-hover: var(--color-accent-strong-hover);
+  --ui-accent-fg: var(--color-accent-fg);
+  --ui-accent-soft: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  --ui-accent-text: var(--color-accent-text);
+  --ui-on-accent: var(--color-on-accent);
+  --ui-secondary: var(--color-secondary);
+  --ui-secondary-hover: var(--color-secondary-hover);
+  --ui-secondary-border: var(--color-secondary-border);
+  --ui-secondary-soft: var(--color-secondary-soft);
+  --ui-danger: var(--color-danger);
+  --ui-danger-soft: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  --ui-success: var(--color-success);
+  --ui-warn: var(--color-warn);
+  --ui-info: var(--color-info);
+  --ui-on-status: var(--color-on-status);
+  --ui-success-fg: var(--color-success-fg);
+  --ui-text-dim: var(--color-fg-dim);
+  --ui-text-unlit: var(--color-fg-unlit);
+
+  --ui-surface-1: var(--color-surface-1);
+  --ui-surface-2: var(--color-surface-2);
+  --ui-surface-3: var(--color-surface-3);
+  --ui-border: var(--color-border);
+  --ui-border-subtle: color-mix(in srgb, var(--color-border) 50%, transparent);
+  --ui-border-strong: var(--color-border-strong);
+  --ui-control-border: var(--color-control-border);
+  --ui-control-off: var(--color-control-off);
+  --ui-control-off-hover: var(--color-control-off-hover);
+  --ui-text: var(--color-fg);
+  --ui-text-muted: var(--color-fg-muted);
+  --ui-label: var(--color-fg-label);
+  --ui-hover: color-mix(in srgb, var(--color-fg) 8%, transparent);
+  --ui-hover-strong: color-mix(in srgb, var(--color-fg) 10%, transparent);
+  --ui-stripe: color-mix(in srgb, var(--color-fg) 4%, transparent);
+
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.25rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
+
+  --ui-font: var(--font-sans);
+  --ui-font-xs: var(--text-xs);
+  --ui-font-sm: var(--text-ctrl-sm);
+  --ui-font-md: var(--text-ctrl);
+  --ui-font-lg: var(--text-ctrl-lg);
+  --ui-weight-bold: 600;
+
+  --ui-control-height: 2.25rem;
+  --ui-control-height-sm: 1.75rem;
+
+  --ui-radius-sm: var(--radius-sm);
+  --ui-radius: var(--radius-md);
+  --ui-radius-lg: var(--radius-lg);
+  --ui-radius-full: 999px;
+  --ui-shadow: var(--shadow-overlay);
+  --ui-scrim: var(--color-scrim);
+
+  --ui-focus-color: var(--color-focus);
+  --ui-focus-ring: 2px solid color-mix(in srgb, var(--color-focus) 80%, transparent);
+
+  --ui-duration-fast: 120ms;
+  --ui-duration: 180ms;
+  --ui-ease-out: var(--ease-out);
+}

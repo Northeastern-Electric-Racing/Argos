@@ -1,0 +1,20 @@
+/*
+ * Legacy #909 styles for .ui-spinner, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1B (rules-table still uses it; loading-page moved to the spinner recipe in wave 0). Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Spinner ---------- */
+.ui-spinner {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: 4px solid color-mix(in srgb, var(--ui-text) 15%, transparent);
+  border-top-color: var(--ui-accent);
+  animation: ui-spin 0.9s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

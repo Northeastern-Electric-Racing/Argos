@@ -1,0 +1,165 @@
+/*
+ * Base layer: fonts, the document, and the compatibility shim that keeps not-yet-migrated components
+ * looking as they did on #909 now that Tailwind's preflight reset is on. styles.css imports this file
+ * into layer(base), so every utility, legacy rule and component stylesheet beats it.
+ */
+@import './roboto.scss';
+@import './material-icons.scss';
+
+/* Seven-segment display font */
+@font-face {
+  font-family: 'Segment7';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../assets/fonts/WooveboxSegment7Standard.otf) format('opentype');
+}
+
+/* Highway Gothic — US DOT public domain font for annunciator plates */
+@font-face {
+  font-family: 'Highway Gothic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../assets/fonts/HWYGOTH.TTF) format('truetype');
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: var(--font-sans);
+}
+body {
+  margin: 0;
+  background-color: var(--color-page);
+}
+
+/* Scrollbars stay hidden, as they always were (WebKit, then Firefox). */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+}
+
+.connection-dot {
+  background-color: transparent;
+  border: 3px solid;
+  border-color: rgb(243, 243, 243);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+/* Users who ask for less motion get state changes without the slides and fades (spinners keep turning). */
+@media (prefers-reduced-motion: reduce) {
+  :not(.ui-spinner, .animate-spin),
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------- Preflight compatibility shim ----------
+ * Preflight is on (tailwindcss/preflight.css, layer base). These rules put back what the app's
+ * unmigrated CSS relied on, each one checked against #909 screenshots of all 14 routes at 390 and 1440.
+ * Migrated components set these through utilities and don't depend on the shim.
+ */
+
+/* Preflight sets line-height 1.5 on html; the app was laid out at the UA's `normal`. */
+html,
+body {
+  line-height: normal;
+}
+
+/* Tailwind v4 buttons default to `cursor: default`; PrimeNG and #909 used a pointer. */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+/* `border` utilities draw in the hairline token instead of currentColor. */
+*,
+::after,
+::before,
+::backdrop,
+::file-selector-button {
+  border-color: var(--color-border);
+}
+
+/* Preflight's placeholder is 50% of the text colour, which fails AA; #909 used the muted token. */
+::placeholder {
+  color: var(--color-fg-muted);
+}
+
+/*
+ * Typography renders <p>, dialogs <h2>, the fault accordion <h3>: they were laid out with the browser's
+ * margins and heading sizes, which preflight zeroes. `revert` hands these properties back to the browser
+ * default; a utility (m-0, text-*, font-*) on a migrated element still wins.
+ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: revert;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: revert;
+  font-weight: revert;
+}
+
+/* Lists kept the browser's indent and markers where no component CSS set them. */
+ul,
+ol {
+  padding-inline-start: revert;
+  list-style: revert;
+}
+
+/* Preflight makes replaced elements blocks; the battery icon and gauge/chart SVGs sat inline. */
+img,
+svg,
+video,
+canvas {
+  display: revert;
+  vertical-align: revert;
+}
+
+/* Units are <sup> and <small> (BMS cells, stat displays); preflight flattens their line box and size. */
+small,
+sub,
+sup {
+  font-size: revert;
+  line-height: revert;
+  position: revert;
+  vertical-align: revert;
+  top: revert;
+  bottom: revert;
+}
+
+/*
+ * Native controls without a font of their own (the eFuses RTDS and switch buttons) used the browser's
+ * control font (13.33px); preflight makes them inherit the page's. The recipes and the legacy classes set
+ * their own font, so only unmigrated controls see this.
+ */
+button,
+input,
+select,
+optgroup,
+textarea {
+  font: revert;
+  letter-spacing: revert;
+}

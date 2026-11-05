@@ -1,0 +1,50 @@
+/*
+ * Legacy #909 styles for the Aria menu panel, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1A (apps menu); 2A also uses it for the session menu. Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Floating surfaces: popover, listbox popup, menu ---------- */
+.ui-menu {
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  animation: var(--animate-pop-in);
+}
+
+/* ---------- Menu (Angular Aria menu in a CDK connected overlay) ---------- */
+.ui-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: var(--ui-space-1);
+}
+.ui-menu[data-visible='false'] {
+  display: none;
+}
+.ui-menu [ngMenuItem] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  outline: none;
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-font-md);
+  cursor: pointer;
+}
+.ui-menu [ngMenuItem]:hover,
+.ui-menu [ngMenuItem]:focus {
+  background: var(--ui-hover);
+}
+.ui-menu [ngMenuItem]:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-menu [ngMenuItem][aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -1,107 +1,46 @@
-/* You can add global styles to this file, and also import other style files */
-@import 'styles/roboto.scss';
-@import 'styles/material-icons.scss';
-@import 'ui/ui.css';
+/*
+ * The only global stylesheet: cascade layer order and imports. Tokens live in styles/theme.css,
+ * document and compat rules in styles/base.css, our utilities and variants in styles/utilities.css.
+ *
+ * Tailwind's output lives in cascade layers, and any unlayered CSS beats every layer whatever its
+ * specificity: Angular component styles, Material's mat-icon rules, ApexCharts and Mapbox. So a component
+ * is either all utilities or all component CSS, never both. Legacy #909 classes (src/ui/legacy) sit in
+ * their own layer below utilities, and the CDK's prebuilt CSS below them.
+ */
+@layer theme, base, cdk, legacy, components, utilities;
 
-/* Seven-segment display font */
-@font-face {
-  font-family: 'Segment7';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(assets/fonts/WooveboxSegment7Standard.otf) format('opentype');
-}
+@import 'tailwindcss/theme.css' layer(theme);
+@import './styles/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import './styles/base.css' layer(base);
 
-/* Highway Gothic — US DOT public domain font for annunciator plates */
-@font-face {
-  font-family: 'Highway Gothic';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(assets/fonts/HWYGOTH.TTF) format('truetype');
-}
+/* The CDK ships no theme, only structure: overlay positioning and .cdk-visually-hidden. */
+@import '@angular/cdk/overlay-prebuilt.css' layer(cdk);
+@import '@angular/cdk/a11y-prebuilt.css' layer(cdk);
 
-/* ---- Design Tokens ---- */
-:root {
-  /* Colors */
-  --color-text-primary: #efefef;
-  /* #a3a3a3, not the old #797a7a: AA (4.5:1) on every surface up to #333. */
-  --color-text-secondary: #a3a3a3;
-  --color-text-subtitle: #cacaca;
-  --color-background-info: #2c2c2c;
-  --color-background-page: #101010;
-  --color-divider: #414141;
-  --color-battery-shell: #efefed;
-  --color-battery-low: #f50905;
-  --color-battery-med: #ffea00;
-  --color-battery-high: #1ae824;
-  --color-widget-glass: #ffffff;
+/* #909's ui.css, one file per primitive; each owner deletes its file once nothing uses those classes. */
+@import './ui/legacy/button.css' layer(legacy);
+@import './ui/legacy/field.css' layer(legacy);
+@import './ui/legacy/segmented.css' layer(legacy);
+@import './ui/legacy/checkbox.css' layer(legacy);
+@import './ui/legacy/table.css' layer(legacy);
+@import './ui/legacy/spinner.css' layer(legacy);
+@import './ui/legacy/badge.css' layer(legacy);
+@import './ui/legacy/dialog.css' layer(legacy);
+@import './ui/legacy/drawer.css' layer(legacy);
+@import './ui/legacy/popover.css' layer(legacy);
+@import './ui/legacy/listbox.css' layer(legacy);
+@import './ui/legacy/menu.css' layer(legacy);
+@import './ui/legacy/icon-button.css' layer(legacy);
+@import './ui/legacy/cell-button.css' layer(legacy);
+@import './ui/legacy/cell-compare.css' layer(legacy);
 
-  /* Typography */
-  --font-family: 'Roboto', sans-serif;
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-md: 16px;
-  --font-size-lg: 20px;
-  --font-size-xl: 34px;
-  --font-size-xxl: 48px;
-
-  /* Spacing */
-  --border-radius-panel: 8px;
-}
-
-/* Base reset PrimeNG's theme used to inject globally; layouts depend on it. */
-*,
-::before,
-::after {
-  box-sizing: border-box;
-}
-
-:root {
-  color-scheme: dark;
-}
-
-html,
-body {
-  height: 100%;
-  font-family: var(--font-family);
-}
-body {
-  margin: 0;
-  background-color: var(--color-background-page);
-}
-
-/* WebKit (Chrome, Safari) scrollbar styles */
-::-webkit-scrollbar {
-  display: none;
-}
-
-/* Firefox scrollbar styles */
-* {
-  scrollbar-width: none;
-}
-.connection-dot {
-  background-color: transparent;
-  border: 3px solid;
-  border-color: rgb(243, 243, 243);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-/* Cell comparison dialog: compact, modeless */
-.cell-compare-dialog .ui-dialog-surface {
-  --ui-dialog-header-top: 6px;
-  --ui-dialog-header-right: 8px;
-  --ui-dialog-header-bottom: 4px;
-  --ui-dialog-header-left: 14px;
-  border-radius: 12px;
-}
-
-.cell-compare-dialog .ui-dialog-title {
-  font-size: 1rem;
-}
-
-.cell-compare-dialog .ui-dialog-content {
-  padding: 0 14px 10px;
-}
+/*
+ * Utilities, generated from the class names in the .ts and .html files under src. Specs, assets and CSS are not
+ * scanned, so words in tests and property values in stylesheets don't emit CSS.
+ */
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@source './**/*.{ts,html}';
+@source not './**/*.spec.ts';
+@source not './test-setup.ts';
+@import './styles/utilities.css';

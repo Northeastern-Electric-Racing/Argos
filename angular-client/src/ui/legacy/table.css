@@ -1,0 +1,48 @@
+/*
+ * Legacy #909 styles for .ui-table, split from src/ui/ui.css and imported into layer(legacy), so any
+ * utility beats them. Owner: 1B (table recipe). Delete this file once no template uses these classes
+ * (see tw-spike primitives.md); until then only compat fixes go in.
+ */
+
+/* ---------- Table (CDK table) ---------- */
+.ui-table-wrapper {
+  overflow: auto;
+  border-radius: var(--ui-radius);
+}
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--ui-text);
+  font-size: var(--ui-font-md);
+}
+/* Headers stick through the CDK's own option: *cdkHeaderRowDef="columns; sticky: true". */
+.ui-table th {
+  text-align: left;
+  font-weight: var(--ui-weight-bold);
+  padding: var(--ui-space-3);
+  background: var(--ui-surface-3);
+  border-bottom: 1px solid var(--ui-border);
+}
+.ui-table td {
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-bottom: 1px solid var(--ui-border);
+}
+.ui-table--striped tbody tr:nth-child(even) {
+  background: var(--ui-stripe);
+}
+.ui-table--hover tbody tr:hover {
+  background: var(--ui-hover);
+  cursor: pointer;
+}
+.ui-table tbody tr.ui-row-selected {
+  background: var(--ui-accent-soft);
+}
+.ui-table tbody tr:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+.ui-table .ui-table-empty {
+  text-align: center;
+  color: var(--ui-text-muted);
+  padding: var(--ui-space-8);
+}
