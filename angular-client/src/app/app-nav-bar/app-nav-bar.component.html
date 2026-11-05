@@ -1,6 +1,6 @@
-@if (isMobile || this.sidebarVisible) {
+@if (isMobile || this.sidebarVisible()) {
   <ui-drawer [(visible)]="sidebarVisible" position="left" width="20rem" ariaLabel="Navigation">
-    <typography uiDrawerHeader style="width: 100%; text-align: center" variant="large-header" content="Argos" />
+    <typography uiDrawerHeader textClass="w-full text-center" variant="large-header" content="Argos" />
     @for (navItem of allNavItems; track navItem) {
       <sidebar-chip
         icon="{{ navItem.icon }}"
@@ -12,11 +12,18 @@
     }
   </ui-drawer>
 } @else {
-  <nav class="navbar">
-    <button type="button" class="home-logo" aria-label="Home" (click)="this.homeNavItem.onClick()">
-      <mat-icon aria-hidden="true" [svgIcon]="this.homeNavItem.icon" />
+  <nav class="mb-4 flex h-15 w-full flex-row items-center justify-between self-center bg-panel p-2.5">
+    <button
+      type="button"
+      class="flex cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-2.5 text-inherit focus-visible:focus-ring"
+      aria-label="Home"
+      (click)="this.homeNavItem.onClick()"
+    >
+      <span class="inline-flex size-12"
+        ><mat-icon aria-hidden="true" [inline]="true" [svgIcon]="this.homeNavItem.icon"
+      /></span>
     </button>
-    <div class="navbar-nav">
+    <div class="inline-flex flex-1">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
@@ -24,44 +31,21 @@
           [small]="this.isWindowSmall"
           [active]="this.isSelected(navItem)"
           (click)="navItem.onClick()"
-          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
         >
         </sidebar-chip>
       }
     </div>
 
     <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="min-height: 36px; min-width: 130px"
-      />
+      <button type="button" uiButton class="min-w-[130px]" (click)="startNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
         content="{{ time$ | async | date: 'HH:mm:ss' }}"
-        additionalStyles="fontSize: 36px"
+        textClass="text-[36px]"
       />
       <messages-per-second />
-      <button
-        type="button"
-        class="navbar-notification"
-        [attr.aria-label]="'Notifications, ' + notificationLogService.unreadCount() + ' unread'"
-        aria-haspopup="dialog"
-        [attr.aria-expanded]="notificationPanel.isOpen()"
-        (click)="notificationPanel.toggle($event)"
-      >
-        <mat-icon [svgIcon]="'notifications'" />
-        @if (notificationLogService.unreadCount() > 0) {
-          <span class="ui-badge notification-badge" aria-hidden="true">{{ notificationLogService.unreadCount() }}</span>
-        }
-      </button>
-      <ui-popover #notificationPanel (shown)="onNotificationPanelShow()" ariaLabel="Notifications">
-        <notification-list variant="popover" />
-      </ui-popover>
+      <notification-bell />
       <app-nav-options-menu [items]="navMenuItems" />
     </hstack>
   </nav>

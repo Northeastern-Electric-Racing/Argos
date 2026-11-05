@@ -1,26 +1,33 @@
 <button
   type="button"
-  class="navbar-menu"
+  [class]="classes.trigger"
   ngMenuTrigger
   #origin
   #trigger="ngMenuTrigger"
   [menu]="menu()"
-  [class.selected]="trigger.expanded()"
   aria-label="More pages"
 >
-  <mat-icon [svgIcon]="'apps'" aria-hidden="true" />
+  <span class="inline-flex size-12 text-[48px]"><mat-icon [svgIcon]="'apps'" [inline]="true" aria-hidden="true" /></span>
 </button>
 <ng-template
   [cdkConnectedOverlayOpen]="trigger.expanded()"
   [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }"
   [cdkConnectedOverlayPositions]="positions"
 >
-  <div ngMenu class="ui-menu nav-options-menu" #appsMenu="ngMenu" (itemSelected)="select($event)">
+  <div ngMenu [class]="classes.panel" #appsMenu="ngMenu" (itemSelected)="select($event)">
     <ng-template ngMenuContent>
       @for (menuItem of items(); track menuItem.id) {
-        <div ngMenuItem class="menu-item" [value]="menuItem.id" [searchTerm]="menuItem.label" [attr.data-id]="menuItem.id">
-          <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" aria-hidden="true" />
-          <span class="menu-label">{{ menuItem.label }}</span>
+        <div
+          ngMenuItem
+          [class]="classes.item"
+          [value]="menuItem.id"
+          [searchTerm]="menuItem.label"
+          [attr.data-id]="menuItem.id"
+        >
+          <span class="mb-2 inline-flex size-12 text-[48px]">
+            <mat-icon [svgIcon]="menuItem.icon" [inline]="true" aria-hidden="true" />
+          </span>
+          <span [class]="classes.label">{{ menuItem.label }}</span>
         </div>
       }
     </ng-template>

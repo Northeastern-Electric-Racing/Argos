@@ -1,7 +1,16 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  Injector,
+  afterNextRender,
+  signal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { interval, map, Observable, startWith } from 'rxjs';
@@ -10,9 +19,8 @@ import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { UiDrawerComponent } from 'src/ui/drawer/drawer.component';
-import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
-import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
@@ -22,8 +30,7 @@ import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.compo
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
-import { NotificationLogService } from 'src/services/notification-log.service';
-import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
+import { NotificationBellComponent } from './notification-bell/notification-bell.component';
 
 export interface NavItem {
   id: string;
@@ -35,11 +42,10 @@ export interface NavItem {
 @Component({
   selector: 'app-nav-bar',
   templateUrl: './app-nav-bar.component.html',
-  styleUrls: ['./app-nav-bar.component.css'],
   imports: [
     UiDrawerComponent,
     CurrentRunDisplayComponent,
-    ToastButtonComponent,
+    UiButtonDirective,
     MessagesPerSecondComponent,
     AsyncPipe,
     DatePipe,
@@ -47,8 +53,7 @@ export interface NavItem {
     HStackComponent,
     SidebarChipComponent,
     MatIcon,
-    NotificationListComponent,
-    UiPopoverComponent,
+    NotificationBellComponent,
     NavOptionsMenuComponent
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -63,20 +68,21 @@ export class AppNavBarComponent implements OnInit {
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
   private dialogService = inject(UiDialogService);
-  protected notificationLogService = inject(NotificationLogService);
+  private injector = inject(Injector);
 
   ref: DialogRef | null | undefined;
   editRunRef: DialogRef | null | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
-  sidebarVisible = false;
+  /** The mobile nav drawer; a signal, so the zoneless app re-renders when the sidebar service opens it. */
+  sidebarVisible = signal(false);
   isMobile = false;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
-      this.sidebarVisible = isOpen;
+      this.sidebarVisible.set(isOpen);
     });
     this.isMobile = window.innerWidth <= 768;
     this.router.events
@@ -86,6 +92,14 @@ export class AppNavBarComponent implements OnInit {
       )
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
+        // A nav item was chosen in the drawer: close it. Its trigger left with the old page, so focus goes
+        // to the new page's menu button (when it has one) instead of dropping to <body>.
+        if (this.sidebarVisible()) {
+          this.sidebarVisible.set(false);
+          afterNextRender(() => document.querySelector<HTMLElement>('sidebar-toggle button')?.focus(), {
+            injector: this.injector
+          });
+        }
       });
   }
 
@@ -100,6 +114,18 @@ export class AppNavBarComponent implements OnInit {
     startWith(0),
     map(() => new Date())
   );
+
+  /** Starts a new run and confirms it with a toast (as the toast button did; an error adds its own toast). */
+  startNewRun(): void {
+    this.onStartNewRun();
+    setTimeout(() =>
+      this.messageService.add({
+        severity: 'success',
+        summary: 'New Run Started',
+        detail: 'Your new run has started successfully.'
+      })
+    );
+  }
 
   onStartNewRun = () => {
     const runsQueryResponse = this.serverService.query(() => startNewRun(), { invalidates: ['runs'] });
@@ -201,10 +227,6 @@ export class AppNavBarComponent implements OnInit {
   navigateTo(route: string): void {
     this.selectedRoute = route;
     this.router.navigate([route]);
-  }
-
-  onNotificationPanelShow(): void {
-    this.notificationLogService.markAllRead();
   }
 
   isSelected(navItem: NavItem) {
