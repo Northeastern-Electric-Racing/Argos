@@ -21,9 +21,10 @@ import { listboxClasses, listboxPopupClass } from '../recipes/listbox';
 /*
  * The trigger. Pages restyle it through custom properties set on ui-select or any ancestor, instead of piercing
  * encapsulation: --ui-select-height, -radius, -bg, -color, -font-size, -font-weight and -padding-left (BMS
- * segment rows and the graph caption use them). Each falls back to the token the size would use. Hover lays a
- * 6% text-colour tint over whatever the background is; focus and open show the neutral focus edge, 2px
- * thick (the border plus a 1px outline outside it). The rest edge is control-border, 3:1 on every surface.
+ * segment rows and the graph caption use them; the arrow follows -color too). Each falls back to the token the
+ * size would use. Hover lays a 6% text-colour tint over whatever the background is; focus and open show the
+ * neutral focus edge, 2px thick (the border plus a 1px outline outside it). The rest edge is control-border,
+ * 3:1 on every surface.
  */
 const triggerBase = tw(
   'group/trigger relative box-border flex w-full cursor-pointer items-center border border-solid border-control-border bg-[color:var(--ui-select-bg,var(--color-surface-3))] pr-9 [font-weight:var(--ui-select-font-weight,inherit)] text-[color:var(--ui-select-color,var(--color-fg))] transition-[border-color] duration-120 select-none hover:border-control-border-hover hover:bg-linear-to-r hover:from-fg/6 hover:to-fg/6 focus-visible:border-focus focus-visible:outline-1 focus-visible:outline-focus aria-disabled:cursor-default aria-disabled:opacity-55 aria-expanded:border-focus aria-expanded:outline-1 aria-expanded:outline-focus'
@@ -64,9 +65,13 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
   selectionChange = output<T>();
 
   protected readonly lb = listboxClasses;
-  /** The arrow's box: it carries the colour, since Material's unlayered mat-icon colour rule beats utilities. */
+  /**
+   * The arrow's box: it carries the colour, since Material's unlayered mat-icon colour rule beats utilities. It
+   * follows the trigger's text colour hook, so a page that restyles the trigger (BMS's unlit control-off rows,
+   * where fg-muted was 2.96:1) keeps the arrow at the text's contrast; muted otherwise.
+   */
   protected readonly arrowClass = tw(
-    'pointer-events-none absolute right-[0.45rem] flex text-fg-muted transition-transform duration-180 ease-out group-aria-expanded/trigger:rotate-180'
+    'pointer-events-none absolute right-[0.45rem] flex text-[color:var(--ui-select-color,var(--color-fg-muted))] transition-transform duration-180 ease-out group-aria-expanded/trigger:rotate-180'
   );
   protected readonly arrowIcon = iconClasses.md;
   protected readonly checkClass = cx(iconClasses.xs, listboxClasses.optionCheck);
