@@ -31,31 +31,7 @@ import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-opt
 import { filter } from 'rxjs/operators';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationBellComponent } from './notification-bell/notification-bell.component';
-
-/**
- * Focus the routed page's menu button, or else the page's host in app-context's `<main>` (display: contents, so
- * main itself can't take focus). The host is focusable only until focus leaves it, like a skip link's target,
- * and draws no ring.
- */
-function focusNewPage(): void {
-  const toggle = document.querySelector<HTMLElement>('sidebar-toggle button');
-  if (toggle) return toggle.focus();
-  const page = document.querySelector<HTMLElement>('main > router-outlet + *');
-  if (!page) return;
-  if (!page.hasAttribute('tabindex')) {
-    page.tabIndex = -1;
-    page.classList.add('outline-none');
-    page.addEventListener(
-      'focusout',
-      () => {
-        page.removeAttribute('tabindex');
-        page.classList.remove('outline-none');
-      },
-      { once: true }
-    );
-  }
-  page.focus();
-}
+import { focusIsLost, focusNewPage, pageLabel } from './focus-new-page';
 
 export interface NavItem {
   id: string;
@@ -102,6 +78,8 @@ export class AppNavBarComponent implements OnInit {
   selectedRoute: string = window.location.pathname;
   /** The mobile nav drawer; a signal, so the zoneless app re-renders when the sidebar service opens it. */
   sidebarVisible = signal(false);
+  /** False until the first navigation (page load) ends. */
+  private navigatedBefore = false;
   isMobile = false;
   isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
 
@@ -117,13 +95,19 @@ export class AppNavBarComponent implements OnInit {
       )
       .subscribe((event: NavigationEnd) => {
         this.selectedRoute = event.url;
+        const label = pageLabel(event.urlAfterRedirects, this.allNavItems);
         // A nav item was chosen in the drawer: close it. Its trigger left with the old page, so focus goes to
         // the new page's menu button when it has one, and otherwise to the page itself in the main region, never
         // to <body>.
         if (this.sidebarVisible()) {
           this.sidebarVisible.set(false);
-          afterNextRender(() => focusNewPage(), { injector: this.injector });
+          afterNextRender(() => focusNewPage(label), { injector: this.injector });
+        } else if (this.navigatedBefore) {
+          // Any other in-app navigation (See more, the segment selector, a row that opens a page): when the
+          // control that started it left with the old page, focus lands the same way. Page load is left alone.
+          afterNextRender(() => focusIsLost() && focusNewPage(label), { injector: this.injector });
         }
+        this.navigatedBefore = true;
       });
   }
 
