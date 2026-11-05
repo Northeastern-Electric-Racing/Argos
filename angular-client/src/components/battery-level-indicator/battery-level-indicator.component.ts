@@ -8,8 +8,8 @@ import Theme from 'src/services/theme.service';
 @Component({
   selector: 'battery-level-indicator',
   templateUrl: './battery-level-indicator.component.html',
-  styleUrl: './battery-level-indicator.component.css',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'inline-flex shrink-0 self-center' }
 })
 export class BatteryLevelIndicatorComponent {
   percentage = input<number>(0);

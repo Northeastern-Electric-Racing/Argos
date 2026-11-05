@@ -1,5 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { formatDisplayValue } from 'src/utils/pipes.utils';
+import { tw } from 'src/ui/recipes/tw';
 import { BatteryPercentageComponent } from '../battery-percentage/battery-percentage.component';
 import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
 import TypographyComponent from '../typography/typography.component';
@@ -32,7 +33,6 @@ export type WidgetConfig = ThermometerConfig | BatteryConfig | ConnectionDotConf
 @Component({
   selector: 'info-value-display',
   templateUrl: './info-value-display.component.html',
-  styleUrl: './info-value-display.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     BatteryPercentageComponent,
@@ -65,10 +65,6 @@ export class InfoValueDisplayComponent {
     return connectDotConfig.getStatusMessage ? connectDotConfig.getStatusMessage : () => '';
   };
 
-  getSubtitleStyle = (): string => {
-    if (this.unit() === '' && this.boolValue() === undefined) {
-      return this.subtitleStyle() + 'margin-top: 1vh';
-    }
-    return this.subtitleStyle();
-  };
+  /** A value with no unit row sits lower, so its subtitle gets a 1vh gap. */
+  protected subtitleClass = computed(() => (this.unit() === '' && this.boolValue() === undefined ? tw('m-0 mt-[1vh]') : ''));
 }

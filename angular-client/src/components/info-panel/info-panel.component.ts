@@ -1,6 +1,10 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import Theme from 'src/services/theme.service';
+import { iconClasses } from 'src/ui/recipes/icon';
+import { tw } from 'src/ui/recipes/tw';
+
+const panelWidth = { full: tw('box-border w-full rounded-md'), fit: tw('box-border w-fit rounded-md') };
 
 /**
  * Lightweight panel wrapper with configurable padding, sizing, and optional title.
@@ -9,7 +13,7 @@ import Theme from 'src/services/theme.service';
  * - Lets consumers control padding via `padding` input (CSS shorthand)
  * - Supports `width` mode: 'full' (100%) or 'fit' (fit-content)
  * - Has no fixed height — it wraps content tightly
- * - Title bar uses plain CSS instead of typography component
+ * - Title bar uses plain utilities instead of the typography component
  *
  * Usage:
  *   <info-panel title="At A Glance" svgIcon="battery_charging_2" padding="4px 8px">
@@ -19,7 +23,6 @@ import Theme from 'src/services/theme.service';
 @Component({
   selector: 'info-panel',
   templateUrl: './info-panel.component.html',
-  styleUrl: './info-panel.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [MatIcon]
 })
@@ -36,4 +39,7 @@ export class InfoPanelComponent {
   padding = input<string>('8px');
   /** Width mode: 'full' stretches to 100%, 'fit' wraps content */
   widthMode = input<'full' | 'fit'>('full');
+
+  protected panelClass = computed(() => panelWidth[this.widthMode()]);
+  protected readonly iconClass = iconClasses.sm;
 }

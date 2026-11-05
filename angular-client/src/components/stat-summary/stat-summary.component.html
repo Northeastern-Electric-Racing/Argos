@@ -1,10 +1,16 @@
-<div class="summary-zone">
+<div class="m-0 flex h-full w-full items-center justify-center overflow-hidden">
   @for (config of configs(); track config.label) {
-    <div class="stat">
-      <span class="stat-value"
-        >{{ formatStat(config) }}<sup class="stat-unit">{{ config.unit }}</sup></span
+    <!-- Fluid sizes (vw clamps): the segment rows scale with the window, so no fixed step of the type scale fits. -->
+    <div
+      class="flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden px-[clamp(4px,1vw,24px)] not-first:border-l not-first:border-solid not-first:border-border"
+    >
+      <span class="font-sans text-[length:clamp(0.8rem,2.2vw,3rem)] leading-[1.1] font-bold whitespace-nowrap text-fg"
+        >{{ formatStat(config)
+        }}<sup class="align-super text-[length:0.45em] font-normal text-fg-muted">{{ config.unit }}</sup></span
       >
-      <span class="stat-label">{{ config.label }}</span>
+      <span class="mt-1 font-sans text-[length:clamp(0.4rem,0.75vw,1rem)] whitespace-nowrap text-fg-label">{{
+        config.label
+      }}</span>
     </div>
   }
 </div>
