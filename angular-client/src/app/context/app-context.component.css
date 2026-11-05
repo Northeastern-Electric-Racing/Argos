@@ -1,0 +1,5 @@
+/* Block host so the quick view's sticky containing block spans the whole page; an inline host
+   collapses it, and the pinned bar would drop off partway down the scroll. */
+:host {
+  display: block;
+}

@@ -1,0 +1,20 @@
+<div class="card">
+  @if (readout().icon; as icon) {
+    <mat-icon class="icon" [svgIcon]="icon" aria-hidden="true" />
+  }
+  <div class="col">
+    <div>
+      <span class="value">{{ value() }}</span>
+      @if (readout().unit; as unit) {
+        <span class="unit">{{ unit }}</span>
+      }
+    </div>
+    <div class="subtitle">{{ readout().label }}</div>
+    @if (detail(); as detail) {
+      <div class="detail">{{ detail }}</div>
+    }
+  </div>
+  @if (status(); as status) {
+    <span class="dot" role="img" [style.background]="status.color" [attr.aria-label]="status.label"></span>
+  }
+</div>

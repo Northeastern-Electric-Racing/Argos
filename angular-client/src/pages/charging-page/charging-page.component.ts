@@ -13,6 +13,17 @@ import StateOfChargeDisplayComponent from './components/state-of-charge/state-of
 import PackTempComponent from './components/pack-temp/pack-temp.component';
 import CombinedStatusDisplayComponent from './components/combined-status-display/combined-status-display.component';
 import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mobile.component';
+import { QuickViewService } from 'src/services/quick-view.service';
+import {
+  balancingReadout,
+  bmsStateReadout,
+  cellSpreadReadout,
+  chargerFaultReadout,
+  chargingCurrentReadout,
+  highCellTempReadout,
+  packVoltageReadout,
+  stateOfChargeReadout
+} from 'src/components/quick-view/quick-view.readouts';
 
 /**
  * Container for the Charging page, obtains data from the storage service.
@@ -45,6 +56,20 @@ export default class ChargingPageComponent implements OnInit {
   location: string = 'No Location Set';
   mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;
+
+  constructor() {
+    // Pack-level state stays in the app quick view while the graphs below the fold are in use.
+    inject(QuickViewService).register([
+      stateOfChargeReadout(),
+      packVoltageReadout(),
+      chargingCurrentReadout(),
+      bmsStateReadout(),
+      balancingReadout(),
+      cellSpreadReadout(),
+      highCellTempReadout(),
+      chargerFaultReadout()
+    ]);
+  }
 
   ngOnInit() {
     this.storage
