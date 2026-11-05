@@ -11,11 +11,11 @@
   <span class="pointer-events-none truncate" [class.text-fg-muted]="display() === undefined">{{
     display() ?? placeholder()
   }}</span>
-  <mat-icon [class]="arrowClass" aria-hidden="true">expand_more</mat-icon>
+  <span [class]="arrowClass" aria-hidden="true"><mat-icon [class]="arrowIcon">expand_more</mat-icon></span>
 </div>
 
 <ng-template
-  [cdkConnectedOverlay]="{ origin: combobox.element, usePopover: 'inline', matchWidth: true }"
+  [cdkConnectedOverlay]="{ origin: combobox.element, usePopover: 'inline', minWidth: popupMinWidth() }"
   [cdkConnectedOverlayOpen]="expanded()"
 >
   <ng-template ngComboboxPopup [combobox]="combobox">
