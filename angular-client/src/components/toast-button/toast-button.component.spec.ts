@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ToastService } from 'src/ui/toast/toast.service';
+import { buttonClass } from 'src/ui/recipes/button';
 import { ToastButtonComponent } from './toast-button.component';
 
 describe('ToastButtonComponent', () => {
@@ -20,11 +21,15 @@ describe('ToastButtonComponent', () => {
 
   const button = (): HTMLButtonElement => fixture.nativeElement.querySelector('button');
 
-  it('uses the same design-system classes as argos-button', () => {
-    expect(button().className).toBe('ui-button ui-button--lg');
+  // Angular's [class] binding may reorder classes, so compare them as sorted sets.
+  const sorted = (classes: string): string[] => [...new Set(classes.split(/\s+/).filter(Boolean))].sort();
+
+  it('uses the same button recipe as argos-button, at lg', () => {
+    expect(sorted(button().className)).toEqual(sorted(buttonClass('primary', 'lg')));
     fixture.componentRef.setInput('variant', 'neutral');
     fixture.detectChanges();
-    expect(button().className).toBe('ui-button ui-button--lg ui-button--neutral');
+    expect(sorted(button().className)).toEqual(sorted(buttonClass('neutral', 'lg')));
+    expect(button().dataset['variant']).toBe('neutral');
   });
 
   it('runs the action, then confirms it with a toast', async () => {

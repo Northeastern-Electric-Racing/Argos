@@ -1,35 +1,19 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { ButtonSize, ButtonVariant } from 'src/ui/recipes/button';
 
-/** `lg` keeps the legacy 140x45 footprint; `sm` is the compact toolbar size. */
-export type ButtonSize = 'lg' | 'sm';
-
-/** The design-system button variants in src/ui/ui.css; 'primary' is the plain .ui-button. */
-export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'tonal'
-  | 'neutral'
-  | 'outlined'
-  | 'text'
-  | 'success'
-  | 'warn'
-  | 'danger';
-
-/** The design-system classes for a button of this variant and size, shared by argos-button and toast-button. */
-export function buttonClass(variant: ButtonVariant, size: ButtonSize): string {
-  const classes = ['ui-button', `ui-button--${size}`];
-  if (variant !== 'primary') classes.push(`ui-button--${variant}`);
-  return classes.join(' ');
-}
+export type { ButtonSize, ButtonVariant } from 'src/ui/recipes/button';
 
 /**
- * The app's labelled button: a native button styled by the design system's .ui-button.
- * Pick the look with `variant` and `size`; `additionalStyles` is for layout only (width, margins).
+ * The app's labelled button: a native button styled by the button recipe (src/ui/recipes/button.ts).
+ * Pick the look with `variant` and `size` (lg, the legacy 140x45 footprint, by default). Layout goes in a
+ * class on <argos-button>; `additionalStyles` is the legacy inline-style hook, for layout only.
  */
 @Component({
   selector: 'argos-button',
   templateUrl: './argos-button.component.html',
-  styleUrls: ['./argos-button.component.css'],
+  imports: [UiButtonDirective],
+  host: { class: 'inline-flex' },
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ButtonComponent {
@@ -46,5 +30,4 @@ export class ButtonComponent {
   ariaExpanded = input<boolean | undefined>(undefined);
   /** For on/off toggles whose label stays the same: whether it is on (aria-pressed). */
   ariaPressed = input<boolean | undefined>(undefined);
-  cssClass = computed(() => buttonClass(this.variant(), this.size()));
 }
