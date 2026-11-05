@@ -1,11 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, RouterOutlet } from '@angular/router';
 import SidebarService from 'src/services/sidebar.service';
 import { AppNavBarComponent } from './app-nav-bar.component';
 
 @Component({ template: '' })
 class Blank {}
+
+/** A page with its own mobile menu button (landing, charging, map). */
+@Component({
+  template: '<sidebar-toggle><button type="button">Open navigation</button></sidebar-toggle>',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+})
+class WithToggle {}
+
+/** The nav bar and the routed page in their main region, as app-context lays them out. */
+@Component({
+  template: '<app-nav-bar /><main tabindex="-1"><router-outlet /></main>',
+  imports: [AppNavBarComponent, RouterOutlet]
+})
+class Shell {}
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -22,12 +36,14 @@ describe('AppNavBarComponent on a phone', () => {
       providers: [
         provideRouter([
           { path: 'landing', component: Blank },
-          { path: 'graph', component: Blank }
+          { path: 'graph', component: Blank },
+          { path: 'charging', component: WithToggle }
         ])
       ]
     });
-    const fixture = TestBed.createComponent(AppNavBarComponent);
+    const fixture = TestBed.createComponent(Shell);
     document.body.appendChild(fixture.nativeElement);
+    const main = fixture.nativeElement.querySelector('main') as HTMLElement;
     fixture.autoDetectChanges();
     await fixture.whenStable();
     const drawer = () => document.querySelector<HTMLElement>('[role="dialog"][aria-label="Navigation"]');
@@ -36,7 +52,16 @@ describe('AppNavBarComponent on a phone', () => {
       await fixture.whenStable();
       await settle();
     };
-    return { fixture, drawer, open };
+    const choose = async (label: string) => {
+      const item = [...drawer()!.querySelectorAll<HTMLButtonElement>('sidebar-chip button')].find(
+        (b) => b.textContent?.trim() === label
+      )!;
+      item.focus();
+      item.click();
+      await fixture.whenStable();
+      await settle();
+    };
+    return { fixture, drawer, open, choose, main };
   };
 
   it('shows no desktop bar, and opens the nav drawer from the sidebar service', async () => {
@@ -69,5 +94,25 @@ describe('AppNavBarComponent on a phone', () => {
     await settle();
     expect(TestBed.inject(Router).url).toBe('/graph');
     expect(drawer()).toBeNull();
+  });
+
+  it("moves focus to the new page's main region when that page has no menu button", async () => {
+    const { drawer, open, choose, main } = await setup();
+    await open();
+    await choose('Graph');
+    expect(drawer()).toBeNull();
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(main);
+  });
+
+  it("moves focus to the new page's menu button when it has one", async () => {
+    const { fixture, open, choose, main } = await setup();
+    await open();
+    await choose('Charging');
+    expect(main.querySelector('sidebar-toggle')).not.toBeNull();
+    await fixture.whenStable();
+    const toggle = document.querySelector<HTMLElement>('sidebar-toggle button');
+    expect(toggle).not.toBeNull();
+    expect(document.activeElement).toBe(toggle);
   });
 });
