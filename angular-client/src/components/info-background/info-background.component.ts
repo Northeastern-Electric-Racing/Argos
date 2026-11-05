@@ -1,9 +1,11 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
+import { UiIconButtonDirective } from 'src/ui/button/button.directive';
 import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
+import { cardClass } from './card.recipe';
 
 /**
  * Component that is essentially the template/background for
@@ -13,14 +15,15 @@ import HStackComponent from '../hstack/hstack.component';
 interface ButtonInputs {
   onClick: () => void;
   icon: string;
+  /** The button's accessible name (it shows only an icon). Default "Reset", what every current caller does. */
+  ariaLabel?: string;
 }
 
 @Component({
   selector: 'info-background',
   templateUrl: './info-background.component.html',
-  styleUrls: ['./info-background.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent]
+  imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent, UiIconButtonDirective]
 })
 export class InfoBackgroundComponent {
   icon = input<string>();
@@ -42,4 +45,13 @@ export class InfoBackgroundComponent {
    * rather than size to its own intrinsic height.
    */
   fill = input<boolean>(false);
+
+  protected containerClass = computed(() => cardClass({ fill: this.fill(), sliced: this.slicedLeftCorner() }));
+
+  /** The corner slice is data-driven (slicePercentage), so it stays a style binding. */
+  protected clipPath = computed(() => {
+    if (!this.slicedLeftCorner()) return null;
+    const x = this.slicePercentage();
+    return `polygon(${x}px 0, 100% 0, 100% 100%, 0 100%, 0 ${x + 20}px)`;
+  });
 }
