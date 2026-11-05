@@ -4,7 +4,6 @@ import { ButtonComponent } from '../../../../components/argos-button/argos-butto
 @Component({
   selector: 'fault-buttons',
   templateUrl: './fault-buttons.component.html',
-  styleUrl: './fault-buttons.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ButtonComponent]
 })
