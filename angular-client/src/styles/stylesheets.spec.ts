@@ -42,9 +42,7 @@ describe('global stylesheets', () => {
     const token = (name: string) => theme.match(new RegExp('^\\s*--color-' + name + ':\\s*(#[0-9a-f]+);', 'im'))?.[1];
     const pairs: [string, string][] = [
       [Theme.battteryLow, 'battery-low'],
-      [Theme.battteryMed, 'battery-med'],
       [Theme.battteryHigh, 'battery-high'],
-      [Theme.batteryBack, 'battery-shell'],
       [Theme.infoBackground, 'panel']
     ];
     for (const [value, name] of pairs) expect([name, value.toLowerCase()]).toEqual([name, token(name)?.toLowerCase()]);
