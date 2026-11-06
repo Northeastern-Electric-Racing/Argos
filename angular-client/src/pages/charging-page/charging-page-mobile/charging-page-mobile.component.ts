@@ -22,7 +22,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 @Component({
   selector: 'charging-page-mobile',
   templateUrl: './charging-page-mobile.component.html',
-  styleUrls: ['./charging-page-mobile.component.css'],
   imports: [
     DividerComponent,
     DatePipe,
