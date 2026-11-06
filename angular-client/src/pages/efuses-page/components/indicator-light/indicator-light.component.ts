@@ -9,7 +9,7 @@ const plateBase = tw(
 const unlit = tw('border-surface-3 bg-surface-1 text-fg-dim');
 /** Lit: a tinted plate, a glowing edge and the legend in the lamp's colour, each at AA on its tint. */
 const lit: Record<string, string> = {
-  red: tw('border-accent bg-accent/20 text-accent-fg'),
+  red: tw('border-accent bg-accent/15 text-accent-fg'),
   green: tw('border-success bg-success/10 text-success-fg'),
   amber: tw('border-warn bg-warn/10 text-warn')
 };

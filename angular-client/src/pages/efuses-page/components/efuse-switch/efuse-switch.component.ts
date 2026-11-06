@@ -9,7 +9,7 @@ const positionClass = cx(
   panelButtonClass,
   legendClass,
   tw(
-    'min-w-22 px-6.5 py-3.5 text-fg-dim not-aria-pressed:hover:bg-surface-2 not-aria-pressed:hover:text-fg-muted max-md:min-w-18 max-md:px-4'
+    'min-w-22 bg-surface-1 px-6.5 py-3.5 text-fg-dim not-aria-pressed:hover:bg-surface-2 not-aria-pressed:hover:text-fg-muted max-md:min-w-18 max-md:px-4'
   )
 );
 
@@ -17,7 +17,7 @@ const positionClass = cx(
 const buttonClasses: Record<EfuseSwitchState, string> = {
   ON: cx(positionClass, tw('aria-pressed:bg-success/10 aria-pressed:text-success-fg')),
   AUTO: cx(positionClass, tw('aria-pressed:bg-warn/10 aria-pressed:text-warn')),
-  OFF: cx(positionClass, tw('aria-pressed:bg-accent/20 aria-pressed:text-accent-fg'))
+  OFF: cx(positionClass, tw('aria-pressed:bg-accent/15 aria-pressed:text-accent-fg'))
 };
 
 /**
@@ -57,7 +57,7 @@ export default class EfuseSwitchComponent {
   /** The group's accessible name, e.g. "Brake mode" */
   ariaLabel = input<string>('eFuse mode');
 
-  protected readonly groupClass = cx(panelGroupClass, tw('divide-x divide-surface-2'));
+  protected readonly groupClass = panelGroupClass;
   protected readonly buttonClasses = buttonClasses;
 
   /**
