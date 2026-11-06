@@ -11,11 +11,8 @@
       <loading-page />
     </div>
   } @else {
-    <!-- Mapbox makes its container position: relative from an unlayered sheet, so the box that fills the page is a wrapper. -->
-    <div class="absolute h-full w-full">
-      <div id="map" class="h-full w-full">
-        <run-selector class="absolute right-0 bottom-0 mr-4 mb-4" [selectRun]="onRunSelected" />
-      </div>
+    <div id="map" class="absolute h-full w-full">
+      <run-selector class="absolute right-0 bottom-0 mr-4 mb-4" [selectRun]="onRunSelected" />
     </div>
   }
 }

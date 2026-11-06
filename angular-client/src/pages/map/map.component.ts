@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy, DOCUMENT } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MapService } from '../../services/map.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -12,6 +12,7 @@ import { RunSelectorComponent } from '../graph-page/graph-caption/run-selector/r
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import { loadMapboxStyles } from './mapbox-styles';
 
 @Component({
   selector: 'map',
@@ -31,11 +32,23 @@ export default class MapComponent implements OnInit {
   isError: boolean = false;
   error?: Error;
   isMobile = window.innerWidth <= 768;
+  /** Mapbox GL's stylesheet, requested as the page opens; every map is built once it has loaded. */
+  private styles = loadMapboxStyles(inject(DOCUMENT));
+  private destroyed = false;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => (this.destroyed = true));
+  }
+
+  /** Runs `build` once the stylesheet is in, unless the page has gone by then. */
+  private whenStyled(build: () => void) {
+    void this.styles.then(() => {
+      if (!this.destroyed) build();
+    });
+  }
 
   ngOnInit() {
-    setTimeout(() => {
-      this.map.buildMap('map');
-    }, 1);
+    setTimeout(() => this.whenStyled(() => this.map.buildMap('map')), 1);
   }
 
   onResize() {
@@ -45,26 +58,34 @@ export default class MapComponent implements OnInit {
   onRunSelected = (run: Run) => {
     if (run.id === this.storage.getCurrentRunId().value) {
       this.isLoading = false;
-      setTimeout(() => {
-        this.map.buildMap('map');
-        this.map.addPolyline([]);
-        this.storage
-          .get(topics.gpsLocation())
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((value) => {
-            this.map.addCoordinateToPolyline(this.map.transformDataToCoordinate(value));
-          });
-      }, 100);
+      setTimeout(
+        () =>
+          this.whenStyled(() => {
+            this.map.buildMap('map');
+            this.map.addPolyline([]);
+            this.storage
+              .get(topics.gpsLocation())
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe((value) => {
+                this.map.addCoordinateToPolyline(this.map.transformDataToCoordinate(value));
+              });
+          }),
+        100
+      );
     } else {
       const queryResponse = this.apiService.query<DataValue[]>(() =>
         getDataByDataTypeNameAndRunId(topics.gpsLocation(), run.id)
       );
       queryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((points) => {
         if (points) {
-          setTimeout(() => {
-            this.map.buildMap('map');
-            this.map.addPolyline(points.map(this.map.transformDataToCoordinate));
-          }, 100);
+          setTimeout(
+            () =>
+              this.whenStyled(() => {
+                this.map.buildMap('map');
+                this.map.addPolyline(points.map(this.map.transformDataToCoordinate));
+              }),
+            100
+          );
         }
       });
       queryResponse.isLoading

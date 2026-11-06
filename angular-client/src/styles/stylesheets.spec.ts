@@ -24,8 +24,17 @@ const readers = (): string => {
 describe('global stylesheets', () => {
   it('has no legacy layer and imports no #909 legacy CSS', () => {
     const styles = read('styles.css');
-    expect(styles).toMatch(/^@layer theme, base, cdk, components, utilities;$/m);
+    expect(styles).toMatch(/^@layer theme, base, vendor, cdk, components, utilities;$/m);
     expect(styles).not.toMatch(/ui\/legacy|layer\(legacy\)/);
+  });
+
+  // Third-party CSS sits in the vendor layer, so utilities beat it; only the CDK overlay's runtime CSS is unlayered.
+  it('layers the installed Mapbox GL stylesheet in vendor, as a bundle the map page links', () => {
+    expect(read('styles/mapbox.css')).toMatch(/^@import 'mapbox-gl\/dist\/mapbox-gl\.css' layer\(vendor\);$/m);
+    const angular = JSON.parse(readFileSync(resolve(process.cwd(), 'angular.json'), 'utf8'));
+    const { styles } = angular.projects['angular-client'].architect.build.options;
+    expect(styles).toEqual(['src/styles.css', { input: 'src/styles/mapbox.css', bundleName: 'mapbox', inject: false }]);
+    expect(read('index.html')).not.toMatch(/mapbox/i);
   });
 
   it('keeps only the legacy aliases something still reads', () => {
