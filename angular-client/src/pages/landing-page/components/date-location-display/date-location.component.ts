@@ -15,7 +15,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'date-location',
   templateUrl: './date-location.component.html',
-  styleUrl: './date-location.component.css',
   imports: [InfoBackgroundComponent, DividerComponent, DatePipe, TypographyComponent, VStackComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
