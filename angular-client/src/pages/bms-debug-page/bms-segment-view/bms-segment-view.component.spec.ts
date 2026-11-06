@@ -28,4 +28,11 @@ describe('BmsSegmentViewComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it("names its selects for their purpose: this segment's view and the view for all segments", () => {
+    const names = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('[role=combobox]')).map((c) =>
+      c.getAttribute('aria-label')
+    );
+    expect(names).toEqual(['Segment', 'Segment 1 heat map view', 'Heat map view for all segments']);
+  });
 });

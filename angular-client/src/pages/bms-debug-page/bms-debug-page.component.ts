@@ -61,7 +61,8 @@ export class BmsDebugPageComponent implements OnInit {
   ];
   allSegSelectorConfig: SelectorConfig = {
     options: this.allViewOptions,
-    placeholder: 'Set ALL Maps'
+    placeholder: 'Set ALL Maps',
+    ariaLabel: 'Heat map view for all segments'
   };
 
   ngOnInit(): void {

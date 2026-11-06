@@ -6,6 +6,8 @@ export interface SelectorConfig {
   options: DropdownOption[];
   placeholder: string;
   defaultValue?: string;
+  /** The select's accessible name, its purpose ("Segment 3 heat map view"); without one it is named by its placeholder. */
+  ariaLabel?: string;
 }
 export interface DropdownOption {
   name: string;
@@ -29,6 +31,8 @@ export class SelectDropdownComponent {
     }
   ]);
   placeholder = input<string>('placeholder');
+  /** The select's accessible name: what it is for, never its value or placeholder. Falls back to the placeholder. */
+  ariaLabel = input<string | undefined>(undefined);
   defaultValue = input<string | undefined>(undefined);
 
   selectedOption: DropdownOption | undefined;
