@@ -53,14 +53,8 @@
           >chevron_right</mat-icon
         >
       } @else {
-        <!-- The leaf's checkbox look, from the row's aria-selected; the tick is drawn, so no icon box overflows it. -->
-        <span
-          class="inline-grid size-4 shrink-0 place-items-center rounded-xs border-[1.5px] border-solid border-control-border group-aria-selected:border-accent group-aria-selected:bg-accent"
-          aria-hidden="true"
-          ><span
-            class="invisible -mt-0.5 h-2 w-1 rotate-45 border-0 border-r-2 border-b-2 border-solid border-on-accent group-aria-selected:visible"
-          ></span
-        ></span>
+        <!-- No checkbox (814 parity): the row's tint shows selection; this keeps leaf labels in line with their parents'. -->
+        <span class="size-5 shrink-0" aria-hidden="true"></span>
       }
       <!-- The accent label on hover, except on a selected (red-tinted) row, where it would be red on red. -->
       <span class="min-w-0 flex-1 font-sans text-base font-bold group-hover:group-not-aria-selected:text-accent-fg">{{
