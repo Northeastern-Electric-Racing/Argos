@@ -5,7 +5,6 @@ import TypographyComponent from '../typography/typography.component';
   selector: 'switch',
   templateUrl: './switch.component.html',
   styleUrls: ['./switch.component.css'],
-  standalone: true,
   imports: [TypographyComponent]
 })
 export class SwitchComponent {

@@ -10,8 +10,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'starting-soc-timer',
   templateUrl: './starting-soc-timer.component.html',
-  styleUrls: ['./starting-soc-timer.component.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export default class StartingSocTimerComponent {

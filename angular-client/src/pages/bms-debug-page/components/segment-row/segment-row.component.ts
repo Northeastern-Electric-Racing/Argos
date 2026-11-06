@@ -1,6 +1,7 @@
-import { Component, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import {
@@ -11,12 +12,27 @@ import {
 import { appRoutes } from 'src/app/app-routes';
 import { SegmentHeatmapComponent } from '../segment-heatmap/segment-heatmap.component';
 import { SegmentOverviewComponent } from '../segment-overview/segment-overview.component';
+import { buttonBaseClass, buttonVariantClasses } from 'src/ui/recipes/button';
+import { cx, tw } from 'src/ui/recipes/tw';
+
+/**
+ * "See more": the secondary button at the row's fluid size (no recipe size is fluid). Its height never drops
+ * under 24px (WCAG 2.5.8; 814's clamp started at 18px), like the select's.
+ */
+const seeMoreClass = cx(
+  buttonBaseClass,
+  buttonVariantClasses.secondary,
+  tw(
+    'h-[clamp(24px,2.3vw,44px)] w-full gap-[0.3em] rounded-[clamp(8px,1.25vw,24px)] px-[clamp(6px,1.4vw,28px)] text-[length:clamp(7px,0.94vw,18px)]'
+  )
+);
 
 @Component({
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
-  styleUrl: './segment-row.component.css',
-  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent, UiIconComponent],
+  host: { class: 'block' }
 })
 export class SegmentRowComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -24,6 +40,7 @@ export class SegmentRowComponent implements OnInit {
   private router = inject(Router);
 
   segment = input.required<Segment>();
+  protected readonly seeMoreClass = seeMoreClass;
 
   viewSelectorConfig!: SelectorConfig;
   private viewOptions: DropdownOption[] = [

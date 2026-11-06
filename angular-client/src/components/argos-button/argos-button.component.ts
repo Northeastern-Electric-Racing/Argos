@@ -1,17 +1,20 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { ButtonSize, ButtonVariant } from 'src/ui/recipes/button';
 
-export type ButtonSize = 'default' | 'sm';
+export type { ButtonSize, ButtonVariant } from 'src/ui/recipes/button';
 
 /**
- * Simple custom button component that does something on click
- * Takes label and onClick function as inputs
- * Currently has one set button style but can be expanded to have more customizable styles
+ * The app's labelled button: a native button styled by the button recipe (src/ui/recipes/button.ts).
+ * Pick the look with `variant` and `size` (lg, the legacy 140x45 footprint, by default). Layout goes in a
+ * class on <argos-button>; `additionalStyles` is the legacy inline-style hook, for layout only.
  */
 @Component({
   selector: 'argos-button',
   templateUrl: './argos-button.component.html',
-  styleUrls: ['./argos-button.component.css'],
-  standalone: true
+  imports: [UiButtonDirective],
+  host: { class: 'inline-flex' },
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ButtonComponent {
   label = input.required<string>();
@@ -20,13 +23,11 @@ export class ButtonComponent {
   onClick = input.required<(event?: Event) => void>();
   additionalStyles = input<string>();
   disabled = input<boolean>(false);
-  size = input<ButtonSize>('default');
-  cssClass = computed(() => `btn btn--${this.size()}`);
-  style = computed(() => {
-    // The default size keeps the legacy fixed footprint; sm lets CSS drive sizing
-    // so callers don't need to override width/height per-button.
-    const base = this.size() === 'sm' ? '' : 'width: 140px; height: 45px; ';
-    const extra = this.additionalStyles();
-    return extra ? base + extra : base;
-  });
+  size = input<ButtonSize>('lg');
+  variant = input<ButtonVariant>('primary');
+  /** For buttons that open a popup: its kind, and whether it is open. */
+  ariaHaspopup = input<'dialog' | 'menu' | 'listbox' | undefined>(undefined);
+  ariaExpanded = input<boolean | undefined>(undefined);
+  /** For on/off toggles whose label stays the same: whether it is on (aria-pressed). */
+  ariaPressed = input<boolean | undefined>(undefined);
 }

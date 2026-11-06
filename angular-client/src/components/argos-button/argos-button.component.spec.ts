@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { buttonClass } from 'src/ui/recipes/button';
 import { ButtonComponent } from './argos-button.component';
+
+// Angular's [class] binding may reorder classes, so compare them as sorted sets.
+const sorted = (classes: string): string[] => [...new Set(classes.split(/\s+/).filter(Boolean))].sort();
 
 describe('ButtonComponent', () => {
   let component: ButtonComponent;
@@ -22,25 +26,40 @@ describe('ButtonComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('defaults to btn btn--default class and includes legacy width/height', () => {
-    expect(component.cssClass()).toBe('btn btn--default');
-    expect(component.style()).toContain('width: 140px');
-    expect(component.style()).toContain('height: 45px');
+  const button = (): HTMLButtonElement => fixture.nativeElement.querySelector('button');
+
+  const classes = (): string[] => sorted(button().className);
+
+  it('renders a primary button from the recipe at the legacy 140x45 footprint (lg) by default', () => {
+    expect(classes()).toEqual(sorted(buttonClass('primary', 'lg')));
+    expect(button().dataset['variant']).toBe('primary');
+    expect(button().dataset['size']).toBe('lg');
   });
 
-  it('omits legacy width/height when size is sm', () => {
+  it('renders the compact size without the legacy footprint', () => {
     fixture.componentRef.setInput('size', 'sm');
     fixture.detectChanges();
-    expect(component.cssClass()).toBe('btn btn--sm');
-    expect(component.style()).not.toContain('width: 140px');
-    expect(component.style()).not.toContain('height: 45px');
+    expect(classes()).toEqual(sorted(buttonClass('primary', 'sm')));
   });
 
-  it('appends additionalStyles after the size-driven base', () => {
+  it('maps each variant to its recipe', () => {
+    fixture.componentRef.setInput('variant', 'tonal');
     fixture.componentRef.setInput('size', 'sm');
-    fixture.componentRef.setInput('additionalStyles', 'background-color: red;');
     fixture.detectChanges();
-    expect(component.style()).toContain('background-color: red;');
+    expect(classes()).toEqual(sorted(buttonClass('tonal', 'sm')));
+    expect(button().dataset['variant']).toBe('tonal');
+  });
+
+  it('applies additionalStyles for layout tweaks', () => {
+    fixture.componentRef.setInput('additionalStyles', 'width: 100%;');
+    fixture.detectChanges();
+    expect(button().style.width).toBe('100%');
+  });
+
+  it('disables the native button', () => {
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(button().disabled).toBe(true);
   });
 
   it('passes the click event to the onClick handler (popover triggers depend on this)', () => {
@@ -53,5 +72,12 @@ describe('ButtonComponent', () => {
     button.click();
     expect(received).toBeDefined();
     expect(received instanceof Event).toBe(true);
+  });
+
+  it('reports an on/off toggle through aria-pressed, and leaves it off plain buttons', () => {
+    expect(button().hasAttribute('aria-pressed')).toBe(false);
+    fixture.componentRef.setInput('ariaPressed', true);
+    fixture.detectChanges();
+    expect(button().getAttribute('aria-pressed')).toBe('true');
   });
 });

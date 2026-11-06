@@ -1,18 +1,35 @@
-import { Component, input, computed } from '@angular/core';
+import { Component, input, computed, ChangeDetectionStrategy } from '@angular/core';
+import { cx, tw } from 'src/ui/recipes/tw';
+import { legendClass } from '../../efuses.classes';
+
+const plateBase = tw(
+  'inline-flex min-w-20 items-center justify-center rounded-[4px] border px-4 py-1.5 transition-colors duration-100 select-none'
+);
+/** Unlit: a dark plate with a dim legend that still reads at AA (fg-dim, 5:1 on surface-1). */
+const unlit = tw('border-surface-3 bg-surface-1 text-fg-dim');
+/** Lit: a tinted plate, a glowing edge and the legend in the lamp's colour, each at AA on its tint. */
+const lit: Record<string, string> = {
+  red: tw('border-accent bg-accent/15 text-accent-fg'),
+  green: tw('border-success bg-success/10 text-success-fg'),
+  amber: tw('border-warn bg-warn/10 text-warn')
+};
+/** A lamp in a caller's own CSS colour: the plate and edge take it, the legend is fg. */
+const litCustom = tw('text-fg');
 
 /**
  * Backlit annunciator plate indicator — mimics vintage panel-mount
  * status lights found on aircraft and radio equipment.
  *
- * When inactive, the plate is dark with barely visible text.
- * When active, the plate glows with the specified color and the text
- * becomes bright white.
+ * When inactive, the plate is dark with a dim legend. When active, the plate glows with the specified
+ * colour and so does the legend. The legend is followed by a visually hidden ", on" or ", off", so
+ * assistive tech hears whether the lamp is lit, not just its name.
  */
 @Component({
   selector: 'indicator-light',
   templateUrl: './indicator-light.component.html',
-  styleUrls: ['./indicator-light.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager,
+  // An opaque base under the plate: a lit plate's tint must compose over surface-1, not the card (4.36:1 there)
+  host: { class: 'inline-flex rounded-[4px] bg-surface-1' }
 })
 export default class IndicatorLightComponent {
   /** The text displayed on the plate (e.g., "FAULTED", "ENABLED") */
@@ -27,13 +44,10 @@ export default class IndicatorLightComponent {
   /** Font size in px */
   fontSize = input<number>(14);
 
-  /** Resolved color values for active state */
-  glowColor = computed(() => {
-    const presets: Record<string, { bg: string; glow: string; text: string }> = {
-      red: { bg: '#4a1515', glow: '#cc3030', text: '#cc3030' },
-      green: { bg: '#1a3318', glow: '#4a9e3e', text: '#4a9e3e' },
-      amber: { bg: '#3d3010', glow: '#c8911e', text: '#c8911e' }
-    };
-    return presets[this.color()] ?? { bg: this.color(), glow: this.color(), text: '#ffffff' };
-  });
+  protected readonly legendClass = legendClass;
+
+  protected plateClass = computed(() => cx(plateBase, this.active() ? lit[this.color()] ?? litCustom : unlit));
+
+  /** A custom (non-preset) colour, painted on the plate while lit. */
+  protected customColor = computed(() => (this.active() && !lit[this.color()] ? this.color() : null));
 }

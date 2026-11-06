@@ -1,0 +1,43 @@
+<!-- 28px (#909's 22px missed the 24px target); -my-0.5 keeps the row's height -->
+<button
+  type="button"
+  uiIconButton
+  size="sm"
+  class="-my-0.5 align-middle"
+  ngMenuTrigger
+  #origin
+  #trigger="ngMenuTrigger"
+  [menu]="menu()"
+  (click)="$event.stopPropagation()"
+  (keyup.enter)="$event.stopPropagation()"
+  aria-label="Session actions"
+>
+  <ui-icon name="more_vert" />
+</button>
+<ng-template
+  [cdkConnectedOverlayOpen]="trigger.expanded()"
+  [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }"
+  [cdkConnectedOverlayPositions]="menuPositions"
+>
+  <div
+    ngMenu
+    [class]="panelClass"
+    #rowMenu="ngMenu"
+    (itemSelected)="action.emit($event)"
+    (click)="$event.stopPropagation()"
+    (keyup.enter)="$event.stopPropagation()"
+  >
+    <ng-template ngMenuContent>
+      <div ngMenuItem [class]="itemClass" value="rename" searchTerm="Rename">
+        <ui-icon name="edit" size="sm" /><span>Rename</span>
+      </div>
+      <div ngMenuItem [class]="itemClass" value="download" searchTerm="Download CSV">
+        <ui-icon name="download" size="sm" /><span>Download CSV</span>
+      </div>
+      <div ngMenuItem [class]="itemClass" value="delete" searchTerm="Delete">
+        <!-- the item's own colour is fg; the destructive orange goes on a wrapper (icons take their parent's) -->
+        <span class="flex items-center gap-2 text-danger"> <ui-icon name="delete" size="sm" /><span>Delete</span> </span>
+      </div>
+    </ng-template>
+  </div>
+</ng-template>

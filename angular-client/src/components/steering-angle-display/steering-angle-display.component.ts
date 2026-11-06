@@ -15,7 +15,6 @@ import TypographyComponent from '../typography/typography.component';
   selector: 'steering-angle-display',
   templateUrl: './steering-angle-display.component.html',
   styleUrls: ['./steering-angle-display.component.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class SteeringAngleDisplayComponent implements OnInit {

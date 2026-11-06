@@ -1,6 +1,6 @@
 <info-background title="Current" svgIcon="bolt">
-  <div style="display: flex; justify-content: center; align-items: center; height: 80%">
-    <typography variant="info-value" [content]="amps.toFixed(3).toString()" additionalStyles="fontSize:40px" />
-    <typography variant="info-unit" content="amps" additionalStyles="fontSize:20px" />
+  <div class="flex h-4/5 items-center justify-center">
+    <typography variant="info-value" [content]="amps.toFixed(3).toString()" textClass="text-display" />
+    <typography variant="info-unit" content="amps" textClass="text-lg" />
   </div>
 </info-background>

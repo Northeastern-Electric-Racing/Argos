@@ -1,3 +1,8 @@
-<div class="hstack" [ngStyle]="{ gap: spacing(), 'justify-content': justifyContent(), 'align-items': alignItems() }">
+<div
+  class="flex flex-row"
+  [style.gap]="spacing()"
+  [style.justify-content]="justifyContent()"
+  [style.align-items]="alignItems()"
+>
   <ng-content />
 </div>

@@ -17,8 +17,6 @@ enum BMSMODE {
 @Component({
   selector: 'bms-mode-display',
   templateUrl: './BMS-mode-display.component.html',
-  styleUrls: ['./BMS-mode-display.component.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export default class BMSModeDisplayComponent implements OnInit {

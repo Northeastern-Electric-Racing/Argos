@@ -50,15 +50,17 @@ Tooltip.positioners.cursor = cursorPositioner;
 function download(href: string, extension: string): void {
   const link = document.createElement('a');
   link.href = href;
-  link.download = `argos-graph-${new Date().toISOString().replace(/[:.]/g, '-')}.${extension}`;
+  // Joined rather than a template literal: tw-lint reads "graph-${" as a built h-* class
+  const time = new Date().toISOString().replace(/[:.]/g, '-');
+  link.download = 'argos-graph-' + time + '.' + extension;
   link.click();
 }
 
 @Component({
   selector: 'graph',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
-  standalone: true,
+  // A flex item that may get smaller than the canvas's current size, so Chart.js gets a smaller box to fit
+  host: { class: 'block min-h-0 min-w-0' },
   imports: [BaseChartDirective, ButtonComponent],
   // Register only what the line chart uses, so the rest of Chart.js tree-shakes out
   providers: [

@@ -2,8 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { Node } from '../types.utils';
 
 @Pipe({
-  name: 'nodeFilter',
-  standalone: true
+  name: 'nodeFilter'
 })
 export class NodeFilterPipe implements PipeTransform {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

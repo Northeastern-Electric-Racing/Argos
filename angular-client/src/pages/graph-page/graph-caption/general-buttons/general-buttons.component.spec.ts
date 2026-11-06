@@ -1,12 +1,14 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import type { Mock } from 'vitest';
+import { TabsHarness } from '@angular/aria/tabs/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
 describe('GeneralButtonsComponent — custom range validation', () => {
   let fixture: ComponentFixture<GeneralButtonsComponent>;
   let component: GeneralButtonsComponent;
-  let toastSpy: { add: Mock<MessageService['add']> };
+  let toastSpy: { add: Mock };
   let onSelectPresetSpy: Mock;
   let onApplyCustomLastXSpy: Mock;
   let onApplyCustomDateRangeSpy: Mock;
@@ -20,14 +22,15 @@ describe('GeneralButtonsComponent — custom range validation', () => {
   ];
 
   beforeEach(async () => {
-    // The run selector inside fetches the run list on init. Under Karma that request was still in
-    // flight when these specs finished; Node's fetch rejects at once, and its error toast would land
-    // in these assertions. Keep it pending, as it effectively was in the browser.
+    // The run selector inside fetches the run list on init; keep it off the network so its
+    // failure toast does not land in these assertions.
     vi.stubGlobal(
       'fetch',
       vi.fn(() => new Promise(() => {}))
     );
-    toastSpy = { add: vi.fn().mockName('MessageService.add') };
+    toastSpy = {
+      add: vi.fn().mockName('ToastService.add')
+    };
     onSelectPresetSpy = vi.fn().mockName('onSelectPreset');
     onApplyCustomLastXSpy = vi.fn().mockName('onApplyCustomLastX');
     onApplyCustomDateRangeSpy = vi.fn().mockName('onApplyCustomDateRange');
@@ -37,7 +40,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
 
     await TestBed.configureTestingModule({
       imports: [GeneralButtonsComponent],
-      providers: [{ provide: MessageService, useValue: toastSpy }]
+      providers: [{ provide: ToastService, useValue: toastSpy }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneralButtonsComponent);
@@ -52,9 +55,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  afterEach(() => vi.unstubAllGlobals());
 
   describe('applyCustomLastX', () => {
     it('rejects 0 hours / 0 minutes with a toast and no callback', () => {
@@ -62,9 +63,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ severity: 'warn', summary: 'Invalid Range' })
-      );
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'warn', summary: 'Invalid Range' }));
     });
 
     it('rejects total exceeding MAX_RANGE_MINUTES with a toast', () => {
@@ -72,14 +72,16 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(0);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
     });
 
     it('emits the total minutes when valid', () => {
       component.customHours.set(2);
       component.customMinutes.set(15);
       component.applyCustomLastX();
-      expect(onApplyCustomLastXSpy).toHaveBeenCalledExactlyOnceWith(135);
+      expect(onApplyCustomLastXSpy).toHaveBeenCalledTimes(1);
+      expect(onApplyCustomLastXSpy).toHaveBeenCalledWith(135);
       expect(toastSpy.add).not.toHaveBeenCalled();
     });
 
@@ -88,7 +90,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customMinutes.set(null);
       component.applyCustomLastX();
       expect(onApplyCustomLastXSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
   });
 
@@ -100,7 +103,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
 
     it('rejects an end time more than 1 minute in the future', () => {
@@ -108,7 +112,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now + 5 * 60 * 1000));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Invalid Range' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Invalid Range' }));
     });
 
     it('rejects a span exceeding MAX_RANGE_MINUTES', () => {
@@ -117,7 +122,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customToDate.set(new Date(now - oneMinuteMs));
       component.applyCustomDateRange();
       expect(onApplyCustomDateRangeSpy).not.toHaveBeenCalled();
-      expect(toastSpy.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Range Too Large' }));
+      expect(toastSpy.add).toHaveBeenCalledTimes(1);
+      expect(toastSpy.add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Range Too Large' }));
     });
 
     it('emits start and end ms when valid', () => {
@@ -126,7 +132,8 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       component.customFromDate.set(start);
       component.customToDate.set(end);
       component.applyCustomDateRange();
-      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledExactlyOnceWith(start.getTime(), end.getTime());
+      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledTimes(1);
+      expect(onApplyCustomDateRangeSpy).toHaveBeenCalledWith(start.getTime(), end.getTime());
       expect(toastSpy.add).not.toHaveBeenCalled();
     });
   });
@@ -142,7 +149,7 @@ describe('GeneralButtonsComponent — custom range validation', () => {
     });
 
     it('seeds Date Range mode + From/To when activeDateRange is set', () => {
-      const range = { startMs: 1_700_000_000_000, endMs: 1_700_000_900_000 };
+      const range = { startMs: 1700000000000, endMs: 1700000900000 };
       fixture.componentRef.setInput('activeDateRange', range);
       fixture.detectChanges();
       component.onCustomPopoverShow();
@@ -165,6 +172,70 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(toMs - fromMs).toBe(30 * 60 * 1000);
       // maxDate also refreshed
       expect(component.maxDate().getTime()).toBeGreaterThanOrEqual(before);
+    });
+  });
+
+  describe('custom range tabs', () => {
+    const openPopover = async () => {
+      const trigger = [...fixture.nativeElement.querySelectorAll('button')].find(
+        (b: HTMLButtonElement) => b.textContent?.trim() === 'Custom'
+      ) as HTMLButtonElement;
+      trigger.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return trigger;
+    };
+    /** The custom range popover is in an overlay, so its tabs are found from the document root. */
+    const tabs = () => TestbedHarnessEnvironment.documentRootLoader(fixture).getHarness(TabsHarness);
+
+    it('marks the Custom trigger as a dialog popup and reports when it is open', async () => {
+      const trigger = await openPopover();
+      expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('switches between Last X and Date Range through the Aria tabs', async () => {
+      await openPopover();
+      const harness = await tabs();
+      expect(await Promise.all((await harness.getTabs()).map((t) => t.getTitle()))).toEqual(['Last X', 'Date Range']);
+      expect(await (await harness.getSelectedTab())?.getTitle()).toBe('Last X');
+      expect(document.getElementById('custom-hours')).not.toBeNull();
+
+      await harness.selectTab({ title: 'Date Range' });
+      await fixture.whenStable();
+
+      expect(component.customMode()).toBe('date-range');
+      expect(await (await harness.getSelectedTab())?.getTitle()).toBe('Date Range');
+      expect(document.getElementById('custom-from')).not.toBeNull();
+    });
+
+    it('keeps one panel live: the unselected one is inert, so inert:hidden takes it out of the layout', async () => {
+      await openPopover();
+      await (await tabs()).selectTab({ title: 'Date Range' });
+      await fixture.whenStable();
+      const panels = [...document.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+      expect(panels.length).toBe(2);
+      const inert = panels.filter((p) => p.hasAttribute('inert'));
+      expect(inert.length).toBe(1);
+      expect(inert[0].querySelector('#custom-hours')).toBeNull();
+      expect(panels.find((p) => !p.hasAttribute('inert'))!.querySelector('#custom-from')).not.toBeNull();
+    });
+
+    it('labels every custom range field', async () => {
+      await openPopover();
+      for (const id of ['custom-hours', 'custom-minutes']) {
+        expect(document.querySelector(`label[for="${id}"]`)?.textContent?.trim()).toBeTruthy();
+      }
+      const hours = document.getElementById('custom-hours') as HTMLInputElement;
+      expect(hours.type).toBe('number');
+      expect(hours.min).toBe('0');
+      expect(hours.step).toBe('1');
+    });
+
+    it('ignores tab values that are not a custom mode', () => {
+      component.setCustomMode(undefined);
+      component.setCustomMode('something-else');
+      expect(component.customMode()).toBe('last-x');
     });
   });
 });

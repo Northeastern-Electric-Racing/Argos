@@ -1,0 +1,69 @@
+<!-- 814 parity: the filter and tree sit 16px in from the sidebar, rows 2px apart, parents 36px, leaves 30px, 16px per level. -->
+<div class="flex min-h-0 flex-col px-4" [style.height]="height()">
+  <div class="relative">
+    <ui-icon name="search" size="sm" class="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2" />
+    <input
+      type="search"
+      uiInput
+      class="w-full pl-8"
+      [placeholder]="filterPlaceholder()"
+      [attr.aria-label]="filterPlaceholder()"
+      [value]="filter()"
+      (input)="onFilterInput($event)"
+    />
+  </div>
+
+  <ul
+    ngTree
+    #tree="ngTree"
+    class="m-0 min-h-0 flex-1 list-none overflow-auto p-0 select-none"
+    aria-label="Topics"
+    [multi]="true"
+    [value]="selectedKeys()"
+    (valueChange)="onValueChange($event)"
+  >
+    <ng-template [ngTemplateOutlet]="treeNodes" [ngTemplateOutletContext]="{ nodes: visibleNodes(), parent: tree }" />
+  </ul>
+  @if (visibleNodes().length === 0) {
+    <p class="m-0 text-center text-ctrl-sm text-fg-muted">No topics found</p>
+  }
+</div>
+
+<ng-template #treeNodes let-nodes="nodes" let-parent="parent">
+  @for (node of nodes; track node.key) {
+    <li
+      ngTreeItem
+      #treeItem="ngTreeItem"
+      [parent]="parent"
+      [value]="node.key"
+      [label]="node.label"
+      [selectable]="!!node.selectable"
+      [(expanded)]="node.expanded"
+      class="group mt-0.5 flex min-h-7.5 cursor-pointer list-none items-center gap-1 rounded-sm px-2 text-fg outline-none not-aria-selected:hover:bg-fg/7 focus-visible:focus-ring focus-visible:-outline-offset-2 aria-selected:bg-accent/33 [&[aria-expanded]]:min-h-9"
+    >
+      @if (node.children?.length) {
+        <span class="grid size-7 shrink-0 place-items-center" aria-hidden="true"
+          ><ui-icon name="chevron_right" size="xs" class="transition-transform duration-150 group-aria-expanded:rotate-90"
+        /></span>
+      } @else {
+        <!-- No checkbox (814 parity): the row's tint shows selection; the toggle's box keeps leaf labels in line. -->
+        <span class="size-7 shrink-0" aria-hidden="true"></span>
+      }
+      <!-- The accent label on hover, except on a selected (red-tinted) row, where it would be red on red. -->
+      <span class="min-w-0 flex-1 font-sans text-base font-bold group-hover:group-not-aria-selected:text-accent-fg">{{
+        node.label
+      }}</span>
+      @if (!node.children?.length) {
+        <span class="shrink-0 font-sans text-base text-fg">{{ node.data.displayValue() }}</span>
+      }
+    </li>
+
+    @if (node.children?.length) {
+      <ul role="group" class="m-0 list-none pl-4 [li[aria-expanded='false']+&]:hidden">
+        <ng-template ngTreeItemGroup [ownedBy]="treeItem" #group="ngTreeItemGroup">
+          <ng-template [ngTemplateOutlet]="treeNodes" [ngTemplateOutletContext]="{ nodes: node.children, parent: group }" />
+        </ng-template>
+      </ul>
+    }
+  }
+</ng-template>

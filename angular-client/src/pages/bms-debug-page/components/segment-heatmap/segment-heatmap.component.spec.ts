@@ -1,6 +1,6 @@
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DialogService } from 'primeng/dynamicdialog';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
@@ -11,6 +11,16 @@ import { SegmentHeatmapComponent } from './segment-heatmap.component';
 const SEGMENT = 0;
 const CELL = 0;
 const GREY = 'grey';
+
+/** WCAG contrast of black tile text on a #rrggbb fill. */
+const contrastWithBlack = (hex: string): number => {
+  const channel = (i: number) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  return (luminance + 0.05) / 0.05;
+};
 
 const push = (storage: Storage, key: string, value: string): void => {
   storage.addValue(key, { values: [value], time: '0', unit: '' } as DataValue);
@@ -41,7 +51,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
         Storage,
         CellService,
         HeatMapService,
-        { provide: DialogService, useValue: {} }
+        { provide: UiDialogService, useValue: {} }
       ]
     }).compileComponents();
 
@@ -93,7 +103,23 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     push(storage, topics.alphaOw(SEGMENT, CELL), '1');
 
     expect(alphaCell(CELL)?.boolValue).toBe(true);
-    expect(component.getColor(alphaCell(CELL)!)).toBe('#dc2626');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('#de3232');
+  });
+
+  it('fills a failed CvS cell in a red its black text reads on at AA (#dc2626 measured 4.35:1)', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.CvsFailure);
+    push(storage, topics.alphaCvs(SEGMENT, CELL), '1');
+
+    expect(alphaCell(CELL)?.boolValue).toBe(true);
+    expect(contrastWithBlack(component.getColor(alphaCell(CELL)!))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('fills a balancing cell in a blue its black text reads on at AA (#4169e1 measured 4.33:1)', () => {
+    heatMap.setCurrentView(SEGMENT, HeatMapView.Balancing);
+    push(storage, topics.alphaBurning(SEGMENT, CELL), '1');
+
+    expect(alphaCell(CELL)?.boolValue).toBe(true);
+    expect(contrastWithBlack(component.getColor(alphaCell(CELL)!))).toBeGreaterThanOrEqual(4.5);
   });
 
   it('renders Open Wire false as green FALSE from the OW topic', () => {
