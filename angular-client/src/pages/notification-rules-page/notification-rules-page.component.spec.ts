@@ -27,6 +27,8 @@ describe('NotificationRulesPageComponent', () => {
     messageService = TestBed.inject(ToastService);
     fixture.detectChanges();
   });
+  // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
+  afterEach(() => localStorage.removeItem('notification_rules_client_id'));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -165,6 +167,7 @@ describe('NotificationRulesPageComponent', () => {
 });
 
 describe('NotificationRulesPageComponent stream rail across the phone breakpoint', () => {
+  afterEach(() => localStorage.removeItem('notification_rules_client_id'));
   it('shows a live, reachable stream on a phone even after it was hidden on a desktop', async () => {
     localStorage.setItem('notification_rules_client_id', 'test-client-id');
     const phone = new BehaviorSubject(false);

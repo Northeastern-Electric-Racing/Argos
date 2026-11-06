@@ -18,6 +18,8 @@ describe('GraphPresetService', () => {
   beforeEach(() => {
     localStorage.clear();
   });
+  // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
+  afterEach(() => localStorage.clear());
 
   function build(): GraphPresetService {
     TestBed.configureTestingModule({ providers: [GraphPresetService, ToastService] });

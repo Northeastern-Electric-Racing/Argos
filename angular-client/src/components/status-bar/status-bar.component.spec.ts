@@ -32,6 +32,8 @@ describe('StatusBarComponent', () => {
     host = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
   });
+  // The focus spies sit on HTMLElement.prototype, which every spec file in the worker shares (isolate: false).
+  afterEach(() => vi.restoreAllMocks());
 
   it('auto-opens with the panel and projected chips, and no edge handle', () => {
     expect(hide()?.getAttribute('aria-expanded')).toBe('true');
