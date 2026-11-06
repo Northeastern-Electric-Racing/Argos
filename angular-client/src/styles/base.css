@@ -1,7 +1,7 @@
 /*
  * Base layer: fonts, the document, and the compatibility shim that keeps not-yet-migrated components
  * looking as they did on #909 now that Tailwind's preflight reset is on. styles.css imports this file
- * into layer(base), so every utility, legacy rule and component stylesheet beats it.
+ * into layer(base), so every utility and component stylesheet beats it.
  */
 @import './roboto.scss';
 @import './material-icons.scss';
@@ -143,8 +143,8 @@ sup {
 
 /*
  * Native controls without a font of their own (the eFuses RTDS and switch buttons) used the browser's
- * control font (13.33px); preflight makes them inherit the page's. The recipes and the legacy classes set
- * their own font, so only unmigrated controls see this.
+ * control font (13.33px); preflight makes them inherit the page's. The recipes set their own font, so only
+ * controls without one see this.
  */
 button,
 input,
