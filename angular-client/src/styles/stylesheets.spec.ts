@@ -1,9 +1,24 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import Theme from 'src/services/theme.service';
 
 const src = resolve(process.cwd(), 'src');
 const read = (path: string) => readFileSync(join(src, path), 'utf8');
+
+/** Every .ts, .html and .css file under src except specs and the theme itself, as one string. */
+const readers = (): string => {
+  const out: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) walk(path);
+      else if (/\.(ts|html|css|scss)$/.test(name) && !name.endsWith('.spec.ts') && !path.endsWith('theme.css'))
+        out.push(readFileSync(path, 'utf8'));
+    }
+  };
+  walk(src);
+  return out.join('\n');
+};
 
 // The global stylesheet after the migration: tokens, the base shim, the CDK's a11y CSS and utilities, nothing else.
 describe('global stylesheets', () => {
@@ -11,6 +26,15 @@ describe('global stylesheets', () => {
     const styles = read('styles.css');
     expect(styles).toMatch(/^@layer theme, base, cdk, components, utilities;$/m);
     expect(styles).not.toMatch(/ui\/legacy|layer\(legacy\)/);
+  });
+
+  it('keeps only the legacy aliases something still reads', () => {
+    const theme = read('styles/theme.css');
+    const aliases = [...theme.matchAll(/^\s*(--(?:ui|color-text)-[a-z0-9-]+):/gm)].map((m) => m[1]);
+    const used = readers();
+    expect(aliases.filter((alias) => !used.includes('var(' + alias))).toEqual([]);
+    // the unused segment-summary's "See More" pill is the last reader (wave 4)
+    expect(aliases).toEqual(['--ui-radius-full']);
   });
 
   it('paints the Theme colour constants in the token colours', () => {
