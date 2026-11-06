@@ -6,7 +6,6 @@ import { GraphComponent } from '../../../../../components/graph/graph.component'
 @Component({
   selector: 'cell-temp-graph',
   templateUrl: './cell-temp-graph.component.html',
-  styleUrls: ['./cell-temp-graph.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [GraphComponent]
 })

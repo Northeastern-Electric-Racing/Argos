@@ -6,7 +6,6 @@ import { DoubleLineGraphComponent } from '../../../../../components/double-line-
 @Component({
   selector: 'high-low-cell-graph',
   templateUrl: './high-low-cell-graph.component.html',
-  styleUrls: ['./high-low-cell-graph.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [DoubleLineGraphComponent]
 })
