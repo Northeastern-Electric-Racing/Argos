@@ -117,6 +117,7 @@
   --radius-lg: 16px;
   --radius-dialog: 20px; /* PrimeNG dialog parity */
   --shadow-overlay: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --shadow-bulb: 0 5px 5px rgba(0, 0, 0, 0.2); /* the thermometer bulb; read as [box-shadow:var(--shadow-bulb)], no utility stack */
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
