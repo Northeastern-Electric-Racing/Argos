@@ -11,7 +11,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'state-of-charge-display',
   templateUrl: './state-of-charge-display.component.html',
-  styleUrls: ['./state-of-charge-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, BatteryPercentageComponent, TypographyComponent, HStackComponent]
 })

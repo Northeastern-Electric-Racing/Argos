@@ -1,10 +1,16 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
+import { tw } from 'src/ui/recipes/tw';
+
+/** The nub fades to grey over a second while clicked. */
+const nubClasses = {
+  idle: tw('bg-battery-shell transition-colors duration-1000 ease-linear'),
+  clicked: tw('bg-control-off transition-colors duration-1000 ease-linear')
+} as const;
 
 @Component({
   selector: 'battery-percentage',
   templateUrl: 'battery-percentage.component.html',
-  styleUrls: ['battery-percentage.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class BatteryPercentageComponent {
@@ -12,17 +18,17 @@ export class BatteryPercentageComponent {
   height = input.required<number>();
   width = input.required<number>();
 
-  // Background Styles
+  // Background Styles (the shell is the battery-shell token)
   heightpx = computed(() => this.height() + 'px');
   widthpx = computed(() => this.width() + 'px');
-  backgroundColor: string = Theme.batteryBack;
 
   // Fill Styles
   fillWidth = computed(() => this.width() * 0.9 + 'px');
   fillMarginBottom = computed(() => this.height() * 0.05 + 'px');
 
-  // Nub Styles (clicking greys the nub; the CSS transition fades it)
-  clicked: boolean = false;
+  // Nub Styles
+  clicked = signal(false);
+  protected nubClass = computed(() => (this.clicked() ? nubClasses.clicked : nubClasses.idle));
   nubHeight = computed(() => this.height() / 10 + 'px');
   nubWidth = computed(() => this.width() / 2 + 'px');
 
@@ -33,14 +39,11 @@ export class BatteryPercentageComponent {
     return (percentage / 100) * (this.height() * 0.9) + 'px';
   };
 
-  getFillColor = (percentage: number) => {
-    if (percentage <= 20) {
-      return Theme.battteryLow;
-    }
-    return Theme.battteryHigh;
-  };
+  /** The fill's level: low at 20% and below, high above; its colour is the matching Theme battery colour. */
+  level = computed(() => (this.percentage() <= 20 ? 'low' : 'high'));
+  fillColor = computed(() => (this.level() === 'low' ? Theme.battteryLow : Theme.battteryHigh));
 
   toggleIsCorrect() {
-    this.clicked = !this.clicked; // change in data-bound value
+    this.clicked.update((clicked) => !clicked);
   }
 }

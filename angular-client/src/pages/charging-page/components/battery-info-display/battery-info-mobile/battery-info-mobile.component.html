@@ -1,5 +1,5 @@
-<hstack style="width: 100%; height: 100%" spacing="10px">
-  <vstack style="width: 33%">
+<hstack class="size-full" spacing="10px">
+  <vstack class="w-[33%]">
     <hstack>
       <typography variant="info-value-mobile" [content]="stateOfCharge().toString() + '%'" />
       <battery-percentage [percentage]="stateOfCharge()" [height]="60" [width]="30" />
@@ -7,30 +7,30 @@
     <typography variant="info-subtitle" content="Charge State" />
   </vstack>
 
-  <divider style="height: 100px" />
-  <vstack style="width: 33%">
+  <divider class="h-25" />
+  <vstack class="w-[33%]">
     <hstack>
       <typography variant="info-value-mobile" [content]="packTemp().toString() + '°'" />
-      <div class="thermometer-container">
+      <div class="flex h-18.5 w-7 items-center justify-center">
         <thermometer [temperature]="packTemp()" [min]="-15" [max]="30" />
       </div>
     </hstack>
     <typography variant="info-subtitle" content="Pack Temperature" />
   </vstack>
 
-  <divider style="height: 100px" />
-  <vstack style="width: 33%">
-    <hstack style="width: 100%" justifyContent="space-between">
+  <divider class="h-25" />
+  <vstack class="w-[33%]">
+    <hstack class="w-full" justifyContent="space-between">
       <typography variant="info-subtitle" content="Pack Voltage" />
       <typography variant="info-value-mobile" [content]="voltage().toFixed(1) + 'V'" />
     </hstack>
 
-    <hstack style="width: 100%" justifyContent="space-between">
+    <hstack class="w-full" justifyContent="space-between">
       <typography variant="info-subtitle" content="CCL" />
       <typography variant="info-value-mobile" [content]="chargeCurrentLimit().toString() + 'A'" />
     </hstack>
 
-    <hstack style="width: 100%" justifyContent="space-between">
+    <hstack class="w-full" justifyContent="space-between">
       <typography variant="info-subtitle" content="DCL" />
       <typography variant="info-value-mobile" [content]="dischargeCurrentLimit().toString() + 'A'" />
     </hstack>
