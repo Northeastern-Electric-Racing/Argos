@@ -1,33 +1,26 @@
-<div class="rtds-card-shell">
-  <info-background title="RTDS Debug" icon="volume_up">
-    <div class="rtds-card-content">
-      <vstack [align]="'stretch'" [spacing]="'15px'">
-        <div class="rtds-button-row">
-          <div class="rtds-button-group" [class.locked]="isLocked()">
-            <button class="rtds-button rtds-button-sound" [disabled]="isLocked()" (click)="sendRtdsCommand(0)">
-              Sound RTDS
+<info-background title="RTDS Debug" icon="volume_up">
+  <div class="pt-5 pr-7.5 pb-6.25 pl-10 max-md:px-0">
+    <div class="flex flex-col gap-3.75">
+      <div class="flex w-full flex-wrap items-center justify-center gap-5">
+        <div [class]="groupClass">
+          @for (command of commands; track command.value) {
+            <button type="button" [class]="command.class" [disabled]="isLocked()" (click)="sendRtdsCommand(command.value)">
+              {{ command.label }}
             </button>
-            <button class="rtds-button rtds-button-cancel" [disabled]="isLocked()" (click)="sendRtdsCommand(1)">
-              Cancel RTDS
-            </button>
-            <button class="rtds-button rtds-button-start" [disabled]="isLocked()" (click)="sendRtdsCommand(2)">
-              Start Reverse
-            </button>
-            <button class="rtds-button rtds-button-stop" [disabled]="isLocked()" (click)="sendRtdsCommand(3)">
-              Stop Reverse
-            </button>
-          </div>
-          <lock-button [locked]="isLocked()" (pressed)="onLockButtonClick()"></lock-button>
+          }
         </div>
-        <div class="rtds-button-subtext">
-          Note: These are oneshot trigger buttons (i.e., they don't force a continuous state on the car).<br />
-          The car still triggers RTDS/Reverse automatically as normal regardless of these buttons.
-        </div>
+        <lock-button ariaLabel="Lock RTDS commands" [locked]="isLocked()" (pressed)="onLockButtonClick()" />
+      </div>
+      <div class="-mt-1.5 mb-0.5 pb-2.5 text-center font-highway leading-[1.2]">
+        Note: These are oneshot trigger buttons (i.e., they don't force a continuous state on the car).<br />
+        The car still triggers RTDS/Reverse automatically as normal regardless of these buttons.
+      </div>
 
-        <div class="rtds-display-grid">
-          <div class="rtds-display">
+      <div class="flex flex-wrap justify-center gap-x-12.5 gap-y-2">
+        @for (display of displays; track display.label) {
+          <div class="flex flex-col items-center gap-1.5">
             <seven-segment-display
-              [value]="formatState(pinState)"
+              [value]="formatState(display.value())"
               [digits]="1"
               [decimals]="0"
               [fontSize]="40"
@@ -37,61 +30,16 @@
               [paddingRight]="12"
               [paddingTop]="10"
             />
-            <div class="rtds-display-label">Pin State</div>
+            <div class="text-center text-sm leading-[1.2] font-black text-fg">{{ display.label }}</div>
           </div>
-
-          <div class="rtds-display">
-            <seven-segment-display
-              [value]="formatState(soundingState)"
-              [digits]="1"
-              [decimals]="0"
-              [fontSize]="40"
-              [unitFontSize]="0"
-              [paddingBottom]="4"
-              [paddingLeft]="12"
-              [paddingRight]="12"
-              [paddingTop]="10"
-            />
-            <div class="rtds-display-label">Sounding State</div>
-          </div>
-
-          <div class="rtds-display">
-            <seven-segment-display
-              [value]="formatState(reverseState)"
-              [digits]="1"
-              [decimals]="0"
-              [fontSize]="40"
-              [unitFontSize]="0"
-              [paddingBottom]="4"
-              [paddingLeft]="12"
-              [paddingRight]="12"
-              [paddingTop]="10"
-            />
-            <div class="rtds-display-label">Reverse State</div>
-          </div>
-
-          <div class="rtds-display">
-            <seven-segment-display
-              [value]="formatState(errorState)"
-              [digits]="1"
-              [decimals]="0"
-              [fontSize]="40"
-              [unitFontSize]="0"
-              [paddingBottom]="4"
-              [paddingLeft]="12"
-              [paddingRight]="12"
-              [paddingTop]="10"
-            />
-            <div class="rtds-display-label">Error State</div>
-          </div>
+        }
+      </div>
+      <div class="pt-2.5 text-center">
+        <indicator-light [label]="'SHUTDOWN CLOSED'" [active]="shutdown" [color]="'red'" [fontSize]="14" />
+        <div class="mt-px mb-0.5 pt-1.25 pb-2.5 text-center font-highway text-sm leading-[1.2] font-thin">
+          Shutdown has to be closed for RTDS to sound. This is enforced in the firmware.
         </div>
-        <div class="shutdown-indicator">
-          <indicator-light [label]="'SHUTDOWN CLOSED'" [active]="shutdown" [color]="'red'" [fontSize]="14" />
-          <div class="rtds-button-subtext-2">
-            Shutdown has to be closed for RTDS to sound. This is enforced in the firmware.
-          </div>
-        </div>
-      </vstack>
+      </div>
     </div>
-  </info-background>
-</div>
+  </div>
+</info-background>
