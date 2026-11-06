@@ -28,7 +28,11 @@ describe('NotificationRulesPageComponent', () => {
     fixture.detectChanges();
   });
   // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
-  afterEach(() => localStorage.removeItem('notification_rules_client_id'));
+  afterEach(() => {
+    localStorage.removeItem('notification_rules_client_id');
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -106,6 +110,30 @@ describe('NotificationRulesPageComponent', () => {
       expect(document.activeElement?.textContent?.trim()).toBe('Add');
       expect(fixture.nativeElement.querySelector('argos-button[label="Remove"] button')?.disabled).toBe(true);
       vi.unstubAllGlobals();
+    });
+
+    it('shows no ring on Add after a mouse confirm, and a ring after a key press', async () => {
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'confirm').mockReturnValue(undefined);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ client_rules: [] }) }))
+      );
+      for (const [event, ring] of [
+        [new MouseEvent('mousedown', { bubbles: true, buttons: 1, detail: 1 }), false],
+        [new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }), true]
+      ] as const) {
+        component.selectedRules.set(selected);
+        fixture.detectChanges();
+        const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+        component.onRemoveSelected();
+        document.dispatchEvent(event);
+        confirm.mock.calls.at(-1)![0].accept?.();
+        await new Promise((resolve) => setTimeout(resolve));
+        fixture.detectChanges();
+        expect(document.activeElement?.textContent?.trim()).toBe('Add');
+        expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: ring }));
+        focus.mockRestore();
+      }
     });
 
     it('keeps the rules that failed selected, so the user can retry', async () => {

@@ -48,7 +48,10 @@ describe('RulesTableComponent', () => {
     await settle();
   });
 
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   const switchEl = (): HTMLButtonElement => fixture.nativeElement.querySelector('[role="switch"]');
 
@@ -138,6 +141,23 @@ describe('RulesTableComponent', () => {
       deleteButton('c').click();
       await accept();
       expect(document.activeElement).toBe(deleteButton('b'));
+    });
+
+    it('shows no ring on the moved focus after a mouse confirm, and a ring after a key press', async () => {
+      for (const [event, ring] of [
+        [new MouseEvent('mousedown', { bubbles: true, buttons: 1, detail: 1 }), false],
+        [new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }), true]
+      ] as const) {
+        fixture.componentInstance.rules.set([rule('a', false), rule('b', false)]);
+        await settle();
+        const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+        deleteButton('a').click();
+        document.dispatchEvent(event);
+        await accept();
+        expect(document.activeElement).toBe(deleteButton('b'));
+        expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: ring }));
+        focus.mockRestore();
+      }
     });
 
     it('asks the page to take focus when the last rule is gone', async () => {

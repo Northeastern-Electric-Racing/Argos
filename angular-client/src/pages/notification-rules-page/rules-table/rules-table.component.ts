@@ -1,15 +1,14 @@
 import { DialogRef } from '@angular/cdk/dialog';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
   inject,
-  Injector,
   input,
   OnInit,
   output,
@@ -54,7 +53,7 @@ export class RulesTableComponent implements OnInit {
   protected readonly checkbox = checkboxClass;
 
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private injector = inject(Injector);
+  private focusAfterRender = injectFocusAfterRender();
 
   private messageService = inject(ToastService);
   private dialogService = inject(UiDialogService);
@@ -197,15 +196,12 @@ export class RulesTableComponent implements OnInit {
    * focus its Add button. Nothing is left on <body>.
    */
   private focusAfterDelete(index: number): void {
-    afterNextRender(
-      () => {
-        const buttons = this.host.nativeElement.querySelectorAll<HTMLButtonElement>('button[data-action="delete"]');
-        const next = buttons[Math.min(Math.max(index, 0), buttons.length - 1)];
-        if (next) next.focus();
-        else this.emptiedByDelete.emit();
-      },
-      { injector: this.injector }
-    );
+    this.focusAfterRender(() => {
+      const buttons = this.host.nativeElement.querySelectorAll<HTMLButtonElement>('button[data-action="delete"]');
+      const next = buttons[Math.min(Math.max(index, 0), buttons.length - 1)];
+      if (!next) this.emptiedByDelete.emit();
+      return next;
+    });
   }
 
   private async deleteRule(rule: ClientRule): Promise<void> {

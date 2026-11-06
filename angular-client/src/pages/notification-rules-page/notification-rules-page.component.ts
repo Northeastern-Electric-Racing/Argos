@@ -28,6 +28,7 @@ import { NotificationListComponent } from 'src/components/notification-list/noti
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { UiInputDirective } from 'src/ui/field/field.directive';
 import { iconClasses } from 'src/ui/recipes/icon';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
@@ -46,6 +47,7 @@ export default class NotificationRulesPageComponent implements OnInit {
   private dialogService = inject(UiDialogService);
   private confirmService = inject(ConfirmService);
   private router = inject(Router);
+  private focusAfterRender = injectFocusAfterRender();
 
   clientId!: string;
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -162,7 +164,7 @@ export default class NotificationRulesPageComponent implements OnInit {
 
   /** After a delete leaves no row to focus, focus goes to Add, never to <body>. */
   focusAddButton(): void {
-    (this.addButton()?.nativeElement as HTMLElement | undefined)?.querySelector('button')?.focus();
+    this.focusAfterRender(() => (this.addButton()?.nativeElement as HTMLElement | undefined)?.querySelector('button'));
   }
 
   onToggleSubscription = async () => {
