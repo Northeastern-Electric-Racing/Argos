@@ -15,9 +15,10 @@ import LvBatteryChipComponent from './components/lv-battery-chip/lv-battery-chip
  */
 @Component({
   selector: 'efuses-page',
-  styleUrls: ['./efuses-page.component.css'],
   templateUrl: './efuses-page.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
+  // A block host, so the sticky status bar's containing block spans the whole page, not one viewport.
+  host: { class: 'block' },
   imports: [GridLayoutComponent, EfuseCardComponent, RtdsDebugCardComponent, StatusBarComponent, LvBatteryChipComponent]
 })
 export default class EfusesPageComponent {
