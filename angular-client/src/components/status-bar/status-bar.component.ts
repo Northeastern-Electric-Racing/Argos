@@ -1,16 +1,6 @@
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  Injector,
-  input,
-  signal,
-  viewChild
-} from '@angular/core';
-import { InputModalityDetector } from '@angular/cdk/a11y';
+import { ChangeDetectionStrategy, Component, ElementRef, input, signal, viewChild } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { iconClasses } from 'src/ui/recipes/icon';
 import { cx, tw } from 'src/ui/recipes/tw';
 
@@ -32,8 +22,12 @@ const docked = tw('absolute top-0 right-0 border border-r-0 border-border bg-pan
   host: { class: 'sticky top-0 z-20 block' }
 })
 export default class StatusBarComponent {
-  private readonly injector = inject(Injector);
-  private readonly modality = inject(InputModalityDetector);
+  /**
+   * preventScroll: moving focus into a passive status surface must never move the page. It also guards the fade-in:
+   * an earlier version translated the panel past the right edge, and a scrolling focus() chased it, dragging the
+   * whole page sideways for the animation. The moved focus shows a ring only after a key press.
+   */
+  private readonly focusAfterRender = injectFocusAfterRender({ preventScroll: true });
 
   protected readonly handleClass = cx(
     docked,
@@ -70,19 +64,6 @@ export default class StatusBarComponent {
     this.collapsed.update((collapsed) => !collapsed);
     // The @if/@else swaps which control is on screen, so move keyboard focus to the
     // successor — otherwise focus falls back to <body> and the focus-visible ring is lost.
-    // preventScroll: moving focus into a passive status surface must never move the page. It
-    // also guards the fade-in — an earlier version translated the panel past the right edge, and
-    // a scrolling focus() chased it, dragging the whole page sideways for the animation.
-    // As src/ui/focus's helper does, the moved focus shows a ring only after a key press; that helper
-    // can't pass preventScroll yet.
-    const recent = this.modality.mostRecentModality;
-    const focusVisible = recent !== 'mouse' && recent !== 'touch';
-    afterNextRender(
-      () => {
-        const target = this.collapsed() ? this.handle() : this.collapseButton();
-        target?.nativeElement.focus({ preventScroll: true, focusVisible } as FocusOptions);
-      },
-      { injector: this.injector }
-    );
+    this.focusAfterRender(() => (this.collapsed() ? this.handle() : this.collapseButton())?.nativeElement);
   }
 }
