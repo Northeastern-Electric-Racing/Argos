@@ -6,7 +6,7 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import LapTimerService from 'src/services/lap-timer.service';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { formatDeltaMs } from 'src/utils/lap-timer.types';
-import { injectFocusAfterRender } from '../focus-after-render';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { lapTimerClasses } from '../lap-timer.classes';
 
 const deltaBase = tw('text-right font-sans text-base font-semibold tabular-nums');

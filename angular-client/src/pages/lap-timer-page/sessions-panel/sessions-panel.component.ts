@@ -2,7 +2,6 @@ import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { SessionAction, SessionMenuComponent } from './session-menu/session-menu.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
@@ -14,7 +13,7 @@ import { iconClasses } from 'src/ui/recipes/icon';
 import { lightHeaderCellClass, rowClass } from 'src/ui/recipes/table';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { formatMs, LapSession } from 'src/utils/lap-timer.types';
-import { injectFocusAfterRender } from '../focus-after-render';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { lapTimerClasses } from '../lap-timer.classes';
 
 /** Body cells: 6px rows (tighter than the laps table), the state column hugging its icon. */
@@ -31,7 +30,6 @@ const activeEdge = tw('border-l-3 border-l-battery-high');
   host: { class: 'flex h-full w-full' },
   imports: [
     DatePipe,
-    FormsModule,
     MatIcon,
     SessionMenuComponent,
     ButtonComponent,
@@ -144,15 +142,17 @@ export default class SessionsPanelComponent {
     if (filename) this.toast('success', 'Downloaded', filename);
   };
 
-  /** Opens the name field in place and puts focus in it, with the name selected. */
+  /**
+   * Opens the name field in place and puts focus in it, then selects the name, so typing replaces it. The field
+   * binds `[value]`, which is set as it renders (ngModel writes a tick later, after the select would have run).
+   */
   startEdit(session: LapSession): void {
     this.editingSessionId.set(session.id);
     this.editingName.set(session.name);
-    this.focusAfterRender(() => {
-      const input = this.host.nativeElement.querySelector<HTMLInputElement>('input[aria-label="Session name"]');
-      input?.select();
-      return input;
-    });
+    this.focusAfterRender(
+      () => this.host.nativeElement.querySelector<HTMLInputElement>('input[aria-label="Session name"]'),
+      (input) => (input as HTMLInputElement).select()
+    );
   }
 
   /** Saves a changed name. Enter puts focus back on the session's name; focus leaving the field (a click elsewhere) doesn't. */
