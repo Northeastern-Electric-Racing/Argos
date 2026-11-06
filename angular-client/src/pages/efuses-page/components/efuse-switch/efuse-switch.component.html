@@ -1,18 +1,14 @@
-<div class="switch-group" role="group" [class.disabled]="disabled()">
+<div role="group" [attr.aria-label]="ariaLabel()" [class]="groupClass">
   @for (option of orderedOptions(); track option) {
     <button
       type="button"
-      class="switch-button"
+      [class]="buttonClasses[option]"
       [attr.aria-pressed]="selected() === option"
-      [class.active]="selected() === option"
-      [class.state-on]="option === 'ON'"
-      [class.state-auto]="option === 'AUTO'"
-      [class.state-off]="option === 'OFF'"
       [style.font-size.px]="fontSize()"
       [disabled]="disabled()"
       (click)="select(option)"
     >
-      <span class="switch-label">{{ option }}</span>
+      {{ option }}
     </button>
   }
 </div>
