@@ -132,3 +132,44 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     expect(lastNav[1].queryParams.topics).toBeNull();
   });
 });
+
+// #847 removed the landing page, which was where mobile users found the nav drawer's toggle.
+// The graph page is the new landing spot, so it carries the toggle now; CSS hides it on desktop.
+describe('GraphPageComponent — mobile nav toggle', () => {
+  beforeEach(async () => {
+    const neverLoads = {
+      isLoading: new BehaviorSubject<boolean>(true),
+      data: new BehaviorSubject<unknown>(null),
+      isError: new BehaviorSubject<boolean>(false),
+      error: new BehaviorSubject<Error | null>(null)
+    };
+    const apiServiceMock: Pick<APIService, 'query'> = {
+      query: <T>() => neverLoads as unknown as QueryResponse<T>
+    };
+    const routeMock = {
+      queryParamMap: new BehaviorSubject<ParamMap>(convertToParamMap({})).asObservable(),
+      snapshot: { queryParamMap: convertToParamMap({}) }
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [GraphPageComponent],
+      providers: [
+        TopicSelectionService,
+        FaultService,
+        Storage,
+        MessageService,
+        { provide: APIService, useValue: apiServiceMock },
+        { provide: ActivatedRoute, useValue: routeMock },
+        { provide: Router, useValue: { url: '/graph', navigate: vi.fn() } }
+      ]
+    }).compileComponents();
+  });
+
+  // Rendered outside the loading/error branches so the drawer stays reachable in every state.
+  it('renders the sidebar toggle while the page is still loading', () => {
+    const fixture = TestBed.createComponent(GraphPageComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('sidebar-toggle')).toBeTruthy();
+  });
+});

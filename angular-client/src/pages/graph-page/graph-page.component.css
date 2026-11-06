@@ -83,6 +83,10 @@
   display: none;
 }
 
+.mobile-nav-toggle {
+  display: none;
+}
+
 .graph {
   flex: 1 1 auto;
 }
@@ -155,6 +159,11 @@
 
   .mobile-value-strip {
     display: block;
+  }
+
+  .mobile-nav-toggle {
+    display: block;
+    padding: 8px 0 0 12px;
   }
 
   .right-container {
