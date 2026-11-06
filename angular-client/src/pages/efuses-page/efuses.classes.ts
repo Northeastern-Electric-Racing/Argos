@@ -17,9 +17,11 @@ export const panelGroupClass = tw('inline-flex gap-px overflow-hidden rounded-[4
  * bottom one would sink out of the clipped group): its tinted fill is only about 1.5:1 from an unpressed one,
  * the bar is 4.5:1 or more (WCAG 1.4.11). The group clips its overflow, so the focus indicator is drawn inside.
  * Each button sets its own padding, colours (an opaque surface-1, or a tint over the base) and font size.
+ * While locked (disabled) the unpressed buttons dim to 65%; the pressed one keeps its strength, since it shows the
+ * eFuse's current mode.
  */
 export const panelButtonClass = tw(
-  'relative inline-flex cursor-pointer items-center justify-center border-0 transition-transform duration-100 select-none not-aria-pressed:hover:translate-y-px focus-visible:focus-ring focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:opacity-65 aria-pressed:translate-y-[3px] aria-pressed:shadow-[inset_0_3px_0_currentColor]'
+  'relative inline-flex cursor-pointer items-center justify-center border-0 transition-transform duration-100 select-none not-aria-pressed:hover:translate-y-px focus-visible:focus-ring focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:not-aria-pressed:opacity-65 aria-pressed:translate-y-[3px] aria-pressed:shadow-[inset_0_3px_0_currentColor]'
 );
 
 /** The engraved legend on plates and buttons. */
