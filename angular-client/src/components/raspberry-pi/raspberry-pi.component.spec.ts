@@ -11,6 +11,9 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 
 describe('RasberryPiComponent', () => {
+  // Spec files in one worker share window (Vitest runs with isolate: false): put the width back.
+  const realWidth = window.innerWidth;
+  afterEach(() => Object.defineProperty(window, 'innerWidth', { configurable: true, value: realWidth }));
   let fixture: ComponentFixture<RasberryPiComponent>;
   const streams = new Map<string, Subject<DataValue>>();
   const stream = (topic: string) => {
