@@ -1,6 +1,6 @@
 <div class="mx-4 block">
   <!-- 814's 6-column mat-grid-list: 1.5rem rows, 15px gutters, each tile a centred cell that clips -->
-  <div class="-mt-5 grid auto-rows-6 grid-cols-6 gap-3.75">
+  <div [class]="grid" class="-mt-5">
     <div [class]="tile.header">
       <!-- Display values are 1-based index for segments-->
       <bms-header class="w-full" [pageTitle]="(this.changeTitleSize ? 'Seg. ' : 'Segment ') + (this.segmentId + 1)" />

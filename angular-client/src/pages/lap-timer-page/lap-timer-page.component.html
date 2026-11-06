@@ -1,18 +1,18 @@
-<!-- #909's 6-column mat-grid-list (1.5rem rows, 15px gutter) as a CSS grid; each tile centres and clips its card -->
-<div class="mx-4 grid auto-rows-[1.5rem] grid-cols-6 gap-3.75">
-  <div [class]="tile" class="col-span-6 row-span-8">
+<!-- #909's 6-column mat-grid-list (1.5rem rows, 15px gutter) as the grid recipe; each tile centres and clips its card -->
+<div [class]="grid" class="mx-4">
+  <div [class]="tiles.sessions">
     <sessions-panel />
   </div>
 
-  <div [class]="tile" class="col-span-3 row-span-9">
+  <div [class]="tiles.hero">
     <timer-hero />
   </div>
 
-  <div [class]="tile" class="col-span-1 row-span-9">
+  <div [class]="tiles.summary">
     <session-summary />
   </div>
 
-  <div [class]="tile" class="col-span-2 row-span-5">
+  <div [class]="tiles.speed">
     <info-background svgIcon="speed" title="Speed" class="h-full w-full">
       <div class="flex h-full w-full items-center justify-center overflow-hidden">
         <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" [color]="speedGaugeColor()" [size]="320" />
@@ -20,19 +20,19 @@
     </info-background>
   </div>
 
-  <div [class]="tile" class="col-span-1 row-span-4">
+  <div [class]="tiles.stat">
     <info-background title="Battery" class="h-full w-full">
       <gauge-stat [value]="liveSoc()" unit="%" [color]="socColor()" />
     </info-background>
   </div>
 
-  <div [class]="tile" class="col-span-1 row-span-4">
+  <div [class]="tiles.stat">
     <info-background title="Motor" class="h-full w-full">
       <gauge-stat [value]="liveMotorTemp()" unit="°C" [color]="motorTempColor()" />
     </info-background>
   </div>
 
-  <div [class]="tile" class="col-span-6 row-span-22">
+  <div [class]="tiles.laps">
     <laps-table />
   </div>
 </div>

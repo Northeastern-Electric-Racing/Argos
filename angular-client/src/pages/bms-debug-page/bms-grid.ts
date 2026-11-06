@@ -1,15 +1,11 @@
-import { cx, tw } from 'src/ui/recipes/tw';
+import { gridTileClass, tileGridClass } from 'src/ui/recipes/grid';
 
-/**
- * The BMS pages' tiles, from 814's 6-column mat-grid-list (1.5rem rows, 15px gutters): the grid is
- * `grid auto-rows-6 grid-cols-6 gap-3.75`, and each tile spans whole columns and rows, centres its content and
- * clips it, as mat-grid-tile did. Complete class lists per span, so Tailwind sees every one.
- */
-const cell = tw('flex items-center justify-center overflow-hidden');
+/** The BMS pages' grid and tiles (columns × rows), from the grid recipe: 814's mat-grid-list, tiles that clip. */
+export const bmsGrid = tileGridClass;
 export const bmsTile = {
-  header: cx(tw('col-span-6 row-span-3'), cell),
-  glance: cx(tw('col-span-6 row-span-5'), cell),
-  heatmap: cx(tw('col-span-6 row-span-8'), cell),
-  half: cx(tw('col-span-3 row-span-8'), cell),
-  halfTall: cx(tw('col-span-3 row-span-10'), cell)
+  header: gridTileClass(6, 3),
+  glance: gridTileClass(6, 5),
+  heatmap: gridTileClass(6, 8),
+  half: gridTileClass(3, 8),
+  halfTall: gridTileClass(3, 10)
 } as const;

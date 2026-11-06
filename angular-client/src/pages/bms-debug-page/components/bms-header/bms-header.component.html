@@ -1,6 +1,6 @@
-<!-- 814's 6-column mat-grid-list (1.5rem rows, 15px gutters); these tiles let their content overflow -->
-<div class="grid auto-rows-6 grid-cols-6 gap-3.75">
-  <div class="col-span-3 row-span-3 flex items-center justify-center">
+<!-- 814's 6-column mat-grid-list as the grid recipe; these tiles let their content spill -->
+<div [class]="grid">
+  <div [class]="titleTile">
     <typography
       class="mb-2.5 ml-7.5 grid h-full w-full items-center text-ellipsis whitespace-nowrap"
       variant="x-large-title"
@@ -9,13 +9,13 @@
     />
   </div>
 
-  <div class="col-span-1 row-span-3 flex items-center justify-center">
+  <div [class]="tile">
     <segment-selector class="mt-2.5 h-4/5 w-full" />
   </div>
-  <div class="col-span-1 row-span-3 flex items-center justify-center">
+  <div [class]="tile">
     <crc class="mt-2.5 h-4/5 w-full" />
   </div>
-  <div class="col-span-1 row-span-3 flex items-center justify-center">
+  <div [class]="tile">
     <bms-overflow class="mt-2.5 h-4/5 w-full" />
   </div>
 </div>

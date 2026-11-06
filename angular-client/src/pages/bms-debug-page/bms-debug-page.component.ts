@@ -7,7 +7,7 @@ import { SegmentRowComponent } from './components/segment-row/segment-row.compon
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
-import { bmsTile } from './bms-grid';
+import { bmsGrid, bmsTile } from './bms-grid';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
 
@@ -30,6 +30,7 @@ export class BmsDebugPageComponent implements OnInit {
   windowSize: number = window.innerWidth;
   isMobile = window.innerWidth < this.mobileThreshold;
   segments = allSegments;
+  protected readonly grid = bmsGrid;
   protected readonly tile = bmsTile;
 
   /** "Set ALL Maps" dropdown — shown once at the section header level */

@@ -9,7 +9,7 @@ import SessionsPanelComponent from './sessions-panel/sessions-panel.component';
 import TimerHeroComponent from './timer-hero/timer-hero.component';
 import SessionSummaryComponent from './session-summary/session-summary.component';
 import LapsTableComponent from './laps-table/laps-table.component';
-import { tw } from 'src/ui/recipes/tw';
+import { gridTileClass, tileGridClass } from 'src/ui/recipes/grid';
 
 @Component({
   selector: 'lap-timer-page',
@@ -29,8 +29,16 @@ export default class LapTimerPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
 
-  /** A grid tile, as mat-grid-tile drew it: its card centred, anything larger clipped. */
-  protected readonly tile = tw('flex items-center justify-center overflow-hidden');
+  protected readonly grid = tileGridClass;
+  /** The grid's tiles (columns × rows), as mat-grid-tile drew them: the card centred, anything larger clipped. */
+  protected readonly tiles = {
+    sessions: gridTileClass(6, 8),
+    hero: gridTileClass(3, 9),
+    summary: gridTileClass(1, 9),
+    speed: gridTileClass(2, 5),
+    stat: gridTileClass(1, 4),
+    laps: gridTileClass(6, 22)
+  } as const;
 
   readonly liveSpeed = signal(0);
   readonly liveMotorTemp = signal(0);

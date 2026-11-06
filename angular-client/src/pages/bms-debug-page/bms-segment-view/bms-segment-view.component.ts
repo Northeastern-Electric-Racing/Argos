@@ -10,7 +10,7 @@ import { ChipFaultsComponent } from '../components/chip-faults/chip-faults.compo
 import { InfoBackgroundComponent } from '../../../components/info-background/info-background.component';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
-import { bmsTile } from '../bms-grid';
+import { bmsGrid, bmsTile } from '../bms-grid';
 
 const formatAllSelectorName = (name: string) => {
   return 'Set ALL Maps: ' + name;
@@ -46,6 +46,7 @@ export class BmsSegmentViewComponent implements OnInit {
   segmentId!: Segment;
   chipAlpha: Chip = Chip.Alpha;
   chipBeta: Chip = Chip.Beta;
+  protected readonly grid = bmsGrid;
   protected readonly tile = bmsTile;
 
   cellViewSelectOptions: DropdownOption[] = [
