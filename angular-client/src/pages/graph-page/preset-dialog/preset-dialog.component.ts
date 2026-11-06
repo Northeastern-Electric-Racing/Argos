@@ -1,17 +1,8 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  Injector,
-  computed,
-  inject,
-  signal,
-  viewChild
-} from '@angular/core';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
@@ -41,7 +32,7 @@ export class PresetDialogComponent {
   private topicSelectionService = inject(TopicSelectionService);
   private messageService = inject(ToastService);
   private confirmationService = inject(ConfirmService);
-  private injector = inject(Injector);
+  private focusAfterRender = injectFocusAfterRender();
   private host: HTMLElement = inject(ElementRef).nativeElement;
   protected readonly field = fieldClasses;
   /** The table recipe, with this table's fixed column widths. */
@@ -168,14 +159,10 @@ export class PresetDialogComponent {
    * that took its place (or the new last row), or to the name field once the list is empty.
    */
   private focusAfterDelete(index: number): void {
-    afterNextRender(
-      () => {
-        const deletes = this.host.querySelectorAll<HTMLButtonElement>('[data-preset-delete]');
-        const target = deletes[Math.min(Math.max(index, 0), deletes.length - 1)] ?? this.nameInput()?.nativeElement;
-        target?.focus();
-      },
-      { injector: this.injector }
-    );
+    this.focusAfterRender(() => {
+      const deletes = this.host.querySelectorAll<HTMLButtonElement>('[data-preset-delete]');
+      return deletes[Math.min(Math.max(index, 0), deletes.length - 1)] ?? this.nameInput()?.nativeElement;
+    });
   }
 
   private confirmReplace(name: string, onAccept: () => void): void {

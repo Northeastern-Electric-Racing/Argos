@@ -38,7 +38,10 @@ describe('PresetDialogComponent', () => {
     await fixture.whenStable();
   });
   // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
-  afterEach(() => localStorage.clear());
+  afterEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
 
   const el = (): HTMLElement => fixture.nativeElement;
   const buttons = (label: string) =>
@@ -94,6 +97,22 @@ describe('PresetDialogComponent', () => {
     buttons('Delete')[0].click();
     confirms[1].accept!();
     await fixture.whenStable();
+    expect(document.activeElement?.id).toBe('preset-name');
+  });
+
+  it('shows no ring on the moved focus after a mouse confirm, and a ring after a key press', async () => {
+    for (const [event, ring] of [
+      [new MouseEvent('mousedown', { bubbles: true, buttons: 1, detail: 1 }), false],
+      [new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }), true]
+    ] as const) {
+      const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+      buttons('Delete')[0].click();
+      document.dispatchEvent(event);
+      confirms.at(-1)!.accept!();
+      await fixture.whenStable();
+      expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: ring }));
+      focus.mockRestore();
+    }
     expect(document.activeElement?.id).toBe('preset-name');
   });
 });
