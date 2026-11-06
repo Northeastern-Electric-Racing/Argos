@@ -16,7 +16,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 @Component({
   selector: 'map',
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.css'],
   imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {

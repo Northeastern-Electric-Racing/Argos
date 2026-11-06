@@ -1,9 +1,9 @@
 <info-background>
-  <div class="connection-display">
-    <div class="connection-display-title">
-      <typography variant="header" content="Connection" additionalStyles="margin: 0px;" />
+  <div class="flex h-full flex-col items-center justify-center">
+    <div>
+      <typography variant="header" content="Connection" textClass="m-0" />
     </div>
-    <div style="margin-top: 20px"></div>
+    <div class="mt-5"></div>
     <connection-dot-with-message
       [getStatusColor]="this.getConnectedColor"
       [getStatusMessage]="this.getConnectedStatus"

@@ -16,7 +16,8 @@ type ChartOptions = Pick<
 @Component({
   selector: 'graph-component',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
+  // Fills its box by default; zero specificity, so a consumer's h-*/w-* class wins (#909's :host block).
+  host: { class: 'relative block [:where(&)]:h-full [:where(&)]:w-full' },
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class GraphComponent implements OnInit, OnDestroy {

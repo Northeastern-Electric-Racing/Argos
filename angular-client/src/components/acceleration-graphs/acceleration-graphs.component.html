@@ -1,51 +1,35 @@
-<info-background title="Acceleration" svgIcon="speed" backgroundColor="#2c2c2c">
+<info-background title="Acceleration" svgIcon="speed">
   <vstack>
-    <hstack style="width: 100%">
-      <div class="graph-container">
+    <hstack class="w-full">
+      <div class="flex h-62.5 w-7/10 flex-col items-center justify-center">
         <graph-component [data]="xData" color="#4d9ac9" title="Longitudinal Acceleration" graphContainerId="xGraph" />
-        <typography variant="info-subtitle" content="Longitudinal Acceleration" additionalStyles="margin-top: 10px" />
+        <typography variant="info-subtitle" content="Longitudinal Acceleration" textClass="m-0 mt-2.5" />
       </div>
-      <div class="right-panel">
-        <div class="vBar"></div>
-        <div class="max-container">
-          <div class="max">
-            <typography
-              variant="header"
-              content="{{ xMax }}"
-              additionalStyles="fontSize: 50px; padding: 0px; margin: 0px;"
-            />
-            <typography
-              variant="info-subtitle"
-              content="g"
-              additionalStyles="fontSize: 20px; margin-bottom: 10px; color: var(--color-text-secondary)"
-            />
+      <div class="flex">
+        <div class="mx-7.5 h-50 w-0.5 bg-border"></div>
+        <div class="flex flex-col items-center justify-center">
+          <div class="flex items-end">
+            <typography variant="header" content="{{ xMax }}" textClass="m-0 p-0 text-2xl" />
+            <typography variant="info-subtitle" content="g" textClass="m-0 mb-2.5 text-lg text-fg-muted" />
           </div>
-          <typography variant="info-subtitle" content="Peak Long. Accel." additionalStyles="" />
+          <typography variant="info-subtitle" content="Peak Long. Accel." />
         </div>
       </div>
     </hstack>
-    <div class="hBar"></div>
-    <hstack style="width: 100%">
-      <div class="graph-container">
+    <div class="h-0.5 w-full bg-border"></div>
+    <hstack class="w-full">
+      <div class="flex h-62.5 w-7/10 flex-col items-center justify-center">
         <graph-component [data]="yData" color="#17ff00" title="Lateral Acceleration" graphContainerId="yGraph" />
-        <typography variant="info-subtitle" content="Lateral Acceleration" additionalStyles="margin-top: 10px" />
+        <typography variant="info-subtitle" content="Lateral Acceleration" textClass="m-0 mt-2.5" />
       </div>
-      <div class="right-panel">
-        <div class="vBar"></div>
-        <div class="max-container">
-          <div class="max">
-            <typography
-              variant="header"
-              content="{{ yMax }}"
-              additionalStyles="fontSize: 50px; padding: 0px; margin: 0px;"
-            />
-            <typography
-              variant="info-subtitle"
-              content="g"
-              additionalStyles="fontSize: 20px; margin-bottom: 10px; color: var(--color-text-secondary)"
-            />
+      <div class="flex">
+        <div class="mx-7.5 h-50 w-0.5 bg-border"></div>
+        <div class="flex flex-col items-center justify-center">
+          <div class="flex items-end">
+            <typography variant="header" content="{{ yMax }}" textClass="m-0 p-0 text-2xl" />
+            <typography variant="info-subtitle" content="g" textClass="m-0 mb-2.5 text-lg text-fg-muted" />
           </div>
-          <typography variant="info-subtitle" content="Peak Lat. Accel." additionalStyles="" />
+          <typography variant="info-subtitle" content="Peak Lat. Accel." />
         </div>
       </div>
     </hstack>

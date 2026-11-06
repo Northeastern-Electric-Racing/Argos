@@ -9,7 +9,6 @@ import HStackComponent from '../hstack/hstack.component';
 @Component({
   selector: 'torque-display',
   templateUrl: './torque-display.component.html',
-  styleUrls: ['./torque-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent]
 })

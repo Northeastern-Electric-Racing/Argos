@@ -17,7 +17,8 @@ type ChartOptions = Pick<
 @Component({
   selector: 'double-line-graph',
   templateUrl: './double-line-graph.component.html',
-  styleUrls: ['./double-line-graph.component.css'],
+  // Fills its box by default; zero specificity, so a consumer's h-*/w-* class wins (#909's :host block).
+  host: { class: 'relative block [:where(&)]:h-full [:where(&)]:w-full' },
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class DoubleLineGraphComponent implements OnInit, OnDestroy {

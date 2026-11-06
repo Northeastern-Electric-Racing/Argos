@@ -1,49 +1,49 @@
-<hstack style="width: 100%; height: 100%">
-  <vstack style="width: 20%">
+<hstack class="h-full w-full">
+  <vstack class="w-1/5">
     <circular-percentage [percentage]="cpuUsage()" [dimension]="85" [ringColor]="colorRed" />
 
     <typography variant="info-subtitle" content="CPU Usage" />
   </vstack>
-  <divider style="height: 150px" />
+  <divider class="h-37.5" />
 
-  <vstack style="width: 20%">
+  <vstack class="w-1/5">
     <hstack>
       <typography variant="info-value" [content]="cpuTemp().toString() + '°'" />
-      <div class="thermometer-container">
+      <div class="flex h-27.5 w-10 items-center justify-center">
         <thermometer [temperature]="cpuTemp()" [min]="-15" [max]="30" />
       </div>
     </hstack>
     <typography variant="info-subtitle" content="CPU Temp" />
   </vstack>
 
-  <divider style="height: 150px" />
+  <divider class="h-37.5" />
 
-  <vstack style="width: 20%">
+  <vstack class="w-1/5">
     <circular-percentage [percentage]="ramUsage()" [dimension]="85" [ringColor]="colorPurple" />
-    <div style="display: flex; justify-content: center; align-items: center">
+    <div class="flex items-center justify-center">
       <typography variant="info-subtitle" content="RAM Usage" />
     </div>
   </vstack>
 
-  <divider style="height: 150px" />
+  <divider class="h-37.5" />
 
-  <vstack style="width: 20%">
+  <vstack class="w-1/5">
     <hstack>
-      <div class="wifi-container">
+      <div class="flex h-27.5 items-center justify-center">
         <typography variant="info-value" [content]="wifiRSSI().toString()" />
       </div>
-      <div>
+      <div [class]="wifi.unitBox">
         <mat-icon svgIcon="wifi" />
-        <span class="wifi-dbm-unit">dBM</span>
+        <span [class]="wifi.unit">dBM</span>
       </div>
     </hstack>
     <typography variant="info-subtitle" content="Wi-Fi RSSI" />
   </vstack>
-  <divider style="height: 150px" />
+  <divider class="h-37.5" />
 
-  <vstack style="width: 20%">
-    <hstack style="height: 110px">
-      <div class="mcs-container">
+  <vstack class="w-1/5">
+    <hstack class="h-27.5">
+      <div class="flex h-32.5 items-center justify-center">
         <typography variant="info-value" [content]="mcs().toString()" />
       </div>
     </hstack>
