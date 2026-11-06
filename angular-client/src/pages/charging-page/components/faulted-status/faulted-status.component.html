@@ -1,11 +1,11 @@
 <info-background title="FAULTED">
   <hstack>
-    <current-total-timer class="min-h-25 pl-5" [currentTime]="currentSeconds()" [totalTime]="totalSeconds()" />
+    <current-total-timer class="pl-5" [currentTime]="currentSeconds()" [totalTime]="totalSeconds()" />
     <div class="pt-10">
       @if (displayLight()) {
         <div
           role="img"
-          class="size-10 rounded-full border-3 border-solid border-fg data-[on=true]:border-accent data-[on=true]:bg-accent"
+          [class]="lightClass()"
           [attr.data-on]="isFaulted()"
           [attr.aria-label]="isFaulted() ? 'Faulted' : 'Not faulted'"
         ></div>
