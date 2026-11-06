@@ -8,7 +8,6 @@ import { InfoGraphComponent } from '../info-graph/info-graph.component';
 @Component({
   selector: 'speed-over-time-display',
   templateUrl: './speed-over-time-display.component.html',
-  styleUrls: ['./speed-over-time-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoGraphComponent]
 })

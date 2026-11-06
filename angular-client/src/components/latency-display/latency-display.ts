@@ -12,7 +12,6 @@ import HStackComponent from '../hstack/hstack.component';
 @Component({
   selector: 'latency-display',
   templateUrl: './latency-display.html',
-  styleUrls: ['./latency-display.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, DividerComponent, TypographyComponent, VStackComponent, HStackComponent]
 })

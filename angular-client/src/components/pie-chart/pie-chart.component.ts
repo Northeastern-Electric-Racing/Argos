@@ -21,7 +21,6 @@ export type ChartOptions = {
 @Component({
   selector: 'pie-chart',
   templateUrl: 'pie-chart.component.html',
-  styleUrls: ['pie-chart.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgApexchartsModule]
 })

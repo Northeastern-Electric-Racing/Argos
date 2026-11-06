@@ -3,17 +3,20 @@ import { InfoBackgroundComponent } from '../info-background/info-background.comp
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
 import VStackComponent from '../vstack/vstack.component';
+import { tw } from 'src/ui/recipes/tw';
 
 @Component({
   selector: 'current-total-timer',
   templateUrl: './current-total-timer.component.html',
-  styleUrls: ['./current-total-timer.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
 export default class CurrentTotalTimerComponent {
   currentTime = input<number>(0);
   totalTime = input<number>(0);
+
+  /** The times in full-strength text with #909's faint light glow (a 30% tint of the label grey). */
+  protected readonly readout = tw('text-fg [text-shadow:0_0_5px_color-mix(in_srgb,var(--color-fg-label)_30%,transparent)]');
 
   getCurrentTime() {
     return this.formatTime(this.currentTime());

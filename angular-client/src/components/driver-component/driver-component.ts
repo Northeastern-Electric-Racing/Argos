@@ -12,7 +12,6 @@ import VStackComponent from '../vstack/vstack.component';
 @Component({
   selector: 'driver-component',
   templateUrl: './driver-component.html',
-  styleUrls: ['./driver-component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
