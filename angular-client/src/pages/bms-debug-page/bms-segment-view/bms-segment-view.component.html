@@ -3,10 +3,10 @@
   <div [class]="grid" class="-mt-5">
     <div [class]="tile.header">
       <!-- Display values are 1-based index for segments-->
-      <bms-header class="w-full" [pageTitle]="(this.changeTitleSize ? 'Seg. ' : 'Segment ') + (this.segmentId + 1)" />
+      <bms-header class="w-full" [pageTitle]="(this.changeTitleSize ? 'Seg. ' : 'Segment ') + (this.segmentId() + 1)" />
     </div>
     <div [class]="tile.glance">
-      <segment-at-a-glance class="h-full w-full" [segmentNumber]="this.segmentId" />
+      <segment-at-a-glance class="h-full w-full" [segmentNumber]="this.segmentId()" />
     </div>
     <div [class]="tile.heatmap">
       <info-background
@@ -14,25 +14,25 @@
         [title]="this.getHeatmapTitle()"
         svgIcon="battery_charging_2"
         [slicedLeftCorner]="true"
-        [selectorConfigs]="[this.currentSegmentSelectorConfig, this.allSegSelectorConfig]"
+        [selectorConfigs]="[this.currentSegmentSelectorConfig(), this.allSegSelectorConfig()]"
       >
         <div class="pt-5"></div>
-        <segment-heatmap size="page" [segment]="this.segmentId" />
+        <segment-heatmap size="page" [segment]="this.segmentId()" />
       </info-background>
     </div>
     <div [class]="tile.half">
       <!-- Alpha -->
-      <chip-diagnostics class="h-full w-full" [chip]="this.chipAlpha" [segment]="this.segmentId" />
+      <chip-diagnostics class="h-full w-full" [chip]="this.chipAlpha" [segment]="this.segmentId()" />
     </div>
     <div [class]="tile.half">
       <!-- Beta -->
-      <chip-diagnostics class="h-full w-full" [chip]="this.chipBeta" [segment]="this.segmentId" />
+      <chip-diagnostics class="h-full w-full" [chip]="this.chipBeta" [segment]="this.segmentId()" />
     </div>
     <div [class]="tile.halfTall">
-      <chip-faults class="h-full w-full" [chip]="this.chipAlpha" [segment]="this.segmentId" />
+      <chip-faults class="h-full w-full" [chip]="this.chipAlpha" [segment]="this.segmentId()" />
     </div>
     <div [class]="tile.halfTall">
-      <chip-faults class="h-full w-full" [chip]="this.chipBeta" [segment]="this.segmentId" />
+      <chip-faults class="h-full w-full" [chip]="this.chipBeta" [segment]="this.segmentId()" />
     </div>
   </div>
 </div>
