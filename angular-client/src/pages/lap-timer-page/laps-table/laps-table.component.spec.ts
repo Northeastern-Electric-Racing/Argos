@@ -14,7 +14,11 @@ describe('LapsTableComponent', () => {
     await fixture.whenStable();
   });
 
-  afterEach(() => timer.clearAllSessions());
+  // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
+  afterEach(() => {
+    timer.clearAllSessions();
+    localStorage.clear();
+  });
 
   /** Three laps of 80s, 70s and 90s. */
   async function recordLaps(): Promise<void> {

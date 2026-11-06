@@ -37,6 +37,8 @@ describe('PresetDialogComponent', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
   });
+  // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
+  afterEach(() => localStorage.clear());
 
   const el = (): HTMLElement => fixture.nativeElement;
   const buttons = (label: string) =>

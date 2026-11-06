@@ -17,6 +17,7 @@ describe('TimerHeroComponent', () => {
 
   afterEach(() => {
     TestBed.inject(LapTimerService).reset();
+    localStorage.clear(); // spec files in one worker share window (isolate: false)
     fixture.nativeElement.remove();
   });
 

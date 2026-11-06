@@ -25,6 +25,7 @@ describe('SessionsPanelComponent', () => {
 
   afterEach(() => {
     timer.clearAllSessions();
+    localStorage.clear(); // spec files in one worker share window (isolate: false)
     fixture.nativeElement.remove();
     document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
   });
