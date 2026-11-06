@@ -1,9 +1,12 @@
-<info-background [svgIcon]="icon()" [title]="title()" [onClick]="openDialog">
-  <graph-component
-    style="height: 200px; width: 100%"
-    [graphContainerId]="graphContainerId()"
-    [data]="data()"
-    [title]="subTitle()"
-    [color]="color()"
-  />
+<info-background [svgIcon]="icon()" [title]="title()">
+  <button type="button" [class]="opener" [attr.aria-label]="'Click for more details: ' + title()" (click)="openDialog()">
+    <typography textClass="text-left" variant="info-subtitle" content="Click for more details" />
+    <graph-component
+      class="h-50 w-full"
+      [graphContainerId]="graphContainerId()"
+      [data]="data()"
+      [title]="subTitle()"
+      [color]="color()"
+    />
+  </button>
 </info-background>
