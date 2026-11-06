@@ -74,7 +74,7 @@ describe('typographyClass', () => {
     const theme = readFileSync(resolve(process.cwd(), 'src/styles/theme.css'), 'utf8');
     // the utility each `--text-<step>:` declaration makes, read whole from the theme
     const steps = [...theme.matchAll(/^\s*--(text-[a-z0-9-]+):/gm)].map((m) => m[1]);
-    expect(steps).toEqual(expect.arrayContaining(['text-banner', 'text-timer', 'text-timer-sm']));
+    expect(steps).toEqual(expect.arrayContaining(['text-banner', 'text-timer', 'text-timer-sm', 'text-md', 'text-stat']));
     for (const step of steps) {
       const classes = classSet(typographyClass('x-large-title', step));
       expect([step, classes.has('text-fg')]).toEqual([step, true]);

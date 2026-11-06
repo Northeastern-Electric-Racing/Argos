@@ -3,7 +3,7 @@
   <vstack>
     <hstack>
       <vstack class="w-1/10 pb-2.5">
-        <typography variant="info-value" [content]="avgTemp().toString() + '°'" textClass="text-xl" />
+        <typography variant="info-value" [content]="avgTemp().toString() + '°'" textClass="text-stat" />
         <typography variant="info-subtitle" content="Avg. Temp" textClass="text-sm" />
       </vstack>
 
@@ -12,7 +12,7 @@
       <div class="pl-5"></div>
 
       <vstack class="w-1/10 pb-2.5">
-        <typography variant="info-value" [content]="maxTemp().toString() + '°'" textClass="text-xl" />
+        <typography variant="info-value" [content]="maxTemp().toString() + '°'" textClass="text-stat" />
         <typography variant="info-subtitle" content="Max. Temp" textClass="text-sm" />
       </vstack>
     </hstack>

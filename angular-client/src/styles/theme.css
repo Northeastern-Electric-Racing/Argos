@@ -86,15 +86,18 @@
   --text-xs: 0.75rem; /* 12px */
   --text-sm: 0.875rem; /* 14px */
   --text-base: 1rem; /* 16px */
+  --text-md: 1.125rem; /* 18px: small units and labels (Wi-Fi dBM, the BMS cell panel's row labels) */
   --text-lg: 1.25rem; /* 20px */
   --text-xl: 2.125rem; /* 34px */
   --text-2xl: 3rem; /* 48px */
   /*
-   * Display sizes, one step each, so 24 · 34 · 36 · 40 · 48 · 56 · 64 · 85 · 96 · 120 is the whole ladder above 20px. A legacy
-   * size within about 6% of a step takes that step (25px values, 32px headers and 2rem read the same).
+   * Display sizes, one step each, so 24 · 30 · 34 · 36 · 40 · 48 · 56 · 64 · 85 · 96 · 120 is the whole ladder
+   * above 20px. A legacy size within about 6% of a step takes that step (25px values, 32px headers and 2rem read
+   * the same).
    * Sizes 814 drew side by side move together: one never snaps to a step its neighbour doesn't take.
    */
   --text-title: 1.5rem; /* 24px: card units, phone values, the graph page's title */
+  --text-stat: 1.875rem; /* 30px: the charging page's cell temperatures and voltages */
   --text-readout: 2.25rem; /* 36px: the nav bar's clock and its "Run #N" partner, always the same size */
   --text-display: 2.5rem; /* 40px: page titles */
   --text-timer-sm: 3.5rem; /* 56px: the lap timer's lap count */

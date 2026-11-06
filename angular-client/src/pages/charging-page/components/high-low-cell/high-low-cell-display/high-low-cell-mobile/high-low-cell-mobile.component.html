@@ -4,7 +4,7 @@
       <vstack class="w-1/10">
         <hstack>
           @if (isDesktop) {
-            <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" textClass="text-xl" />
+            <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" textClass="text-stat" />
           } @else {
             <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" textClass="text-lg" />
           }
@@ -16,7 +16,7 @@
 
       <vstack class="w-1/10">
         @if (isDesktop) {
-          <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" textClass="text-xl" />
+          <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" textClass="text-stat" />
         } @else {
           <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" textClass="text-lg" />
         }
@@ -28,7 +28,7 @@
       <vstack class="w-1/10">
         <hstack>
           @if (isDesktop) {
-            <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" textClass="text-xl" />
+            <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" textClass="text-stat" />
           } @else {
             <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" textClass="text-lg" />
           }
