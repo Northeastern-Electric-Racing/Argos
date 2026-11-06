@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { StyleVariant } from 'src/utils/style-variant';
 import { TYPOGRAPHY_VARIANTS, typographyClass } from './typography';
 
@@ -66,6 +68,18 @@ describe('typographyClass', () => {
     expect(classes.has('text-xl')).toBe(false);
     expect(classes.has('text-readout')).toBe(true);
     expect(classes.has('text-fg')).toBe(true);
+  });
+
+  it('treats every font-size step of the theme as a size, so a new step replaces the variant size (BMS titles)', () => {
+    const theme = readFileSync(resolve(process.cwd(), 'src/styles/theme.css'), 'utf8');
+    // the utility each `--text-<step>:` declaration makes, read whole from the theme
+    const steps = [...theme.matchAll(/^\s*--(text-[a-z0-9-]+):/gm)].map((m) => m[1]);
+    expect(steps).toEqual(expect.arrayContaining(['text-banner', 'text-timer', 'text-timer-sm']));
+    for (const step of steps) {
+      const classes = classSet(typographyClass('x-large-title', step));
+      expect([step, classes.has('text-fg')]).toEqual([step, true]);
+      if (step !== 'text-display') expect([step, classes.has('text-display')]).toEqual([step, false]);
+    }
   });
 
   it('keeps variant classes when extra classes only add a responsive or state variant', () => {
