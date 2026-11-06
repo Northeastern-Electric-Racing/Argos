@@ -3,7 +3,7 @@
  * document and compat rules in styles/base.css, our utilities and variants in styles/utilities.css.
  *
  * Tailwind's output lives in cascade layers, and any unlayered CSS beats every layer whatever its
- * specificity: Angular component styles, Material's mat-icon rules, ApexCharts and Mapbox. So a component
+ * specificity: Angular component styles, Material's mat-icon rules and Mapbox. So a component
  * is either all utilities or all component CSS, never both. The CDK's prebuilt CSS sits in its own layer below
  * utilities.
  */

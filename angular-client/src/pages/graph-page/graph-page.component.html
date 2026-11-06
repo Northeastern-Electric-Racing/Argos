@@ -119,7 +119,9 @@
         <live-value-strip [dataTypes]="selectedDataTypes" class="hidden max-md:block" />
       }
 
-      <div class="flex w-full flex-auto flex-row max-md:flex-col">
+      <!-- min-h-0: a flex item held at the canvas's height never gives Chart.js a smaller box, and the x-axis and
+           legend end up below the fold -->
+      <div class="flex min-h-0 w-full flex-auto flex-row max-md:flex-col">
         @if (this.showSideBar) {
           <graph-sidebar [dataTypes]="dataTypes" class="flex-[0_1_auto] max-md:hidden" />
         }
@@ -127,7 +129,6 @@
           class="flex min-h-0 flex-auto flex-col overflow-hidden pr-4 pb-10 max-md:h-[50vh] max-md:min-h-62.5 max-md:px-2"
         >
           <graph
-            [limitRange]="realTime === true"
             [realTime]="this.realTime === true"
             [valuesSubject]="selectedDataTypeValuesSubject"
             class="flex-auto"

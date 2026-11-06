@@ -20,7 +20,6 @@ export class InfoGraphComponent {
   title = input.required<string>();
   color = input.required<string>();
   subTitle = input<string | undefined>(undefined);
-  graphContainerId = input.required<string>();
   /**
    * The hint and the graph are one real button (the card's own click handler is a div, out of reach of the
    * keyboard), laid out as the card laid them out: a full-width block at the card's 16px font.
@@ -33,8 +32,7 @@ export class InfoGraphComponent {
         data: this.data(),
         color: this.color(),
         title: this.title(),
-        subTitle: this.subTitle(),
-        graphContainerId: this.graphContainerId() + 'big'
+        subTitle: this.subTitle()
       },
       dismissableMask: true // enables auto-close on outside click
     });

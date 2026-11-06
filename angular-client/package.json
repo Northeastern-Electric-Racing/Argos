@@ -32,15 +32,16 @@
     "@angular/platform-browser": "22.2.3",
     "@angular/router": "22.2.3",
     "@types/mapbox-gl": "^2.7.19",
-    "apexcharts": "^5.16.0",
+    "chart.js": "4.5.1",
+    "chartjs-plugin-zoom": "2.2.0",
     "mapbox-gl": "^3.1.0",
     "material-design-icons": "^3.0.1",
-    "ng-apexcharts": "2.5.0",
+    "ng2-charts": "10.0.0",
     "rxjs": "~7.8.0",
     "select": "^1.1.2",
     "socket.io-client": "^4.7.2",
     "tslib": "^2.3.0",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -59,6 +60,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "vitest-canvas-mock": "^1.2.0"
   }
 }

@@ -1,2 +1,33 @@
-<!-- ApexCharts sets no text colour on its download menu (white in the light chart theme): its items read in black. -->
-<div id="chart-container" class="size-full [&_.apexcharts-menu]:text-on-status"></div>
+<div class="flex size-full flex-col">
+  <!-- Above the canvas, so it never covers the plot, an axis or a tooltip -->
+  <div
+    class="flex flex-none justify-end gap-1.5 pb-1"
+    title="Drag to zoom, shift-drag to pan, ctrl-scroll to zoom, double-click to reset"
+  >
+    <argos-button label="Zoom In" size="sm" variant="tonal" [onClick]="zoomIn" [disabled]="!hasData()" />
+    <argos-button label="Zoom Out" size="sm" variant="tonal" [onClick]="zoomOut" [disabled]="!zoomed()" />
+    <argos-button label="Reset Zoom" size="sm" variant="tonal" [onClick]="resetZoom" [disabled]="!zoomed()" />
+    <argos-button label="Save PNG" size="sm" variant="tonal" [onClick]="savePng" [disabled]="!hasData()" />
+    <argos-button label="Save CSV" size="sm" variant="tonal" [onClick]="saveCsv" [disabled]="!hasData()" />
+  </div>
+  <!-- Chart.js sizes the canvas to this box (responsive, no fixed aspect ratio) -->
+  <div class="relative min-h-0 w-full flex-auto">
+    <!-- A crosshair over the zoomable plot; the legend sets a pointer over its items -->
+    <canvas
+      baseChart
+      type="line"
+      class="cursor-crosshair"
+      [data]="chartData"
+      [options]="chartOptions"
+      [plugins]="chartPlugins"
+      role="img"
+      aria-label="Telemetry graph of the selected topics. Drag to zoom, shift-drag to pan, double-click to reset."
+      (dblclick)="resetZoom()"
+    ></canvas>
+    @if (!hasData()) {
+      <p class="pointer-events-none absolute inset-0 m-0 flex items-center justify-center text-md text-fg-muted">
+        {{ valuesSubject().length ? 'Waiting for data' : 'Select a topic to graph' }}
+      </p>
+    }
+  </div>
+</div>

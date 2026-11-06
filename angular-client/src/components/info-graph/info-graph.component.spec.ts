@@ -6,13 +6,12 @@ import { GraphComponent } from '../graph/graph.component';
 import { InfoGraphComponent } from './info-graph.component';
 import { GraphData } from 'src/utils/types.utils';
 
-// The real graph builds an ApexCharts chart on a timer; the card only needs its inputs.
+// The real graph builds a Chart.js chart on a timer; the card only needs its inputs.
 @Component({ selector: 'graph-component', template: '' })
 class GraphStubComponent {
   data = input<GraphData[]>([]);
   color = input<string>('');
   title = input<string | undefined>(undefined);
-  graphContainerId = input<string>('');
 }
 
 describe('InfoGraphComponent', () => {
@@ -36,7 +35,6 @@ describe('InfoGraphComponent', () => {
     fixture.componentRef.setInput('icon', 'speed');
     fixture.componentRef.setInput('title', 'Speed Over Time');
     fixture.componentRef.setInput('color', '#4682b4');
-    fixture.componentRef.setInput('graphContainerId', 'speedOverTimeGraph');
     fixture.detectChanges();
   });
 
@@ -60,9 +58,7 @@ describe('InfoGraphComponent', () => {
     const [[component, config]] = open.mock.calls;
     expect(component).toBe(GraphDialogComponent);
     expect(config.header).toBe('Speed Over Time');
-    expect(config.data).toEqual(
-      expect.objectContaining({ data: [{ x: 1, y: 2 }], color: '#4682b4', graphContainerId: 'speedOverTimeGraphbig' })
-    );
+    expect(config.data).toEqual(expect.objectContaining({ data: [{ x: 1, y: 2 }], color: '#4682b4' }));
   });
 
   it('shows the hint once, from the button, not from the card', () => {
