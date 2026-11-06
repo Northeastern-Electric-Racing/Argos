@@ -56,7 +56,7 @@ export default class LandingPageComponent implements OnInit {
   time = new Date();
 
   /** 814's 6-column mat-grid-list (1.5rem rows, 15px gutters), tile by tile (columns × rows). */
-  protected readonly grid = tileGridClass;
+  protected readonly grid = tileGridClass();
   protected readonly tiles = {
     dateLocation: gridTileClass(2, 4),
     small: gridTileClass(1, 4),

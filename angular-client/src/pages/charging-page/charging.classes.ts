@@ -2,11 +2,10 @@ import { tileGridClass } from 'src/ui/recipes/grid';
 import { cx, tw } from 'src/ui/recipes/tw';
 
 /**
- * The charging page's desktop layout: the tile grid recipe with 814's 1.2rem rows (15px gutters, as the recipe)
- * for its 30 rows: the 12-row status band, then three 6-row graph cards. The recipe's rows are 1.5rem, which
- * would make every card 20% taller; the explicit row tracks take precedence over the recipe's auto rows.
+ * The charging page's desktop layout: the tile grid recipe with 814's 1.2rem rows for its 30 rows: the 12-row
+ * status band, then three 6-row graph cards (1.5rem rows would make every card 20% taller).
  */
-export const chargingGridClass = cx(tileGridClass, tw('grid-rows-[repeat(30,1.2rem)]'));
+export const chargingGridClass = tileGridClass({ rows: 'sm' });
 
 /**
  * A fault row: faults alternate between an orange fill with black text and a dim orange tint with the label
