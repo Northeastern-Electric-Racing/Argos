@@ -2,7 +2,7 @@ import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { Component, DestroyRef, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Run } from 'src/utils/types.utils';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiButtonDirective, UiIconButtonDirective } from 'src/ui/button/button.directive';
 
 // the data for the dialog, basically just all the runs
@@ -23,7 +23,7 @@ const AUTOPLAY_MS = 3000;
   selector: 'carousel',
   templateUrl: 'carousel.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatIcon, UiButtonDirective, UiIconButtonDirective]
+  imports: [UiIconComponent, UiButtonDirective, UiIconButtonDirective]
 })
 export class CarouselComponent {
   public dialogRef = inject(DialogRef);

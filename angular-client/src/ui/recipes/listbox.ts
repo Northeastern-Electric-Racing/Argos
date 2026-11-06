@@ -41,7 +41,7 @@ export const listboxClasses = {
   ),
   /** The option's label, ellipsed when it doesn't fit. */
   optionText: tw('truncate'),
-  /** The check mark after a select option, shown only on the selected one (pair it with iconClasses.xs). */
+  /** The check mark after a select option, shown only on the selected one (on an xs ui-icon). */
   optionCheck: tw('invisible ml-auto group-aria-selected/option:visible'),
   /** The "No options" line. */
   empty: tw('px-3 py-2 text-fg-muted')

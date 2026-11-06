@@ -23,7 +23,7 @@ import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
@@ -53,7 +53,7 @@ export interface NavItem {
     TypographyComponent,
     HStackComponent,
     SidebarChipComponent,
-    MatIcon,
+    UiIconComponent,
     NotificationBellComponent,
     NavOptionsMenuComponent
   ],

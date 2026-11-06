@@ -1,5 +1,5 @@
 import { afterRenderEffect, ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
 import { tw } from '../recipes/tw';
 import { ToastService, ToastSeverity } from './toast.service';
@@ -38,12 +38,12 @@ const severityClasses: Record<ToastSeverity, string> = {
   )
 };
 
-/** The icon is coloured through its parent: Material's own mat-icon colour rule is unlayered. */
+/** The severity icon's colour. */
 const iconTone: Record<ToastSeverity, string> = {
-  success: tw('flex shrink-0 text-success'),
-  info: tw('flex shrink-0 text-info'),
-  warn: tw('flex shrink-0 text-warn'),
-  error: tw('flex shrink-0 text-danger')
+  success: tw('shrink-0 text-success'),
+  info: tw('shrink-0 text-info'),
+  warn: tw('shrink-0 text-warn'),
+  error: tw('shrink-0 text-danger')
 };
 
 /**
@@ -55,7 +55,7 @@ const iconTone: Record<ToastSeverity, string> = {
   selector: 'ui-toast-host',
   templateUrl: './toast-host.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIcon, UiIconButtonDirective]
+  imports: [UiIconComponent, UiIconButtonDirective]
 })
 export class ToastHostComponent {
   protected toastService = inject(ToastService);

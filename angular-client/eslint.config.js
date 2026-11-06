@@ -20,7 +20,7 @@ const tailwindSettings = {
   }
 };
 
-// Classes the spike bans; the last (important modifier) is lifted for the icon-sizing recipes only.
+// Classes the spike bans.
 const restrictedClasses = [
   { pattern: '^(.*:)?dark:.*$', message: 'The client is dark-only: never use the dark: variant.' },
   {
@@ -32,7 +32,7 @@ const restrictedClasses = [
     pattern: '^(.*:)?(container|ring|filter)$',
     message: 'styles.css excludes these utilities (the scanner found them in prose); focus rings are focus-ring outlines.'
   },
-  { pattern: '^(.*!|!.*)$', message: 'No important modifier; mat-icon sizes come from iconClasses (src/ui/recipes/icon.ts).' }
+  { pattern: '^(.*!|!.*)$', message: 'No important modifier: everything is in cascade layers, so order and specificity decide.' }
 ];
 
 // A component is migrated once its stylesheet is gone (it is then all utilities), so unknown-class checks
@@ -143,15 +143,8 @@ module.exports = tseslint.config(
     }
   },
   {
-    // The important modifier is allowed only where the recipes size mat-icon (Material's unlayered .mat-icon rule).
-    files: ['src/ui/recipes/icon.ts', 'src/ui/recipes/button.ts'],
-    rules: {
-      'better-tailwindcss/no-restricted-classes': ['error', { restrict: restrictedClasses.slice(0, -1) }]
-    }
-  },
-  {
     // Unknown classes (typos, missing tokens, legacy ui-* classes) in migrated templates and the recipes.
-    files: [...migratedFiles, 'src/ui/recipes/*.ts', 'src/ui/button/*.ts', 'src/ui/field/*.ts'],
+    files: [...migratedFiles, 'src/ui/recipes/*.ts', 'src/ui/button/*.ts', 'src/ui/field/*.ts', 'src/ui/icon/*.ts'],
     ignores: ['src/**/*.spec.ts'],
     plugins: { 'better-tailwindcss': betterTailwind },
     settings: tailwindSettings,

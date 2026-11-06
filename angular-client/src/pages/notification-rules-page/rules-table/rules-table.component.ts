@@ -15,7 +15,7 @@ import {
   signal
 } from '@angular/core';
 import { CdkTableModule } from '@angular/cdk/table';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiSwitchComponent } from 'src/ui/switch/switch.component';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { take } from 'rxjs';
@@ -34,7 +34,7 @@ import { cellClass, checkboxClass, headerCellClass, rowClass, tableClass, tableC
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CdkTableModule, UiSwitchComponent, UiButtonDirective, MatIcon],
+  imports: [CdkTableModule, UiSwitchComponent, UiButtonDirective, UiIconComponent],
   templateUrl: './rules-table.component.html'
 })
 export class RulesTableComponent implements OnInit {

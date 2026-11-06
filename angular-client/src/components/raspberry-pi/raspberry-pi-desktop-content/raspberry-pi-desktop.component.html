@@ -32,8 +32,8 @@
       <div class="flex h-27.5 items-center justify-center">
         <typography variant="info-value" [content]="wifiRSSI().toString()" />
       </div>
-      <div [class]="wifi.unitBox">
-        <mat-icon svgIcon="wifi" />
+      <div>
+        <ui-icon svg="wifi" [class]="wifi.icon" />
         <span [class]="wifi.unit">dBM</span>
       </div>
     </hstack>

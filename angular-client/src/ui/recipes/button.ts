@@ -41,7 +41,7 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
  * more) composes `cx(buttonBaseClass, buttonVariantClasses[v], <its own size>)` instead of copying the base.
  */
 export const buttonBaseClass = tw(
-  'inline-flex cursor-pointer items-center justify-center border border-solid text-center font-sans leading-control font-semibold whitespace-nowrap transition-colors duration-120 select-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 [&_.material-icons]:text-ctrl-lg'
+  'inline-flex cursor-pointer items-center justify-center border border-solid text-center font-sans leading-control font-semibold whitespace-nowrap transition-colors duration-120 select-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50'
 );
 
 export const buttonVariantClasses: Record<ButtonVariant, string> = {
@@ -88,7 +88,7 @@ const iconButtonBase = tw(
   'inline-grid cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-fg-muted hover:bg-fg/10 hover:text-fg focus-visible:focus-ring'
 );
 const iconButtonSizeClasses: Record<IconButtonSize, string> = {
-  sm: tw('size-7 [&_mat-icon]:size-4.5! [&_mat-icon]:text-[18px]!'),
+  sm: tw('size-7 [&_ui-icon]:size-4.5 [&_ui-icon]:text-[18px]'),
   md: tw('size-8')
 };
 

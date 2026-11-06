@@ -30,7 +30,7 @@
   <div class="min-h-0 flex-1 overflow-y-auto" [class.max-h-90]="isPopover()">
     @if (!hasEntries()) {
       <div class="flex flex-col items-center justify-center gap-1.5 px-4 py-10 text-center text-fg-muted">
-        <span class="text-border-strong" aria-hidden="true"><mat-icon [class]="emptyIcon">notifications_off</mat-icon></span>
+        <span class="text-border-strong" aria-hidden="true"><ui-icon name="notifications_off" size="lg" /></span>
         <span class="text-ctrl font-medium text-fg-label">No notifications yet</span>
         <span class="text-xs">Triggered rules will appear here</span>
       </div>
@@ -71,7 +71,7 @@
               (click)="notificationLogService.dismissEntry(entry.id)"
               [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
             >
-              <mat-icon [class]="dismissIcon" aria-hidden="true">close</mat-icon>
+              <ui-icon name="close" size="sm" />
             </button>
           </li>
         }
@@ -88,7 +88,7 @@
         aria-label="View all notifications"
       >
         View all notifications
-        <mat-icon [class]="footerIcon" aria-hidden="true">arrow_forward</mat-icon>
+        <ui-icon name="arrow_forward" size="lg" />
       </button>
     </footer>
   }

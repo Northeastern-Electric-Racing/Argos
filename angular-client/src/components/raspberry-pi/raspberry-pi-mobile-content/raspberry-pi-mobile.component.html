@@ -40,8 +40,8 @@
     <vstack class="w-1/2">
       <hstack class="h-27.5">
         <typography variant="info-value" [content]="wifiRSSI().toString()" />
-        <div [class]="wifi.unitBox">
-          <mat-icon svgIcon="wifi" />
+        <div>
+          <ui-icon svg="wifi" [class]="wifi.icon" />
           <span [class]="wifi.unit">dBM</span>
         </div>
       </hstack>

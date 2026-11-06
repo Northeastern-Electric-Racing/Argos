@@ -53,7 +53,7 @@ describe('ToastHostComponent', () => {
     const { fixture, service, toasts } = await setup();
     service.add({ severity: 'warn', summary: 'Careful', sticky: true });
     await fixture.whenStable();
-    const icons = [...toasts()[0].querySelectorAll('mat-icon')];
+    const icons = [...toasts()[0].querySelectorAll('ui-icon')];
     expect(icons.every((icon) => icon.getAttribute('aria-hidden') === 'true')).toBe(true);
   });
 });

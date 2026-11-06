@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, Signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
-import { iconClasses } from 'src/ui/recipes/icon';
 import { cellClass, lightHeaderCellClass } from 'src/ui/recipes/table';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { formatDeltaMs, formatMs, Lap } from 'src/utils/lap-timer.types';
@@ -24,7 +23,7 @@ const edges = {
   templateUrl: './laps-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex h-full w-full' },
-  imports: [DatePipe, DecimalPipe, MatIcon, InfoBackgroundComponent, TypographyComponent]
+  imports: [DatePipe, DecimalPipe, UiIconComponent, InfoBackgroundComponent, TypographyComponent]
 })
 export default class LapsTableComponent {
   readonly timer = inject(LapTimerService);
@@ -32,7 +31,6 @@ export default class LapsTableComponent {
   readonly lapsNewestFirst: Signal<Lap[]> = computed(() => this.timer.laps().slice().reverse());
 
   protected readonly cls = lapTimerClasses;
-  protected readonly iconXs = iconClasses.xs;
   protected readonly rowClass = tw('hover:bg-fg/4');
   protected readonly headers = {
     num: cx(lightHeaderCellClass({ align: 'right' }), tw('w-14')),

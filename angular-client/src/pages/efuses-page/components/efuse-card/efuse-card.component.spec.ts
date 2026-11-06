@@ -1,6 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -25,8 +23,6 @@ describe('EfuseCardComponent', () => {
   beforeEach(() => {
     storage = new FakeStorage();
     TestBed.configureTestingModule({ providers: [{ provide: Storage, useValue: storage }] });
-    const icons = TestBed.inject(MatIconRegistry);
-    icons.addSvgIconLiteral('electrical_services', TestBed.inject(DomSanitizer).bypassSecurityTrustHtml('<svg></svg>'));
     fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }));
   });
   afterEach(() => vi.restoreAllMocks());

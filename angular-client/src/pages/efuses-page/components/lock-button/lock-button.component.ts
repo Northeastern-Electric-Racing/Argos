@@ -1,5 +1,5 @@
 import { Component, ElementRef, input, output, viewChild, ChangeDetectionStrategy } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { panelButtonClass, panelGroupClass } from '../../efuses.classes';
 
@@ -11,7 +11,7 @@ import { panelButtonClass, panelGroupClass } from '../../efuses.classes';
 @Component({
   selector: 'lock-button',
   templateUrl: './lock-button.component.html',
-  imports: [MatIcon],
+  imports: [UiIconComponent],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class LockButtonComponent {

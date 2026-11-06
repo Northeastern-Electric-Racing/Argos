@@ -10,7 +10,7 @@
   @if (currentRun(); as run) {
     <div class="flex items-center gap-1">
       <button type="button" uiIconButton aria-label="Previous run" (click)="prev()">
-        <mat-icon aria-hidden="true">chevron_left</mat-icon>
+        <ui-icon name="chevron_left" />
       </button>
       <div
         class="min-w-0 flex-1"
@@ -31,7 +31,7 @@
         </div>
       </div>
       <button type="button" uiIconButton aria-label="Next run" (click)="next()">
-        <mat-icon aria-hidden="true">chevron_right</mat-icon>
+        <ui-icon name="chevron_right" />
       </button>
     </div>
     <div class="flex items-center justify-center gap-2 pb-1.5">
@@ -43,7 +43,7 @@
         [attr.aria-label]="autoplay() ? 'Stop automatic slide show' : 'Start automatic slide show'"
         (click)="autoplay.set(!autoplay())"
       >
-        <mat-icon aria-hidden="true">{{ autoplay() ? 'pause' : 'play_arrow' }}</mat-icon>
+        <ui-icon [name]="autoplay() ? 'pause' : 'play_arrow'" />
       </button>
       @if (runs.length <= 12) {
         <div class="flex justify-center gap-1.5">

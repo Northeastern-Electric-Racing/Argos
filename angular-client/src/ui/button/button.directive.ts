@@ -20,7 +20,7 @@ export class UiButtonDirective {
   protected classes = computed(() => buttonClass(this.variant(), this.size()));
 }
 
-/** A round icon-only button: `<button uiIconButton aria-label="Close"><mat-icon …/></button>`. Name it. */
+/** A round icon-only button: `<button uiIconButton aria-label="Close"><ui-icon name="close" /></button>`. Name it. */
 @Directive({
   selector: 'button[uiIconButton]',
   host: { '[class]': 'classes()', '[attr.data-size]': 'size()' }

@@ -1,11 +1,10 @@
 import { Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
-import { iconClasses } from 'src/ui/recipes/icon';
 
 export type NotificationListVariant = 'popover' | 'stream';
 
@@ -13,15 +12,11 @@ export type NotificationListVariant = 'popover' | 'stream';
   selector: 'notification-list',
   templateUrl: './notification-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatIcon, UiButtonDirective]
+  imports: [DatePipe, UiIconComponent, UiButtonDirective]
 })
 export class NotificationListComponent {
   protected notificationLogService = inject(NotificationLogService);
   private router = inject(Router);
-
-  protected readonly emptyIcon = iconClasses.lg;
-  protected readonly dismissIcon = iconClasses.sm;
-  protected readonly footerIcon = iconClasses.lg;
 
   variant = input<NotificationListVariant>('popover');
   title = input<string>('Notifications');

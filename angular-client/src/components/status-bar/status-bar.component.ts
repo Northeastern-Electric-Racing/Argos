@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, input, signal, viewChild } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
-import { iconClasses } from 'src/ui/recipes/icon';
 import { cx, tw } from 'src/ui/recipes/tw';
 
 /** Both surfaces dock flush to the top-right edge. */
@@ -16,7 +15,7 @@ const docked = tw('absolute top-0 right-0 border border-r-0 border-border bg-pan
 @Component({
   selector: 'status-bar',
   templateUrl: './status-bar.component.html',
-  imports: [MatIcon],
+  imports: [UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // A block host, so the sticky bar's containing block spans the whole page.
   host: { class: 'sticky top-0 z-20 block' }
@@ -49,8 +48,6 @@ export default class StatusBarComponent {
   protected readonly collapseClass = tw(
     'inline-flex size-7 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-0 text-fg-label hover:bg-fg/8 focus-visible:focus-ring'
   );
-  protected readonly handleIconClass = iconClasses.lg;
-  protected readonly collapseIconClass = iconClasses.md;
 
   /** Small header label shown above the pinned chips. */
   readonly title = input('Quick view');

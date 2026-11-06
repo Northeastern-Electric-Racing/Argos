@@ -2,7 +2,7 @@ import { CdkDialogContainer, DialogRef } from '@angular/cdk/dialog';
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { CdkPortalOutlet } from '@angular/cdk/portal';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
 import { dialogClasses, headerlessContentClass } from './dialog.recipe';
 import { UiDialogConfig } from './dialog.service';
@@ -17,7 +17,7 @@ import { UiDialogConfig } from './dialog.service';
   selector: 'ui-dialog-container',
   templateUrl: './dialog-container.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [CdkPortalOutlet, CdkDrag, CdkDragHandle, MatIcon, UiIconButtonDirective],
+  imports: [CdkPortalOutlet, CdkDrag, CdkDragHandle, UiIconComponent, UiIconButtonDirective],
   // Fill the overlay pane, which carries the requested width (what CdkDialogContainer's own styles did).
   host: { class: 'block size-full max-h-[inherit] min-h-[inherit] outline-none' }
 })

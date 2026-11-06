@@ -12,7 +12,7 @@
   (keyup.enter)="$event.stopPropagation()"
   aria-label="Session actions"
 >
-  <mat-icon aria-hidden="true">more_vert</mat-icon>
+  <ui-icon name="more_vert" />
 </button>
 <ng-template
   [cdkConnectedOverlayOpen]="trigger.expanded()"
@@ -29,16 +29,14 @@
   >
     <ng-template ngMenuContent>
       <div ngMenuItem [class]="itemClass" value="rename" searchTerm="Rename">
-        <mat-icon aria-hidden="true" [class]="iconSm">edit</mat-icon><span>Rename</span>
+        <ui-icon name="edit" size="sm" /><span>Rename</span>
       </div>
       <div ngMenuItem [class]="itemClass" value="download" searchTerm="Download CSV">
-        <mat-icon aria-hidden="true" [class]="iconSm">download</mat-icon><span>Download CSV</span>
+        <ui-icon name="download" size="sm" /><span>Download CSV</span>
       </div>
       <div ngMenuItem [class]="itemClass" value="delete" searchTerm="Delete">
         <!-- the item's own colour is fg; the destructive orange goes on a wrapper (icons take their parent's) -->
-        <span class="flex items-center gap-2 text-danger">
-          <mat-icon aria-hidden="true" [class]="iconSm">delete</mat-icon><span>Delete</span>
-        </span>
+        <span class="flex items-center gap-2 text-danger"> <ui-icon name="delete" size="sm" /><span>Delete</span> </span>
       </div>
     </ng-template>
   </div>

@@ -8,7 +8,7 @@ import { FaultData, FaultNode } from 'src/utils/types.utils';
 
 import { AccordionContent, AccordionGroup, AccordionPanel, AccordionTrigger } from '@angular/aria/accordion';
 import { CdkTableModule } from '@angular/cdk/table';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { DatePipe } from '@angular/common';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { cellClass, headerCellClass, rowClass, tableClass } from 'src/ui/recipes/table';
@@ -36,7 +36,7 @@ function groupByNode(faults: FaultData[]): FaultNode[] {
     AccordionPanel,
     AccordionContent,
     CdkTableModule,
-    MatIcon,
+    UiIconComponent,
     DatePipe,
     TypographyComponent,
     UiAccordionBodyDirective

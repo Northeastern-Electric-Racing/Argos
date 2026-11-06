@@ -1,7 +1,7 @@
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, InjectionToken, Injector, Type, inject } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { Observable, Subject } from 'rxjs';
 import { UiIconButtonDirective } from '../button/button.directive';
 import { DialogDensity, dialogClasses } from './dialog.recipe';
@@ -46,7 +46,7 @@ export const UI_PANEL_CONFIG = new InjectionToken<UiPanelConfig>('UI_PANEL_CONFI
   selector: 'ui-panel',
   templateUrl: './panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgComponentOutlet, CdkDrag, CdkDragHandle, MatIcon, UiIconButtonDirective],
+  imports: [NgComponentOutlet, CdkDrag, CdkDragHandle, UiIconComponent, UiIconButtonDirective],
   host: {
     class: 'block size-full max-h-[inherit] min-h-[inherit] outline-none',
     role: 'dialog',
