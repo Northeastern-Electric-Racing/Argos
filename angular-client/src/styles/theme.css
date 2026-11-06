@@ -10,8 +10,8 @@
  * for fills under white text (4.98:1), `accent-fg` for red text on dark surfaces (4.57:1 or better).
  *
  * The client is dark-only: base.css sets `color-scheme: dark`; never use the `dark:` variant.
- * `static` emits every token even when no utility uses it, so legacy CSS, inline [style] bindings
- * and the --ui-* aliases below can always reference them.
+ * `static` emits every token even when no utility uses it, so inline [style] bindings and arbitrary
+ * values (`[box-shadow:var(--shadow-bulb)]`) can always reference them.
  */
 @theme static {
   --color-*: initial;
@@ -144,57 +144,9 @@
 }
 
 /*
- * Legacy aliases, kept until wave 4 so component CSS and src/ui/legacy/*.css keep working while they
- * are migrated. Nothing new may use them: use the theme tokens (utilities) above. An alias goes as soon as
- * nothing references it (the fix step after each wave drops those).
+ * The one legacy alias left: the unused segment-summary's "See More" pill reads it (an idea to delete that component).
+ * Nothing new may use it; use the theme tokens (utilities) above.
  */
 :root {
-  --ui-accent: var(--color-accent);
-  --ui-accent-hover: var(--color-accent-hover);
-  --ui-accent-strong: var(--color-accent-strong);
-  --ui-accent-strong-hover: var(--color-accent-strong-hover);
-  --ui-accent-fg: var(--color-accent-fg);
-  --ui-accent-soft: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  --ui-on-accent: var(--color-on-accent);
-  --ui-secondary: var(--color-secondary);
-  --ui-secondary-hover: var(--color-secondary-hover);
-  --ui-secondary-border: var(--color-secondary-border);
-  --ui-secondary-soft: var(--color-secondary-soft);
-  --ui-danger: var(--color-danger);
-  --ui-danger-soft: color-mix(in srgb, var(--color-danger) 16%, transparent);
-  --ui-success: var(--color-success);
-  --ui-warn: var(--color-warn);
-  --ui-on-status: var(--color-on-status);
-
-  --ui-surface-1: var(--color-surface-1);
-  --ui-surface-3: var(--color-surface-3);
-  --ui-border: var(--color-border);
-  --ui-border-strong: var(--color-border-strong);
-  --ui-text: var(--color-fg);
-  --ui-text-muted: var(--color-fg-muted);
-  --ui-label: var(--color-fg-label);
-  --ui-hover: color-mix(in srgb, var(--color-fg) 8%, transparent);
-
-  --ui-space-1: 0.25rem;
-  --ui-space-2: 0.5rem;
-  --ui-space-3: 0.75rem;
-  --ui-space-4: 1rem;
-
-  --ui-font: var(--font-sans);
-  --ui-font-xs: var(--text-xs);
-  --ui-font-sm: var(--text-ctrl-sm);
-  --ui-font-md: var(--text-ctrl);
-  --ui-weight-bold: 600;
-
-  --ui-control-height: 2.25rem;
-  --ui-control-height-sm: 1.75rem;
-
-  --ui-radius-sm: var(--radius-sm);
-  --ui-radius: var(--radius-md);
   --ui-radius-full: 999px;
-
-  --ui-focus-color: var(--color-focus);
-  --ui-focus-ring: 2px solid color-mix(in srgb, var(--color-focus) 80%, transparent);
-
-  --ui-duration-fast: 120ms;
 }
