@@ -2,7 +2,7 @@ import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 
-import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
+import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 
