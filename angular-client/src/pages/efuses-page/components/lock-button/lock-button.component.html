@@ -1,11 +1,12 @@
-<div class="switch-group">
+<div [class]="groupClass">
   <button
-    class="switch-button"
-    [class.active]="locked()"
-    [class.state-locked]="locked()"
+    #button
+    type="button"
+    [class]="buttonClass"
+    [attr.aria-pressed]="locked()"
+    [attr.aria-label]="ariaLabel()"
     (click)="pressed.emit()"
-    aria-label="Toggle lock"
   >
-    <span class="material-icons switch-label">{{ locked() ? 'lock' : 'lock_open' }}</span>
+    <mat-icon aria-hidden="true" [fontIcon]="locked() ? 'lock' : 'lock_open'" />
   </button>
 </div>
