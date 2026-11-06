@@ -2,11 +2,11 @@
   <div class="flex h-4/5 items-center justify-center pt-5">
     <vstack spacing="10px" class="pl-5">
       <hstack>
-        <typography variant="info-subtitle" content="CURRENT:" textClass="text-sm" />
+        <typography variant="info-subtitle" content="CURRENT:" textClass="text-sm leading-4.5" />
         <typography variant="info-subtitle" [content]="getCurrentTime()" [textClass]="readout" />
       </hstack>
       <hstack spacing="42px">
-        <typography variant="info-subtitle" content="TOTAL:" textClass="text-sm" />
+        <typography variant="info-subtitle" content="TOTAL:" textClass="text-sm leading-4.5" />
         <typography variant="info-subtitle" [content]="getTotalTime()" [textClass]="readout" />
       </hstack>
     </vstack>

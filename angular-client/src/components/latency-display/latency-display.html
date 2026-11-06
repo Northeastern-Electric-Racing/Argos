@@ -5,7 +5,7 @@
       <div class="flex h-2.5 items-center justify-center">
         <div class="mr-2.5 size-2.5 rounded-full" [style.background-color]="mapColor(latency, medVal())"></div>
         <typography variant="subheader" [content]="latency.toString()" />
-        <typography variant="info-unit" content="ms" textClass="pt-1.25 text-sm" />
+        <typography variant="info-unit" content="ms" textClass="pt-1.25 text-sm leading-4.5" />
       </div>
     </vstack>
 
@@ -16,7 +16,7 @@
       <div class="flex h-2.5 items-center justify-center">
         <div class="mr-2.5 size-2.5 rounded-full" [style.background-color]="mapColor(newLatency, medVal())"></div>
         <typography variant="subheader" [content]="newLatency.toString()" />
-        <typography variant="info-unit" content="ms" textClass="pt-1.25 text-sm" />
+        <typography variant="info-unit" content="ms" textClass="pt-1.25 text-sm leading-4.5" />
       </div>
     </vstack>
   </hstack>
