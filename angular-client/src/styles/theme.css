@@ -150,7 +150,6 @@
   --color-background-page: var(--color-page);
   --color-divider: var(--color-border);
 
-  --font-family: var(--font-sans);
   --font-size-xs: 12px;
   --font-size-lg: 20px;
   --border-radius-panel: var(--radius-md);

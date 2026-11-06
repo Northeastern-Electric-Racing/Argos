@@ -104,7 +104,7 @@ const families: [Family, RegExp][] = [
   ['self', /^self-/]
 ];
 
-/** Which families a class list sets without a variant prefix (`max-md:text-lg` layers on top, so it is ignored). */
+/** Which families a class list sets without a variant prefix (a size behind `max-md:` layers on top, so it is ignored). */
 function familiesOf(extra: string): Set<Family> {
   const found = new Set<Family>();
   for (const cls of extra.split(/\s+/)) {
