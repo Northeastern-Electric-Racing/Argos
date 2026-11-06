@@ -11,9 +11,13 @@ export type FocusTarget = () => HTMLElement | null | undefined;
  * <body>. After a mouse or touch press (the CDK's most recent input modality, which also sees the click on a
  * confirm dialog's button) the moved focus shows no ring, as the click itself would not; after a key press it
  * does. `then` runs on the element after it has focus: select a field's text there, never before focusing.
+ * `preventScroll` keeps the page where it is (a passive surface such as the status bar must never move it).
  * Call it in an injection context.
  */
-export function injectFocusAfterRender(): (find: FocusTarget, then?: (element: HTMLElement) => void) => void {
+export function injectFocusAfterRender({ preventScroll = false }: { preventScroll?: boolean } = {}): (
+  find: FocusTarget,
+  then?: (element: HTMLElement) => void
+) => void {
   const injector = inject(Injector);
   const modality = inject(InputModalityDetector);
   return (find, then) => {
@@ -23,7 +27,7 @@ export function injectFocusAfterRender(): (find: FocusTarget, then?: (element: H
       () => {
         const element = find();
         if (!element) return;
-        element.focus({ focusVisible: !pointer } as FocusOptions);
+        element.focus({ preventScroll, focusVisible: !pointer } as FocusOptions);
         then?.(element);
       },
       { injector }
