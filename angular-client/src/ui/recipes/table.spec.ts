@@ -1,4 +1,13 @@
-import { headerCellClass, lightHeaderCellClass, TABLE_ALIGNS, TABLE_DENSITIES, tableClasses } from './table';
+import {
+  cellClass,
+  headerCellClass,
+  lightHeaderCellClass,
+  rowClass,
+  TABLE_ALIGNS,
+  TABLE_DENSITIES,
+  TABLE_HEADER_TONES,
+  tableClasses
+} from './table';
 
 // jsdom runs without Tailwind, so this checks the recipe's shape; the audit kit checks how it looks.
 describe('table recipe', () => {
@@ -33,5 +42,41 @@ describe('table recipe', () => {
       expect(c.some((x) => x.startsWith('bg-'))).toBe(false);
     }
     expect(classes(lightHeaderCellClass())).toContain('text-left');
+  });
+
+  it('has a caps header tone: 12px uppercase fg-label labels on an opaque surface-2, so it can stick', () => {
+    for (const d of TABLE_DENSITIES) {
+      const c = classes(headerCellClass(d, { tone: 'caps', sticky: true }));
+      expect(c).toEqual(
+        expect.arrayContaining(['bg-surface-2', 'text-xs', 'uppercase', 'text-fg-label', 'sticky', 'top-0'])
+      );
+      expect(c).not.toContain('bg-surface-3');
+      // one font size: no density's smaller phone text on top of the caps 12px
+      expect(c.filter((x) => /^(max-md:)?text-(xs|ctrl|ctrl-sm|sm)$/.test(x))).toEqual(['text-xs']);
+    }
+  });
+
+  it('gives every density and tone exactly one padding per side and one fill', () => {
+    for (const tone of TABLE_HEADER_TONES)
+      for (const d of TABLE_DENSITIES) {
+        const c = classes(headerCellClass(d, { tone })).filter((x) => !x.includes(':'));
+        expect(c.filter((x) => /^bg-/.test(x))).toHaveLength(1);
+        expect(c.filter((x) => /^p[xy]?-/.test(x)).join(' ')).toMatch(/^(p-\S+|px-\S+ py-\S+)$/);
+      }
+  });
+
+  it("has a roomy density for 814's notification log: 10px by 14px cells over faint dividers", () => {
+    expect(classes(cellClass('roomy'))).toEqual(
+      expect.arrayContaining(['px-3.5', 'py-2.5', 'border-border/40', 'max-md:px-2.5', 'max-md:py-2'])
+    );
+    expect(classes(headerCellClass('roomy', { tone: 'caps' }))).toEqual(expect.arrayContaining(['px-3.5', 'py-2.5']));
+  });
+
+  it('tints a hovered row; only a clickable row (hover: true) shows the pointer', () => {
+    expect(classes(rowClass({ hover: true }))).toEqual(expect.arrayContaining(['hover:bg-fg/8', 'cursor-pointer']));
+    const tint = classes(rowClass({ striped: true, hover: 'tint' }));
+    expect(tint).toEqual(expect.arrayContaining(['hover:bg-fg/8', 'even:bg-fg/4']));
+    expect(tint).not.toContain('cursor-pointer');
+    expect(classes(rowClass())).not.toContain('hover:bg-fg/8');
   });
 });

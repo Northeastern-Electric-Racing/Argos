@@ -36,11 +36,12 @@ export default class NotificationLogPageComponent {
 
   protected readonly t = tableClasses;
   protected readonly table = tableClass();
-  protected readonly th = headerCellClass('phone');
-  protected readonly thEnd = headerCellClass('phone', { align: 'right' });
-  protected readonly td = cellClass('phone');
-  /** Striped; `group/entry` lets the rule cell read the row's data-unread (accent dot, bolder id). */
-  protected readonly row = cx(rowClass({ striped: true }), tw('group/entry'));
+  /** 814's log table: the caps header on an opaque surface-2 (it sticks), roomy cells, rows that tint on hover. */
+  protected readonly th = headerCellClass('roomy', { tone: 'caps' });
+  protected readonly thEnd = headerCellClass('roomy', { tone: 'caps', align: 'right' });
+  protected readonly td = cellClass('roomy');
+  /** Striped and tinted on hover; `group/entry` lets the rule cell read the row's data-unread (accent dot, bolder id). */
+  protected readonly row = cx(rowClass({ striped: true, hover: 'tint' }), tw('group/entry'));
   protected readonly buttonIcon = iconClasses.sm;
   /** 36px, the nearest icon step to #909's 40px; decorative. */
   protected readonly emptyIcon = iconClasses.xl;
