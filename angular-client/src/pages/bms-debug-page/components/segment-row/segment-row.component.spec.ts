@@ -35,8 +35,9 @@ describe('SegmentRowComponent', () => {
     expect(navigate).toHaveBeenCalledWith([appRoutes.bmsSegmentViewRoute(2)]);
   });
 
-  it('labels its view select with the current heat-map view', () => {
+  it('shows the current heat-map view in its view select, named for the segment', () => {
     const combobox: HTMLElement = fixture.nativeElement.querySelector('[role=combobox]');
     expect(combobox.textContent).toContain('C Volts');
+    expect(combobox.getAttribute('aria-label')).toBe('Segment 3 heat map view');
   });
 });

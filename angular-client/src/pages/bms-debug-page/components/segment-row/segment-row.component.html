@@ -19,6 +19,7 @@
         [options]="viewSelectorConfig.options"
         [placeholder]="viewSelectorConfig.placeholder"
         [defaultValue]="viewSelectorConfig.defaultValue"
+        [ariaLabel]="'Segment ' + (segment() + 1) + ' heat map view'"
       />
       <button type="button" [class]="seeMoreClass" (click)="openSegmentPage()">
         See more

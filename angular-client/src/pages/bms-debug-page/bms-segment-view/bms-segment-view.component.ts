@@ -99,7 +99,8 @@ export class BmsSegmentViewComponent implements OnInit {
         this.heatMapService.setAllSegViews(option.name as HeatMapView);
       }
     })),
-    placeholder: 'Change ALL Segments'
+    placeholder: 'Change ALL Segments',
+    ariaLabel: 'Heat map view for all segments'
   };
 
   ngOnInit(): void {
@@ -111,6 +112,11 @@ export class BmsSegmentViewComponent implements OnInit {
   }
 
   private subscribeToView(): void {
+    // Named for the segment shown; the page is reused when the route moves to another segment.
+    this.currentSegmentSelectorConfig = {
+      ...this.currentSegmentSelectorConfig,
+      ariaLabel: `Segment ${this.segmentId + 1} heat map view`
+    };
     const viewSub = this.heatMapService.getCurrentView(this.segmentId);
     if (viewSub) {
       viewSub.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
