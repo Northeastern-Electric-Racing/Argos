@@ -40,4 +40,10 @@
  * anyway (eslint no-restricted-classes): Tailwind's container clashes with our naming, rings are outlines here.
  */
 @source not inline('container ring filter');
+/*
+ * Two more prose words (wave 2 review fix): "outline" and "transition" in comments emitted the bare `outline` and
+ * `transition` utilities (0.5 kB), which no template uses. Write `focus-ring` or `outline-solid outline-1`, and
+ * `transition-colors`, `transition-transform` or `transition-[…]`; to use a bare one, take it off this list.
+ */
+@source not inline('outline transition');
 @import './styles/utilities.css';
