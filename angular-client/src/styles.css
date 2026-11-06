@@ -6,8 +6,9 @@
  * specificity (Angular component styles included). So a component is either all utilities or all component CSS,
  * never both, and third-party CSS goes in a layer below utilities: Mapbox GL's sheet in vendor (styles/mapbox.css,
  * a separate bundle the map page links; this statement orders its layer however late it loads), the CDK's prebuilt
- * CSS in cdk. Icons are ours (ui-icon, all utilities). The one unlayered third-party CSS left is the CDK overlay
- * structure (below).
+ * CSS in cdk. Icons are ours (ui-icon, all utilities). The only unlayered third-party CSS left is the structure
+ * the CDK injects at runtime: the overlay (below), plus one-rule copies of .cdk-dialog-container,
+ * .cdk-visually-hidden and .cdk-table-fixed-layout.
  */
 @layer theme, base, vendor, cdk, components, utilities;
 
