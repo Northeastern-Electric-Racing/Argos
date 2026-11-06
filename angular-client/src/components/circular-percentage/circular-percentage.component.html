@@ -1,6 +1,6 @@
 <info-background>
   <div
-    class="circular-container"
+    class="flex items-center justify-center rounded-full"
     [style]="{
       background:
         'conic-gradient(from 180deg, ' +
@@ -17,24 +17,20 @@
     }"
   >
     <div
-      class="inner"
-      [style]="{
-        'background-color': backgroundColor,
-        height: innerCircleDimension() + 'px',
-        width: innerCircleDimension() + 'px'
-      }"
+      class="flex items-center justify-center rounded-full bg-panel"
+      data-part="inner"
+      [style.height.px]="innerCircleDimension()"
+      [style.width.px]="innerCircleDimension()"
     >
-      <div class="content">
-        <typography
-          variant="header"
-          content="{{ percentage() }}"
-          additionalStyles="fontSize: {{ percentageFontSize() }}px; margin: 0;"
-        />
-        <typography
-          variant="info-subtitle"
-          content="%"
-          additionalStyles="fontSize: {{ percentageSignFontSize() }}px; margin-bottom: {{ percentageSignOffset() }}px"
-        />
+      <div class="flex flex-row items-end">
+        <p [class]="valueClass" [style.font-size.px]="percentageFontSize()">{{ percentage() }}</p>
+        <p
+          [class]="signClass"
+          [style.font-size.px]="percentageSignFontSize()"
+          [style.margin-bottom.px]="percentageSignOffset()"
+        >
+          %
+        </p>
       </div>
     </div>
   </div>

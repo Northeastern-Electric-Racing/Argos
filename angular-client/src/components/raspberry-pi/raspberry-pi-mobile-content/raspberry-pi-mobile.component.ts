@@ -6,11 +6,11 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 import ThermometerComponent from 'src/components/thermometer/thermometer.component';
+import { wifi } from '../wifi.classes';
 
 @Component({
   selector: 'raspberry-pi-mobile',
   templateUrl: './raspberry-pi-mobile.component.html',
-  styleUrls: ['./raspberry-pi-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     CircularPercentageComponent,
@@ -29,6 +29,7 @@ export default class RaspberryPiMobileComponent {
   wifiRSSI = input<number>(0);
   mcs = input<number>(0);
 
+  protected readonly wifi = wifi;
   colorRed = '#FF0000';
   colorPurple = '#800080';
 }
