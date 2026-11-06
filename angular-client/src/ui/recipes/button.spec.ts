@@ -53,8 +53,8 @@ describe('button recipe', () => {
     expect(lg).toEqual(expect.arrayContaining(['min-h-11.25', 'min-w-35', 'max-md:min-h-11']));
     // pages laid out around the 140px minimum (the lap timer's hero) keep it on phones
     expect(lg.filter((c) => c.startsWith('max-md:min-w') || c.startsWith('max-md:px'))).toEqual([]);
-    // pages used to resize lg through --ui-button-* custom properties; the size owns its footprint now
-    expect(buttonSizeClasses.lg).not.toMatch(/var\(--ui-/);
+    // the size owns its footprint: no custom-property hook (the legacy button's are gone with its stylesheet)
+    for (const s of BUTTON_SIZES) expect(buttonSizeClasses[s]).not.toMatch(/var\(--/);
   });
 
   it('has an lg-fluid size: lg on wide screens, as wide as its label on phones', () => {

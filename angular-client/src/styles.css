@@ -4,10 +4,10 @@
  *
  * Tailwind's output lives in cascade layers, and any unlayered CSS beats every layer whatever its
  * specificity: Angular component styles, Material's mat-icon rules, ApexCharts and Mapbox. So a component
- * is either all utilities or all component CSS, never both. Legacy #909 classes (src/ui/legacy) sit in
- * their own layer below utilities, and the CDK's prebuilt CSS below them.
+ * is either all utilities or all component CSS, never both. The CDK's prebuilt CSS sits in its own layer below
+ * utilities.
  */
-@layer theme, base, cdk, legacy, components, utilities;
+@layer theme, base, cdk, components, utilities;
 
 @import 'tailwindcss/theme.css' layer(theme);
 @import './styles/theme.css' layer(theme);
@@ -21,10 +21,6 @@
  * .cdk-visually-hidden.
  */
 @import '@angular/cdk/a11y-prebuilt.css' layer(cdk);
-
-/* #909's ui.css, one file per primitive; each owner deletes its file once nothing uses those classes. */
-@import './ui/legacy/button.css' layer(legacy);
-@import './ui/legacy/field.css' layer(legacy);
 
 /*
  * Utilities, generated from the class names in the .ts and .html files under src. Specs, assets and CSS are not
