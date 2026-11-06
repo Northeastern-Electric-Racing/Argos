@@ -48,6 +48,8 @@ describe('injectFocusAfterRender', () => {
     await fixture.whenStable();
     return fixture;
   };
+  // The focus spies sit on a prototype that spec files in one worker share (isolate: false): restore them even if a test fails.
+  afterEach(() => vi.restoreAllMocks());
 
   it('focuses the element once it has rendered, then runs `then` on it with focus already there', async () => {
     const fixture = await setup();
@@ -70,7 +72,6 @@ describe('injectFocusAfterRender', () => {
       fixture.componentInstance.edit();
       await fixture.whenStable();
       expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: ring }));
-      vi.restoreAllMocks();
       fixture.destroy();
     }
   });
@@ -84,7 +85,6 @@ describe('injectFocusAfterRender', () => {
     await fixture.whenStable();
     expect(document.activeElement?.textContent).toBe('Hide');
     expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ preventScroll: true }));
-    vi.restoreAllMocks();
   });
 
   it('scrolls the focused element into view by default', async () => {
@@ -93,7 +93,6 @@ describe('injectFocusAfterRender', () => {
     fixture.componentInstance.edit();
     await fixture.whenStable();
     expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ preventScroll: false }));
-    vi.restoreAllMocks();
   });
 
   it('does nothing when there is nothing to focus', async () => {

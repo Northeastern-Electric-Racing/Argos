@@ -21,6 +21,8 @@ describe('NotificationLogPageComponent', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
   });
+  // The focus spy sits on a prototype that spec files in one worker share (isolate: false): restore it even if a test fails.
+  afterEach(() => vi.restoreAllMocks());
 
   it('lists the newest entry first, with its count', () => {
     const rules = Array.from(el().querySelectorAll('tbody tr')).map((r) => r.querySelector('td')?.textContent?.trim());
@@ -52,7 +54,6 @@ describe('NotificationLogPageComponent', () => {
     await render();
     expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: true }));
     expect(document.activeElement).toBe(dismiss('hot'));
-    vi.restoreAllMocks();
   });
 
   it('shows the empty state after Clear All, with focus on it rather than the body', async () => {
