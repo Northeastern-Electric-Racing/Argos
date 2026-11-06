@@ -2,17 +2,17 @@
   <info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton">
     <hstack spacing="30px">
       <vstack class="mb-10 w-1/10">
-        <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" textClass="text-xl" />
+        <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" textClass="text-stat" />
         <typography variant="info-subtitle" content="Delta" textClass="text-sm" />
       </vstack>
       <divider class="mb-10 h-25" />
       <vstack class="mb-10 w-1/10">
-        <typography variant="info-value" [content]="lowCellVoltage.toFixed(3) + 'V'" textClass="text-xl" />
+        <typography variant="info-value" [content]="lowCellVoltage.toFixed(3) + 'V'" textClass="text-stat" />
         <typography variant="info-subtitle" content="Low Cell" textClass="text-sm" />
       </vstack>
       <divider class="mb-10 h-25" />
       <vstack class="mb-10 w-1/10">
-        <typography variant="info-value" [content]="highCellVoltage.toFixed(3) + 'V'" textClass="text-xl" />
+        <typography variant="info-value" [content]="highCellVoltage.toFixed(3) + 'V'" textClass="text-stat" />
         <typography variant="info-subtitle" content="High Cell" textClass="text-sm" />
       </vstack>
       <high-low-cell-graph class="w-3/4 pb-8.75" [highVoltsData]="highVoltsData" [lowVoltsData]="lowVoltsData" />
