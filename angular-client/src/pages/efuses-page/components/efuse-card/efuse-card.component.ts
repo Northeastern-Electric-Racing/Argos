@@ -238,18 +238,6 @@ export default class EfuseCardComponent implements OnInit {
     }
   }
 
-  getStatusColor(): string {
-    if (this.isFaulted) return '#ef4444';
-    if (this.isEnabled) return '#22c55e';
-    return '#6b7280';
-  }
-
-  getStatusText(): string {
-    if (this.isFaulted) return 'FAULTED';
-    if (this.isEnabled) return 'ENABLED';
-    return 'DISABLED';
-  }
-
   /** Handle switch state change — sends the appropriate CAN message; reverts the switch if it fails */
   onSwitchStateChange(state: EfuseSwitchState): void {
     if (this.effectivelyLocked()) return;
