@@ -14,6 +14,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import { cellClass, headerCellClass, rowClass, tableClass } from 'src/ui/recipes/table';
 import { accordionClasses } from 'src/ui/recipes/accordion';
 import { cellButtonClass } from 'src/ui/recipes/cell-button';
+import { UiAccordionBodyDirective } from 'src/ui/accordion/accordion-body.directive';
 
 function groupByNode(faults: FaultData[]): FaultNode[] {
   const nodes = new Map<string, FaultNode>();
@@ -37,7 +38,8 @@ function groupByNode(faults: FaultData[]): FaultNode[] {
     CdkTableModule,
     MatIcon,
     DatePipe,
-    TypographyComponent
+    TypographyComponent,
+    UiAccordionBodyDirective
   ]
 })
 export default class FaultPageComponent {
