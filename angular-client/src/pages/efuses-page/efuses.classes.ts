@@ -1,4 +1,4 @@
-import { tw } from 'src/ui/recipes/tw';
+import { cx, tw } from 'src/ui/recipes/tw';
 
 /**
  * The eFuses page's panel hardware: annunciator plates, push-button switches, the lock and the RTDS buttons share
@@ -17,12 +17,14 @@ export const panelGroupClass = tw('inline-flex gap-px overflow-hidden rounded-[4
  * bottom one would sink out of the clipped group): its tinted fill is only about 1.5:1 from an unpressed one,
  * the bar is 4.5:1 or more (WCAG 1.4.11). The group clips its overflow, so the focus indicator is drawn inside.
  * Each button sets its own padding, colours (an opaque surface-1, or a tint over the base) and font size.
- * While locked (disabled) the unpressed buttons dim to 65%; the pressed one keeps its strength, since it shows the
- * eFuse's current mode.
+ * `panelButtonClass` also dims a locked (disabled) button; the eFuse switch dims only its unpressed positions,
+ * since the pressed one shows the eFuse's current mode, so it composes the base and `panelLockedDimClass` itself.
  */
-export const panelButtonClass = tw(
-  'relative inline-flex cursor-pointer items-center justify-center border-0 transition-transform duration-100 select-none not-aria-pressed:hover:translate-y-px focus-visible:focus-ring focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:not-aria-pressed:opacity-65 aria-pressed:translate-y-[3px] aria-pressed:shadow-[inset_0_3px_0_currentColor]'
+export const panelButtonBaseClass = tw(
+  'relative inline-flex cursor-pointer items-center justify-center border-0 transition-transform duration-100 select-none not-aria-pressed:hover:translate-y-px focus-visible:focus-ring focus-visible:-outline-offset-2 disabled:pointer-events-none aria-pressed:translate-y-[3px] aria-pressed:shadow-[inset_0_3px_0_currentColor]'
 );
+export const panelLockedDimClass = tw('disabled:opacity-65');
+export const panelButtonClass = cx(panelButtonBaseClass, panelLockedDimClass);
 
 /** The engraved legend on plates and buttons. */
 export const legendClass = tw('font-highway font-normal tracking-widest uppercase');
