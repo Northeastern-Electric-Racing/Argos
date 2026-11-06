@@ -27,7 +27,9 @@ const litCustom = tw('text-fg');
 @Component({
   selector: 'indicator-light',
   templateUrl: './indicator-light.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.Eager,
+  // An opaque base under the plate: a lit plate's tint must compose over surface-1, not the card (4.36:1 there)
+  host: { class: 'inline-flex rounded-[4px] bg-surface-1' }
 })
 export default class IndicatorLightComponent {
   /** The text displayed on the plate (e.g., "FAULTED", "ENABLED") */
