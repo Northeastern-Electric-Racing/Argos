@@ -29,8 +29,7 @@
   --color-fg: #efefef;
   --color-fg-muted: #a3a3a3; /* not the old #797a7a: AA on every surface up to #333 */
   --color-fg-label: #cacaca;
-  --color-fg-dim: #8a8a8a; /* live controls drawn as unlit panel switches, AA on #1a1a1a */
-  --color-fg-unlit: #666; /* decorative only: an unlit annunciator legend at 3:1 */
+  --color-fg-dim: #8a8a8a; /* unlit panel switches and lamp legends (eFuses), AA on #1a1a1a */
 
   /* Lines and controls */
   --color-border: #414141;
@@ -150,17 +149,6 @@
  * nothing references it (the fix step after each wave drops those).
  */
 :root {
-  --color-text-primary: var(--color-fg);
-  --color-text-secondary: var(--color-fg-muted);
-  --color-text-subtitle: var(--color-fg-label);
-  --color-background-info: var(--color-panel);
-  --color-background-page: var(--color-page);
-  --color-divider: var(--color-border);
-
-  --font-size-xs: 12px;
-  --font-size-lg: 20px;
-  --border-radius-panel: var(--radius-md);
-
   --ui-accent: var(--color-accent);
   --ui-accent-hover: var(--color-accent-hover);
   --ui-accent-strong: var(--color-accent-strong);
@@ -177,9 +165,6 @@
   --ui-success: var(--color-success);
   --ui-warn: var(--color-warn);
   --ui-on-status: var(--color-on-status);
-  --ui-success-fg: var(--color-success-fg);
-  --ui-text-dim: var(--color-fg-dim);
-  --ui-text-unlit: var(--color-fg-unlit);
 
   --ui-surface-1: var(--color-surface-1);
   --ui-surface-3: var(--color-surface-3);
