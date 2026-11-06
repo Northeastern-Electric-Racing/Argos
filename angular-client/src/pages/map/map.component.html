@@ -1,5 +1,5 @@
 @if (isMobile) {
-  <sidebar-toggle style="width: 100%" />
+  <sidebar-toggle class="w-full" />
 }
 @if (isError) {
   <div>
@@ -11,11 +11,11 @@
       <loading-page />
     </div>
   } @else {
-    <div id="map" class="map-container">
-      <run-selector
-        style="position: absolute; margin-bottom: 16px; margin-right: 16px; bottom: 0; right: 0"
-        [selectRun]="onRunSelected"
-      />
+    <!-- Mapbox makes its container position: relative from an unlayered sheet, so the box that fills the page is a wrapper. -->
+    <div class="absolute h-full w-full">
+      <div id="map" class="h-full w-full">
+        <run-selector class="absolute right-0 bottom-0 mr-4 mb-4" [selectRun]="onRunSelected" />
+      </div>
     </div>
   }
 }

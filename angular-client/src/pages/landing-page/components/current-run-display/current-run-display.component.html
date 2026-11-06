@@ -3,21 +3,19 @@
     <typography
       [variant]="small() ? 'sidebar-label' : 'large-header'"
       content="Run"
-      textClass="text-readout"
-      additionalStyles="margin: 0px; color: #ef4345"
+      textClass="m-0 text-readout text-accent"
     />
     <typography
       [variant]="small() ? 'sidebar-label' : 'large-header'"
       content="#{{ currentRun }}"
-      textClass="text-readout"
-      additionalStyles="margin: 0px; color: #ef4345"
+      textClass="m-0 text-readout text-accent"
     />
   </hstack>
 } @else {
   <info-background>
-    <div class="current-run-display">
-      <typography variant="header" content="Run" additionalStyles="margin: 0px" />
-      <typography variant="info-subtitle" content="#{{ currentRun }}" additionalStyles="margin: 0px" />
+    <div class="flex h-full flex-col items-center justify-center">
+      <typography variant="header" content="Run" textClass="m-0" />
+      <typography variant="info-subtitle" content="#{{ currentRun }}" />
     </div>
   </info-background>
 }

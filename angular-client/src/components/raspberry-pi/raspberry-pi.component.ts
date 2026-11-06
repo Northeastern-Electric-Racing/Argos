@@ -10,7 +10,6 @@ import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-
 @Component({
   selector: 'raspberry-pi',
   templateUrl: './raspberry-pi.component.html',
-  styleUrls: ['./raspberry-pi.component.css'],
   imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
