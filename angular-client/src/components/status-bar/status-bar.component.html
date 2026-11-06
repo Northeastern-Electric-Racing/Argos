@@ -1,6 +1,6 @@
 @if (collapsed()) {
   <button #handle type="button" [class]="handleClass" (click)="toggle()" aria-expanded="false" aria-label="Show status bar">
-    <mat-icon aria-hidden="true" [class]="handleIconClass">chevron_left</mat-icon>
+    <ui-icon name="chevron_left" size="lg" />
   </button>
 } @else {
   <div [class]="panelClass">
@@ -14,7 +14,7 @@
         aria-expanded="true"
         aria-label="Hide status bar"
       >
-        <mat-icon aria-hidden="true" [class]="collapseIconClass">chevron_right</mat-icon>
+        <ui-icon name="chevron_right" size="md" />
       </button>
     </div>
     <ng-content />

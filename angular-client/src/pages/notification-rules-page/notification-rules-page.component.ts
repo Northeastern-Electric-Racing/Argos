@@ -6,7 +6,7 @@ import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { map, take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -27,7 +27,6 @@ import { RulesTableComponent } from './rules-table/rules-table.component';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { UiInputDirective } from 'src/ui/field/field.directive';
-import { iconClasses } from 'src/ui/recipes/icon';
 import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
@@ -40,7 +39,14 @@ const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
   selector: 'notification-rules-page',
   templateUrl: './notification-rules-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, RulesTableComponent, NotificationListComponent, MatIcon, UiInputDirective]
+  imports: [
+    TypographyComponent,
+    ButtonComponent,
+    RulesTableComponent,
+    NotificationListComponent,
+    UiIconComponent,
+    UiInputDirective
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
   private messageService = inject(ToastService);
@@ -70,7 +76,6 @@ export default class NotificationRulesPageComponent implements OnInit {
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
   private addButton = viewChild('addButton', { read: ElementRef });
-  protected readonly toggleIcon = iconClasses.sm;
   hasSelection = computed(() => this.selectedRules().length > 0);
 
   private confirmRef: DialogRef<boolean> | null | undefined;

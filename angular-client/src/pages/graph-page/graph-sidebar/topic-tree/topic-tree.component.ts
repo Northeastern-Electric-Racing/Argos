@@ -1,9 +1,8 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Tree, TreeItem, TreeItemGroup } from '@angular/aria/tree';
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiInputDirective } from 'src/ui/field/field.directive';
-import { iconClasses } from 'src/ui/recipes/icon';
 import { TreeNode, TreeNodeData } from 'src/utils/tree.utils';
 
 type TopicNode = TreeNode<TreeNodeData>;
@@ -40,7 +39,7 @@ function collectLeafKeys(nodes: TopicNode[], into: Set<string>): Set<string> {
   templateUrl: './topic-tree.component.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Tree, TreeItem, TreeItemGroup, NgTemplateOutlet, MatIcon, UiInputDirective]
+  imports: [Tree, TreeItem, TreeItemGroup, NgTemplateOutlet, UiIconComponent, UiInputDirective]
 })
 export class TopicTreeComponent {
   nodes = input<TopicNode[]>([]);
@@ -51,7 +50,6 @@ export class TopicTreeComponent {
   nodeSelect = output<string>();
   nodeUnselect = output<string>();
 
-  protected readonly icon = iconClasses;
   protected filter = signal('');
   protected visibleNodes = computed(() => {
     const term = this.filter().trim().toLowerCase();

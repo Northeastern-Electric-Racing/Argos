@@ -1,12 +1,7 @@
 <!-- 814 parity: the filter and tree sit 16px in from the sidebar, rows 2px apart, parents 36px, leaves 30px, 16px per level. -->
 <div class="flex min-h-0 flex-col px-4" [style.height]="height()">
   <div class="relative">
-    <mat-icon
-      [class]="icon.sm"
-      class="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-fg-muted"
-      aria-hidden="true"
-      >search</mat-icon
-    >
+    <ui-icon name="search" size="sm" class="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2" />
     <input
       type="search"
       uiInput
@@ -48,10 +43,8 @@
     >
       @if (node.children?.length) {
         <span class="grid size-7 shrink-0 place-items-center" aria-hidden="true"
-          ><mat-icon [class]="icon.xs" class="text-fg-muted transition-transform duration-150 group-aria-expanded:rotate-90"
-            >chevron_right</mat-icon
-          ></span
-        >
+          ><ui-icon name="chevron_right" size="xs" class="transition-transform duration-150 group-aria-expanded:rotate-90"
+        /></span>
       } @else {
         <!-- No checkbox (814 parity): the row's tint shows selection; the toggle's box keeps leaf labels in line. -->
         <span class="size-7 shrink-0" aria-hidden="true"></span>

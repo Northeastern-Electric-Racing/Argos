@@ -1,7 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import Theme from 'src/services/theme.service';
-import { iconClasses } from 'src/ui/recipes/icon';
 import { tw } from 'src/ui/recipes/tw';
 
 const panelWidth = { full: tw('box-border w-full rounded-md'), fit: tw('box-border w-fit rounded-md') };
@@ -24,7 +23,7 @@ const panelWidth = { full: tw('box-border w-full rounded-md'), fit: tw('box-bord
   selector: 'info-panel',
   templateUrl: './info-panel.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatIcon]
+  imports: [UiIconComponent]
 })
 export class InfoPanelComponent {
   /** Panel title — omit to hide the title bar entirely */
@@ -41,5 +40,4 @@ export class InfoPanelComponent {
   widthMode = input<'full' | 'fit'>('full');
 
   protected panelClass = computed(() => panelWidth[this.widthMode()]);
-  protected readonly iconClass = iconClasses.sm;
 }

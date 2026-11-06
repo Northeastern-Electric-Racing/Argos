@@ -84,6 +84,7 @@
   --font-sans: 'Roboto', sans-serif;
   --font-segment7: 'Segment7', monospace;
   --font-highway: 'Highway Gothic', sans-serif;
+  --font-icons: 'Material Icons'; /* ui-icon's ligatures (styles/material-icons.scss) */
   --text-*: initial;
   --text-xs: 0.75rem; /* 12px */
   --text-sm: 0.875rem; /* 14px */

@@ -11,7 +11,7 @@
     </div>
     @if (hasEntries()) {
       <button type="button" uiButton variant="danger-text" (click)="clearAll()" aria-label="Clear all notifications">
-        <mat-icon [class]="buttonIcon" aria-hidden="true">delete</mat-icon>Clear All
+        <ui-icon name="delete" size="sm" />Clear All
       </button>
     }
   </header>
@@ -22,9 +22,8 @@
       tabindex="-1"
       class="flex min-h-75 flex-1 flex-col items-center justify-center gap-2.5 rounded-md border border-dashed border-border bg-panel px-4 py-12 text-center text-fg-muted focus-visible:focus-ring"
     >
-      <span class="mb-2 text-border-strong" aria-hidden="true"
-        ><mat-icon [class]="emptyIcon">notifications_off</mat-icon></span
-      >
+      <!-- 36px, the nearest icon step to #909's 40px; decorative. -->
+      <span class="mb-2 text-border-strong" aria-hidden="true"><ui-icon name="notifications_off" size="xl" /></span>
       <typography variant="subheader" content="No notifications have been triggered yet" />
       <span class="text-ctrl-sm text-fg-muted">Triggered rules will appear here in real-time</span>
     </div>
@@ -71,7 +70,7 @@
               [attr.data-entry]="entry.id"
               [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
             >
-              <mat-icon [class]="buttonIcon" aria-hidden="true">close</mat-icon>
+              <ui-icon name="close" size="sm" />
             </button>
           </td>
         </ng-container>

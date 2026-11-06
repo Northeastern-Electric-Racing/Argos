@@ -1,9 +1,7 @@
 @if (headerLabel()) {
   <div class="mb-1 flex items-center gap-1.5 whitespace-nowrap">
     @if (headerIcon()) {
-      <span class="flex h-4.25 w-3.25 shrink-0"
-        ><mat-icon aria-hidden="false" [svgIcon]="headerIcon()" [inline]="true"
-      /></span>
+      <span class="flex h-4.25 w-3.25 shrink-0"><ui-icon [svg]="headerIcon()" size="inline" /></span>
     }
     <span class="font-sans text-sm font-normal whitespace-nowrap text-fg">{{ headerLabel() }}</span>
   </div>

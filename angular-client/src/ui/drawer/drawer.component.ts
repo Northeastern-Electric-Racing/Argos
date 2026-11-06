@@ -13,7 +13,7 @@ import {
   untracked,
   viewChild
 } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
 import { tw } from '../recipes/tw';
 
@@ -36,7 +36,7 @@ const drawerClasses = {
   selector: 'ui-drawer',
   templateUrl: './drawer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIcon, UiIconButtonDirective]
+  imports: [UiIconComponent, UiIconButtonDirective]
 })
 export class UiDrawerComponent {
   visible = model(false);

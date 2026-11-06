@@ -2,14 +2,13 @@ import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { SessionAction, SessionMenuComponent } from './session-menu/session-menu.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
 import { InfoBackgroundComponent } from 'src/components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import LapTimerService from 'src/services/lap-timer.service';
 import { UiInputDirective } from 'src/ui/field/field.directive';
-import { iconClasses } from 'src/ui/recipes/icon';
 import { lightHeaderCellClass, rowClass } from 'src/ui/recipes/table';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { formatMs, LapSession } from 'src/utils/lap-timer.types';
@@ -30,7 +29,7 @@ const activeEdge = tw('border-l-3 border-l-battery-high');
   host: { class: 'flex h-full w-full' },
   imports: [
     DatePipe,
-    MatIcon,
+    UiIconComponent,
     SessionMenuComponent,
     ButtonComponent,
     InfoBackgroundComponent,
@@ -47,7 +46,6 @@ export default class SessionsPanelComponent {
   private focusAfterRender = injectFocusAfterRender();
 
   protected readonly cls = lapTimerClasses;
-  protected readonly iconSm = iconClasses.sm;
   protected readonly rowClass = cx(rowClass({ hover: true }), tw('data-[active=true]:bg-fg/4'));
   protected readonly headers = {
     state: tw('w-8 border-b border-solid border-border py-2 pr-0 pl-2'),

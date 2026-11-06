@@ -26,7 +26,7 @@ describe('SegmentRowComponent', () => {
     const button = seeMore();
     expect(button.type).toBe('button');
     expect(button.textContent?.trim()).toMatch(/^See more/);
-    expect(button.querySelector('mat-icon')?.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(button.querySelector('ui-icon')?.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('opens the segment page from "See more"', () => {

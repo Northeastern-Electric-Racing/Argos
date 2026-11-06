@@ -40,7 +40,7 @@
                 <td [class]="stateCellClass(s)">
                   @if (activeStateIcon(s); as icon) {
                     <span class="inline-flex align-middle text-battery-high">
-                      <mat-icon aria-hidden="true" [class]="iconSm">{{ icon }}</mat-icon>
+                      <ui-icon size="sm" [name]="icon" />
                     </span>
                     <span class="sr-only">{{ icon === 'pause' ? 'Paused' : 'Running' }}</span>
                   }

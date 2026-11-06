@@ -3,9 +3,7 @@
     <!-- Announced through LiveAnnouncer in ToastService, so this is visual only. -->
     <div [class]="classes.toast" [attr.data-severity]="toast.severity">
       <div [class]="severityClasses[toast.severity]">
-        <span [class]="iconTone[toast.severity]">
-          <mat-icon aria-hidden="true">{{ icons[toast.severity] }}</mat-icon>
-        </span>
+        <ui-icon [class]="iconTone[toast.severity]" [name]="icons[toast.severity]" />
         <div class="min-w-0 flex-1 text-ctrl-sm wrap-anywhere">
           @if (toast.summary) {
             <div class="mb-[0.15rem] font-semibold">{{ toast.summary }}</div>
@@ -21,7 +19,7 @@
           aria-label="Dismiss notification"
           (click)="toastService.remove(toast.id)"
         >
-          <mat-icon aria-hidden="true">close</mat-icon>
+          <ui-icon name="close" />
         </button>
       </div>
     </div>

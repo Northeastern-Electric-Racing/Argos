@@ -2,10 +2,10 @@
   @if (title()) {
     <div class="flex items-center gap-1 text-fg">
       @if (icon()) {
-        <mat-icon aria-hidden="false" [fontIcon]="icon()" [class]="iconClass" />
+        <ui-icon size="sm" [name]="icon()" />
       }
       @if (svgIcon()) {
-        <mat-icon aria-hidden="false" [svgIcon]="svgIcon()" [class]="iconClass" />
+        <ui-icon size="sm" [svg]="svgIcon()" />
       }
       <span class="font-sans text-sm font-medium whitespace-nowrap">{{ title() }}</span>
     </div>

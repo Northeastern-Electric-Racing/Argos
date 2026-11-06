@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { tw } from 'src/ui/recipes/tw';
 
 /** The status dot: the shared battery-low token while the LV low-voltage fault is active, battery-high otherwise. */
@@ -18,7 +18,7 @@ const LV_NORMAL_DOT = tw('size-2.5 shrink-0 rounded-full bg-battery-high');
 @Component({
   selector: 'lv-battery-chip',
   templateUrl: './lv-battery-chip.component.html',
-  imports: [MatIcon],
+  imports: [UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class LvBatteryChipComponent {

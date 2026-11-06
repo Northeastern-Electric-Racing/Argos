@@ -13,8 +13,7 @@ import {
   viewChild
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { MatIcon } from '@angular/material/icon';
-import { iconClasses } from '../recipes/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { cx, tw } from '../recipes/tw';
 import { listboxClasses, listboxPopupClass } from '../recipes/listbox';
 
@@ -49,7 +48,7 @@ const triggerSizeClasses = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   // The 10rem default min width is zero-specificity (:where), so a consumer's min-w-* class always wins.
   host: { class: 'inline-block [:where(&)]:min-w-40' },
-  imports: [Combobox, ComboboxPopup, ComboboxWidget, Listbox, Option, OverlayModule, MatIcon],
+  imports: [Combobox, ComboboxPopup, ComboboxWidget, Listbox, Option, OverlayModule, UiIconComponent],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => UiSelectComponent), multi: true }]
 })
 export class UiSelectComponent<T> implements ControlValueAccessor {
@@ -66,15 +65,13 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
 
   protected readonly lb = listboxClasses;
   /**
-   * The arrow's box: it carries the colour, since Material's unlayered mat-icon colour rule beats utilities. It
-   * follows the trigger's text colour hook, so a page that restyles the trigger (BMS's unlit control-off rows,
+   * The arrow's box: it places, turns and colours the icon. Its colour follows the trigger's text colour hook, so a page that restyles the trigger (BMS's unlit control-off rows,
    * where fg-muted was 2.96:1) keeps the arrow at the text's contrast; muted otherwise.
    */
   protected readonly arrowClass = tw(
     'pointer-events-none absolute right-[0.45rem] flex text-[color:var(--ui-select-color,var(--color-fg-muted))] transition-transform duration-180 ease-out group-aria-expanded/trigger:rotate-180'
   );
-  protected readonly arrowIcon = iconClasses.md;
-  protected readonly checkClass = cx(iconClasses.xs, listboxClasses.optionCheck);
+  protected readonly checkClass = listboxClasses.optionCheck;
   protected triggerClass = computed(() => cx(triggerBase, triggerSizeClasses[this.size()]));
   protected popupClass = computed(() => listboxPopupClass('grow', this.size()));
 

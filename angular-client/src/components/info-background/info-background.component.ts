@@ -2,7 +2,7 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 import Theme from 'src/services/theme.service';
 import { UiIconButtonDirective } from 'src/ui/button/button.directive';
 import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import TypographyComponent from '../typography/typography.component';
 import HStackComponent from '../hstack/hstack.component';
 import { cardClass } from 'src/ui/recipes/card';
@@ -23,7 +23,7 @@ interface ButtonInputs {
   selector: 'info-background',
   templateUrl: './info-background.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [MatIcon, SelectDropdownComponent, TypographyComponent, HStackComponent, UiIconButtonDirective]
+  imports: [UiIconComponent, SelectDropdownComponent, TypographyComponent, HStackComponent, UiIconButtonDirective]
 })
 export class InfoBackgroundComponent {
   icon = input<string>();

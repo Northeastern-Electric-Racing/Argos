@@ -19,9 +19,7 @@
       aria-label="Home"
       (click)="this.homeNavItem.onClick()"
     >
-      <span class="inline-flex size-12"
-        ><mat-icon aria-hidden="true" [inline]="true" [svgIcon]="this.homeNavItem.icon"
-      /></span>
+      <span class="inline-flex size-12"><ui-icon size="inline" [svg]="this.homeNavItem.icon" /></span>
     </button>
     <div class="inline-flex flex-1">
       @for (navItem of onlyDesktopNavItems; track navItem) {

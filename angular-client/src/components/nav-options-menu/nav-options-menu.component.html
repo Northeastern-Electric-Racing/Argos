@@ -7,7 +7,7 @@
   [menu]="menu()"
   aria-label="More pages"
 >
-  <span class="inline-flex size-12"><mat-icon [svgIcon]="'apps'" [inline]="true" aria-hidden="true" /></span>
+  <span class="inline-flex size-12"><ui-icon [svg]="'apps'" size="inline" /></span>
 </button>
 <ng-template
   [cdkConnectedOverlayOpen]="trigger.expanded()"
@@ -25,7 +25,7 @@
           [attr.data-id]="menuItem.id"
         >
           <span class="mb-2 inline-flex size-12">
-            <mat-icon [svgIcon]="menuItem.icon" [inline]="true" aria-hidden="true" />
+            <ui-icon [svg]="menuItem.icon" size="inline" />
           </span>
           <span [class]="classes.label">{{ menuItem.label }}</span>
         </div>

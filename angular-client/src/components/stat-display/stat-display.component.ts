@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { tw } from 'src/ui/recipes/tw';
 import { ConnectionDotWithMessageComponent } from '../connection-dot-with-message/connection-dot-with-message.component';
 
@@ -17,7 +17,7 @@ const unit = {
   selector: 'stat-display',
   templateUrl: './stat-display.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIcon, ConnectionDotWithMessageComponent],
+  imports: [UiIconComponent, ConnectionDotWithMessageComponent],
   host: { class: 'flex min-w-0 flex-1 flex-col items-center justify-end' }
 })
 export class StatDisplayComponent {

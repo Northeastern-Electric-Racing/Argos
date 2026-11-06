@@ -7,8 +7,6 @@ import RasberryPiComponent from './raspberry-pi.component';
 import RaspberryPiDesktopComponent from './raspberry-pi-desktop-content/raspberry-pi-desktop.component';
 import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-pi-mobile.component';
 import { By } from '@angular/platform-browser';
-import { MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
 
 describe('RasberryPiComponent', () => {
   // Spec files in one worker share window (Vitest runs with isolate: false): put the width back.
@@ -34,9 +32,6 @@ describe('RasberryPiComponent', () => {
       imports: [RasberryPiComponent],
       providers: [{ provide: Storage, useValue: { get: (topic: string) => stream(topic) } }]
     }).compileComponents();
-    const icons = TestBed.inject(MatIconRegistry);
-    icons.addSvgIconLiteral('wifi', TestBed.inject(DomSanitizer).bypassSecurityTrustHtml('<svg></svg>'));
-    icons.addSvgIconLiteral('memory', TestBed.inject(DomSanitizer).bypassSecurityTrustHtml('<svg></svg>'));
     fixture = TestBed.createComponent(RasberryPiComponent);
     fixture.detectChanges();
   };

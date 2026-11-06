@@ -7,6 +7,6 @@
     [attr.aria-label]="ariaLabel()"
     (click)="pressed.emit()"
   >
-    <mat-icon aria-hidden="true" [fontIcon]="locked() ? 'lock' : 'lock_open'" />
+    <ui-icon [name]="locked() ? 'lock' : 'lock_open'" />
   </button>
 </div>

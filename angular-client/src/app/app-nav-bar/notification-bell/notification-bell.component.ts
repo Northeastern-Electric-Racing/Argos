@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { tw } from 'src/ui/recipes/tw';
 
 const bellClasses = {
-  /** White like the rest of the bar, red on hover. Its 32px icon is an `inline` mat-icon in a sized box. */
+  /** White like the rest of the bar, red on hover. Its 32px icon is an `inline` ui-icon in a sized box. */
   bell: tw(
     'relative flex cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-2 text-inherit transition-colors duration-200 hover:text-accent-fg focus-visible:focus-ring'
   ),
@@ -24,7 +24,7 @@ const bellClasses = {
   selector: 'notification-bell',
   templateUrl: './notification-bell.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIcon, NotificationListComponent, UiPopoverComponent]
+  imports: [UiIconComponent, NotificationListComponent, UiPopoverComponent]
 })
 export class NotificationBellComponent {
   protected notificationLogService = inject(NotificationLogService);

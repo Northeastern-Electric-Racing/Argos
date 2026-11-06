@@ -1,7 +1,7 @@
 import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import {
@@ -31,7 +31,7 @@ const seeMoreClass = cx(
   selector: 'segment-row',
   templateUrl: './segment-row.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent, MatIcon],
+  imports: [SelectDropdownComponent, SegmentHeatmapComponent, SegmentOverviewComponent, UiIconComponent],
   host: { class: 'block' }
 })
 export class SegmentRowComponent implements OnInit {
