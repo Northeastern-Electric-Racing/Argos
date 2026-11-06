@@ -29,7 +29,7 @@ export default class LapTimerPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
 
-  protected readonly grid = tileGridClass;
+  protected readonly grid = tileGridClass();
   /** The grid's tiles (columns × rows), as mat-grid-tile drew them: the card centred, anything larger clipped. */
   protected readonly tiles = {
     sessions: gridTileClass(6, 8),

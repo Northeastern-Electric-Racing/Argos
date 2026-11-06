@@ -4,7 +4,7 @@ import { BUTTON_SIZES, BUTTON_VARIANTS, buttonClass, ICON_BUTTON_SIZES, iconButt
 import { cardClass } from './card';
 import { cellButtonClass } from './cell-button';
 import { fieldClasses, INPUT_SIZES, inputClass } from './field';
-import { GRID_COL_SPANS, GRID_ROW_SPANS, gridTileClass, tileGridClass } from './grid';
+import { GRID_COL_SPANS, GRID_ROW_HEIGHTS, GRID_ROW_SPANS, gridTileClass, tileGridClass } from './grid';
 import { iconClasses } from './icon';
 import { listboxClasses, listboxPopupClass, LISTBOX_SIZES, LISTBOX_WIDTHS } from './listbox';
 import { appsMenuClasses, menuItemClass, menuPanelClass } from './menu';
@@ -52,7 +52,10 @@ const everyRecipeList = (): [string, string][] => {
   add('listbox', listboxClasses);
   add('menu', [menuPanelClass, menuItemClass, appsMenuClasses]);
   for (const w of NUMBER_INPUT_WIDTHS) add(`number input ${w}`, numberInputClass(w));
-  add('grid', [tileGridClass, ...GRID_COL_SPANS.flatMap((c) => GRID_ROW_SPANS.map((r) => gridTileClass(c, r)))]);
+  add('grid', [
+    ...GRID_ROW_HEIGHTS.map((rows) => tileGridClass({ rows })),
+    ...GRID_COL_SPANS.flatMap((c) => GRID_ROW_SPANS.map((r) => gridTileClass(c, r)))
+  ]);
   add('segmented', segmentedClasses);
   add('spinner', spinnerClass);
   for (const s of TABLE_SIZES) add(`table ${s}`, tableClass(s));

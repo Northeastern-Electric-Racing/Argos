@@ -1,14 +1,24 @@
 import { cx, tw } from './tw';
 
 /*
- * The tile grid that replaces 814's 6-column mat-grid-list (1.5rem rows, 15px gutters): `tileGridClass` on the
- * grid, `gridTileClass(cols, rows)` on each tile. A tile spans whole columns and rows and centres its content;
+ * The tile grid that replaces 814's 6-column mat-grid-list (15px gutters): `tileGridClass()` on the grid,
+ * `gridTileClass(cols, rows)` on each tile. Rows are 1.5rem (`md`, the lap timer, BMS and landing) or 1.2rem
+ * (`{ rows: 'sm' }`, the charging page's rowHeight). A tile spans whole columns and rows and centres its content;
  * it clips anything larger, as mat-grid-tile did, unless `{ clip: false }` (the BMS header's tiles let their
  * content spill). The span lists are complete literal classes, so Tailwind sees each one: a span no page uses
- * yet is added here, never built from a number. The lap timer and the BMS pages use it; landing (3A) takes it
- * in wave 3, and charging's 1.2rem rows would be a row-height option added then.
+ * yet is added here, never built from a number.
  */
-export const tileGridClass = tw('grid auto-rows-6 grid-cols-6 gap-3.75');
+const tileGrids = {
+  md: tw('grid auto-rows-6 grid-cols-6 gap-3.75'),
+  sm: tw('grid auto-rows-[1.2rem] grid-cols-6 gap-3.75')
+} as const;
+
+export type GridRowHeight = keyof typeof tileGrids;
+export const GRID_ROW_HEIGHTS = Object.keys(tileGrids) as GridRowHeight[];
+
+export function tileGridClass({ rows = 'md' }: { rows?: GridRowHeight } = {}): string {
+  return tileGrids[rows];
+}
 
 const colSpans = {
   1: tw('col-span-1'),
