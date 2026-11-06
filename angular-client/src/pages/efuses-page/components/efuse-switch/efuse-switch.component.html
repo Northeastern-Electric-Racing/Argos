@@ -2,7 +2,7 @@
   @for (option of orderedOptions(); track option) {
     <button
       type="button"
-      [class]="buttonClasses[option]"
+      [class]="classFor()(option)"
       [attr.aria-pressed]="selected() === option"
       [style.font-size.px]="fontSize()"
       [disabled]="disabled()"

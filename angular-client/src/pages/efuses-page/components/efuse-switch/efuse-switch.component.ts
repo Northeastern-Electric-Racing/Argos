@@ -1,12 +1,12 @@
 import { Component, computed, input, linkedSignal, output, ChangeDetectionStrategy } from '@angular/core';
 import { cx, tw } from 'src/ui/recipes/tw';
-import { legendClass, panelButtonClass, panelGroupClass } from '../../efuses.classes';
+import { legendClass, panelButtonBaseClass, panelGroupClass, panelLockedDimClass } from '../../efuses.classes';
 
 export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
 
 /** An unpressed position is a live button, so its legend stays at AA (fg-dim, 5:1 on surface-1). */
 const positionClass = cx(
-  panelButtonClass,
+  panelButtonBaseClass,
   legendClass,
   tw(
     'min-w-22 bg-surface-1 px-6.5 py-3.5 text-fg-dim not-aria-pressed:hover:bg-surface-2 not-aria-pressed:hover:text-fg-muted max-md:min-w-18 max-md:px-4'
@@ -18,6 +18,16 @@ const buttonClasses: Record<EfuseSwitchState, string> = {
   ON: cx(positionClass, tw('aria-pressed:bg-success/10 aria-pressed:text-success-fg')),
   AUTO: cx(positionClass, tw('aria-pressed:bg-warn/10 aria-pressed:text-warn')),
   OFF: cx(positionClass, tw('aria-pressed:bg-accent/15 aria-pressed:text-accent-fg'))
+};
+
+/**
+ * While locked (disabled) the unpressed positions dim; the pressed one keeps full strength, since it is how the
+ * eFuse's current mode reads at a glance (the lock's own pressed state says the switch is locked).
+ */
+const unpressedClasses: Record<EfuseSwitchState, string> = {
+  ON: cx(buttonClasses.ON, panelLockedDimClass),
+  AUTO: cx(buttonClasses.AUTO, panelLockedDimClass),
+  OFF: cx(buttonClasses.OFF, panelLockedDimClass)
 };
 
 /**
@@ -58,7 +68,6 @@ export default class EfuseSwitchComponent {
   ariaLabel = input<string>('eFuse mode');
 
   protected readonly groupClass = panelGroupClass;
-  protected readonly buttonClasses = buttonClasses;
 
   /**
    * Ordered options — ensures AUTO is always in the middle when present.
@@ -73,6 +82,12 @@ export default class EfuseSwitchComponent {
   selected = linkedSignal<EfuseSwitchState>(
     () => this.selectedState() ?? (this.options().includes('AUTO') ? 'AUTO' : 'OFF')
   );
+
+  /** Each position's classes: the pressed one never dims */
+  protected readonly classFor = computed(() => {
+    const selected = this.selected();
+    return (option: EfuseSwitchState) => (option === selected ? buttonClasses : unpressedClasses)[option];
+  });
 
   /** Emitted when the user selects a new state */
   stateChange = output<EfuseSwitchState>();
