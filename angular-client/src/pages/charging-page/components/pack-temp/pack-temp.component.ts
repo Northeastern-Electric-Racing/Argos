@@ -11,7 +11,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'pack-temp',
   templateUrl: './pack-temp.component.html',
-  styleUrls: ['./pack-temp.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, ThermometerComponent, HStackComponent]
 })
