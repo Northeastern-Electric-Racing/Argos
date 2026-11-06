@@ -1,4 +1,5 @@
-<div class="flex min-h-0 flex-col gap-2" [style.height]="height()">
+<!-- 814 parity: the filter and tree sit 16px in from the sidebar, rows 2px apart, parents 36px, leaves 30px, 16px per level. -->
+<div class="flex min-h-0 flex-col px-4" [style.height]="height()">
   <div class="relative">
     <mat-icon
       [class]="icon.sm"
@@ -20,7 +21,7 @@
   <ul
     ngTree
     #tree="ngTree"
-    class="m-0 min-h-0 flex-1 list-none overflow-auto p-1 select-none"
+    class="m-0 min-h-0 flex-1 list-none overflow-auto p-0 select-none"
     aria-label="Topics"
     [multi]="true"
     [value]="selectedKeys()"
@@ -43,18 +44,17 @@
       [label]="node.label"
       [selectable]="!!node.selectable"
       [(expanded)]="node.expanded"
-      class="group flex min-h-7.5 cursor-pointer list-none items-center gap-2 rounded-sm px-2 text-fg outline-none not-aria-selected:hover:bg-fg/7 focus-visible:focus-ring focus-visible:-outline-offset-2 aria-selected:bg-accent/33"
+      class="group mt-0.5 flex min-h-7.5 cursor-pointer list-none items-center gap-1 rounded-sm px-2 text-fg outline-none not-aria-selected:hover:bg-fg/7 focus-visible:focus-ring focus-visible:-outline-offset-2 aria-selected:bg-accent/33 [&[aria-expanded]]:min-h-9"
     >
       @if (node.children?.length) {
-        <mat-icon
-          [class]="icon.md"
-          class="text-fg-muted transition-transform duration-150 group-aria-expanded:rotate-90"
-          aria-hidden="true"
-          >chevron_right</mat-icon
+        <span class="grid size-7 shrink-0 place-items-center" aria-hidden="true"
+          ><mat-icon [class]="icon.xs" class="text-fg-muted transition-transform duration-150 group-aria-expanded:rotate-90"
+            >chevron_right</mat-icon
+          ></span
         >
       } @else {
-        <!-- No checkbox (814 parity): the row's tint shows selection; this keeps leaf labels in line with their parents'. -->
-        <span class="size-5 shrink-0" aria-hidden="true"></span>
+        <!-- No checkbox (814 parity): the row's tint shows selection; the toggle's box keeps leaf labels in line. -->
+        <span class="size-7 shrink-0" aria-hidden="true"></span>
       }
       <!-- The accent label on hover, except on a selected (red-tinted) row, where it would be red on red. -->
       <span class="min-w-0 flex-1 font-sans text-base font-bold group-hover:group-not-aria-selected:text-accent-fg">{{
@@ -66,7 +66,7 @@
     </li>
 
     @if (node.children?.length) {
-      <ul role="group" class="m-0 list-none pl-4.5 [li[aria-expanded='false']+&]:hidden">
+      <ul role="group" class="m-0 list-none pl-4 [li[aria-expanded='false']+&]:hidden">
         <ng-template ngTreeItemGroup [ownedBy]="treeItem" #group="ngTreeItemGroup">
           <ng-template [ngTemplateOutlet]="treeNodes" [ngTemplateOutletContext]="{ nodes: node.children, parent: group }" />
         </ng-template>
