@@ -18,7 +18,6 @@ import VStackComponent from '../vstack/vstack.component';
 @Component({
   selector: 'acceleration-graphs',
   templateUrl: './acceleration-graphs.component.html',
-  styleUrls: ['./acceleration-graphs.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, GraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })

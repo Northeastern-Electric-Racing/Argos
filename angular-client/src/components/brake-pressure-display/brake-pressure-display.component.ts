@@ -11,7 +11,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'brake-pressure-display',
   templateUrl: './brake-pressure-display.component.html',
-  styleUrls: ['./brake-pressure-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent, VStackComponent, DividerComponent]
 })
