@@ -1,10 +1,10 @@
 <div class="flex flex-col gap-1.5">
-  <label uiLabel [for]="label() + '-input'">{{ label() }}</label>
+  <label uiLabel [for]="inputId()">{{ label() }}</label>
   <input
     uiInput
     [class]="numberInput"
     type="number"
-    [id]="label() + '-input'"
+    [id]="inputId()"
     [(ngModel)]="value"
     [attr.min]="min()"
     [attr.max]="max()"

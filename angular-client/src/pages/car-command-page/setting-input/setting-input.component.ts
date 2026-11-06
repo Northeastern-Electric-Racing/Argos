@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 import { numberInputClass } from 'src/ui/recipes/number-input';
@@ -16,6 +16,16 @@ export default class SettingInputComponent {
   min = input<number>();
   max = input<number>();
   protected readonly numberInput = numberInputClass('fill');
+  /** A valid id from the label: "Batch Time (s)" is `setting-batch-time-s-input`. */
+  protected readonly inputId = computed(
+    () =>
+      'setting-' +
+      this.label()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') +
+      '-input'
+  );
 
   onValueChange(raw: string) {
     let num = Number(raw);
