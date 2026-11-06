@@ -10,7 +10,6 @@ import ThermometerComponent from 'src/components/thermometer/thermometer.compone
 @Component({
   selector: 'battery-info-mobile',
   templateUrl: './battery-info-mobile.component.html',
-  styleUrls: ['./battery-info-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     BatteryPercentageComponent,

@@ -8,7 +8,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'current-display',
   templateUrl: './current-display.component.html',
-  styleUrls: ['./current-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })

@@ -6,7 +6,6 @@ import { GraphComponent } from '../../../../../components/graph/graph.component'
 @Component({
   selector: 'pack-voltage-graph',
   templateUrl: './pack-voltage-graph.component.html',
-  styleUrls: ['./pack-voltage-graph.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [GraphComponent]
 })

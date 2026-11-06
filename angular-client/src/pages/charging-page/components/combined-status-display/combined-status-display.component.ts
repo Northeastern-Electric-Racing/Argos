@@ -11,7 +11,6 @@ import ActiveStatusComponent from '../active-status/active-status.component';
 @Component({
   selector: 'combined-status-display',
   templateUrl: './combined-status-display.component.html',
-  styleUrls: ['./combined-status-display.component.css'],
   imports: [
     InfoBackgroundComponent,
     DividerComponent,

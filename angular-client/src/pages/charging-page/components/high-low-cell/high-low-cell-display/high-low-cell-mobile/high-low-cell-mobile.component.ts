@@ -12,7 +12,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'high-low-cell-mobile',
   templateUrl: './high-low-cell-mobile.component.html',
-  styleUrls: ['./high-low-cell-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
@@ -32,5 +31,5 @@ export default class HighLowCellMobileComponent {
   isDesktop = window.innerWidth > this.mobileThreshold;
   highVoltsData = input<GraphData[]>([]);
   lowVoltsData = input<GraphData[]>([]);
-  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
+  resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
 }
