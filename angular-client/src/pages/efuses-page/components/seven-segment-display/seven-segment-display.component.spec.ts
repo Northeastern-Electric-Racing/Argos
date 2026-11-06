@@ -8,10 +8,11 @@ describe('SevenSegmentDisplayComponent', () => {
     fixture.componentRef.setInput('unit', 'V');
     fixture.detectChanges();
 
-    const ghost: HTMLElement = fixture.nativeElement.querySelector('.segment-text.background');
-    const value: HTMLElement = fixture.nativeElement.querySelector('.segment-text.foreground');
-    expect(ghost.getAttribute('aria-hidden')).toBe('true');
-    expect(value.hasAttribute('aria-hidden')).toBe(false);
-    expect(value.textContent).toContain('1');
+    const hidden: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('[aria-hidden="true"]'));
+    expect(hidden.map((el) => el.textContent)).toEqual(['8․88']);
+
+    const read = (fixture.nativeElement as HTMLElement).cloneNode(true) as HTMLElement;
+    read.querySelectorAll('[aria-hidden="true"]').forEach((el) => el.remove());
+    expect(read.textContent?.replace(/\s+/g, '')).toBe('1․23V');
   });
 });
