@@ -7,8 +7,8 @@ import LvBatteryChipComponent from './lv-battery-chip.component';
 describe('LvBatteryChipComponent', () => {
   let fixture: ComponentFixture<LvBatteryChipComponent>;
 
-  const text = (selector: string): string =>
-    (fixture.nativeElement as HTMLElement).querySelector(selector)?.textContent?.trim() ?? '';
+  // What the chip reads, in order: the voltage, its unit, then the subtitle.
+  const text = (): string => (fixture.nativeElement as HTMLElement).textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -25,25 +25,25 @@ describe('LvBatteryChipComponent', () => {
 
   it('shows a placeholder until a voltage arrives', () => {
     // voltage input defaults to undefined
-    expect(text('.value')).toBe('–');
+    expect(text()).toMatch(/^–V/);
   });
 
   it('formats the voltage to two decimals', () => {
     fixture.componentRef.setInput('voltage', 24.5);
     fixture.detectChanges();
 
-    expect(text('.value')).toBe('24.50');
+    expect(text()).toMatch(/^24\.50V/);
   });
 
   it('shows the placeholder for a non-finite voltage', () => {
     fixture.componentRef.setInput('voltage', NaN);
     fixture.detectChanges();
 
-    expect(text('.value')).toBe('–');
+    expect(text()).toMatch(/^–V/);
   });
 
   it('labels the status dot for accessibility, driven by the fault flag', () => {
-    const dot = (): HTMLElement => (fixture.nativeElement as HTMLElement).querySelector('.dot')!;
+    const dot = (): HTMLElement => (fixture.nativeElement as HTMLElement).querySelector('[role="img"][aria-label]')!;
 
     expect(dot().getAttribute('aria-label')).toBe('LV battery nominal');
 
