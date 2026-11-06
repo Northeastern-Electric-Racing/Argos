@@ -10,7 +10,9 @@ import { tw } from './tw';
  *   trigger  full-width row: accent text while expanded, hover tint, a pressed tint (p-ripple's stand-in, Q8),
  *            the solid focus ring inset
  *   icon     the chevron, turned while its trigger is expanded
- *   body     the panel's padding
+ *   body     the panel's padding; use it through `UiAccordionBodyDirective` (`<div uiAccordionBody>`), which also
+ *            keeps the group's keys (arrows, Home, End, Enter, Space) away from it: the group applies them to the
+ *            active trigger wherever they were pressed, so a button in a panel could not be pressed by key
  * The fault page's CAN-node panels use it.
  */
 export const accordionClasses = {

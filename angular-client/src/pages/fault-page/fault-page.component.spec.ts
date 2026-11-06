@@ -108,6 +108,41 @@ describe('FaultPageComponent', () => {
     expect(faults.getSelectedFault().value?.name).toBe('Pack Overheat');
   });
 
+  /** A key as the browser delivers it: the keydown bubbles, and unless something prevents it, Enter or Space on a button clicks it. */
+  const press = (target: HTMLElement, key: string) => {
+    const down = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    target.dispatchEvent(down);
+    if (!down.defaultPrevented && (key === 'Enter' || key === ' ') && target instanceof HTMLButtonElement) target.click();
+  };
+
+  it('graphs a fault from Enter or Space on its Name button, leaving its panel open and the button focused', async () => {
+    const [bms] = await accordions();
+    for (const key of ['Enter', ' ']) {
+      navigate.mockClear();
+      const button = faultButton('Pack Overheat');
+      button.focus();
+      press(button, key);
+      await fixture.whenStable();
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(faults.getSelectedFault().value?.name).toBe('Pack Overheat');
+      expect(await bms.isExpanded()).toBe(true);
+      expect(document.activeElement).toBe(button);
+    }
+  });
+
+  it("keeps the arrow keys, Home and End on a control inside a panel, away from the group's triggers", async () => {
+    const [bms] = await accordions();
+    const button = faultButton('Cell Undervoltage');
+    for (const key of ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End']) {
+      button.focus();
+      press(button, key);
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(button);
+    }
+    expect(await bms.isExpanded()).toBe(true);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('graphs a fault from a click anywhere on its row', () => {
     (faultButton('Cell Undervoltage').closest('tr')!.querySelector('td:last-child') as HTMLElement).click();
     expect(navigate).toHaveBeenCalledTimes(1);

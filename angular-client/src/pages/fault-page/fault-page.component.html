@@ -22,7 +22,7 @@
       </h3>
       <div ngAccordionPanel #panel="ngAccordionPanel">
         <ng-template ngAccordionContent>
-          <div [class]="accordion.body">
+          <div uiAccordionBody>
             <table cdk-table [class]="table" [dataSource]="node.data" [trackBy]="trackFault">
               <ng-container cdkColumnDef="name">
                 <th cdk-header-cell *cdkHeaderCellDef [class]="th">Name</th>
