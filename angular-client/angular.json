@@ -31,7 +31,6 @@
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules/"]
             },
-            "scripts": ["node_modules/apexcharts/dist/apexcharts.min.js"],
             "browser": "src/main.ts"
           },
           "configurations": {
@@ -81,7 +80,7 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "providersFile": "src/test-setup.ts"
+            "setupFiles": ["src/test-setup.ts"]
           }
         },
         "lint": {

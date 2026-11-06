@@ -41,13 +41,13 @@ export default class MotorInfoComponent implements OnInit {
   piechartData: { value: number; name: string }[] = [];
 
   /**
-   * #909's row: the readings left, the usage pie pulled into the card's top-right corner. On phones the pie no
-   * longer fits beside the readings (it widened the page by 243px), so the row wraps, the pie takes its own
-   * line at the card's width, and the card grows to hold it.
+   * #909's row: the readings left, the usage pie (140px tall, as its Chart.js canvas fits it) at the right. On
+   * phones the pie no longer fits beside the readings (it widened the page by 243px), so the row wraps, the pie
+   * takes its own line at the card's width, and the card grows to hold it.
    */
   protected readonly layout = {
     row: tw('flex h-37.5 w-full flex-row justify-between max-md:h-auto max-md:flex-wrap'),
-    pie: tw('-mt-5 -mr-11.25 max-md:mt-2 max-md:mr-0 max-md:w-full')
+    pie: tw('h-35 max-md:mt-2 max-md:w-full')
   } as const;
 
   ngOnInit() {

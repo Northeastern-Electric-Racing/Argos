@@ -1,1 +1,11 @@
-<div class="h-full w-full" [id]="this.graphContainerId()"></div>
+<!-- Chart.js sizes the canvas to this box (responsive, no fixed aspect ratio) -->
+<div class="relative size-full">
+  <canvas
+    baseChart
+    type="line"
+    [data]="chartData"
+    [options]="chartOptions"
+    role="img"
+    [attr.aria-label]="title() ?? 'Live graph'"
+  ></canvas>
+</div>

@@ -2,7 +2,7 @@
  * Binary search for the insertion index to keep `arr` sorted by `x`.
  * Returns the index at which `x` should be inserted.
  */
-export function binarySearchInsertIndex(arr: { x: number }[], x: number): number {
+export function binarySearchInsertIndex(arr: readonly { x: number }[], x: number): number {
   let lo = 0;
   let hi = arr.length;
   while (lo < hi) {

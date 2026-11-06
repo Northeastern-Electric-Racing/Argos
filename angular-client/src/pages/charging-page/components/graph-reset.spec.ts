@@ -15,7 +15,7 @@ const cases: { component: Type<unknown>; name: string }[] = [
 ];
 
 describe('charging graph reset buttons', () => {
-  // ApexCharts can't draw in jsdom: the cards are tested without their charts.
+  // The cards' names don't depend on their charts: the cards are tested without them.
   beforeEach(() => {
     for (const graph of [CellTempGraphComponent, HighLowCellGraphComponent, PackVoltageGraphComponent]) {
       TestBed.overrideComponent(graph, { set: { template: '', imports: [] } });

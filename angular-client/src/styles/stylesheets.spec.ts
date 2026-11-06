@@ -43,7 +43,9 @@ describe('global stylesheets', () => {
     const pairs: [string, string][] = [
       [Theme.battteryLow, 'battery-low'],
       [Theme.battteryHigh, 'battery-high'],
-      [Theme.infoBackground, 'panel']
+      [Theme.infoBackground, 'panel'],
+      [Theme.page, 'page'],
+      [Theme.secondaryBorder, 'secondary-border']
     ];
     for (const [value, name] of pairs) expect([name, value.toLowerCase()]).toEqual([name, token(name)?.toLowerCase()]);
   });
