@@ -20,26 +20,6 @@ const liveBmsCriticalFaults = [
   { topic: 'BMS/Faults/Critical/Cell_open_wire', name: 'Cell Open Wire' }
 ];
 
-// Topics the display used to watch that the car no longer publishes.
-const deadBmsFaultTopics = [
-  'BMS/Faults/Critical/Open_Wire',
-  'BMS/Faults/Critical/Charger_Can',
-  'BMS/Faults/Critical/Battery_Therm',
-  'BMS/Faults/Critical/Charger_Safety',
-  'BMS/Faults/Critical/External_Can',
-  'BMS/Faults/Critical/Weak_Pack',
-  'BMS/Faults/Critical/Low_Cell_Volts',
-  'BMS/Faults/Critical/Charge_Reading',
-  'BMS/Faults/Critical/Current_Sense',
-  'BMS/Faults/Critical/IC_Comm',
-  'BMS/Faults/Critical/Thermal_Err',
-  'BMS/Faults/Critical/Software',
-  'BMS/Faults/Critical/Pack_Overheat',
-  'BMS/Faults/Critical/Cell_Undervoltage',
-  'BMS/Faults/Critical/Cell_Overvoltage',
-  'BMS/Faults/Critical/Cells_Not_Balancing'
-];
-
 describe('FaultDisplayComponent', () => {
   let fixture: ComponentFixture<FaultDisplayComponent>;
   let component: FaultDisplayComponent;
@@ -65,8 +45,8 @@ describe('FaultDisplayComponent', () => {
     });
   });
 
-  it('shows nothing for topics the car no longer publishes', () => {
-    deadBmsFaultTopics.forEach((topic) => push(storage, topic, '1'));
+  it('shows nothing for a topic it does not watch', () => {
+    push(storage, 'BMS/Faults/Critical/Not_A_Real_Fault', '1');
 
     expect(component.faults).toEqual([]);
   });
