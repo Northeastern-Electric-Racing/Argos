@@ -12,7 +12,8 @@
         <span
           ngAccordionTrigger
           [panel]="panel"
-          [expanded]="opensByDefault(node.node)"
+          [expanded]="expanded().has(node.node)"
+          (expandedChange)="setExpanded(node.node, $event)"
           #trigger="ngAccordionTrigger"
           [class]="accordion.trigger"
         >
