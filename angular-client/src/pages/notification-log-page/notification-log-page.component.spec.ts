@@ -40,6 +40,21 @@ describe('NotificationLogPageComponent', () => {
     expect(document.activeElement).toBe(dismiss('hot'));
   });
 
+  it('shows a ring on the moved focus only after a keyboard dismiss', async () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, buttons: 1, detail: 1 }));
+    dismiss('warm')!.click();
+    await render();
+    expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: false }));
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    dismiss('cold')!.click();
+    await render();
+    expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: true }));
+    expect(document.activeElement).toBe(dismiss('hot'));
+    vi.restoreAllMocks();
+  });
+
   it('shows the empty state after Clear All, with focus on it rather than the body', async () => {
     const clear = el().querySelector<HTMLButtonElement>('button[aria-label="Clear all notifications"]')!;
     clear.focus();

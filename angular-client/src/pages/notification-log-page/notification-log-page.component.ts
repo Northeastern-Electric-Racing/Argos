@@ -1,19 +1,11 @@
-import {
-  Component,
-  ChangeDetectionStrategy,
-  ElementRef,
-  Injector,
-  afterNextRender,
-  computed,
-  inject,
-  viewChild
-} from '@angular/core';
+import { Component, ChangeDetectionStrategy, ElementRef, computed, inject, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { CdkTableModule } from '@angular/cdk/table';
 import { MatIcon } from '@angular/material/icon';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { NotificationLogEntry, NotificationLogService } from 'src/services/notification-log.service';
 import { UiButtonDirective, UiIconButtonDirective } from 'src/ui/button/button.directive';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { iconClasses } from 'src/ui/recipes/icon';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { cellClass, headerCellClass, rowClass, tableClass, tableClasses } from 'src/ui/recipes/table';
@@ -26,7 +18,7 @@ import { cellClass, headerCellClass, rowClass, tableClass, tableClasses } from '
 })
 export default class NotificationLogPageComponent {
   protected notificationLogService = inject(NotificationLogService);
-  private injector = inject(Injector);
+  private focusAfterRender = injectFocusAfterRender();
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private emptyState = viewChild<ElementRef<HTMLElement>>('emptyState');
   protected entries = this.notificationLogService.notifications;
@@ -52,24 +44,16 @@ export default class NotificationLogPageComponent {
     const at = entries.indexOf(entry);
     const next = entries[at + 1] ?? entries[at - 1];
     this.notificationLogService.dismissEntry(entry.id);
-    this.focusAfterRender(next);
+    this.focusAfterRender(() =>
+      next
+        ? this.host.nativeElement.querySelector<HTMLElement>(`[data-entry="${next.id}"]`)
+        : this.emptyState()?.nativeElement
+    );
   }
 
   /** Clears the log; focus moves to the empty state that replaces the table and its Clear All button. */
   protected clearAll() {
     this.notificationLogService.clearAll();
-    this.focusAfterRender(undefined);
-  }
-
-  private focusAfterRender(entry: NotificationLogEntry | undefined) {
-    afterNextRender(
-      () => {
-        const target = entry
-          ? this.host.nativeElement.querySelector<HTMLElement>(`[data-entry="${entry.id}"]`)
-          : this.emptyState()?.nativeElement;
-        target?.focus();
-      },
-      { injector: this.injector }
-    );
+    this.focusAfterRender(() => this.emptyState()?.nativeElement);
   }
 }

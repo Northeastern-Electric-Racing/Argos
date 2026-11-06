@@ -1,13 +1,12 @@
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { ToastService } from 'src/ui/toast/toast.service';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
-  Injector,
   OnInit,
-  afterNextRender,
   computed,
   inject,
   signal,
@@ -65,7 +64,7 @@ export default class CarCommandComponent implements OnInit {
   private toastService = inject(ToastService);
   private confirmationService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
-  private injector = inject(Injector);
+  private focusAfterRender = injectFocusAfterRender();
   private commandsHeader = viewChild<ElementRef<HTMLElement>>('commandsHeader');
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);
@@ -148,11 +147,12 @@ export default class CarCommandComponent implements OnInit {
     });
   };
 
-  /** The password form leaves with the Authenticate button; focus goes to the commands' first control, not <body>. */
+  /**
+   * The password form leaves with the Authenticate button; focus goes to the commands' first control, not <body>,
+   * with a ring only after a keyboard Authenticate.
+   */
   private focusCommands() {
-    afterNextRender(() => this.commandsHeader()?.nativeElement.querySelector('button')?.focus(), {
-      injector: this.injector
-    });
+    this.focusAfterRender(() => this.commandsHeader()?.nativeElement.querySelector('button'));
   }
 
   onUpdateVideosPressed = () => {

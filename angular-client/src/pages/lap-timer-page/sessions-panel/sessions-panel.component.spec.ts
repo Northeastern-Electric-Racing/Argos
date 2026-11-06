@@ -79,6 +79,8 @@ describe('SessionsPanelComponent', () => {
       expect(nameInput()).not.toBeNull();
       expect(document.activeElement).toBe(nameInput());
       expect(nameInput()!.value).toBe('Practice');
+      // the whole name is selected, so typing replaces it (focus first, then select: wave 2 review N1)
+      expect([nameInput()!.selectionStart, nameInput()!.selectionEnd]).toEqual([0, 'Practice'.length]);
     });
 
     it('commits on Enter and puts focus back on the renamed session', async () => {

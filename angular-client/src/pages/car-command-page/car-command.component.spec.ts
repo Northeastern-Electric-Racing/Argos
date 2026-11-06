@@ -79,6 +79,20 @@ describe('CarCommandComponent', () => {
     expect(el().contains(document.activeElement)).toBe(true);
   });
 
+  it('shows no ring on the moved focus after a mouse Authenticate, even after a failed keyboard try', async () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    // a failed keyboard try first: focus-visible must not carry over to the mouse retry (wave 2 review N3)
+    passwordOk = false;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await authenticate('wrong');
+    passwordOk = true;
+    document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, buttons: 1, detail: 1 }));
+    await authenticate('secret');
+    expect(focus).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: false }));
+    expect(el().contains(document.activeElement)).toBe(true);
+    vi.restoreAllMocks();
+  });
+
   describe('sending a command', () => {
     beforeEach(async () => {
       await authenticate('secret');
