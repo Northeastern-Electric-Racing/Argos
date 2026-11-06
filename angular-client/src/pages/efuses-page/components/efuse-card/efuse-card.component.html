@@ -4,12 +4,12 @@
   [topRightInfo]="notice()"
   [topRightInfoSize]="'12px'"
 >
-  <div style="padding: 20px 30px 10px 40px; height: 100%; box-sizing: border-box">
-    <vstack [align]="'flex-center'" [spacing]="'30px'" style="height: 100%; justify-content: space-between">
-      <!-- Current display + ADC displays side by side -->
-      <hstack [spacing]="'100px'" style="align-items: flex-start; margin-top: 10px">
+  <div class="h-full pt-5 pr-7.5 pb-2.5 pl-10 max-md:px-0">
+    <div class="flex flex-col gap-7.5">
+      <!-- Current display + ADC displays side by side; on phones the ADC column wraps below -->
+      <div class="mt-2.5 flex flex-wrap items-center justify-center gap-x-25 gap-y-4 max-md:gap-x-6">
         <!-- Main Current Value (Large) -->
-        <vstack [align]="'flex-start'">
+        <div class="flex flex-col items-start gap-1.25">
           <seven-segment-display
             [value]="current.toFixed(2)"
             [digits]="3"
@@ -18,13 +18,13 @@
             [unit]="'A'"
             [unitFontSize]="largeDisplayUnitFontSize"
           />
-          <div class="current-label">Current</div>
-        </vstack>
+          <!-- the same size as the unit beside it, so the two always move together -->
+          <div class="leading-[1.2] font-bold text-fg" [style.font-size.px]="largeDisplayUnitFontSize">Current</div>
+        </div>
 
         <!-- ADC Voltage + ADC Raw stacked vertically -->
-        <vstack [spacing]="'10px'" [align]="'flex-start'">
-          <!-- ADC Voltage -->
-          <vstack [align]="'flex-start'">
+        <div class="flex flex-col items-start gap-2.5">
+          <div class="flex flex-col items-start gap-1.25">
             <seven-segment-display
               [value]="voltage.toFixed(2)"
               [digits]="3"
@@ -37,11 +37,10 @@
               [paddingRight]="smallDisplayPaddingRight"
               [paddingTop]="smallDisplayPaddingTop"
             />
-            <div class="adc-voltage-label">ADC Voltage</div>
-          </vstack>
+            <div [class]="displayLabelClass">ADC Voltage</div>
+          </div>
 
-          <!-- ADC Raw -->
-          <vstack [align]="'flex-start'">
+          <div class="flex flex-col items-start gap-1.25">
             <seven-segment-display
               [value]="adcRaw.toFixed(0).padStart(4, '0')"
               [digits]="4"
@@ -54,23 +53,24 @@
               [paddingRight]="smallDisplayPaddingRight"
               [paddingTop]="smallDisplayPaddingTop"
             />
-            <div class="adc-voltage-label">ADC</div>
-          </vstack>
-        </vstack>
-      </hstack>
+            <div [class]="displayLabelClass">ADC</div>
+          </div>
+        </div>
+      </div>
 
       <!-- Status Indicators + Switch (centered, stacked) -->
-      <vstack [align]="'center'" [spacing]="'30px'">
-        <hstack [justifyContent]="'center'" [spacing]="'15px'" [alignItems]="'center'">
+      <div class="flex flex-col items-center gap-7.5">
+        <div class="flex items-center justify-center gap-3.75">
           <indicator-light [label]="'FAULTED'" [active]="isFaulted" [color]="'red'" [fontSize]="14" />
           <indicator-light [label]="'ENABLED'" [active]="isEnabled" [color]="'green'" [fontSize]="14" />
-        </hstack>
+        </div>
 
         <!-- Switch + optional AUTO telemetry display -->
-        <hstack [justifyContent]="hasAutoMode() ? 'space-between' : 'center'" [alignItems]="'center'" style="width: 100%">
-          <vstack [align]="'center'" [spacing]="'6px'">
-            <hstack [justifyContent]="'center'" [alignItems]="'center'" [spacing]="'10px'">
+        <div [class]="controlRowClass()">
+          <div class="flex flex-col items-center gap-1.5">
+            <div class="flex items-center justify-center gap-2.5">
               <efuse-switch
+                [ariaLabel]="efuseName() + ' mode'"
                 [fontSize]="14"
                 [options]="switchOptions()"
                 [selectedState]="switchState()"
@@ -78,9 +78,9 @@
                 (stateChange)="onSwitchStateChange($event)"
               />
               @if (showsLockButton()) {
-                <lock-button [locked]="isLocked()" (pressed)="onLockButtonClick()"></lock-button>
+                <lock-button [ariaLabel]="'Lock ' + efuseName()" [locked]="isLocked()" (pressed)="onLockButtonClick()" />
               }
-            </hstack>
+            </div>
             <seven-segment-display
               [value]="controlStateDisplay()"
               [digits]="4"
@@ -94,9 +94,9 @@
               [paddingRight]="controlDisplayPaddingRight"
               [paddingTop]="controlDisplayPaddingTop"
             />
-          </vstack>
+          </div>
           @if (hasAutoMode()) {
-            <vstack [align]="'flex-start'" [spacing]="'2px'">
+            <div class="flex flex-col items-start gap-0.5">
               <seven-segment-display
                 [value]="autoValue.toFixed(autoDecimals()).padStart(autoDigits() + (autoDecimals() > 0 ? 1 : 0), '0')"
                 [digits]="autoDigits()"
@@ -109,11 +109,11 @@
                 [paddingRight]="smallDisplayPaddingRight"
                 [paddingTop]="smallDisplayPaddingTop"
               />
-              <div class="adc-voltage-label">{{ autoLabel() }}</div>
-            </vstack>
+              <div [class]="displayLabelClass">{{ autoLabel() }}</div>
+            </div>
           }
-        </hstack>
-      </vstack>
-    </vstack>
+        </div>
+      </div>
+    </div>
   </div>
 </info-background>
