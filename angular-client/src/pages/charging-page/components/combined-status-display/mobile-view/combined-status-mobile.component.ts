@@ -9,7 +9,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'combined-status-mobile',
   templateUrl: './combined-status-mobile.component.html',
-  styleUrls: ['./combined-status-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
