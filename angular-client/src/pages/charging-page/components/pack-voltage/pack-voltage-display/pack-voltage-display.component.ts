@@ -12,7 +12,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'pack-voltage-display',
   templateUrl: './pack-voltage-display.component.html',
-  styleUrls: ['./pack-voltage-display.component.css'],
   imports: [
     InfoBackgroundComponent,
     PackVoltageMobileDisplayComponent,
@@ -34,7 +33,8 @@ export default class PackVoltageDisplayComponent implements OnInit {
     onClick: () => {
       this.packVoltData = [];
     },
-    icon: 'restart_alt'
+    icon: 'restart_alt',
+    ariaLabel: 'Reset the pack voltage graph'
   };
   mobileThreshold = 1070;
   isDesktop = window.innerWidth > this.mobileThreshold;

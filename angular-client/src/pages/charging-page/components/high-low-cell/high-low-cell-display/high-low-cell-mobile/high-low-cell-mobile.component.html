@@ -1,57 +1,43 @@
 <info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton()">
   <vstack>
-    <hstack style="width: 100%">
-      <vstack style="width: 10%">
+    <hstack class="w-full">
+      <vstack class="w-1/10">
         <hstack>
           @if (isDesktop) {
-            <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
+            <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" textClass="text-xl" />
           } @else {
-            <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+            <typography variant="info-value" [content]="delta().toFixed(3) + 'V'" textClass="text-lg" />
           }
         </hstack>
-        <typography variant="info-subtitle" content="Delta" additionalStyles="fontSize:15px" />
+        <typography variant="info-subtitle" content="Delta" textClass="text-sm" />
       </vstack>
 
-      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-      <divider style="height: 100px" />
+      <divider class="h-25" />
 
-      <vstack style="width: 10%">
+      <vstack class="w-1/10">
         @if (isDesktop) {
-          <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" additionalStyles="fontSize:30px" />
+          <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" textClass="text-xl" />
         } @else {
-          <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" additionalStyles="fontSize:20px" />
+          <typography variant="info-value" [content]="lowCellVoltage().toFixed(3) + 'V'" textClass="text-lg" />
         }
-        <typography variant="info-subtitle" content="Low Cell" additionalStyles="fontSize:15px" />
+        <typography variant="info-subtitle" content="Low Cell" textClass="text-sm" />
       </vstack>
 
-      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-      <divider style="height: 100px" />
+      <divider class="h-25" />
 
-      <vstack style="width: 10%">
+      <vstack class="w-1/10">
         <hstack>
           @if (isDesktop) {
-            <typography
-              variant="info-value"
-              [content]="highCellVoltage().toFixed(3) + 'V'"
-              additionalStyles="fontSize:30px"
-            />
+            <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" textClass="text-xl" />
           } @else {
-            <typography
-              variant="info-value"
-              [content]="highCellVoltage().toFixed(3) + 'V'"
-              additionalStyles="fontSize:20px"
-            />
+            <typography variant="info-value" [content]="highCellVoltage().toFixed(3) + 'V'" textClass="text-lg" />
           }
         </hstack>
-        <typography variant="info-subtitle" content="High Cell" additionalStyles="fontSize:15px" />
+        <typography variant="info-subtitle" content="High Cell" textClass="text-sm" />
       </vstack>
     </hstack>
     @if (!isDesktop) {
-      <high-low-cell-graph
-        style="width: 100%; padding-bottom: 35px"
-        [highVoltsData]="highVoltsData()"
-        [lowVoltsData]="lowVoltsData()"
-      />
+      <high-low-cell-graph class="w-full pb-8.75" [highVoltsData]="highVoltsData()" [lowVoltsData]="lowVoltsData()" />
     }
   </vstack>
 </info-background>

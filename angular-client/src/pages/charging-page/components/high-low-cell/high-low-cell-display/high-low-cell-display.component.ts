@@ -16,7 +16,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'high-low-cell-display',
   templateUrl: './high-low-cell-display.component.html',
-  styleUrls: ['./high-low-cell-display.component.css'],
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -46,7 +45,8 @@ export default class HighLowCellDisplayComponent implements OnInit {
       this.highVoltsData = [];
       this.lowVoltsData = [];
     },
-    icon: 'restart_alt'
+    icon: 'restart_alt',
+    ariaLabel: 'Reset the cell voltage graph'
   };
 
   onResize() {
