@@ -1,7 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import Theme from 'src/services/theme.service';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
-import TypographyComponent from '../typography/typography.component';
+import { typographyClass } from 'src/ui/recipes/typography';
 
 /**
  * Component that displays a percentage using a ring that is colored
@@ -11,9 +10,8 @@ import TypographyComponent from '../typography/typography.component';
 @Component({
   selector: 'circular-percentage',
   templateUrl: './circular-percentage.component.html',
-  styleUrls: ['./circular-percentage.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [InfoBackgroundComponent, TypographyComponent]
+  imports: [InfoBackgroundComponent]
 })
 export class CircularPercentageComponent {
   dimension = input.required<number>();
@@ -21,8 +19,9 @@ export class CircularPercentageComponent {
   percentage = input.required<number>();
   spacing = input<number>(0);
 
-  //values needed for styling and scaling
-  backgroundColor: string = Theme.infoBackground;
+  // The number and its sign scale with the ring, so their sizes (and the sign's lift) stay style bindings.
+  protected readonly valueClass = typographyClass('header', 'm-0');
+  protected readonly signClass = typographyClass('info-subtitle', 'm-0');
   emptyAngle: number = 360;
   innerCircleDimension = computed(() => this.dimension() * 0.87);
   percentageFontSize = computed(() => this.dimension() * 0.39);
