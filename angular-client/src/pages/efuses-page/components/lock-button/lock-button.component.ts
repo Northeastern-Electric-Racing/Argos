@@ -31,7 +31,7 @@ export class LockButtonComponent {
   protected readonly buttonClass = cx(
     panelButtonClass,
     tw(
-      'bg-surface-1 px-2.75 py-2.5 text-fg-dim not-aria-pressed:hover:bg-surface-2 not-aria-pressed:hover:text-fg-muted aria-pressed:bg-accent/15 aria-pressed:text-accent-fg'
+      'bg-surface-1 px-3 py-2.5 text-fg-dim not-aria-pressed:hover:bg-surface-2 not-aria-pressed:hover:text-fg-muted aria-pressed:bg-accent/15 aria-pressed:text-accent-fg'
     )
   );
 }
