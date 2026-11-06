@@ -1,16 +1,13 @@
 <info-background title="BALANCING">
   <hstack>
-    <current-total-timer
-      style="padding-left: 20px; min-height: 100px"
-      [currentTime]="currentSeconds"
-      [totalTime]="totalSeconds"
-    />
-    <div style="padding-top: 40px">
+    <current-total-timer class="min-h-25 pl-5" [currentTime]="currentSeconds()" [totalTime]="totalSeconds()" />
+    <div class="pt-10">
       @if (displayLight()) {
         <div
-          class="connection-dot"
-          [style.background-color]="getStatusColor(isBalancing)"
-          [style.border-color]="isBalancing ? getStatusColor(isBalancing) : 'white'"
+          role="img"
+          class="size-10 rounded-full border-3 border-solid border-fg data-[on=true]:border-info data-[on=true]:bg-info"
+          [attr.data-on]="isBalancing()"
+          [attr.aria-label]="isBalancing() ? 'Balancing' : 'Not balancing'"
         ></div>
       }
     </div>
