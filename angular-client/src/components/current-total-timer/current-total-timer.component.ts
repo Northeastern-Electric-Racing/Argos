@@ -15,8 +15,8 @@ export default class CurrentTotalTimerComponent {
   currentTime = input<number>(0);
   totalTime = input<number>(0);
 
-  /** The times in full-strength text with #909's faint light glow (a 30% tint of the label grey). */
-  protected readonly readout = tw('text-fg [text-shadow:0_0_5px_color-mix(in_srgb,var(--color-fg-label)_30%,transparent)]');
+  /** The times in full-strength text with #909's faint light glow. */
+  protected readonly readout = tw('text-fg [text-shadow:var(--shadow-text-glow)]');
 
   getCurrentTime() {
     return this.formatTime(this.currentTime());

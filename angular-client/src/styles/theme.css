@@ -78,6 +78,9 @@
   --color-battery-shell: #efefed;
   --color-widget-glass: #ffffff;
 
+  /* Decorative, never text: the seven-segment display's unlit ghost digits (aria-hidden), a dark red behind the lit ones */
+  --color-segment-ghost: #2a0a0a;
+
   /* Type. Sizes carry no line-height: the app sets line-height: normal (base.css), use leading-* to change it. */
   --font-sans: 'Roboto', sans-serif;
   --font-segment7: 'Segment7', monospace;
@@ -121,6 +124,7 @@
   --radius-dialog: 20px; /* PrimeNG dialog parity */
   --shadow-overlay: 0 8px 28px rgba(0, 0, 0, 0.55);
   --shadow-bulb: 0 5px 5px rgba(0, 0, 0, 0.2); /* the thermometer bulb; read as [box-shadow:var(--shadow-bulb)], no utility stack */
+  --shadow-text-glow: 0 0 5px rgb(217 217 214 / 0.3); /* the timer readouts' faint glow; read as [text-shadow:var(--shadow-text-glow)] */
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
