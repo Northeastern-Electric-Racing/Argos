@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, tap } from 'rxjs';
 import { Router } from '@angular/router';
@@ -52,18 +52,34 @@ export default class FaultPageComponent {
   readonly nodeArray = toSignal(
     this.faultService.getFaults().pipe(
       map(groupByNode),
-      tap((nodes) => (this.firstNode ??= nodes[0]?.node))
+      tap((nodes) => this.openFirstNode(nodes))
     ),
     { initialValue: [] }
   );
   readonly columns = ['name', 'occurredAt', 'lastSeen', 'expired'];
 
   /**
-   * The node whose panel opens by default: the first in the first message (p-accordion's `[value]="0"`). Its
-   * binding never changes afterwards, so later messages leave every panel as the user left it.
+   * The expanded panels, by node name, as p-accordion kept them (its `[value]`): a node that drops out of a
+   * message and comes back keeps its panel open or closed. The first node of the first message opens by default
+   * (p-accordion's `[value]="0"`); a node that first arrives later starts closed.
    */
-  private firstNode?: string;
-  protected opensByDefault = (node: string) => node === this.firstNode;
+  protected readonly expanded = signal<ReadonlySet<string>>(new Set());
+  private seeded = false;
+
+  private openFirstNode(nodes: FaultNode[]) {
+    if (this.seeded || nodes.length === 0) return;
+    this.seeded = true;
+    this.expanded.set(new Set([nodes[0].node]));
+  }
+
+  protected setExpanded(node: string, open: boolean) {
+    this.expanded.update((names) => {
+      const next = new Set(names);
+      if (open) next.add(node);
+      else next.delete(node);
+      return next;
+    });
+  }
 
   protected readonly accordion = accordionClasses;
   protected readonly cellButton = cellButtonClass;

@@ -102,6 +102,27 @@ describe('FaultPageComponent', () => {
     expect(await expandedTitles()).toEqual(['Charger']);
   });
 
+  it('keeps a panel open when its node drops out of a message and comes back, as p-accordion kept it by node', async () => {
+    const [, , dti] = await accordions();
+    await dti.expand();
+
+    faults.addFault(message(2000).filter((f) => f.node !== 'Dti'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(await expandedTitles()).toEqual(['Bms']);
+
+    await receive(3000);
+    expect(await expandedTitles()).toEqual(['Bms', 'Dti']);
+  });
+
+  it('opens a node that first arrives in a later message closed', async () => {
+    faults.addFault([fault('Vcu', 'Brake Fault', 1000)]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await receive(2000);
+    expect(await expandedTitles()).toEqual(['Bms']);
+  });
+
   it('graphs a fault from a button in its Name cell', () => {
     faultButton('Pack Overheat').click();
     expect(navigate).toHaveBeenCalledTimes(1);
