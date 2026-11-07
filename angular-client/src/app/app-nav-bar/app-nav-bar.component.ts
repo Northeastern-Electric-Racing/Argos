@@ -9,7 +9,7 @@ import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { Drawer } from 'primeng/drawer';
-import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
+import { CurrentRunDisplayComponent } from '../../components/current-run-display/current-run-display.component';
 import { ToastButtonComponent } from '../../components/toast-button/toast-button.component';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
@@ -128,10 +128,11 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     });
   };
 
+  // The landing page was removed in #847, so the home logo opens the graph page.
   homeNavItem: NavItem = {
-    id: appRoutes.landingRoute(),
+    id: appRoutes.graphRoute(),
     label: 'Home',
-    onClick: () => this.navigateTo(appRoutes.landingRoute()),
+    onClick: () => this.navigateTo(appRoutes.graphRoute()),
     icon: 'logo'
   };
 
@@ -215,7 +216,8 @@ export class AppNavBarComponent implements OnInit, OnDestroy {
     }
   ];
 
-  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
+  // The home logo is desktop-only; in the sidebar its graph-page destination is already listed.
+  allNavItems: NavItem[] = [...this.mostUsedNavItems, ...this.navMenuItems];
 
   openMenu() {
     this.menuRef = this.dialogService.open(NavOptionsMenuComponent, {

@@ -99,8 +99,9 @@ export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
 // NOTE: The entire TPU/* namespace is absent from the current /datatypes list;
 // it appears the Raspberry-Pi telemetry feed (CPU/RAM/Wi-Fi/GPS) is no longer
 // wired through. Strings left in place because no replacement topics have been
-// identified — the raspberry-pi, map, and related components will stay blank
-// until a new topic source exists.
+// identified — the map and any future consumer will stay blank until a new topic
+// source exists. Only gpsLocation still has a consumer; the rest lost theirs
+// when the landing page went away (#847).
 export const cpuUsage = () => `TPU/OnBoard/CpuUsage`;
 export const cpuTemp = () => `TPU/OnBoard/CpuTemp`;
 export const ramUsage = () => `TPU/OnBoard/MemAvailable`;
@@ -143,10 +144,10 @@ export const highDieTemp = () => `BMS/Faults/Critical/High_die_temp`;
 export const cellOpenWire = () => `BMS/Faults/Critical/Cell_open_wire`;
 
 // Fake / Mock Data
-// These placeholder names were never real CAN/MQTT topics; the widgets that
-// consume them (motor-info, steering-angle-display, torque-display, accel
-// graphs) still reference them but will remain blank until real source topics
-// are identified. Leaving strings untouched.
+// These placeholder names were never real CAN/MQTT topics and will remain blank
+// until real source topics are identified. Leaving strings untouched. Only
+// steering-angle-display still consumes one (steeringAngle); the rest lost their
+// consumers when the landing page went away (#847).
 export const motorUsage = () => `Motor Usage`;
 export const coolingUsage = () => `Cooling Usage`;
 export const steeringAngle = () => `Steering Angle`;

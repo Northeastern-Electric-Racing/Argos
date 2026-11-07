@@ -20,6 +20,7 @@ import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
 import CustomGraphComponent from './graph/graph.component';
 import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
+import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import TypographyComponent from '../../components/typography/typography.component';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -31,6 +32,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./graph-page.component.css'],
   imports: [
     LoadingPageComponent,
+    SidebarToggleComponent,
     ErrorPageComponent,
     ButtonComponent,
     FaultButtonsComponent,
