@@ -59,72 +59,36 @@ export default class FaultDisplayComponent implements OnInit {
 
     const bmsFaultAndDisplayNames = [
       {
-        displayName: 'Open Wire',
-        faultIdentifier: topics.openWire()
-      },
-      {
         displayName: 'Charger Limit Enforcement',
         faultIdentifier: topics.chargerLimitEnforcementFault()
-      },
-      {
-        displayName: 'Charger Can Fault',
-        faultIdentifier: topics.chargerCanFault()
-      },
-      {
-        displayName: 'Battery Thermistor',
-        faultIdentifier: topics.batteryThermistor()
-      },
-      {
-        displayName: 'Charger Safety Relay',
-        faultIdentifier: topics.chargerSafetyRelay()
       },
       {
         displayName: 'Discharge Limit Enforcement',
         faultIdentifier: topics.dischargeLimitEnforcementFault()
       },
       {
-        displayName: 'External Can Fault',
-        faultIdentifier: topics.externalCanFault()
+        displayName: 'Cell Voltage Low',
+        faultIdentifier: topics.cellVoltageLow()
       },
       {
-        displayName: 'Weak Pack Fault',
-        faultIdentifier: topics.weakPackFault()
+        displayName: 'Cell Voltage High',
+        faultIdentifier: topics.cellVoltageHigh()
       },
       {
-        displayName: 'Low Cell Voltage',
-        faultIdentifier: topics.lowCellVoltage()
+        displayName: 'Charging Voltage High',
+        faultIdentifier: topics.chargingVoltageHigh()
       },
       {
-        displayName: 'Charge Reading Mismatch',
-        faultIdentifier: topics.chargeReadingMismatch()
+        displayName: 'Pack Too Hot',
+        faultIdentifier: topics.packTooHot()
       },
       {
-        displayName: 'Current Sensor Fault',
-        faultIdentifier: topics.currentSensorFault()
+        displayName: 'High Die Temp',
+        faultIdentifier: topics.highDieTemp()
       },
       {
-        displayName: 'Internal Cell Comm Fault',
-        faultIdentifier: topics.internalCellCommFault()
-      },
-      {
-        displayName: 'Internal Software Fault',
-        faultIdentifier: topics.internalSoftwareFault()
-      },
-      {
-        displayName: 'Pack Overheat',
-        faultIdentifier: topics.packOverheat()
-      },
-      {
-        displayName: 'Cell Undervoltage',
-        faultIdentifier: topics.cellUndervoltage()
-      },
-      {
-        displayName: 'Cell Overvoltage',
-        faultIdentifier: topics.cellOvervoltage()
-      },
-      {
-        displayName: 'Cells Not Balancing',
-        faultIdentifier: topics.cellsNotBalancing()
+        displayName: 'Cell Open Wire',
+        faultIdentifier: topics.cellOpenWire()
       }
     ];
 
