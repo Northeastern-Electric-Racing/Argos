@@ -48,8 +48,18 @@ const value = {
 };
 const unit = tw('align-super font-sans text-[length:calc(var(--hex-w)*0.2)] font-semibold text-on-status');
 
-/** The selected tile's white glow follows the hex outline (a glow on the clipped tile's host). */
-const hostBase = tw('block shrink-0');
+/**
+ * The native button around the clipped hex: Tab reaches it, Enter and Space press it, and its click bubbles to the
+ * host's (click). It keeps the hex's box (block, so no line box adds height); the focus ring is drawn on it, since
+ * the hex's clip-path would cut an outline on the tile.
+ */
+const button = tw('block rounded-xs focus-visible:focus-ring');
+
+/**
+ * The selected tile's white glow follows the hex outline (a glow on the clipped tile's host). A focused tile rises
+ * above its neighbours and the interlocking row, so they don't paint over its ring.
+ */
+const hostBase = tw('block shrink-0 has-focus-visible:z-2');
 const hostSelected = tw(
   'z-1 [filter:drop-shadow(0_0_3px_var(--color-on-accent))_drop-shadow(0_0_1px_var(--color-on-accent))]'
 );
@@ -89,6 +99,7 @@ export class HexTileComponent {
   protected containerClass = computed(() => (this.double() || this.flag() ? container.centred : container.single));
   protected valueClass = computed(() => (this.flag() ? value.flag : value.plain));
   protected readonly unitClass = unit;
+  protected readonly buttonClass = button;
 
   displayValue = computed(() => {
     const boolValue = this.booleanValue();
@@ -99,6 +110,17 @@ export class HexTileComponent {
     }
     const value = this.value();
     return value === undefined ? '-' : value.toFixed(2);
+  });
+
+  /** The button's name: its cell or cells and its value, e.g. "Cell 3, 3.60 V" or "Cells 0 and 1, no data". */
+  accessibleName = computed(() => {
+    const cells = (this.cellNumber() ?? '').split(',');
+    const label =
+      cells.length > 1 ? `Cells ${cells.slice(0, -1).join(', ')} and ${cells[cells.length - 1]}` : `Cell ${cells[0]}`;
+    const value = this.displayValue();
+    if (value === '-') return `${label}, no data`;
+    const unit = this.unitLabel();
+    return unit ? `${label}, ${value} ${unit}` : `${label}, ${value}`;
   });
 
   unitLabel = computed(() => {

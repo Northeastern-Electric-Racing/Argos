@@ -1,9 +1,11 @@
-<div [class]="tileClass()" [style.background-color]="color()">
-  <span [class]="numberClass()">{{ cellNumber() }}</span>
-  <span [class]="containerClass()">
-    <span [class]="valueClass()">{{ displayValue() }}</span>
-    @if (unitLabel()) {
-      <sup [class]="unitClass">{{ unitLabel() }}</sup>
-    }
+<button type="button" [class]="buttonClass" [attr.aria-pressed]="boxShadowColor()" [attr.aria-label]="accessibleName()">
+  <span [class]="tileClass()" [style.background-color]="color()">
+    <span [class]="numberClass()">{{ cellNumber() }}</span>
+    <span [class]="containerClass()">
+      <span [class]="valueClass()">{{ displayValue() }}</span>
+      @if (unitLabel()) {
+        <sup [class]="unitClass">{{ unitLabel() }}</sup>
+      }
+    </span>
   </span>
-</div>
+</button>
