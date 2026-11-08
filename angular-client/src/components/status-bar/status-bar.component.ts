@@ -9,7 +9,7 @@ const docked = tw('absolute top-0 right-0 border border-r-0 border-border bg-pan
 /**
  * Reusable read-only "quick view" status bar: a right-edge sidebar pop-out, top-aligned,
  * that surfaces pinned chips (projected via `<ng-content/>`). It auto-opens; a handle at the
- * top-right edge re-opens it after collapse, and it stays sticky while the page scrolls —
+ * top-right edge re-opens it once it is closed, and it stays sticky while the page scrolls —
  * pinning to the top-right corner. Foundation for user-pinned, multi-chip status (see #709).
  */
 @Component({
