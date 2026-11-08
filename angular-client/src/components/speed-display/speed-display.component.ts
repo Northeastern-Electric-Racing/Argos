@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -8,6 +8,7 @@ import HalfGaugeComponent from '../half-gauge/half-gauge.component';
 @Component({
   selector: 'speed-display',
   templateUrl: './speed-display.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, HalfGaugeComponent]
 })
 export default class SpeedDisplayComponent implements OnInit {

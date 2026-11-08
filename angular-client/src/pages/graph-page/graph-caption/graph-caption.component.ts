@@ -1,4 +1,13 @@
-import { Component, OnInit, TemplateRef, contentChild, input, inject, DestroyRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  TemplateRef,
+  contentChild,
+  input,
+  inject,
+  DestroyRef
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
@@ -9,6 +18,7 @@ import { NgTemplateOutlet } from '@angular/common';
 @Component({
   selector: 'graph-caption',
   templateUrl: './graph-caption.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgTemplateOutlet]
 })
 export default class GraphInfoComponent implements OnInit {

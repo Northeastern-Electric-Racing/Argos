@@ -1,4 +1,4 @@
-import { Component, input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, OnInit } from '@angular/core';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 
 /**
@@ -8,6 +8,7 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 @Component({
   selector: 'graph-header',
   templateUrl: './graph-header.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [SidebarToggleComponent],
   host: {
     '(window:resize)': 'onResize()'

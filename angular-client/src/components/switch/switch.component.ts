@@ -1,4 +1,4 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
 import TypographyComponent from '../typography/typography.component';
 import { tw } from 'src/ui/recipes/tw';
 
@@ -15,6 +15,7 @@ const knobClasses = {
 @Component({
   selector: 'switch',
   templateUrl: './switch.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TypographyComponent]
 })
 export class SwitchComponent {

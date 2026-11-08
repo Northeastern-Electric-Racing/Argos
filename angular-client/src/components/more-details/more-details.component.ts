@@ -1,5 +1,5 @@
 import { ToastService } from 'src/ui/toast/toast.service';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import Storage from 'src/services/storage.service';
 import { ButtonComponent } from '../argos-button/argos-button.component';
@@ -7,6 +7,7 @@ import { ButtonComponent } from '../argos-button/argos-button.component';
 @Component({
   selector: 'more-details',
   templateUrl: './more-details.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ButtonComponent]
 })
 export default class MoreDetailsComponent {
