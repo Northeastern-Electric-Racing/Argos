@@ -743,7 +743,7 @@ async fn test_edit_rule_preserves_subscriptions_concurrent() -> Result<(), RuleM
             set.spawn(async move {
                 let new_expr = format!("a > {}", 10 + i);
                 let new_debounce = core::time::Duration::from_millis(100 + i * 10);
-                rm.edit_rule(rid, new_expr, new_debounce).await
+                rm.edit_rule(rid, new_expr, new_debounce, None).await
             });
             set
         })
@@ -1108,5 +1108,130 @@ async fn test_subscribe_rules_concurrent() -> Result<(), RuleManagerError> {
     // Verify rules still exist
     assert_eq!(rule_manager.get_all_rules().await.len(), num_rules);
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_add_rule_sets_uploaded_by_from_client() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("uploader_client".to_string());
+
+    let mut rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    // a client-supplied uploader is overwritten by the requesting client
+    rule.uploaded_by = Some("spoofed".to_owned());
+    rule.description = Some("Pack overvoltage".to_owned());
+
+    rule_manager.add_rule(client, rule).await?;
+
+    let rules = rule_manager.get_all_rules().await;
+    assert_eq!(rules[0].uploaded_by.as_deref(), Some("uploader_client"));
+    assert_eq!(rules[0].description.as_deref(), Some("Pack overvoltage"));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_edit_rule_keeps_description_and_uploaded_by() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("uploader_client".to_string());
+    let rule_id = RuleId("rule_1".to_string());
+
+    let mut rule = Rule::new(
+        rule_id.clone(),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    rule.description = Some("Pack overvoltage".to_owned());
+    rule_manager.add_rule(client, rule).await?;
+
+    rule_manager
+        .edit_rule(
+            rule_id,
+            "a > 20".to_owned(),
+            core::time::Duration::from_secs(30),
+            None,
+        )
+        .await?;
+
+    let rules = rule_manager.get_all_rules().await;
+    assert_eq!(rules[0].expr, "a > 20");
+    assert_eq!(rules[0].description.as_deref(), Some("Pack overvoltage"));
+    assert_eq!(rules[0].uploaded_by.as_deref(), Some("uploader_client"));
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_edit_rule_updates_description() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("uploader_client".to_string());
+    let rule_id = RuleId("rule_1".to_string());
+
+    let mut rule = Rule::new(
+        rule_id.clone(),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    rule.description = Some("Old".to_owned());
+    rule_manager.add_rule(client, rule).await?;
+
+    rule_manager
+        .edit_rule(
+            rule_id,
+            "a > 10".to_owned(),
+            core::time::Duration::from_secs(60),
+            Some("New".to_owned()),
+        )
+        .await?;
+
+    let rules = rule_manager.get_all_rules().await;
+    assert_eq!(rules[0].description.as_deref(), Some("New"));
+    assert_eq!(rules[0].uploaded_by.as_deref(), Some("uploader_client"));
+    Ok(())
+}
+
+#[test]
+fn test_rule_json_ignores_incoming_uploaded_by() {
+    let rule: Rule = serde_json::from_str(
+        r#"{"id":"r","topic":"t","debounce_time":5,"expr":"a > 1","description":"d","uploaded_by":"spoofed"}"#,
+    )
+    .expect("rule should deserialize");
+    assert_eq!(rule.description.as_deref(), Some("d"));
+    assert_eq!(rule.uploaded_by, None);
+
+    // older clients omit description entirely
+    let rule: Rule =
+        serde_json::from_str(r#"{"id":"r","topic":"t","debounce_time":5,"expr":"a > 1"}"#)
+            .expect("rule without description should deserialize");
+    assert_eq!(rule.description, None);
+}
+
+#[tokio::test]
+async fn test_rules_response_includes_description_and_uploaded_by() -> Result<(), RuleManagerError>
+{
+    let rule_manager = RuleManager::new();
+    let client = ClientId("uploader_client".to_string());
+
+    let mut rule = Rule::new(
+        RuleId("rule_1".to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    rule.description = Some("Pack overvoltage".to_owned());
+    rule_manager.add_rule(client.clone(), rule).await?;
+
+    let response = rule_manager
+        .get_all_rules_with_subscription_status(client)
+        .await;
+    let json = serde_json::to_value(&response).expect("response should serialize");
+    let client_rule = &json["client_rules"][0];
+    assert_eq!(client_rule["description"], "Pack overvoltage");
+    assert_eq!(client_rule["uploaded_by"], "uploader_client");
     Ok(())
 }

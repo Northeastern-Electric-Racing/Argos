@@ -235,6 +235,10 @@ pub struct Rule {
     #[serde_as(as = "DurationSeconds<u64>")]
     debounce_time: Duration,
     pub expr: String,
+    pub description: Option<String>,
+    /// set by the server from the uploading client, never trusted from the request body
+    #[serde(skip_deserializing)]
+    pub uploaded_by: Option<String>,
     #[serde(skip)]
     last_seen: Option<tokio::time::Instant>,
     #[serde(skip)]
@@ -252,6 +256,8 @@ impl Rule {
             topic,
             debounce_time,
             expr,
+            description: None,
+            uploaded_by: None,
             last_seen: None,
             first_seen: None,
             during_cooldown: false,
@@ -442,7 +448,9 @@ impl RuleManager {
     }
 
     /// Adds a rule, creating or activating the client if needed
-    pub async fn add_rule(&self, client: ClientId, rule: Rule) -> Result<(), RuleManagerError> {
+    pub async fn add_rule(&self, client: ClientId, mut rule: Rule) -> Result<(), RuleManagerError> {
+        rule.uploaded_by = Some(client.0.clone());
+
         // Add to subscriptions bimap
         self.subscriptions
             .write()
@@ -551,16 +559,18 @@ impl RuleManager {
         rule_id: RuleId,
         expr: String,
         debounce_time: Duration,
+        description: Option<String>,
     ) -> Result<(), RuleManagerError> {
         let mut rules_guard = self.rules.write().await;
         let Some(old_rule) = rules_guard.remove(&rule_id) else {
             warn!("Could not find rule with rule_id: {rule_id} to edit!");
             return Err(RuleManagerError::NoMatchingRule);
         };
-        rules_guard.insert(
-            rule_id,
-            Rule::new(old_rule.id, old_rule.topic, debounce_time, expr),
-        );
+        // rebuild to reset debounce state, carrying over fields the edit doesn't replace
+        let mut new_rule = Rule::new(old_rule.id, old_rule.topic, debounce_time, expr);
+        new_rule.description = description.or(old_rule.description);
+        new_rule.uploaded_by = old_rule.uploaded_by;
+        rules_guard.insert(rule_id, new_rule);
         Ok(())
     }
 

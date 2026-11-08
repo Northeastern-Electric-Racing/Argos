@@ -42,6 +42,16 @@
     }
   </div>
 
+  <div class="field">
+    <label for="rule-description">Description (optional)</label>
+    <input
+      id="rule-description"
+      pInputText
+      formControlName="description"
+      placeholder="e.g. Pack voltage out of safe range"
+    />
+  </div>
+
   <div class="button-row">
     <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
     <button pButton type="submit" label="Add Rule"></button>
