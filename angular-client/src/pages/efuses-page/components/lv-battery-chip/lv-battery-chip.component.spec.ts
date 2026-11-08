@@ -3,7 +3,7 @@ import LvBatteryChipComponent from './lv-battery-chip.component';
 
 // Presentational component: drive it through its inputs and assert the rendered DOM,
 // so the tests cover external behavior rather than internal signals. Zoneless change
-// detection is registered globally in src/test-setup.ts.
+// detection is registered globally in src/test-providers.ts.
 describe('LvBatteryChipComponent', () => {
   let fixture: ComponentFixture<LvBatteryChipComponent>;
 

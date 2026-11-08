@@ -17,12 +17,10 @@ export class GraphDialogComponent {
   data: GraphData[];
   color: string;
   title: string;
-  graphContainerId: string;
 
   constructor() {
     this.data = this.config.data.data;
     this.color = this.config.data.color;
     this.title = this.config.data.title;
-    this.graphContainerId = this.config.data.graphContainerId;
   }
 }
