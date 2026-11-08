@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData } from 'src/utils/types.utils';
@@ -10,6 +10,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'fault-display-info',
   templateUrl: './fault-display-info.component.html',
   styleUrl: './fault-display-info.component.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [DatePipe, TypographyComponent]
 })
 export class FaultDisplayInfoComponent implements OnInit {

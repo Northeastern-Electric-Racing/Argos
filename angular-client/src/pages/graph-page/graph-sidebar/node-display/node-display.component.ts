@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
 import { AsyncPipe } from '@angular/common';
@@ -13,6 +13,7 @@ import { TopicSelectionService } from 'src/services/topic-selection.service';
   selector: 'node-display',
   templateUrl: './node-display.component.html',
   styleUrls: ['./node-display.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [AsyncPipe, NodeFilterPipe, SidebarCardComponent]
 })
 export default class NodeDisplayComponent {

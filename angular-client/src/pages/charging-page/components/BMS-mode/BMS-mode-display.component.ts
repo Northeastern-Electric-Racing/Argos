@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -18,6 +18,7 @@ enum BMSMODE {
   selector: 'bms-mode-display',
   templateUrl: './BMS-mode-display.component.html',
   styleUrls: ['./BMS-mode-display.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export default class BMSModeDisplayComponent implements OnInit {

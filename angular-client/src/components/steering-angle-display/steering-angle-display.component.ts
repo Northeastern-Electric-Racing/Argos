@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -15,6 +15,7 @@ import TypographyComponent from '../typography/typography.component';
   selector: 'steering-angle-display',
   templateUrl: './steering-angle-display.component.html',
   styleUrls: ['./steering-angle-display.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export class SteeringAngleDisplayComponent implements OnInit {

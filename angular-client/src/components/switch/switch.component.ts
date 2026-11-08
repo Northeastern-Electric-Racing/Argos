@@ -1,10 +1,11 @@
-import { Component, computed, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
 import TypographyComponent from '../typography/typography.component';
 
 @Component({
   selector: 'switch',
   templateUrl: './switch.component.html',
   styleUrls: ['./switch.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TypographyComponent]
 })
 export class SwitchComponent {

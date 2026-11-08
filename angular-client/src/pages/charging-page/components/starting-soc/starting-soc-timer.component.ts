@@ -1,4 +1,4 @@
-import { Component, inject, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
 import Storage from 'src/services/storage.service';
@@ -11,6 +11,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'starting-soc-timer',
   templateUrl: './starting-soc-timer.component.html',
   styleUrls: ['./starting-soc-timer.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })
 export default class StartingSocTimerComponent {

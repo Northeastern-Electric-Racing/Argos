@@ -1,4 +1,13 @@
-import { Component, OnInit, TemplateRef, contentChild, input, inject, DestroyRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  TemplateRef,
+  contentChild,
+  input,
+  inject,
+  DestroyRef
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { DataValue } from 'src/utils/socket.utils';
@@ -11,6 +20,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
   selector: 'graph-caption',
   styleUrls: ['./graph-caption.component.css'],
   templateUrl: './graph-caption.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgTemplateOutlet, TypographyComponent]
 })
 export default class GraphInfoComponent implements OnInit {
