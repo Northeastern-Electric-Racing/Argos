@@ -2,10 +2,10 @@ import { Component, computed, input, signal, ChangeDetectionStrategy } from '@an
 import Theme from 'src/services/theme.service';
 import { tw } from 'src/ui/recipes/tw';
 
-/** The nub fades to grey over a second while clicked. */
+/** The nub fades to grey (814's #808080, the control-border token) over a second while clicked. */
 const nubClasses = {
   idle: tw('bg-battery-shell transition-colors duration-1000 ease-linear'),
-  clicked: tw('bg-control-off transition-colors duration-1000 ease-linear')
+  clicked: tw('bg-control-border transition-colors duration-1000 ease-linear')
 } as const;
 
 @Component({

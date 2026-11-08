@@ -46,6 +46,9 @@ describe('BatteryPercentageComponent', () => {
     nub.click();
     fixture.detectChanges();
     expect(nub.dataset['clicked']).toBe('true');
+    // 814's #808080, the control-border token
+    expect(nub.classList).toContain('bg-control-border');
+    expect(nub.classList).not.toContain('bg-battery-shell');
 
     nub.click();
     fixture.detectChanges();
