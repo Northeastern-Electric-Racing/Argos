@@ -3,6 +3,7 @@ import { hasModifierKey } from '@angular/cdk/keycodes';
 import { ComponentPortal, ComponentType } from '@angular/cdk/portal';
 import { Injectable, Injector, inject } from '@angular/core';
 import { createGlobalPositionStrategy, createOverlayRef } from '@angular/cdk/overlay';
+import { injectFocusRestore } from '../focus/restore-focus';
 import { UiDialogContainerComponent } from './dialog-container.component';
 import { dialogBackdropClass, DialogDensity } from './dialog.recipe';
 import { UI_PANEL_CONFIG, UiPanelComponent, UiPanelConfig, UiPanelRef } from './panel.component';
@@ -65,6 +66,7 @@ const newTitleId = () => `ui-dialog-title-${nextTitleId++}`;
 export class UiDialogService {
   private dialog = inject(Dialog);
   private injector = inject(Injector);
+  private captureFocus = injectFocusRestore();
 
   /** `R` is the result type the dialog closes with. */
   open<R = unknown, D = unknown>(component: ComponentType<unknown>, options: UiDialogOptions<D> = {}): DialogRef<R> {
@@ -113,13 +115,15 @@ export class UiDialogService {
   /**
    * Opens a non-modal panel: same chrome as a dialog, but on a plain CDK overlay, so the page
    * stays usable and visible to assistive tech, and Tab can leave it. Escape or the close button
-   * closes it. The content component can inject DIALOG_DATA and UiPanelRef.
+   * closes it, and focus goes back to the element focused when it opened (see injectFocusRestore).
+   * The content component can inject DIALOG_DATA and UiPanelRef.
    */
   openPanel<R = unknown, D = unknown>(
     component: ComponentType<unknown>,
     options: Pick<UiDialogOptions<D>, 'header' | 'data' | 'width' | 'draggable' | 'panelClass' | 'compact'> = {}
   ): UiPanelRef<R> {
     const ref = new UiPanelRef<R>();
+    const restoreFocus = this.captureFocus();
     const overlayRef = createOverlayRef(this.injector, {
       positionStrategy: createGlobalPositionStrategy(this.injector).centerHorizontally().centerVertically(),
       hasBackdrop: false,
@@ -143,7 +147,10 @@ export class UiDialogService {
       ]
     });
     overlayRef.attach(new ComponentPortal(UiPanelComponent, null, injector));
-    ref.setCloseHandler(() => overlayRef.dispose());
+    ref.setCloseHandler(() => {
+      restoreFocus(overlayRef.overlayElement);
+      overlayRef.dispose();
+    });
     overlayRef.keydownEvents().subscribe((event) => {
       if (event.key === 'Escape' && !hasModifierKey(event)) {
         event.preventDefault();

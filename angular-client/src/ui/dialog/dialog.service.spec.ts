@@ -89,6 +89,59 @@ describe('UiDialogService', () => {
       expect(panes.some((p) => p.classList.contains(c))).toBe(true);
   });
 
+  it('closes on a backdrop click only with dismissableMask', async () => {
+    const kept = vi.fn();
+    service.open(Content, { header: 'Kept' }).closed.subscribe(kept);
+    await settle();
+    document.querySelector<HTMLElement>('.cdk-overlay-backdrop')!.click();
+    await settle();
+    expect(kept).not.toHaveBeenCalled();
+    service.closeAll();
+    await settle();
+
+    const dismissed = vi.fn();
+    service.open(Content, { header: 'Dismissed', dismissableMask: true }).closed.subscribe(dismissed);
+    await settle();
+    document.querySelector<HTMLElement>('.cdk-overlay-backdrop')!.click();
+    await settle();
+    expect(dismissed).toHaveBeenCalledTimes(1);
+    expect(dialog()).toBeNull();
+  });
+
+  it('drags by its header only when draggable', async () => {
+    service.open(Content, { header: 'Fixed' });
+    await settle();
+    expect(dialog()!.querySelector('.cdk-drag')!.classList).toContain('cdk-drag-disabled');
+    expect(dialog()!.querySelector('header')!.classList).not.toContain('cursor-move');
+    service.closeAll();
+    await settle();
+
+    service.open(Content, { header: 'Moves', draggable: true });
+    await settle();
+    const header = dialog()!.querySelector<HTMLElement>('header')!;
+    expect(dialog()!.querySelector('.cdk-drag')!.classList).not.toContain('cdk-drag-disabled');
+    expect([...header.classList]).toEqual(expect.arrayContaining(['cdk-drag-handle', 'cursor-move']));
+    // The CDK moves the whole pane (cdkDragRootElement), past its 5px start threshold. buttons and detail tell
+    // a real press from a screen reader's fake one.
+    header.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 10, clientY: 10, buttons: 1, detail: 1 }));
+    document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 60, clientY: 40 }));
+    document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 70, clientY: 50 }));
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 70, clientY: 50 }));
+    await settle();
+    expect(dialog()!.closest<HTMLElement>('.cdk-overlay-pane')!.style.transform).toContain('translate3d(60px, 40px');
+  });
+
+  it('pins to the viewport edges given by position instead of centring', async () => {
+    service.open(Content, { header: 'Pinned', position: { top: '12px', right: '8px' } });
+    await settle();
+    const pane = dialog()!.closest<HTMLElement>('.cdk-overlay-pane')!;
+    const wrapper = pane.parentElement!;
+    expect(pane.style.marginTop).toBe('12px');
+    expect(pane.style.marginRight).toBe('8px');
+    expect(wrapper.style.alignItems).toBe('flex-start');
+    expect(wrapper.style.justifyContent).toBe('flex-end');
+  });
+
   describe('openPanel', () => {
     it('opens a non-modal dialog the page stays usable behind, closed by Escape', async () => {
       const ref: UiPanelRef = service.openPanel(Content, { header: 'Graph', data: 'p' });
@@ -124,6 +177,67 @@ describe('UiDialogService', () => {
       const pane = document.querySelector<HTMLElement>('ui-panel')!.closest('.cdk-overlay-pane')!;
       expect([...pane.classList]).toEqual(expect.arrayContaining(['pane-f', 'pane-g']));
       ref!.close();
+    });
+
+    describe('focus on close', () => {
+      let page: HTMLElement;
+      let trigger: HTMLButtonElement;
+      let other: HTMLButtonElement;
+      beforeEach(() => {
+        page = document.body.appendChild(document.createElement('div'));
+        const group = page.appendChild(document.createElement('div'));
+        trigger = group.appendChild(document.createElement('button'));
+        other = group.appendChild(document.createElement('button'));
+        trigger.focus();
+      });
+      afterEach(() => page.remove());
+      const openFromTrigger = async () => {
+        const ref = service.openPanel(Content, { header: 'Cell Comparison' });
+        await settle();
+        const panel = document.querySelector<HTMLElement>('ui-panel')!;
+        panel.querySelector<HTMLInputElement>('input')!.focus();
+        return { ref, panel };
+      };
+
+      it('gives focus back to the element that opened it, from the Close button', async () => {
+        const { panel } = await openFromTrigger();
+        panel.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+        await settle();
+        expect(document.activeElement).toBe(trigger);
+      });
+
+      it('gives focus back to the element that opened it, from Escape', async () => {
+        const { panel } = await openFromTrigger();
+        escape(panel.querySelector('input')!);
+        await settle();
+        expect(document.activeElement).toBe(trigger);
+      });
+
+      it('leaves focus where it is when the page closed it from outside the panel', async () => {
+        const { ref } = await openFromTrigger();
+        other.focus();
+        ref.close();
+        await settle();
+        expect(document.activeElement).toBe(other);
+      });
+
+      it('falls back to the nearest focusable element where the opener was, once the opener is gone', async () => {
+        const { panel } = await openFromTrigger();
+        trigger.remove();
+        panel.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+        await settle();
+        expect(document.activeElement).toBe(other);
+      });
+
+      it('falls back to the first focusable element on the page when the area around the opener is gone too', async () => {
+        const first = document.body.insertBefore(document.createElement('button'), document.body.firstChild);
+        const { panel } = await openFromTrigger();
+        page.firstElementChild!.remove();
+        panel.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+        await settle();
+        expect(document.activeElement).toBe(first);
+        first.remove();
+      });
     });
   });
 });
