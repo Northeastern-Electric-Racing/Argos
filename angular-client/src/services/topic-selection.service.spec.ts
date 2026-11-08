@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
 import { TopicSelectionService } from './topic-selection.service';
 import { DataType } from 'src/utils/types.utils';
 
@@ -22,68 +23,61 @@ describe('TopicSelectionService', () => {
   });
 
   it('should start with an empty selection', async () => {
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes).toEqual([]);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes).toEqual([]);
   });
 
   it('should set selected data types', async () => {
     service.setSelectedDataTypes([mockDataType1, mockDataType2]);
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(2);
-      expect(dataTypes).toContain(mockDataType1);
-      expect(dataTypes).toContain(mockDataType2);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(2);
+    expect(dataTypes).toContain(mockDataType1);
+    expect(dataTypes).toContain(mockDataType2);
   });
 
   it('should add a single data type', async () => {
     service.setSelectedDataTypes([mockDataType1]);
     service.addDataType(mockDataType2);
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(2);
-      expect(dataTypes).toContain(mockDataType1);
-      expect(dataTypes).toContain(mockDataType2);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(2);
+    expect(dataTypes).toContain(mockDataType1);
+    expect(dataTypes).toContain(mockDataType2);
   });
 
   it('should not add duplicate data types', async () => {
     service.setSelectedDataTypes([mockDataType1]);
     service.addDataType(mockDataType1); // Try to add the same one again
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(1);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(1);
   });
 
   it('should add multiple data types', async () => {
     service.addDataTypes([mockDataType1, mockDataType2, mockDataType3]);
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(3);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(3);
   });
 
   it('should remove a single data type', async () => {
     service.setSelectedDataTypes([mockDataType1, mockDataType2]);
     service.removeDataType(mockDataType1);
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(1);
-      expect(dataTypes).toContain(mockDataType2);
-      expect(dataTypes).not.toContain(mockDataType1);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(1);
+    expect(dataTypes).toContain(mockDataType2);
+    expect(dataTypes).not.toContain(mockDataType1);
   });
 
   it('should remove multiple data types', async () => {
     service.setSelectedDataTypes([mockDataType1, mockDataType2, mockDataType3]);
     service.removeDataTypes([mockDataType1, mockDataType3]);
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(1);
-      expect(dataTypes).toContain(mockDataType2);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(1);
+    expect(dataTypes).toContain(mockDataType2);
   });
 
   it('should toggle data type selection', () => {
@@ -104,9 +98,8 @@ describe('TopicSelectionService', () => {
     service.setSelectedDataTypes([mockDataType1, mockDataType2, mockDataType3]);
     service.clearSelection();
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(0);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(0);
   });
 
   it('should correctly report if a data type is selected', () => {
@@ -133,8 +126,7 @@ describe('TopicSelectionService', () => {
     service.setSelectedDataTypes([mockDataType1]);
     service.addDataTypes([mockDataType1, mockDataType2]); // mockDataType1 is already selected
 
-    service.getSelectedDataTypes().subscribe((dataTypes) => {
-      expect(dataTypes.length).toBe(2);
-    });
+    const dataTypes = await firstValueFrom(service.getSelectedDataTypes());
+    expect(dataTypes.length).toBe(2);
   });
 });
