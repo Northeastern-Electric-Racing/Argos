@@ -37,25 +37,19 @@ export type TableAlign = (typeof TABLE_ALIGNS)[number];
 export const TABLE_HEADER_TONES = ['fill', 'caps'] as const;
 export type TableHeaderTone = (typeof TABLE_HEADER_TONES)[number];
 
-/** Each header cell list is complete for its density and tone: the tone sets the fill and type, the density the padding. */
-const headerCellClasses: Record<TableHeaderTone, Record<TableDensity, string>> = {
-  fill: {
-    md: tw('border-b border-solid border-border bg-surface-3 p-3 font-semibold'),
-    phone: tw('border-b border-solid border-border bg-surface-3 p-3 font-semibold max-md:p-1.5 max-md:text-ctrl-sm'),
-    roomy: tw('border-b border-solid border-border bg-surface-3 px-3.5 py-2.5 font-semibold')
-  },
-  caps: {
-    md: tw(
-      'border-b border-solid border-border bg-surface-2 p-3 text-xs font-semibold tracking-[0.04em] text-fg-label uppercase'
-    ),
-    phone: tw(
-      'border-b border-solid border-border bg-surface-2 p-3 text-xs font-semibold tracking-[0.04em] text-fg-label uppercase max-md:p-1.5'
-    ),
-    roomy: tw(
-      'border-b border-solid border-border bg-surface-2 px-3.5 py-2.5 text-xs font-semibold tracking-[0.04em] text-fg-label uppercase'
-    )
-  }
+/** A header cell is the base, its tone (fill and type) and its density's padding. */
+const headerCellBase = tw('border-b border-solid border-border font-semibold');
+const headerToneClasses: Record<TableHeaderTone, string> = {
+  fill: tw('bg-surface-3'),
+  caps: tw('bg-surface-2 text-xs tracking-[0.04em] text-fg-label uppercase')
 };
+const headerPaddingClasses: Record<TableDensity, string> = {
+  md: tw('p-3'),
+  phone: tw('p-3 max-md:p-1.5'),
+  roomy: tw('px-3.5 py-2.5')
+};
+/** The phone density's smaller header text, on the fill tone only: caps keeps its 12px. */
+const phoneHeaderText = tw('max-md:text-ctrl-sm');
 const headerAlignClasses: Record<TableAlign, string> = { left: tw('text-left'), right: tw('text-right') };
 const lightHeaderCellBase = tw(
   'border-b border-solid border-border px-3 py-2 text-xs font-semibold tracking-[0.04em] text-fg-muted uppercase'
@@ -63,9 +57,10 @@ const lightHeaderCellBase = tw(
 /** A plain table's sticky header cell; its opaque fill (either tone) covers the rows scrolling under it. */
 const stickyHeaderCell = tw('sticky top-0 z-1');
 
+const cellMd = tw('border-b border-solid border-border px-3 py-2');
 const cellClasses: Record<TableDensity, string> = {
-  md: tw('border-b border-solid border-border px-3 py-2'),
-  phone: tw('border-b border-solid border-border px-3 py-2 max-md:p-1.5 max-md:text-ctrl-sm max-md:wrap-anywhere'),
+  md: cellMd,
+  phone: cx(cellMd, tw('max-md:p-1.5 max-md:text-ctrl-sm max-md:wrap-anywhere')),
   roomy: tw('border-b border-solid border-border/40 px-3.5 py-2.5 text-sm max-md:px-2.5 max-md:py-2 max-md:text-ctrl-sm')
 };
 
@@ -86,7 +81,14 @@ export function headerCellClass(
   density: TableDensity = 'md',
   { align = 'left', sticky = false, tone = 'fill' }: { align?: TableAlign; sticky?: boolean; tone?: TableHeaderTone } = {}
 ): string {
-  return cx(headerCellClasses[tone][density], headerAlignClasses[align], sticky && stickyHeaderCell);
+  return cx(
+    headerCellBase,
+    headerToneClasses[tone],
+    headerPaddingClasses[density],
+    tone === 'fill' && density === 'phone' && phoneHeaderText,
+    headerAlignClasses[align],
+    sticky && stickyHeaderCell
+  );
 }
 
 /** The light header cell (no fill, small uppercase muted labels), aligned like its column. */

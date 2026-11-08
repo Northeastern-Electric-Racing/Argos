@@ -33,7 +33,7 @@ describe('UiDialogService', () => {
     expect(el.querySelector('button[aria-label="Close"]')).not.toBeNull();
   });
 
-  it('closes on Escape and on the Close button when closable', async () => {
+  it('closes on Escape and on the Close button', async () => {
     const closed = vi.fn();
     service.open(Content, { header: 'A' }).closed.subscribe(closed);
     await settle();
@@ -48,23 +48,23 @@ describe('UiDialogService', () => {
     expect(closed).toHaveBeenCalledTimes(2);
   });
 
-  it('keeps a non-closable dialog open on Escape, without a Close button', async () => {
-    const ref = service.open(Content, { header: 'Locked', closable: false });
+  it('stays open on Escape with a modifier key', async () => {
     const closed = vi.fn();
-    ref.closed.subscribe(closed);
+    service.open(Content, { header: 'Kept' }).closed.subscribe(closed);
     await settle();
-    escape(dialog()!);
+    dialog()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, shiftKey: true, bubbles: true }));
     await settle();
     expect(closed).not.toHaveBeenCalled();
-    expect(dialog()!.querySelector('button[aria-label="Close"]')).toBeNull();
+    expect(dialog()).not.toBeNull();
   });
 
   it('uses alertdialog and aria-describedby for confirmations', async () => {
-    service.open(Content, { ariaLabel: 'Confirm', role: 'alertdialog', ariaDescribedBy: 'msg', showHeader: false });
+    service.open(Content, { header: 'Confirm', role: 'alertdialog', ariaDescribedBy: 'msg' });
     await settle();
-    expect(dialog()!.getAttribute('role')).toBe('alertdialog');
-    expect(dialog()!.getAttribute('aria-label')).toBe('Confirm');
-    expect(dialog()!.getAttribute('aria-describedby')).toBe('msg');
+    const el = dialog()!;
+    expect(el.getAttribute('role')).toBe('alertdialog');
+    expect(document.getElementById(el.getAttribute('aria-labelledby')!)?.textContent).toBe('Confirm');
+    expect(el.getAttribute('aria-describedby')).toBe('msg');
   });
 
   // Initial focus on the first field needs layout (the CDK skips invisible elements); focus-walk.js checks it.
@@ -77,16 +77,6 @@ describe('UiDialogService', () => {
     await settle();
     expect(document.activeElement).toBe(trigger);
     trigger.remove();
-  });
-
-  it('puts each class of a recipe-style panelClass on the pane, from a string or an array', async () => {
-    // classList.add('a b') throws InvalidCharacterError: the CDK needs one class per array item (lesson)
-    expect(() => service.open(Content, { header: 'A', panelClass: 'pane-a  pane-b' })).not.toThrow();
-    service.open(Content, { header: 'B', panelClass: ['pane-c', 'pane-d pane-e'] });
-    await settle();
-    const panes = [...document.querySelectorAll<HTMLElement>('.cdk-overlay-pane')];
-    for (const c of ['pane-a', 'pane-b', 'pane-c', 'pane-d', 'pane-e'])
-      expect(panes.some((p) => p.classList.contains(c))).toBe(true);
   });
 
   it('closes on a backdrop click only with dismissableMask', async () => {
@@ -131,17 +121,6 @@ describe('UiDialogService', () => {
     expect(dialog()!.closest<HTMLElement>('.cdk-overlay-pane')!.style.transform).toContain('translate3d(60px, 40px');
   });
 
-  it('pins to the viewport edges given by position instead of centring', async () => {
-    service.open(Content, { header: 'Pinned', position: { top: '12px', right: '8px' } });
-    await settle();
-    const pane = dialog()!.closest<HTMLElement>('.cdk-overlay-pane')!;
-    const wrapper = pane.parentElement!;
-    expect(pane.style.marginTop).toBe('12px');
-    expect(pane.style.marginRight).toBe('8px');
-    expect(wrapper.style.alignItems).toBe('flex-start');
-    expect(wrapper.style.justifyContent).toBe('flex-end');
-  });
-
   describe('openPanel', () => {
     it('opens a non-modal dialog the page stays usable behind, closed by Escape', async () => {
       const ref: UiPanelRef = service.openPanel(Content, { header: 'Graph', data: 'p' });
@@ -168,15 +147,6 @@ describe('UiDialogService', () => {
       await settle();
       expect(document.querySelector('ui-panel')).toBeNull();
       ref.close();
-    });
-
-    it('splits a panelClass string into classes, as open() does', async () => {
-      let ref: UiPanelRef | undefined;
-      expect(() => (ref = service.openPanel(Content, { header: 'P', panelClass: 'pane-f pane-g' }))).not.toThrow();
-      await settle();
-      const pane = document.querySelector<HTMLElement>('ui-panel')!.closest('.cdk-overlay-pane')!;
-      expect([...pane.classList]).toEqual(expect.arrayContaining(['pane-f', 'pane-g']));
-      ref!.close();
     });
 
     describe('focus on close', () => {

@@ -1,7 +1,7 @@
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CdkConnectedOverlay, ConnectedPosition, FlexibleConnectedPositionStrategyOrigin } from '@angular/cdk/overlay';
-import { ChangeDetectionStrategy, Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
-import { cx, tw } from '../recipes/tw';
+import { ChangeDetectionStrategy, Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { tw } from '../recipes/tw';
 
 /** The floating surface. A panel with nothing tabbable focuses itself, and needs no outline for that. */
 const panelBase = tw(
@@ -30,8 +30,6 @@ const POSITIONS: ConnectedPosition[] = [
 })
 export class UiPopoverComponent {
   ariaLabel = input<string | undefined>(undefined);
-  /** Extra classes on the panel (size, padding); the surface itself comes from the popover. */
-  panelClass = input<string>('');
   /** Emits once the panel is open. */
   shown = output<void>();
 
@@ -39,7 +37,7 @@ export class UiPopoverComponent {
   readonly isOpen = this.open.asReadonly();
   protected origin = signal<FlexibleConnectedPositionStrategyOrigin | null>(null);
   protected positions = POSITIONS;
-  protected panelClasses = computed(() => cx(panelBase, this.panelClass()));
+  protected readonly panelClass = panelBase;
   private trap = viewChild(CdkTrapFocus);
   private panel = viewChild<ElementRef<HTMLElement>>('panel');
 

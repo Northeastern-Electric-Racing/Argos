@@ -48,7 +48,7 @@ export const GRID_COL_SPANS = Object.keys(colSpans).map(Number) as GridColSpan[]
 export const GRID_ROW_SPANS = Object.keys(rowSpans).map(Number) as GridRowSpan[];
 
 const tileCentred = tw('flex items-center justify-center');
-const tileClipped = tw('flex items-center justify-center overflow-hidden');
+const tileClipped = cx(tileCentred, tw('overflow-hidden'));
 
 export function gridTileClass(cols: GridColSpan, rows: GridRowSpan, { clip = true }: { clip?: boolean } = {}): string {
   return cx(colSpans[cols], rowSpans[rows], clip ? tileClipped : tileCentred);

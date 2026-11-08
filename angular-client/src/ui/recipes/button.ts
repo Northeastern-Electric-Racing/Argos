@@ -67,11 +67,12 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   'danger-text': tw('border-transparent bg-transparent text-danger not-disabled:hover:bg-danger/16')
 };
 
+const lgSize = tw('min-h-11.25 min-w-35 gap-2 rounded-md px-4 text-ctrl max-md:min-h-11');
 export const buttonSizeClasses: Record<ButtonSize, string> = {
   sm: tw('min-h-7 gap-2 rounded-sm px-3 text-xs max-md:min-h-8'),
   md: tw('min-h-9 gap-2 rounded-md px-4 text-ctrl'),
-  lg: tw('min-h-11.25 min-w-35 gap-2 rounded-md px-4 text-ctrl max-md:min-h-11'),
-  'lg-fluid': tw('min-h-11.25 min-w-35 gap-2 rounded-md px-4 text-ctrl max-md:min-h-11 max-md:min-w-0 max-md:px-3'),
+  lg: lgSize,
+  'lg-fluid': cx(lgSize, tw('max-md:min-w-0 max-md:px-3')),
   icon: tw('min-h-8 w-8 gap-2 rounded-md p-0 text-ctrl')
 };
 

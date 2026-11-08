@@ -1,7 +1,7 @@
 import { afterRenderEffect, ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
-import { tw } from '../recipes/tw';
+import { cx, tw } from '../recipes/tw';
 import { ToastService, ToastSeverity } from './toast.service';
 
 const ICONS: Record<ToastSeverity, string> = {
@@ -23,19 +23,12 @@ const toastClasses = {
 };
 
 /** Per severity: a 10% tint, a 45% edge and a solid 4px left bar in the status colour. */
+const severityBase = tw('flex items-start gap-3 rounded-md border border-l-4 border-solid py-3 pr-2 pl-4');
 const severityClasses: Record<ToastSeverity, string> = {
-  success: tw(
-    'flex items-start gap-3 rounded-md border border-l-4 border-solid border-success/45 border-l-success bg-success/10 py-3 pr-2 pl-4'
-  ),
-  info: tw(
-    'flex items-start gap-3 rounded-md border border-l-4 border-solid border-info/45 border-l-info bg-info/10 py-3 pr-2 pl-4'
-  ),
-  warn: tw(
-    'flex items-start gap-3 rounded-md border border-l-4 border-solid border-warn/45 border-l-warn bg-warn/10 py-3 pr-2 pl-4'
-  ),
-  error: tw(
-    'flex items-start gap-3 rounded-md border border-l-4 border-solid border-danger/45 border-l-danger bg-danger/10 py-3 pr-2 pl-4'
-  )
+  success: cx(severityBase, tw('border-success/45 border-l-success bg-success/10')),
+  info: cx(severityBase, tw('border-info/45 border-l-info bg-info/10')),
+  warn: cx(severityBase, tw('border-warn/45 border-l-warn bg-warn/10')),
+  error: cx(severityBase, tw('border-danger/45 border-l-danger bg-danger/10'))
 };
 
 /** The severity icon's colour. */

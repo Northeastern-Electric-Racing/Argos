@@ -4,7 +4,7 @@ import { CdkPortalOutlet } from '@angular/cdk/portal';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
-import { dialogClasses, headerlessContentClass } from './dialog.recipe';
+import { dialogClasses } from './dialog.recipe';
 import { UiDialogConfig } from './dialog.service';
 
 /**
@@ -24,7 +24,6 @@ import { UiDialogConfig } from './dialog.service';
 export class UiDialogContainerComponent extends CdkDialogContainer<UiDialogConfig> {
   private ref = inject(DialogRef);
   protected readonly classes = dialogClasses[this._config.uiDensity];
-  protected readonly headerlessContent = headerlessContentClass;
 
   close(): void {
     this.ref.close(undefined, { focusOrigin: 'mouse' });

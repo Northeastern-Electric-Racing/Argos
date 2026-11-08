@@ -1,4 +1,4 @@
-import { dialogBackdropClass, dialogClasses, headerlessContentClass } from '../dialog/dialog.recipe';
+import { dialogBackdropClass, dialogClasses } from '../dialog/dialog.recipe';
 import { accordionClasses } from './accordion';
 import { BUTTON_SIZES, BUTTON_VARIANTS, buttonClass, ICON_BUTTON_SIZES, iconButtonClass } from './button';
 import { cardClass } from './card';
@@ -65,7 +65,7 @@ const everyRecipeList = (): [string, string][] => {
   for (const striped of [false, true])
     for (const hover of [false, true, 'tint'] as const) add('row', rowClass({ striped, hover }));
   add('table', [tableClasses, checkboxClass]);
-  add('dialog', [dialogBackdropClass, dialogClasses, headerlessContentClass]);
+  add('dialog', [dialogBackdropClass, dialogClasses]);
   return lists;
 };
 

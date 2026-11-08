@@ -71,7 +71,6 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
   protected readonly arrowClass = tw(
     'pointer-events-none absolute right-[0.45rem] flex text-[color:var(--ui-select-color,var(--color-fg-muted))] transition-transform duration-180 ease-out group-aria-expanded/trigger:rotate-180'
   );
-  protected readonly checkClass = listboxClasses.optionCheck;
   protected triggerClass = computed(() => cx(triggerBase, triggerSizeClasses[this.size()]));
   protected popupClass = computed(() => listboxPopupClass('grow', this.size()));
 
