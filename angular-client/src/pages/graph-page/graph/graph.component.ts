@@ -159,7 +159,7 @@ export default class CustomGraphComponent implements OnDestroy {
 
   /**
    * Asks for a redraw on the next animation frame. Bursts of incoming points (many topics,
-   * high rates) collapse into one Chart.js update per frame instead of one per message.
+   * high rates) merge into one Chart.js update per frame instead of one per message.
    */
   updateChart = () => {
     // No pause guard: incoming points are already dropped while paused (graphInfoCallback, and the graph page),
