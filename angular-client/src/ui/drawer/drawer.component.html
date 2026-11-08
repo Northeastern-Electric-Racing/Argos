@@ -1,5 +1,12 @@
 <ng-template #panel>
-  <div [class]="classes.drawer" [attr.data-position]="position()">
+  <!-- The modal drawer's CDK dialog container is the dialog; the non-modal one's overlay has none, so this is. -->
+  <div
+    [class]="classes.drawer"
+    [attr.data-position]="position()"
+    [attr.role]="modal() ? null : 'dialog'"
+    [attr.aria-label]="modal() ? null : ariaLabel()"
+    [attr.tabindex]="modal() ? null : -1"
+  >
     <header class="flex items-center gap-2 pt-3 pr-3 pb-2 pl-4">
       <div class="min-w-0 flex-1"><ng-content select="[uiDrawerHeader]" /></div>
       <button type="button" uiIconButton aria-label="Close" (click)="close()">

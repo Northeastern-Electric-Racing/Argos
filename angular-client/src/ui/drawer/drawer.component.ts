@@ -1,11 +1,14 @@
-import { Dialog, DialogRef } from '@angular/cdk/dialog';
+import { Dialog } from '@angular/cdk/dialog';
 import { hasModifierKey } from '@angular/cdk/keycodes';
-import { createGlobalPositionStrategy } from '@angular/cdk/overlay';
+import { GlobalPositionStrategy, createGlobalPositionStrategy, createOverlayRef } from '@angular/cdk/overlay';
+import { TemplatePortal } from '@angular/cdk/portal';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   Injector,
   TemplateRef,
+  ViewContainerRef,
   effect,
   inject,
   input,
@@ -15,12 +18,14 @@ import {
 } from '@angular/core';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
+import { injectFocusAfterRender } from '../focus/focus-after-render';
+import { injectFocusRestore } from '../focus/restore-focus';
 import { tw } from '../recipes/tw';
 
 const drawerClasses = {
   /** The sheet slides in from its edge (a transition from @starting-style, so no keyframes are needed). */
   drawer: tw(
-    'flex h-full flex-col bg-surface-2 text-fg shadow-overlay transition-transform duration-180 ease-out data-[position=left]:starting:-translate-x-full data-[position=right]:starting:translate-x-full'
+    'flex h-full flex-col bg-surface-2 text-fg shadow-overlay transition-transform duration-180 ease-out outline-none data-[position=left]:starting:-translate-x-full data-[position=right]:starting:translate-x-full'
   ),
   /** On the CDK overlay pane: the dialog container takes focus on open and needs no outline of its own. */
   pane: tw('[&_.cdk-dialog-container]:outline-none'),
@@ -31,6 +36,9 @@ const drawerClasses = {
  * Side drawer: a CDK dialog pinned to one edge with a global position strategy, so it gets the
  * CDK's focus trap, Escape handling and focus restore. Neither Angular Aria nor the CDK has a
  * ready-made drawer. Put a `[uiDrawerHeader]` element inside for the header; the rest is the body.
+ * With `modal` false it is a plain CDK overlay instead, as UiDialogService.openPanel is: no scrim,
+ * focus trap or aria-hidden on the page, since a CDK Dialog hides the page and traps focus even
+ * without a backdrop. It closes with its host.
  */
 @Component({
   selector: 'ui-drawer',
@@ -50,13 +58,22 @@ export class UiDrawerComponent {
 
   private dialog = inject(Dialog);
   private injector = inject(Injector);
+  private viewContainerRef = inject(ViewContainerRef);
+  private focusAfterRender = injectFocusAfterRender();
+  private captureFocus = injectFocusRestore();
   private panel = viewChild.required<TemplateRef<unknown>>('panel');
-  private ref?: DialogRef<unknown, unknown>;
+  /** Closes the open drawer; set while it is open. */
+  private closeOpen?: () => void;
+  private destroyed = false;
 
   constructor() {
     effect(() => {
       const visible = this.visible();
-      untracked(() => (visible ? this.open() : this.ref?.close()));
+      untracked(() => (visible ? this.open() : this.closeOpen?.()));
+    });
+    inject(DestroyRef).onDestroy(() => {
+      this.destroyed = true;
+      this.closeOpen?.();
     });
   }
 
@@ -65,24 +82,35 @@ export class UiDrawerComponent {
   }
 
   private open(): void {
-    if (this.ref) return;
+    if (this.closeOpen) return;
     const strategy = createGlobalPositionStrategy(this.injector).top('0');
     if (this.position() === 'right') strategy.right('0');
     else strategy.left('0');
+    if (this.modal()) this.openModal(strategy);
+    else this.openNonModal(strategy);
+  }
 
+  /** Called once the drawer has closed, however it closed. */
+  private onClosed(): void {
+    this.closeOpen = undefined;
+    // A destroyed host's model can't emit.
+    if (!this.destroyed) this.visible.set(false);
+  }
+
+  private openModal(strategy: GlobalPositionStrategy): void {
     const ref = this.dialog.open(this.panel(), {
       positionStrategy: strategy,
       width: this.width(),
       maxWidth: '100vw',
       height: '100%',
-      hasBackdrop: this.modal(),
+      hasBackdrop: true,
       backdropClass: drawerClasses.backdrop.split(' '),
       panelClass: drawerClasses.pane.split(' '),
       disableClose: true,
       ariaLabel: this.ariaLabel(),
       autoFocus: 'dialog'
     });
-    this.ref = ref;
+    this.closeOpen = () => ref.close();
     // These streams complete when the drawer closes.
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
     ref.keydownEvents.subscribe((event) => {
@@ -95,9 +123,34 @@ export class UiDrawerComponent {
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
     ref.backdropClick.subscribe(() => this.dismissible() && ref.close(undefined, { focusOrigin: 'mouse' }));
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
-    ref.closed.subscribe(() => {
-      this.ref = undefined;
-      this.visible.set(false);
+    ref.closed.subscribe(() => this.onClosed());
+  }
+
+  private openNonModal(strategy: GlobalPositionStrategy): void {
+    const restoreFocus = this.captureFocus();
+    const overlayRef = createOverlayRef(this.injector, {
+      positionStrategy: strategy,
+      width: this.width(),
+      maxWidth: '100vw',
+      height: '100%',
+      hasBackdrop: false
+    });
+    overlayRef.attach(new TemplatePortal(this.panel(), this.viewContainerRef));
+    // As the modal drawer's autoFocus: 'dialog', focus the drawer itself so Tab starts inside it.
+    this.focusAfterRender(() => overlayRef.overlayElement.querySelector<HTMLElement>('[role="dialog"]'));
+    this.closeOpen = () => {
+      // The host's injector is gone once it is destroyed, so there is no render to restore focus after.
+      if (!this.destroyed) restoreFocus(overlayRef.overlayElement);
+      overlayRef.dispose();
+      this.onClosed();
+    };
+    // Completes when the overlay is disposed.
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- completes with the drawer
+    overlayRef.keydownEvents().subscribe((event) => {
+      if (event.key === 'Escape' && !hasModifierKey(event)) {
+        event.preventDefault();
+        this.closeOpen?.();
+      }
     });
   }
 }
