@@ -21,7 +21,7 @@ import { UiIconRegistry } from './icon-registry';
  */
 @Component({
   selector: 'ui-icon',
-  template: '{{ svg() ? "" : name() }}',
+  templateUrl: './icon.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     translate: 'no',
