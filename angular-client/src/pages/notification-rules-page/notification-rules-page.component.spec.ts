@@ -43,6 +43,13 @@ describe('NotificationRulesPageComponent', () => {
     expect(component.clientId.length).toBeGreaterThan(0);
   });
 
+  it('fills View Log in the primary NER red, as on PrimeNG (white on accent-strong passes AA)', () => {
+    const viewLog = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(
+      (b) => b.textContent?.trim() === 'View Log'
+    );
+    expect(viewLog?.dataset['variant']).toBe('primary');
+  });
+
   it('should persist client ID across instances', () => {
     const firstId = component.clientId;
     // Create a new instance
