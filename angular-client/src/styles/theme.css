@@ -64,6 +64,7 @@
 
   /* Status. NER red is the accent, so danger takes orange and destructive buttons are never filled. */
   --color-danger: #fb923c;
+  --color-fault: #d4760b; /* charging fault rows: 814's orange, black text on it 6.4:1 */
   --color-success: #4ade80;
   --color-success-hover: color-mix(in srgb, var(--color-success) 82%, #fff);
   --color-success-fg: #5fc04f; /* lit-lamp text on the eFuses plates */

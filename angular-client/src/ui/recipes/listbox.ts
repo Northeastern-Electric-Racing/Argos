@@ -2,7 +2,7 @@ import { cx, tw } from './tw';
 
 /**
  * The listbox popup shared by ui-select and the add-rule topic autocomplete (Aria combobox + listbox in a
- * CDK connected overlay). Options take their state from what Aria sets: `aria-selected` (accent tint, and
+ * CDK connected overlay). Options take their state from what Aria sets: `aria-selected` (a neutral tint, and
  * the check mark of a select option), `data-active` (the keyboard's active option, a solid inset ring).
  *   width   fill: as wide as the trigger (autocomplete); grow: at least the trigger, wider for a long option
  *   size    md (13px) or sm (12px), matching the trigger's size
@@ -37,7 +37,7 @@ export const listboxClasses = {
    * take DOM focus (activedescendant), and it would clear the style the data-active outline width draws with.
    */
   option: tw(
-    'group/option flex min-h-8 cursor-pointer items-center gap-2 truncate rounded-sm px-3 hover:bg-fg/8 aria-selected:bg-accent/18 aria-selected:text-accent-text data-[active=true]:outline-2 data-[active=true]:-outline-offset-2 data-[active=true]:outline-focus'
+    'group/option flex min-h-8 cursor-pointer items-center gap-2 truncate rounded-sm px-3 hover:bg-fg/8 aria-selected:bg-fg/12 aria-selected:text-fg data-[active=true]:outline-2 data-[active=true]:-outline-offset-2 data-[active=true]:outline-focus'
   ),
   /** The option's label, ellipsed when it doesn't fit. */
   optionText: tw('truncate'),
