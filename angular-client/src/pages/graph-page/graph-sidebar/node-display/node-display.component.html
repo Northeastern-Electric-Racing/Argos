@@ -8,7 +8,11 @@
     [isDesktop]="isDesktop()"
   />
   @if (node().subnodesVisible) {
-    <div [class]="isDesktop() ? '' : 'mobile-subcontainer'">
+    <div
+      [class]="isDesktop() ? '' : 'mobile-subcontainer'"
+      [animate.enter]="isDesktop() ? 'expand-down-enter' : 'expand-across-enter'"
+      [animate.leave]="isDesktop() ? 'expand-down-leave' : 'expand-across-leave'"
+    >
       @for (subNode of node().nodes | async | nodeFilter: 'name' : searchFilter(); track subNode) {
         <div [class]="isDesktop() ? 'desktop-subcontainer' : 'mobile-subcontainer'">
           <node-display
