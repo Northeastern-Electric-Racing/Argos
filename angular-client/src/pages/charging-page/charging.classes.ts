@@ -8,11 +8,11 @@ import { cx, tw } from 'src/ui/recipes/tw';
 export const chargingGridClass = tileGridClass({ rows: 'sm' });
 
 /**
- * A fault row: faults alternate between 814's #d4760b orange fill with black text (6.4:1) and a dim orange tint with the label
+ * A fault row: faults alternate between an orange fill (a shade under 814's #d4760b) with white text (4.6:1) and a dim orange tint with the label
  * grey, and each fault keeps its fill as new ones arrive. Both pairs pass AA.
  */
 export const faultRowClasses = {
-  lit: tw('w-full rounded-xs bg-fault text-on-status'),
+  lit: tw('w-full rounded-xs bg-fault text-on-fault'),
   dim: tw('w-full rounded-xs bg-fault/10 text-fg-label')
 } as const;
 
