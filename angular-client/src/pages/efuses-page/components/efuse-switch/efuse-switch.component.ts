@@ -1,29 +1,57 @@
-import { Component, computed, effect, input, output, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, linkedSignal, output, ChangeDetectionStrategy } from '@angular/core';
+import { cx, tw } from 'src/ui/recipes/tw';
+import { legendClass, panelButtonBaseClass, panelGroupClass, panelLockedDimClass } from '../../efuses.classes';
 
 export type EfuseSwitchState = 'ON' | 'OFF' | 'AUTO';
+
+/** An unpressed position is a live button, so its legend stays at AA (fg-dim, 5:1 on surface-1). */
+const positionClass = cx(
+  panelButtonBaseClass,
+  legendClass,
+  tw(
+    'min-w-22 bg-surface-1 px-6.5 py-3.5 text-fg-dim not-aria-pressed:hover:bg-surface-2 not-aria-pressed:hover:text-fg-muted max-md:min-w-18 max-md:px-4'
+  )
+);
+
+/** Each position lights in its own colour while pressed: ON green, AUTO amber, OFF red. */
+const buttonClasses: Record<EfuseSwitchState, string> = {
+  ON: cx(positionClass, tw('aria-pressed:bg-success/10 aria-pressed:text-success-fg')),
+  AUTO: cx(positionClass, tw('aria-pressed:bg-warn/10 aria-pressed:text-warn')),
+  OFF: cx(positionClass, tw('aria-pressed:bg-accent/15 aria-pressed:text-accent-fg'))
+};
+
+/**
+ * While locked (disabled) the unpressed positions dim; the pressed one keeps full strength, since it is how the
+ * eFuse's current mode reads at a glance (the lock's own pressed state says the switch is locked).
+ */
+const unpressedClasses: Record<EfuseSwitchState, string> = {
+  ON: cx(buttonClasses.ON, panelLockedDimClass),
+  AUTO: cx(buttonClasses.AUTO, panelLockedDimClass),
+  OFF: cx(buttonClasses.OFF, panelLockedDimClass)
+};
 
 /**
  * Multi-position momentary switch — styled to match the annunciator
  * plate indicator lights used elsewhere on the eFuse page.
  *
- * Only one option can be active at a time. Clicking the currently
- * active option does nothing; clicking a different option selects it
- * and deselects the previous one.
+ * A named group of buttons; the selected one is aria-pressed. Clicking
+ * the currently active option does nothing; clicking a different option
+ * selects it and emits it.
  *
  * The available options are configurable — pass ['ON', 'OFF'] for a
  * simple two-state switch, or ['ON', 'OFF', 'AUTO'] for eFuses that
  * support automatic firmware control.
  *
- * Emits the newly selected state via the `stateChange` output so
- * the parent can send the appropriate CAN message.
+ * Controlled: a press shows at once, and `selectedState` (Calypso's
+ * state, the source of truth) always wins when it changes, so a parent
+ * reverts a failed command by setting it back.
  */
 @Component({
   selector: 'efuse-switch',
   templateUrl: './efuse-switch.component.html',
-  styleUrls: ['./efuse-switch.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager
 })
-export default class EfuseSwitchComponent implements OnInit {
+export default class EfuseSwitchComponent {
   /** Font size in px for the button labels */
   fontSize = input<number>(14);
 
@@ -36,6 +64,11 @@ export default class EfuseSwitchComponent implements OnInit {
   /** Selected state from Calypso (source of truth) */
   selectedState = input<EfuseSwitchState | null>(null);
 
+  /** The group's accessible name, e.g. "Brake mode" */
+  ariaLabel = input<string>('eFuse mode');
+
+  protected readonly groupClass = panelGroupClass;
+
   /**
    * Ordered options — ensures AUTO is always in the middle when present.
    * Canonical order: ON, AUTO, OFF.
@@ -45,24 +78,19 @@ export default class EfuseSwitchComponent implements OnInit {
     return canonical.filter((s) => this.options().includes(s));
   });
 
-  /** The currently selected state */
-  selected = signal<EfuseSwitchState>('OFF');
+  /** The currently selected state: Calypso's, else AUTO when it is an option, else OFF */
+  selected = linkedSignal<EfuseSwitchState>(
+    () => this.selectedState() ?? (this.options().includes('AUTO') ? 'AUTO' : 'OFF')
+  );
 
-  private syncSelectedState = effect(() => {
-    const incoming = this.selectedState();
-    if (incoming) {
-      this.selected.set(incoming);
-    }
+  /** Each position's classes: the pressed one never dims */
+  protected readonly classFor = computed(() => {
+    const selected = this.selected();
+    return (option: EfuseSwitchState) => (option === selected ? buttonClasses : unpressedClasses)[option];
   });
 
   /** Emitted when the user selects a new state */
   stateChange = output<EfuseSwitchState>();
-
-  ngOnInit(): void {
-    // Default to AUTO when it is an available option, otherwise OFF
-    const opts = this.options();
-    this.selected.set(opts.includes('AUTO') ? 'AUTO' : 'OFF');
-  }
 
   select(state: EfuseSwitchState): void {
     if (this.disabled()) return;

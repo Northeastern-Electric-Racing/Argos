@@ -31,7 +31,7 @@ describe('CircularPercentageComponent', () => {
 
     expect(component.innerCircleDimension()).toBeCloseTo(174);
     expect(component.percentageFontSize()).toBeCloseTo(78);
-    const inner: HTMLElement = fixture.nativeElement.querySelector('.inner');
+    const inner: HTMLElement = fixture.nativeElement.querySelector('[data-part="inner"]');
     expect(inner.style.width).toBe('174px');
   });
 });

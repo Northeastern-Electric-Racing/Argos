@@ -26,10 +26,11 @@ import {
 @Component({
   selector: 'graph-component',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
   providers: [provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
-  imports: [BaseChartDirective],
-  changeDetection: ChangeDetectionStrategy.Eager
+  // Fills its box by default; zero specificity, so a consumer's h-*/w-* class wins (#909's :host block).
+  host: { class: 'relative block [:where(&)]:h-full [:where(&)]:w-full' },
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [BaseChartDirective]
 })
 export class GraphComponent {
   private chartDirective = viewChild<BaseChartDirective<'line', GraphData[]>>(BaseChartDirective);

@@ -1,11 +1,11 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MessageService } from 'primeng/api';
 import { startNewRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import Storage from 'src/services/storage.service';
 
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
+import { gridTileClass, tileGridClass } from 'src/ui/recipes/grid';
 import { DateLocationComponent } from './components/date-location-display/date-location.component';
 import { CurrentRunDisplayComponent } from './components/current-run-display/current-run-display.component';
 import { ViewerDisplayComponent } from './components/viewer-display/viewer-display.component';
@@ -26,12 +26,9 @@ import LandingPageMobileComponent from './landing-page-mobile/landing-page-mobil
  */
 @Component({
   selector: 'landing-page',
-  styleUrls: ['./landing-page.component.css'],
   templateUrl: './landing-page.component.html',
   imports: [
     LandingPageMobileComponent,
-    MatGridList,
-    MatGridTile,
     DateLocationComponent,
     CurrentRunDisplayComponent,
     ViewerDisplayComponent,
@@ -55,8 +52,22 @@ export default class LandingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
   time = new Date();
+
+  /** 814's 6-column mat-grid-list (1.5rem rows, 15px gutters), tile by tile (columns × rows). */
+  protected readonly grid = tileGridClass();
+  protected readonly tiles = {
+    dateLocation: gridTileClass(2, 4),
+    small: gridTileClass(1, 4),
+    torque: gridTileClass(1, 5),
+    motor: gridTileClass(3, 5),
+    driver: gridTileClass(2, 5),
+    overTime: gridTileClass(3, 7),
+    acceleration: gridTileClass(3, 14),
+    raspberryPi: gridTileClass(4, 6),
+    brakes: gridTileClass(2, 6)
+  } as const;
   newRunIsLoading = false;
   mobileThreshold = 768;
   isMobile = window.innerWidth < this.mobileThreshold;

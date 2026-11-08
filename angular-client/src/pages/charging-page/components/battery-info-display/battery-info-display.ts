@@ -10,7 +10,6 @@ import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobil
 @Component({
   selector: 'battery-info-display',
   templateUrl: './battery-info-display.html',
-  styleUrls: ['./battery-info-display.css'],
   imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {

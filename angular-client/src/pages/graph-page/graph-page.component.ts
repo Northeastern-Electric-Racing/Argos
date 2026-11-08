@@ -1,3 +1,4 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import {
   ChangeDetectorRef,
   Component,
@@ -11,7 +12,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
@@ -31,14 +31,15 @@ import CustomGraphComponent from './graph/graph.component';
 import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
-import TypographyComponent from '../../components/typography/typography.component';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { numberInputClass } from 'src/ui/recipes/number-input';
+import { UiInputDirective } from 'src/ui/field/field.directive';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
-  styleUrls: ['./graph-page.component.css'],
+  // 60px is the app nav bar.
+  host: { class: 'block h-[calc(100vh-60px)]' },
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     LoadingPageComponent,
@@ -49,16 +50,17 @@ import { FormsModule } from '@angular/forms';
     GraphSidebarComponent,
     CustomGraphComponent,
     LiveValueStripComponent,
-    TypographyComponent,
-    InputNumberModule,
+    UiInputDirective,
     FormsModule
   ]
 })
 export default class GraphPageComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
+  protected readonly rangeInputClass = numberInputClass('sm');
+  protected readonly yAxisInputClass = numberInputClass('xs');
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private toastService = inject(MessageService);
+  private toastService = inject(ToastService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation

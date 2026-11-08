@@ -1,4 +1,4 @@
-<div class="page-container">
+<div class="p-5">
   @if (dataTypesError()) {
     <error-page [errorMessage]="dataTypesError()!.message" />
   } @else if (settingsError()) {
@@ -6,52 +6,60 @@
   } @else if (dataTypesIsLoading() || settingsIsLoading()) {
     <loading-page />
   } @else if (!isAuthenticated()) {
-    <div class="auth-section">
-      <info-background title="Car Commands" icon="lock">
-        <div class="auth-content">
-          <p class="auth-description">Enter the command password to access car controls.</p>
-          <div class="auth-form">
-            <div class="auth-input-group">
-              <label for="password">Password</label>
-              <p-password [feedback]="false" inputId="password" [(ngModel)]="enteredPw" />
+    <div class="flex min-h-[60vh] items-center justify-center">
+      <info-background class="w-full max-w-105" title="Car Commands" icon="lock">
+        <div class="flex flex-col gap-5 pt-3">
+          <p id="password-hint" class="m-0 text-sm text-fg-muted">Enter the command password to access car controls.</p>
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
+              <label uiLabel for="password">Password</label>
+              <input
+                uiInput
+                type="password"
+                id="password"
+                class="w-full"
+                autocomplete="current-password"
+                aria-required="true"
+                [attr.aria-invalid]="authError() ? 'true' : null"
+                [attr.aria-describedby]="authError() ? 'password-error' : 'password-hint'"
+                [(ngModel)]="enteredPw"
+              />
             </div>
             <argos-button label="Authenticate" [onClick]="authenticatePw" />
             @if (authError()) {
-              <p class="auth-error">{{ authError() }}</p>
+              <p uiFieldError id="password-error" class="m-0 text-center" role="alert">{{ authError() }}</p>
             }
           </div>
         </div>
       </info-background>
     </div>
   } @else {
-    <div class="page-header">
+    <div #commandsHeader class="mb-5 flex items-center justify-between">
       <typography variant="large-header" content="Car Commands" />
       <argos-button label="Update Videos" [onClick]="onUpdateVideosPressed" />
     </div>
 
-    <div class="commands-grid">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
       @for (command of carCommandTopics(); track command.title) {
         <command-card [command]="command" (sendCommand)="confirmSendCommand($event.title, $event.value)" />
       }
     </div>
 
-    <div class="section-spacer">
+    <div class="mt-6">
       <info-background title="Scylla Settings" icon="settings">
-        <div class="settings-content">
-          <div class="settings-grid">
+        <div class="flex flex-col gap-5 pt-4">
+          <div class="grid grid-cols-4 gap-x-5 gap-y-4 max-md:grid-cols-2">
             <setting-input [label]="'Batch Time (s)'" [(value)]="batchTime" [min]="0" [max]="3600" />
             <setting-input [label]="'Rate Limit Mode'" [(value)]="rateLimitMode" [min]="0" [max]="10" />
             <setting-input [label]="'Rate Limit Time (ms)'" [(value)]="rateLimitTime" [min]="0" [max]="60000" />
             <setting-input [label]="'Discard Percentage'" [(value)]="discardPercentage" [min]="0" [max]="100" />
           </div>
-          <div class="settings-footer">
+          <div class="flex items-center justify-between pt-1">
             <setting-toggle [label]="'Upload Enabled'" [(value)]="uploadEnabled" />
             <argos-button [label]="'Save Settings'" [onClick]="confirmSaveSettings" />
           </div>
         </div>
       </info-background>
     </div>
-
-    <p-confirmdialog />
   }
 </div>

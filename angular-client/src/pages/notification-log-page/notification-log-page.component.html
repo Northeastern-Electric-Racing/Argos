@@ -1,66 +1,82 @@
-<div class="page-container">
-  <header class="page-header">
-    <div class="header-title">
+<div class="flex h-full flex-col gap-4 p-5 max-md:gap-3 max-md:p-3">
+  <header class="flex flex-wrap items-end justify-between gap-4 max-md:flex-col max-md:items-start max-md:gap-2.5">
+    <div class="flex min-w-0 items-baseline gap-3">
       <typography variant="x-large-title" content="Notification Log" />
       @if (hasEntries()) {
-        <span class="entry-count">{{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}</span>
+        <span
+          class="shrink-0 rounded-full border border-solid border-border bg-surface-2 px-2.5 py-1 text-sm font-medium whitespace-nowrap text-fg-muted"
+          >{{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}</span
+        >
       }
     </div>
     @if (hasEntries()) {
-      <p-button
-        label="Clear All"
-        icon="pi pi-trash"
-        severity="danger"
-        [text]="true"
-        (onClick)="notificationLogService.clearAll()"
-        ariaLabel="Clear all notifications"
-      />
+      <button type="button" uiButton variant="danger-text" (click)="clearAll()" aria-label="Clear all notifications">
+        <ui-icon name="delete" size="sm" />Clear All
+      </button>
     }
   </header>
 
   @if (!hasEntries()) {
-    <div class="empty-state">
-      <i class="pi pi-bell-slash empty-icon"></i>
+    <div
+      #emptyState
+      tabindex="-1"
+      class="flex min-h-75 flex-1 flex-col items-center justify-center gap-2.5 rounded-md border border-dashed border-border bg-panel px-4 py-12 text-center text-fg-muted focus-visible:focus-ring"
+    >
+      <!-- 36px, the nearest icon step to #909's 40px; decorative. -->
+      <span class="mb-2 text-border-strong" aria-hidden="true"><ui-icon name="notifications_off" size="xl" /></span>
       <typography variant="subheader" content="No notifications have been triggered yet" />
-      <span class="empty-hint">Triggered rules will appear here in real-time</span>
+      <span class="text-ctrl-sm text-fg-muted">Triggered rules will appear here in real-time</span>
     </div>
   } @else {
-    <div class="log-table-wrapper">
-      <p-table [value]="entries()" stripedRows [scrollable]="true" scrollHeight="flex">
-        <ng-template #header>
-          <tr>
-            <th class="col-rule">Rule ID</th>
-            <th class="col-topic">Topic</th>
-            <th class="col-values">Values</th>
-            <th class="col-time">Time</th>
-            <th class="col-actions"></th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-entry>
-          <tr [class.unread]="!entry.read">
-            <td class="col-rule">
-              <span class="rule-cell">
-                <span class="rule-dot" [class.unread-dot]="!entry.read" aria-hidden="true"></span>
-                {{ entry.notification.id }}
-              </span>
-            </td>
-            <td class="col-topic">{{ entry.notification.topic }}</td>
-            <td class="col-values">{{ entry.notification.values.join(', ') }}</td>
-            <td class="col-time">{{ entry.notification.time | date: 'HH:mm:ss' }}</td>
-            <td class="col-actions">
-              <p-button
-                icon="pi pi-times"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                size="small"
-                (onClick)="notificationLogService.dismissEntry(entry.id)"
-                [ariaLabel]="'Dismiss notification ' + entry.notification.id"
-              />
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+    <div [class]="t.wrapper" class="min-h-0 flex-1 border border-solid border-border bg-panel">
+      <table cdk-table [class]="table" [dataSource]="entries()" [trackBy]="trackById">
+        <ng-container cdkColumnDef="rule">
+          <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="w-1/4">Rule ID</th>
+          <td cdk-cell *cdkCellDef="let entry" [class]="td">
+            <span class="inline-flex items-center gap-2.5 font-medium group-data-[unread=true]/entry:font-semibold">
+              <span
+                class="size-1.5 shrink-0 rounded-full bg-surface-3 group-data-[unread=true]/entry:bg-accent"
+                aria-hidden="true"
+              ></span>
+              {{ entry.notification.id }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container cdkColumnDef="topic">
+          <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="w-[35%]">Topic</th>
+          <td cdk-cell *cdkCellDef="let entry" [class]="td">{{ entry.notification.topic }}</td>
+        </ng-container>
+        <ng-container cdkColumnDef="values">
+          <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="w-1/5">Values</th>
+          <td cdk-cell *cdkCellDef="let entry" [class]="td" class="tabular-nums">
+            {{ entry.notification.values.join(', ') }}
+          </td>
+        </ng-container>
+        <ng-container cdkColumnDef="time">
+          <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="w-[12%]">Time</th>
+          <td cdk-cell *cdkCellDef="let entry" [class]="td" class="font-mono text-sm whitespace-nowrap tabular-nums">
+            {{ entry.notification.time | date: 'HH:mm:ss' }}
+          </td>
+        </ng-container>
+        <ng-container cdkColumnDef="actions">
+          <th cdk-header-cell *cdkHeaderCellDef [class]="thEnd" class="w-[8%]">
+            <span class="cdk-visually-hidden">Actions</span>
+          </th>
+          <td cdk-cell *cdkCellDef="let entry" [class]="td" class="text-right">
+            <button
+              type="button"
+              uiIconButton
+              (click)="dismiss(entry)"
+              [attr.data-entry]="entry.id"
+              [attr.aria-label]="'Dismiss notification ' + entry.notification.id"
+            >
+              <ui-icon name="close" size="sm" />
+            </button>
+          </td>
+        </ng-container>
+        <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
+        <tr cdk-row *cdkRowDef="let entry; columns: columns" [class]="row" [attr.data-unread]="!entry.read"></tr>
+      </table>
     </div>
   }
 </div>

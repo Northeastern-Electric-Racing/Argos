@@ -1,81 +1,86 @@
-<div class="dialog-content">
+<div class="flex flex-col gap-4 font-sans text-fg">
   <input
     #fileInput
     type="file"
     accept=".json,application/json"
-    class="hidden-file-input"
+    class="hidden"
     (change)="onFileSelected($event)"
     aria-hidden="true"
   />
 
-  <section class="save-section">
-    <div class="actions-row">
-      <div class="save-form">
-        <label for="preset-name">Save current selection</label>
-        <div class="save-form-controls">
+  <section class="flex flex-col gap-1">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div [class]="field.field" class="flex-[1_1_280px]">
+        <label uiLabel for="preset-name">Save current selection</label>
+        <div class="flex gap-2">
           <input
+            #nameInput
+            uiInput
+            class="min-w-0 flex-auto"
             id="preset-name"
-            pInputText
+            [attr.aria-describedby]="hasSelection() ? null : 'preset-name-hint'"
             [ngModel]="newPresetName()"
             (ngModelChange)="newPresetName.set($event)"
             placeholder="Preset name…"
             (keyup.enter)="onSaveCurrent()"
           />
           <button
-            pButton
+            uiButton
             type="button"
-            label="Save"
             (click)="onSaveCurrent()"
             [disabled]="!hasSelection() || newPresetName().trim().length === 0"
-          ></button>
+          >
+            Save
+          </button>
         </div>
       </div>
 
-      <button pButton type="button" label="Upload JSON" class="p-button-outlined" (click)="onUploadClick()"></button>
+      <button uiButton variant="neutral" type="button" (click)="onUploadClick()">Upload JSON</button>
     </div>
     @if (!hasSelection()) {
-      <small class="hint">Select a topic to save a preset</small>
+      <small id="preset-name-hint" [class]="field.hint">Select a topic to save a preset</small>
     }
   </section>
 
-  <section class="presets-list">
+  <section class="border-t border-solid border-border pt-3">
     @if (presets().length === 0) {
-      <div class="empty-state">
-        <p>No presets yet</p>
-        <small> Save your current topic selection or upload a JSON of your preset </small>
+      <div class="rounded-md border border-dashed border-border px-3 py-6 text-center text-fg-muted">
+        <p class="m-0 mb-1 text-fg">No presets yet</p>
+        <small class="text-ctrl-sm">Save your current topic selection or upload a JSON of your preset</small>
       </div>
     } @else {
-      <table class="preset-table">
+      <table [class]="table.table">
         <thead>
           <tr>
-            <th class="name">Name</th>
-            <th class="topic-count">Topics</th>
-            <th class="actions">Actions</th>
+            <th [class]="table.nameHead">Name</th>
+            <th [class]="table.topicsHead">Topics</th>
+            <th [class]="table.actionsHead">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (preset of presets(); track preset.id) {
             <tr>
-              <td class="name" [title]="preset.name">
-                <span class="name-text">{{ preset.name }}</span>
+              <td [class]="table.cell" [title]="preset.name">
+                <span class="block truncate">{{ preset.name }}</span>
               </td>
-              <td class="topic-count">{{ preset.topicNames.length }}</td>
-              <td class="actions">
-                <button pButton type="button" label="Apply" (click)="onApply(preset)"></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Download"
-                  class="p-button-outlined"
-                  (click)="onDownload(preset)"
-                ></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Delete"
-                  class="p-button-text p-button-danger"
-                  (click)="onDelete(preset)"
-                ></button>
+              <td [class]="table.numberCell">
+                {{ preset.topicNames.length }}
+              </td>
+              <td [class]="table.cell">
+                <div class="flex flex-wrap justify-end gap-1">
+                  <button uiButton size="sm" type="button" (click)="onApply(preset)">Apply</button>
+                  <button uiButton size="sm" variant="neutral" type="button" (click)="onDownload(preset)">Download</button>
+                  <button
+                    uiButton
+                    size="sm"
+                    variant="danger-text"
+                    type="button"
+                    data-preset-delete
+                    (click)="onDelete(preset)"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           }
@@ -84,10 +89,8 @@
     }
   </section>
 
-  <div class="footer">
-    <button pButton type="button" label="Add Default Presets" class="p-button-text" (click)="onAddDefaultPresets()"></button>
-    <button pButton type="button" label="Close" class="p-button-text" (click)="onClose()"></button>
+  <div class="mt-1 flex items-center justify-between">
+    <button uiButton variant="text" type="button" (click)="onAddDefaultPresets()">Add Default Presets</button>
+    <button uiButton variant="text" type="button" (click)="onClose()">Close</button>
   </div>
-
-  <p-confirmdialog />
 </div>

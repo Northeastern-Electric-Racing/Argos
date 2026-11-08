@@ -8,7 +8,6 @@ import TypographyComponent from '../typography/typography.component';
 @Component({
   selector: 'error-page',
   templateUrl: './error-page.component.html',
-  styleUrls: ['./error-page.component.css'],
   imports: [TypographyComponent],
   changeDetection: ChangeDetectionStrategy.Eager
 })

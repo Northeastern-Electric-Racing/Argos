@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
+import { faultRowClasses } from '../../charging.classes';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
@@ -14,21 +15,30 @@ enum FaultType {
 @Component({
   selector: 'fault-display',
   templateUrl: './fault-display.component.html',
-  styleUrls: ['./fault-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, VStackComponent]
 })
 export default class FaultDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  faults: { type: string; name: string; time: string }[] = [];
-  faultsShifted: boolean = false;
+  faults = signal<{ type: string; name: string; time: string }[]>([]);
+  faultsShifted = signal(false);
   resetButton = {
     onClick: () => {
-      this.faults = [];
+      this.faults.set([]);
     },
-    icon: 'restart_alt'
+    icon: 'restart_alt',
+    ariaLabel: 'Clear the faults'
   };
+
+  /** Rows alternate fills; flipping the parity with each new fault keeps every fault's fill as the list grows. */
+  isLit(index: number): boolean {
+    return (index % 2 === 0) === this.faultsShifted();
+  }
+
+  rowClass(index: number): string {
+    return this.isLit(index) ? faultRowClasses.lit : faultRowClasses.dim;
+  }
 
   ngOnInit() {
     const chargerFaultAndDisplayNames = [
@@ -127,16 +137,10 @@ export default class FaultDisplayComponent implements OnInit {
    */
   private addFault(faultValue: number, faultName: string, faultType: FaultType, lastFaultValue: number) {
     if (faultValue !== 0 && lastFaultValue === 0) {
-      if (this.faults.length >= 50) {
-        this.faults.pop();
-      }
-      this.faultsShifted = !this.faultsShifted;
-
-      this.faults.unshift({
-        type: faultType,
-        name: faultName,
-        time: new Date().toLocaleTimeString()
-      });
+      this.faultsShifted.update((shifted) => !shifted);
+      this.faults.update((faults) =>
+        [{ type: faultType, name: faultName, time: new Date().toLocaleTimeString() }, ...faults].slice(0, 50)
+      );
     }
   }
 }

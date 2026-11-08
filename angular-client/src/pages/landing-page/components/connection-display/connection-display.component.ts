@@ -9,7 +9,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'connection-display',
   templateUrl: './connection-display.component.html',
-  styleUrl: './connection-display.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, ConnectionDotWithMessageComponent, TypographyComponent]
 })

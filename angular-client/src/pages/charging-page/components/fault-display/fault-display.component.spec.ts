@@ -1,12 +1,8 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import Storage from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
+import { topics } from 'src/utils/topic.utils';
 import FaultDisplayComponent from './fault-display.component';
-
-const push = (storage: Storage, key: string, value: string): void => {
-  storage.addValue(key, { values: [value], time: '0', unit: '' } as DataValue);
-};
 
 // The BMS critical faults the car publishes (Odyssey-Definitions can-messages/bms.json).
 const liveBmsCriticalFaults = [
@@ -25,41 +21,67 @@ describe('FaultDisplayComponent', () => {
   let component: FaultDisplayComponent;
   let storage: Storage;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [FaultDisplayComponent],
-      providers: [provideZonelessChangeDetection(), Storage]
-    }).compileComponents();
+  const push = (key: string, value: string) => {
+    storage.addValue(key, { values: [value], time: '0', unit: '' } as DataValue);
+    fixture.detectChanges();
+  };
+  const shown = () => component.faults().map(({ type, name }) => ({ type, name }));
+  const rows = (): HTMLElement[] => [...fixture.nativeElement.querySelectorAll('[data-fault]')];
+  const clear = (): HTMLButtonElement => fixture.nativeElement.querySelector('button[aria-label="Clear the faults"]');
 
-    storage = TestBed.inject(Storage);
+  beforeEach(() => {
     fixture = TestBed.createComponent(FaultDisplayComponent);
     component = fixture.componentInstance;
+    storage = TestBed.inject(Storage);
     fixture.detectChanges(); // ngOnInit subscribes to the fault topics
   });
 
   liveBmsCriticalFaults.forEach(({ topic, name }) => {
     it(`shows ${topic} when it is raised`, () => {
-      push(storage, topic, '1');
+      push(topic, '1');
 
-      expect(component.faults.map(({ type, name }) => ({ type, name }))).toEqual([{ type: 'BMS', name }]);
+      expect(shown()).toEqual([{ type: 'BMS', name }]);
     });
   });
 
   it('shows nothing for a topic it does not watch', () => {
-    push(storage, 'BMS/Faults/Critical/Not_A_Real_Fault', '1');
+    push('BMS/Faults/Critical/Not_A_Real_Fault', '1');
 
-    expect(component.faults).toEqual([]);
+    expect(component.faults()).toEqual([]);
   });
 
   it('still shows a charger fault when it is raised', () => {
-    push(storage, 'Charger/Box/F_OverTemp', '1');
+    push('Charger/Box/F_OverTemp', '1');
 
-    expect(component.faults.map(({ type, name }) => ({ type, name }))).toEqual([{ type: 'Charger', name: 'Over Temp' }]);
+    expect(shown()).toEqual([{ type: 'Charger', name: 'Over Temp' }]);
   });
 
   it('logs a fault once when it is raised, and again only after it clears', () => {
-    ['1', '1', '0', '1'].forEach((value) => push(storage, 'BMS/Faults/Critical/Pack_too_hot', value));
+    ['1', '1', '0', '1'].forEach((value) => push('BMS/Faults/Critical/Pack_too_hot', value));
 
-    expect(component.faults.length).toBe(2);
+    expect(component.faults().length).toBe(2);
+  });
+
+  it('lists a fault when its value turns non-zero, newest first, each keeping its fill', () => {
+    push(topics.commTimeoutFault(), '1');
+    expect(rows().map((r) => r.dataset['fault'])).toEqual(['Comm Timeout']);
+    expect(rows()[0].dataset['lit']).toBe('true');
+
+    push(topics.commTimeoutFault(), '1');
+    expect(rows().length).toBe(1);
+
+    push(topics.overTempFault(), '2');
+    expect(rows().map((r) => r.dataset['fault'])).toEqual(['Over Temp', 'Comm Timeout']);
+    expect(rows().map((r) => r.dataset['lit'])).toEqual(['false', 'true']);
+    expect(rows()[0].textContent).toContain('Charger');
+  });
+
+  it('clears the list with a named button', () => {
+    push(topics.cellOpenWire(), '1');
+    expect(rows().length).toBe(1);
+
+    clear().click();
+    fixture.detectChanges();
+    expect(rows().length).toBe(0);
   });
 });

@@ -13,7 +13,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'chip-diagnostics',
   templateUrl: './chip-diagnostics.component.html',
-  styleUrl: './chip-diagnostics.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, InfoValueDisplayComponent, HStackComponent, VStackComponent]
 })

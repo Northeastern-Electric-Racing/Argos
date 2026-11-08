@@ -9,7 +9,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'current-run-display',
   templateUrl: './current-run-display.component.html',
-  styleUrl: './current-run-display.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent, HStackComponent]
 })

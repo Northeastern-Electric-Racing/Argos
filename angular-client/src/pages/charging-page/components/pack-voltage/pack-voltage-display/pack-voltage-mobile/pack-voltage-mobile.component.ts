@@ -10,7 +10,6 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'pack-voltage-mobile',
   templateUrl: './pack-voltage-mobile.component.html',
-  styleUrls: ['./pack-voltage-mobile.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, PackVoltageGraphComponent, TypographyComponent, HStackComponent, VStackComponent]
 })
@@ -18,5 +17,5 @@ export default class PackVoltageMobileDisplayComponent {
   private storage = inject(Storage);
   voltage = input<number>(0);
   packVoltData = input<GraphData[]>([]);
-  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
+  resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
 }

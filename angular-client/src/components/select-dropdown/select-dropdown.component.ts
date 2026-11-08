@@ -1,11 +1,13 @@
 import { Component, effect, input, ChangeDetectionStrategy } from '@angular/core';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { UiSelectComponent } from 'src/ui/select/select.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 export interface SelectorConfig {
   options: DropdownOption[];
   placeholder: string;
   defaultValue?: string;
+  /** The select's accessible name, its purpose ("Segment 3 heat map view"); without one it is named by its placeholder. */
+  ariaLabel?: string;
 }
 export interface DropdownOption {
   name: string;
@@ -15,9 +17,9 @@ export interface DropdownOption {
 @Component({
   selector: 'select-dropdown',
   templateUrl: './select-dropdown.component.html',
-  styleUrl: './select-dropdown.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Select, ReactiveFormsModule, FormsModule]
+  host: { class: 'inline-block' },
+  imports: [UiSelectComponent, ReactiveFormsModule, FormsModule]
 })
 export class SelectDropdownComponent {
   options = input<DropdownOption[]>([
@@ -29,6 +31,8 @@ export class SelectDropdownComponent {
     }
   ]);
   placeholder = input<string>('placeholder');
+  /** The select's accessible name: what it is for, never its value or placeholder. Falls back to the placeholder. */
+  ariaLabel = input<string | undefined>(undefined);
   defaultValue = input<string | undefined>(undefined);
 
   selectedOption: DropdownOption | undefined;
@@ -53,8 +57,8 @@ export class SelectDropdownComponent {
     });
   }
 
-  handleChangedOption(changeEvent: SelectChangeEvent) {
-    changeEvent.value.function();
+  handleChangedOption(option: DropdownOption) {
+    option.function();
   }
 
   // Get display text for the dropdown

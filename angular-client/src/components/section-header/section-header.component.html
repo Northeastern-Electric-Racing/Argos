@@ -1,9 +1,14 @@
-<div class="section-header">
-  <span class="section-title">{{ leftTitle() }}</span>
+<div class="flex items-center gap-[clamp(6px,0.94vw,18px)] pt-[clamp(8px,1.25vw,24px)] pb-[clamp(4px,0.63vw,12px)]">
+  <span class="font-sans text-[length:clamp(18px,2.66vw,44px)] font-bold text-fg">{{ leftTitle() }}</span>
   @for (config of selectorConfigs(); track config.placeholder) {
-    <select-dropdown [options]="config.options" [placeholder]="config.placeholder" [defaultValue]="config.defaultValue" />
+    <select-dropdown
+      [options]="config.options"
+      [placeholder]="config.placeholder"
+      [defaultValue]="config.defaultValue"
+      [ariaLabel]="config.ariaLabel"
+    />
   }
   @if (rightTitle(); as right) {
-    <span class="section-title section-title-right">{{ right }}</span>
+    <span class="ml-auto font-sans text-[length:clamp(18px,2.66vw,44px)] font-bold text-fg">{{ right }}</span>
   }
 </div>

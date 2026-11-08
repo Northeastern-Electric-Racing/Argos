@@ -1,5 +1,4 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import { NgStyle } from '@angular/common';
 
 type RepeatMode = 'auto-fit' | 'auto-fill';
 
@@ -15,12 +14,10 @@ type RepeatMode = 'auto-fit' | 'auto-fill';
 @Component({
   selector: 'grid-layout',
   templateUrl: './grid-layout.component.html',
-  styleUrls: ['./grid-layout.component.css'],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [NgStyle]
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class GridLayoutComponent {
-  /** Minimum column width (e.g. '300px', '20rem') */
+  /** Minimum column width (e.g. '300px', '20rem'); a grid narrower than this gets one column of its own width */
   minWidth = input<string>('300px');
 
   /** Maximum column width (e.g. '1fr', '500px') */
@@ -33,6 +30,6 @@ export default class GridLayoutComponent {
   gap = input<string>('15px');
 
   gridTemplateColumns = computed(() => {
-    return `repeat(${this.repeatMode()}, minmax(${this.minWidth()}, ${this.maxWidth()}))`;
+    return `repeat(${this.repeatMode()}, minmax(min(${this.minWidth()}, 100%), ${this.maxWidth()}))`;
   });
 }

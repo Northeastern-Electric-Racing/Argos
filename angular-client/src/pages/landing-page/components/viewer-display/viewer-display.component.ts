@@ -8,7 +8,6 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'viewer-display',
   templateUrl: './viewer-display.component.html',
-  styleUrl: './viewer-display.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, TypographyComponent]
 })

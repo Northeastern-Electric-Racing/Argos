@@ -1,18 +1,18 @@
 import { Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { NotificationLogService } from 'src/services/notification-log.service';
 import { appRoutes } from 'src/app/app-routes';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
 
 export type NotificationListVariant = 'popover' | 'stream';
 
 @Component({
   selector: 'notification-list',
   templateUrl: './notification-list.component.html',
-  styleUrls: ['./notification-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button]
+  imports: [DatePipe, UiIconComponent, UiButtonDirective]
 })
 export class NotificationListComponent {
   protected notificationLogService = inject(NotificationLogService);
@@ -26,6 +26,7 @@ export class NotificationListComponent {
       ? this.notificationLogService.notifications()
       : this.notificationLogService.recentNotifications()
   );
+  protected isPopover = computed(() => this.variant() === 'popover');
   protected hasEntries = computed(() => this.entries().length > 0);
   protected totalCount = computed(() => this.notificationLogService.notifications().length);
 

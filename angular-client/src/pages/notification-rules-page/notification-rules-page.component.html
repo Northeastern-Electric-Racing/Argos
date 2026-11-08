@@ -1,40 +1,53 @@
-<div class="page-container">
+<div class="p-5 max-md:p-3">
   <input
     #fileInput
     type="file"
     accept=".csv"
-    class="hidden-file-input"
+    class="hidden"
     (change)="onFileSelected($event)"
     aria-label="Upload CSV file"
   />
 
-  <div class="page-layout">
-    <div class="main-content">
-      <div class="header-row">
+  <!-- The navbar is 60px tall and the page has 20px padding top and bottom. -->
+  <div class="flex min-h-[calc(100vh-100px)] items-stretch gap-5 max-md:min-h-0 max-md:flex-col">
+    <div class="flex min-w-0 flex-1 flex-col">
+      <div class="mb-5 flex items-center gap-5 max-md:flex-col max-md:items-start max-md:gap-3">
         <typography variant="x-large-title" content="Notification Rules" />
-        <div class="header-buttons">
-          <argos-button label="View Log" [onClick]="onViewLog" additionalStyles="background-color: #ef4345;" />
-          <argos-button label="Upload" [onClick]="onUpload" additionalStyles="background-color: #555;" />
-          <argos-button label="Download" [onClick]="onDownload" additionalStyles="background-color: #555;" />
+        <div class="ml-auto flex items-center gap-2.5 max-md:ml-0 max-md:w-full max-md:flex-wrap">
+          <argos-button size="lg-fluid" label="View Log" [onClick]="onViewLog" variant="outlined" />
+          <argos-button size="lg-fluid" label="Upload" [onClick]="onUpload" variant="neutral" />
+          <argos-button size="lg-fluid" label="Download" [onClick]="onDownload" variant="neutral" />
         </div>
       </div>
 
-      <div class="rules-bar">
+      <div class="mb-4 flex flex-wrap items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-2.5">
         <typography variant="header" content="Rules" />
-        <div class="rules-bar-actions">
-          <argos-button label="Add" [onClick]="onAddRule" />
-          <argos-button label="Remove" [onClick]="onRemoveSelected" [disabled]="!hasSelection()" />
-          <argos-button label="Toggle Subscription" [onClick]="onToggleSubscription" [disabled]="!hasSelection()" />
+        <div class="flex flex-wrap items-center gap-2 max-md:gap-1.5">
+          <argos-button #addButton size="lg-fluid" label="Add" [onClick]="onAddRule" />
+          <argos-button
+            size="lg-fluid"
+            label="Remove"
+            variant="danger"
+            [onClick]="onRemoveSelected"
+            [disabled]="!hasSelection()"
+          />
+          <argos-button
+            size="lg-fluid"
+            label="Toggle Subscription"
+            variant="neutral"
+            [onClick]="onToggleSubscription"
+            [disabled]="!hasSelection()"
+          />
         </div>
-        <div class="search-container">
+        <div class="ml-auto max-md:ml-0 max-md:w-full">
           <input
-            pInputText
+            uiInput
             type="text"
+            class="w-50 max-md:w-full"
             placeholder="Search..."
             [value]="searchTerm()"
             (input)="onSearchInput($event)"
             aria-label="Search rules"
-            class="search-input"
           />
         </div>
       </div>
@@ -44,26 +57,30 @@
         [clientId]="clientId"
         [searchTerm]="searchTerm()"
         (selectionChanged)="onSelectionChanged($event)"
+        (emptiedByDelete)="focusAddButton()"
       />
     </div>
 
     <button
       type="button"
-      class="stream-toggle"
+      class="mt-4.5 flex h-11 w-7 shrink-0 cursor-pointer items-center justify-center self-start rounded-sm border border-solid border-border-strong bg-surface-3 p-0 text-fg-label transition-colors duration-150 hover:border-control-border hover:bg-surface-3-hover hover:text-fg focus-visible:border-control-border focus-visible:bg-surface-3-hover focus-visible:text-fg focus-visible:focus-ring max-md:hidden"
       (click)="toggleStreamRail()"
       [attr.aria-label]="streamRailOpen() ? 'Hide notification stream' : 'Show notification stream'"
       [attr.title]="streamRailOpen() ? 'Hide stream' : 'Show stream'"
+      [attr.aria-expanded]="streamRailOpen()"
     >
-      <i class="pi" [class.pi-angle-right]="streamRailOpen()" [class.pi-angle-left]="!streamRailOpen()"></i>
+      <ui-icon [name]="streamRailOpen() ? 'chevron_right' : 'chevron_left'" size="sm" />
     </button>
 
+    <!-- Hangs flush to the right edge (cancels the page padding); collapsed, it also cancels the gap. Always
+         shown on phones, which have no toggle. -->
     <aside
-      class="stream-rail"
-      [class.collapsed]="!streamRailOpen()"
-      [attr.aria-hidden]="!streamRailOpen()"
+      class="-mr-5 flex w-[clamp(200px,16.66vw,280px)] shrink-0 overflow-hidden transition-[width,margin-left,opacity] duration-250 ease-out aria-hidden:pointer-events-none aria-hidden:-ml-5 aria-hidden:w-0 aria-hidden:opacity-0 max-md:mr-0 max-md:max-h-80 max-md:w-full max-md:aria-hidden:pointer-events-auto max-md:aria-hidden:ml-0 max-md:aria-hidden:w-full max-md:aria-hidden:opacity-100"
+      [attr.aria-hidden]="!streamRailShown()"
+      [inert]="!streamRailShown()"
       aria-label="Live notification stream"
     >
-      <notification-list variant="stream" />
+      <notification-list class="min-w-0 flex-1" variant="stream" />
     </aside>
   </div>
 </div>

@@ -8,7 +8,6 @@ import VStackComponent from '../vstack/vstack.component';
 @Component({
   selector: 'messages-per-second',
   templateUrl: './messages-per-second.component.html',
-  styleUrl: './messages-per-second.component.css',
   imports: [TypographyComponent, VStackComponent],
   changeDetection: ChangeDetectionStrategy.Eager
 })
@@ -28,9 +27,8 @@ export class MessagesPerSecondComponent {
       });
   }
 
-  additionalStyles = computed(() => {
-    return this.small() ? 'fontSize: 12px; color: gray;' : 'fontSize: 15px; color: gray;';
-  });
+  /** Small, muted text: the rate is chrome next to the clock, not a reading. */
+  textClass = computed(() => (this.small() ? 'text-xs text-fg-muted' : 'text-sm text-fg-muted'));
 
   getDisplayNumber = () => {
     return this.messagesPerSecond !== undefined ? this.messagesPerSecond.toString() : 'N/A';

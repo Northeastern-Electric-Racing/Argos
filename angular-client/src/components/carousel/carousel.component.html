@@ -1,34 +1,70 @@
-<div class="modal-container">
-  <!-- Carousel Content -->
-  <p-carousel
-    [value]="runs"
-    [numVisible]="1"
-    [numScroll]="1"
-    [circular]="true"
-    [autoplayInterval]="3000"
-    (onPage)="handlePageChange($event)"
-  >
-    <ng-template let-run let-i="index" #item>
-      <div class="run-card">
-        <mat-grid-list cols="2" rowHeight="40px">
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="'Run #' + run.id"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="right" variant="subheader" [content]="run.driverName"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile>
-            <typography class="left" variant="subheader" [content]="datePipe(run.time)"></typography>
-          </mat-grid-tile>
-          <mat-grid-tile colspan="2">
-            <typography variant="subheader" class="right" [content]="run.locationName"></typography>
-          </mat-grid-tile>
-        </mat-grid-list>
+<section
+  class="overflow-hidden rounded-lg bg-surface-2 font-sans text-fg"
+  aria-roledescription="carousel"
+  aria-label="Runs"
+  (mouseenter)="setPaused(true)"
+  (mouseleave)="setPaused(false)"
+  (focusin)="onFocusIn($event)"
+  (focusout)="setPaused(false)"
+>
+  @if (currentRun(); as run) {
+    <div class="flex items-center gap-1">
+      <button type="button" uiIconButton aria-label="Previous run" (click)="prev()">
+        <ui-icon name="chevron_left" />
+      </button>
+      <div
+        class="min-w-0 flex-1"
+        role="group"
+        aria-roledescription="slide"
+        [attr.aria-label]="currentIndex() + 1 + ' of ' + runs.length"
+        [attr.aria-live]="rotating() ? 'off' : 'polite'"
+      >
+        <!-- Two columns of 40px rows, as the mat-grid-list was: id and driver, the date, then the location across both. -->
+        <div class="mx-2 grid auto-rows-[40px] grid-cols-2 rounded-md border-2 border-solid border-secondary text-base">
+          <span class="flex items-center justify-start px-1.25">Run #{{ run.id }}</span>
+          <span class="flex items-center justify-end px-1.25 text-right">{{ run.driverName }}</span>
+          <span class="col-start-1 flex items-center justify-start px-1.25">{{ datePipe(run.time) }}</span>
+          <span class="col-span-2 flex items-center justify-end px-1.25 text-right">{{ run.locationName }}</span>
+        </div>
+        <div class="p-2.5 text-center">
+          <button type="button" uiButton variant="neutral" (click)="selectRun(run)">Select this Run</button>
+        </div>
       </div>
-
-      <div class="select-button-container">
-        <p-button class="run-select-button" severity="primary" label="Select this Run" (onClick)="selectRun(run)"></p-button>
-      </div>
-    </ng-template>
-  </p-carousel>
-</div>
+      <button type="button" uiIconButton aria-label="Next run" (click)="next()">
+        <ui-icon name="chevron_right" />
+      </button>
+    </div>
+    <div class="flex items-center justify-center gap-2 pb-1.5">
+      <!-- WAI-ARIA carousel: auto-rotation needs a visible stop/start control. -->
+      <button
+        type="button"
+        uiIconButton
+        size="sm"
+        [attr.aria-label]="autoplay() ? 'Stop automatic slide show' : 'Start automatic slide show'"
+        (click)="autoplay.set(!autoplay())"
+      >
+        <ui-icon [name]="autoplay() ? 'pause' : 'play_arrow'" />
+      </button>
+      @if (runs.length <= 12) {
+        <div class="flex justify-center gap-1.5">
+          @for (r of runs; track r.id; let i = $index) {
+            <!-- A 24px target around the 5px bar, so the indicators meet the target-size minimum. -->
+            <button
+              type="button"
+              class="group grid h-6 w-6 cursor-pointer place-items-center border-0 bg-transparent p-0 focus-visible:focus-ring"
+              [attr.aria-current]="i === currentIndex()"
+              [attr.aria-label]="'Show run ' + r.id"
+              (click)="goTo(i)"
+            >
+              <span class="block h-1.25 w-6 rounded-xs bg-control-off group-aria-[current=true]:bg-accent"></span>
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="text-center text-ctrl-sm text-fg-muted">{{ currentIndex() + 1 }} / {{ runs.length }}</div>
+      }
+    </div>
+  } @else {
+    <p class="m-0 pb-1.5 text-center text-ctrl-sm text-fg-muted">No runs yet</p>
+  }
+</section>

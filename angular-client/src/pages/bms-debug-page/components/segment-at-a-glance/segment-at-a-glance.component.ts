@@ -16,7 +16,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'segment-at-a-glance',
   templateUrl: './segment-at-a-glance.component.html',
-  styleUrl: './segment-at-a-glance.component.css',
   imports: [
     InfoBackgroundComponent,
     InfoValueDisplayComponent,

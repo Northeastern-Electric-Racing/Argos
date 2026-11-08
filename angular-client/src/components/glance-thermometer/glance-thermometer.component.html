@@ -1,7 +1,14 @@
-<div class="thermo">
-  <div class="tube">
-    <div class="glass"></div>
-    <div class="mercury" [style.height]="mercuryHeight()" [style.background-color]="mercuryColor()"></div>
+<div class="relative flex h-14.5 w-6 flex-col items-center">
+  <div class="relative flex h-9 w-3 flex-col justify-end overflow-hidden rounded-t-sm bg-widget-glass">
+    <div class="absolute inset-0 rounded-[inherit]"></div>
+    <div
+      class="mx-auto min-h-0.5 w-1.75 rounded-t-[4px] transition-[height] duration-300 ease-[ease]"
+      [style.height]="mercuryHeight()"
+      [style.background-color]="mercuryColor()"
+    ></div>
   </div>
-  <div class="bulb" [style.background-color]="mercuryColor()"></div>
+  <div
+    class="-mt-0.75 size-5 rounded-full border-3 border-solid border-widget-glass"
+    [style.background-color]="mercuryColor()"
+  ></div>
 </div>

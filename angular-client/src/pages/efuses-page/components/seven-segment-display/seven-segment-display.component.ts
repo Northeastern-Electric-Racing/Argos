@@ -15,7 +15,6 @@ const DOT = '\u2024';
 @Component({
   selector: 'seven-segment-display',
   templateUrl: './seven-segment-display.component.html',
-  styleUrls: ['./seven-segment-display.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class SevenSegmentDisplayComponent {

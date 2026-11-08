@@ -1,9 +1,9 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 import { BaseChartDirective } from 'ng2-charts';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { GraphDialogComponent } from './graph-dialog.component';
 
 const DIALOG_SOURCE = 'src/components/graph-dialog/graph-dialog.component.ts';
@@ -32,11 +32,8 @@ describe('GraphDialogComponent', () => {
   it('draws the graph it was opened with', async () => {
     TestBed.configureTestingModule({
       providers: [
-        {
-          provide: DynamicDialogConfig,
-          useValue: { data: { data: [{ x: 1_000, y: 10 }], color: '#ff0000', title: 'Speed' } }
-        },
-        { provide: DynamicDialogRef, useValue: {} }
+        { provide: DIALOG_DATA, useValue: { data: [{ x: 1_000, y: 10 }], color: '#ff0000', title: 'Speed' } },
+        { provide: DialogRef, useValue: {} }
       ]
     });
     const fixture = TestBed.createComponent(GraphDialogComponent);

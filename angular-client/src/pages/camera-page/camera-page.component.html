@@ -1,20 +1,21 @@
 @if (this.urlAvailable) {
-  <div class="background">
-    <div class="top-right">
-      <p-select
+  <div class="relative">
+    <div class="absolute top-2.5 right-2.5 z-10 flex items-center gap-2.5">
+      <ui-select
+        class="min-w-56"
         [options]="videoUrls"
         [(ngModel)]="selectedVideoName"
         placeholder="Select a Video"
-        (onChange)="onDropdownChange($event)"
-        [style]="{ padding: '5px' }"
+        ariaLabel="Video"
+        (selectionChange)="onDropdownChange($event)"
       />
     </div>
 
-    <div class="video-container">
+    <div class="h-[90vh] w-full">
       @if (this.liveStream) {
-        <video #remoteVideo controls autoplay muted style="width: 100%; height: 90vh"></video>
+        <video #remoteVideo class="block h-[90vh] w-full" controls autoplay muted></video>
       } @else {
-        <video #playbackVideo controls autoplay muted style="width: 100%; height: 90vh">
+        <video #playbackVideo class="block h-[90vh] w-full" controls autoplay muted>
           <source [src]="playbackVideoUrl" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
@@ -22,7 +23,10 @@
     </div>
   </div>
 } @else {
-  <div style="display: flex; justify-content: center; align-items: center; height: 100%">
-    <typography content="Camera Not Reachable" variant="xx-large-title" additionalStyles="color: red" />
+  <!-- 7.5rem bold like the xx-large title, 3rem on phones so the longest word fits a 390px screen. -->
+  <div class="flex h-full items-center justify-center px-4">
+    <p class="m-0 text-center font-sans text-hero font-bold text-accent-fg select-none max-md:text-2xl" role="status">
+      Camera Not Reachable
+    </p>
   </div>
 }

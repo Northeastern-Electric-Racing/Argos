@@ -1,0 +1,129 @@
+import { DIALOG_DATA } from '@angular/cdk/dialog';
+import { Component, inject } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { UiPanelRef } from './panel.component';
+import { UiDialogService } from './dialog.service';
+
+@Component({ template: `<input aria-label="Name" /><span class="data">{{ data }}</span>` })
+class Content {
+  data = inject(DIALOG_DATA);
+}
+
+const settle = () => new Promise((resolve) => setTimeout(resolve));
+const escape = (target: EventTarget) =>
+  target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+
+describe('UiDialogService', () => {
+  let service: UiDialogService;
+
+  beforeEach(() => (service = TestBed.inject(UiDialogService)));
+  afterEach(() => service.closeAll());
+
+  const dialog = () => document.querySelector<HTMLElement>('ui-dialog-container');
+
+  it('opens a modal dialog labelled by its header, with the data and a Close button', async () => {
+    service.open(Content, { header: 'Edit Rule', data: 'payload' });
+    await settle();
+    const el = dialog()!;
+    expect(el.getAttribute('role')).toBe('dialog');
+    // Modal: a backdrop, and the CDK hides the page behind from assistive tech.
+    expect(document.querySelector('.cdk-overlay-backdrop')).not.toBeNull();
+    expect(document.getElementById(el.getAttribute('aria-labelledby')!)?.textContent).toBe('Edit Rule');
+    expect(el.querySelector('.data')?.textContent).toBe('payload');
+    expect(el.querySelector('button[aria-label="Close"]')).not.toBeNull();
+  });
+
+  it('closes on Escape and on the Close button when closable', async () => {
+    const closed = vi.fn();
+    service.open(Content, { header: 'A' }).closed.subscribe(closed);
+    await settle();
+    escape(dialog()!);
+    await settle();
+    expect(closed).toHaveBeenCalledTimes(1);
+
+    service.open(Content, { header: 'B' }).closed.subscribe(closed);
+    await settle();
+    dialog()!.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+    await settle();
+    expect(closed).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a non-closable dialog open on Escape, without a Close button', async () => {
+    const ref = service.open(Content, { header: 'Locked', closable: false });
+    const closed = vi.fn();
+    ref.closed.subscribe(closed);
+    await settle();
+    escape(dialog()!);
+    await settle();
+    expect(closed).not.toHaveBeenCalled();
+    expect(dialog()!.querySelector('button[aria-label="Close"]')).toBeNull();
+  });
+
+  it('uses alertdialog and aria-describedby for confirmations', async () => {
+    service.open(Content, { ariaLabel: 'Confirm', role: 'alertdialog', ariaDescribedBy: 'msg', showHeader: false });
+    await settle();
+    expect(dialog()!.getAttribute('role')).toBe('alertdialog');
+    expect(dialog()!.getAttribute('aria-label')).toBe('Confirm');
+    expect(dialog()!.getAttribute('aria-describedby')).toBe('msg');
+  });
+
+  // Initial focus on the first field needs layout (the CDK skips invisible elements); focus-walk.js checks it.
+  it('gives focus back to the trigger when it closes', async () => {
+    const trigger = document.body.appendChild(document.createElement('button'));
+    trigger.focus();
+    service.open(Content, { header: 'Add' });
+    await settle();
+    escape(dialog()!);
+    await settle();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
+  it('puts each class of a recipe-style panelClass on the pane, from a string or an array', async () => {
+    // classList.add('a b') throws InvalidCharacterError: the CDK needs one class per array item (lesson)
+    expect(() => service.open(Content, { header: 'A', panelClass: 'pane-a  pane-b' })).not.toThrow();
+    service.open(Content, { header: 'B', panelClass: ['pane-c', 'pane-d pane-e'] });
+    await settle();
+    const panes = [...document.querySelectorAll<HTMLElement>('.cdk-overlay-pane')];
+    for (const c of ['pane-a', 'pane-b', 'pane-c', 'pane-d', 'pane-e'])
+      expect(panes.some((p) => p.classList.contains(c))).toBe(true);
+  });
+
+  describe('openPanel', () => {
+    it('opens a non-modal dialog the page stays usable behind, closed by Escape', async () => {
+      const ref: UiPanelRef = service.openPanel(Content, { header: 'Graph', data: 'p' });
+      const closed = vi.fn();
+      ref.closed.subscribe(closed);
+      await settle();
+      const panel = document.querySelector<HTMLElement>('ui-panel')!;
+      expect(panel.getAttribute('role')).toBe('dialog');
+      expect(document.querySelector('.cdk-overlay-backdrop')).toBeNull();
+      expect(document.getElementById(panel.getAttribute('aria-labelledby')!)?.textContent).toBe('Graph');
+
+      escape(panel);
+      await settle();
+      expect(closed).toHaveBeenCalledTimes(1);
+      expect(document.querySelector('ui-panel')).toBeNull();
+    });
+
+    it('can be compact, with the same header, close button and labelling', async () => {
+      const ref = service.openPanel(Content, { header: 'Cell Comparison', compact: true, draggable: true });
+      await settle();
+      const panel = document.querySelector<HTMLElement>('ui-panel')!;
+      expect(document.getElementById(panel.getAttribute('aria-labelledby')!)?.textContent).toBe('Cell Comparison');
+      panel.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+      await settle();
+      expect(document.querySelector('ui-panel')).toBeNull();
+      ref.close();
+    });
+
+    it('splits a panelClass string into classes, as open() does', async () => {
+      let ref: UiPanelRef | undefined;
+      expect(() => (ref = service.openPanel(Content, { header: 'P', panelClass: 'pane-f pane-g' }))).not.toThrow();
+      await settle();
+      const pane = document.querySelector<HTMLElement>('ui-panel')!.closest('.cdk-overlay-pane')!;
+      expect([...pane.classList]).toEqual(expect.arrayContaining(['pane-f', 'pane-g']));
+      ref!.close();
+    });
+  });
+});

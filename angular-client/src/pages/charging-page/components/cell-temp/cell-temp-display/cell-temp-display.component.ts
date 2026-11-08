@@ -16,7 +16,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'cell-temp-display',
   templateUrl: './cell-temp-display.component.html',
-  styleUrls: ['./cell-temp-display.component.css'],
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -40,7 +39,8 @@ export default class CellTempDisplayComponent implements OnInit {
     onClick: () => {
       this.cellTempData = [];
     },
-    icon: 'restart_alt'
+    icon: 'restart_alt',
+    ariaLabel: 'Reset the cell temperature graph'
   };
   cellTempData: GraphData[] = [];
   mobileThreshold = 1070;

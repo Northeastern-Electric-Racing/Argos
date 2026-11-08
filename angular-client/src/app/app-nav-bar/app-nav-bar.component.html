@@ -1,26 +1,27 @@
-@if (isMobile || this.sidebarVisible) {
-  <p-drawer [(visible)]="sidebarVisible">
-    <ng-template #header>
-      <typography style="width: 100%; text-align: center" variant="large-header" content="Argos" />
-    </ng-template>
-    <ng-template #content>
-      @for (navItem of allNavItems; track navItem) {
-        <sidebar-chip
-          icon="{{ navItem.icon }}"
-          value="{{ navItem.label }}"
-          [active]="this.isSelected(navItem)"
-          (click)="navItem.onClick()"
-        >
-        </sidebar-chip>
-      }
-    </ng-template>
-  </p-drawer>
+@if (isMobile || this.sidebarVisible()) {
+  <ui-drawer [(visible)]="sidebarVisible" position="left" width="20rem" ariaLabel="Navigation">
+    <typography uiDrawerHeader textClass="w-full text-center" variant="large-header" content="Argos" />
+    @for (navItem of allNavItems; track navItem) {
+      <sidebar-chip
+        icon="{{ navItem.icon }}"
+        value="{{ navItem.label }}"
+        [active]="this.isSelected(navItem)"
+        (click)="navItem.onClick()"
+      >
+      </sidebar-chip>
+    }
+  </ui-drawer>
 } @else {
-  <nav class="navbar">
-    <div class="home-logo" (click)="this.homeNavItem.onClick()">
-      <mat-icon [svgIcon]="this.homeNavItem.icon" />
-    </div>
-    <div class="navbar-nav">
+  <nav class="mb-4 flex h-15 w-full flex-row items-center justify-between self-center bg-panel p-2.5">
+    <button
+      type="button"
+      class="flex cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-2.5 text-inherit focus-visible:focus-ring"
+      aria-label="Home"
+      (click)="this.homeNavItem.onClick()"
+    >
+      <span class="inline-flex size-12"><ui-icon size="inline" [svg]="this.homeNavItem.icon" /></span>
+    </button>
+    <div class="inline-flex flex-1">
       @for (navItem of onlyDesktopNavItems; track navItem) {
         <sidebar-chip
           icon="{{ navItem.icon }}"
@@ -28,47 +29,22 @@
           [small]="this.isWindowSmall"
           [active]="this.isSelected(navItem)"
           (click)="navItem.onClick()"
-          additionalStyles=".mat-icon {width: 36px; height: 36px;}"
         >
         </sidebar-chip>
       }
     </div>
 
     <hstack>
-      <toast-button
-        [onClick]="this.onStartNewRun"
-        buttonLabel="Start New Run"
-        popUpSeverity="success"
-        popUpTitle="New Run Started"
-        popUpDetails="Your new run has started successfully."
-        additionalStyles="height: 36px; width: 130px"
-      />
+      <button type="button" uiButton class="min-w-[130px]" (click)="startNewRun()">Start New Run</button>
       <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
       <typography
         [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
         content="{{ time$ | async | date: 'HH:mm:ss' }}"
-        additionalStyles="fontSize: 36px"
+        textClass="text-readout"
       />
       <messages-per-second />
-      <button
-        type="button"
-        class="navbar-notification"
-        aria-label="Notifications"
-        (click)="notificationPanel.toggle($event)"
-      >
-        <mat-icon [svgIcon]="'notifications'" />
-        @if (notificationLogService.unreadCount() > 0) {
-          <p-badge [value]="notificationLogService.unreadCount().toString()" severity="danger" class="notification-badge" />
-        }
-      </button>
-      <p-popover #notificationPanel (onShow)="onNotificationPanelShow()" styleClass="notification-popover">
-        <ng-template #content>
-          <notification-list variant="popover" />
-        </ng-template>
-      </p-popover>
-      <div class="navbar-menu" (click)="toggleMenu()" [class.selected]="menuRef !== undefined">
-        <mat-icon [svgIcon]="'apps'" />
-      </div>
+      <notification-bell />
+      <app-nav-options-menu [items]="navMenuItems" />
     </hstack>
   </nav>
 }

@@ -1,12 +1,22 @@
 import { Injector, Signal, runInInjectionContext, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { TreeNode } from 'primeng/api';
 import { map } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, Node } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
+
+/** A topic-tree node as rendered by the graph sidebar's Angular Aria tree. */
+export interface TreeNode<T = unknown> {
+  label?: string;
+  data?: T;
+  /** Unique, stable id (the topic name); used as the Aria tree item value. */
+  key?: string;
+  children?: TreeNode<T>[];
+  selectable?: boolean;
+  expanded?: boolean;
+}
 
 export interface TreeNodeData extends Node {
   displayValue: Signal<string>;
@@ -37,7 +47,8 @@ export function mapNodesToTreeNodes(
       data: { ...node, displayValue },
       key: node.topicName,
       children: node.nodes.value.map(mapToTreeNode),
-      selectable: isLeaf
+      selectable: isLeaf,
+      expanded: false
     };
   };
 
@@ -93,8 +104,8 @@ export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLe
 
 /**
  * Filters a flat list of leaf TreeNodes to only those whose dataType is in
- * `selectedDataTypes`. Preserves the original node references so PrimeNG's
- * selection-by-reference matching keeps working.
+ * `selectedDataTypes`. Preserves the original node references so keys and
+ * references stay stable.
  */
 export function filterSelectedNodes(
   flatNodes: TreeNode<TreeNodeData>[],

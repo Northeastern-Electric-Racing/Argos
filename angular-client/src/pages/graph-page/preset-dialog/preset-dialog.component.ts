@@ -1,15 +1,19 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
+import { ToastService } from 'src/ui/toast/toast.service';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
 import { GraphPresetService, Preset, PresetSeed } from 'src/services/graph-preset.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { DataType } from 'src/utils/types.utils';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
+import { cellClass, headerCellClass, tableClass } from 'src/ui/recipes/table';
+import { cx, tw } from 'src/ui/recipes/tw';
 
 interface PresetDialogData {
   dataTypes: DataType[];
@@ -18,20 +22,29 @@ interface PresetDialogData {
 @Component({
   selector: 'preset-dialog',
   templateUrl: './preset-dialog.component.html',
-  styleUrls: ['./preset-dialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
-  imports: [FormsModule, InputText, ButtonDirective, ConfirmDialog]
+  imports: [FormsModule, UiButtonDirective, UiInputDirective, UiLabelDirective]
 })
 export class PresetDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  private ref = inject(DialogRef);
+  private data = inject<PresetDialogData>(DIALOG_DATA);
   private presetService = inject(GraphPresetService);
   private topicSelectionService = inject(TopicSelectionService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(ToastService);
+  private confirmationService = inject(ConfirmService);
+  private focusAfterRender = injectFocusAfterRender();
+  private host: HTMLElement = inject(ElementRef).nativeElement;
+  protected readonly field = fieldClasses;
+  /** The table recipe, with this table's fixed column widths. */
+  protected readonly table = {
+    table: cx(tableClass(), tw('table-fixed')),
+    nameHead: headerCellClass(),
+    topicsHead: cx(headerCellClass('md', { align: 'right' }), tw('w-17.5')),
+    actionsHead: cx(headerCellClass('md', { align: 'right' }), tw('w-60 max-[600px]:w-auto')),
+    cell: cellClass(),
+    numberCell: cx(cellClass(), tw('text-right tabular-nums'))
+  };
 
-  private data = this.config.data as PresetDialogData;
   private dataTypes = this.data.dataTypes;
   private currentSelection = toSignal(this.topicSelectionService.getSelectedDataTypes(), {
     initialValue: [] as DataType[]
@@ -41,6 +54,7 @@ export class PresetDialogComponent {
   newPresetName = signal('');
   hasSelection = computed(() => this.currentSelection().length > 0);
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  private nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
 
   onSaveCurrent(): void {
     const name = this.newPresetName().trim();
@@ -130,10 +144,24 @@ export class PresetDialogComponent {
       header: 'Delete Preset',
       acceptLabel: 'Delete',
       rejectLabel: 'Cancel',
+      danger: true,
       accept: () => {
+        const index = this.presets().findIndex((p) => p.id === preset.id);
         this.presetService.deletePreset(preset.id);
         this.messageService.add({ severity: 'success', summary: 'Preset Deleted', detail: preset.name });
+        this.focusAfterDelete(index);
       }
+    });
+  }
+
+  /**
+   * The deleted row's button is gone, so focus would drop to <body>: move it to the Delete button of the row
+   * that took its place (or the new last row), or to the name field once the list is empty.
+   */
+  private focusAfterDelete(index: number): void {
+    this.focusAfterRender(() => {
+      const deletes = this.host.querySelectorAll<HTMLButtonElement>('[data-preset-delete]');
+      return deletes[Math.min(Math.max(index, 0), deletes.length - 1)] ?? this.nameInput()?.nativeElement;
     });
   }
 
