@@ -59,6 +59,12 @@ describe('UiSelectComponent', () => {
     return { fixture, loader, label };
   };
 
+  // [id]="undefined" renders id="undefined", a duplicate id on every select without one.
+  it('leaves the id off the combobox when no inputId is given', async () => {
+    const { fixture } = await setup();
+    expect(fixture.nativeElement.querySelector('.by-input [role="combobox"]').hasAttribute('id')).toBe(false);
+  });
+
   it('shows the placeholder, then the label of a [value] set by the parent', async () => {
     const { fixture, label } = await setup();
     expect(label('by-input')).toBe('Pick a run');

@@ -52,4 +52,12 @@ describe('UiDateTimeInputComponent', () => {
     input.dispatchEvent(new Event('input'));
     expect(fixture.componentInstance.value).toBeNull();
   });
+
+  // [id]="undefined" renders id="undefined", a duplicate id on every input without one.
+  it('leaves the id off when no inputId is given', async () => {
+    const fixture = TestBed.createComponent(UiDateTimeInputComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('input').hasAttribute('id')).toBe(false);
+  });
 });

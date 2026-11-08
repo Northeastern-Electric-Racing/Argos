@@ -30,6 +30,12 @@ describe('UiSwitchComponent', () => {
     expect(el('bound').getAttribute('aria-checked')).toBe('false');
   });
 
+  // [id]="undefined" renders id="undefined", a duplicate id on every switch without one.
+  it('leaves the id off when no inputId is given', async () => {
+    const { el } = await setup();
+    expect(el('bound').hasAttribute('id')).toBe(false);
+  });
+
   it('flips on click and writes back through [(checked)]', async () => {
     const { fixture, el } = await setup();
     el('bound').click();
