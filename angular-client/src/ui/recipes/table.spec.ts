@@ -75,8 +75,15 @@ describe('table recipe', () => {
   it('tints a hovered row; only a clickable row (hover: true) shows the pointer', () => {
     expect(classes(rowClass({ hover: true }))).toEqual(expect.arrayContaining(['hover:bg-fg/8', 'cursor-pointer']));
     const tint = classes(rowClass({ striped: true, hover: 'tint' }));
-    expect(tint).toEqual(expect.arrayContaining(['hover:bg-fg/8', 'even:bg-fg/4']));
+    expect(tint).toContain('even:bg-fg/4');
     expect(tint).not.toContain('cursor-pointer');
     expect(classes(rowClass())).not.toContain('hover:bg-fg/8');
+  });
+
+  it("tints a 'tint' row's cells 3% (814's log), stacked over the stripe rather than replacing it", () => {
+    const tint = classes(rowClass({ striped: true, hover: 'tint' }));
+    expect(tint).toContain('hover:*:bg-fg/3');
+    // the row's own fill stays the stripe on hover, so the cells' tint paints on top of it
+    expect(tint.filter((c) => /^hover:bg-/.test(c))).toEqual([]);
   });
 });

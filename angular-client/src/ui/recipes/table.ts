@@ -17,7 +17,8 @@ import { cx, tw } from './tw';
  *   light th  the lap timer's header: no fill, 12px semibold uppercase fg-muted labels on the card (#909's
  *             lap tables); not sticky, since rows would show through it
  *   row       striped and/or hover (tint and pointer for clickable rows, or 'tint' alone for rows that only
- *             highlight); selected from data-selected="true", focus from a solid inset ring
+ *             highlight: 814's faint log hover, on the cells so it stacks over the stripe); selected from
+ *             data-selected="true", focus from a solid inset ring
  *   empty     the cell of the empty (or loading) row
  */
 export const TABLE_SIZES = ['md', 'sm'] as const;
@@ -99,14 +100,16 @@ export function cellClass(density: TableDensity = 'md'): string {
 
 /**
  * A body row: striped (every even row tinted) and/or hover: `true` tints it and shows the pointer (clickable
- * rows), `'tint'` only tints it (rows that highlight under the mouse but don't open anything).
+ * rows), `'tint'` only tints it (rows that highlight under the mouse but don't open anything), at 814's faint
+ * 3%. That tint goes on the cells, which paint over the row's fill: a 3% row fill would either replace the 4% stripe
+ * (darkening a striped row on hover) or lose to it, where 3% over it lightens every row.
  */
 export function rowClass({ striped = false, hover = false }: { striped?: boolean; hover?: boolean | 'tint' } = {}): string {
   return cx(
     rowBase,
     striped && tw('even:bg-fg/4'),
     hover === true && tw('cursor-pointer hover:bg-fg/8'),
-    hover === 'tint' && tw('hover:bg-fg/8')
+    hover === 'tint' && tw('hover:*:bg-fg/3')
   );
 }
 
