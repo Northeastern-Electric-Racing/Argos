@@ -116,5 +116,36 @@ describe('AddRuleDialogComponent', () => {
       expect(fixture.componentInstance.form.controls.topic.value).toBe('');
       expect(input('rule-topic').getAttribute('aria-invalid')).toBe('true');
     });
+
+    /** Moves focus off the topic input to `next`, as a pointer down on it does. */
+    const blurTo = async (from: Element, next: Element | null) => {
+      from.dispatchEvent(new FocusEvent('blur', { relatedTarget: next }));
+      from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: next }));
+      await fixture.whenStable();
+    };
+    const listboxEl = (): HTMLElement => document.querySelector('[role="listbox"]')!;
+
+    it('keeps the typed query while focus moves into the suggestions, so a mouse pick lands on what was shown', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('pack');
+      await blurTo(input('rule-topic'), listboxEl());
+      expect(fixture.componentInstance.query()).toBe('pack');
+      const listbox = await combobox.getPopupWidget(ListboxHarness);
+      const options = await listbox.getOptions();
+      expect(await Promise.all(options.map((o) => o.getText()))).toEqual(['BMS/Pack/Voltage', 'BMS/Pack/Current']);
+      await options[1].click();
+      await fixture.whenStable();
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('BMS/Pack/Current');
+      expect(await combobox.getValue()).toBe('BMS/Pack/Current');
+    });
+
+    it('still clears free text when focus leaves the suggestions for somewhere else', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('pack');
+      await blurTo(input('rule-topic'), listboxEl());
+      await blurTo(listboxEl(), input('rule-expr'));
+      expect(fixture.componentInstance.query()).toBe('');
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('');
+    });
   });
 });

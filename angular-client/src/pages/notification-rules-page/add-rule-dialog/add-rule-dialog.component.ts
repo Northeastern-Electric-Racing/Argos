@@ -8,7 +8,8 @@ import {
   OnInit,
   signal,
   viewChild,
-  DestroyRef
+  DestroyRef,
+  ElementRef
 } from '@angular/core';
 import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
 import { Listbox, Option } from '@angular/aria/listbox';
@@ -55,6 +56,8 @@ export class AddRuleDialogComponent implements OnInit {
 
   private allTopics = signal<string[]>([]);
   private listbox = viewChild(Listbox);
+  private topicInput = viewChild.required('combobox', { read: ElementRef<HTMLInputElement> });
+  private topicPopup = viewChild('topicPopup', { read: ElementRef<HTMLElement> });
   /** Text typed in the topic combobox; the form's topic is only set to an exact topic (forceSelection). */
   query = signal('');
   popupExpanded = signal(false);
@@ -108,8 +111,16 @@ export class AddRuleDialogComponent implements OnInit {
     this.popupExpanded.set(false);
   }
 
-  /** Like PrimeNG's forceSelection: free text that isn't a topic is cleared on blur. */
-  onTopicBlur(): void {
+  /**
+   * Like PrimeNG's forceSelection: free text that isn't a topic is cleared when focus leaves the field. Focus
+   * moving between the input and its suggestions (a pointer down on an option) is not leaving it: clearing then
+   * would re-filter the list under the click. The popup's own focusout runs this too, so leaving from there clears.
+   */
+  onTopicBlur(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (next && (this.topicInput().nativeElement.contains(next) || this.topicPopup()?.nativeElement.contains(next))) {
+      return;
+    }
     this.form.controls.topic.markAsTouched();
     if (!this.allTopics().includes(this.query())) {
       this.query.set('');

@@ -32,7 +32,7 @@
         [value]="query()"
         (valueChange)="onQueryChange($event)"
         [(expanded)]="popupExpanded"
-        (blur)="onTopicBlur()"
+        (blur)="onTopicBlur($event)"
       />
     </div>
     <div aria-live="polite" class="cdk-visually-hidden">
@@ -43,7 +43,7 @@
       [cdkConnectedOverlayOpen]="popupExpanded() && filteredTopics().length > 0"
     >
       <ng-template ngComboboxPopup [combobox]="combobox">
-        <div [class]="popup">
+        <div #topicPopup [class]="popup" (focusout)="onTopicBlur($event)">
           <div
             #listbox="ngListbox"
             ngListbox
