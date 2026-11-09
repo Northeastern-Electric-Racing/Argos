@@ -7,7 +7,7 @@ import Lara from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app-routing.module';
-import { importProvidersFrom, provideZonelessChangeDetection } from '@angular/core';
+import { importProvidersFrom } from '@angular/core';
 import AppContextComponent from './app/context/app-context.component';
 
 bootstrapApplication(AppContextComponent, {
@@ -25,7 +25,6 @@ bootstrapApplication(AppContextComponent, {
           darkModeSelector: '.dark-mode-always'
         }
       }
-    }),
-    provideZonelessChangeDetection()
+    })
   ]
 }).catch((err) => console.error(err));
