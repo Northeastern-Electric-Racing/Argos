@@ -4,7 +4,7 @@
       <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="w-12 max-md:w-10">
         <input
           type="checkbox"
-          [class]="checkbox"
+          [class]="headerCheckbox"
           aria-label="Select all rules"
           [disabled]="filteredRules().length === 0"
           [checked]="allSelected()"

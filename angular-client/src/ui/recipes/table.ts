@@ -12,8 +12,10 @@ import { cx, tw } from './tw';
  *   th / td   md, phone (tighter 6px cells and smaller text below 768px, long values wrap) or roomy (814's
  *             notification log: 10px by 14px cells of 14px text over faint dividers, 8px by 10px below 768px;
  *             values don't wrap, so a narrow screen scrolls the table inside its wrapper); a header cell aligns left or right (numbers), can stick to the top of the wrapper, and
- *             takes a tone: fill (surface-3, the cell's own text) or caps (814's log header: 12px semibold uppercase
- *             fg-label labels on an opaque surface-2, so it can stick too)
+ *             takes a tone: fill (surface-3, the cell's own text), caps (814's log header: 12px semibold uppercase
+ *             fg-label labels on an opaque surface-2, so it can stick too) or accent (814's rules table: white
+ *             semibold labels on accent-strong, 4.98:1, with no grey edge under it; pair it with the on-accent
+ *             checkbox)
  *   light th  the lap timer's header: no fill, 12px semibold uppercase fg-muted labels on the card (#909's
  *             lap tables); not sticky, since rows would show through it
  *   row       striped and/or hover (tint and pointer for clickable rows, or 'tint' alone for rows that only
@@ -34,21 +36,22 @@ const tableSizeClasses: Record<TableSize, string> = {
 export const TABLE_ALIGNS = ['left', 'right'] as const;
 export type TableAlign = (typeof TABLE_ALIGNS)[number];
 
-export const TABLE_HEADER_TONES = ['fill', 'caps'] as const;
+export const TABLE_HEADER_TONES = ['fill', 'caps', 'accent'] as const;
 export type TableHeaderTone = (typeof TABLE_HEADER_TONES)[number];
 
-/** A header cell is the base, its tone (fill and type) and its density's padding. */
-const headerCellBase = tw('border-b border-solid border-border font-semibold');
+/** A header cell is the base, its tone (fill, edge colour and type) and its density's padding. */
+const headerCellBase = tw('border-b border-solid font-semibold');
 const headerToneClasses: Record<TableHeaderTone, string> = {
-  fill: tw('bg-surface-3'),
-  caps: tw('bg-surface-2 text-xs tracking-[0.04em] text-fg-label uppercase')
+  fill: tw('border-border bg-surface-3'),
+  caps: tw('border-border bg-surface-2 text-xs tracking-[0.04em] text-fg-label uppercase'),
+  accent: tw('border-accent-strong bg-accent-strong text-on-accent')
 };
 const headerPaddingClasses: Record<TableDensity, string> = {
   md: tw('p-3'),
   phone: tw('p-3 max-md:p-1.5'),
   roomy: tw('px-3.5 py-2.5')
 };
-/** The phone density's smaller header text, on the fill tone only: caps keeps its 12px. */
+/** The phone density's smaller header text, on every tone but caps, which keeps its 12px. */
 const phoneHeaderText = tw('max-md:text-ctrl-sm');
 const headerAlignClasses: Record<TableAlign, string> = { left: tw('text-left'), right: tw('text-right') };
 const lightHeaderCellBase = tw(
@@ -85,7 +88,7 @@ export function headerCellClass(
     headerCellBase,
     headerToneClasses[tone],
     headerPaddingClasses[density],
-    tone === 'fill' && density === 'phone' && phoneHeaderText,
+    tone !== 'caps' && density === 'phone' && phoneHeaderText,
     headerAlignClasses[align],
     sticky && stickyHeaderCell
   );
@@ -122,6 +125,22 @@ export function rowClass({ striped = false, hover = false }: { striped?: boolean
  * fg-muted (5:1 on the surface-3 table header), a step lighter than control-border's 3.2:1 there.
  * The box is 18px like #909's; as a control in a table cell it meets WCAG 2.5.8 through the spacing exception.
  */
-export const checkboxClass = tw(
-  "m-0 inline-grid size-4.5 cursor-pointer appearance-none place-content-center rounded-xs border-[1.5px] border-solid border-fg-muted bg-transparent align-middle before:h-1.5 before:w-2.5 before:-translate-y-px before:scale-0 before:-rotate-45 before:border-b-2 before:border-l-2 before:border-solid before:border-on-accent before:transition-transform before:duration-120 before:content-[''] checked:border-accent checked:bg-accent checked:before:scale-100 indeterminate:border-accent indeterminate:bg-accent indeterminate:before:h-0 indeterminate:before:translate-y-0 indeterminate:before:scale-100 indeterminate:before:rotate-0 indeterminate:before:border-l-0 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
+const checkboxShape = tw(
+  "m-0 inline-grid size-4.5 cursor-pointer appearance-none place-content-center rounded-xs border-[1.5px] border-solid bg-transparent align-middle before:h-1.5 before:w-2.5 before:-translate-y-px before:scale-0 before:-rotate-45 before:border-b-2 before:border-l-2 before:border-solid before:transition-transform before:duration-120 before:content-[''] checked:before:scale-100 indeterminate:before:h-0 indeterminate:before:translate-y-0 indeterminate:before:scale-100 indeterminate:before:rotate-0 indeterminate:before:border-l-0 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
+);
+export const checkboxClass = cx(
+  checkboxShape,
+  tw(
+    'border-fg-muted before:border-on-accent checked:border-accent checked:bg-accent indeterminate:border-accent indeterminate:bg-accent'
+  )
+);
+
+/**
+ * The checkbox on the accent header (the rules table's select-all), where the accent fill and the grey edge would
+ * vanish into the red (1.3:1 and 2:1): a white edge, filled white with an accent-strong tick or dash when checked
+ * or indeterminate, each 4.98:1 on the red; the neutral focus ring is 3.4:1 there.
+ */
+export const checkboxOnAccentClass = cx(
+  checkboxShape,
+  tw('border-on-accent before:border-accent-strong checked:bg-on-accent indeterminate:bg-on-accent')
 );

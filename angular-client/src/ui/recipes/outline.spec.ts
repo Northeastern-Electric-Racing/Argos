@@ -14,6 +14,7 @@ import { spinnerClass } from './spinner';
 import {
   cellClass,
   checkboxClass,
+  checkboxOnAccentClass,
   headerCellClass,
   lightHeaderCellClass,
   rowClass,
@@ -64,7 +65,7 @@ const everyRecipeList = (): [string, string][] => {
   for (const align of TABLE_ALIGNS) add(`light header ${align}`, lightHeaderCellClass({ align }));
   for (const striped of [false, true])
     for (const hover of [false, true, 'tint'] as const) add('row', rowClass({ striped, hover }));
-  add('table', [tableClasses, checkboxClass]);
+  add('table', [tableClasses, checkboxClass, checkboxOnAccentClass]);
   add('dialog', [dialogBackdropClass, dialogClasses]);
   return lists;
 };

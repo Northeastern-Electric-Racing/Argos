@@ -29,7 +29,15 @@ import {
   unsubscribeFromRules
 } from 'src/api/rules.api';
 import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edit-rule-dialog.component';
-import { cellClass, checkboxClass, headerCellClass, rowClass, tableClass, tableClasses } from 'src/ui/recipes/table';
+import {
+  cellClass,
+  checkboxClass,
+  checkboxOnAccentClass,
+  headerCellClass,
+  rowClass,
+  tableClass,
+  tableClasses
+} from 'src/ui/recipes/table';
 
 @Component({
   selector: 'rules-table',
@@ -47,10 +55,11 @@ export class RulesTableComponent implements OnInit {
 
   protected readonly t = tableClasses;
   protected readonly table = tableClass();
-  protected readonly th = headerCellClass('phone');
+  protected readonly th = headerCellClass('phone', { tone: 'accent' });
   protected readonly td = cellClass('phone');
   protected readonly row = rowClass({ striped: true });
   protected readonly checkbox = checkboxClass;
+  protected readonly headerCheckbox = checkboxOnAccentClass;
 
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private focusAfterRender = injectFocusAfterRender();

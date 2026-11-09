@@ -194,6 +194,15 @@ describe('RulesTableComponent', () => {
     expect(selected).toHaveBeenLastCalledWith([]);
   });
 
+  it("keeps 814's red header, with a select-all box drawn to show on it", () => {
+    const headers: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('th'));
+    expect(headers.length).toBeGreaterThan(0);
+    for (const th of headers) expect(th.classList).toContain('bg-accent-strong');
+    const selectAll: HTMLInputElement = fixture.nativeElement.querySelector('[aria-label="Select all rules"]');
+    expect(selectAll.classList).toContain('border-on-accent');
+    expect(selectAll.classList).not.toContain('checked:bg-accent');
+  });
+
   it('disables select-all while no rows are listed, so it never shows ticked over an empty table', async () => {
     const selectAll = (): HTMLInputElement => fixture.nativeElement.querySelector('[aria-label="Select all rules"]');
     expect(selectAll().disabled).toBe(false);

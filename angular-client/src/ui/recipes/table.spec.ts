@@ -1,5 +1,7 @@
 import {
   cellClass,
+  checkboxClass,
+  checkboxOnAccentClass,
   headerCellClass,
   lightHeaderCellClass,
   rowClass,
@@ -56,11 +58,39 @@ describe('table recipe', () => {
     }
   });
 
-  it('gives every density and tone exactly one padding per side and one fill', () => {
+  it("has an accent header tone: 814's red header, white semibold labels on accent-strong (4.98:1)", () => {
+    for (const d of TABLE_DENSITIES) {
+      const c = classes(headerCellClass(d, { tone: 'accent', sticky: true }));
+      expect(c).toEqual(expect.arrayContaining(['bg-accent-strong', 'text-on-accent', 'font-semibold', 'sticky']));
+      // the edge under it is the red too, as 814's borderless header was
+      expect(c.filter((x) => /^border-(?!b$|solid$)/.test(x))).toEqual(['border-accent-strong']);
+    }
+    expect(classes(headerCellClass('phone', { tone: 'accent' }))).toContain('max-md:text-ctrl-sm');
+  });
+
+  it('draws a checkbox on the accent header in white, with a red tick, never the accent fill', () => {
+    const c = classes(checkboxOnAccentClass);
+    expect(c).toEqual(
+      expect.arrayContaining([
+        'border-on-accent',
+        'checked:bg-on-accent',
+        'before:border-accent-strong',
+        'focus-visible:focus-ring'
+      ])
+    );
+    expect(c.some((x) => /(^|:)bg-accent$/.test(x) || /(^|:)border-fg-muted$/.test(x))).toBe(false);
+    // the same box as the plain checkbox: only the colours differ
+    const shape = (list: string) =>
+      classes(list).filter((x) => !/(border|bg)-(fg-muted|accent|on-accent|accent-strong)$/.test(x));
+    expect(shape(checkboxOnAccentClass)).toEqual(shape(checkboxClass));
+  });
+
+  it('gives every density and tone exactly one padding per side, one fill and one edge colour', () => {
     for (const tone of TABLE_HEADER_TONES)
       for (const d of TABLE_DENSITIES) {
         const c = classes(headerCellClass(d, { tone })).filter((x) => !x.includes(':'));
         expect(c.filter((x) => /^bg-/.test(x))).toHaveLength(1);
+        expect(c.filter((x) => /^border-(?!b$|solid$)/.test(x))).toHaveLength(1);
         expect(c.filter((x) => /^p[xy]?-/.test(x)).join(' ')).toMatch(/^(p-\S+|px-\S+ py-\S+)$/);
       }
   });
