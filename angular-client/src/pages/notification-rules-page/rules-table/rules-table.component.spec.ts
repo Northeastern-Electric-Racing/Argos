@@ -194,6 +194,24 @@ describe('RulesTableComponent', () => {
     expect(selected).toHaveBeenLastCalledWith([]);
   });
 
+  it('disables select-all while no rows are listed, so it never shows ticked over an empty table', async () => {
+    const selectAll = (): HTMLInputElement => fixture.nativeElement.querySelector('[aria-label="Select all rules"]');
+    expect(selectAll().disabled).toBe(false);
+
+    fixture.componentRef.setInput('searchTerm', 'nothing');
+    await settle();
+    expect(selectAll().disabled).toBe(true);
+    selectAll().click();
+    await settle();
+    expect(selectAll().checked).toBe(false);
+
+    fixture.componentRef.setInput('searchTerm', '');
+    fixture.componentInstance.rules.set([]);
+    await settle();
+    expect(selectAll().disabled).toBe(true);
+    expect(selectAll().checked).toBe(false);
+  });
+
   it('filters on expression, topic and id from the search term', async () => {
     fixture.componentInstance.rules.set([
       { ...rule('volts', false), topic: 'BMS/Pack/Voltage', expr: 'a > 400' },

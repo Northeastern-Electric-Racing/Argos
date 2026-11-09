@@ -117,10 +117,11 @@ export function rowClass({ striped = false, hover = false }: { striped?: boolean
 
 /**
  * A native checkbox (`<input type="checkbox">`) drawn in the tokens: a grey edge, the accent fill and a white
- * tick when checked, a white dash when indeterminate (set `[indeterminate]`), the solid focus ring. The edge is
+ * tick when checked, a white dash when indeterminate (set `[indeterminate]`), the solid focus ring, faded when
+ * disabled (select-all over an empty table, as PrimeNG's header checkbox was). The edge is
  * fg-muted (5:1 on the surface-3 table header), a step lighter than control-border's 3.2:1 there.
  * The box is 18px like #909's; as a control in a table cell it meets WCAG 2.5.8 through the spacing exception.
  */
 export const checkboxClass = tw(
-  "m-0 inline-grid size-4.5 cursor-pointer appearance-none place-content-center rounded-xs border-[1.5px] border-solid border-fg-muted bg-transparent align-middle before:h-1.5 before:w-2.5 before:-translate-y-px before:scale-0 before:-rotate-45 before:border-b-2 before:border-l-2 before:border-solid before:border-on-accent before:transition-transform before:duration-120 before:content-[''] checked:border-accent checked:bg-accent checked:before:scale-100 indeterminate:border-accent indeterminate:bg-accent indeterminate:before:h-0 indeterminate:before:translate-y-0 indeterminate:before:scale-100 indeterminate:before:rotate-0 indeterminate:before:border-l-0 focus-visible:focus-ring"
+  "m-0 inline-grid size-4.5 cursor-pointer appearance-none place-content-center rounded-xs border-[1.5px] border-solid border-fg-muted bg-transparent align-middle before:h-1.5 before:w-2.5 before:-translate-y-px before:scale-0 before:-rotate-45 before:border-b-2 before:border-l-2 before:border-solid before:border-on-accent before:transition-transform before:duration-120 before:content-[''] checked:border-accent checked:bg-accent checked:before:scale-100 indeterminate:border-accent indeterminate:bg-accent indeterminate:before:h-0 indeterminate:before:translate-y-0 indeterminate:before:scale-100 indeterminate:before:rotate-0 indeterminate:before:border-l-0 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
 );
