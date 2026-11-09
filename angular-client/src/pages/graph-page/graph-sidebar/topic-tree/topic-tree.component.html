@@ -31,6 +31,7 @@
 
 <ng-template #treeNodes let-nodes="nodes" let-parent="parent">
   @for (node of nodes; track node.key) {
+    <!-- The focused (roving) item stops Ctrl/Meta+A before it bubbles to the tree, whose toggleAll() would graph every visible topic. -->
     <li
       ngTreeItem
       #treeItem="ngTreeItem"
@@ -39,6 +40,8 @@
       [label]="node.label"
       [selectable]="!!node.selectable"
       [(expanded)]="node.expanded"
+      (keydown.control.a)="$event.stopPropagation()"
+      (keydown.meta.a)="$event.stopPropagation()"
       class="group mt-0.5 flex min-h-7.5 cursor-pointer list-none items-center gap-1 rounded-sm px-2 text-fg outline-none not-aria-selected:hover:bg-fg/7 focus-visible:focus-ring focus-visible:-outline-offset-2 aria-selected:bg-accent/33 [&[aria-expanded]]:min-h-9"
     >
       @if (node.children?.length) {

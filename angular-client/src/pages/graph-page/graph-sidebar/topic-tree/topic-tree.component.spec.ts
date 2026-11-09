@@ -115,6 +115,19 @@ describe('TopicTreeComponent', () => {
     expect(unselected).toEqual(['BMS/Status/Temp_Average']);
   });
 
+  it.each([{ ctrlKey: true }, { metaKey: true }])(
+    'ignores select-all (%o + A) rather than graphing every visible topic',
+    async (modifier) => {
+      await (await (await tree()).getItems({ text: /BMS/ }))[0].click();
+      const voltage: HTMLElement = fixture.nativeElement.querySelector('[role="treeitem"][aria-level="2"]');
+      voltage.focus();
+      voltage.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true, ...modifier }));
+      await fixture.whenStable();
+      expect(selected).toEqual([]);
+      expect(unselected).toEqual([]);
+    }
+  );
+
   it('shows an empty state when nothing matches', async () => {
     await filter('zzz');
     expect(fixture.nativeElement.textContent).toContain('No topics found');
