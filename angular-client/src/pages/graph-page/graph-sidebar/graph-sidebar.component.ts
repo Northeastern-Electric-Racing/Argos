@@ -21,13 +21,14 @@ export default class GraphSidebarComponent implements OnInit {
   dataTypes = input.required<DataType[]>();
 
   isMobile!: boolean;
+  /** Below this width is mobile, matching Tailwind's max-md (< 768px). */
   mobileThreshold = 768;
 
   ngOnInit() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
+    this.isMobile = window.innerWidth < this.mobileThreshold;
   }
 
   onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
+    this.isMobile = window.innerWidth < this.mobileThreshold;
   }
 }
