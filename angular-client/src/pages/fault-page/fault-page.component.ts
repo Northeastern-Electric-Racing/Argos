@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, tap } from 'rxjs';
+import { map } from 'rxjs';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
@@ -49,28 +49,14 @@ export default class FaultPageComponent {
    * Faults grouped by CAN node, sorted by node. A signal under OnPush: new accordion items then render
    * in a reactive pass, so each trigger's [panel] reference resolves before it is checked.
    */
-  readonly nodeArray = toSignal(
-    this.faultService.getFaults().pipe(
-      map(groupByNode),
-      tap((nodes) => this.openFirstNode(nodes))
-    ),
-    { initialValue: [] }
-  );
+  readonly nodeArray = toSignal(this.faultService.getFaults().pipe(map(groupByNode)), { initialValue: [] });
   readonly columns = ['name', 'occurredAt', 'lastSeen', 'expired'];
 
   /**
    * The expanded panels, by node name, as p-accordion kept them (its `[value]`): a node that drops out of a
-   * message and comes back keeps its panel open or closed. The first node of the first message opens by default
-   * (p-accordion's `[value]="0"`); a node that first arrives later starts closed.
+   * message and comes back keeps its panel open or closed. Every node starts closed, as on develop.
    */
   protected readonly expanded = signal<ReadonlySet<string>>(new Set());
-  private seeded = false;
-
-  private openFirstNode(nodes: FaultNode[]) {
-    if (this.seeded || nodes.length === 0) return;
-    this.seeded = true;
-    this.expanded.set(new Set([nodes[0].node]));
-  }
 
   protected setExpanded(node: string, open: boolean) {
     this.expanded.update((names) => {

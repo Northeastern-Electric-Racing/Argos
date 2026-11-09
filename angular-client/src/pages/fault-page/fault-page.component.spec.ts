@@ -58,16 +58,24 @@ describe('FaultPageComponent', () => {
     await receive(1000);
   });
 
+  /** Opens the Bms panel, whose faults the row tests use. */
+  const openBms = async () => {
+    const [bms] = await accordions();
+    await bms.expand();
+    return bms;
+  };
+
   const faultButton = (name: string): HTMLButtonElement =>
     Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('td button')).find(
       (b) => b.textContent?.trim() === name
     )!;
 
-  it('shows one panel per CAN node, sorted, with the first open by default', async () => {
+  // develop's p-accordion [value]="0" matched no panel (each is keyed by node name), so none opened.
+  it('shows one panel per CAN node, sorted, all closed at first', async () => {
     const titles = [];
     for (const a of await accordions()) titles.push((await a.getTitle()).replace('expand_more', '').trim());
     expect(titles).toEqual(['Bms', 'Charger', 'Dti', 'Mpu']);
-    expect(await expandedTitles()).toEqual(['Bms']);
+    expect(await expandedTitles()).toEqual([]);
   });
 
   it('moves between node triggers with the arrow keys, Home and End, and toggles with Enter and Space', async () => {
@@ -78,7 +86,7 @@ describe('FaultPageComponent', () => {
     expect(await charger.isFocused()).toBe(true);
     await (await charger.host()).sendKeys(TestKey.ENTER);
     expect(await charger.isExpanded()).toBe(true);
-    expect(await bms.isExpanded()).toBe(true);
+    expect(await bms.isExpanded()).toBe(false);
 
     await (await charger.host()).sendKeys(TestKey.END);
     expect(await mpu.isFocused()).toBe(true);
@@ -88,14 +96,17 @@ describe('FaultPageComponent', () => {
     await (await mpu.host()).sendKeys(TestKey.HOME);
     expect(await bms.isFocused()).toBe(true);
     await (await bms.host()).sendKeys(TestKey.ENTER);
+    expect(await bms.isExpanded()).toBe(true);
+    await (await bms.host()).sendKeys(' ');
     expect(await bms.isExpanded()).toBe(false);
     expect(await expandedTitles()).toEqual(['Charger', 'Mpu']);
   });
 
   it('keeps every panel as the user left it when a new message rebuilds the faults', async () => {
     const [bms, charger] = await accordions();
-    await bms.collapse();
+    await bms.expand();
     await charger.expand();
+    await bms.collapse();
 
     await receive(2000);
 
@@ -109,13 +120,15 @@ describe('FaultPageComponent', () => {
     faults.addFault(message(2000).filter((f) => f.node !== 'Dti'));
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(await expandedTitles()).toEqual(['Bms']);
+    expect(await expandedTitles()).toEqual([]);
 
     await receive(3000);
-    expect(await expandedTitles()).toEqual(['Bms', 'Dti']);
+    expect(await expandedTitles()).toEqual(['Dti']);
   });
 
   it('opens a node that first arrives in a later message closed', async () => {
+    const [bms] = await accordions();
+    await bms.expand();
     faults.addFault([fault('Vcu', 'Brake Fault', 1000)]);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -123,7 +136,8 @@ describe('FaultPageComponent', () => {
     expect(await expandedTitles()).toEqual(['Bms']);
   });
 
-  it('graphs a fault from a button in its Name cell', () => {
+  it('graphs a fault from a button in its Name cell', async () => {
+    await openBms();
     faultButton('Pack Overheat').click();
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(faults.getSelectedFault().value?.name).toBe('Pack Overheat');
@@ -137,7 +151,7 @@ describe('FaultPageComponent', () => {
   };
 
   it('graphs a fault from Enter or Space on its Name button, leaving its panel open and the button focused', async () => {
-    const [bms] = await accordions();
+    const bms = await openBms();
     for (const key of ['Enter', ' ']) {
       navigate.mockClear();
       const button = faultButton('Pack Overheat');
@@ -152,7 +166,7 @@ describe('FaultPageComponent', () => {
   });
 
   it("keeps the arrow keys, Home and End on a control inside a panel, away from the group's triggers", async () => {
-    const [bms] = await accordions();
+    const bms = await openBms();
     const button = faultButton('Cell Undervoltage');
     for (const key of ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End']) {
       button.focus();
@@ -164,13 +178,15 @@ describe('FaultPageComponent', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('graphs a fault from a click anywhere on its row', () => {
+  it('graphs a fault from a click anywhere on its row', async () => {
+    await openBms();
     (faultButton('Cell Undervoltage').closest('tr')!.querySelector('td:last-child') as HTMLElement).click();
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(faults.getSelectedFault().value?.name).toBe('Cell Undervoltage');
   });
 
   it('keeps the focused fault row, and its focus, when a new message rebuilds the faults', async () => {
+    await openBms();
     const button = faultButton('Pack Overheat');
     button.focus();
 
