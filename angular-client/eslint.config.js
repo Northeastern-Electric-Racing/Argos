@@ -78,6 +78,10 @@ module.exports = tseslint.config(
         tsconfigRootDir: __dirname
       }
     },
+    // tsRecommended's prefer-on-push-component-change-detection flags ChangeDetectionStrategy.Eager.
+    // The v22 migration's Eager pins are bulk-suppressed in eslint-suppressions.json until they move
+    // to OnPush (#863); regenerate it with
+    // `npm run lint -- --suppress-rule @angular-eslint/prefer-on-push-component-change-detection`.
     rules: {
       '@angular-eslint/component-selector': [
         'error',
@@ -88,9 +92,6 @@ module.exports = tseslint.config(
           style: 'kebab-case'
         }
       ],
-      // Angular 22 defaults to OnPush; components pinned to Eager by the v22 migration keep their
-      // old behaviour until they move to OnPush (#863).
-      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
       'guard-for-in': 'error',
       'prefer-arrow-callback': 'error',
       'no-unsafe-negation': ['error', { enforceForOrderingRelations: true }],

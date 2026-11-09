@@ -4,7 +4,7 @@ import StatusBarComponent from './status-bar.component';
 
 // A host exercises projection and the title input exactly as a consumer would.
 // title is a signal so updates integrate with zoneless change detection.
-// Zoneless change detection is registered globally in src/test-providers.ts.
+// Zoneless change detection is TestBed's default in Angular 22.
 @Component({
   template: `<status-bar [title]="title()"><span id="projected">chip</span></status-bar>`,
   changeDetection: ChangeDetectionStrategy.Eager,

@@ -1,0 +1,607 @@
+{
+  "src/app/app-nav-bar/app-nav-bar.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/app/context/app-context.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/acceleration-graphs/acceleration-graphs.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/acceleration-over-time-display/acceleration-over-time-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/argos-button/argos-button.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/battery-level-indicator/battery-level-indicator.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/battery-percentage/battery-percentage.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/brake-pressure-display/brake-pressure-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/carousel/carousel.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/circular-percentage/circular-percentage.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/config-table/config-table.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/connection-dot-with-message/connection-dot-with-message.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/current-total-timer/current-total-timer.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/divider/divider.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/double-line-graph/double-line-graph.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/driver-component/driver-component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/error-page/error-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/form-template/form-template.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/glance-thermometer/glance-thermometer.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/graph-dialog/graph-dialog.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/graph/graph.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/grid-layout/grid-layout.component.spec.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/grid-layout/grid-layout.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/hstack/hstack.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/info-background/info-background.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/info-graph/info-graph.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/info-panel/info-panel.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/info-value-dispaly/info-value-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/latency-display/latency-display.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/loading-page/loading-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/messages-per-second/messages-per-second.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/more-details/more-details.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/motor-info/motor-info.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/pie-chart/pie-chart.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/raspberry-pi/raspberry-pi-desktop-content/raspberry-pi-desktop.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/raspberry-pi/raspberry-pi-mobile-content/raspberry-pi-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/raspberry-pi/raspberry-pi.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/run-form/run-form.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/select-dropdown/select-dropdown.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/sidebar-chip/sidebar-chip.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/sidebar-toggle/sidebar-toggle.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/speed-display/speed-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/speed-over-time-display/speed-over-time-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/stat-summary/stat-summary.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/status-bar/status-bar.component.spec.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/steering-angle-display/steering-angle-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/switch/switch.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/thermometer/thermometer.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/toast-button/toast-button.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/torque-display/torque-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/typography/typography.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/components/vstack/vstack.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/bms-debug-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/bms-segment-view/bms-segment-view.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/bms-header/bms-header.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/bms-overflow/bms-overflow.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/cell-view/cell-view.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/chip-diagnostics/chip-diagnostics.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/chip-faults/chip-faults.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/crc/crc.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/segment-at-a-glance/segment-at-a-glance.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/segment-heatmap/segment-heatmap.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/segment-overview/segment-overview.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/segment-row/segment-row.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/segment-selector/segment-selector.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/bms-debug-page/components/segment-summary/segment-summary.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/camera-page/camera-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/charging-page-mobile/charging-page-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/charging-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/BMS-mode/BMS-mode-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/active-status/active-status.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/balancing-status/balancing-status.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/battery-current/current-display/current-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/battery-info-display/battery-info-desktop/battery-info-desktop.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/battery-info-display/battery-info-display.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/battery-info-display/battery-info-mobile/battery-info-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/cell-temp/cell-temp-display/cell-temp-mobile/cell-temp-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/cell-temp/cell-temp-graph/cell-temp-graph.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/charging-state/charging-status.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/combined-status-display/combined-status-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/combined-status-display/mobile-view/combined-status-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/fault-display/fault-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/faulted-status/faulted-status.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/high-low-cell/high-low-cell-display/high-low-cell-mobile/high-low-cell-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/high-low-cell/high-low-cell-graph/high-low-cell-graph.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/pack-temp/pack-temp.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/pack-voltage/pack-voltage-display/pack-voltage-mobile/pack-voltage-mobile.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/pack-voltage/pack-voltage-graph/pack-voltage-graph.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/starting-soc/starting-soc-timer.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/charging-page/components/state-of-charge/state-of-charge-display/state-of-charge-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/efuse-card/efuse-card.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/efuse-switch/efuse-switch.component.spec.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/efuse-switch/efuse-switch.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/indicator-light/indicator-light.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/lock-button/lock-button.component.spec.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/lock-button/lock-button.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/rtds-debug-card/rtds-debug-card.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/components/seven-segment-display/seven-segment-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/efuses-page/efuses-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-caption/fault-buttons/fault-buttons.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-caption/fault-display-info/fault-display-info.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-caption/general-display-info/general-display-info.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-caption/graph-caption.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-caption/run-selector/run-selector.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-header/graph-header.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-sidebar/graph-sidebar.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-sidebar/node-display/node-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-sidebar/sidebar-card/sidebar-card.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/graph-page/graph-sidebar/topic-tree/topic-tree.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/landing-page/components/connection-display/connection-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/landing-page/components/current-run-display/current-run-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/landing-page/components/date-location-display/date-location.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/landing-page/components/viewer-display/viewer-display.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/landing-page/landing-page.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/pages/map/map.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  },
+  "src/ui/dialog/dialog-container.component.ts": {
+    "@angular-eslint/prefer-on-push-component-change-detection": {
+      "count": 1
+    }
+  }
+}
