@@ -24,12 +24,6 @@ export default class NodeDisplayComponent {
   protected readonly row = tw('flex w-fit flex-row justify-start gap-4');
   protected readonly centred = tw('flex justify-center');
   protected readonly indented = tw('ml-7.5 block w-[95%]');
-  /* Sub-nodes slide open beneath their card on desktop and widen out beside it on mobile, 400ms each way.
-     Growing to the natural size needs interpolate-size; without it the fade and slide still run and the size snaps. */
-  protected readonly expandDownEnter = tw('animate-expand-down overflow-hidden [interpolate-size:allow-keywords]');
-  protected readonly expandDownLeave = tw('animate-collapse-up overflow-hidden [interpolate-size:allow-keywords]');
-  protected readonly expandAcrossEnter = tw('animate-expand-across overflow-hidden [interpolate-size:allow-keywords]');
-  protected readonly expandAcrossLeave = tw('animate-collapse-across overflow-hidden [interpolate-size:allow-keywords]');
 
   private topicSelection = inject(TopicSelectionService);
 

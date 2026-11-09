@@ -11,8 +11,7 @@ const makeNode = (name: string, children: NodeWithVisibilityToggle[] = []): Node
   subnodesVisible: false
 });
 
-// The expand/collapse animation is CSS run by animate.enter/animate.leave, which Angular skips under
-// jsdom (no Element.getAnimations), so these specs cover the toggle the animation decorates.
+// Sub-nodes open and close instantly, like develop, whose expand animation never ran (the motion is #967).
 describe('NodeDisplayComponent', () => {
   let fixture: ComponentFixture<NodeDisplayComponent>;
   let node: NodeWithVisibilityToggle;

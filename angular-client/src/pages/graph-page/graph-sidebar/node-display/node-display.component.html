@@ -8,11 +8,7 @@
     [isDesktop]="isDesktop()"
   />
   @if (node().subnodesVisible) {
-    <div
-      [class]="isDesktop() ? '' : row"
-      [animate.enter]="isDesktop() ? expandDownEnter : expandAcrossEnter"
-      [animate.leave]="isDesktop() ? expandDownLeave : expandAcrossLeave"
-    >
+    <div [class]="isDesktop() ? '' : row">
       @for (subNode of node().nodes | async | nodeFilter: 'name' : searchFilter(); track subNode) {
         <div [class]="isDesktop() ? centred : row">
           <node-display
