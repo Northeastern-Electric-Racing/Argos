@@ -62,9 +62,9 @@ export class AddRuleDialogComponent implements OnInit {
   filteredTopics = computed(() => {
     const search = this.query().toLowerCase();
     const lower = (t: string) => t.toLowerCase();
-    return this.allTopics()
-      .filter((topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search)))
-      .slice(0, 100);
+    return this.allTopics().filter(
+      (topic) => lower(topic).includes(search) || topic.split('/').some((seg) => lower(seg).includes(search))
+    );
   });
 
   constructor() {

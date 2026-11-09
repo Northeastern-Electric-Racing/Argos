@@ -59,10 +59,10 @@ describe('AddRuleDialogComponent', () => {
   describe('topic autocomplete', () => {
     const topics = ['BMS/Pack/Voltage', 'BMS/Pack/Current', 'BMS/Status/Temp_Average', 'VCU/Speed'];
 
-    const setupWithTopics = async () => {
+    const setupWithTopics = async (names = topics) => {
       vi.stubGlobal(
         'fetch',
-        vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(topics.map((name) => ({ name, unit: '' }))) }))
+        vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(names.map((name) => ({ name, unit: '' }))) }))
       );
       TestBed.resetTestingModule();
       Element.prototype.scrollIntoView ??= () => undefined;
@@ -85,6 +85,14 @@ describe('AddRuleDialogComponent', () => {
       const listbox = await combobox.getPopupWidget(ListboxHarness);
       const texts = await Promise.all((await listbox.getOptions()).map((o) => o.getText()));
       expect(texts).toEqual(['BMS/Pack/Voltage', 'BMS/Pack/Current']);
+    });
+
+    it('lists every matching topic, with no cap (as PrimeNG did)', async () => {
+      const many = Array.from({ length: 150 }, (_, i) => `BMS/Cell/Voltage_${i}`);
+      const combobox = await setupWithTopics(many);
+      await combobox.setValue('cell');
+      const listbox = await combobox.getPopupWidget(ListboxHarness);
+      expect((await listbox.getOptions()).length).toBe(150);
     });
 
     it('sets the topic only to a picked suggestion', async () => {
