@@ -14,7 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { interval, map, Observable, startWith } from 'rxjs';
-import { startNewRun } from 'src/api/run.api';
+import { startNewRun, updateRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
@@ -28,7 +28,8 @@ import TypographyComponent from 'src/components/typography/typography.component'
 import HStackComponent from 'src/components/hstack/hstack.component';
 import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
 import { NavOptionsMenuComponent } from 'src/components/nav-options-menu/nav-options-menu.component';
-import { filter } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
+import { FormGroup } from '@angular/forms';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationBellComponent } from './notification-bell/notification-bell.component';
 import { focusIsLost, focusNewPage, pageLabel } from './focus-new-page';
@@ -72,7 +73,7 @@ export class AppNavBarComponent implements OnInit {
   private injector = inject(Injector);
 
   ref: DialogRef | null | undefined;
-  editRunRef: DialogRef | null | undefined;
+  editRunRef: DialogRef<FormGroup> | null | undefined;
 
   // Set selected route to current URL path
   selectedRoute: string = window.location.pathname;
@@ -146,9 +147,29 @@ export class AppNavBarComponent implements OnInit {
   };
 
   openRunForm = () => {
-    this.editRunRef = this.dialogService.open(RunFormComponent, {
+    const ref = this.dialogService.open<FormGroup>(RunFormComponent, {
       width: '550px',
       header: 'Edit Run'
+    });
+    this.editRunRef = ref;
+    // Read the chosen run off the form here: close() destroys it before closed emits.
+    const runForm = ref.componentInstance as RunFormComponent | null;
+
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    ref.closed.pipe(take(1)).subscribe((form) => {
+      // Closed without submitting (close button, Escape): nothing to save.
+      if (!form) return;
+      const run = runForm?.selectedRun;
+      if (run === undefined) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
+        return;
+      }
+      updateRun(
+        run.id,
+        form.controls['driverName'].value,
+        form.controls['locationName'].value,
+        form.controls['notes'].value
+      );
     });
   };
 

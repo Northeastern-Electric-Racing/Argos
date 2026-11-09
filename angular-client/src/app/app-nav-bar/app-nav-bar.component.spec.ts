@@ -252,3 +252,42 @@ describe('AppNavBarComponent on a desktop', () => {
     }
   });
 });
+
+describe('AppNavBarComponent Edit Runs dialog', () => {
+  const run = { id: 7, locationName: 'Boston', driverName: 'Ada', time: new Date(0), notes: 'wet' };
+  let fetchMock: ReturnType<typeof vi.fn>;
+  beforeEach(() => {
+    fetchMock = vi.fn((url: string) =>
+      Promise.resolve(new Response(JSON.stringify(url.endsWith('/runs') ? [run] : {}), { status: 200 }))
+    );
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+  });
+
+  it('updates the selected run once the form is submitted and the dialog has closed', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AppNavBarComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.openRunForm();
+    await fixture.whenStable();
+    await settle();
+
+    const submit = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
+      (b) => b.textContent?.trim() === 'Submit'
+    )!;
+    expect(submit).toBeDefined();
+    submit.click();
+    await fixture.whenStable();
+    await settle();
+
+    expect(document.querySelector('run-form')).toBeNull();
+    const update = fetchMock.mock.calls.find(([url]) => String(url).includes('/runs/update/'));
+    expect(update).toBeDefined();
+    expect(update![0]).toMatch(/\/runs\/update\/7\/Ada\/Boston\/wet$/);
+    expect(update![1]).toEqual({ method: 'POST' });
+  });
+});
