@@ -1,12 +1,14 @@
 <label class="self-center text-sm text-fg" [for]="inputId()">{{ row().label }}</label>
 <span class="self-center text-sm text-fg-muted tabular-nums">{{ currentValue() ?? '--' }}</span>
 <input
+  #field
   uiInput
   type="number"
   [class]="numberInput"
-  [(ngModel)]="value"
+  [ngModel]="value()"
+  (ngModelChange)="onValueChange($event, field)"
   [id]="inputId()"
-  min="-1000000"
-  max="1000000"
+  [min]="min"
+  [max]="max"
   step="any"
 />

@@ -130,4 +130,37 @@ describe('CarCommandComponent', () => {
       expect(calls('/config/set/').map(([url]) => url)).toEqual([expect.stringContaining('/config/set/Launch?data=12.5')]);
     });
   });
+
+  // Native min/max only flag the field; develop's p-inputnumber kept the value within ±1,000,000 (#541).
+  describe('a command value out of range', () => {
+    const send = async (typed: string) => {
+      await authenticate('secret');
+      const value = el().querySelector<HTMLInputElement>('command-row input')!;
+      value.value = typed;
+      value.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      button('Send Command', el()).click();
+      await settle(fixture);
+      button('Send', document.querySelector('[role=alertdialog]') as HTMLElement).click();
+      await settle(fixture);
+      return value;
+    };
+
+    it('is clamped to 1,000,000 before sending, in the field too', async () => {
+      const value = await send('2500000');
+      expect(value.value).toBe('1000000');
+      expect(calls('/config/set/').map(([url]) => url)).toEqual([
+        expect.stringMatching(/\/config\/set\/Launch\?data=1000000$/)
+      ]);
+    });
+
+    it('is clamped to -1,000,000 before sending', async () => {
+      const value = await send('-7000000');
+      expect(value.value).toBe('-1000000');
+      expect(calls('/config/set/').map(([url]) => url)).toEqual([
+        expect.stringMatching(/\/config\/set\/Launch\?data=-1000000$/)
+      ]);
+    });
+  });
 });

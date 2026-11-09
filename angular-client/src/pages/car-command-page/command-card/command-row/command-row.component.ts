@@ -31,6 +31,8 @@ export default class CommandRowComponent implements OnInit {
   value = model<number>(0);
   /** Fills its grid cell, with tabular figures. */
   protected readonly numberInput = numberInputClass('fill');
+  protected readonly min = -1_000_000;
+  protected readonly max = 1_000_000;
 
   protected inputId = computed(() => this.row().dataType.name.replaceAll('/', '-') + '-input');
   protected currentValue = signal<string | undefined>(undefined);
@@ -40,5 +42,15 @@ export default class CommandRowComponent implements OnInit {
       .get(this.row().dataType.name)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((dv) => this.currentValue.set(dv?.values?.[0]));
+  }
+
+  /**
+   * Keeps the value within ±1,000,000 (#541), in the field too, as develop's p-inputnumber did; native min/max
+   * only mark the field invalid. An empty field (null) passes through.
+   */
+  protected onValueChange(typed: number | null, field: HTMLInputElement) {
+    const value = typed === null ? typed : Math.min(this.max, Math.max(this.min, typed));
+    if (value !== typed) field.value = String(value);
+    this.value.set(value as number);
   }
 }
