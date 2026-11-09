@@ -2,12 +2,7 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import {
-  provideClientHydration,
-  BrowserModule,
-  bootstrapApplication,
-  withNoIncrementalHydration
-} from '@angular/platform-browser';
+import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
 import Lara from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { provideRouter } from '@angular/router';
@@ -31,7 +26,6 @@ bootstrapApplication(AppContextComponent, {
         }
       }
     }),
-    provideClientHydration(withNoIncrementalHydration()),
     provideZonelessChangeDetection()
   ]
 }).catch((err) => console.error(err));
