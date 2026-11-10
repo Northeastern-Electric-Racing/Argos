@@ -37,7 +37,7 @@ describe('NodeDisplayComponent', () => {
     fixture.detectChanges();
   });
 
-  it('expands to show the sub-nodes when the card is clicked', () => {
+  it('expands to show the tree nodes when the card is clicked', () => {
     expect(subnodeNames()).toEqual([]);
 
     toggle();
@@ -46,7 +46,7 @@ describe('NodeDisplayComponent', () => {
     expect(subnodeNames()).toEqual(['Pack', 'Cells']);
   });
 
-  it('collapses and removes the sub-nodes on a second click', () => {
+  it('collapses and removes the tree nodes on a second click', () => {
     toggle();
     toggle();
 
