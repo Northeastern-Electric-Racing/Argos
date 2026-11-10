@@ -128,46 +128,67 @@ describe('TopicTreeComponent', () => {
     }
   );
 
-  describe("blocks range selection (develop's tree had none)", () => {
+  describe("ignores Shift, as develop's tree did (no range selection)", () => {
     // Keys go to the focused item, as from a real keyboard; the tree's roving focus moves it.
     const press = (init: KeyboardEventInit) =>
       document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
-    /** Opens BMS, walks down `anchorAt` rows and anchors a range there with Shift, then walks `then` more rows without it. */
-    const anchorAndMove = async (anchorAt: number, then: number) => {
+    const focusedLabel = () => document.activeElement?.textContent?.trim();
+    /** Opens BMS and walks down `rows` rows, holding Shift once on the way to anchor a range. Rows 0-2: BMS, Voltage, Temp_Average. */
+    const walk = async (rows: number) => {
       const [bms] = await (await tree()).getItems({ text: /BMS/ });
       await bms.click();
       await bms.focus();
-      for (let i = 0; i < anchorAt; i++) press({ key: 'ArrowDown' });
       press({ key: 'Shift', shiftKey: true });
-      for (let i = 0; i < then; i++) press({ key: 'ArrowDown' });
+      for (let i = 0; i < rows; i++) press({ key: 'ArrowDown' });
       await fixture.whenStable();
     };
 
-    // Each case would otherwise select Voltage along with Temp_Average: rows 0-2 are BMS, Voltage, Temp_Average.
     it.each([
-      { anchorAt: 0, then: 1, init: { key: 'ArrowDown', shiftKey: true } },
-      { anchorAt: 0, then: 2, init: { key: 'ArrowUp', shiftKey: true } },
-      { anchorAt: 0, then: 2, init: { key: 'Enter', shiftKey: true } },
-      { anchorAt: 0, then: 2, init: { key: ' ', shiftKey: true } },
-      { anchorAt: 2, then: 0, init: { key: 'Home', shiftKey: true, ctrlKey: true } },
-      { anchorAt: 2, then: 0, init: { key: 'Home', shiftKey: true, metaKey: true } },
-      { anchorAt: 0, then: 0, init: { key: 'End', shiftKey: true, ctrlKey: true } },
-      { anchorAt: 0, then: 0, init: { key: 'End', shiftKey: true, metaKey: true } }
-    ])('ignores $init', async ({ anchorAt, then, init }) => {
-      await anchorAndMove(anchorAt, then);
-      press(init);
+      { rows: 0, key: 'ArrowDown', focused: /^Voltage/ },
+      { rows: 2, key: 'ArrowUp', focused: /^Voltage/ }
+    ])('moves focus without selecting on Shift+$key', async ({ rows, key, focused }) => {
+      await walk(rows);
+      press({ key, shiftKey: true });
+      await fixture.whenStable();
+      expect(focusedLabel()).toMatch(focused);
+      expect(selected).toEqual([]);
+      expect(unselected).toEqual([]);
+    });
+
+    it.each(['Enter', ' '])('toggles only the focused row on Shift+%j', async (key) => {
+      await walk(1);
+      press({ key, shiftKey: true });
+      await fixture.whenStable();
+      expect(selected).toEqual(['BMS/Pack/Voltage']);
+      press({ key: 'ArrowDown' });
+      press({ key, shiftKey: true });
+      await fixture.whenStable();
+      expect(unselected).toEqual(['BMS/Status/Temp_Average']);
+    });
+
+    it.each([
+      { key: 'Home', ctrlKey: true },
+      { key: 'Home', metaKey: true },
+      { key: 'End', ctrlKey: true },
+      { key: 'End', metaKey: true }
+    ])('selects nothing on Shift+$key with a modifier', async (init) => {
+      await walk(1);
+      press({ ...init, shiftKey: true });
       await fixture.whenStable();
       expect(selected).toEqual([]);
       expect(unselected).toEqual([]);
     });
 
-    it('ignores Shift+click', async () => {
-      await anchorAndMove(0, 0);
+    it('toggles only the clicked row on Shift+click, and keyboard focus follows it', async () => {
+      await walk(0);
       const [voltage] = await (await tree()).getItems({ text: /Voltage/ });
       await (await voltage.host()).click({ shift: true });
       await fixture.whenStable();
-      expect(selected).toEqual([]);
+      expect(selected).toEqual(['BMS/Pack/Voltage']);
       expect(unselected).toEqual([]);
+      press({ key: 'ArrowDown' });
+      await fixture.whenStable();
+      expect(focusedLabel()).toMatch(/^Temp_Average/);
     });
   });
 

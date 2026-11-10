@@ -71,12 +71,20 @@ export class TopicTreeComponent {
     for (const key of prev) if (!next.has(key) && visible.has(key)) this.nodeUnselect.emit(key);
   }
 
-  /** Stops Shift range selection reaching the tree, so a row is only ever selected one at a time, as on develop. */
-  protected stopRangeSelection(event: KeyboardEvent | MouseEvent): void {
-    if (!event.shiftKey) return;
+  /**
+   * Replays a Shift+click or Shift+range key as the same event without Shift, so Shift is ignored as on develop:
+   * Shift+click and Shift+Enter/Space toggle one row, and Shift+arrows only move focus. The tree never sees the original.
+   */
+  protected ignoreShift(event: KeyboardEvent | MouseEvent): void {
+    if (!event.shiftKey || !event.target) return;
     if (event instanceof KeyboardEvent && !RANGE_KEYS.has(event.key)) return;
     event.stopPropagation();
-    event.preventDefault();
+    const init = { bubbles: true, cancelable: true, ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey };
+    const replay =
+      event instanceof KeyboardEvent
+        ? new KeyboardEvent('keydown', { ...init, key: event.key, code: event.code })
+        : new MouseEvent('click', { ...init, clientX: event.clientX, clientY: event.clientY, button: event.button });
+    if (!event.target.dispatchEvent(replay)) event.preventDefault();
   }
 
   protected onFilterInput(event: Event): void {
