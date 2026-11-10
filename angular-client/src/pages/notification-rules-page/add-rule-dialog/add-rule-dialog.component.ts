@@ -102,12 +102,17 @@ export class AddRuleDialogComponent implements OnInit {
     if (value) this.popupExpanded.set(true);
   }
 
+  /**
+   * Picks the active suggestion. A mouse pick has focused the listbox, which is about to close, so focus goes
+   * back to the input first (as PrimeNG's autocomplete did); the popup's focusout then sees it staying in the field.
+   */
   onCommit(): void {
     const [topic] = this.selectedTopic();
     if (topic) {
       this.query.set(topic);
       this.form.controls.topic.setValue(topic);
     }
+    this.topicInput().nativeElement.focus();
     this.popupExpanded.set(false);
   }
 

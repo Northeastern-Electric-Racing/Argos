@@ -139,6 +139,20 @@ describe('AddRuleDialogComponent', () => {
       expect(await combobox.getValue()).toBe('BMS/Pack/Current');
     });
 
+    it('returns focus to the topic input after a mouse pick, so typing and Tab carry on from the field', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('speed');
+      // A pointer down on an option focuses the (tabindex -1) listbox, before the click picks it.
+      listboxEl().focus();
+      const listbox = await combobox.getPopupWidget(ListboxHarness);
+      const [option] = await listbox.getOptions({ text: 'VCU/Speed' });
+      await option.click();
+      await fixture.whenStable();
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('VCU/Speed');
+      expect(await combobox.isOpen()).toBe(false);
+      expect(document.activeElement).toBe(input('rule-topic'));
+    });
+
     it('still clears free text when focus leaves the suggestions for somewhere else', async () => {
       const combobox = await setupWithTopics();
       await combobox.setValue('pack');
