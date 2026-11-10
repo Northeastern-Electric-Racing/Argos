@@ -21,7 +21,10 @@ import { cx, tw } from './tw';
  *   row       striped and/or hover (tint and pointer for clickable rows, or 'tint' alone for rows that only
  *             highlight: 814's faint log hover, on the cells so it stacks over the stripe); selected from
  *             data-selected="true", focus from a solid inset ring
- *   empty     the cell of the empty (or loading) row
+ *   empty     the cell of the empty row
+ *   mask      the loading mask (PrimeNG's p-table [loading]): a scrim over the whole table, first load and reloads
+ *             alike, holding the spinner; a sibling of the wrapper inside a `relative` box, so it stays put while
+ *             the rows scroll, with `isolate` on the wrapper so a CDK sticky header (z-index 100+) stays under it
  */
 export const TABLE_SIZES = ['md', 'sm'] as const;
 export type TableSize = (typeof TABLE_SIZES)[number];
@@ -73,7 +76,8 @@ const rowBase = tw(
 
 export const tableClasses = {
   wrapper: tw('relative overflow-auto rounded-md'),
-  empty: tw('border-b border-solid border-border p-8 text-center text-fg-muted')
+  empty: tw('border-b border-solid border-border p-8 text-center text-fg-muted'),
+  mask: tw('absolute inset-0 z-1 flex items-center justify-center rounded-md bg-scrim')
 } as const;
 
 export function tableClass(size: TableSize = 'md'): string {

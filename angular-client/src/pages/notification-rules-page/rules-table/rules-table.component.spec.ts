@@ -242,6 +242,24 @@ describe('RulesTableComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('No rules match your search.');
   });
 
+  it("covers the rows with develop's loading mask and spinner on a reload, not only on the first load", async () => {
+    const spinner = (): HTMLElement | null =>
+      fixture.nativeElement.querySelector('[role="status"][aria-label="Loading rules"]');
+    expect(spinner()).toBeNull();
+
+    let respond!: (value: unknown) => void;
+    fetchMock.mockImplementationOnce(() => new Promise((resolve) => (respond = resolve)));
+    const reload = fixture.componentInstance.loadRules();
+    await settle();
+    expect(spinner()).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Delete rule hot"]')).not.toBeNull();
+
+    respond({ ok: true, json: () => Promise.resolve({ requesting_client_id: 'c', client_rules: [rule('hot', false)] }) });
+    await reload;
+    await settle();
+    expect(spinner()).toBeNull();
+  });
+
   it('drops rules that are gone from the selection when it reloads', async () => {
     const selected = vi.fn();
     fixture.componentInstance.selectionChanged.subscribe(selected);
