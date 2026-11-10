@@ -15,4 +15,13 @@ describe('SevenSegmentDisplayComponent', () => {
     read.querySelectorAll('[aria-hidden="true"]').forEach((el) => el.remove());
     expect(read.textContent?.replace(/\s+/g, '')).toBe('1․23V');
   });
+
+  it("lights the digits in the NER red nearest develop's #ff3333 (accent, 4.51:1 on surface-1), not the pink accent-fg", () => {
+    const fixture = TestBed.createComponent(SevenSegmentDisplayComponent);
+    fixture.componentRef.setInput('value', '1.23');
+    fixture.detectChanges();
+    const lit: HTMLElement = fixture.nativeElement.querySelector('span:not([aria-hidden])');
+    expect(lit.classList).toContain('text-accent');
+    expect(lit.classList).not.toContain('text-accent-fg');
+  });
 });
