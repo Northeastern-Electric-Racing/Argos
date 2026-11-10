@@ -193,6 +193,17 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Keeps the range at 1 or more, in the field too, as develop's p-inputnumber [min]="1" did; native min only
+   * marks the field invalid. An empty field (null) passes through.
+   */
+  protected onRangeValueChange(typed: number | null, field: HTMLInputElement) {
+    const value = typed === null ? typed : Math.max(1, typed);
+    if (value !== typed) field.value = String(value);
+    this.rangeValue = value as number;
+    this.onGraphConfigChange();
+  }
+
   toggleRangeMode = () => {
     this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
     this.onGraphConfigChange();

@@ -131,4 +131,47 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     const lastNav = routerNavigate.mock.lastCall!;
     expect(lastNav[1].queryParams.topics).toBeNull();
   });
+
+  describe('range input', () => {
+    /** Renders the real-time toolbar (past the loading page) and returns its X range field. */
+    async function rangeField(): Promise<HTMLInputElement> {
+      mountAndLoadDataTypes();
+      fixture.componentInstance.dataTypesIsLoading = false;
+      fixture.componentRef.changeDetectorRef.markForCheck();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return fixture.nativeElement.querySelector('#graph-range-value');
+    }
+    const type = async (field: HTMLInputElement, value: string) => {
+      field.value = value;
+      field.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it.each(['0', '-5'])('clamps %s up to 1, in the field too, as develop\'s p-inputnumber [min]="1" did', async (typed) => {
+      const field = await rangeField();
+      await type(field, typed);
+      expect(field.value).toBe('1');
+      expect(fixture.componentInstance.timeRangeSeconds).toBe(1);
+      expect(fixture.componentInstance.graphConfig.timeRangeMs).toBe(1000);
+    });
+
+    it('clamps the point range too', async () => {
+      const field = await rangeField();
+      fixture.componentInstance.toggleRangeMode();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await type(field, '0');
+      expect(field.value).toBe('1');
+      expect(fixture.componentInstance.graphConfig.maxPoints).toBe(1);
+    });
+
+    it('keeps a value of 1 or more as typed', async () => {
+      const field = await rangeField();
+      await type(field, '45');
+      expect(field.value).toBe('45');
+      expect(fixture.componentInstance.graphConfig.timeRangeMs).toBe(45000);
+    });
+  });
 });

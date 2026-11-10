@@ -46,15 +46,16 @@
                 rangeMode === 'time' ? 'X (sec):' : 'X (points):'
               }}</label>
               <input
+                #rangeField
                 id="graph-range-value"
                 type="number"
                 uiInput="sm"
                 [class]="rangeInputClass"
-                [(ngModel)]="rangeValue"
+                [ngModel]="rangeValue"
                 min="1"
                 step="1"
                 [placeholder]="rangeMode === 'time' ? '30' : 'Auto'"
-                (ngModelChange)="onGraphConfigChange()"
+                (ngModelChange)="onRangeValueChange($event, rangeField)"
               />
             </div>
           }
