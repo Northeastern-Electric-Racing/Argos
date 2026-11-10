@@ -3,7 +3,7 @@ import { cx, tw } from './tw';
 /**
  * Form fields: a text, number or date input (`input[uiInput]`), its label (`label[uiLabel]`), the hint and
  * error lines under it, and the wrappers. Invalid state comes from aria-invalid="true" (set it with
- * aria-describedby pointing at the error, lesson 7) or from Angular's ng-invalid.ng-touched.
+ * aria-describedby pointing at the error, so screen readers announce it) or from Angular's ng-invalid.ng-touched.
  * Width is layout: the consumer adds `w-full` (or a grid/flex class) to the input or its field.
  */
 export const INPUT_SIZES = ['sm', 'md'] as const;

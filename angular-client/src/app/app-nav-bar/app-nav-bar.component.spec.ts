@@ -117,7 +117,7 @@ describe('AppNavBarComponent on a phone', () => {
     const page = main.querySelector<HTMLElement>('router-outlet + *')!;
     expect(document.activeElement).not.toBe(document.body);
     expect(document.activeElement).toBe(page);
-    // named after the chosen page while it holds focus, not after its whole content (wave 1 review N11)
+    // named after the chosen page while it holds focus, not after its whole content
     expect(page.getAttribute('role')).toBe('group');
     expect(page.getAttribute('aria-label')).toBe('Graph');
     // focusable and named only while it holds focus, like a skip link's target

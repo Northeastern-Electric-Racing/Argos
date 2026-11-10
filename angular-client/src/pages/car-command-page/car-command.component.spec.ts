@@ -81,7 +81,7 @@ describe('CarCommandComponent', () => {
 
   it('shows no ring on the moved focus after a mouse Authenticate, even after a failed keyboard try', async () => {
     const focus = vi.spyOn(HTMLElement.prototype, 'focus');
-    // a failed keyboard try first: focus-visible must not carry over to the mouse retry (wave 2 review N3)
+    // a failed keyboard try first: focus-visible must not carry over to the mouse retry
     passwordOk = false;
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await authenticate('wrong');

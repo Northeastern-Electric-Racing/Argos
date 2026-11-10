@@ -42,7 +42,7 @@ describe('global stylesheets', () => {
     const aliases = [...theme.matchAll(/^\s*(--(?:ui|color-text)-[a-z0-9-]+):/gm)].map((m) => m[1]);
     const used = readers();
     expect(aliases.filter((alias) => !used.includes('var(' + alias))).toEqual([]);
-    // the unused segment-summary's "See More" pill is the last reader (wave 4)
+    // the unused segment-summary's "See More" pill is the last reader
     expect(aliases).toEqual(['--ui-radius-full']);
   });
 

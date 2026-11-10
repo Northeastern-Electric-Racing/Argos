@@ -3,7 +3,7 @@ import { cx, tw } from './tw';
 /*
  * The data-table and checkbox recipes, for CDK tables (`<table cdk-table>`, `*cdkHeaderRowDef="cols; sticky: true"`
  * for a sticky header, `[trackBy]`, `*cdkNoDataRow` for the empty row) and plain tables alike: the rules
- * table, the upload preview, and wave 2's lap timer, BMS chip faults, faults and notification log tables.
+ * table, the upload preview, and the lap timer, BMS chip faults, faults and notification log tables.
  *
  *   wrapper   the scroll box, positioned (sr-only labels in its cells are absolute, and would otherwise escape it
  *             and widen the page); add the height cap (max-h-*) for a sticky header to stick inside: a CDK table's

@@ -6,7 +6,7 @@ import { cx, tw } from './tw';
  *   primary      filled NER red, the page's main action
  *   secondary    filled telemetry blue, applying a setting
  *   tonal        blue-tinted surface with a blue edge, the graph page's toggles and tools; solid blue
- *                while aria-pressed="true", so on and off read apart (lesson 8)
+ *                while aria-pressed="true", so on and off read apart
  *   neutral      raised grey, secondary actions such as upload or download
  *   text         no fill or edge, such as Cancel
  *   success/warn filled status colours, the lap timer's start and pause

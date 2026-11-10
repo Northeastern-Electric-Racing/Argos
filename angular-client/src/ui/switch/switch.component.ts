@@ -5,7 +5,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  * On/off switch: a native button with role="switch" and aria-checked (WAI-ARIA switch pattern).
  * Angular Aria has no switch, so this is ours. Works with ngModel or `[(checked)]`.
  * Controlled: it shows `checked` and asks to change it through `checkedChange`, so a parent can set it back
- * (an optimistic toggle that reverts when the server refuses, lesson 4). Track and thumb read aria-checked.
+ * (an optimistic toggle that reverts when the server refuses). Track and thumb read aria-checked.
  * Off is an outlined track (control-border, 3:1 on the surface), on a filled accent track: the states differ by fill
  * versus outline and by the thumb's side, since no grey can be 3:1 from both the surface and the accent (WCAG 1.4.11).
  * Hovered on, the fill deepens to accent-strong (white thumb 4.98:1; a lighter fill left it at 2.96:1) and the

@@ -35,12 +35,12 @@
 @source not './test-setup.ts';
 /*
  * Words the scanner finds in comments and identifiers (the topic `filter`, the dialog `container`, a focus `ring`)
- * that would emit utilities no template uses, ~2 kB with their @property rules. The spike bans them as classes
+ * that would emit utilities no template uses, ~2 kB with their @property rules. Lint bans them as classes
  * anyway (eslint no-restricted-classes): Tailwind's container clashes with our naming, rings are outlines here.
  */
 @source not inline('container ring filter');
 /*
- * Two more prose words (wave 2 review fix): "outline" and "transition" in comments emitted the bare `outline` and
+ * Two more prose words: "outline" and "transition" in comments emitted the bare `outline` and
  * `transition` utilities (0.5 kB), which no template uses. Write `focus-ring` or `outline-solid outline-1`, and
  * `transition-colors`, `transition-transform` or `transition-[…]`; to use a bare one, take it off this list.
  */

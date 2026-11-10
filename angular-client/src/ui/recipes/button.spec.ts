@@ -74,7 +74,7 @@ describe('button recipe', () => {
     expect(iconButtonClass('sm')).not.toBe(iconButtonClass('md'));
   });
 
-  it('uses no palette colours, arbitrary colours or opacity on text (lesson 1)', () => {
+  it('uses no palette colours, arbitrary colours or opacity on text (only theme tokens)', () => {
     const all = [...Object.values(buttonVariantClasses), ...Object.values(buttonSizeClasses), iconButtonClass('md')].join(
       ' '
     );

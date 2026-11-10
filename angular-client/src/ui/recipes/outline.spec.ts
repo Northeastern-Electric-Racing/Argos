@@ -29,7 +29,7 @@ import {
 /*
  * `outline-none` sets `--tw-outline-style: none`, and Tailwind's `outline-<n>` width utilities draw with
  * `outline-style: var(--tw-outline-style)`. So a list holding both draws no outline in any state: the
- * keyboard-active option of every listbox showed nothing (wave 1 review S1). A state outline needs its own
+ * keyboard-active option of every listbox once showed nothing. A state outline needs its own
  * style (`outline-solid`) or `focus-ring`, which sets one; the simplest fix is to drop `outline-none`.
  */
 const stateOutlineWidth = /(?:^|\s)\S+:outline-(?:\d|\[)/;

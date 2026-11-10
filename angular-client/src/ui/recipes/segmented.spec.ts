@@ -14,7 +14,7 @@ describe('segmented recipe (tabs and segmented controls)', () => {
     expect(segmentedClasses.item.split(/\s+/)).toContain('text-fg-muted');
   });
 
-  it('takes an inert tab panel out of the layout, whatever display the panel sets (lesson 3)', () => {
+  it('takes an inert tab panel out of the layout, whatever display the panel sets', () => {
     const panel = segmentedClasses.panel.split(/\s+/);
     expect(panel).toContain('inert:hidden');
     expect(panel).toContain('flex');

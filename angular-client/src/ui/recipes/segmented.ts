@@ -4,7 +4,7 @@ import { tw } from './tw';
  * The segmented look: a row of equal segments on a sunken surface, the chosen one solid telemetry blue.
  * - Aria tabs: `list` on the ngTabList, `item` on each ngTab (aria-selected), `panel` on each ngTabPanel.
  *   The panel lays out as a flex column and `inert:hidden` takes an inert (unselected) panel out of the layout,
- *   so no panel display can keep it on screen (lesson 3).
+ *   so a display class on the panel (flex, grid) can't keep a hidden panel on screen.
  * - A segmented control of toggle buttons: `list` on the group, `item` on each button (aria-pressed).
  */
 export const segmentedClasses = {
