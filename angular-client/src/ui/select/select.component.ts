@@ -39,8 +39,8 @@ const triggerSizeClasses = {
 
 /**
  * Single-select dropdown built from Angular Aria's Combobox + Listbox, positioned with a CDK
- * connected overlay, following the Aria "Select" pattern guide. Works with ngModel, or with
- * `[value]` + `(selectionChange)`.
+ * connected overlay, following the Aria "Select" pattern guide. Works with ngModel; `(selectionChange)`
+ * emits each pick.
  */
 @Component({
   selector: 'ui-select',
@@ -59,7 +59,6 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
   ariaLabel = input<string | undefined>(undefined);
   inputId = input<string | undefined>(undefined);
   size = input<'md' | 'sm'>('md');
-  value = input<T | undefined>(undefined);
 
   selectionChange = output<T>();
 
@@ -88,9 +87,8 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
   protected expanded = signal(false);
   protected disabled = signal(false);
   private selected = signal<T | undefined>(undefined);
-  private hasCvaValue = signal(false);
 
-  protected current = computed(() => (this.hasCvaValue() ? this.selected() : this.selected() ?? this.value()));
+  protected current = this.selected.asReadonly();
   protected selectedValues = computed(() => {
     const current = this.current();
     return current === undefined || current === null ? [] : [current];
@@ -133,7 +131,6 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
   }
 
   writeValue(value: T | null): void {
-    this.hasCvaValue.set(true);
     this.selected.set(value ?? undefined);
   }
 
@@ -147,10 +144,5 @@ export class UiSelectComponent<T> implements ControlValueAccessor {
 
   setDisabledState(disabled: boolean): void {
     this.disabled.set(disabled);
-  }
-
-  /** Clears the shown selection back to the placeholder. */
-  clear(): void {
-    this.selected.set(undefined);
   }
 }
