@@ -23,7 +23,7 @@ const seeMoreClass = cx(
   buttonBaseClass,
   buttonVariantClasses.secondary,
   tw(
-    'h-[clamp(24px,2.3vw,44px)] w-full gap-[0.3em] rounded-[clamp(8px,1.25vw,24px)] px-[clamp(6px,1.4vw,28px)] text-[length:clamp(7px,0.94vw,18px)]'
+    'h-[clamp(24px,2.3vw,44px)] w-full gap-[0.3em] rounded-[clamp(8px,1.25vw,24px)] px-[clamp(6px,1.4vw,28px)] text-[length:clamp(7px,0.94vw,18px)] font-semibold'
   )
 );
 

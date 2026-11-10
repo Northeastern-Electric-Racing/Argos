@@ -83,8 +83,17 @@ describe('button recipe', () => {
     expect(all).not.toMatch(/(^|\s|:)text-[a-z-]+\/\d+/);
   });
 
+  it("restores develop's argos-button labels: 16px bold, 13px on phones at the legacy size, 12px bold when small", () => {
+    for (const s of ['md', 'lg', 'lg-fluid', 'icon'] as const)
+      expect(buttonSizeClasses[s].split(/\s+/)).toEqual(expect.arrayContaining(['text-base', 'font-bold']));
+    for (const s of ['lg', 'lg-fluid'] as const) expect(buttonSizeClasses[s].split(/\s+/)).toContain('max-md:text-ctrl-sm');
+    expect(buttonSizeClasses.md).not.toContain('max-md:text-');
+    expect(buttonSizeClasses.sm.split(/\s+/)).toEqual(expect.arrayContaining(['text-xs', 'font-bold']));
+  });
+
   it('leaves the footprint to the size, so a consumer can compose the base and a variant with its own size', () => {
-    const footprint = /^(gap|min-h|h|w|min-w|p|px|py|rounded|text-(xs|sm|ctrl|ctrl-sm|ctrl-lg|\[))(-|$)/;
+    const footprint =
+      /^(gap|min-h|h|w|min-w|p|px|py|rounded|font-(medium|semibold|bold)|text-(xs|sm|base|ctrl|ctrl-sm|ctrl-lg|\[))(-|$)/;
     expect(buttonBaseClass.split(/\s+/).filter((c) => footprint.test(c))).toEqual([]);
     for (const s of BUTTON_SIZES) expect(buttonSizeClasses[s].split(/\s+/)).toContain('gap-2');
   });

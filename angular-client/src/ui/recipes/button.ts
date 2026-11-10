@@ -15,7 +15,8 @@ import { cx, tw } from './tw';
  * Sizes: md is the default control height (36px); sm is compact (28px, 32px on phones); lg is the legacy
  * 140x45 footprint (44px tall on phones), which some pages are laid out around; lg-fluid is lg on wide
  * screens and as wide as its label on phones (12px padding), so a row of them wraps less (the rules page);
- * icon is a 32px square for an icon-only button.
+ * icon is a 32px square for an icon-only button. Labels are develop's argos-button type: 16px bold, 13px on phones
+at the legacy size (lg, lg-fluid), 12px bold when small.
  */
 export const BUTTON_VARIANTS = [
   'primary',
@@ -35,11 +36,11 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
 
 /**
  * The base every button shares (layout, border style, font, focus ring, disabled). It sets no footprint (gap,
- * height, padding, radius, font size): the size does, so a consumer with a size no step fits (BMS's fluid See
+ * height, padding, radius, font size and weight): the size does, so a consumer with a size no step fits (BMS's fluid See
  * more) composes `cx(buttonBaseClass, buttonVariantClasses[v], <its own size>)` instead of copying the base.
  */
 export const buttonBaseClass = tw(
-  'inline-flex cursor-pointer items-center justify-center border border-solid text-center font-sans leading-control font-semibold whitespace-nowrap transition-colors duration-120 select-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex cursor-pointer items-center justify-center border border-solid text-center font-sans leading-control whitespace-nowrap transition-colors duration-120 select-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50'
 );
 
 export const buttonVariantClasses: Record<ButtonVariant, string> = {
@@ -62,13 +63,13 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   'danger-text': tw('border-transparent bg-transparent text-danger not-disabled:hover:bg-danger/16')
 };
 
-const lgSize = tw('min-h-11.25 min-w-35 gap-2 rounded-md px-4 text-ctrl max-md:min-h-11');
+const lgSize = tw('min-h-11.25 min-w-35 gap-2 rounded-md px-4 text-base font-bold max-md:min-h-11 max-md:text-ctrl-sm');
 export const buttonSizeClasses: Record<ButtonSize, string> = {
-  sm: tw('min-h-7 gap-2 rounded-sm px-3 text-xs max-md:min-h-8'),
-  md: tw('min-h-9 gap-2 rounded-md px-4 text-ctrl'),
+  sm: tw('min-h-7 gap-2 rounded-sm px-3 text-xs font-bold max-md:min-h-8'),
+  md: tw('min-h-9 gap-2 rounded-md px-4 text-base font-bold'),
   lg: lgSize,
   'lg-fluid': cx(lgSize, tw('max-md:min-w-0 max-md:px-3')),
-  icon: tw('min-h-8 w-8 gap-2 rounded-md p-0 text-ctrl')
+  icon: tw('min-h-8 w-8 gap-2 rounded-md p-0 text-base font-bold')
 };
 
 /** The classes for a button of this variant and size. */
