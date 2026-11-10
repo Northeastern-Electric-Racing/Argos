@@ -50,6 +50,13 @@ describe('NotificationRulesPageComponent', () => {
     expect(viewLog?.dataset['variant']).toBe('primary');
   });
 
+  it('fills Toggle Subscription in the primary NER red, as in develop (white on accent-strong passes AA, 4.98:1)', () => {
+    const toggle = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(
+      (b) => b.textContent?.trim() === 'Toggle Subscription'
+    );
+    expect(toggle?.dataset['variant']).toBe('primary');
+  });
+
   it('should persist client ID across instances', () => {
     const firstId = component.clientId;
     // Create a new instance
