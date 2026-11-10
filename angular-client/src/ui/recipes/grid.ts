@@ -4,7 +4,7 @@ import { cx, tw } from './tw';
  * The tile grid that replaces 814's 6-column mat-grid-list (15px gutters): `tileGridClass()` on the grid,
  * `gridTileClass(cols, rows)` on each tile. Rows are 1.5rem (`md`, the lap timer, BMS and landing) or 1.2rem
  * (`{ rows: 'sm' }`, the charging page's rowHeight). A tile spans whole columns and rows and centres its content;
- * it clips anything larger, as mat-grid-tile did, unless `{ clip: false }` (the BMS header's tiles let their
+ * it clips anything larger, as mat-grid-tile did, unless `{ clip: false }` (the BMS pages' tiles let their
  * content spill). The span lists are complete literal classes, so Tailwind sees each one: a span no page uses
  * yet is added here, never built from a number.
  */
