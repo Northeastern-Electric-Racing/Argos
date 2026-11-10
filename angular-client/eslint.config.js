@@ -145,7 +145,7 @@ module.exports = tseslint.config(
     }
   },
   {
-    // Unknown classes (typos, missing tokens, legacy ui-* classes) in migrated templates and every tw() list.
+    // Unknown classes (typos, missing tokens) in migrated templates and every tw() list.
     files: [...migratedFiles, 'src/**/*.ts'],
     ignores: ['src/**/*.spec.ts'],
     plugins: { 'better-tailwindcss': betterTailwind },
@@ -154,9 +154,8 @@ module.exports = tseslint.config(
       'better-tailwindcss/no-unknown-classes': [
         'error',
         {
-          // Not Tailwind's to know: #909's legacy ui-* classes (tw-lint flags them for their owners) and the
-          // CDK's own classes.
-          ignore: ['^ui-', '^cdk-']
+          // Not Tailwind's to know: the CDK's own classes.
+          ignore: ['^cdk-']
         }
       ]
     }
