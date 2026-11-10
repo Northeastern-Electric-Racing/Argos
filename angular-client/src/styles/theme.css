@@ -71,10 +71,8 @@
   --color-fault: #b05509;
   --color-on-fault: #fff;
   --color-success: #4ade80;
-  --color-success-hover: color-mix(in srgb, var(--color-success) 82%, #fff);
   --color-success-fg: #5fc04f; /* lit-lamp text on the eFuses plates */
   --color-warn: #fbbf24;
-  --color-warn-hover: color-mix(in srgb, var(--color-warn) 82%, #fff);
   --color-info: #60a5fa;
   --color-on-status: #000; /* dark text on bright fills: success, warn, heat-map tiles */
   /*

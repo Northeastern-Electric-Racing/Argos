@@ -9,7 +9,8 @@ import { cx, tw } from './tw';
  *                while aria-pressed="true", so on and off read apart
  *   neutral      raised grey, secondary actions such as upload or download
  *   text         no fill or edge, such as Cancel
- *   success/warn filled status colours, the lap timer's start and pause
+ *   success/warn filled battery-gauge green and yellow with black text, as develop drew the lap timer's
+ *                start, lap and resume, and its pause
  *   danger       orange edge, never filled, for destructive actions
  *   danger-text  orange text with no edge, for a destructive action in a row or list (Clear, Delete)
  * Sizes: md is the default control height (36px); sm is compact (28px, 32px on phones); lg is the legacy
@@ -56,9 +57,11 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   ),
   text: tw('border-transparent bg-transparent text-fg not-disabled:hover:bg-fg/8'),
   success: tw(
-    'border-success bg-success text-on-status not-disabled:hover:border-success-hover not-disabled:hover:bg-success-hover'
+    'border-battery-high bg-battery-high text-on-status not-disabled:hover:border-battery-high/85 not-disabled:hover:bg-battery-high/85'
   ),
-  warn: tw('border-warn bg-warn text-on-status not-disabled:hover:border-warn-hover not-disabled:hover:bg-warn-hover'),
+  warn: tw(
+    'border-battery-med bg-battery-med text-on-status not-disabled:hover:border-battery-med/85 not-disabled:hover:bg-battery-med/85'
+  ),
   danger: tw('border-danger bg-transparent text-danger not-disabled:hover:bg-danger/16'),
   'danger-text': tw('border-transparent bg-transparent text-danger not-disabled:hover:bg-danger/16')
 };

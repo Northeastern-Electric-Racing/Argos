@@ -25,8 +25,8 @@ describe('button recipe', () => {
     ['tonal', 'bg-secondary-soft'],
     ['neutral', 'bg-surface-3'],
     ['text', 'bg-transparent'],
-    ['success', 'bg-success'],
-    ['warn', 'bg-warn'],
+    ['success', 'bg-battery-high'],
+    ['warn', 'bg-battery-med'],
     ['danger', 'text-danger'],
     ['danger-text', 'text-danger']
   ] as const)('builds %s on its token (%s)', (variant, token) => {
