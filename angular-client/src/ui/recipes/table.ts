@@ -9,7 +9,7 @@ import { cx, tw } from './tw';
  *             and widen the page); add the height cap (max-h-*) for a sticky header to stick inside: a CDK table's
  *             `sticky: true` header row, or `headerCellClass(density, { sticky: true })` on a plain table's <th>s
  *   table     md (0.9rem) or sm (0.8125rem) text
- *   th / td   md, phone (tighter 6px cells and smaller text below 768px, long values wrap) or roomy (814's
+ *   th / td   md, phone (tighter 6px cells and smaller text below 768px, words too long for their column break, but columns size to whole words as on develop) or roomy (814's
  *             notification log: 10px by 14px cells of 14px text over faint dividers, 8px by 10px below 768px;
  *             values don't wrap, so a narrow screen scrolls the table inside its wrapper); a header cell aligns left or right (numbers), can stick to the top of the wrapper, and
  *             takes a tone: fill (surface-3, the cell's own text), caps (814's log header: 12px semibold uppercase
@@ -66,7 +66,7 @@ const stickyHeaderCell = tw('sticky top-0 z-1');
 const cellMd = tw('border-b border-solid border-border px-3 py-2');
 const cellClasses: Record<TableDensity, string> = {
   md: cellMd,
-  phone: cx(cellMd, tw('max-md:p-1.5 max-md:text-ctrl-sm max-md:wrap-anywhere')),
+  phone: cx(cellMd, tw('max-md:p-1.5 max-md:text-ctrl-sm max-md:wrap-break-word')),
   roomy: tw('border-b border-solid border-border/40 px-3.5 py-2.5 text-sm max-md:px-2.5 max-md:py-2 max-md:text-ctrl-sm')
 };
 

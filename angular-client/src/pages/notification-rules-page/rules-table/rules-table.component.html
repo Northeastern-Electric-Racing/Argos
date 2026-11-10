@@ -91,8 +91,9 @@
       <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
       <tr cdk-row *cdkRowDef="let rule; columns: columns" [class]="row" [attr.data-selected]="isSelected(rule)"></tr>
       <tr *cdkNoDataRow>
-        <td [attr.colspan]="columns.length" [class]="t.empty">
-          <!-- While loading, the mask below holds the spinner, so no empty-state text flashes under it. -->
+        <!-- While loading, the mask below holds the spinner, so no empty-state text flashes under it; the row is tall enough
+             then for the spinner, centred on the whole table, to clear the header. -->
+        <td [attr.colspan]="columns.length" [class]="t.empty" [class.h-32]="loading()">
           @if (!loading()) {
             @if (rules().length === 0) {
               No rules yet. Add a rule or upload a CSV to get started.
