@@ -49,12 +49,13 @@
           <div [class]="field.field">
             <label uiLabel for="custom-hours">Hours</label>
             <input
+              #hoursField
               id="custom-hours"
               type="number"
               uiInput="sm"
-              class="tabular-nums"
+              [class]="numberInputClass"
               [ngModel]="customHours()"
-              (ngModelChange)="customHours.set($event)"
+              (ngModelChange)="setLastX(customHours, $event, hoursField)"
               min="0"
               step="1"
               placeholder="0"
@@ -63,12 +64,13 @@
           <div [class]="field.field">
             <label uiLabel for="custom-minutes">Minutes</label>
             <input
+              #minutesField
               id="custom-minutes"
               type="number"
               uiInput="sm"
-              class="tabular-nums"
+              [class]="numberInputClass"
               [ngModel]="customMinutes()"
-              (ngModelChange)="customMinutes.set($event)"
+              (ngModelChange)="setLastX(customMinutes, $event, minutesField)"
               min="0"
               step="1"
               placeholder="30"

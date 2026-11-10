@@ -1,5 +1,14 @@
 import { ToastService } from 'src/ui/toast/toast.service';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  WritableSignal,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { UiPopoverComponent } from 'src/ui/popover/popover.component';
@@ -7,6 +16,7 @@ import { UiDateTimeInputComponent } from 'src/ui/datetime/datetime-input.compone
 import { segmentedClasses } from 'src/ui/recipes/segmented';
 import { UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 import { fieldClasses } from 'src/ui/recipes/field';
+import { numberInputClass } from 'src/ui/recipes/number-input';
 import { SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { Run } from 'src/utils/types.utils';
 
@@ -56,6 +66,7 @@ export class GeneralButtonsComponent {
   private toastService = inject(ToastService);
   protected readonly segmented = segmentedClasses;
   protected readonly field = fieldClasses;
+  protected readonly numberInputClass = numberInputClass('fill');
 
   historicalOn = input<boolean>(false);
   onRunSelected = input.required<(run: Run) => void>();
@@ -133,6 +144,16 @@ export class GeneralButtonsComponent {
       this.customToDate.set(new Date());
     }
   };
+
+  /**
+   * Keeps Hours or Minutes at 0 or more, in the field too, as develop's p-inputnumber [min]="0" did; native min
+   * only marks the field invalid. An empty field (null) passes through.
+   */
+  protected setLastX(target: WritableSignal<number | null>, typed: number | null, field: HTMLInputElement) {
+    const value = typed === null ? typed : Math.max(0, typed);
+    if (value !== typed) field.value = String(value);
+    target.set(value);
+  }
 
   // Driven by the Aria tab list, which reports the selected tab's value as a string.
   setCustomMode = (mode: string | undefined) => {

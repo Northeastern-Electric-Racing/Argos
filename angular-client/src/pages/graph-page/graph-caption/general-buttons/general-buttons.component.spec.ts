@@ -3,6 +3,7 @@ import type { Mock } from 'vitest';
 import { TabsHarness } from '@angular/aria/tabs/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { numberInputClass } from 'src/ui/recipes/number-input';
 import { GeneralButtonsComponent, MAX_RANGE_MINUTES, RangePreset } from './general-buttons.component';
 
 describe('GeneralButtonsComponent — custom range validation', () => {
@@ -225,6 +226,49 @@ describe('GeneralButtonsComponent — custom range validation', () => {
       expect(hours.type).toBe('number');
       expect(hours.min).toBe('0');
       expect(hours.step).toBe('1');
+    });
+
+    describe('Hours and Minutes', () => {
+      const type = async (field: HTMLInputElement, value: string) => {
+        field.value = value;
+        field.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        await fixture.whenStable();
+      };
+      const fields = {
+        hours: { id: 'custom-hours', value: () => component.customHours() },
+        minutes: { id: 'custom-minutes', value: () => component.customMinutes() }
+      };
+
+      for (const [name, { id, value }] of Object.entries(fields)) {
+        it.each(['-1', '-30'])(
+          `clamps ${name} %s up to 0, in the field too, as develop's p-inputnumber [min]="0" did`,
+          async (typed) => {
+            await openPopover();
+            const field = document.getElementById(id) as HTMLInputElement;
+            await type(field, typed);
+            expect(field.value).toBe('0');
+            expect(value()).toBe(0);
+          }
+        );
+
+        it(`keeps ${name} of 0 or more as typed, and an empty field empty`, async () => {
+          await openPopover();
+          const field = document.getElementById(id) as HTMLInputElement;
+          await type(field, '45');
+          expect(field.value).toBe('45');
+          expect(value()).toBe(45);
+          await type(field, '');
+          expect(field.value).toBe('');
+          expect(value()).toBeNull();
+        });
+
+        it(`sizes ${name} with the number input recipe`, async () => {
+          await openPopover();
+          const field = document.getElementById(id) as HTMLInputElement;
+          expect([...field.classList]).toEqual(expect.arrayContaining(numberInputClass('fill').split(/\s+/)));
+        });
+      }
     });
 
     it('ignores tab values that are not a custom mode', () => {
