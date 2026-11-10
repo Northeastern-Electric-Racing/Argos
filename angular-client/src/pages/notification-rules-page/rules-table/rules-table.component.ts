@@ -4,7 +4,7 @@ import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Table, TableModule } from 'primeng/table';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
-import { ButtonDirective } from 'primeng/button';
+import { ButtonDirective, ButtonIcon } from 'primeng/button';
 import { take } from 'rxjs';
 import {
   ClientRule,
@@ -20,7 +20,7 @@ import { EditRuleDialogComponent, EditRuleResult } from '../edit-rule-dialog/edi
 @Component({
   selector: 'rules-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective],
+  imports: [TableModule, ToggleSwitch, FormsModule, ButtonDirective, ButtonIcon],
   templateUrl: './rules-table.component.html',
   styleUrls: ['./rules-table.component.css']
 })

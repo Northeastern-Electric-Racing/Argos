@@ -41,13 +41,12 @@
   </div>
   <p-tree
     [value]="activeNodes()"
-    styleClass="w-full md:w-[30rem]"
     (onNodeSelect)="nodeSelect($event)"
     (onNodeUnselect)="onNodeUnselect($event)"
     [(selection)]="selectedNodes"
     [filter]="true"
     filterPlaceholder="Select Data Type"
-    styleClass="w-full"
+    class="w-full"
     [autofocus]="true"
     [style]="{ height: '80vh', overflow: 'auto' }"
     [metaKeySelection]="false"

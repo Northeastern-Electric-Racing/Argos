@@ -26,4 +26,9 @@ describe('FormTemplateComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('renders the submit button label', () => {
+    const button = (fixture.nativeElement as HTMLElement).querySelector('button');
+    expect(button?.textContent?.trim()).toBe('Submit');
+  });
 });

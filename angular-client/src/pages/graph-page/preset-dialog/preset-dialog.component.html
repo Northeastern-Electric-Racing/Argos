@@ -24,14 +24,15 @@
           <button
             pButton
             type="button"
-            label="Save"
             (click)="onSaveCurrent()"
             [disabled]="!hasSelection() || newPresetName().trim().length === 0"
-          ></button>
+          >
+            Save
+          </button>
         </div>
       </div>
 
-      <button pButton type="button" label="Upload JSON" class="p-button-outlined" (click)="onUploadClick()"></button>
+      <button pButton type="button" class="p-button-outlined" (click)="onUploadClick()">Upload JSON</button>
     </div>
     @if (!hasSelection()) {
       <small class="hint">Select a topic to save a preset</small>
@@ -61,21 +62,11 @@
               </td>
               <td class="topic-count">{{ preset.topicNames.length }}</td>
               <td class="actions">
-                <button pButton type="button" label="Apply" (click)="onApply(preset)"></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Download"
-                  class="p-button-outlined"
-                  (click)="onDownload(preset)"
-                ></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Delete"
-                  class="p-button-text p-button-danger"
-                  (click)="onDelete(preset)"
-                ></button>
+                <button pButton type="button" (click)="onApply(preset)">Apply</button>
+                <button pButton type="button" class="p-button-outlined" (click)="onDownload(preset)">Download</button>
+                <button pButton type="button" class="p-button-text p-button-danger" (click)="onDelete(preset)">
+                  Delete
+                </button>
               </td>
             </tr>
           }
@@ -85,8 +76,8 @@
   </section>
 
   <div class="footer">
-    <button pButton type="button" label="Add Default Presets" class="p-button-text" (click)="onAddDefaultPresets()"></button>
-    <button pButton type="button" label="Close" class="p-button-text" (click)="onClose()"></button>
+    <button pButton type="button" class="p-button-text" (click)="onAddDefaultPresets()">Add Default Presets</button>
+    <button pButton type="button" class="p-button-text" (click)="onClose()">Close</button>
   </div>
 
   <p-confirmdialog />
