@@ -50,12 +50,6 @@ describe('ButtonComponent', () => {
     expect(button().dataset['variant']).toBe('tonal');
   });
 
-  it('applies additionalStyles for layout tweaks', () => {
-    fixture.componentRef.setInput('additionalStyles', 'width: 100%;');
-    fixture.detectChanges();
-    expect(button().style.width).toBe('100%');
-  });
-
   it('disables the native button', () => {
     fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();

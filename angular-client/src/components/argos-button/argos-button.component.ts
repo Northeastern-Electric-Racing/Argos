@@ -7,7 +7,7 @@ export type { ButtonSize, ButtonVariant } from 'src/ui/recipes/button';
 /**
  * The app's labelled button: a native button styled by the button recipe (src/ui/recipes/button.ts).
  * Pick the look with `variant` and `size` (lg, the legacy 140x45 footprint, by default). Layout goes in a
- * class on <argos-button>; `additionalStyles` is the legacy inline-style hook, for layout only.
+ * class on <argos-button>.
  */
 @Component({
   selector: 'argos-button',
@@ -21,7 +21,6 @@ export class ButtonComponent {
   // Event is optional so callers can pass either `() => void` or `(event: Event) => void`;
   // popover/menu triggers need the event for anchoring.
   onClick = input.required<(event?: Event) => void>();
-  additionalStyles = input<string>();
   disabled = input<boolean>(false);
   size = input<ButtonSize>('lg');
   variant = input<ButtonVariant>('primary');
