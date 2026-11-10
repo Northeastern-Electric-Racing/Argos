@@ -37,11 +37,11 @@
         <p-toggleswitch [ngModel]="rule.is_subscribed" (ngModelChange)="onToggleSubscription(rule, $event)" />
       </td>
       <td class="action-icons">
-        <button pButton class="p-button-text p-button-sm" (click)="onEdit(rule)" aria-label="Edit rule">
-          <span pButtonIcon class="pi pi-pencil" aria-hidden="true"></span>
+        <button pButton iconOnly class="p-button-text p-button-sm" (click)="onEdit(rule)" aria-label="Edit rule">
+          <span class="pi pi-pencil" aria-hidden="true"></span>
         </button>
-        <button pButton class="p-button-text p-button-sm p-button-danger" (click)="onDelete(rule)" aria-label="Delete rule">
-          <span pButtonIcon class="pi pi-trash" aria-hidden="true"></span>
+        <button pButton iconOnly class="p-button-text p-button-sm p-button-danger" (click)="onDelete(rule)" aria-label="Delete rule">
+          <span class="pi pi-trash" aria-hidden="true"></span>
         </button>
       </td>
     </tr>

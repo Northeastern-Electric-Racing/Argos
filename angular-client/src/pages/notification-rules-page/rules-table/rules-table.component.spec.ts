@@ -37,8 +37,8 @@ describe('RulesTableComponent', () => {
 
     const edit = host.querySelector('button[aria-label="Edit rule"]');
     const del = host.querySelector('button[aria-label="Delete rule"]');
-    expect(edit?.querySelector('.p-button-icon.pi.pi-pencil')).toBeTruthy();
-    expect(del?.querySelector('.p-button-icon.pi.pi-trash')).toBeTruthy();
+    expect(edit?.querySelector('.pi.pi-pencil')).toBeTruthy();
+    expect(del?.querySelector('.pi.pi-trash')).toBeTruthy();
     expect(edit?.classList).toContain('p-button-icon-only');
     expect(del?.classList).toContain('p-button-icon-only');
   });
