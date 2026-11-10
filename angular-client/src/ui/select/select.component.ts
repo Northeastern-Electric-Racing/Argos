@@ -30,7 +30,7 @@ const triggerBase = tw(
 );
 const triggerSizeClasses = {
   md: tw(
-    'h-[var(--ui-select-height,2.25rem)] rounded-[var(--ui-select-radius,var(--radius-md))] pl-[var(--ui-select-padding-left,0.75rem)] text-[length:var(--ui-select-font-size,var(--text-ctrl))]'
+    'h-[var(--ui-select-height,2.25rem)] rounded-[var(--ui-select-radius,var(--radius-md))] pl-[var(--ui-select-padding-left,0.75rem)] text-[length:var(--ui-select-font-size,var(--text-base))]'
   ),
   sm: tw(
     'h-[var(--ui-select-height,1.75rem)] rounded-[var(--ui-select-radius,var(--radius-sm))] pl-[var(--ui-select-padding-left,0.5rem)] text-[length:var(--ui-select-font-size,var(--text-ctrl-sm))]'

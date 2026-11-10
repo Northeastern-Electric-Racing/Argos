@@ -12,6 +12,10 @@ describe('field recipe', () => {
     expect(inputClass('sm')).not.toBe(inputClass('md'));
   });
 
+  it("types at develop's 16px at both sizes (PrimeNG's inputs; under 16px iOS Safari zooms in on focus)", () => {
+    for (const s of INPUT_SIZES) expect(inputClass(s).split(/\s+/)).toContain('text-base');
+  });
+
   it('marks invalid fields from aria-invalid and from touched invalid forms, in the danger token', () => {
     expect(inputClass('md')).toContain('aria-invalid:border-danger');
     expect(inputClass('md')).toContain('[&.ng-invalid.ng-touched]:border-danger');
