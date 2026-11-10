@@ -1,7 +1,7 @@
 <div class="flex size-full flex-col">
-  <!-- Above the canvas, so it never covers the plot, an axis or a tooltip -->
+  <!-- Above the canvas, so it never covers the plot, an axis or a tooltip; wraps where it doesn't fit (phones) -->
   <div
-    class="flex flex-none justify-end gap-1.5 pb-1"
+    class="flex flex-none flex-wrap justify-end gap-1.5 pb-1"
     title="Drag to zoom, shift-drag to pan, ctrl-scroll to zoom, double-click to reset"
   >
     <argos-button label="Zoom In" size="sm" variant="tonal" [onClick]="zoomIn" [disabled]="!hasData()" />
