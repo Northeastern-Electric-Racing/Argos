@@ -3,7 +3,7 @@ import LvBatteryChipComponent from './lv-battery-chip.component';
 
 // Presentational component: drive it through its inputs and assert the rendered DOM,
 // so the tests cover external behavior rather than internal signals. Zoneless change
-// detection is registered globally in src/test-providers.ts.
+// detection is Angular's default for TestBed, so the spec needs no extra providers.
 describe('LvBatteryChipComponent', () => {
   let fixture: ComponentFixture<LvBatteryChipComponent>;
 
