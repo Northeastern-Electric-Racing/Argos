@@ -1,5 +1,5 @@
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { ChangeDetectorRef, provideZonelessChangeDetection } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
@@ -46,13 +46,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SegmentHeatmapComponent],
-      providers: [
-        provideZonelessChangeDetection(),
-        Storage,
-        CellService,
-        HeatMapService,
-        { provide: UiDialogService, useValue: { openPanel: () => null } }
-      ]
+      providers: [Storage, CellService, HeatMapService, { provide: UiDialogService, useValue: { openPanel: () => null } }]
     }).compileComponents();
 
     storage = TestBed.inject(Storage);

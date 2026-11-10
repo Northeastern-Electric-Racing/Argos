@@ -1,4 +1,3 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
@@ -13,7 +12,7 @@ describe('HeatMapService cell comparison panel', () => {
   beforeEach(() => {
     openPanel.mockClear();
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), { provide: UiDialogService, useValue: { openPanel } }]
+      providers: [{ provide: UiDialogService, useValue: { openPanel } }]
     });
   });
 
