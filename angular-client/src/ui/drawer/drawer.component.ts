@@ -1,13 +1,11 @@
 import { Dialog } from '@angular/cdk/dialog';
-import { GlobalPositionStrategy, createGlobalPositionStrategy, createOverlayRef } from '@angular/cdk/overlay';
-import { TemplatePortal } from '@angular/cdk/portal';
+import { createGlobalPositionStrategy } from '@angular/cdk/overlay';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   Injector,
   TemplateRef,
-  ViewContainerRef,
   effect,
   inject,
   input,
@@ -19,8 +17,6 @@ import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
 import { closeOnEscape } from '../dialog/close-on-escape';
 import { dialogBackdropClass } from '../dialog/dialog.recipe';
-import { injectFocusAfterRender } from '../focus/focus-after-render';
-import { injectFocusRestore } from '../focus/restore-focus';
 import { tw } from '../recipes/tw';
 
 const drawerClasses = {
@@ -36,9 +32,7 @@ const drawerClasses = {
  * Side drawer: a CDK dialog pinned to one edge with a global position strategy, so it gets the
  * CDK's focus trap, Escape handling and focus restore. Neither Angular Aria nor the CDK has a
  * ready-made drawer. Put a `[uiDrawerHeader]` element inside for the header; the rest is the body.
- * With `modal` false it is a plain CDK overlay instead, as UiDialogService.openPanel is: no scrim,
- * focus trap or aria-hidden on the page, since a CDK Dialog hides the page and traps focus even
- * without a backdrop. It closes with its host.
+ * It closes with its host.
  */
 @Component({
   selector: 'ui-drawer',
@@ -50,7 +44,6 @@ export class UiDrawerComponent {
   visible = model(false);
   position = input<'left' | 'right'>('right');
   width = input('20rem');
-  modal = input(true);
   /** Close when the backdrop is clicked. */
   dismissible = input(true);
   ariaLabel = input('Drawer');
@@ -58,9 +51,6 @@ export class UiDrawerComponent {
 
   private dialog = inject(Dialog);
   private injector = inject(Injector);
-  private viewContainerRef = inject(ViewContainerRef);
-  private focusAfterRender = injectFocusAfterRender();
-  private captureFocus = injectFocusRestore();
   private panel = viewChild.required<TemplateRef<unknown>>('panel');
   /** Closes the open drawer; set while it is open. */
   private closeOpen?: () => void;
@@ -86,18 +76,6 @@ export class UiDrawerComponent {
     const strategy = createGlobalPositionStrategy(this.injector).top('0');
     if (this.position() === 'right') strategy.right('0');
     else strategy.left('0');
-    if (this.modal()) this.openModal(strategy);
-    else this.openNonModal(strategy);
-  }
-
-  /** Called once the drawer has closed, however it closed. */
-  private onClosed(): void {
-    this.closeOpen = undefined;
-    // A destroyed host's model can't emit.
-    if (!this.destroyed) this.visible.set(false);
-  }
-
-  private openModal(strategy: GlobalPositionStrategy): void {
     const ref = this.dialog.open(this.panel(), {
       positionStrategy: strategy,
       width: this.width(),
@@ -119,25 +97,10 @@ export class UiDrawerComponent {
     ref.closed.subscribe(() => this.onClosed());
   }
 
-  private openNonModal(strategy: GlobalPositionStrategy): void {
-    const restoreFocus = this.captureFocus();
-    const overlayRef = createOverlayRef(this.injector, {
-      positionStrategy: strategy,
-      width: this.width(),
-      maxWidth: '100vw',
-      height: '100%',
-      hasBackdrop: false
-    });
-    overlayRef.attach(new TemplatePortal(this.panel(), this.viewContainerRef));
-    // As the modal drawer's autoFocus: 'dialog', focus the drawer itself so Tab starts inside it.
-    this.focusAfterRender(() => overlayRef.overlayElement.querySelector<HTMLElement>('[role="dialog"]'));
-    this.closeOpen = () => {
-      // The host's injector is gone once it is destroyed, so there is no render to restore focus after.
-      if (!this.destroyed) restoreFocus(overlayRef.overlayElement);
-      overlayRef.dispose();
-      this.onClosed();
-    };
-    // Completes when the overlay is disposed.
-    closeOnEscape(overlayRef.keydownEvents(), () => this.closeOpen?.());
+  /** Called once the drawer has closed, however it closed. */
+  private onClosed(): void {
+    this.closeOpen = undefined;
+    // A destroyed host's model can't emit.
+    if (!this.destroyed) this.visible.set(false);
   }
 }

@@ -18,7 +18,7 @@ const firstFocusable = (scope: Element): HTMLElement | undefined =>
 export type RestoreFocus = (surface: Element) => void;
 
 /**
- * Focus restore for non-modal surfaces (a panel, a non-modal drawer), which the CDK Dialog's own restore doesn't
+ * Focus restore for non-modal surfaces (a panel from UiDialogService.openPanel), which the CDK Dialog's own restore doesn't
  * cover. Returns a function to call as the surface opens: it remembers the focused element, and gives back a
  * {@link RestoreFocus} to call as it closes. That returns focus to the opener when focus was inside the surface
  * (Close button, Escape) or already lost, so it never drops to <body>; when the page closed the surface while focus
