@@ -70,4 +70,52 @@ describe('NotificationListComponent', () => {
     expect(service.markAllRead).toHaveBeenCalled();
     expect(navigate).toHaveBeenCalled();
   });
+
+  describe('focus after dismiss and Clear, as on the log page', () => {
+    const setupLive = async (variant: 'popover' | 'stream') => {
+      await TestBed.configureTestingModule({
+        imports: [NotificationListComponent],
+        providers: [provideRouter([])]
+      }).compileComponents();
+      const log = TestBed.inject(NotificationLogService);
+      for (const id of ['cold', 'warm', 'hot'])
+        log.addNotification({ id, topic: 'BMS/Pack/Voltage', values: [1, 2], time: new Date(0).toISOString() });
+      const fixture = TestBed.createComponent(NotificationListComponent);
+      fixture.componentRef.setInput('variant', variant);
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      const el = fixture.nativeElement as HTMLElement;
+      const dismiss = (id: string) => el.querySelector<HTMLButtonElement>(`[aria-label="Dismiss notification ${id}"]`);
+      const press = async (button: HTMLButtonElement) => {
+        button.focus();
+        button.click();
+        await fixture.whenStable();
+      };
+      return { el, dismiss, press };
+    };
+
+    for (const variant of ['popover', 'stream'] as const) {
+      it(`moves focus to the next entry after a dismiss, then the one above after the last (${variant})`, async () => {
+        const { dismiss, press } = await setupLive(variant);
+        await press(dismiss('warm')!);
+        expect(dismiss('warm')).toBeNull();
+        expect(document.activeElement).toBe(dismiss('cold'));
+        await press(dismiss('cold')!);
+        expect(document.activeElement).toBe(dismiss('hot'));
+      });
+
+      it(`moves focus to the empty state after the last dismiss and after Clear (${variant})`, async () => {
+        const first = await setupLive(variant);
+        for (const id of ['hot', 'warm', 'cold']) await first.press(first.dismiss(id)!);
+        expect(first.el.textContent).toContain('No notifications yet');
+        expect(first.el.contains(document.activeElement)).toBe(true);
+        TestBed.resetTestingModule();
+
+        const { el, press } = await setupLive(variant);
+        await press(el.querySelector<HTMLButtonElement>('[aria-label="Clear all notifications"]')!);
+        expect(el.textContent).toContain('No notifications yet');
+        expect(el.contains(document.activeElement)).toBe(true);
+      });
+    }
+  });
 });
