@@ -4,7 +4,7 @@ import { CdkPortalOutlet } from '@angular/cdk/portal';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
-import { dialogClasses } from './dialog.recipe';
+import { dialogClasses } from '../recipes/dialog';
 import { UiDialogConfig } from './dialog.service';
 
 /**

@@ -1,4 +1,4 @@
-import { cx, tw } from '../recipes/tw';
+import { cx, tw } from './tw';
 
 /**
  * Dialog and panel chrome, PrimeNG's look: the surface-2 grey, a 20px radius, a 20px semibold title, the

@@ -1,4 +1,4 @@
-import { dialogBackdropClass, dialogClasses } from '../dialog/dialog.recipe';
+import { dialogBackdropClass, dialogClasses } from './dialog';
 import { accordionClasses } from './accordion';
 import { BUTTON_SIZES, BUTTON_VARIANTS, buttonClass, ICON_BUTTON_SIZES, iconButtonClass } from './button';
 import { cardClass } from './card';

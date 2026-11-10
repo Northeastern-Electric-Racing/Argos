@@ -16,7 +16,7 @@ import {
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiIconButtonDirective } from '../button/button.directive';
 import { closeOnEscape } from '../dialog/close-on-escape';
-import { dialogBackdropClass } from '../dialog/dialog.recipe';
+import { dialogBackdropClass } from '../recipes/dialog';
 import { tw } from '../recipes/tw';
 
 const drawerClasses = {

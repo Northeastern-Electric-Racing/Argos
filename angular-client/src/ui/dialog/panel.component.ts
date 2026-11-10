@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, InjectionToken, Injector, Type, inj
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { Observable, Subject } from 'rxjs';
 import { UiIconButtonDirective } from '../button/button.directive';
-import { DialogDensity, dialogClasses } from './dialog.recipe';
+import { DialogDensity, dialogClasses } from '../recipes/dialog';
 
 /** Handle to a non-modal panel from UiDialogService.openPanel; the same shape callers use on a DialogRef. */
 export class UiPanelRef<R = unknown> {

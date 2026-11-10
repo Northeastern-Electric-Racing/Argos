@@ -5,7 +5,7 @@ import { createGlobalPositionStrategy, createOverlayRef } from '@angular/cdk/ove
 import { injectFocusRestore } from '../focus/restore-focus';
 import { closeOnEscape } from './close-on-escape';
 import { UiDialogContainerComponent } from './dialog-container.component';
-import { dialogBackdropClass, DialogDensity } from './dialog.recipe';
+import { dialogBackdropClass, DialogDensity } from '../recipes/dialog';
 import { UI_PANEL_CONFIG, UiPanelComponent, UiPanelConfig, UiPanelRef } from './panel.component';
 
 /** Options for {@link UiDialogService.open}, on top of the CDK's own DialogConfig. */
