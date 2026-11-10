@@ -1,9 +1,4 @@
-<div
-  [class]="plateClass()"
-  [style.font-size.px]="fontSize()"
-  [style.background-color]="customColor()"
-  [style.border-color]="customColor()"
->
+<div [class]="plateClass()" [style.font-size.px]="fontSize()">
   <span [class]="legendClass">{{ label() }}</span
   ><span class="sr-only text-fg">, {{ active() ? 'on' : 'off' }}</span>
 </div>

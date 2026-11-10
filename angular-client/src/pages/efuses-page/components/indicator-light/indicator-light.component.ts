@@ -8,13 +8,11 @@ const plateBase = tw(
 /** Unlit: a dark plate with a dim legend that still reads at AA (fg-dim, 5:1 on surface-1). */
 const unlit = tw('border-surface-3 bg-surface-1 text-fg-dim');
 /** Lit: a tinted plate, a glowing edge and the legend in the lamp's colour, each at AA on its tint. */
-const lit: Record<string, string> = {
+const lit = {
   red: tw('border-accent bg-accent/15 text-accent-fg'),
   green: tw('border-success bg-success/10 text-success-fg'),
   amber: tw('border-warn bg-warn/10 text-warn')
-};
-/** A lamp in a caller's own CSS colour: the plate and edge take it, the legend is fg. */
-const litCustom = tw('text-fg');
+} as const;
 
 /**
  * Backlit annunciator plate indicator — mimics vintage panel-mount
@@ -38,16 +36,13 @@ export default class IndicatorLightComponent {
   /** Whether the indicator is active (lit) */
   active = input<boolean>(false);
 
-  /** The glow color when active: 'red', 'green', 'amber', or a custom CSS color */
-  color = input<string>('red');
+  /** The glow colour when active */
+  color = input<keyof typeof lit>('red');
 
   /** Font size in px */
   fontSize = input<number>(14);
 
   protected readonly legendClass = legendClass;
 
-  protected plateClass = computed(() => cx(plateBase, this.active() ? lit[this.color()] ?? litCustom : unlit));
-
-  /** A custom (non-preset) colour, painted on the plate while lit. */
-  protected customColor = computed(() => (this.active() && !lit[this.color()] ? this.color() : null));
+  protected plateClass = computed(() => cx(plateBase, this.active() ? lit[this.color()] : unlit));
 }
