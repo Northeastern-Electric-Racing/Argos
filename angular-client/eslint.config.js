@@ -36,8 +36,9 @@ const restrictedClasses = [
 ];
 
 // A component is migrated once its stylesheet is gone (it is then all utilities), so unknown-class checks
-// cover exactly those templates plus the recipes and atoms, and every slice's components join as it deletes
-// their CSS. Templates that still have a stylesheet use their own class names, which Tailwind can't know.
+// cover exactly those templates, and every slice's components join as it deletes their CSS. Templates that
+// still have a stylesheet use their own class names, which Tailwind can't know. TypeScript is checked
+// everywhere: its class lists are tw() recipes (pages' and components' as well as src/ui's), all utilities.
 const migratedFiles = fs
   .readdirSync(path.join(__dirname, 'src'), { recursive: true })
   .filter((f) => f.endsWith('.component.html') && !fs.existsSync(path.join(__dirname, 'src', f.replace(/\.html$/, '.css'))))
@@ -144,8 +145,8 @@ module.exports = tseslint.config(
     }
   },
   {
-    // Unknown classes (typos, missing tokens, legacy ui-* classes) in migrated templates and the recipes.
-    files: [...migratedFiles, 'src/ui/recipes/*.ts', 'src/ui/button/*.ts', 'src/ui/field/*.ts', 'src/ui/icon/*.ts'],
+    // Unknown classes (typos, missing tokens, legacy ui-* classes) in migrated templates and every tw() list.
+    files: [...migratedFiles, 'src/**/*.ts'],
     ignores: ['src/**/*.spec.ts'],
     plugins: { 'better-tailwindcss': betterTailwind },
     settings: tailwindSettings,
