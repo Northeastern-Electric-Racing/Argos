@@ -8,7 +8,6 @@ import { cx, tw } from './tw';
  *   tonal        blue-tinted surface with a blue edge, the graph page's toggles and tools; solid blue
  *                while aria-pressed="true", so on and off read apart (lesson 8)
  *   neutral      raised grey, secondary actions such as upload or download
- *   outlined     accent edge only
  *   text         no fill or edge, such as Cancel
  *   success/warn filled status colours, the lap timer's start and pause
  *   danger       orange edge, never filled, for destructive actions
@@ -23,7 +22,6 @@ export const BUTTON_VARIANTS = [
   'secondary',
   'tonal',
   'neutral',
-  'outlined',
   'text',
   'success',
   'warn',
@@ -54,9 +52,6 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   ),
   neutral: tw(
     'border-border bg-surface-3 text-fg not-disabled:hover:border-border-strong not-disabled:hover:bg-surface-3-hover'
-  ),
-  outlined: tw(
-    'border-accent bg-transparent text-accent-fg not-disabled:hover:border-accent-hover not-disabled:hover:bg-accent/18'
   ),
   text: tw('border-transparent bg-transparent text-fg not-disabled:hover:bg-fg/8'),
   success: tw(

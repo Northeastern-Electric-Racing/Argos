@@ -24,7 +24,6 @@ describe('button recipe', () => {
     ['secondary', 'bg-secondary'],
     ['tonal', 'bg-secondary-soft'],
     ['neutral', 'bg-surface-3'],
-    ['outlined', 'border-accent'],
     ['text', 'bg-transparent'],
     ['success', 'bg-success'],
     ['warn', 'bg-warn'],
