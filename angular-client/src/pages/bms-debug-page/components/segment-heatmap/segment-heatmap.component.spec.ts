@@ -213,12 +213,12 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
       expect(tile(CELL).getAttribute('aria-label')).toBe('Cell 0, 3.60 V');
     });
 
-    it('name a tile with no reading as no data', () => {
+    it('name a tile with no reading by its dash and unit, as no data', () => {
       heatMap.setCurrentView(SEGMENT, HeatMapView.SVolts);
       render();
       const tiles = alphaTiles();
       const last = component.alphaDisplayCells[component.alphaDisplayCells.length - 1];
-      expect(tiles[tiles.length - 1].getAttribute('aria-label')).toBe(`Cell ${last.cellLabel}, no data`);
+      expect(tiles[tiles.length - 1].getAttribute('aria-label')).toBe(`Cell ${last.cellLabel}, - V (no data)`);
     });
 
     it('name a flag view tile by its TRUE or FALSE', () => {
@@ -232,7 +232,33 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
       heatMap.setCurrentView(SEGMENT, HeatMapView.Temperature);
       render();
       expect(component.alphaDisplayCells[0].cellLabel).toBe('0,1');
-      expect(alphaTiles()[0].getAttribute('aria-label')).toMatch(/^Cells 0 and 1, /);
+      expect(alphaTiles()[0].getAttribute('aria-label')).toMatch(/^Cells 0,1, /);
     });
+
+    /** WCAG 2.5.3 Label in Name: every piece of a tile's visible text is in its name, in the order shown. */
+    it.each([HeatMapView.Voltage, HeatMapView.SVolts, HeatMapView.Temperature, HeatMapView.Balancing, HeatMapView.OpenWire])(
+      'name every tile with its visible text in order (%s)',
+      (view) => {
+        heatMap.setCurrentView(SEGMENT, view);
+        push(storage, topics.alphaVolt(SEGMENT, CELL), '3.60');
+        push(storage, topics.alphaOw(SEGMENT, CELL), '1');
+        render();
+        const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('hex-tile button'));
+        expect(buttons.length).toBeGreaterThan(0);
+        for (const button of buttons) {
+          const name = button.getAttribute('aria-label') ?? '';
+          let from = 0;
+          // The text of each leaf (number, value, unit); Angular drops the whitespace between them.
+          const pieces = Array.from(button.querySelectorAll('span, sup'))
+            .filter((e) => !e.children.length)
+            .map((e) => e.textContent!.trim());
+          for (const piece of pieces) {
+            const at = name.indexOf(piece, from);
+            expect(at, `"${piece}" of ${JSON.stringify(pieces)} in "${name}"`).toBeGreaterThanOrEqual(0);
+            from = at + piece.length;
+          }
+        }
+      }
+    );
   });
 });

@@ -112,15 +112,16 @@ export class HexTileComponent {
     return value === undefined ? '-' : value.toFixed(2);
   });
 
-  /** The button's name: its cell or cells and its value, e.g. "Cell 3, 3.60 V" or "Cells 0 and 1, no data". */
+  /**
+   * The button's name: "Cell" or "Cells", then the tile's visible text in the order shown (WCAG 2.5.3, Label in
+   * Name), e.g. "Cell 3, 3.60 V", "Cells 0,1, 21.50 °C" or "Cell 3, - V (no data)".
+   */
   accessibleName = computed(() => {
-    const cells = (this.cellNumber() ?? '').split(',');
-    const label =
-      cells.length > 1 ? `Cells ${cells.slice(0, -1).join(', ')} and ${cells[cells.length - 1]}` : `Cell ${cells[0]}`;
+    const cells = this.cellNumber() ?? '';
     const value = this.displayValue();
-    if (value === '-') return `${label}, no data`;
     const unit = this.unitLabel();
-    return unit ? `${label}, ${value} ${unit}` : `${label}, ${value}`;
+    const shown = unit ? `${value} ${unit}` : value;
+    return `${cells.includes(',') ? 'Cells' : 'Cell'} ${cells}, ${shown}${value === '-' ? ' (no data)' : ''}`;
   });
 
   unitLabel = computed(() => {
