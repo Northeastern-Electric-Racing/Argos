@@ -70,7 +70,7 @@ export class PresetDialogComponent {
           summary: 'Preset Replaced',
           detail: `"${name}" now contains ${topicNames.length} topic(s)`
         });
-        this.newPresetName.set('');
+        this.afterSave();
       });
     } else {
       this.presetService.addPreset(name, topicNames);
@@ -79,8 +79,17 @@ export class PresetDialogComponent {
         summary: 'Preset Saved',
         detail: `"${name}" with ${topicNames.length} topic(s)`
       });
-      this.newPresetName.set('');
+      this.afterSave();
     }
+  }
+
+  /**
+   * Clears the name, which disables Save: focus on it would drop to <body>, so it moves to the name field, ready for
+   * the next preset (after the Replace confirm too, whose own restore lands on the disabled Save).
+   */
+  private afterSave(): void {
+    this.newPresetName.set('');
+    this.focusAfterRender(() => this.nameInput()?.nativeElement);
   }
 
   onUploadClick(): void {

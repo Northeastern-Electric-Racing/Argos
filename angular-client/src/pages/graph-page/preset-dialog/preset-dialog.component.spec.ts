@@ -65,6 +65,36 @@ describe('PresetDialogComponent', () => {
     expect(presets.findByName('Mine')?.topicNames).toEqual(['BMS/Pack/Current']);
   });
 
+  /** Selects a topic and types `value` into the name field. */
+  const typeName = async (value: string) => {
+    TestBed.inject(TopicSelectionService).setSelectedDataTypes([dt('BMS/Pack/Current')]);
+    await fixture.whenStable();
+    const name = el().querySelector<HTMLInputElement>('#preset-name')!;
+    name.value = value;
+    name.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    return name;
+  };
+
+  it('keeps focus in the dialog after Save, on the cleared name field, though Save is now disabled', async () => {
+    const name = await typeName('Mine');
+    buttons('Save')[0].focus();
+    buttons('Save')[0].click();
+    await fixture.whenStable();
+    expect(buttons('Save')[0].disabled).toBe(true);
+    expect(document.activeElement).toBe(name);
+  });
+
+  it('keeps focus in the dialog after Save replaces a preset of the same name', async () => {
+    const name = await typeName('Pack');
+    buttons('Save')[0].focus();
+    buttons('Save')[0].click();
+    confirms[0].accept!();
+    await fixture.whenStable();
+    expect(presets.findByName('Pack')?.topicNames).toEqual(['BMS/Pack/Current']);
+    expect(document.activeElement).toBe(name);
+  });
+
   it('describes the name field with the hint while nothing is selected', () => {
     const name = el().querySelector<HTMLInputElement>('#preset-name')!;
     const hint = document.getElementById(name.getAttribute('aria-describedby') ?? '');
