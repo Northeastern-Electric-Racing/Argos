@@ -16,7 +16,7 @@ import { UiDialogConfig } from './dialog.service';
 @Component({
   selector: 'ui-dialog-container',
   templateUrl: './dialog-container.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CdkPortalOutlet, CdkDrag, CdkDragHandle, UiIconComponent, UiIconButtonDirective],
   // Fill the overlay pane, which carries the requested width (what CdkDialogContainer's own styles did).
   host: { class: 'block size-full max-h-[inherit] min-h-[inherit] outline-none' }
