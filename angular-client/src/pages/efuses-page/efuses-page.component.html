@@ -4,8 +4,8 @@
 </status-bar>
 
 <div class="p-5">
-  <h2 class="m-0 text-2xl font-black">Normal eFuses</h2>
-  <p class="m-0 pb-2.5">
+  <h2 [class]="zone.heading">Normal eFuses</h2>
+  <p [class]="zone.note">
     Note: You shouldn't have to manually override the states of these eFuses during normal operation, but you can for
     debugging.
   </p>
@@ -96,8 +96,10 @@
     />
   </grid-layout>
 
-  <h2 class="m-0 pt-5 text-2xl font-black">Caution Zone</h2>
-  <p class="m-0 pb-2.5">Note: The states of these eFuses shouldn't be messed with unless there's a really good reason to.</p>
+  <h2 [class]="zone.heading">Caution Zone</h2>
+  <p [class]="zone.note">
+    Note: The states of these eFuses shouldn't be messed with unless there's a really good reason to.
+  </p>
 
   <grid-layout minWidth="520px" gap="15px">
     <!-- Shutdown eFuse -->
@@ -139,8 +141,8 @@
     />
   </grid-layout>
 
-  <h2 class="m-0 pt-5 text-2xl font-black">RTDS Zone</h2>
-  <p class="m-0 pb-2.5">
+  <h2 [class]="zone.heading">RTDS Zone</h2>
+  <p [class]="zone.note">
     Note: You shouldn't need to force an RTDS state during normal operation, since VCU does this automatically.
   </p>
   <rtds-debug-card />
