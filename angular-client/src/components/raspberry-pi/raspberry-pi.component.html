@@ -1,7 +1,7 @@
 <info-background svgIcon="memory" title="Rasberry Pi">
   @if (isMobile) {
     <raspberry-pi-mobile
-      style="width: 100%"
+      class="w-full"
       [cpuTemp]="cpuTemp"
       [cpuUsage]="cpuUsage"
       [ramUsage]="ramUsage"
@@ -10,7 +10,8 @@
     />
   } @else {
     <raspberry-pi-desktop
-      style="width: 100%"
+      class="w-full"
+      [cpuTemp]="cpuTemp"
       [cpuUsage]="cpuUsage"
       [ramUsage]="ramUsage"
       [wifiRSSI]="wifiRSSI"

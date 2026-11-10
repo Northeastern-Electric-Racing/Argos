@@ -3,14 +3,14 @@
   <lv-battery-chip [voltage]="voltage()" [faulted]="faulted()" />
 </status-bar>
 
-<div style="padding: 20px">
-  <div class="zone-title" style="padding-top: 0px">Normal eFuses</div>
-  <div class="zone-subtext">
+<div class="p-5">
+  <h2 [class]="zone.heading">Normal eFuses</h2>
+  <p [class]="zone.note">
     Note: You shouldn't have to manually override the states of these eFuses during normal operation, but you can for
     debugging.
-  </div>
+  </p>
 
-  <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
+  <grid-layout minWidth="520px" gap="15px">
     <!-- Dashboard eFuse -->
     <efuse-card
       efuseName="Dashboard"
@@ -96,12 +96,12 @@
     />
   </grid-layout>
 
-  <div class="zone-title">Caution Zone</div>
-  <div class="zone-subtext">
+  <h2 [class]="zone.heading">Caution Zone</h2>
+  <p [class]="zone.note">
     Note: The states of these eFuses shouldn't be messed with unless there's a really good reason to.
-  </div>
+  </p>
 
-  <grid-layout minWidth="520px" gap="15px" style="margin-top: 20px">
+  <grid-layout minWidth="520px" gap="15px">
     <!-- Shutdown eFuse -->
     <efuse-card
       efuseName="Shutdown"
@@ -141,11 +141,9 @@
     />
   </grid-layout>
 
-  <div class="zone-title">RTDS Zone</div>
-  <div class="zone-subtext">
+  <h2 [class]="zone.heading">RTDS Zone</h2>
+  <p [class]="zone.note">
     Note: You shouldn't need to force an RTDS state during normal operation, since VCU does this automatically.
-  </div>
-  <div class="rtds-section">
-    <rtds-debug-card />
-  </div>
+  </p>
+  <rtds-debug-card />
 </div>

@@ -1,42 +1,61 @@
-<div class="container">
+<div class="flex h-full flex-col p-2">
+  <!-- 814's fluid 4vw title, letter- and word-spaced, pulled up into the page padding -->
   <typography
-    class="title-style"
+    class="-mt-5 grid items-center"
     variant="x-large-title"
     content="Faults"
-    additionalStyles="font-size: 4vw; letter-spacing: 0.2rem; word-spacing: 0.2rem; text-align: left; margin-top: 0;"
+    textClass="text-[4vw] text-left tracking-[0.2rem] [word-spacing:0.2rem]"
   />
-  <p-accordion [value]="0" [multiple]="true">
-    @for (node of nodeArray; track node) {
-      <p-accordion-panel [value]="node.node">
-        <p-accordion-header>{{ node.node }}</p-accordion-header>
-        <p-accordion-content>
-          <p-table
-            selectionMode="single"
-            [(selection)]="selectedFault"
-            (onRowSelect)="onRowSelect()"
-            metaKeySelection
-            [value]="node.data"
-            stripedRows
-          >
-            <ng-template #header>
-              <tr>
-                <th>Name</th>
-                <th>Occurred At</th>
-                <th>Last Seen</th>
-                <th>Expired?</th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-node>
-              <tr [pSelectableRow]="node">
-                <td>{{ node.name }}</td>
-                <td>{{ node.occurredAt | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.lastSeen | date: 'HH:mm:ss' }}</td>
-                <td>{{ node.expired ? 'Yes' : 'No' }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </p-accordion-content>
-      </p-accordion-panel>
+  <div ngAccordionGroup [class]="accordion.group" [multiExpandable]="true">
+    @for (node of nodeArray(); track node.node) {
+      <h3 [class]="accordion.heading">
+        <span
+          ngAccordionTrigger
+          [panel]="panel"
+          [expanded]="expanded().has(node.node)"
+          (expandedChange)="setExpanded(node.node, $event)"
+          #trigger="ngAccordionTrigger"
+          [class]="accordion.trigger"
+        >
+          {{ node.node }}
+          <ui-icon name="expand_more" [class]="accordion.icon" />
+        </span>
+      </h3>
+      <div ngAccordionPanel #panel="ngAccordionPanel">
+        <ng-template ngAccordionContent>
+          <div uiAccordionBody>
+            <table cdk-table [class]="table" [dataSource]="node.data" [trackBy]="trackFault">
+              <ng-container cdkColumnDef="name">
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Name</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td">
+                  <button type="button" [class]="cellButton" (click)="onRowSelect(fault); $event.stopPropagation()">
+                    {{ fault.name }}
+                  </button>
+                </td>
+              </ng-container>
+              <ng-container cdkColumnDef="occurredAt">
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Occurred At</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td" class="whitespace-nowrap">
+                  {{ fault.occurredAt | date: 'HH:mm:ss' }}
+                </td>
+              </ng-container>
+              <ng-container cdkColumnDef="lastSeen">
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Last Seen</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td" class="whitespace-nowrap">
+                  {{ fault.lastSeen | date: 'HH:mm:ss' }}
+                </td>
+              </ng-container>
+              <ng-container cdkColumnDef="expired">
+                <th cdk-header-cell *cdkHeaderCellDef [class]="th">Expired?</th>
+                <td cdk-cell *cdkCellDef="let fault" [class]="td">{{ fault.expired ? 'Yes' : 'No' }}</td>
+              </ng-container>
+              <tr cdk-header-row *cdkHeaderRowDef="columns; sticky: true"></tr>
+              <!-- The whole row is a mouse target; keyboard and screen-reader users get the Name button. -->
+              <tr cdk-row *cdkRowDef="let fault; columns: columns" [class]="row" (click)="onRowSelect(fault)"></tr>
+            </table>
+          </div>
+        </ng-template>
+      </div>
     }
-  </p-accordion>
+  </div>
 </div>

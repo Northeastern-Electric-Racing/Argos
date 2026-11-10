@@ -1,45 +1,22 @@
-<div class="graph">
-  <div class="chart-toolbar" title="Drag to zoom, shift-drag to pan, ctrl-scroll to zoom, double-click to reset">
-    <argos-button
-      label="Zoom In"
-      size="sm"
-      [onClick]="zoomIn"
-      [disabled]="!hasData()"
-      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-    />
-    <argos-button
-      label="Zoom Out"
-      size="sm"
-      [onClick]="zoomOut"
-      [disabled]="!zoomed()"
-      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-    />
-    <argos-button
-      label="Reset Zoom"
-      size="sm"
-      [onClick]="resetZoom"
-      [disabled]="!zoomed()"
-      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-    />
-    <argos-button
-      label="Save PNG"
-      size="sm"
-      [onClick]="savePng"
-      [disabled]="!hasData()"
-      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-    />
-    <argos-button
-      label="Save CSV"
-      size="sm"
-      [onClick]="saveCsv"
-      [disabled]="!hasData()"
-      additionalStyles="background-color: #0c2026; border: 1.4px solid #8fcadd;"
-    />
+<div class="flex size-full flex-col">
+  <!-- Above the canvas, so it never covers the plot, an axis or a tooltip; wraps where it doesn't fit (phones) -->
+  <div
+    class="flex flex-none flex-wrap justify-end gap-1.5 pb-1"
+    title="Drag to zoom, shift-drag to pan, ctrl-scroll to zoom, double-click to reset"
+  >
+    <argos-button label="Zoom In" size="sm" variant="tonal" [onClick]="zoomIn" [disabled]="!hasData()" />
+    <argos-button label="Zoom Out" size="sm" variant="tonal" [onClick]="zoomOut" [disabled]="!zoomed()" />
+    <argos-button label="Reset Zoom" size="sm" variant="tonal" [onClick]="resetZoom" [disabled]="!zoomed()" />
+    <argos-button label="Save PNG" size="sm" variant="tonal" [onClick]="savePng" [disabled]="!hasData()" />
+    <argos-button label="Save CSV" size="sm" variant="tonal" [onClick]="saveCsv" [disabled]="!hasData()" />
   </div>
-  <div class="chart-container">
+  <!-- Chart.js sizes the canvas to this box (responsive, no fixed aspect ratio) -->
+  <div class="relative min-h-0 w-full flex-auto">
+    <!-- A crosshair over the zoomable plot; the legend sets a pointer over its items -->
     <canvas
       baseChart
       type="line"
+      class="cursor-crosshair"
       [data]="chartData"
       [options]="chartOptions"
       [plugins]="chartPlugins"
@@ -48,7 +25,9 @@
       (dblclick)="resetZoom()"
     ></canvas>
     @if (!hasData()) {
-      <p class="empty-state">{{ valuesSubject().length ? 'Waiting for data' : 'Select a topic to graph' }}</p>
+      <p class="pointer-events-none absolute inset-0 m-0 flex items-center justify-center text-md text-fg-muted">
+        {{ valuesSubject().length ? 'Waiting for data' : 'Select a topic to graph' }}
+      </p>
     }
   </div>
 </div>

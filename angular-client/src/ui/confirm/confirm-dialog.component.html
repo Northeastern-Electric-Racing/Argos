@@ -1,0 +1,10 @@
+<p class="mt-0 mb-5 leading-snug" [id]="data.messageId">{{ data.message }}</p>
+<div class="flex justify-end gap-2">
+  <!-- The least destructive action takes initial focus (WAI-ARIA alertdialog pattern). -->
+  <button type="button" uiButton variant="text" cdkFocusInitial (click)="ref.close(false)">
+    {{ data.rejectLabel }}
+  </button>
+  <button type="button" uiButton [variant]="data.danger ? 'danger' : 'primary'" (click)="ref.close(true)">
+    {{ data.acceptLabel }}
+  </button>
+</div>

@@ -1,0 +1,27 @@
+<div #stack [class]="classes.stack" popover="manual">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <!-- Announced through LiveAnnouncer in ToastService, so this is visual only. -->
+    <div [class]="classes.toast" [attr.data-severity]="toast.severity">
+      <div [class]="severityClasses[toast.severity]">
+        <ui-icon [class]="iconTone[toast.severity]" [name]="icons[toast.severity]" />
+        <div class="min-w-0 flex-1 text-ctrl-sm wrap-anywhere">
+          @if (toast.summary) {
+            <div class="mb-[0.15rem] font-semibold">{{ toast.summary }}</div>
+          }
+          @if (toast.detail) {
+            <div>{{ toast.detail }}</div>
+          }
+        </div>
+        <button
+          type="button"
+          uiIconButton
+          size="sm"
+          aria-label="Dismiss notification"
+          (click)="toastService.remove(toast.id)"
+        >
+          <ui-icon name="close" />
+        </button>
+      </div>
+    </div>
+  }
+</div>

@@ -1,11 +1,11 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { NodeWithVisibilityToggle } from 'src/utils/types.utils';
 
 import { AsyncPipe } from '@angular/common';
 import { NodeFilterPipe } from 'src/utils/pipes/node-filter.pipe';
 import SidebarCardComponent from '../sidebar-card/sidebar-card.component';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
+import { tw } from 'src/ui/recipes/tw';
 
 /**
  * Node display component to display a card in the sidebar.
@@ -13,60 +13,17 @@ import { TopicSelectionService } from 'src/services/topic-selection.service';
 @Component({
   selector: 'node-display',
   templateUrl: './node-display.component.html',
-  styleUrls: ['./node-display.component.css'],
-  animations: [
-    trigger('toggleExpand', [
-      state(
-        'desktop-true',
-        style({
-          height: '*',
-          opacity: 1,
-          transform: 'translateY(0)'
-        })
-      ),
-      state(
-        'desktop-false',
-        style({
-          height: 0,
-          opacity: 0,
-          transform: 'translateY(-25%)'
-        }),
-        { params: { dropDown: true } }
-      ),
-      state(
-        'mobile-true',
-        style({
-          opacity: 1,
-          width: '*'
-        })
-      ),
-      state(
-        'mobile-false',
-        style({
-          opacity: 0,
-          width: 0
-        })
-      ),
-      transition('desktop-false => desktop-true', [
-        style({
-          height: 0,
-          opacity: 0,
-          transform: 'translateY(-25%)'
-        }),
-        animate('400ms')
-      ]),
-      transition('desktop-true => desktop-false', [animate('400ms')]),
-      transition('mobile-true => mobile-false', [animate('400ms')]),
-      transition('mobile-false => mobile-true', [animate('400ms')])
-    ])
-  ],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [AsyncPipe, NodeFilterPipe, SidebarCardComponent]
 })
 export default class NodeDisplayComponent {
   node = input.required<NodeWithVisibilityToggle>();
   isDesktop = input<boolean>(true);
   searchFilter = input<string>('');
+
+  protected readonly row = tw('flex w-fit flex-row justify-start gap-4');
+  protected readonly centred = tw('flex justify-center');
+  protected readonly indented = tw('ml-7.5 block w-[95%]');
 
   private topicSelection = inject(TopicSelectionService);
 

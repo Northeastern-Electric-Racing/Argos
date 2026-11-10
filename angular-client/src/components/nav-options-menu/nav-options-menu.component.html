@@ -1,10 +1,35 @@
-<div class="menu-container">
-  <div class="menu-grid">
-    @for (menuItem of menuItems; track menuItem) {
-      <div class="menu-item" (click)="menuItem.onClick()" [attr.data-id]="menuItem.id">
-        <mat-icon class="menu-icon" [svgIcon]="menuItem.icon" />
-        <span class="menu-label">{{ menuItem.label }}</span>
-      </div>
-    }
+<button
+  type="button"
+  [class]="classes.trigger"
+  ngMenuTrigger
+  #origin
+  #trigger="ngMenuTrigger"
+  [menu]="menu()"
+  aria-label="More pages"
+>
+  <span class="inline-flex size-12"><ui-icon [svg]="'apps'" size="inline" /></span>
+</button>
+<ng-template
+  [cdkConnectedOverlayOpen]="trigger.expanded()"
+  [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }"
+  [cdkConnectedOverlayPositions]="positions"
+>
+  <div ngMenu [class]="classes.panel" #appsMenu="ngMenu" (itemSelected)="select($event)">
+    <ng-template ngMenuContent>
+      @for (menuItem of items(); track menuItem.id) {
+        <div
+          ngMenuItem
+          [class]="classes.item"
+          [value]="menuItem.id"
+          [searchTerm]="menuItem.label"
+          [attr.data-id]="menuItem.id"
+        >
+          <span class="mb-2 inline-flex size-12">
+            <ui-icon [svg]="menuItem.icon" size="inline" />
+          </span>
+          <span [class]="classes.label">{{ menuItem.label }}</span>
+        </div>
+      }
+    </ng-template>
   </div>
-</div>
+</ng-template>

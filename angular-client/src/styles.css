@@ -1,194 +1,48 @@
-/* You can add global styles to this file, and also import other style files */
-@import 'styles/roboto.scss';
-@import 'styles/material-icons.scss';
+/*
+ * The only global stylesheet: cascade layer order and imports. Tokens live in styles/theme.css,
+ * document and compat rules in styles/base.css, our utilities and variants in styles/utilities.css.
+ *
+ * Tailwind's output lives in cascade layers, and any unlayered CSS beats every layer whatever its
+ * specificity (Angular component styles included). So a component is either all utilities or all component CSS,
+ * never both, and third-party CSS goes in a layer below utilities: Mapbox GL's sheet in vendor (styles/mapbox.css,
+ * a separate bundle the map page links; this statement orders its layer however late it loads), the CDK's prebuilt
+ * CSS in cdk. Icons are ours (ui-icon, all utilities). The only unlayered third-party CSS left is the structure
+ * the CDK injects at runtime: the overlay (below), plus one-rule copies of .cdk-dialog-container,
+ * .cdk-visually-hidden and .cdk-table-fixed-layout.
+ */
+@layer theme, base, vendor, cdk, components, utilities;
 
-/* Seven-segment display font */
-@font-face {
-  font-family: 'Segment7';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(assets/fonts/WooveboxSegment7Standard.otf) format('opentype');
-}
+@import 'tailwindcss/theme.css' layer(theme);
+@import './styles/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import './styles/base.css' layer(base);
 
-/* Highway Gothic — US DOT public domain font for annunciator plates */
-@font-face {
-  font-family: 'Highway Gothic';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(assets/fonts/HWYGOTH.TTF) format('truetype');
-}
+/*
+ * The CDK ships no theme, only structure. Its overlay structure is not imported: the CDK injects it itself,
+ * unlayered, when the first overlay opens, so a layered copy never won (and utilities on .cdk-overlay-pane,
+ * backdrop or container lose for position, display, max size, pointer-events and z-index). a11y gives
+ * .cdk-visually-hidden.
+ */
+@import '@angular/cdk/a11y-prebuilt.css' layer(cdk);
 
-/* ---- Design Tokens ---- */
-:root {
-  /* Colors */
-  --color-text-primary: #efefef;
-  --color-text-secondary: #797a7a;
-  --color-text-subtitle: #cacaca;
-  --color-background-info: #2c2c2c;
-  --color-background-page: #101010;
-  --color-divider: #414141;
-  --color-battery-shell: #efefed;
-  --color-battery-low: #f50905;
-  --color-battery-med: #ffea00;
-  --color-battery-high: #1ae824;
-  --color-widget-glass: #ffffff;
-
-  /* Typography */
-  --font-family: 'Roboto', sans-serif;
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-md: 16px;
-  --font-size-lg: 20px;
-  --font-size-xl: 34px;
-  --font-size-xxl: 48px;
-
-  /* Spacing */
-  --border-radius-panel: 8px;
-}
-
-html,
-body {
-  height: 100%;
-  font-family: var(--font-family);
-}
-body {
-  margin: 0;
-  background-color: var(--color-background-page);
-}
-
-/* WebKit (Chrome, Safari) scrollbar styles */
-::-webkit-scrollbar {
-  display: none;
-}
-
-/* Firefox scrollbar styles */
-* {
-  scrollbar-width: none;
-}
-.mat-mdc-dialog-container {
-  --mat-dialog-container-color: transparent !important;
-}
-
-.connection-dot {
-  background-color: transparent;
-  border: 3px solid;
-  border-color: rgb(243, 243, 243);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.p-dialog-title {
-  --p-dialog-title-font-weight: bold;
-}
-
-.p-dialog {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 20px !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-}
-.p-dialog-header {
-  background-color: #262626 !important;
-  color: white !important;
-  padding: 1rem !important;
-  font-size: 1.2rem;
-  padding: 1rem;
-  border-radius: 20px 20px 0px 0px !important;
-}
-.p-dialog-content {
-  background-color: #262626 !important;
-  color: white !important;
-  border-radius: 0px 0px 20px 20px !important;
-}
-
-/* Main select button */
-.p-select {
-  color: white !important;
-  background-color: #5a5a5a !important;
-
-  border: none !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Dropdown panel */
-.p-select-panel {
-  background-color: #5a5a5a !important;
-  color: white !important;
-  border-radius: 0 0 5px 5px !important;
-  gap: 0px !important;
-}
-
-/* Dropdown items */
-.p-select-option {
-  color: white !important;
-  background-color: transparent !important;
-  padding: 8px 16px !important;
-  border-radius: 5px !important;
-}
-
-/* Hovered item */
-.p-select-option:hover {
-  background-color: #45454594 !important;
-  border-radius: 0px !important;
-}
-
-/* Selected item */
-.p-select-option.p-highlight {
-  background-color: rgba(0, 122, 255, 0.15) !important;
-  color: #007aff !important;
-}
-
-/* Dropdown list container */
-.p-select-list {
-  background-color: #5a5a5a !important;
-  border-radius: 0 0 5px 5px !important;
-  margin: 0px;
-}
-
-/* Navbar options dropdown */
-.nav-options-dialog.p-dialog {
-  position: fixed !important;
-  top: 70px !important;
-  right: 10px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-}
-
-.nav-options-dialog .p-dialog-content {
-  padding: 0 !important;
-}
-
-.p-dialog-mask:has(.nav-options-dialog) {
-  background: transparent !important;
-}
-
-/* Cell comparison dialog — compact, no backdrop */
-.cell-compare-dialog.p-dialog {
-  width: auto !important;
-  min-width: 0 !important;
-  border-radius: 12px !important;
-}
-
-.cell-compare-dialog .p-dialog-header {
-  padding: 8px 14px !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-.cell-compare-dialog .p-dialog-content {
-  padding: 0 14px 10px !important;
-  border-radius: 0 0 12px 12px !important;
-}
-
-.p-dialog-mask:has(.cell-compare-dialog) {
-  background: transparent !important;
-  pointer-events: none !important;
-}
-
-.cell-compare-dialog {
-  pointer-events: auto !important;
-}
+/*
+ * Utilities, generated from the class names in the .ts and .html files under src. Specs, assets and CSS are not
+ * scanned, so words in tests and property values in stylesheets don't emit CSS.
+ */
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@source './**/*.{ts,html}';
+@source not './**/*.spec.ts';
+@source not './test-setup.ts';
+/*
+ * Words the scanner finds in comments and identifiers (the topic `filter`, the dialog `container`, a focus `ring`)
+ * that would emit utilities no template uses, ~2 kB with their @property rules. Lint bans them as classes
+ * anyway (eslint no-restricted-classes): Tailwind's container clashes with our naming, rings are outlines here.
+ */
+@source not inline('container ring filter');
+/*
+ * Two more prose words: "outline" and "transition" in comments emitted the bare `outline` and
+ * `transition` utilities (0.5 kB), which no template uses. Write `focus-ring` or `outline-solid outline-1`, and
+ * `transition-colors`, `transition-transform` or `transition-[…]`; to use a bare one, take it off this list.
+ */
+@source not inline('outline transition');
+@import './styles/utilities.css';

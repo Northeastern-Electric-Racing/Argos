@@ -11,6 +11,7 @@ import type {
   TooltipPositionerFunction
 } from 'chart.js';
 import { getRelativePosition } from 'chart.js/helpers';
+import Theme from 'src/services/theme.service';
 import { GraphData } from 'src/utils/types.utils';
 
 /**
@@ -34,7 +35,7 @@ export const SERIES_COLORS = [
 const TICK_COLOR = '#fff'; // white
 const GRID_COLOR = 'rgba(255, 255, 255, 0.1)'; // white at 10%, faint on the dark page
 /** The app's light-blue outline, as on its toolbar buttons; marks each local midnight on the x-axis. */
-const THEME_OUTLINE = '#8fcadd'; // light blue
+const THEME_OUTLINE = Theme.secondaryBorder; // light blue
 
 type ScaleConfig = NonNullable<ChartOptions<'line'>['scales']>[string];
 
@@ -359,7 +360,7 @@ export const cursorPositioner: TooltipPositionerFunction<ChartType> = function (
 };
 
 /** The hover dot drawn on each line at the cursor's time. */
-const HOVER_DOT = { radius: 4, borderColor: '#101010', borderWidth: 2 };
+const HOVER_DOT = { radius: 4, borderColor: Theme.page, borderWidth: 2 };
 /** uPlot's cursor line color. */
 const CURSOR_COLOR = '#607D8B';
 /** The pointer's position over each chart's plot area; null once it leaves. */
@@ -517,7 +518,7 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
       legend: {
         position: 'bottom',
         labels: { color: '#fff', font: { size: 15 }, usePointStyle: true, boxWidth: 12, boxHeight: 12 },
-        // The canvas is a crosshair for zooming (graph.component.css); a legend item toggles its series
+        // The canvas is a crosshair for zooming (graph.component.html); a legend item toggles its series
         onHover: (event) => setCanvasCursor(event, 'pointer'),
         onLeave: (event) => setCanvasCursor(event, '')
       },
@@ -570,7 +571,7 @@ export function buildBaseOptions(callbacks: { onZoom: () => void }): ChartOption
       zoom: {
         zoom: {
           // The plugin's default drag threshold is 0 px, so a click with a little jitter zoomed to a sliver
-          drag: { enabled: true, threshold: 10, backgroundColor: 'rgba(143, 202, 221, 0.25)' },
+          drag: { enabled: true, threshold: 10, backgroundColor: `${THEME_OUTLINE}40` },
           wheel: { enabled: true, modifierKey: 'ctrl' },
           pinch: { enabled: true },
           mode: 'x',

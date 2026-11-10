@@ -1,4 +1,4 @@
-import { Injectable, NgZone, inject, signal, computed } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { RuleNotification } from 'src/utils/types.utils';
 
 export interface NotificationLogEntry {
@@ -21,8 +21,6 @@ const RECENT_LIMIT = 10;
   providedIn: 'root'
 })
 export class NotificationLogService {
-  private ngZone = inject(NgZone);
-
   private entries = signal<NotificationLogEntry[]>([]);
   private nextId = 0;
 
@@ -33,16 +31,11 @@ export class NotificationLogService {
   /** Newest RECENT_LIMIT entries — used by the nav bell popover dropdown. */
   readonly recentNotifications = computed(() => this.entries().slice(0, RECENT_LIMIT));
 
-  /**
-   * Prepend a new notification. Called from the socket service's rule_notify handler.
-   * Wrapped in ngZone.run because socket.io callbacks fire outside Angular's zone.
-   */
+  /** Prepend a new notification. Called from the socket service's rule_notify handler. */
   addNotification(notification: RuleNotification): void {
-    this.ngZone.run(() => {
-      this.entries.update((current) => {
-        const next = [{ id: this.nextId++, notification, read: false }, ...current];
-        return next.slice(0, MAX_ENTRIES);
-      });
+    this.entries.update((current) => {
+      const next = [{ id: this.nextId++, notification, read: false }, ...current];
+      return next.slice(0, MAX_ENTRIES);
     });
   }
 
