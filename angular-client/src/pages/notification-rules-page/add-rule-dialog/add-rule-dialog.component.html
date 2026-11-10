@@ -33,6 +33,7 @@
         (valueChange)="onQueryChange($event)"
         [(expanded)]="popupExpanded"
         (blur)="onTopicBlur($event)"
+        (keydown)="onTopicKeydown($event)"
       />
     </div>
     <div aria-live="polite" class="cdk-visually-hidden">

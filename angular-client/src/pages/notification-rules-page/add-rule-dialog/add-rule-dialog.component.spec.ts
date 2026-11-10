@@ -153,6 +153,42 @@ describe('AddRuleDialogComponent', () => {
       expect(document.activeElement).toBe(input('rule-topic'));
     });
 
+    /** Presses a key on the topic input, then moves focus on as the browser does for Tab. */
+    const press = async (key: string, init: KeyboardEventInit = {}) => {
+      input('rule-topic').dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }));
+      await fixture.whenStable();
+    };
+
+    it('picks the highlighted suggestion on Tab, then lets focus move on (as PrimeNG did)', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('pack');
+      await press('ArrowDown');
+      expect(listboxEl().querySelector('[data-active="true"]')?.textContent?.trim()).toBe('BMS/Pack/Current');
+      await press('Tab');
+      await blurTo(input('rule-topic'), input('rule-expr'));
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('BMS/Pack/Current');
+      expect(await combobox.getValue()).toBe('BMS/Pack/Current');
+      expect(await combobox.isOpen()).toBe(false);
+    });
+
+    it('picks the highlighted suggestion on Shift+Tab too', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('speed');
+      await press('Tab', { shiftKey: true });
+      await blurTo(input('rule-topic'), input('rule-id'));
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('VCU/Speed');
+    });
+
+    it('accepts a topic typed in any case, as the topic itself (forceSelection)', async () => {
+      const combobox = await setupWithTopics();
+      await combobox.setValue('vcu/SPEED');
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('VCU/Speed');
+      await combobox.blur();
+      await fixture.whenStable();
+      expect(await combobox.getValue()).toBe('VCU/Speed');
+      expect(fixture.componentInstance.form.controls.topic.value).toBe('VCU/Speed');
+    });
+
     it('still clears free text when focus leaves the suggestions for somewhere else', async () => {
       const combobox = await setupWithTopics();
       await combobox.setValue('pack');

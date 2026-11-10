@@ -8,6 +8,7 @@ import {
   OnInit,
   signal,
   viewChild,
+  viewChildren,
   DestroyRef,
   ElementRef
 } from '@angular/core';
@@ -56,9 +57,10 @@ export class AddRuleDialogComponent implements OnInit {
 
   private allTopics = signal<string[]>([]);
   private listbox = viewChild(Listbox);
+  private options = viewChildren<Option<string>>(Option);
   private topicInput = viewChild.required('combobox', { read: ElementRef<HTMLInputElement> });
   private topicPopup = viewChild('topicPopup', { read: ElementRef<HTMLElement> });
-  /** Text typed in the topic combobox; the form's topic is only set to an exact topic (forceSelection). */
+  /** Text typed in the topic combobox; the form's topic is only set to a topic it names, in any case (forceSelection). */
   query = signal('');
   popupExpanded = signal(false);
   selectedTopic = signal<string[]>([]);
@@ -96,10 +98,33 @@ export class AddRuleDialogComponent implements OnInit {
       });
   }
 
+  /** The topic `text` names, ignoring case (PrimeNG's forceSelection matched a suggestion's label this way). */
+  private topicNamed(text: string): string | undefined {
+    const lower = text.toLowerCase();
+    return this.allTopics().find((topic) => topic.toLowerCase() === lower);
+  }
+
   onQueryChange(value: string): void {
     this.query.set(value);
-    this.form.controls.topic.setValue(this.allTopics().includes(value) ? value : '');
+    this.form.controls.topic.setValue(this.topicNamed(value) ?? '');
     if (value) this.popupExpanded.set(true);
+  }
+
+  /**
+   * Tab or Shift+Tab with the suggestions open picks the highlighted one, as PrimeNG's autocomplete did, and lets
+   * focus move on as usual (no preventDefault).
+   */
+  onTopicKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Tab' || !this.popupExpanded()) return;
+    const active = this.options().find((option) => option.active());
+    if (!active) return;
+    this.pick(active.value());
+    this.popupExpanded.set(false);
+  }
+
+  private pick(topic: string): void {
+    this.query.set(topic);
+    this.form.controls.topic.setValue(topic);
   }
 
   /**
@@ -108,16 +133,14 @@ export class AddRuleDialogComponent implements OnInit {
    */
   onCommit(): void {
     const [topic] = this.selectedTopic();
-    if (topic) {
-      this.query.set(topic);
-      this.form.controls.topic.setValue(topic);
-    }
+    if (topic) this.pick(topic);
     this.topicInput().nativeElement.focus();
     this.popupExpanded.set(false);
   }
 
   /**
-   * Like PrimeNG's forceSelection: free text that isn't a topic is cleared when focus leaves the field. Focus
+   * Like PrimeNG's forceSelection: text naming a topic in another case becomes that topic, and free text that isn't
+   * a topic is cleared, when focus leaves the field. Focus
    * moving between the input and its suggestions (a pointer down on an option) is not leaving it: clearing then
    * would re-filter the list under the click. The popup's own focusout runs this too, so leaving from there clears.
    */
@@ -127,10 +150,7 @@ export class AddRuleDialogComponent implements OnInit {
       return;
     }
     this.form.controls.topic.markAsTouched();
-    if (!this.allTopics().includes(this.query())) {
-      this.query.set('');
-      this.form.controls.topic.setValue('');
-    }
+    this.pick(this.topicNamed(this.query()) ?? '');
   }
 
   /** Whether a field shows an error, so its input gets aria-invalid and points at the message. */
