@@ -1,19 +1,29 @@
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
-import { SegmentHeatmapComponent } from './segment-heatmap.component';
+import { HEAT_FILLS, SegmentHeatmapComponent } from './segment-heatmap.component';
 
 const SEGMENT = 0;
 const CELL = 0;
-const GREY = 'grey';
+const GREY = 'var(--color-heat-no-data)';
 
-/** WCAG contrast of black tile text on a #rrggbb fill. */
-const contrastWithBlack = (hex: string): number => {
+/** The #rrggbb value of a `var(--color-…)` fill, read from the theme (jsdom loads no CSS). */
+const theme = readFileSync(resolve(process.cwd(), 'src/styles/theme.css'), 'utf8');
+const tokenValue = (fill: string): string => {
+  const name = /^var\((--color-[a-z0-9-]+)\)$/.exec(fill)?.[1];
+  return (name && theme.match(new RegExp(`${name}:\\s*(#[0-9a-f]{6})\\b`, 'i'))?.[1]) || '';
+};
+
+/** WCAG contrast of black tile text on a `var(--color-…)` fill. */
+const contrastWithBlack = (fill: string): number => {
+  const hex = tokenValue(fill);
   const channel = (i: number) => {
     const v = parseInt(hex.slice(i, i + 2), 16) / 255;
     return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
@@ -66,6 +76,13 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     expect(component).toBeTruthy();
   });
 
+  it('fills the flag views from theme tokens, each under black text at AA', () => {
+    for (const fill of Object.values(HEAT_FILLS)) {
+      expect(tokenValue(fill)).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(contrastWithBlack(fill)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('renders the C Volts value and color from the Volts topic', () => {
     heatMap.setCurrentView(SEGMENT, HeatMapView.Voltage);
     push(storage, topics.alphaVolt(SEGMENT, CELL), '3.60');
@@ -97,7 +114,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     push(storage, topics.alphaOw(SEGMENT, CELL), '1');
 
     expect(alphaCell(CELL)?.boolValue).toBe(true);
-    expect(component.getColor(alphaCell(CELL)!)).toBe('#de3232');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('var(--color-heat-failed)');
   });
 
   it('fills a failed CvS cell in a red its black text reads on at AA (#dc2626 measured 4.35:1)', () => {
@@ -121,7 +138,7 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     push(storage, topics.alphaOw(SEGMENT, CELL), '0');
 
     expect(alphaCell(CELL)?.boolValue).toBe(false);
-    expect(component.getColor(alphaCell(CELL)!)).toBe('#16a34a');
+    expect(component.getColor(alphaCell(CELL)!)).toBe('var(--color-heat-passed)');
   });
 
   it('shows the no-data grey for an Open Wire cell with no value', () => {

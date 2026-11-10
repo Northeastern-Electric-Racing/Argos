@@ -77,6 +77,16 @@
   --color-warn-hover: color-mix(in srgb, var(--color-warn) 82%, #fff);
   --color-info: #60a5fa;
   --color-on-status: #000; /* dark text on bright fills: success, warn, heat-map tiles */
+  /*
+   * The BMS heat map's flag-view fills (Balancing, CvS Failure, Open Wire), under black tile text (on-status).
+   * The blue and red are a step lighter than 814's #4169e1 and #dc2626 (4.33 and 4.35:1) so the text reads at AA.
+   * Black on each: balancing 4.60, failed 4.61, idle 19.56, passed 6.37, no data 5.32:1.
+   */
+  --color-heat-balancing: #486ee2;
+  --color-heat-idle: #ffff00; /* not balancing */
+  --color-heat-failed: #de3232;
+  --color-heat-passed: #16a34a;
+  --color-heat-no-data: #808080;
   --color-battery-low: #f50905;
   --color-battery-med: #ffea00;
   --color-battery-high: #1ae824;

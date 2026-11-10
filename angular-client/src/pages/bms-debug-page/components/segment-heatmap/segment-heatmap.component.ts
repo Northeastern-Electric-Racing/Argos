@@ -24,14 +24,14 @@ const sizeClasses: Record<HeatmapSize, string> = {
   )
 };
 
-/** Tile fills for the flag views. The blue and red are a step lighter than #4169e1 and #dc2626 (4.33 and 4.35:1)
- *  so the tiles' black text reads at AA (4.6:1). */
+/** Tile fills for the flag views and cells with no data: the theme's heat-map tokens (styles/theme.css), AA under
+ *  the tiles' black text. */
 export const HEAT_FILLS = {
-  balancing: '#486ee2',
-  notBalancing: 'yellow',
-  failed: '#de3232',
-  passed: '#16a34a',
-  noData: 'grey'
+  balancing: 'var(--color-heat-balancing)',
+  notBalancing: 'var(--color-heat-idle)',
+  failed: 'var(--color-heat-failed)',
+  passed: 'var(--color-heat-passed)',
+  noData: 'var(--color-heat-no-data)'
 } as const;
 
 export interface DisplayCell {
