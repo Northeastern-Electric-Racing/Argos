@@ -37,7 +37,7 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
 /**
  * The base every button shares (layout, border style, font, focus ring, disabled). It sets no footprint (gap,
  * height, padding, radius, font size and weight): the size does, so a consumer with a size no step fits (BMS's fluid See
- * more) composes `cx(buttonBaseClass, buttonVariantClasses[v], <its own size>)` instead of copying the base.
+ * more) composes `cx(buttonBaseClass, <a variant>, <its own size>)` instead of copying the base.
  */
 export const buttonBaseClass = tw(
   'inline-flex cursor-pointer items-center justify-center border border-solid text-center font-sans leading-control whitespace-nowrap transition-colors duration-120 select-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50'

@@ -29,6 +29,12 @@ describe('SegmentRowComponent', () => {
     expect(button.querySelector('ui-icon')?.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 
+  it('fills "See more" in develop\'s light blue with black text (info, 8.26:1), not the secondary button', () => {
+    const classes = seeMore().className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['bg-info', 'text-on-status']));
+    expect(classes).not.toContain('bg-secondary');
+  });
+
   it('opens the segment page from "See more"', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     seeMore().click();

@@ -12,16 +12,17 @@ import {
 import { appRoutes } from 'src/app/app-routes';
 import { SegmentHeatmapComponent } from '../segment-heatmap/segment-heatmap.component';
 import { SegmentOverviewComponent } from '../segment-overview/segment-overview.component';
-import { buttonBaseClass, buttonVariantClasses } from 'src/ui/recipes/button';
+import { buttonBaseClass } from 'src/ui/recipes/button';
 import { cx, tw } from 'src/ui/recipes/tw';
 
 /**
- * "See more": the secondary button at the row's fluid size (no recipe size is fluid). Its height never drops
+ * "See more": develop's light blue pill with black text, on the nearest token (info #60a5fa for #2aaeee; 8.26:1),
+ * at the row's fluid size (no recipe size is fluid). Hover darkens it, as develop's did. Its height never drops
  * under 24px (WCAG 2.5.8; 814's clamp started at 18px), like the select's.
  */
 const seeMoreClass = cx(
   buttonBaseClass,
-  buttonVariantClasses.secondary,
+  tw('border-info bg-info text-on-status not-disabled:hover:border-info/85 not-disabled:hover:bg-info/85'),
   tw(
     'h-[clamp(24px,2.3vw,44px)] w-full gap-[0.3em] rounded-[clamp(8px,1.25vw,24px)] px-[clamp(6px,1.4vw,28px)] text-[length:clamp(7px,0.94vw,18px)] font-semibold'
   )
