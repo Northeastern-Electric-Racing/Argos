@@ -17,11 +17,16 @@ export class UploadConfirmDialogComponent {
 
   protected readonly f = fieldClasses;
   protected readonly table = tableClass('sm');
-  protected readonly th = headerCellClass();
-  protected readonly td = cellClass();
+  protected readonly th = headerCellClass('phone');
+  protected readonly td = cellClass('phone');
   protected readonly row = rowClass({ striped: true });
 
   rules: RulePayload[] = this.dialogData.rules;
+  /** Each rule with its topic split after every slash, where a narrow column may break it (never mid-word). */
+  protected readonly rows = this.rules.map((rule) => ({
+    ...rule,
+    topicSegments: rule.topic.split(/(?<=\/)/)
+  }));
 
   onConfirm(): void {
     this.ref.close(true);

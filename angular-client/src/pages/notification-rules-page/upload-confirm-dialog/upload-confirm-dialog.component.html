@@ -1,5 +1,12 @@
 <p class="mt-0 mb-3 text-fg-label">The following {{ rules.length }} rule(s) will be added:</p>
-<div class="mb-2 max-h-75 overflow-y-auto rounded-md border border-solid border-border">
+<!-- Many rules outgrow the box, so it takes focus to scroll from the keyboard (the dialog still opens on Cancel). On a
+     phone the cells tighten and a topic may break after a slash, so the columns fit the box's width. -->
+<div
+  role="region"
+  aria-label="Rules to add"
+  tabindex="0"
+  class="mb-2 max-h-75 overflow-y-auto rounded-md border border-solid border-border focus-visible:focus-ring"
+>
   <table [class]="table">
     <thead>
       <tr>
@@ -10,10 +17,15 @@
       </tr>
     </thead>
     <tbody>
-      @for (rule of rules; track rule.id) {
+      @for (rule of rows; track rule.id) {
         <tr [class]="row">
           <td [class]="td">{{ rule.id }}</td>
-          <td [class]="td">{{ rule.topic }}</td>
+          <td [class]="td">
+            @for (segment of rule.topicSegments; track $index) {
+              <span>{{ segment }}</span
+              ><wbr />
+            }
+          </td>
           <td [class]="td">{{ rule.expr }}</td>
           <td [class]="td">{{ rule.debounce_time }}</td>
         </tr>
@@ -22,6 +34,6 @@
   </table>
 </div>
 <div [class]="f.actions">
-  <button type="button" uiButton variant="text" (click)="onCancel()">Cancel</button>
+  <button type="button" uiButton variant="text" cdkFocusInitial (click)="onCancel()">Cancel</button>
   <button type="button" uiButton (click)="onConfirm()">Confirm Upload</button>
 </div>

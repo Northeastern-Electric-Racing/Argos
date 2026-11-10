@@ -43,6 +43,23 @@ describe('UploadConfirmDialogComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('The following 2 rule(s) will be added');
   });
 
+  it('puts the preview in a labelled region the keyboard can scroll, as its rows can outgrow it', async () => {
+    const { fixture } = await setup();
+    const region: HTMLElement = fixture.nativeElement.querySelector('[role="region"]');
+    expect(region.contains(fixture.nativeElement.querySelector('table'))).toBe(true);
+    expect(region.tabIndex).toBe(0);
+    expect(region.getAttribute('aria-label')).toBe('Rules to add');
+  });
+
+  it('lets a topic break only after a slash, so a phone-width column never splits a word', async () => {
+    const { fixture } = await setup();
+    const [, topic] = fixture.nativeElement
+      .querySelectorAll('tbody tr')[1]
+      .querySelectorAll('td') as NodeListOf<HTMLElement>;
+    expect(topic.textContent).toBe('BMS/Status/Temp_Average');
+    expect(topic.querySelectorAll('wbr').length).toBe(3);
+  });
+
   it('closes with true to upload, false to cancel', async () => {
     const { close, button } = await setup();
     button('Confirm Upload').click();
