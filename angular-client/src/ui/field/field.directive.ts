@@ -1,21 +1,20 @@
-import { computed, Directive, ElementRef, inject, input } from '@angular/core';
+import { computed, Directive, input } from '@angular/core';
 import { fieldClasses, InputSize, inputClass } from '../recipes/field';
 
 /**
- * A text, number, date or password input, or a textarea, in the design system's look:
+ * A text, number, date or password input in the design system's look:
  * `<input uiInput>` (md) or `<input uiInput="sm">`. Wire aria-required, aria-invalid and aria-describedby on
  * the element as usual; aria-invalid="true" turns the edge to the danger colour. Width is the consumer's class.
  */
 @Directive({
-  selector: 'input[uiInput], textarea[uiInput]',
+  selector: 'input[uiInput]',
   host: { '[class]': 'classes()', '[attr.data-size]': 'size()' }
 })
 export class UiInputDirective {
   /** The size; the bare attribute (`uiInput`) means md. */
   uiInput = input<InputSize | ''>('');
-  private element = inject(ElementRef).nativeElement as HTMLElement;
   protected size = computed<InputSize>(() => this.uiInput() || 'md');
-  protected classes = computed(() => inputClass(this.size(), this.element.tagName === 'TEXTAREA' ? 'textarea' : 'input'));
+  protected classes = computed(() => inputClass(this.size()));
 }
 
 /** A field label: `<label uiLabel for="id">`. */

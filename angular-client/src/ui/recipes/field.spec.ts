@@ -42,20 +42,13 @@ describe('field recipe', () => {
   it('sets one padding, height and radius class per element, from the size', () => {
     const one = (c: string[], re: RegExp) => c.filter((x) => re.test(x));
     for (const s of INPUT_SIZES) {
-      for (const el of ['input', 'textarea'] as const) {
-        const c = inputClass(s, el).split(/\s+/);
-        expect(one(c, /^p[xlr]?-/), `${s} ${el} padding-x`).toHaveLength(1);
-        expect(one(c, /^h-/), `${s} ${el} height`).toHaveLength(1);
-        expect(one(c, /^rounded/), `${s} ${el} radius`).toHaveLength(1);
-      }
+      const c = inputClass(s).split(/\s+/);
+      expect(one(c, /^p[xlr]?-/), `${s} padding-x`).toHaveLength(1);
+      expect(one(c, /^h-/), `${s} height`).toHaveLength(1);
+      expect(one(c, /^rounded/), `${s} radius`).toHaveLength(1);
     }
     expect(inputClass('sm').split(/\s+/)).toContain('px-2');
     expect(inputClass('md').split(/\s+/)).toContain('px-3');
-  });
-
-  it('lets a textarea grow instead of holding the control height', () => {
-    expect(inputClass('md', 'textarea')).toContain('h-auto');
-    expect(inputClass('md', 'input')).not.toContain('h-auto');
   });
 
   it('has literal classes for the label, field, form, hint, error, required mark and action row', () => {

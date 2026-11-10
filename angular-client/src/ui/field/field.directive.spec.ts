@@ -13,7 +13,6 @@ const classesOf = (e: HTMLElement): string[] => sorted(e.className);
     <label id="label" uiLabel for="name">Name</label>
     <input id="name" uiInput class="w-full" aria-describedby="name-error" [attr.aria-invalid]="invalid()" />
     <input id="small" [uiInput]="size()" />
-    <textarea id="notes" uiInput></textarea>
     <span id="name-error" uiFieldError>Name is required</span>
   `
 })
@@ -46,11 +45,6 @@ describe('uiInput, uiLabel and uiFieldError', () => {
     fixture.componentInstance.size.set('md');
     fixture.detectChanges();
     expect(classesOf(el('small'))).toEqual(sorted(inputClass('md')));
-  });
-
-  it('lets a textarea grow with its rows', async () => {
-    const { el } = await setup();
-    expect(classesOf(el('notes'))).toEqual(sorted(inputClass('md', 'textarea')));
   });
 
   it('styles the label and the error line', async () => {

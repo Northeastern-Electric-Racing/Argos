@@ -19,14 +19,14 @@ export type InputSize = (typeof INPUT_SIZES)[number];
 const inputBase = tw(
   'border border-solid border-control-border bg-surface-1 font-sans text-fg transition-[border-color] duration-120 placeholder:text-fg-muted hover:border-control-border-hover focus:border-focus focus:outline-1 focus:outline-focus disabled:cursor-not-allowed disabled:opacity-55 aria-invalid:border-danger aria-invalid:focus:outline-danger [&.ng-invalid.ng-touched]:border-danger [&.ng-invalid.ng-touched]:focus:outline-danger'
 );
-const inputSizeClasses: Record<InputSize, Record<'input' | 'textarea', string>> = {
-  sm: { input: tw('h-7 rounded-sm px-2 text-base'), textarea: tw('h-auto rounded-sm px-2 py-2 text-base') },
-  md: { input: tw('h-9 rounded-md px-3 text-base'), textarea: tw('h-auto rounded-md px-3 py-2 text-base') }
+const inputSizeClasses: Record<InputSize, string> = {
+  sm: tw('h-7 rounded-sm px-2 text-base'),
+  md: tw('h-9 rounded-md px-3 text-base')
 };
 
-/** The classes for an input (or a textarea, which grows with its rows) of this size. */
-export function inputClass(size: InputSize = 'md', element: 'input' | 'textarea' = 'input'): string {
-  return cx(inputBase, inputSizeClasses[size][element]);
+/** The classes for an input of this size. */
+export function inputClass(size: InputSize = 'md'): string {
+  return cx(inputBase, inputSizeClasses[size]);
 }
 
 export const fieldClasses = {

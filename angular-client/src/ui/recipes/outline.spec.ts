@@ -46,7 +46,7 @@ const everyRecipeList = (): [string, string][] => {
   add('accordion', accordionClasses);
   add('cell button', cellButtonClass);
   for (const fill of [false, true]) for (const sliced of [false, true]) add('card', cardClass({ fill, sliced }));
-  for (const s of INPUT_SIZES) for (const e of ['input', 'textarea'] as const) add(`input ${s} ${e}`, inputClass(s, e));
+  for (const s of INPUT_SIZES) add(`input ${s}`, inputClass(s));
   add('field', fieldClasses);
   add('icon', iconClasses);
   for (const w of LISTBOX_WIDTHS) for (const s of LISTBOX_SIZES) add(`listbox popup ${w} ${s}`, listboxPopupClass(w, s));
