@@ -9,7 +9,7 @@ import {
   signal,
   viewChild
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgModel } from '@angular/forms';
 import { Tab, TabContent, TabList, TabPanel, Tabs } from '@angular/aria/tabs';
 import { UiPopoverComponent } from 'src/ui/popover/popover.component';
 import { UiDateTimeInputComponent } from 'src/ui/datetime/datetime-input.component';
@@ -147,11 +147,12 @@ export class GeneralButtonsComponent {
 
   /**
    * Keeps Hours or Minutes at 0 or more, in the field too, as develop's p-inputnumber [min]="0" did; native min
-   * only marks the field invalid. An empty field (null) passes through.
+   * only marks the field invalid. The value is set on the form control, so a field already at 0 isn't left invalid.
+   * An empty field (null) passes through.
    */
-  protected setLastX(target: WritableSignal<number | null>, typed: number | null, field: HTMLInputElement) {
+  protected setLastX(target: WritableSignal<number | null>, typed: number | null, field: NgModel) {
     const value = typed === null ? typed : Math.max(0, typed);
-    if (value !== typed) field.value = String(value);
+    if (value !== typed) field.control.setValue(value, { emitViewToModelChange: false });
     target.set(value);
   }
 

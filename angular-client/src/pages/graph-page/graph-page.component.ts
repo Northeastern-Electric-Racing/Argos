@@ -33,7 +33,7 @@ import LoadingPageComponent from 'src/components/loading-page/loading-page.compo
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import { numberInputClass } from 'src/ui/recipes/number-input';
 import { UiInputDirective } from 'src/ui/field/field.directive';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgModel } from '@angular/forms';
 
 @Component({
   selector: 'graph-page',
@@ -195,11 +195,12 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
   /**
    * Keeps the range at 1 or more, in the field too, as develop's p-inputnumber [min]="1" did; native min only
-   * marks the field invalid. An empty field (null) passes through.
+   * marks the field invalid. The value is set on the form control, so a field already at 1 isn't left invalid.
+   * An empty field (null) passes through.
    */
-  protected onRangeValueChange(typed: number | null, field: HTMLInputElement) {
+  protected onRangeValueChange(typed: number | null, field: NgModel) {
     const value = typed === null ? typed : Math.max(1, typed);
-    if (value !== typed) field.value = String(value);
+    if (value !== typed) field.control.setValue(value, { emitViewToModelChange: false });
     this.rangeValue = value as number;
     this.onGraphConfigChange();
   }

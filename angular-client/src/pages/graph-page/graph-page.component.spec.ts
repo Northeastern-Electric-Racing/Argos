@@ -157,6 +157,15 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
       expect(fixture.componentInstance.graphConfig.timeRangeMs).toBe(1000);
     });
 
+    it('leaves the range valid when clamped again at its limit', async () => {
+      const field = await rangeField();
+      await type(field, '0');
+      await type(field, '-5');
+      expect(field.value).toBe('1');
+      expect(fixture.componentInstance.timeRangeSeconds).toBe(1);
+      expect(field.classList).toContain('ng-valid');
+    });
+
     it('clamps the point range too', async () => {
       const field = await rangeField();
       fixture.componentInstance.toggleRangeMode();

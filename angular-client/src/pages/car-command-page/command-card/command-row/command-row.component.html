@@ -1,7 +1,7 @@
 <label class="self-center text-sm text-fg" [for]="inputId()">{{ row().label }}</label>
 <span class="self-center text-sm text-fg-muted tabular-nums">{{ currentValue() ?? '--' }}</span>
 <input
-  #field
+  #field="ngModel"
   uiInput
   type="number"
   [class]="numberInput"

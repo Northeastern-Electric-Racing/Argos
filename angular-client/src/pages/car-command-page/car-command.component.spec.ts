@@ -155,6 +155,19 @@ describe('CarCommandComponent', () => {
       ]);
     });
 
+    it('stays valid when clamped again at its limit', async () => {
+      await authenticate('secret');
+      const value = el().querySelector<HTMLInputElement>('command-row input')!;
+      for (const typed of ['2500000', '3000000']) {
+        value.value = typed;
+        value.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        await fixture.whenStable();
+      }
+      expect(value.value).toBe('1000000');
+      expect(value.classList).toContain('ng-valid');
+    });
+
     it('is clamped to -1,000,000 before sending', async () => {
       const value = await send('-7000000');
       expect(value.value).toBe('-1000000');

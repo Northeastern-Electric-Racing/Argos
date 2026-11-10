@@ -252,6 +252,16 @@ describe('GeneralButtonsComponent — custom range validation', () => {
           }
         );
 
+        it(`leaves ${name} valid when clamped again at its limit`, async () => {
+          await openPopover();
+          const field = document.getElementById(id) as HTMLInputElement;
+          await type(field, '-1');
+          await type(field, '-5');
+          expect(field.value).toBe('0');
+          expect(value()).toBe(0);
+          expect(field.classList).toContain('ng-valid');
+        });
+
         it(`keeps ${name} of 0 or more as typed, and an empty field empty`, async () => {
           await openPopover();
           const field = document.getElementById(id) as HTMLInputElement;

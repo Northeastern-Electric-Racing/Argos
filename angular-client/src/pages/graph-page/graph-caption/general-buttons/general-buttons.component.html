@@ -49,7 +49,7 @@
           <div [class]="field.field">
             <label uiLabel for="custom-hours">Hours</label>
             <input
-              #hoursField
+              #hoursField="ngModel"
               id="custom-hours"
               type="number"
               uiInput="sm"
@@ -64,7 +64,7 @@
           <div [class]="field.field">
             <label uiLabel for="custom-minutes">Minutes</label>
             <input
-              #minutesField
+              #minutesField="ngModel"
               id="custom-minutes"
               type="number"
               uiInput="sm"

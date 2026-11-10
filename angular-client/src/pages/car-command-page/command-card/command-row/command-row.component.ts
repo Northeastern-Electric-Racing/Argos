@@ -10,7 +10,7 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgModel } from '@angular/forms';
 import Storage from 'src/services/storage.service';
 import { CarCommandRow } from 'src/utils/types.utils';
 import { UiInputDirective } from 'src/ui/field/field.directive';
@@ -46,11 +46,12 @@ export default class CommandRowComponent implements OnInit {
 
   /**
    * Keeps the value within ±1,000,000 (#541), in the field too, as develop's p-inputnumber did; native min/max
-   * only mark the field invalid. An empty field (null) passes through.
+   * only mark the field invalid. The value is set on the form control, so a field already at a limit isn't left
+   * invalid. An empty field (null) passes through.
    */
-  protected onValueChange(typed: number | null, field: HTMLInputElement) {
+  protected onValueChange(typed: number | null, field: NgModel) {
     const value = typed === null ? typed : Math.min(this.max, Math.max(this.min, typed));
-    if (value !== typed) field.value = String(value);
+    if (value !== typed) field.control.setValue(value, { emitViewToModelChange: false });
     this.value.set(value as number);
   }
 }
