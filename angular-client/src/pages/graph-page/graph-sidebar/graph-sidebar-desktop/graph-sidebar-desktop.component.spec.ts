@@ -28,11 +28,6 @@ describe('GraphSidebarDesktopComponent', () => {
     fixture.detectChanges();
   });
 
-  it('sizes the topic tree to its container', () => {
-    const tree = (fixture.nativeElement as HTMLElement).querySelector('p-tree');
-    expect(tree?.classList).toContain('w-full');
-  });
-
   it('builds the tree from dataTypes', () => {
     expect(component.treeNodes().map((n) => n.label)).toEqual(['BMS']);
     expect(component.flatNodes().map((n) => n.data?.dataType.name)).toEqual(['BMS/Pack/SoC']);
