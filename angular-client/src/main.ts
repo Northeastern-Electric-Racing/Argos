@@ -2,7 +2,7 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
+import { bootstrapApplication } from '@angular/platform-browser';
 import Lara from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { provideRouter } from '@angular/router';
@@ -13,7 +13,7 @@ import AppContextComponent from './app/context/app-context.component';
 bootstrapApplication(AppContextComponent, {
   providers: [
     provideRouter(routes),
-    importProvidersFrom(BrowserModule, DynamicDialogModule),
+    importProvidersFrom(DynamicDialogModule),
     DialogService,
     MessageService,
     ChipFaultPipe,
