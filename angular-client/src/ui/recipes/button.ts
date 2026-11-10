@@ -17,7 +17,7 @@ import { cx, tw } from './tw';
  * 140x45 footprint (44px tall on phones), which some pages are laid out around; lg-fluid is lg on wide
  * screens and as wide as its label on phones (12px padding), so a row of them wraps less (the rules page);
  * icon is a 32px square for an icon-only button. Labels are develop's argos-button type: 16px bold, 13px on phones
-at the legacy size (lg, lg-fluid), 12px bold when small.
+ * at the legacy size (lg, lg-fluid), 12px bold when small.
  */
 export const BUTTON_VARIANTS = [
   'primary',
