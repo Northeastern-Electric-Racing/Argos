@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ClientRule } from 'src/api/rules.api';
 import { ConfirmOptions, ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
+import { spinnerClass } from 'src/ui/recipes/spinner';
 import { RulesTableComponent } from './rules-table.component';
 
 const rule = (id: string, is_subscribed: boolean): ClientRule => ({
@@ -252,6 +253,7 @@ describe('RulesTableComponent', () => {
     const reload = fixture.componentInstance.loadRules();
     await settle();
     expect(spinner()).not.toBeNull();
+    expect([...spinner()!.classList].sort()).toEqual(spinnerClass('sm').split(/\s+/).sort());
     expect(fixture.nativeElement.querySelector('[aria-label="Delete rule hot"]')).not.toBeNull();
 
     respond({ ok: true, json: () => Promise.resolve({ requesting_client_id: 'c', client_rules: [rule('hot', false)] }) });

@@ -19,6 +19,7 @@ import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiSwitchComponent } from 'src/ui/switch/switch.component';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { take } from 'rxjs';
+import { spinnerClass } from 'src/ui/recipes/spinner';
 import {
   ClientRule,
   deleteRule,
@@ -60,6 +61,7 @@ export class RulesTableComponent implements OnInit {
   protected readonly row = rowClass({ striped: true });
   protected readonly checkbox = checkboxClass;
   protected readonly headerCheckbox = checkboxOnAccentClass;
+  protected readonly spinner = spinnerClass('sm');
 
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private focusAfterRender = injectFocusAfterRender();

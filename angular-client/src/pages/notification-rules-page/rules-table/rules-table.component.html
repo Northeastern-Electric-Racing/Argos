@@ -107,11 +107,7 @@
   </div>
   @if (loading()) {
     <div [class]="t.mask">
-      <div
-        class="size-8 animate-spin rounded-full border-4 border-solid border-fg/15 border-t-accent"
-        role="status"
-        aria-label="Loading rules"
-      ></div>
+      <div [class]="spinner" role="status" aria-label="Loading rules"></div>
     </div>
   }
 </div>

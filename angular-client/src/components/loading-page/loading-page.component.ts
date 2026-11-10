@@ -11,5 +11,5 @@ import { spinnerClass } from 'src/ui/recipes/spinner';
   imports: []
 })
 export default class LoadingPageComponent {
-  protected readonly spinnerClass = spinnerClass;
+  protected readonly spinnerClass = spinnerClass('lg');
 }

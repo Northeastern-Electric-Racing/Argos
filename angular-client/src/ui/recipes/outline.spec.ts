@@ -10,7 +10,7 @@ import { listboxClasses, listboxPopupClass, LISTBOX_SIZES, LISTBOX_WIDTHS } from
 import { appsMenuClasses, menuItemClass, menuPanelClass } from './menu';
 import { NUMBER_INPUT_WIDTHS, numberInputClass } from './number-input';
 import { segmentedClasses } from './segmented';
-import { spinnerClass } from './spinner';
+import { SPINNER_SIZES, spinnerClass } from './spinner';
 import {
   cellClass,
   checkboxClass,
@@ -58,7 +58,7 @@ const everyRecipeList = (): [string, string][] => {
     ...GRID_COL_SPANS.flatMap((c) => GRID_ROW_SPANS.map((r) => gridTileClass(c, r)))
   ]);
   add('segmented', segmentedClasses);
-  add('spinner', spinnerClass);
+  for (const s of SPINNER_SIZES) add(`spinner ${s}`, spinnerClass(s));
   for (const s of TABLE_SIZES) add(`table ${s}`, tableClass(s));
   for (const d of TABLE_DENSITIES)
     add(`table cells ${d}`, [...TABLE_HEADER_TONES.map((tone) => headerCellClass(d, { tone })), cellClass(d)]);
