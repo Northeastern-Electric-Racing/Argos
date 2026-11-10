@@ -128,6 +128,49 @@ describe('TopicTreeComponent', () => {
     }
   );
 
+  describe("blocks range selection (develop's tree had none)", () => {
+    // Keys go to the focused item, as from a real keyboard; the tree's roving focus moves it.
+    const press = (init: KeyboardEventInit) =>
+      document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+    /** Opens BMS, walks down `anchorAt` rows and anchors a range there with Shift, then walks `then` more rows without it. */
+    const anchorAndMove = async (anchorAt: number, then: number) => {
+      const [bms] = await (await tree()).getItems({ text: /BMS/ });
+      await bms.click();
+      await bms.focus();
+      for (let i = 0; i < anchorAt; i++) press({ key: 'ArrowDown' });
+      press({ key: 'Shift', shiftKey: true });
+      for (let i = 0; i < then; i++) press({ key: 'ArrowDown' });
+      await fixture.whenStable();
+    };
+
+    // Each case would otherwise select Voltage along with Temp_Average: rows 0-2 are BMS, Voltage, Temp_Average.
+    it.each([
+      { anchorAt: 0, then: 1, init: { key: 'ArrowDown', shiftKey: true } },
+      { anchorAt: 0, then: 2, init: { key: 'ArrowUp', shiftKey: true } },
+      { anchorAt: 0, then: 2, init: { key: 'Enter', shiftKey: true } },
+      { anchorAt: 0, then: 2, init: { key: ' ', shiftKey: true } },
+      { anchorAt: 2, then: 0, init: { key: 'Home', shiftKey: true, ctrlKey: true } },
+      { anchorAt: 2, then: 0, init: { key: 'Home', shiftKey: true, metaKey: true } },
+      { anchorAt: 0, then: 0, init: { key: 'End', shiftKey: true, ctrlKey: true } },
+      { anchorAt: 0, then: 0, init: { key: 'End', shiftKey: true, metaKey: true } }
+    ])('ignores $init', async ({ anchorAt, then, init }) => {
+      await anchorAndMove(anchorAt, then);
+      press(init);
+      await fixture.whenStable();
+      expect(selected).toEqual([]);
+      expect(unselected).toEqual([]);
+    });
+
+    it('ignores Shift+click', async () => {
+      await anchorAndMove(0, 0);
+      const [voltage] = await (await tree()).getItems({ text: /Voltage/ });
+      await (await voltage.host()).click({ shift: true });
+      await fixture.whenStable();
+      expect(selected).toEqual([]);
+      expect(unselected).toEqual([]);
+    });
+  });
+
   it('shows an empty state when nothing matches', async () => {
     await filter('zzz');
     expect(fixture.nativeElement.textContent).toContain('No topics found');

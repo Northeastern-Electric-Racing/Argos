@@ -31,7 +31,8 @@
 
 <ng-template #treeNodes let-nodes="nodes" let-parent="parent">
   @for (node of nodes; track node.key) {
-    <!-- The focused (roving) item stops Ctrl/Meta+A before it bubbles to the tree, whose toggleAll() would graph every visible topic. -->
+    <!-- The focused (roving) item stops Ctrl/Meta+A before it bubbles to the tree, whose toggleAll() would graph every visible topic,
+         and Shift range selection (Shift+click, Shift+arrows/Enter/Space, Ctrl/Meta+Shift+Home/End), which develop's tree never had. -->
     <li
       ngTreeItem
       #treeItem="ngTreeItem"
@@ -42,6 +43,8 @@
       [(expanded)]="node.expanded"
       (keydown.control.a)="$event.stopPropagation()"
       (keydown.meta.a)="$event.stopPropagation()"
+      (keydown)="stopRangeSelection($event)"
+      (click)="stopRangeSelection($event)"
       class="group mt-0.5 flex min-h-7.5 cursor-pointer list-none items-center gap-1 rounded-sm px-2 text-fg outline-none not-aria-selected:hover:bg-fg/7 focus-visible:focus-ring focus-visible:-outline-offset-2 aria-selected:bg-accent/33 [&[aria-expanded]]:min-h-9"
     >
       @if (node.children?.length) {

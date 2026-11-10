@@ -7,6 +7,9 @@ import { TreeNode, TreeNodeData } from 'src/utils/tree.utils';
 
 type TopicNode = TreeNode<TreeNodeData>;
 
+/** Keys Angular Aria's multi-select tree turns into a range selection when Shift is held. */
+const RANGE_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End', 'Enter', ' ']);
+
 /** Keeps nodes whose label matches, plus the ancestors of matches (expanded), like PrimeNG's lenient filter. */
 function filterNodes(nodes: TopicNode[], term: string): TopicNode[] {
   const result: TopicNode[] = [];
@@ -64,6 +67,14 @@ export class TopicTreeComponent {
     const visible = this.visibleLeafKeys();
     for (const key of next) if (!prev.has(key) && visible.has(key)) this.nodeSelect.emit(key);
     for (const key of prev) if (!next.has(key) && visible.has(key)) this.nodeUnselect.emit(key);
+  }
+
+  /** Stops Shift range selection reaching the tree, so a row is only ever selected one at a time, as on develop. */
+  protected stopRangeSelection(event: KeyboardEvent | MouseEvent): void {
+    if (!event.shiftKey) return;
+    if (event instanceof KeyboardEvent && !RANGE_KEYS.has(event.key)) return;
+    event.stopPropagation();
+    event.preventDefault();
   }
 
   protected onFilterInput(event: Event): void {
