@@ -20,7 +20,7 @@
   "private": true,
   "dependencies": {
     "@angular/aria": "22.2.3",
-    "@angular/build": "22.2.3",
+    "@angular/build": "22.2.6",
     "@angular/cdk": "22.2.3",
     "@angular/cli": "22.2.3",
     "@angular/common": "22.2.3",
