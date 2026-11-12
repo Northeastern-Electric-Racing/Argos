@@ -28,5 +28,6 @@ export default class CellTempMobileComponent {
   avgTemp = input<number>(0);
   maxTemp = input<number>(0);
   resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
+  graphTopics = input<string[]>([]);
   cellTempData = input<GraphData[]>([]);
 }

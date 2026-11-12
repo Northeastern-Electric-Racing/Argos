@@ -7,7 +7,10 @@ import CellTempGraphComponent from './cell-temp/cell-temp-graph/cell-temp-graph.
 import HighLowCellGraphComponent from './high-low-cell/high-low-cell-graph/high-low-cell-graph.component';
 import PackVoltageGraphComponent from './pack-voltage/pack-voltage-graph/pack-voltage-graph.component';
 
-/** Each graph card's reset button says which graph it clears (WCAG 2.4.6), on phones and desktops alike. */
+/**
+ * Each graph card's reset button says which graph it clears (WCAG 2.4.6), on phones and desktops alike.
+ * The card's "Open in graph" link sits beside it; every button in the card must be named.
+ */
 const cases: { component: Type<unknown>; name: string }[] = [
   { component: CellTempDisplayComponent, name: 'Reset the cell temperature graph' },
   { component: HighLowCellDisplayComponent, name: 'Reset the cell voltage graph' },
@@ -29,7 +32,8 @@ describe('charging graph reset buttons', () => {
       const names = [...fixture.nativeElement.querySelectorAll('button')].map((b: HTMLButtonElement) =>
         b.getAttribute('aria-label')
       );
-      expect(names).toEqual([c.name]);
+      expect(names).toContain(c.name);
+      expect(names).not.toContain(null);
     });
   }
 });

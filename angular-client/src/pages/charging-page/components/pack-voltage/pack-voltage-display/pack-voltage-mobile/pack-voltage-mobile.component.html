@@ -1,4 +1,4 @@
-<info-background svgIcon="electric_meter" title="Pack Voltage" [button]="resetGraphButton()">
+<info-background svgIcon="electric_meter" title="Pack Voltage" [button]="resetGraphButton()" [graphTopics]="graphTopics()">
   <vstack>
     <hstack class="w-3/20">
       <typography variant="info-value" [content]="voltage().toFixed(1) + 'V'" />

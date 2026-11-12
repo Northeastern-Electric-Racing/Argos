@@ -30,6 +30,14 @@ import { tw } from 'src/ui/recipes/tw';
 export default class MotorInfoComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  // Motor Usage and Cooling Usage are mock topics that are never stored, so they can't be graphed
+  readonly graphTopics = [
+    topics.motorTemp(),
+    topics.motorController(),
+    topics.lvBoards(),
+    topics.battboxFans(),
+    topics.pumps()
+  ];
   motorUsage: number = 100;
   coolUsage: number = 0;
   motorTemp: number = 0;

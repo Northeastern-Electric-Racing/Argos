@@ -44,6 +44,10 @@ export default class LapTimerPageComponent implements OnInit {
   readonly liveMotorTemp = signal(0);
   readonly liveSoc = signal(0);
 
+  readonly speedGraphTopics = [topics.speed()];
+  readonly socGraphTopics = [topics.stateOfCharge()];
+  readonly motorTempGraphTopics = [topics.motorTemp()];
+
   readonly speedGaugeColor = signal('#1ae824');
 
   readonly socColor = computed(() => {

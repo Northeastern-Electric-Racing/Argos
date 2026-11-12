@@ -1,4 +1,8 @@
-<info-background [title]="'Segment ' + (this.segmentNumber() + 1)" svgIcon="battery_charging_2">
+<info-background
+  [title]="'Segment ' + (this.segmentNumber() + 1)"
+  svgIcon="battery_charging_2"
+  [graphTopics]="graphTopics()"
+>
   <vstack spacing="20px">
     <info-value-display class="mt-2.5" [value]="this.temperature" unit="C" subtitle="Temperature" />
 

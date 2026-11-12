@@ -17,6 +17,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 export default class PackTempComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.packTemp()];
   packTemp: number = 0;
 
   ngOnInit() {

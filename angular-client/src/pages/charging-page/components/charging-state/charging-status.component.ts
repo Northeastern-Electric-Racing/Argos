@@ -17,6 +17,7 @@ export default class ChargingStatusComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   displayLight = input<boolean>(true);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.charging()];
   isCharging = signal(false);
   protected lightClass = computed(() => (this.isCharging() ? statusLightClasses.charging : statusLightClasses.off));
   currentSeconds = signal(0);
