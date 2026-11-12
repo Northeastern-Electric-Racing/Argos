@@ -8,7 +8,7 @@ describe('InfoBackgroundComponent', () => {
   let router: Router;
   let topicSelectionService: TopicSelectionService;
 
-  const graphLink = (): HTMLElement | null => fixture.nativeElement.querySelector('.graph-link');
+  const graphLink = (): HTMLElement | null => fixture.nativeElement.querySelector('button[aria-label="Open in graph"]');
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
