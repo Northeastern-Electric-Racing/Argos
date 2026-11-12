@@ -25,9 +25,10 @@ import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.util
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
-/** CSV columns: id, topic, expr, debounce_time */
-// TODO: add description and uploaded_by columns once backend supports them
+/** Required CSV columns: id, topic, expr, debounce_time */
 const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
+/** Optional so older exports still import; uploaded_by is left out because the server sets it */
+const CSV_DESCRIPTION_HEADER = 'description';
 
 @Component({
   selector: 'notification-rules-page',
@@ -253,6 +254,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     const topicIdx = headers.indexOf('topic');
     const exprIdx = headers.indexOf('expr');
     const debounceIdx = headers.indexOf('debounce_time');
+    const descriptionIdx = headers.indexOf(CSV_DESCRIPTION_HEADER);
 
     const rules: RulePayload[] = [];
     const errors: string[] = [];
@@ -281,7 +283,8 @@ export default class NotificationRulesPageComponent implements OnInit {
         continue;
       }
 
-      rules.push({ id, topic, expr, debounce_time: debounceTime });
+      const description = descriptionIdx >= 0 ? cols[descriptionIdx].trim() : '';
+      rules.push({ id, topic, expr, debounce_time: debounceTime, ...(description && { description }) });
     }
 
     if (errors.length > 0) {
@@ -387,12 +390,15 @@ export default class NotificationRulesPageComponent implements OnInit {
         return;
       }
 
-      // TODO: add description and uploaded_by columns once backend supports them
-      const header = CSV_HEADERS.join(',');
+      const header = [...CSV_HEADERS, CSV_DESCRIPTION_HEADER].join(',');
       const rows = rules.map((r) =>
-        [this.escapeCsvCell(r.id), this.escapeCsvCell(r.topic), this.escapeCsvCell(r.expr), String(r.debounce_time)].join(
-          ','
-        )
+        [
+          this.escapeCsvCell(r.id),
+          this.escapeCsvCell(r.topic),
+          this.escapeCsvCell(r.expr),
+          String(r.debounce_time),
+          this.escapeCsvCell(r.description ?? '')
+        ].join(',')
       );
 
       const csvContent = [header, ...rows].join('\n');

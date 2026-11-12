@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { of } from 'rxjs';
 import NotificationRulesPageComponent from './notification-rules-page.component';
 
 describe('NotificationRulesPageComponent', () => {
@@ -54,6 +55,63 @@ describe('NotificationRulesPageComponent', () => {
 
       await component.onFileSelected(event);
       expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', summary: 'Invalid File' }));
+    });
+
+    const uploadedRules = async (csv: string): Promise<unknown> => {
+      const openSpy = vi
+        .spyOn(TestBed.inject(DialogService), 'open')
+        .mockReturnValue({ onClose: of(false) } as unknown as DynamicDialogRef);
+      const event = { target: { files: [new File([csv], 'rules.csv')], value: 'rules.csv' } } as unknown as Event;
+
+      await component.onFileSelected(event);
+      return (openSpy.mock.calls[0][1]?.data as { rules: unknown }).rules;
+    };
+
+    it('should import the optional description column', async () => {
+      const rules = await uploadedRules('id,topic,expr,debounce_time,description\nr1,BMS/Pack,a > 5,10,Pack overvoltage');
+
+      expect(rules).toEqual([
+        { id: 'r1', topic: 'BMS/Pack', expr: 'a > 5', debounce_time: 10, description: 'Pack overvoltage' }
+      ]);
+    });
+
+    it('should still import CSVs without a description column', async () => {
+      const rules = await uploadedRules('id,topic,expr,debounce_time\nr1,BMS/Pack,a > 5,10');
+
+      expect(rules).toEqual([{ id: 'r1', topic: 'BMS/Pack', expr: 'a > 5', debounce_time: 10 }]);
+    });
+  });
+
+  describe('CSV download', () => {
+    it('should export the description column', async () => {
+      const clientRules = [
+        {
+          id: 'r1',
+          topic: 'BMS/Pack',
+          expr: 'a > 5',
+          debounce_time: 10,
+          description: 'Pack, overvoltage',
+          uploaded_by: 'c'
+        },
+        { id: 'r2', topic: 'BMS/Cell', expr: 'a < 2', debounce_time: 5, description: null, uploaded_by: 'c' }
+      ];
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ client_rules: clientRules, other_rules: [] }))
+      );
+      let blob: Blob | undefined;
+      URL.createObjectURL = vi.fn((b: Blob) => {
+        blob = b;
+        return 'blob:rules';
+      });
+      URL.revokeObjectURL = vi.fn();
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+      component.onDownload();
+      await vi.waitFor(() => expect(blob).toBeDefined());
+
+      expect(await blob?.text()).toBe(
+        'id,topic,expr,debounce_time,description\nr1,BMS/Pack,a > 5,10,"Pack, overvoltage"\nr2,BMS/Cell,a < 2,5,'
+      );
     });
   });
 });
