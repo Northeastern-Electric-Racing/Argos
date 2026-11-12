@@ -568,7 +568,12 @@ impl RuleManager {
         };
         // rebuild to reset debounce state, carrying over fields the edit doesn't replace
         let mut new_rule = Rule::new(old_rule.id, old_rule.topic, debounce_time, expr);
-        new_rule.description = description.or(old_rule.description);
+        // omitted keeps the old description, empty clears it
+        new_rule.description = match description {
+            Some(d) if d.is_empty() => None,
+            Some(d) => Some(d),
+            None => old_rule.description,
+        };
         new_rule.uploaded_by = old_rule.uploaded_by;
         rules_guard.insert(rule_id, new_rule);
         Ok(())

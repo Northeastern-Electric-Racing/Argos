@@ -1195,6 +1195,36 @@ async fn test_edit_rule_updates_description() -> Result<(), RuleManagerError> {
     Ok(())
 }
 
+#[tokio::test]
+async fn test_edit_rule_empty_description_clears_it() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("uploader_client".to_string());
+    let rule_id = RuleId("rule_1".to_string());
+
+    let mut rule = Rule::new(
+        rule_id.clone(),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(60),
+        "a > 10".to_owned(),
+    );
+    rule.description = Some("Old".to_owned());
+    rule_manager.add_rule(client, rule).await?;
+
+    rule_manager
+        .edit_rule(
+            rule_id,
+            "a > 10".to_owned(),
+            core::time::Duration::from_secs(60),
+            Some(String::new()),
+        )
+        .await?;
+
+    let rules = rule_manager.get_all_rules().await;
+    assert_eq!(rules[0].description, None);
+    assert_eq!(rules[0].uploaded_by.as_deref(), Some("uploader_client"));
+    Ok(())
+}
+
 #[test]
 fn test_rule_json_ignores_incoming_uploaded_by() {
     let rule: Rule = serde_json::from_str(
