@@ -161,6 +161,16 @@ describe('MapComponent tracks', () => {
     expect(headings).toEqual(['Track', 'Timing lines', 'Laps']);
   });
 
+  it("names each line's buttons by its line", () => {
+    const page = selected([placed]);
+    page.fixture.detectChanges();
+    const names = [...page.fixture.nativeElement.querySelectorAll('aside button[aria-label]')].map((button: HTMLElement) =>
+      button.getAttribute('aria-label')
+    );
+
+    expect(names).toEqual(['Clear start line', 'Place finish line']);
+  });
+
   it("labels each line end's coordinates", () => {
     const label = latitudeInput(selected([placed])).closest('label');
 

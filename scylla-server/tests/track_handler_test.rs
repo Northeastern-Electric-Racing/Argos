@@ -1,12 +1,13 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, time::Duration};
 
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use scylla_server::{
-    ArgosPoolHandle, ClientData,
+    ArgosPoolHandle, ClientData, PoolHandle,
     lap_timing::{GPS_LOCATION_TOPIC, GeoPoint, GpsFix, Lap, TimingLine},
     track_handler::{LiveRun, LiveRunHandle, RunLaps, TracksChanged, track_handler},
     transformers::track_transformer::PublicTrack,
 };
-use socketioxide::SocketIo;
+use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
 
@@ -146,23 +147,26 @@ fn a_long_runs_trace_keeps_every_nth_fix() {
     assert_eq!(trace[..2], [fix(0), fix(3)]);
 }
 
-#[tokio::test]
-async fn the_track_handler_keeps_the_live_runs_gps_fixes() {
-    let (data_send, data_recv) = broadcast::channel(10);
+/// The live run's trace once the track handler has read one GPS fix behind a burst of other data, as busy as the car,
+/// with `argos_pool` for its tracks
+async fn trace_after_one_fix(argos_pool: ArgosPoolHandle) -> Vec<GpsFix> {
+    let (data_send, data_recv) = broadcast::channel(10_000);
     let (_, io) = SocketIo::new_layer();
+    // as main.rs does; the handler's sends go to the default namespace
+    io.ns("/", async |_: SocketRef| {});
     let live_run = LiveRunHandle::default();
     let handler = tokio::spawn(track_handler(
         CancellationToken::new(),
         data_recv,
-        ArgosPoolHandle(None),
+        argos_pool,
         TracksChanged::default(),
         live_run.clone(),
         io,
     ));
-    for (name, values) in [
-        ("BMS/Pack/Voltage", vec![400.0]),
-        (GPS_LOCATION_TOPIC, vec![42.5, -71.25]),
-    ] {
+    // the handler loads the tracks as it starts, so this data arrives while that load is under way
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    let other_data = std::iter::repeat_n(("BMS/Pack/Voltage", vec![400.0]), 5_000);
+    for (name, values) in other_data.chain([(GPS_LOCATION_TOPIC, vec![42.5, -71.25])]) {
         data_send
             .send(ClientData {
                 run_id: 3,
@@ -177,9 +181,35 @@ async fn the_track_handler_keeps_the_live_runs_gps_fixes() {
     // the handler stops once it has read every message on the closed channel
     drop(data_send);
     handler.await.unwrap();
+    live_run.0.lock().await.trace(3)
+}
+
+#[tokio::test]
+async fn the_track_handler_keeps_the_live_runs_gps_fixes() {
+    assert_eq!(
+        trace_after_one_fix(ArgosPoolHandle(None)).await,
+        [GpsFix::new(42.5, -71.25, 1_000_000)]
+    );
+}
+
+#[tokio::test]
+async fn the_track_handler_keeps_taking_gps_fixes_while_the_tracks_database_hangs() {
+    // accepts connections and never answers, like a database that has stopped responding
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!(
+        "postgres://postgres@{}/argos",
+        listener.local_addr().unwrap()
+    );
+    let hung = PoolHandle::builder().build_unchecked(AsyncDieselConnectionManager::new(url));
+
+    let trace = tokio::time::timeout(
+        Duration::from_secs(5),
+        trace_after_one_fix(ArgosPoolHandle(Some(hung))),
+    )
+    .await;
 
     assert_eq!(
-        live_run.0.lock().await.trace(3),
+        trace.expect("GPS intake stalled behind the tracks load"),
         [GpsFix::new(42.5, -71.25, 1_000_000)]
     );
 }

@@ -19,6 +19,8 @@ const LAPS_SOCKET_KEY: &str = "laps";
 
 /// The browser draws every trace fix and searches them on each mouse move
 const MAX_TRACE_FIXES: usize = 10_000;
+/// GPS fixes queue behind a track load in this task, so a database that stops answering must not hold it longer
+const LOAD_TRACKS_TIMEOUT: Duration = Duration::from_secs(1);
 
 /// Wakes the track handler to reload the tracks after a route changes them
 #[derive(Clone, Default)]
@@ -125,6 +127,8 @@ pub async fn track_handler(
     let mut send_interval = tokio::time::interval(Duration::from_secs(1));
     loop {
         tokio::select! {
+            // queued data first, so a slow track load on a tick can't leave GPS fixes waiting behind the next one
+            biased;
             () = cancel_token.cancelled() => {
                 debug!("Shutting down track handler!");
                 break;
@@ -166,14 +170,18 @@ async fn reload_tracks(
     tracks: &mut Vec<PublicTrack>,
     live_run: &Mutex<LiveRun>,
 ) -> bool {
-    match load_tracks(argos_pool).await {
-        Ok(loaded) => {
+    match tokio::time::timeout(LOAD_TRACKS_TIMEOUT, load_tracks(argos_pool)).await {
+        Ok(Ok(loaded)) => {
             *tracks = loaded;
             live_run.lock().await.set_tracks(tracks);
             true
         }
-        Err(err) => {
+        Ok(Err(err)) => {
             warn!("Could not load the tracks: {:?}", err);
+            false
+        }
+        Err(_) => {
+            warn!("Timed out loading the tracks");
             false
         }
     }
