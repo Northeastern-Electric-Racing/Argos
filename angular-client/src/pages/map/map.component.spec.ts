@@ -153,6 +153,20 @@ describe('MapComponent tracks', () => {
     return page.fixture.nativeElement.querySelector('input[aria-label="Start line end 1 latitude"]');
   };
 
+  it('heads each sidebar section', () => {
+    const page = selected([placed]);
+    page.fixture.detectChanges();
+    const headings = [...page.fixture.nativeElement.querySelectorAll('aside h2')].map((h: HTMLElement) => h.textContent);
+
+    expect(headings).toEqual(['Track', 'Timing lines', 'Laps']);
+  });
+
+  it("labels each line end's coordinates", () => {
+    const label = latitudeInput(selected([placed])).closest('label');
+
+    expect(label?.querySelector('span')?.textContent).toBe('End 1: latitude, longitude');
+  });
+
   it('keeps the same selected track when scylla resends unchanged tracks', () => {
     const { storage, map } = selected([track(7), track(8)]);
     const shown = map.selectedTrack();

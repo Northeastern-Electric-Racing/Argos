@@ -16,7 +16,6 @@ import { EMPTY, asyncScheduler, filter, from, merge, switchMap, tap, throttleTim
 import { getTrace } from 'src/api/trace.api';
 import { addTrack, deleteTrack, editTrackLine } from 'src/api/track.api';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 import Storage from 'src/services/storage.service';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
@@ -61,7 +60,6 @@ const sameJson = (left: unknown, right: unknown) => JSON.stringify(left) === JSO
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     SidebarToggleComponent,
-    TypographyComponent,
     FormsModule,
     ReactiveFormsModule,
     MapCanvasComponent,
