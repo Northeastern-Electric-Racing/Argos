@@ -15,12 +15,16 @@ arch=$(uname -m)
 [ "$arch" = aarch64 ] && arch=arm64
 release=https://github.com/protomaps/go-pmtiles/releases/download/v$pmtiles_version
 case "$(uname -s)" in
-  Linux) curl -sfL "$release/go-pmtiles_${pmtiles_version}_Linux_$arch.tar.gz" | tar xz -C "$work" pmtiles ;;
-  Darwin)
-    curl -sfL -o "$work/pmtiles.zip" "$release/go-pmtiles-${pmtiles_version}_Darwin_$arch.zip"
-    unzip -q "$work/pmtiles.zip" pmtiles -d "$work"
-    ;;
-  *) echo "Run this on Linux, macOS or WSL" >&2; exit 1 ;;
+  Linux) asset=go-pmtiles_${pmtiles_version}_Linux_$arch.tar.gz ;;
+  Darwin) asset=go-pmtiles-${pmtiles_version}_Darwin_$arch.zip ;;
+  # Git Bash, where running pmtiles runs pmtiles.exe
+  MINGW* | MSYS*) asset=go-pmtiles_${pmtiles_version}_Windows_$arch.zip ;;
+  *) echo "Run this on Linux, macOS, WSL or Git Bash" >&2; exit 1 ;;
+esac
+curl -sfL -o "$work/$asset" "$release/$asset"
+case "$asset" in
+  *.zip) unzip -q "$work/$asset" -d "$work" ;;
+  *) tar xzf "$work/$asset" -C "$work" ;;
 esac
 
 # Daily builds are deleted after about a week, so take the newest
