@@ -1,9 +1,21 @@
-import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
+import { DIALOG_DATA } from '@angular/cdk/dialog';
+import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellReading } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
 import { ConfigTableComponent, TableRowConfig, TableColumnConfig } from 'src/components/config-table/config-table.component';
+import { tw } from 'src/ui/recipes/tw';
+
+/**
+ * Value colours on the panel (surface-2), text tokens at AA: balancing blue and CvS red were #4169e1 and #dc2626
+ * text (about 3.1:1), now the info and accent text tokens; "No" and "False" take warn and success.
+ */
+const valueColour = {
+  balancing: tw('text-info'),
+  notBalancing: tw('text-warn'),
+  failed: tw('text-accent-fg'),
+  passed: tw('text-success')
+} as const;
 
 const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
   {
@@ -17,12 +29,13 @@ const DEFAULT_ROW_CONFIG: TableRowConfig<SelectedCellInfo>[] = [
   {
     label: 'Balancing',
     getValue: (c) => (c.reading.balancing === undefined ? '-' : c.reading.balancing ? 'Yes' : 'No'),
-    getClass: (c) => (c.reading.balancing === true ? 'bal-yes' : c.reading.balancing === false ? 'bal-no' : '')
+    getClass: (c) =>
+      c.reading.balancing === true ? valueColour.balancing : c.reading.balancing === false ? valueColour.notBalancing : ''
   },
   {
     label: 'CvS Failure',
     getValue: (c) => (c.reading.cvs === undefined ? '-' : c.reading.cvs ? 'True' : 'False'),
-    getClass: (c) => (c.reading.cvs === true ? 'cvs-true' : c.reading.cvs === false ? 'cvs-false' : '')
+    getClass: (c) => (c.reading.cvs === true ? valueColour.failed : c.reading.cvs === false ? valueColour.passed : '')
   }
 ];
 
@@ -34,13 +47,14 @@ const COLUMN_CONFIG: TableColumnConfig<SelectedCellInfo> = {
 @Component({
   selector: 'cell-view',
   templateUrl: './cell-view.component.html',
-  styleUrl: './cell-view.component.css',
-  imports: [ConfigTableComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [ConfigTableComponent],
+  host: { class: 'block' }
 })
 export class CellViewComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private refreshInterval: ReturnType<typeof setInterval> | undefined;
-  public config = inject(DynamicDialogConfig);
+  public dialogData = inject(DIALOG_DATA);
 
   /** Shared Map reference — mutations by SegmentHeatmapComponent
    *  are visible here because it's the same Map object. */
@@ -53,7 +67,7 @@ export class CellViewComponent implements OnDestroy {
   }
 
   constructor() {
-    this.cellsMap = this.config.data.cells;
+    this.cellsMap = this.dialogData.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);
   }

@@ -31,12 +31,7 @@
               { "glob": "maplibre-gl-worker.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" }
             ],
             "inlineStyleLanguage": "css",
-            "styles": [
-              "src/styles.css",
-              "node_modules/primeicons/primeicons.css",
-              "primeicons/primeicons.css",
-              "node_modules/maplibre-gl/dist/maplibre-gl.css"
-            ],
+            "styles": ["src/styles.css", { "input": "src/styles/mapbox.css", "bundleName": "mapbox", "inject": false }],
             "stylePreprocessorOptions": {
               "includePaths": ["node_modules/"]
             },
@@ -89,13 +84,15 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "setupFiles": ["src/test-setup.ts"]
+            "setupFiles": ["src/test-setup.ts"],
+            "providersFile": "src/test-providers.ts"
           }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"],
+            "applySuppressions": true
           }
         }
       }

@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal, DestroyRef } from '@angular/core';
+import { Component, inject, input, OnInit, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { Segment, segmentInfo, SegmentInfo } from 'src/utils/bms.utils';
@@ -15,9 +15,9 @@ const SEGMENT_TOPIC_KEYS: (keyof SegmentInfo)[] = ['segmentTempKey', 'voltageKey
 @Component({
   selector: 'segment-overview',
   templateUrl: './segment-overview.component.html',
-  styleUrl: './segment-overview.component.css',
-  standalone: true,
-  imports: [StatSummaryComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [StatSummaryComponent],
+  host: { class: 'flex h-full w-full items-center justify-center' }
 })
 export class SegmentOverviewComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

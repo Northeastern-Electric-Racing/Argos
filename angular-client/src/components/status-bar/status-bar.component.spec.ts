@@ -1,12 +1,13 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import StatusBarComponent from './status-bar.component';
 
 // A host exercises projection and the title input exactly as a consumer would.
 // title is a signal so updates integrate with zoneless change detection.
-// Zoneless change detection is registered globally in src/test-setup.ts.
+// Zoneless change detection is TestBed's default in Angular 22.
 @Component({
-  template: `<status-bar [title]="title()"><span class="projected">chip</span></status-bar>`,
+  template: `<status-bar [title]="title()"><span id="projected">chip</span></status-bar>`,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [StatusBarComponent]
 })
 class HostComponent {
@@ -18,6 +19,9 @@ describe('StatusBarComponent', () => {
   let host: HTMLElement;
 
   const q = (selector: string): HTMLElement | null => host.querySelector(selector);
+  // Classes are styling, not structure: find the controls by their names.
+  const hide = () => q('button[aria-label="Hide status bar"]');
+  const show = () => q('button[aria-label="Show status bar"]');
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -28,32 +32,36 @@ describe('StatusBarComponent', () => {
     host = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
   });
+  // The focus spies sit on HTMLElement.prototype, which every spec file in the worker shares (isolate: false).
+  afterEach(() => vi.restoreAllMocks());
 
   it('auto-opens with the panel and projected chips, and no edge handle', () => {
-    expect(q('.panel')).toBeTruthy();
-    expect(q('.side-handle')).toBeFalsy();
-    expect(q('.projected')?.textContent).toContain('chip');
+    expect(hide()?.getAttribute('aria-expanded')).toBe('true');
+    expect(show()).toBeFalsy();
+    expect(q('#projected')?.textContent).toContain('chip');
   });
 
   it('renders the title input in the header', () => {
-    expect(q('.panel-title')?.textContent?.trim()).toBe('Quick view');
+    expect(host.textContent).toContain('Quick view');
 
     fixture.componentInstance.title.set('Pinned');
     fixture.detectChanges();
 
-    expect(q('.panel-title')?.textContent?.trim()).toBe('Pinned');
+    expect(host.textContent).toContain('Pinned');
+    expect(host.textContent).not.toContain('Quick view');
   });
 
   it('collapses to a handle and re-expands on toggle', () => {
-    (q('.panel-collapse') as HTMLButtonElement).click();
+    (hide() as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(q('.panel')).toBeFalsy();
-    expect(q('.side-handle')).toBeTruthy();
+    expect(q('#projected')).toBeFalsy();
+    expect(hide()).toBeFalsy();
+    expect(show()?.getAttribute('aria-expanded')).toBe('false');
 
-    (q('.side-handle') as HTMLButtonElement).click();
+    (show() as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(q('.panel')).toBeTruthy();
-    expect(q('.side-handle')).toBeFalsy();
+    expect(q('#projected')).toBeTruthy();
+    expect(show()).toBeFalsy();
   });
 
   // Regression: a scrolling focus() on the freshly-swapped control drags the whole page
@@ -63,30 +71,45 @@ describe('StatusBarComponent', () => {
     // prototype and assert against the call that actually landed.
     const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
 
-    (q('.panel-collapse') as HTMLButtonElement).click();
+    (hide() as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(focusSpy.mock.contexts.at(-1)).toBe(q('.side-handle')!);
-    expect(focusSpy.mock.lastCall).toEqual([{ preventScroll: true }]);
+    expect(focusSpy.mock.contexts.at(-1)).toBe(show()!);
+    expect(focusSpy.mock.lastCall).toEqual([expect.objectContaining({ preventScroll: true })]);
 
-    (q('.side-handle') as HTMLButtonElement).click();
+    (show() as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(focusSpy.mock.contexts.at(-1)).toBe(q('.panel-collapse')!);
-    expect(focusSpy.mock.lastCall).toEqual([{ preventScroll: true }]);
+    expect(focusSpy.mock.contexts.at(-1)).toBe(hide()!);
+    expect(focusSpy.mock.lastCall).toEqual([expect.objectContaining({ preventScroll: true })]);
   });
 
   it('moves keyboard focus to the successor control on toggle', async () => {
-    (q('.panel-collapse') as HTMLButtonElement).click();
+    (hide() as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(document.activeElement).toBe(q('.side-handle'));
+    expect(document.activeElement).toBe(show());
 
-    (q('.side-handle') as HTMLButtonElement).click();
+    (show() as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(document.activeElement).toBe(q('.panel-collapse'));
+    expect(document.activeElement).toBe(hide());
+  });
+
+  // A mouse press shows no ring on the moved focus, a key press does (CDK InputModalityDetector).
+  it('shows a ring on the successor only after a key press', async () => {
+    const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
+    for (const [event, ring] of [
+      [new MouseEvent('mousedown', { bubbles: true, buttons: 1, detail: 1 }), false],
+      [new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }), true]
+    ] as const) {
+      document.dispatchEvent(event);
+      ((hide() ?? show()) as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(focusSpy).toHaveBeenLastCalledWith(expect.objectContaining({ focusVisible: ring }));
+    }
   });
 });

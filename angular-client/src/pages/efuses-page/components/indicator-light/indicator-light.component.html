@@ -1,10 +1,4 @@
-<div
-  class="indicator-plate"
-  [class.active]="active()"
-  [style.font-size.px]="fontSize()"
-  [style.--plate-bg]="glowColor().bg"
-  [style.--plate-glow]="glowColor().glow"
-  [style.--plate-text]="glowColor().text"
->
-  <span class="plate-label">{{ label() }}</span>
+<div [class]="plateClass()" [style.font-size.px]="fontSize()">
+  <span [class]="legendClass">{{ label() }}</span
+  ><span class="sr-only text-fg">, {{ active() ? 'on' : 'off' }}</span>
 </div>

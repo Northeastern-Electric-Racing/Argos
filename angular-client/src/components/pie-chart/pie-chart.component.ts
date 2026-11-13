@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { ArcElement, ChartData, ChartOptions, Legend, PieController, Title, Tooltip, TooltipItem } from 'chart.js';
 import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import Theme from 'src/services/theme.service';
@@ -16,8 +16,9 @@ function sliceLabel({ chart, dataset, dataIndex, formattedValue }: TooltipItem<'
 @Component({
   selector: 'pie-chart',
   templateUrl: 'pie-chart.component.html',
-  styleUrls: ['pie-chart.component.css'],
-  standalone: true,
+  // 300px wide and as tall as its box by default; zero specificity, so a consumer's h-*/w-* class wins
+  host: { class: 'block [:where(&)]:h-full [:where(&)]:w-75' },
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [BaseChartDirective],
   // Register only what the pie chart uses, so the rest of Chart.js tree-shakes out
   providers: [provideCharts({ registerables: [PieController, ArcElement, Legend, Title, Tooltip] })]

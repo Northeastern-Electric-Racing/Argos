@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, DestroyRef } from '@angular/core';
+import { Component, effect, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
@@ -16,7 +16,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'segment-at-a-glance',
   templateUrl: './segment-at-a-glance.component.html',
-  styleUrl: './segment-at-a-glance.component.css',
   imports: [
     InfoBackgroundComponent,
     InfoValueDisplayComponent,
@@ -25,6 +24,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     VStackComponent,
     HStackComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }

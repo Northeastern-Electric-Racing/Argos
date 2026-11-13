@@ -1,28 +1,46 @@
-<!-- Unified segment row: dark wrapper with light heatmap and overview panels -->
-<div class="segment-row">
+<!-- Unified segment row: dark wrapper with light heatmap and overview panels. Sizes are fluid (vw clamps). -->
+<div
+  class="flex w-full items-stretch gap-[clamp(4px,0.94vw,20px)] rounded-[clamp(4px,0.63vw,14px)] bg-surface-1 p-[clamp(2px,0.4vw,7px)]"
+>
   <!-- LEFT: Controls (inside dark wrapper) -->
-  <div class="controls-zone">
-    <div class="segment-title">
-      <img class="battery-icon" src="assets/icons/battery.svg" alt="battery" />
-      <span class="title-text">Segment {{ segment() + 1 }}</span>
+  <div
+    class="flex min-w-[clamp(70px,10vw,200px)] shrink-0 flex-col items-start justify-start gap-[clamp(3px,0.63vw,12px)] p-[clamp(3px,0.63vw,12px)]"
+  >
+    <div class="flex items-center gap-1.5">
+      <img class="h-[clamp(10px,1.33vw,26px)] w-[clamp(8px,1vw,20px)]" src="assets/icons/battery.svg" alt="battery" />
+      <span class="font-sans text-[length:clamp(10px,1.56vw,30px)] font-bold whitespace-nowrap text-fg"
+        >Segment {{ segment() + 1 }}</span
+      >
     </div>
-    <div class="controls-actions">
+    <div class="flex w-[clamp(64px,9.4vw,190px)] flex-col gap-[clamp(2px,0.47vw,10px)]">
+      <!-- the select's restyle hooks (ui-select): the row's fluid height, radius and type, on the unlit fill -->
       <select-dropdown
+        class="[--ui-select-bg:var(--color-control-off)] [--ui-select-color:var(--color-fg)] [--ui-select-font-size:clamp(7px,0.94vw,18px)] [--ui-select-font-weight:600] [--ui-select-height:clamp(24px,2.3vw,44px)] [--ui-select-padding-left:clamp(4px,0.94vw,20px)] [--ui-select-radius:clamp(8px,1.25vw,24px)]"
         [options]="viewSelectorConfig.options"
         [placeholder]="viewSelectorConfig.placeholder"
         [defaultValue]="viewSelectorConfig.defaultValue"
+        [ariaLabel]="'Segment ' + (segment() + 1) + ' heat map view'"
       />
-      <button class="see-more-btn" (click)="openSegmentPage()">See more &nbsp;&rarr;</button>
+      <button type="button" [class]="seeMoreClass" (click)="openSegmentPage()">
+        See more
+        <span class="flex size-[1.2em] text-[length:1.2em]" aria-hidden="true"
+          ><ui-icon name="arrow_forward" size="inline"
+        /></span>
+      </button>
     </div>
   </div>
 
   <!-- RIGHT: Separate light panels -->
-  <div class="content-zone">
-    <div class="heatmap-panel">
+  <div class="flex min-w-0 flex-1 items-stretch justify-start gap-2.5">
+    <div
+      class="flex min-h-0 flex-[3_1_auto] items-center justify-center rounded-[clamp(4px,0.63vw,14px)] bg-panel py-[clamp(1px,0.3vw,6px)] pr-[clamp(4px,0.94vw,20px)] pl-[clamp(20px,4vw,80px)] [clip-path:polygon(clamp(34px,6.9vw,136px)_0,100%_0,100%_100%,0_100%,0_clamp(34px,6.9vw,136px))]"
+    >
       <segment-heatmap [segment]="segment()" />
     </div>
 
-    <div class="overview-panel">
+    <div
+      class="flex min-h-0 max-w-[clamp(160px,22vw,420px)] min-w-[clamp(160px,22vw,420px)] flex-none items-center rounded-[clamp(4px,0.63vw,14px)] bg-panel px-[clamp(2px,0.5vw,10px)] py-[clamp(1px,0.3vw,6px)]"
+    >
       <segment-overview [segment]="segment()" />
     </div>
   </div>

@@ -1,22 +1,22 @@
 <info-background title="Latency" svgIcon="speed">
   <hstack spacing="20px">
-    <vstack style="padding-bottom: 40px">
-      <typography variant="subheader" content="Old" additionalStyles="font-size:20px" />
-      <div class="latency-display-body">
-        <div class="latency-display-dot" [style.background-color]="mapColor(latency, medVal())"></div>
-        <typography variant="subheader" [content]="latency.toString()" additionalStyles="font-size:25px" />
-        <typography variant="info-unit" content="ms" additionalStyles="padding-top: 5px; font-size:15px;" />
+    <vstack class="pb-10">
+      <typography variant="subheader" content="Old" />
+      <div class="flex h-2.5 items-center justify-center">
+        <div class="mr-2.5 size-2.5 rounded-full" [style.background-color]="mapColor(latency, medVal())"></div>
+        <typography variant="subheader" [content]="latency.toString()" />
+        <typography variant="info-unit" content="ms" textClass="pt-1.25 text-sm leading-4.5" />
       </div>
     </vstack>
 
-    <divider style="height: 70px" />
+    <divider class="h-17.5" />
 
-    <vstack style="padding-bottom: 40px">
-      <typography variant="subheader" content="New" additionalStyles="font-size:20px" />
-      <div class="latency-display-body">
-        <div class="latency-display-dot" [style.background-color]="mapColor(newLatency, medVal())"></div>
-        <typography variant="subheader" [content]="newLatency.toString()" additionalStyles="font-size:25px" />
-        <typography variant="info-unit" content="ms" additionalStyles="padding-top: 5px; font-size:15px;" />
+    <vstack class="pb-10">
+      <typography variant="subheader" content="New" />
+      <div class="flex h-2.5 items-center justify-center">
+        <div class="mr-2.5 size-2.5 rounded-full" [style.background-color]="mapColor(newLatency, medVal())"></div>
+        <typography variant="subheader" [content]="newLatency.toString()" />
+        <typography variant="info-unit" content="ms" textClass="pt-1.25 text-sm leading-4.5" />
       </div>
     </vstack>
   </hstack>

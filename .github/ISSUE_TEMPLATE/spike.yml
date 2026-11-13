@@ -1,6 +1,5 @@
 name: Spike
 description: Explore one approach to an idea, or try a small standalone improvement. Draft PRs welcome.
-type: Task
 labels: [spike]
 body:
   - type: markdown

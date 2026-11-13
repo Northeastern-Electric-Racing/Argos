@@ -1,9 +1,10 @@
-<div class="setting-input-wrapper">
-  <label [for]="label() + '-input'" class="setting-label">{{ label() }}</label>
+<div class="flex flex-col gap-1.5">
+  <label uiLabel [for]="inputId()">{{ label() }}</label>
   <input
-    pInputText
+    uiInput
+    [class]="numberInput"
     type="number"
-    [id]="label() + '-input'"
+    [id]="inputId()"
     [(ngModel)]="value"
     [attr.min]="min()"
     [attr.max]="max()"

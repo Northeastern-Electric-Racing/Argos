@@ -1,17 +1,15 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FaultService } from 'src/services/fault.service';
 import { FaultData } from 'src/utils/types.utils';
 
 import { DatePipe } from '@angular/common';
-import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
   selector: 'fault-display-info',
   templateUrl: './fault-display-info.component.html',
-  styleUrl: './fault-display-info.component.css',
-  standalone: true,
-  imports: [DatePipe, TypographyComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [DatePipe]
 })
 export class FaultDisplayInfoComponent implements OnInit {
   private destroyRef = inject(DestroyRef);

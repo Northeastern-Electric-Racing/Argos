@@ -1,8 +1,8 @@
-<div [style]="{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-  <typography variant="header" content="Last Seen: " additionalStyles="margin-right: 10px"></typography>
-  <typography variant="subheader" [content]="selectedFault?.lastSeen | date: 'HH:mm:ss'" />
+<div class="flex items-center justify-between font-sans text-fg">
+  <p class="my-4 mr-2.5 text-lg font-bold">Last Seen:</p>
+  <p class="my-4 text-base">{{ selectedFault?.lastSeen | date: 'HH:mm:ss' }}</p>
 </div>
-<div [style]="{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-  <typography variant="header" content="Originally Occurred: " additionalStyles="margin-right: 10px"></typography>
-  <typography variant="subheader" [content]="selectedFault?.occurredAt | date: 'HH:mm:ss'" />
+<div class="flex items-center justify-between font-sans text-fg">
+  <p class="my-4 mr-2.5 text-lg font-bold">Originally Occurred:</p>
+  <p class="my-4 text-base">{{ selectedFault?.occurredAt | date: 'HH:mm:ss' }}</p>
 </div>

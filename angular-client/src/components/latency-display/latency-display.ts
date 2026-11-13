@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
@@ -12,8 +12,7 @@ import HStackComponent from '../hstack/hstack.component';
 @Component({
   selector: 'latency-display',
   templateUrl: './latency-display.html',
-  styleUrls: ['./latency-display.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, DividerComponent, TypographyComponent, VStackComponent, HStackComponent]
 })
 export default class LatencyDisplayComponent implements OnInit {

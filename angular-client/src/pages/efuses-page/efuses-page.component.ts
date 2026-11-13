@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { EFUSE_TOPICS } from './efuses-page.topics';
@@ -9,20 +9,32 @@ import GridLayoutComponent from 'src/components/grid-layout/grid-layout.componen
 import Storage from 'src/services/storage.service';
 import StatusBarComponent from 'src/components/status-bar/status-bar.component';
 import LvBatteryChipComponent from './components/lv-battery-chip/lv-battery-chip.component';
+import { tw } from 'src/ui/recipes/tw';
+
+/**
+ * Each zone's heading and the note under it. A heading after the first sits 20px under the grid above it; the
+ * first is the column's first child, so it stays flush with the page's padding.
+ */
+const zone = {
+  heading: tw('m-0 text-2xl font-black not-first:pt-5'),
+  note: tw('m-0 pb-2.5')
+} as const;
 
 /**
  * Container for the eFuses page, displays eFuse status and controls.
  */
 @Component({
   selector: 'efuses-page',
-  styleUrls: ['./efuses-page.component.css'],
   templateUrl: './efuses-page.component.html',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
+  // A block host, so the sticky status bar's containing block spans the whole page, not one viewport.
+  host: { class: 'block' },
   imports: [GridLayoutComponent, EfuseCardComponent, RtdsDebugCardComponent, StatusBarComponent, LvBatteryChipComponent]
 })
 export default class EfusesPageComponent {
   private storage = inject(Storage);
 
+  protected readonly zone = zone;
   readonly EfuseLockMode = EfuseLockMode;
   readonly topics = EFUSE_TOPICS;
 

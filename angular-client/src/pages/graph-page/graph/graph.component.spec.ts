@@ -27,9 +27,10 @@ describe('CustomGraphComponent (Chart.js)', () => {
   beforeEach(() => {
     // Chart.js sizes the canvas to its container's getBoundingClientRect(), which is 0 x 0 in jsdom. A 0 px wide
     // chart has no room for x ticks, and decimates any series of more than 4 x 0 points down to its first one.
+    // The container is the canvas's parent (the template styles it with utilities, so it has no class to find).
     const layout = Element.prototype.getBoundingClientRect;
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-      return this.classList.contains('chart-container')
+      return this.querySelector(':scope > canvas') !== null
         ? new DOMRect(0, 0, CHART_SIZE.width, CHART_SIZE.height)
         : layout.call(this);
     });
@@ -386,7 +387,8 @@ describe('CustomGraphComponent (Chart.js)', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:graph');
   });
 
-  const emptyMessage = () => (fixture.nativeElement as HTMLElement).querySelector('.empty-state')?.textContent?.trim();
+  // The message overlays the chart box, after the canvas
+  const emptyMessage = () => (fixture.nativeElement as HTMLElement).querySelector('canvas ~ p')?.textContent?.trim();
 
   it('asks for a topic, instead of drawing epoch-zero axes, when none is selected', async () => {
     await render({ valuesSubject: [] });

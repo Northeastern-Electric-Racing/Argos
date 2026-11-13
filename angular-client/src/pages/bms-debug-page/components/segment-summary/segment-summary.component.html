@@ -1,15 +1,16 @@
 <info-background [title]="'Segment ' + (this.segmentNumber() + 1)" svgIcon="battery_charging_2">
   <vstack spacing="20px">
-    <info-value-display style="margin-top: 10px" [value]="this.temperature" unit="C" subtitle="Temperature" />
+    <info-value-display class="mt-2.5" [value]="this.temperature" unit="C" subtitle="Temperature" />
 
-    <divider style="width: 100px; margin-top: 15px" />
-    <info-value-display style="margin-top: -5px" [value]="this.voltage" unit="V" [precision]="2" subtitle="Avg Voltage" />
-    <divider style="width: 100px; margin-top: 25px" />
-    <info-value-display style="margin-top: -5px" [value]="this.alphaChipTemp" unit="C" subtitle="Chip Temp" />
+    <divider class="mt-3.75 w-25" />
+    <info-value-display class="-mt-1.25" [value]="this.voltage" unit="V" [precision]="2" subtitle="Avg Voltage" />
+    <divider class="mt-6.25 w-25" />
+    <info-value-display class="-mt-1.25" [value]="this.alphaChipTemp" unit="C" subtitle="Chip Temp" />
     <toast-button
       buttonLabel="See More ➜"
-      additionalStyles="background-color: #2aaeee; color: black; border-radius: 20px"
-      style="margin-top: 20px"
+      variant="secondary"
+      additionalStyles="border-radius: var(--ui-radius-full)"
+      class="mt-5"
       [disableToast]="true"
       [onClick]="this.openSegmentPage"
     />

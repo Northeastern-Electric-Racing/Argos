@@ -1,65 +1,36 @@
-<div class="background">
-  <div class="presets-row">
+<div class="mt-2.5 flex max-h-[80vh] w-[28vw] flex-col gap-2">
+  <div class="flex items-center justify-start gap-1.5">
     <select-dropdown
-      class="preset-select"
+      class="max-w-full min-w-0 flex-[0_1_auto]"
       [options]="presetSelectorConfig().options"
       [placeholder]="presetSelectorConfig().placeholder"
       [defaultValue]="activePresetName()"
     />
-    <argos-button
-      [onClick]="openPresetsDialog"
-      label="Manage Presets"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
+    <argos-button class="shrink-0" [onClick]="openPresetsDialog" label="Manage Presets" size="sm" variant="tonal" />
   </div>
-  <div class="header-row">
-    <argos-button
-      [onClick]="clearSelections"
-      label="Clear Topics"
-      size="sm"
-      additionalStyles="background-color: #323232; border: 1.4px solid #027bd7;"
-    />
-    <div class="toggle-group">
-      <label class="flatten-toggle">
-        <typography content="Selected" variant="sidebar-label" additionalStyles="padding: 0px;" />
-        <p-toggleSwitch
-          [ngModel]="selectedOnly()"
-          (ngModelChange)="toggleSelectedOnly($event)"
+  <div class="flex flex-wrap items-center justify-start gap-4">
+    <argos-button [onClick]="clearSelections" label="Clear Topics" size="sm" variant="tonal" />
+    <div class="inline-flex items-center gap-4">
+      <label class="inline-flex cursor-pointer items-center gap-2">
+        <span class="font-sans text-base font-bold text-fg select-none">Selected</span>
+        <ui-switch
+          [checked]="selectedOnly()"
+          (checkedChange)="toggleSelectedOnly($event)"
           ariaLabel="Show only selected topics"
         />
       </label>
-      <label class="flatten-toggle">
-        <typography content="Flat" variant="sidebar-label" additionalStyles="padding: 0px;" />
-        <p-toggleSwitch
-          [ngModel]="flattenMode()"
-          (ngModelChange)="toggleFlattenMode($event)"
-          ariaLabel="Flatten topic tree"
-        />
+      <label class="inline-flex cursor-pointer items-center gap-2">
+        <span class="font-sans text-base font-bold text-fg select-none">Flat</span>
+        <ui-switch [checked]="flattenMode()" (checkedChange)="toggleFlattenMode($event)" ariaLabel="Flatten topic tree" />
       </label>
     </div>
   </div>
-  <p-tree
-    [value]="activeNodes()"
-    styleClass="w-full md:w-[30rem]"
-    (onNodeSelect)="nodeSelect($event)"
-    (onNodeUnselect)="onNodeUnselect($event)"
-    [(selection)]="selectedNodes"
-    [filter]="true"
+  <topic-tree
+    [nodes]="activeNodes()"
+    [selectedKeys]="selectedKeys()"
+    (nodeSelect)="nodeSelect($event)"
+    (nodeUnselect)="onNodeUnselect($event)"
     filterPlaceholder="Select Data Type"
-    styleClass="w-full"
-    [autofocus]="true"
-    [style]="{ height: '80vh', overflow: 'auto' }"
-    [metaKeySelection]="false"
-    selectionMode="multiple"
-  >
-    <ng-template let-node pTemplate="default">
-      <div class="tree-node-container" (click)="onRowClick($event, node)">
-        <typography additionalStyles="padding: 0px;" [content]="node.label" variant="sidebar-label" />
-        @if (node.children?.length === 0) {
-          <typography [content]="node.data.displayValue()" variant="subheader" />
-        }
-      </div>
-    </ng-template>
-  </p-tree>
+    height="80vh"
+  />
 </div>

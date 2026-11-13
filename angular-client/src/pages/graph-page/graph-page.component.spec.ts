@@ -1,7 +1,7 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { BehaviorSubject } from 'rxjs';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
@@ -60,7 +60,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
         }
       }
     };
-    routerNavigate = vi.fn().mockName('navigate').mockReturnValue(Promise.resolve(true));
+    routerNavigate = vi.fn().mockName('navigate').mockResolvedValue(true);
     const routerMock = {
       url: '/graph',
       navigate: routerNavigate
@@ -72,7 +72,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
         TopicSelectionService,
         FaultService,
         Storage,
-        MessageService,
+        ToastService,
         { provide: APIService, useValue: apiServiceMock },
         { provide: ActivatedRoute, useValue: routeMock },
         { provide: Router, useValue: routerMock }
@@ -130,5 +130,57 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     expect(topicService.getSelectedDataTypes().value).toEqual([]);
     const lastNav = routerNavigate.mock.lastCall!;
     expect(lastNav[1].queryParams.topics).toBeNull();
+  });
+
+  describe('range input', () => {
+    /** Renders the real-time toolbar (past the loading page) and returns its X range field. */
+    async function rangeField(): Promise<HTMLInputElement> {
+      mountAndLoadDataTypes();
+      fixture.componentInstance.dataTypesIsLoading = false;
+      fixture.componentRef.changeDetectorRef.markForCheck();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return fixture.nativeElement.querySelector('#graph-range-value');
+    }
+    const type = async (field: HTMLInputElement, value: string) => {
+      field.value = value;
+      field.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it.each(['0', '-5'])('clamps %s up to 1, in the field too, as develop\'s p-inputnumber [min]="1" did', async (typed) => {
+      const field = await rangeField();
+      await type(field, typed);
+      expect(field.value).toBe('1');
+      expect(fixture.componentInstance.timeRangeSeconds).toBe(1);
+      expect(fixture.componentInstance.graphConfig.timeRangeMs).toBe(1000);
+    });
+
+    it('leaves the range valid when clamped again at its limit', async () => {
+      const field = await rangeField();
+      await type(field, '0');
+      await type(field, '-5');
+      expect(field.value).toBe('1');
+      expect(fixture.componentInstance.timeRangeSeconds).toBe(1);
+      expect(field.classList).toContain('ng-valid');
+    });
+
+    it('clamps the point range too', async () => {
+      const field = await rangeField();
+      fixture.componentInstance.toggleRangeMode();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await type(field, '0');
+      expect(field.value).toBe('1');
+      expect(fixture.componentInstance.graphConfig.maxPoints).toBe(1);
+    });
+
+    it('keeps a value of 1 or more as typed', async () => {
+      const field = await rangeField();
+      await type(field, '45');
+      expect(field.value).toBe('45');
+      expect(fixture.componentInstance.graphConfig.timeRangeMs).toBe(45000);
+    });
   });
 });
