@@ -1,0 +1,4 @@
+# The offline map covers a 20-mile circle around each venue: latitude longitude name
+42.0661 -84.2414 FSAE Michigan (Michigan International Speedway)
+43.3626 -71.4606 Formula Hybrid + Electric (New Hampshire Motor Speedway)
+42.3398 -71.0892 Boston (Northeastern)

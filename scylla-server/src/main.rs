@@ -25,18 +25,18 @@ use scylla_server::{
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
-        data_type_controller, file_insertion_controller, lap_controller,
+        data_type_controller, file_insertion_controller,
         rule_controller::{
             add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info,
             get_client_subscribed_rules, subscribe_rules, unsubscribe_rules,
         },
-        run_controller, scylla_config_controller, track_controller,
+        run_controller, scylla_config_controller, trace_controller, track_controller,
         video_streamer_controller::{self},
     },
     mqtt_processor::pub_handle,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
-    track_handler::{TracksChanged, track_handler},
+    track_handler::{LiveRunHandle, TracksChanged, track_handler},
     zenoh_processor::ZenohProcessor,
 };
 use scylla_server::{
@@ -241,11 +241,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    // Argos-only data must never stop telemetry; without its DB only the track and lap routes fail
+    // Argos-only data must never stop telemetry; without its DB only the map has no tracks
     let argos_pool = match argos_database::connect(&db_url, ARGOS_DATABASE_NAME).await {
         Ok(pool) => Some(pool),
         Err(e) => {
-            warn!("{ARGOS_DATABASE_NAME} DB unavailable, track and lap routes will fail: {e}");
+            warn!("{ARGOS_DATABASE_NAME} DB unavailable, the map will have no tracks: {e}");
             None
         }
     };
@@ -287,11 +287,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = CancellationToken::new();
 
     let tracks_changed = TracksChanged::default();
+    let live_run = LiveRunHandle::default();
     let fut = track_handler(
         token.clone(),
         mqtt_send_socket.subscribe(),
         ArgosPoolHandle(argos_pool.clone()),
         tracks_changed.clone(),
+        live_run.clone(),
         io.clone(),
     );
     task_tracker.spawn(async move {
@@ -361,7 +363,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
-        let process_mqtt_fut = recv.process_mqtt(eventloop, pool.clone());
+        let process_mqtt_fut = recv.process_mqtt(eventloop, client.clone(), pool.clone());
         task_tracker.spawn(async move {
             let res = tokio::spawn(process_mqtt_fut).await;
             warn!(task = "mqtt_processor", "task ended: {:?}", res);
@@ -405,9 +407,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     put(track_controller::edit_track_line),
                 )
                 .route("/tracks/delete/{id}", post(track_controller::delete_track))
-                .route("/laps/{runId}/{trackId}", get(lap_controller::get_laps))
+                .route("/trace/{runId}", get(trace_controller::get_trace))
                 .layer(Extension(ArgosPoolHandle(argos_pool)))
-                .layer(Extension(tracks_changed)),
+                .layer(Extension(tracks_changed))
+                .layer(Extension(live_run)),
         )
         .merge(
             Router::new()

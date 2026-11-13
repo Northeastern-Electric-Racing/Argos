@@ -31,9 +31,11 @@ pub struct TimingLine {
     pub b: GeoPoint,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Debug, Clone, Copy, PartialEq)]
 pub struct GpsFix {
+    #[serde(flatten)]
     pub point: GeoPoint,
+    #[serde(rename = "timeMs")]
     pub time_ms: f64,
 }
 
@@ -219,12 +221,6 @@ impl LapTimer {
     pub fn laps(&self) -> &[Lap] {
         &self.laps
     }
-}
-
-/// The laps timed by the time-sorted `fixes`
-#[must_use]
-pub fn laps(fixes: &[GpsFix], start: TimingLine, finish: Option<TimingLine>) -> Vec<Lap> {
-    LapTimer::from_fixes(fixes, start, finish).laps
 }
 
 fn lap(start_ms: f64, end_ms: f64) -> Option<Lap> {

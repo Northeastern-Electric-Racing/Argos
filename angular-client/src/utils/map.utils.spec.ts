@@ -1,17 +1,6 @@
-import { LayerSpecification } from 'maplibre-gl';
-import {
-  carGeoJson,
-  draftLineGeoJson,
-  linesGeoJson,
-  mapStyle,
-  overlayLayers,
-  pointGeoJson,
-  toFix,
-  traceFromPoints,
-  traceGeoJson
-} from './map.utils';
+import { draftLineGeoJson, fixAt, linesGeoJson, pointGeoJson, toFix, traceGeoJson } from './map.utils';
 import { DataValue } from './socket.utils';
-import { Track } from './types.utils';
+import { Coordinate, Track } from './types.utils';
 
 const point = (lat: string, lon: string, time: string): DataValue => ({ values: [lat, lon], time, unit: 'deg' });
 
@@ -28,23 +17,11 @@ describe('toFix', () => {
   });
 });
 
-describe('traceFromPoints', () => {
-  it('orders points by time', () => {
-    const trace = traceFromPoints([point('3', '30', '300'), point('1', '10', '100'), point('2', '20', '200')]);
-
-    expect(trace).toEqual([
-      { lat: 1, lon: 10, timeMs: 100 },
-      { lat: 2, lon: 20, timeMs: 200 },
-      { lat: 3, lon: 30, timeMs: 300 }
-    ]);
-  });
-
-  it('is empty without points', () => {
-    expect(traceFromPoints([])).toEqual([]);
-  });
-});
-
 describe('traceGeoJson', () => {
+  it('draws nothing without fixes', () => {
+    expect(traceGeoJson([]).geometry.coordinates).toEqual([]);
+  });
+
   it('draws fixes up to 2 s apart as one line in longitude, latitude order', () => {
     expect(
       traceGeoJson([
@@ -86,7 +63,7 @@ describe('traceGeoJson', () => {
     ]);
   });
 
-  it("keeps a long Run's sparser averaged history as one line", () => {
+  it("keeps a long Run's sparser stored trace as one line", () => {
     expect(
       traceGeoJson([
         { lat: 1, lon: 10, timeMs: 0 },
@@ -102,20 +79,6 @@ describe('traceGeoJson', () => {
         [40, 4]
       ]
     ]);
-  });
-});
-
-describe('carGeoJson', () => {
-  it('puts the car at the last point of the trace', () => {
-    expect(
-      carGeoJson([
-        { lat: 1, lon: 10 },
-        { lat: 2, lon: 20 }
-      ])
-    ).toEqual({
-      type: 'FeatureCollection',
-      features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [20, 2] } }]
-    });
   });
 });
 
@@ -212,51 +175,36 @@ describe('draftLineGeoJson', () => {
   });
 });
 
-describe('mapStyle', () => {
-  const background: LayerSpecification = {
-    id: 'background',
-    type: 'background',
-    paint: { 'background-color': '#101010' }
-  };
+const lat = 42;
+const lon = -84;
+const metresOfLatitude = 180 / (6371000 * Math.PI);
+const metresOfLongitude = metresOfLatitude / Math.cos((lat * Math.PI) / 180);
+const fixes = [
+  { lat, lon, timeMs: 1000 },
+  { lat, lon: lon + 10 * metresOfLongitude, timeMs: 1100 }
+];
 
-  it('is the background alone without a PMTiles file', () => {
-    expect(mapStyle('#101010', undefined)).toEqual({ version: 8, sources: {}, layers: [background] });
-    expect(mapStyle('#101010', '')).toEqual({ version: 8, sources: {}, layers: [background] });
+describe('fixAt', () => {
+  // One screen pixel per metre, y down.
+  const toScreen = (point: Coordinate) => ({
+    x: (point.lon - lon) / metresOfLongitude,
+    y: -(point.lat - lat) / metresOfLatitude
   });
 
-  it('draws the OpenStreetMap basemap from the PMTiles file with fill and line layers only', () => {
-    const style = mapStyle('#101010', '/assets/map/venue.pmtiles');
-
-    expect(style.sources).toEqual({
-      basemap: {
-        type: 'vector',
-        url: 'pmtiles:///assets/map/venue.pmtiles'
-      }
-    });
-    expect(style.layers[0]).toEqual(background);
-    expect(style.layers.map((layer) => [layer.id, layer.type])).toEqual([
-      ['background', 'background'],
-      ['earth', 'fill'],
-      ['landuse', 'fill'],
-      ['water', 'fill'],
-      ['roads', 'line'],
-      ['buildings', 'fill']
-    ]);
-    expect(style.glyphs).toBeUndefined();
-    expect(style.sprite).toBeUndefined();
+  it('finds the nearest fix drawn within 10 px of the cursor', () => {
+    expect(fixAt(fixes, { lat: lat + 6 * metresOfLatitude, lon: lon + 16 * metresOfLongitude }, toScreen)).toEqual(fixes[1]);
   });
-});
 
-describe('overlayLayers', () => {
-  it('stacks the overlays from the trace up to the snap ring', () => {
-    expect(overlayLayers((variable) => variable).map((layer) => layer.id)).toEqual([
-      'trace',
-      'start-line',
-      'finish-line',
-      'draft-line',
-      'draft-end',
-      'car',
-      'snap'
-    ]);
+  it('finds the nearer of two fixes both drawn within 10 px, with its time', () => {
+    expect(fixAt(fixes, { lat, lon: lon + 4 * metresOfLongitude }, toScreen)).toEqual(fixes[0]);
+    expect(fixAt(fixes, { lat, lon: lon + 6 * metresOfLongitude }, toScreen)).toEqual(fixes[1]);
+  });
+
+  it('finds nothing when the nearest fix is drawn more than 10 px away', () => {
+    expect(fixAt(fixes, { lat: lat + 11 * metresOfLatitude, lon }, toScreen)).toBeNull();
+  });
+
+  it('finds nothing without fixes', () => {
+    expect(fixAt([], { lat, lon }, toScreen)).toBeNull();
   });
 });

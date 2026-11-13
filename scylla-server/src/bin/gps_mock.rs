@@ -1,5 +1,5 @@
 use std::{
-    f64::consts::{PI, TAU},
+    f64::consts::TAU,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -14,13 +14,10 @@ use scylla_server::{
 const COURSE_ORIGIN_LAT: f64 = 42.3398;
 const COURSE_ORIGIN_LON: f64 = -71.0892;
 const LOOP_LENGTH_M: f64 = 300.0;
-const LOOP_LAPS: u32 = 3;
-const STRAIGHT_LENGTH_M: f64 = 75.0;
-const U_TURN_RADIUS_M: f64 = 5.0;
 const SPEED_M_PER_S: f64 = 15.0;
 const PUBLISH_PERIOD: Duration = Duration::from_millis(100);
 
-/// Publishes mock `TPU/GPS/Location` fixes: loop laps, then a straight out and back
+/// Publishes mock `TPU/GPS/Location` fixes driving laps of a circular loop
 #[derive(Parser, Debug)]
 struct GpsMockArgs {
     /// The host url of the siren, including port and excluding protocol prefix
@@ -28,39 +25,11 @@ struct GpsMockArgs {
     siren_host_url: String,
 }
 
-/// Metres east and north of the origin after `distance_m`; continuous, so every lap starts at the origin
+/// Metres east and north of the origin after `distance_m`; every lap starts at the origin
 fn course_position_m(distance_m: f64) -> (f64, f64) {
-    let loops_length_m = f64::from(LOOP_LAPS) * LOOP_LENGTH_M;
-    let u_turn_length_m = PI * U_TURN_RADIUS_M;
-    let cycle_length_m = loops_length_m + 2.0 * (STRAIGHT_LENGTH_M + u_turn_length_m);
-    let along_m = distance_m % cycle_length_m;
-    if along_m < loops_length_m {
-        let radius_m = LOOP_LENGTH_M / TAU;
-        let angle = along_m / radius_m;
-        return (radius_m * angle.sin(), radius_m * (1.0 - angle.cos()));
-    }
-
-    let out_m = along_m - loops_length_m;
-    if out_m < STRAIGHT_LENGTH_M {
-        (out_m, 0.0)
-    } else if out_m < STRAIGHT_LENGTH_M + u_turn_length_m {
-        let angle = (out_m - STRAIGHT_LENGTH_M) / U_TURN_RADIUS_M;
-        (
-            STRAIGHT_LENGTH_M + U_TURN_RADIUS_M * angle.sin(),
-            U_TURN_RADIUS_M * angle.cos() - U_TURN_RADIUS_M,
-        )
-    } else if out_m < 2.0 * STRAIGHT_LENGTH_M + u_turn_length_m {
-        (
-            2.0 * STRAIGHT_LENGTH_M + u_turn_length_m - out_m,
-            -2.0 * U_TURN_RADIUS_M,
-        )
-    } else {
-        let angle = (out_m - 2.0 * STRAIGHT_LENGTH_M - u_turn_length_m) / U_TURN_RADIUS_M;
-        (
-            -U_TURN_RADIUS_M * angle.sin(),
-            -U_TURN_RADIUS_M - U_TURN_RADIUS_M * angle.cos(),
-        )
-    }
+    let radius_m = LOOP_LENGTH_M / TAU;
+    let angle = distance_m / radius_m;
+    (radius_m * angle.sin(), radius_m * (1.0 - angle.cos()))
 }
 
 fn location(east_m: f64, north_m: f64, time_us: u64) -> ServerData {

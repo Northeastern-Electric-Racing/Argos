@@ -62,21 +62,20 @@ pub struct Run {
 pub struct Track {
     pub id: i32,
     pub name: String,
-    pub startALat: Option<f64>,
-    pub startALon: Option<f64>,
-    pub startBLat: Option<f64>,
-    pub startBLon: Option<f64>,
-    pub finishALat: Option<f64>,
-    pub finishALon: Option<f64>,
-    pub finishBLat: Option<f64>,
-    pub finishBLon: Option<f64>,
+    pub startLine: Option<Vec<Option<f64>>>,
+    pub finishLine: Option<Vec<Option<f64>>>,
 }
 
-pub type LineColumns = (Option<f64>, Option<f64>, Option<f64>, Option<f64>);
+/// A line's `[a.lat, a.lon, b.lat, b.lon]` column; no line is NULL
+#[must_use]
+pub fn line_to_column(line: Option<TimingLine>) -> Option<Vec<f64>> {
+    line.map(|TimingLine { a, b }| vec![a.lat, a.lon, b.lat, b.lon])
+}
 
-/// A line's `(a_lat, a_lon, b_lat, b_lon)` columns; any NULL column means no line
-fn line_from_columns(columns: LineColumns) -> Option<TimingLine> {
-    let (Some(a_lat), Some(a_lon), Some(b_lat), Some(b_lon)) = columns else {
+/// The inverse of `line_to_column`
+#[must_use]
+pub fn line_from_column(column: Option<&[Option<f64>]>) -> Option<TimingLine> {
+    let [Some(a_lat), Some(a_lon), Some(b_lat), Some(b_lon)] = *column? else {
         return None;
     };
     Some(TimingLine {
@@ -89,35 +88,4 @@ fn line_from_columns(columns: LineColumns) -> Option<TimingLine> {
             lon: b_lon,
         },
     })
-}
-
-/// The inverse of `line_from_columns`: no line means all four columns NULL
-#[must_use]
-pub fn columns_from_line(line: Option<TimingLine>) -> LineColumns {
-    (
-        line.map(|line| line.a.lat),
-        line.map(|line| line.a.lon),
-        line.map(|line| line.b.lat),
-        line.map(|line| line.b.lon),
-    )
-}
-
-impl Track {
-    #[must_use]
-    pub fn lines(&self) -> (Option<TimingLine>, Option<TimingLine>) {
-        (
-            line_from_columns((
-                self.startALat,
-                self.startALon,
-                self.startBLat,
-                self.startBLon,
-            )),
-            line_from_columns((
-                self.finishALat,
-                self.finishALon,
-                self.finishBLat,
-                self.finishBLon,
-            )),
-        )
-    }
 }

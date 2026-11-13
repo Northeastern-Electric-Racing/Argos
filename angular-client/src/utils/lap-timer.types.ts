@@ -72,12 +72,14 @@ export const lapTable = (laps: TimedLap[]): { best: string; rows: LapRow[] } | n
   const bestMs = Math.min(...laps.map((lap) => lap.durationMs));
   return {
     best: formatMs(bestMs),
-    rows: laps.map((lap, index) => ({
-      number: index + 1,
-      time: formatMs(lap.durationMs),
-      deltaToBest: formatDeltaMs(lap.durationMs - bestMs),
-      isBest: lap.durationMs === bestMs
-    }))
+    rows: laps
+      .map((lap, index) => ({
+        number: index + 1,
+        time: formatMs(lap.durationMs),
+        deltaToBest: formatDeltaMs(lap.durationMs - bestMs),
+        isBest: lap.durationMs === bestMs
+      }))
+      .reverse()
   };
 };
 

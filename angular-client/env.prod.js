@@ -1,4 +1,3 @@
 window.__env = {
-  BACKEND_URL: '$BACKEND_URL',
-  MAP_PMTILES_URL: '$MAP_PMTILES_URL'
+  BACKEND_URL: '$BACKEND_URL'
 };

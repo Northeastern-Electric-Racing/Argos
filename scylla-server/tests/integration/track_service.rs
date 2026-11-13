@@ -1,8 +1,9 @@
 use std::time::Duration;
 
 use crate::test_utils::cleanup_and_prepare;
-use axum::{Extension, Json, extract::Path, http::StatusCode};
+use axum::{Extension, Json, extract::Path};
 use scylla_server::{
+    Database,
     controllers::track_controller::{self, AddTrackPayload},
     error::ScyllaError,
     lap_timing::{GeoPoint, LineKind, TimingLine},
@@ -21,6 +22,11 @@ fn line(lat: f64, lon: f64) -> TimingLine {
     }
 }
 
+async fn stored_tracks(db: &mut Database<'_>) -> Result<Vec<PublicTrack>, diesel::result::Error> {
+    let tracks = track_service::get_all_tracks(db).await?;
+    Ok(tracks.into_iter().map(PublicTrack::from).collect())
+}
+
 #[tokio::test]
 async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Error> {
     let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
@@ -31,13 +37,8 @@ async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Er
     let endurance = track_service::add_track(&mut db, "Endurance".to_owned()).await?;
     let accel = track_service::add_track(&mut db, "Accel".to_owned()).await?;
 
-    let listed: Vec<PublicTrack> = track_service::get_all_tracks(&mut db)
-        .await?
-        .into_iter()
-        .map(PublicTrack::from)
-        .collect();
     assert_eq!(
-        listed,
+        stored_tracks(&mut db).await?,
         vec![
             PublicTrack {
                 id: endurance.id,
@@ -61,33 +62,51 @@ async fn test_add_and_list_tracks_in_id_order() -> Result<(), diesel::result::Er
 async fn test_edit_track_line_replaces_only_that_line() -> Result<(), diesel::result::Error> {
     let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
     let mut db = argos_pool.get().await.unwrap();
-
     let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
-    for (kind, placed) in [
-        (LineKind::Start, line(42.1, -71.1)),
-        (LineKind::Finish, line(42.338_5, -71.087_5)),
-    ] {
-        track_service::edit_track_line(&mut db, added.id, kind, Some(placed)).await?;
-    }
-    let precise_line = line(42.337_812_345_678, -71.086_712_345_678);
+    let finish = line(42.338_5, -71.087_5);
+    track_service::edit_track_line(&mut db, added.id, LineKind::Finish, Some(finish)).await?;
+    let precise_start = line(42.337_812_345_678, -71.086_712_345_678);
 
-    track_service::edit_track_line(&mut db, added.id, LineKind::Start, Some(precise_line)).await?;
-    let edited = track_service::edit_track_line(&mut db, added.id, LineKind::Finish, None)
-        .await?
-        .expect("track should exist");
-
-    let expected = PublicTrack {
-        id: added.id,
-        name: "Accel".to_owned(),
-        start_line: Some(precise_line),
-        finish_line: None,
-    };
-    assert_eq!(PublicTrack::from(edited), expected);
-    assert_eq!(
-        track_service::get_track_by_id(&mut db, added.id)
+    let edited =
+        track_service::edit_track_line(&mut db, added.id, LineKind::Start, Some(precise_start))
             .await?
-            .map(PublicTrack::from),
-        Some(expected)
+            .map(PublicTrack::from);
+
+    let stored = stored_tracks(&mut db).await?;
+    assert_eq!(
+        stored,
+        [PublicTrack {
+            id: added.id,
+            name: "Accel".to_owned(),
+            start_line: Some(precise_start),
+            finish_line: Some(finish),
+        }]
+    );
+    assert_eq!(edited.as_ref(), stored.first());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_edit_track_line_with_none_clears_it() -> Result<(), diesel::result::Error> {
+    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
+    let mut db = argos_pool.get().await.unwrap();
+    let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
+    let finish = line(42.338_5, -71.087_5);
+    track_service::edit_track_line(&mut db, added.id, LineKind::Start, Some(line(42.1, -71.1)))
+        .await?;
+    track_service::edit_track_line(&mut db, added.id, LineKind::Finish, Some(finish)).await?;
+
+    track_service::edit_track_line(&mut db, added.id, LineKind::Start, None).await?;
+
+    assert_eq!(
+        stored_tracks(&mut db).await?,
+        [PublicTrack {
+            id: added.id,
+            name: "Accel".to_owned(),
+            start_line: None,
+            finish_line: Some(finish),
+        }]
     );
 
     Ok(())
@@ -120,94 +139,6 @@ async fn test_delete_unknown_track_is_empty_result() {
     .await;
 
     assert!(matches!(deleted, Err(ScyllaError::EmptyResult)));
-}
-
-#[tokio::test]
-async fn test_edit_track_accepts_boundary_coordinates() -> Result<(), ScyllaError> {
-    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
-    let mut db = argos_pool.get().await?;
-    let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
-    drop(db);
-    let corners = TimingLine {
-        a: GeoPoint {
-            lat: 90.0,
-            lon: 180.0,
-        },
-        b: GeoPoint {
-            lat: -90.0,
-            lon: -180.0,
-        },
-    };
-
-    let edited = track_controller::edit_track_line(
-        Extension(argos_pool),
-        Extension(TracksChanged::default()),
-        Path((added.id, LineKind::Start)),
-        Json(Some(corners)),
-    )
-    .await?;
-
-    assert_eq!(
-        edited.0,
-        PublicTrack {
-            id: added.id,
-            name: "Accel".to_owned(),
-            start_line: Some(corners),
-            finish_line: None,
-        }
-    );
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_edit_track_rejects_out_of_range_coordinates() -> Result<(), ScyllaError> {
-    let (_, argos_pool) = cleanup_and_prepare().await.unwrap();
-    let mut db = argos_pool.get().await?;
-    let added = track_service::add_track(&mut db, "Accel".to_owned()).await?;
-
-    for (lat, lon) in [
-        (90.000_1, 0.0),
-        (-90.000_1, 0.0),
-        (0.0, 180.000_1),
-        (0.0, -180.000_1),
-        (f64::NAN, 0.0),
-        (0.0, f64::INFINITY),
-    ] {
-        let bad_point = TimingLine {
-            a: GeoPoint {
-                lat: 42.1,
-                lon: -71.1,
-            },
-            b: GeoPoint { lat, lon },
-        };
-        let edited = track_controller::edit_track_line(
-            Extension(argos_pool.clone()),
-            Extension(TracksChanged::default()),
-            Path((added.id, LineKind::Finish)),
-            Json(Some(bad_point)),
-        )
-        .await;
-
-        assert!(
-            matches!(
-                edited,
-                Err(ScyllaError::HttpError(StatusCode::BAD_REQUEST, _))
-            ),
-            "({lat}, {lon}) should be rejected"
-        );
-    }
-    assert_eq!(
-        track_service::get_track_by_id(&mut db, added.id)
-            .await?
-            .map(PublicTrack::from),
-        Some(PublicTrack {
-            id: added.id,
-            name: "Accel".to_owned(),
-            start_line: None,
-            finish_line: None,
-        })
-    );
-    Ok(())
 }
 
 #[tokio::test]

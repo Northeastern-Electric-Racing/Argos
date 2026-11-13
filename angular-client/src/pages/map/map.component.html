@@ -1,148 +1,110 @@
 @if (isMobile()) {
-  <sidebar-toggle style="width: 100%" />
+  <sidebar-toggle class="w-full" />
 }
-<p-confirmDialog />
-<div class="map-page">
-  <div class="map-area">
-    <map-canvas class="map-container" [mapStyle]="baseStyle" (loaded)="onMapLoaded($event)" />
-    @if (runId() !== undefined) {
-      <div class="overlay chip status">
-        <span class="dot" [class.live]="isLive()"></span>
-        {{ isLive() ? 'Live' : 'Recorded' }} · Run #{{ runId() }}
-      </div>
-    }
+<div class="flex min-h-0 flex-1 max-md:flex-col">
+  <div class="relative min-h-[60vh] flex-1">
+    <map-canvas class="absolute inset-0" (loaded)="onMapLoaded($event)" />
     @if (placing(); as spec) {
-      <div class="overlay chip banner">
+      <div
+        class="absolute top-5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-md bg-panel px-3 py-1.5 text-xs text-fg"
+      >
         Click the map to place the {{ spec.kind }} line's {{ pendingEnd() ? 'second' : 'first' }} end
-        <span class="secondary">Esc to cancel</span>
+        <span class="text-fg-label">Esc to cancel</span>
       </div>
     }
     @if (cursor(); as cursor) {
-      <div class="overlay chip readout">
+      <div
+        class="pointer-events-none absolute bottom-5 left-5 flex items-center gap-1.5 rounded-md bg-panel px-3 py-1.5 text-xs whitespace-nowrap text-fg"
+      >
         @if (cursor.fix; as fix) {
-          @if (snapTarget()) {
-            Snapped to fix ·
-          }
           {{ fix.lat | number: '1.6-6' }}, {{ fix.lon | number: '1.6-6' }}
-          <span class="secondary">{{ fix.timeMs | date: 'HH:mm:ss.SSS' }}</span>
+          <span class="text-fg-label">{{ fix.timeMs | date: 'HH:mm:ss.SSS' }}</span>
         } @else {
           {{ cursor.point.lat | number: '1.6-6' }}, {{ cursor.point.lon | number: '1.6-6' }}
         }
       </div>
     }
-    @if (historyError(); as error) {
-      <error-page class="overlay fill" [errorMessage]="error.message" />
-    } @else if (isLoading()) {
-      <loading-page class="overlay fill" />
-    }
   </div>
 
-  <aside class="panel">
-    <typography class="section" variant="sidebar-label" content="Run" />
-    <run-selector [selectRun]="onRunSelected" />
-
-    <typography class="section" variant="sidebar-label" content="Track" />
-    <p-select
-      [options]="tracks()"
-      [(ngModel)]="selectedTrackId"
-      optionLabel="name"
-      optionValue="id"
-      placeholder="Select a track"
-      [disabled]="saving()"
-      appendTo="body"
-      [fluid]="true"
-    />
-    <div class="row">
+  <aside class="w-90 overflow-y-auto border-l border-border bg-panel px-5 pb-5 text-fg max-md:w-auto max-md:border-l-0">
+    <typography variant="sidebar-label" content="Track" textClass="mt-6 mb-2" />
+    <div class="mt-2 flex gap-2">
+      <ui-select
+        class="min-w-0 flex-1"
+        size="sm"
+        [options]="tracks()"
+        optionLabel="name"
+        placeholder="Select a track"
+        ariaLabel="Track"
+        [ngModel]="selectedTrack()"
+        (selectionChange)="selectedTrackId.set($event.id)"
+      />
+      @if (selectedTrack(); as track) {
+        <button uiButton variant="danger" size="sm" type="button" (click)="confirmDelete(track)">Delete</button>
+      }
+    </div>
+    <div class="mt-2 flex gap-2">
       <input
-        pInputText
-        class="grow"
+        uiInput="sm"
+        class="min-w-0 flex-1"
         placeholder="New track name"
+        aria-label="New track name"
         [formControl]="newTrackName"
         (keydown.enter)="createTrack()"
       />
-      <p-button
-        label="New track"
-        size="small"
-        severity="secondary"
-        [outlined]="true"
-        [disabled]="!canCreateTrack()"
-        (onClick)="createTrack()"
-      />
+      <button uiButton variant="neutral" size="sm" type="button" [disabled]="!canCreateTrack()" (click)="createTrack()">
+        New track
+      </button>
     </div>
-    @if (selectedTrack(); as track) {
-      <div class="row">
-        <p-button
-          label="Delete"
-          size="small"
-          severity="danger"
-          [outlined]="true"
-          [disabled]="saving()"
-          (onClick)="confirmDelete(track)"
-        />
-      </div>
-    }
 
-    <typography class="section" variant="sidebar-label" content="Timing lines" />
+    <typography variant="sidebar-label" content="Timing lines" textClass="mt-6 mb-2" />
     @for (row of lineRows(); track row.spec.kind) {
-      <div class="row line-row">
-        <div class="grow">
-          {{ row.spec.label }}
-          <div class="hint">
-            @if (row.line) {
-              Placed · {{ row.lengthMetres | number: '1.1-1' }} m
-            } @else {
-              Not placed
-            }
-          </div>
-        </div>
+      <div class="mt-2 flex items-center gap-2">
+        <div class="flex-1">{{ row.spec.label }}</div>
         @if (row.line) {
-          <p-button
-            label="Clear"
-            size="small"
-            severity="secondary"
-            [text]="true"
-            [disabled]="saving()"
-            (onClick)="clearLine(row.spec)"
-          />
+          <button uiButton variant="danger-text" size="sm" type="button" (click)="clearLine(row.spec)">Clear</button>
         } @else {
-          <p-button
-            label="Place"
-            size="small"
-            severity="secondary"
-            [outlined]="placing() !== row.spec"
-            [disabled]="!selectedTrack() || saving()"
-            (onClick)="togglePlacing(row.spec)"
-          />
+          <button
+            uiButton
+            variant="tonal"
+            size="sm"
+            type="button"
+            [attr.aria-pressed]="placing() === row.spec"
+            [disabled]="!selectedTrack()"
+            (click)="togglePlacing(row.spec)"
+          >
+            Place
+          </button>
         }
       </div>
       @if (row.line; as line) {
-        <details>
-          <summary class="hint">Edit coordinates</summary>
+        <details class="mt-1">
+          <summary class="cursor-pointer text-xs text-fg-label">Edit coordinates</summary>
           @for (end of lineEnds; track end) {
-            <label class="line-end">
-              <span class="secondary">End {{ $index + 1 }}</span>
+            <label class="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+              <span class="col-span-full text-fg-label">End {{ $index + 1 }}</span>
               <input
                 #latitude
-                pInputText
+                uiInput="sm"
+                class="min-w-0"
                 type="number"
                 step="0.000001"
                 aria-label="Latitude"
                 min="-90"
                 max="90"
                 [value]="line[end].lat.toFixed(6)"
-                [disabled]="saving()"
                 (change)="moveLineEnd(row.spec, end, 'lat', latitude)"
               />
               <input
                 #longitude
-                pInputText
+                uiInput="sm"
+                class="min-w-0"
                 type="number"
                 step="0.000001"
                 aria-label="Longitude"
                 min="-180"
                 max="180"
                 [value]="line[end].lon.toFixed(6)"
-                [disabled]="saving()"
                 (change)="moveLineEnd(row.spec, end, 'lon', longitude)"
               />
             </label>
@@ -150,40 +112,40 @@
         </details>
       }
     }
-    <p class="hint">Start only: every crossing is a lap. Add a finish for accel and autocross.</p>
+    <p class="mt-3 text-xs text-fg-label">Start only: every crossing is a lap. Add a finish for accel and autocross.</p>
 
-    <typography class="section" variant="sidebar-label" content="Laps" />
+    <typography variant="sidebar-label" content="Laps" textClass="mt-6 mb-2" />
     @if (lapTable(); as table) {
-      <p class="best">
-        Best <span>{{ table.best }}</span>
+      <p class="mb-2">
+        Best <span class="text-lg font-semibold text-battery-high">{{ table.best }}</span>
       </p>
-      <p-table [value]="table.rows" size="small">
-        <ng-template #header>
+      <table [class]="lapClasses.table">
+        <thead>
           <tr>
-            <th>#</th>
-            <th>Time</th>
-            <th>Δ best</th>
+            <th [class]="lapClasses.header">#</th>
+            <th [class]="lapClasses.header">Time</th>
+            <th [class]="lapClasses.header">Δ best</th>
           </tr>
-        </ng-template>
-        <ng-template #body let-lap>
-          <tr [class.best-lap]="lap.isBest">
-            <td>{{ lap.number }}</td>
-            <td>{{ lap.time }}</td>
-            <td class="delta">{{ lap.deltaToBest }}</td>
-          </tr>
-        </ng-template>
-      </p-table>
+        </thead>
+        <tbody>
+          @for (lap of table.rows; track lap.number) {
+            <tr [class]="lap.isBest ? lapClasses.best : ''">
+              <td [class]="lapClasses.cell">{{ lap.number }}</td>
+              <td [class]="lapClasses.cell">{{ lap.time }}</td>
+              <td [class]="lap.isBest ? lapClasses.cell : lapClasses.delta">{{ lap.deltaToBest }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
     } @else if (!selectedTrack()) {
-      <p class="hint">Select or create a track.</p>
+      <p class="text-xs text-fg-label">Select or create a track.</p>
     } @else if (!selectedTrack()?.startLine) {
-      <p class="hint">Place the start line to time laps.</p>
+      <p class="text-xs text-fg-label">Place the start line to time laps.</p>
     } @else {
-      <p class="hint">No laps yet.</p>
+      <p class="text-xs text-fg-label">No laps yet.</p>
     }
-    @if (showOsmCredit) {
-      <a class="hint osm-credit" href="https://www.openstreetmap.org/copyright" target="_blank"
-        >© OpenStreetMap contributors</a
-      >
-    }
+    <a class="mt-6 block text-xs text-fg-label" href="https://www.openstreetmap.org/copyright" target="_blank"
+      >© OpenStreetMap contributors</a
+    >
   </aside>
 </div>

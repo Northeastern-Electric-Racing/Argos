@@ -1,11 +1,8 @@
 use crate::{
     Database,
-    argos_schema::track::dsl::{
-        finishALat, finishALon, finishBLat, finishBLon, id, name, startALat, startALon, startBLat,
-        startBLon, track,
-    },
+    argos_schema::track::dsl::{finishLine, id, name, startLine, track},
     lap_timing::{LineKind, TimingLine},
-    models::{Track, columns_from_line},
+    models::{Track, line_to_column},
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -15,17 +12,6 @@ use diesel_async::RunQueryDsl;
 ///   returns: A result containing the tracks or the `QueryError` propogated by the db
 pub async fn get_all_tracks(db: &mut Database<'_>) -> Result<Vec<Track>, diesel::result::Error> {
     track.order(id.asc()).get_results(db).await
-}
-
-/// Gets a single track by its id
-/// * `db` - The database connection to use
-/// * `track_id` - The id of the track to search for
-///   returns: A result containing the track (or None if no track has that id) or the `QueryError` propogated by the db
-pub async fn get_track_by_id(
-    db: &mut Database<'_>,
-    track_id: i32,
-) -> Result<Option<Track>, diesel::result::Error> {
-    track.find(track_id).first(db).await.optional()
 }
 
 /// Adds a track with a new id and no lines
@@ -54,29 +40,11 @@ pub async fn edit_track_line(
     kind: LineKind,
     line: Option<TimingLine>,
 ) -> Result<Option<Track>, diesel::result::Error> {
-    let (a_lat, a_lon, b_lat, b_lon) = columns_from_line(line);
+    let column = line_to_column(line);
     let edit = diesel::update(track.find(track_id));
     let edited = match kind {
-        LineKind::Start => {
-            edit.set((
-                startALat.eq(a_lat),
-                startALon.eq(a_lon),
-                startBLat.eq(b_lat),
-                startBLon.eq(b_lon),
-            ))
-            .get_result(db)
-            .await
-        }
-        LineKind::Finish => {
-            edit.set((
-                finishALat.eq(a_lat),
-                finishALon.eq(a_lon),
-                finishBLat.eq(b_lat),
-                finishBLon.eq(b_lon),
-            ))
-            .get_result(db)
-            .await
-        }
+        LineKind::Start => edit.set(startLine.eq(column)).get_result(db).await,
+        LineKind::Finish => edit.set(finishLine.eq(column)).get_result(db).await,
     };
     edited.optional()
 }

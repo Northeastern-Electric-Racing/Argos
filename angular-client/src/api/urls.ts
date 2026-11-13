@@ -48,8 +48,8 @@ const addTrack = () => `${baseURL}/tracks/add`;
 const editTrackLine = (id: number, kind: LineKind) => `${baseURL}/tracks/edit/${id}/${kind}`;
 const deleteTrack = (id: number) => `${baseURL}/tracks/delete/${id}`;
 
-/* Laps */
-const getLaps = (runId: number, trackId: number) => `${baseURL}/laps/${runId}/${trackId}`;
+/* Trace */
+const getTrace = (runId: number) => `${baseURL}/trace/${runId}`;
 
 /* Authentication */
 const authenticate = () => `${baseURL}/authenticate`;
@@ -95,7 +95,7 @@ export const urls = {
   editTrackLine,
   deleteTrack,
 
-  getLaps,
+  getTrace,
 
   authenticate,
 

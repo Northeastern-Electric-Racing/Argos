@@ -593,10 +593,5 @@
     "@angular-eslint/prefer-on-push-component-change-detection": {
       "count": 1
     }
-  },
-  "src/pages/map/map.component.ts": {
-    "@angular-eslint/prefer-on-push-component-change-detection": {
-      "count": 1
-    }
   }
 }

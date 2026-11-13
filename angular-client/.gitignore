@@ -43,5 +43,5 @@ testem.log
 .DS_Store
 Thumbs.db
 
-# Offline map tiles (see utils/UTILS.md); never committed
+# The offline map, fetched by utils/fetch-basemap.sh; never committed
 /src/assets/map/

@@ -1,11 +1,11 @@
 import { GeoJSONSource, LayerSpecification, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
+import Theme from 'src/services/theme.service';
 import { DataValue } from './socket.utils';
-import { SNAP_RADIUS_PX } from './track.utils';
 import { Coordinate, Fix, Track } from './types.utils';
 
 export const LINES = [
-  { kind: 'start', field: 'startLine', colorVar: '--color-timing-start', label: 'Start line' },
-  { kind: 'finish', field: 'finishLine', colorVar: '--color-timing-finish', label: 'Finish line' }
+  { kind: 'start', field: 'startLine', color: Theme.battteryHigh, label: 'Start line' },
+  { kind: 'finish', field: 'finishLine', color: Theme.accent, label: 'Finish line' }
 ] as const;
 export type LineSpec = (typeof LINES)[number];
 
@@ -19,11 +19,8 @@ export const toFix = (point: DataValue): Fix => ({
   timeMs: Number(point.time)
 });
 
-// The DB returns a run's points in no particular order.
-export const traceFromPoints = (points: DataValue[]): Fix[] => points.map(toFix).sort((a, b) => a.timeMs - b.timeMs);
-
-// Don't draw a straight line across missing GPS, e.g. a dropout or the hole left by batched DB writes. A long Run's
-// history comes back averaged into sparser points, so a gap only counts as missing GPS if it is well over its neighbours.
+// Don't draw a straight line across missing GPS, e.g. a dropout. A long Run's stored trace comes back as every nth fix,
+// so a gap only counts as missing GPS if it is well over its neighbours.
 const MIN_MISSING_GPS_MS = 2_000;
 const MISSING_GPS_SPACINGS = 3;
 
@@ -46,8 +43,6 @@ export const pointGeoJson = (point: Coordinate | null) => ({
     : []
 });
 
-export const carGeoJson = (trace: Coordinate[]) => pointGeoJson(trace.at(-1) ?? null);
-
 export const linesGeoJson = (track: Track | null) => ({
   type: 'FeatureCollection' as const,
   features: LINES.flatMap(({ kind, field }) => {
@@ -64,17 +59,21 @@ export const linesGeoJson = (track: Track | null) => ({
   })
 });
 
-export const draftLineGeoJson = (a: Coordinate | null, cursor: Coordinate | null) => ({
+export const draftLineGeoJson = (pendingEnd: Coordinate | null, cursor: Coordinate | null) => ({
   type: 'FeatureCollection' as const,
-  features: a
+  features: pendingEnd
     ? [
-        { type: 'Feature' as const, properties: {}, geometry: { type: 'Point' as const, coordinates: toLngLat(a) } },
+        {
+          type: 'Feature' as const,
+          properties: {},
+          geometry: { type: 'Point' as const, coordinates: toLngLat(pendingEnd) }
+        },
         ...(cursor
           ? [
               {
                 type: 'Feature' as const,
                 properties: {},
-                geometry: { type: 'LineString' as const, coordinates: [toLngLat(a), toLngLat(cursor)] }
+                geometry: { type: 'LineString' as const, coordinates: [toLngLat(pendingEnd), toLngLat(cursor)] }
               }
             ]
           : [])
@@ -82,7 +81,32 @@ export const draftLineGeoJson = (a: Coordinate | null, cursor: Coordinate | null
     : []
 });
 
-export const OVERLAY_SOURCES = ['trace', 'lines', 'car', 'draft', 'snap'] as const;
+const EARTH_RADIUS_M = 6371000;
+const HOVER_RADIUS_PX = 10;
+const metresPerDegree = (EARTH_RADIUS_M * Math.PI) / 180;
+
+const distanceMetres = (point: Coordinate, origin: Coordinate) =>
+  Math.hypot(
+    (point.lon - origin.lon) * Math.cos((origin.lat * Math.PI) / 180) * metresPerDegree,
+    (point.lat - origin.lat) * metresPerDegree
+  );
+
+/** The trace fix under the cursor, if one is drawn within a few pixels of it */
+export const fixAt = <T extends Coordinate>(
+  trace: T[],
+  cursor: Coordinate,
+  toScreen: (point: Coordinate) => { x: number; y: number }
+): T | null => {
+  const fix = trace.reduce<T | null>(
+    (nearest, fix) => (!nearest || distanceMetres(fix, cursor) < distanceMetres(nearest, cursor) ? fix : nearest),
+    null
+  );
+  if (!fix) return null;
+  const [fixPx, cursorPx] = [toScreen(fix), toScreen(cursor)];
+  return Math.hypot(fixPx.x - cursorPx.x, fixPx.y - cursorPx.y) <= HOVER_RADIUS_PX ? fix : null;
+};
+
+const OVERLAY_SOURCES = ['trace', 'lines', 'car', 'draft'] as const;
 type OverlaySource = (typeof OVERLAY_SOURCES)[number];
 
 export const setOverlay = (
@@ -91,22 +115,22 @@ export const setOverlay = (
   data: Parameters<GeoJSONSource['setData']>[0]
 ) => map?.getSource<GeoJSONSource>(source)?.setData(data);
 
-export const overlayLayers = (color: (variable: string) => string): LayerSpecification[] => [
+const OVERLAY_LAYERS: LayerSpecification[] = [
   {
     id: 'trace',
     type: 'line',
     source: 'trace',
     layout: { 'line-join': 'round', 'line-cap': 'round' },
-    paint: { 'line-color': color('--color-text-secondary'), 'line-width': 7 }
+    paint: { 'line-color': Theme.fgMuted, 'line-width': 7 }
   },
   ...LINES.map(
-    ({ kind, colorVar }): LayerSpecification => ({
+    ({ kind, color }): LayerSpecification => ({
       id: `${kind}-line`,
       type: 'line',
       source: 'lines',
       filter: ['==', ['get', 'kind'], kind],
       layout: { 'line-cap': 'round' },
-      paint: { 'line-color': color(colorVar), 'line-width': 4 }
+      paint: { 'line-color': color, 'line-width': 4 }
     })
   ),
   {
@@ -114,41 +138,20 @@ export const overlayLayers = (color: (variable: string) => string): LayerSpecifi
     type: 'line',
     source: 'draft',
     filter: ['==', ['geometry-type'], 'LineString'],
-    paint: { 'line-color': color('--color-text-primary'), 'line-width': 2, 'line-dasharray': [2, 2] }
+    paint: { 'line-color': Theme.fg, 'line-width': 2, 'line-dasharray': [2, 2] }
   },
   {
     id: 'draft-end',
     type: 'circle',
     source: 'draft',
     filter: ['==', ['geometry-type'], 'Point'],
-    paint: {
-      'circle-radius': 6,
-      'circle-color': color('--color-text-primary'),
-      'circle-stroke-color': color('--color-background-page'),
-      'circle-stroke-width': 2
-    }
+    paint: { 'circle-radius': 6, 'circle-color': Theme.fg, 'circle-stroke-color': Theme.page, 'circle-stroke-width': 2 }
   },
   {
     id: 'car',
     type: 'circle',
     source: 'car',
-    paint: {
-      'circle-radius': 7,
-      'circle-color': color('--color-timing-finish'),
-      'circle-stroke-color': color('--color-text-primary'),
-      'circle-stroke-width': 2
-    }
-  },
-  {
-    id: 'snap',
-    type: 'circle',
-    source: 'snap',
-    paint: {
-      'circle-radius': SNAP_RADIUS_PX,
-      'circle-color': 'transparent',
-      'circle-stroke-color': color('--color-text-primary'),
-      'circle-stroke-width': 2
-    }
+    paint: { 'circle-radius': 7, 'circle-color': Theme.accent, 'circle-stroke-color': Theme.fg, 'circle-stroke-width': 2 }
   }
 ];
 
@@ -216,21 +219,19 @@ const BASEMAP_LAYERS: LayerSpecification[] = [
   }
 ];
 
-export const mapStyle = (backgroundColor: string, pmtilesUrl: string | undefined): StyleSpecification => {
-  const background: LayerSpecification = {
-    id: 'background',
-    type: 'background',
-    paint: { 'background-color': backgroundColor }
-  };
-  if (!pmtilesUrl) return { version: 8, sources: {}, layers: [background] };
-  return {
-    version: 8,
-    sources: {
-      basemap: {
-        type: 'vector',
-        url: `pmtiles://${pmtilesUrl}`
-      }
-    },
-    layers: [background, ...BASEMAP_LAYERS]
-  };
+// The overlays start empty and setOverlay fills them; the basemap is fetched by utils/fetch-basemap.sh and built into
+// the client, so the map needs no internet.
+export const MAP_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    basemap: { type: 'vector', url: 'pmtiles:///assets/map/basemap.pmtiles' },
+    ...Object.fromEntries(
+      OVERLAY_SOURCES.map((source) => [source, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }])
+    )
+  },
+  layers: [
+    { id: 'background', type: 'background', paint: { 'background-color': Theme.page } },
+    ...BASEMAP_LAYERS,
+    ...OVERLAY_LAYERS
+  ]
 };

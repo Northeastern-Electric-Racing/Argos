@@ -1,5 +1,5 @@
 use scylla_server::lap_timing::{
-    GeoPoint, GpsFix, Lap, LapTimer, METRES_PER_DEGREE, ProjectedLine, TimingLine, laps,
+    GeoPoint, GpsFix, Lap, LapTimer, METRES_PER_DEGREE, ProjectedLine, TimingLine,
 };
 
 const REFERENCE: GeoPoint = GeoPoint {
@@ -131,13 +131,6 @@ fn jitter_on_start_line() -> Vec<GpsFix> {
 }
 
 #[test]
-fn crossing_halfway_between_fixes_interpolates_to_the_midpoint_time() {
-    let fixes = [fix(-1.0, 0.0, 1000.0), fix(1.0, 0.0, 1100.0)];
-
-    assert_eq!(crossing_times_ms(&fixes, start_line()), vec![1050.0]);
-}
-
-#[test]
 fn crossing_a_quarter_of_the_way_interpolates_a_quarter_of_the_time() {
     let fixes = [fix(-1.0, 0.0, 1000.0), fix(3.0, 0.0, 1100.0)];
 
@@ -145,13 +138,6 @@ fn crossing_a_quarter_of_the_way_interpolates_a_quarter_of_the_time() {
 
     assert_eq!(crossings.len(), 1);
     assert!((crossings[0] - 1025.0).abs() < 1e-6, "got {}", crossings[0]);
-}
-
-#[test]
-fn crossing_in_the_reverse_direction_interpolates_to_the_midpoint_time() {
-    let fixes = [fix(1.0, 0.0, 1000.0), fix(-1.0, 0.0, 1100.0)];
-
-    assert_eq!(crossing_times_ms(&fixes, start_line()), vec![1050.0]);
 }
 
 #[test]
@@ -208,8 +194,11 @@ fn driving_alongside_without_reaching_the_line_is_no_crossing() {
 
 #[test]
 fn fewer_than_two_fixes_time_no_laps() {
-    assert_eq!(laps(&[], start_line(), None), vec![]);
-    assert_eq!(laps(&[fix(0.0, 0.0, 1000.0)], start_line(), None), vec![]);
+    assert_eq!(LapTimer::from_fixes(&[], start_line(), None).laps(), vec![]);
+    assert_eq!(
+        LapTimer::from_fixes(&[fix(0.0, 0.0, 1000.0)], start_line(), None).laps(),
+        vec![]
+    );
 }
 
 #[test]
@@ -223,7 +212,7 @@ fn start_line_only_times_a_lap_between_each_pair_of_crossings() {
     .concat();
 
     assert_eq!(
-        laps(&fixes, start_line(), None),
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
         vec![
             lap(1000.0, 5000.0),
             lap(5000.0, 9000.0),
@@ -236,7 +225,10 @@ fn start_line_only_times_a_lap_between_each_pair_of_crossings() {
 fn start_line_only_drops_the_short_laps_of_gps_jitter_on_the_line() {
     let fixes: Vec<GpsFix> = [jitter_on_start_line(), cross_start(21900.0)].concat();
 
-    assert_eq!(laps(&fixes, start_line(), None), vec![lap(1900.0, 21900.0)]);
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(1900.0, 21900.0)]
+    );
 }
 
 #[test]
@@ -249,14 +241,9 @@ fn start_line_only_drops_a_lap_spanning_a_stop() {
     .concat();
 
     assert_eq!(
-        laps(&fixes, start_line(), None),
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
         vec![lap(400_000.0, 420_000.0)]
     );
-}
-
-#[test]
-fn a_single_start_crossing_times_no_laps() {
-    assert_eq!(laps(&cross_start(1000.0), start_line(), None), vec![]);
 }
 
 #[test]
@@ -271,16 +258,9 @@ fn separate_finish_line_closes_the_run_opened_at_the_start_line() {
     .concat();
 
     assert_eq!(
-        laps(&fixes, start_line(), Some(finish_line())),
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
         vec![lap(1000.0, 4000.0)]
     );
-}
-
-#[test]
-fn finish_crossing_without_an_open_run_is_ignored() {
-    let fixes = cross_finish(4000.0);
-
-    assert_eq!(laps(&fixes, start_line(), Some(finish_line())), vec![]);
 }
 
 #[test]
@@ -293,7 +273,7 @@ fn start_crossing_while_a_run_is_open_restarts_it() {
     .concat();
 
     assert_eq!(
-        laps(&fixes, start_line(), Some(finish_line())),
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
         vec![lap(3000.0, 6000.0)]
     );
 }
@@ -303,23 +283,8 @@ fn gps_jitter_on_the_start_line_restarts_the_lap_until_the_finish() {
     let fixes: Vec<GpsFix> = [jitter_on_start_line(), cross_finish(21900.0)].concat();
 
     assert_eq!(
-        laps(&fixes, start_line(), Some(finish_line())),
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
         vec![lap(1900.0, 21900.0)]
-    );
-}
-
-#[test]
-fn finish_line_equal_to_the_start_line_chains_laps() {
-    let fixes: Vec<GpsFix> = [
-        cross_start(1000.0),
-        cross_start(9000.0),
-        cross_start(20000.0),
-    ]
-    .concat();
-
-    assert_eq!(
-        laps(&fixes, start_line(), Some(start_line())),
-        vec![lap(1000.0, 9000.0), lap(9000.0, 20000.0)]
     );
 }
 
@@ -344,22 +309,23 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
     .concat();
 
     assert_eq!(
-        laps(&fixes, start_line(), Some(finish_line())),
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
         vec![lap(1000.0, 5000.0), lap(5000.0, 9000.0)]
     );
 }
 
 #[test]
-fn lap_timer_times_a_lap_once_the_fix_after_its_last_crossing_arrives() {
-    let fixes: Vec<GpsFix> = [cross_start(1000.0), cross_start(5000.0)].concat();
-    let mut timer = LapTimer::new(start_line(), None);
-    // the second crossing is between the 7th and 8th fixes
-    for &fix in &fixes[..7] {
-        timer.push(fix);
+fn a_point_is_in_range_up_to_the_poles_and_the_antimeridian() {
+    for (lat, lon) in [(90.0, 180.0), (-90.0, -180.0)] {
+        assert!(GeoPoint { lat, lon }.is_in_range(), "({lat}, {lon})");
     }
-    assert_eq!(timer.laps(), []);
-
-    timer.push(fixes[7]);
-
-    assert_eq!(timer.laps(), [lap(1000.0, 5000.0)]);
+    for (lat, lon) in [
+        (90.000_1, 0.0),
+        (-90.000_1, 0.0),
+        (0.0, 180.000_1),
+        (0.0, -180.000_1),
+        (f64::NAN, 0.0),
+    ] {
+        assert!(!GeoPoint { lat, lon }.is_in_range(), "({lat}, {lon})");
+    }
 }

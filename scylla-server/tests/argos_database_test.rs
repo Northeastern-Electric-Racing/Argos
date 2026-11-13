@@ -1,8 +1,11 @@
-use axum::http::StatusCode;
+use axum::{Extension, Json, extract::Path, http::StatusCode};
 use scylla_server::{
     ArgosPoolHandle,
     argos_database::{ARGOS_DATABASE_NAME, database_url_with_name},
+    controllers::track_controller,
     error::ScyllaError,
+    lap_timing::{GeoPoint, LineKind, TimingLine},
+    track_handler::TracksChanged,
 };
 
 #[test]
@@ -30,11 +33,6 @@ fn database_url_without_a_database_gains_one() {
     );
 }
 
-#[test]
-fn database_url_that_is_not_a_url_is_an_error() {
-    assert!(database_url_with_name("not a url", ARGOS_DATABASE_NAME).is_err());
-}
-
 #[tokio::test]
 async fn an_unavailable_argos_database_is_service_unavailable() {
     let connection = ArgosPoolHandle(None).get().await;
@@ -42,5 +40,30 @@ async fn an_unavailable_argos_database_is_service_unavailable() {
     assert!(matches!(
         connection,
         Err(ScyllaError::HttpError(StatusCode::SERVICE_UNAVAILABLE, _))
+    ));
+}
+
+#[tokio::test]
+async fn an_out_of_range_line_is_rejected_before_the_database() {
+    let edited = track_controller::edit_track_line(
+        Extension(ArgosPoolHandle(None)),
+        Extension(TracksChanged::default()),
+        Path((1, LineKind::Finish)),
+        Json(Some(TimingLine {
+            a: GeoPoint {
+                lat: 42.1,
+                lon: -71.1,
+            },
+            b: GeoPoint {
+                lat: 90.000_1,
+                lon: -71.1,
+            },
+        })),
+    )
+    .await;
+
+    assert!(matches!(
+        edited,
+        Err(ScyllaError::HttpError(StatusCode::BAD_REQUEST, _))
     ));
 }

@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use serde::Serialize;
 use socketioxide::{BroadcastError, SocketIo};
-use tokio::sync::{Notify, broadcast};
+use tokio::sync::{Mutex, Notify, broadcast};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
@@ -17,29 +17,36 @@ use crate::{
 const TRACKS_SOCKET_KEY: &str = "tracks";
 const LAPS_SOCKET_KEY: &str = "laps";
 
+/// The browser draws every trace fix and searches them on each mouse move
+const MAX_TRACE_FIXES: usize = 10_000;
+
 /// Wakes the track handler to reload the tracks after a route changes them
 #[derive(Clone, Default)]
 pub struct TracksChanged(pub Arc<Notify>);
+
+/// The live run, kept by the track handler and read by the trace route
+#[derive(Clone, Default)]
+pub struct LiveRunHandle(pub Arc<Mutex<LiveRun>>);
 
 /// The current run's laps on each track, as sent to the client
 #[derive(Serialize, Debug, PartialEq)]
 pub struct RunLaps<'a> {
     #[serde(rename = "runId")]
     pub run_id: i32,
-    /// By track id, in order, so an unchanged copy serializes the same and the client can skip it
+    /// By track id
     pub laps: BTreeMap<i32, &'a [Lap]>,
 }
 
 /// The current run's GPS fixes and the laps they time on each track with a start line
 #[derive(Default)]
-pub struct LiveLaps {
+pub struct LiveRun {
     run_id: i32,
     fixes: Vec<GpsFix>,
     lines: Vec<(i32, TimingLine, Option<TimingLine>)>,
     timers: BTreeMap<i32, LapTimer>,
 }
 
-impl LiveLaps {
+impl LiveRun {
     /// Times a fix of `run_id`, starting over when a new run begins; a fix no newer than the last is dropped
     pub fn push(&mut self, run_id: i32, fix: GpsFix) {
         if run_id != self.run_id {
@@ -67,6 +74,16 @@ impl LiveLaps {
             .filter_map(|track| Some((track.id, track.start_line?, track.finish_line)))
             .collect();
         self.retime();
+    }
+
+    /// The fixes of `run_id` so far, every nth so a long run stays drawable, or none if it isn't the live run
+    #[must_use]
+    pub fn trace(&self, run_id: i32) -> Vec<GpsFix> {
+        if run_id != self.run_id {
+            return Vec::new();
+        }
+        let every = self.fixes.len().div_ceil(MAX_TRACE_FIXES).max(1);
+        self.fixes.iter().step_by(every).copied().collect()
     }
 
     #[must_use]
@@ -99,12 +116,12 @@ pub async fn track_handler(
     mut data_channel: broadcast::Receiver<ClientData>,
     argos_pool: ArgosPoolHandle,
     TracksChanged(tracks_changed): TracksChanged,
+    LiveRunHandle(live_run): LiveRunHandle,
     io: SocketIo,
 ) {
     info!(task = "track_handler", "starting");
     let mut tracks: Vec<PublicTrack> = Vec::new();
     let mut tracks_current = false;
-    let mut live_laps = LiveLaps::default();
     let mut send_interval = tokio::time::interval(Duration::from_secs(1));
     loop {
         tokio::select! {
@@ -113,14 +130,14 @@ pub async fn track_handler(
                 break;
             },
             () = tracks_changed.notified() => {
-                tracks_current = reload_tracks(&argos_pool, &mut tracks, &mut live_laps).await;
-                send(&io, &tracks, &live_laps).await;
+                tracks_current = reload_tracks(&argos_pool, &mut tracks, &live_run).await;
+                send(&io, &tracks, &live_run).await;
             },
             res = data_channel.recv() => {
                 match res {
                     Ok(data) => {
                         if data.name == GPS_LOCATION_TOPIC && let [lat, lon, ..] = data.values[..] {
-                            live_laps.push(data.run_id, GpsFix::new(lat, lon, data.timestamp.timestamp_micros()));
+                            live_run.lock().await.push(data.run_id, GpsFix::new(lat, lon, data.timestamp.timestamp_micros()));
                         }
                     }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
@@ -135,9 +152,9 @@ pub async fn track_handler(
             _ = send_interval.tick() => {
                 // the first tick is immediate, so this loads the tracks on start and retries a failed load
                 if !tracks_current {
-                    tracks_current = reload_tracks(&argos_pool, &mut tracks, &mut live_laps).await;
+                    tracks_current = reload_tracks(&argos_pool, &mut tracks, &live_run).await;
                 }
-                send(&io, &tracks, &live_laps).await;
+                send(&io, &tracks, &live_run).await;
             },
         }
     }
@@ -147,12 +164,12 @@ pub async fn track_handler(
 async fn reload_tracks(
     argos_pool: &ArgosPoolHandle,
     tracks: &mut Vec<PublicTrack>,
-    live_laps: &mut LiveLaps,
+    live_run: &Mutex<LiveRun>,
 ) -> bool {
     match load_tracks(argos_pool).await {
         Ok(loaded) => {
             *tracks = loaded;
-            live_laps.set_tracks(tracks);
+            live_run.lock().await.set_tracks(tracks);
             true
         }
         Err(err) => {
@@ -172,9 +189,9 @@ async fn load_tracks(argos_pool: &ArgosPoolHandle) -> Result<Vec<PublicTrack>, S
     Ok(tracks.into_iter().map(PublicTrack::from).collect())
 }
 
-async fn send(io: &SocketIo, tracks: &[PublicTrack], live_laps: &LiveLaps) {
+async fn send(io: &SocketIo, tracks: &[PublicTrack], live_run: &Mutex<LiveRun>) {
     emit(io, TRACKS_SOCKET_KEY, tracks).await;
-    emit(io, LAPS_SOCKET_KEY, &live_laps.run_laps()).await;
+    emit(io, LAPS_SOCKET_KEY, &live_run.lock().await.run_laps()).await;
 }
 
 /// Logs a failed emit as `send_socket_msg` does: a transmit error is routine, any other is a bug

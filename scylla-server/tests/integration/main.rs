@@ -4,7 +4,6 @@
 mod argos_database;
 mod data_service;
 mod data_type_service;
-mod lap_controller;
 mod run_service;
 mod test_utils;
 mod track_service;

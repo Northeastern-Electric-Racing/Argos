@@ -1,6 +1,9 @@
 use serde::Serialize;
 
-use crate::{lap_timing::TimingLine, models::Track};
+use crate::{
+    lap_timing::TimingLine,
+    models::{Track, line_from_column},
+};
 
 /// The struct defining the track format sent to the client
 #[derive(Serialize, Debug, PartialEq)]
@@ -15,12 +18,11 @@ pub struct PublicTrack {
 
 impl From<Track> for PublicTrack {
     fn from(value: Track) -> Self {
-        let (start_line, finish_line) = value.lines();
         PublicTrack {
             id: value.id,
             name: value.name,
-            start_line,
-            finish_line,
+            start_line: line_from_column(value.startLine.as_deref()),
+            finish_line: line_from_column(value.finishLine.as_deref()),
         }
     }
 }
