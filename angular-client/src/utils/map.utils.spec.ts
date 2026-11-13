@@ -1,4 +1,4 @@
-import { draftLineGeoJson, fixAt, linesGeoJson, pointGeoJson, toFix, traceGeoJson } from './map.utils';
+import { draftLineGeoJson, fixAt, linePoints, linesGeoJson, pointGeoJson, toFix, traceGeoJson } from './map.utils';
 import { DataValue } from './socket.utils';
 import { Coordinate, Track } from './types.utils';
 
@@ -140,6 +140,21 @@ describe('linesGeoJson', () => {
 
   it('draws nothing without a track', () => {
     expect(linesGeoJson(null)).toEqual({ type: 'FeatureCollection', features: [] });
+  });
+});
+
+describe('linePoints', () => {
+  it("lists both ends of the start line, then the finish line's", () => {
+    expect(linePoints(track)).toEqual([
+      { lat: 42, lon: -84 },
+      { lat: 42.1, lon: -84.1 },
+      { lat: 43, lon: -85 },
+      { lat: 43.1, lon: -85.1 }
+    ]);
+  });
+
+  it('lists nothing for a track without lines', () => {
+    expect(linePoints({ ...track, startLine: null, finishLine: null })).toEqual([]);
   });
 });
 

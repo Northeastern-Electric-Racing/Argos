@@ -37,7 +37,7 @@
         placeholder="Select a track"
         ariaLabel="Track"
         [ngModel]="selectedTrack()"
-        (selectionChange)="selectedTrackId.set($event.id)"
+        (selectionChange)="selectTrack($event)"
       />
       @if (selectedTrack(); as track) {
         <button uiButton variant="danger" size="sm" type="button" (click)="confirmDelete(track)">Delete</button>

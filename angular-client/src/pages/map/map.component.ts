@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { LngLatBounds, Map as MapLibreMap, Marker } from 'maplibre-gl';
+import { LngLatBounds, Map as MapLibreMap, Marker, VectorTileSource } from 'maplibre-gl';
 import { EMPTY, asyncScheduler, filter, from, merge, switchMap, tap, throttleTime } from 'rxjs';
 import { getTrace } from 'src/api/trace.api';
 import { addTrack, deleteTrack, editTrackLine } from 'src/api/track.api';
@@ -31,6 +31,7 @@ import {
   draftLineGeoJson,
   fixAt,
   fromLngLat,
+  linePoints,
   linesGeoJson,
   pointGeoJson,
   setOverlay,
@@ -177,6 +178,12 @@ export default class MapComponent {
     this.placing.set(null);
   }
 
+  selectTrack(track: Track) {
+    this.selectedTrackId.set(track.id);
+    // Before the car drives there is no trace to frame, so show where the track's lines are.
+    if (this.trace().length === 0) this.fit(linePoints(track));
+  }
+
   togglePlacing(spec: LineSpec) {
     this.placing.set(this.placing() === spec ? null : spec);
   }
@@ -215,7 +222,10 @@ export default class MapComponent {
 
   onMapLoaded(map: MapLibreMap) {
     this.map.set(map);
-    this.fitTrace();
+    // Open on the venues the offline map covers, not the whole world; a trace, if there is one, is framed after.
+    const coverage = map.getSource<VectorTileSource>('basemap')?.bounds;
+    if (coverage) map.fitBounds(coverage, { padding: FIT_PADDING_PX, animate: false });
+    this.fit(this.trace());
     map.on('click', (event) => this.placeEnd(fromLngLat(event.lngLat)));
     map.on('mousemove', (event) => this.cursor.set(this.cursorAt(map, fromLngLat(event.lngLat))));
     map.on('mouseout', () => this.cursor.set(null));
@@ -236,7 +246,8 @@ export default class MapComponent {
         // The stored history may already hold this fix.
         if (last && point.timeMs <= last.timeMs) return;
         this.traceFixes.update((trace) => [...trace, point]);
-        if (this.trace().length === 1 || (this.followCar && !this.map()?.getBounds().contains(point))) this.fitTrace();
+        if (this.trace().length === 1 || (this.followCar && !this.map()?.getBounds().contains(point)))
+          this.fit(this.trace());
       })
     );
   }
@@ -248,7 +259,7 @@ export default class MapComponent {
         if (!history) return;
         const lastTimeMs = history.at(-1)?.timeMs ?? -Infinity;
         this.traceFixes.update((live) => [...history, ...live.filter((fix) => fix.timeMs > lastTimeMs)]);
-        this.fitTrace();
+        this.fit(this.trace());
       })
     );
   }
@@ -318,11 +329,10 @@ export default class MapComponent {
     return null;
   }
 
-  private fitTrace() {
+  private fit(points: Coordinate[]) {
     const map = this.map();
-    const trace = this.trace();
-    if (!map || trace.length === 0) return;
-    const bounds = trace.reduce((bounds, point) => bounds.extend(point), new LngLatBounds(trace[0], trace[0]));
+    if (!map || points.length === 0) return;
+    const bounds = points.reduce((bounds, point) => bounds.extend(point), new LngLatBounds(points[0], points[0]));
     map.fitBounds(bounds, { padding: FIT_PADDING_PX, maxZoom: MAX_FIT_ZOOM, animate: false });
   }
 }

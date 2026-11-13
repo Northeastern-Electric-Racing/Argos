@@ -178,6 +178,37 @@ describe('MapComponent tracks', () => {
     expect(map.placing()).toBeNull();
   });
 
+  const loadMap = (page: ReturnType<typeof selected>, coverage?: [number, number, number, number]) => {
+    const fitBounds = vi.fn();
+    page.map.onMapLoaded({
+      getSource: (id: string) => (id === 'basemap' && coverage ? { bounds: coverage } : undefined),
+      getCanvas: () => ({ style: {} }),
+      on: () => undefined,
+      fitBounds
+    } as unknown as MapLibreMap);
+    return fitBounds;
+  };
+
+  it('opens on the area the offline map covers while there is no trace', () => {
+    const fitBounds = loadMap(selected([]), [-84.6, 41.8, -70.7, 43.7]);
+
+    expect(fitBounds).toHaveBeenCalledExactlyOnceWith([-84.6, 41.8, -70.7, 43.7], expect.anything());
+  });
+
+  it("frames a selected track's lines while there is no trace", () => {
+    const page = selected([track(8), placed]);
+    const fitBounds = loadMap(page);
+    page.map.selectTrack(track(8));
+    page.map.selectTrack(placed);
+
+    expect(page.map.selectedTrackId()).toBe(7);
+    expect(fitBounds).toHaveBeenCalledOnce();
+    expect(fitBounds.mock.lastCall?.[0].toArray()).toEqual([
+      [-84, 42],
+      [-84, 42.001]
+    ]);
+  });
+
   it('saves the line placed by two map clicks where they were clicked, and only that line', () => {
     const { calls, map } = selected([track(7)]);
     const clicks: ((event: { lngLat: { lng: number; lat: number } }) => void)[] = [];

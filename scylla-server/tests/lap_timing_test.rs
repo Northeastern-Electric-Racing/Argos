@@ -247,7 +247,7 @@ fn start_line_only_drops_a_lap_spanning_a_stop() {
 }
 
 #[test]
-fn separate_finish_line_closes_the_run_opened_at_the_start_line() {
+fn separate_finish_line_closes_the_timed_run_opened_at_the_start_line() {
     let fixes: Vec<GpsFix> = [
         cross_finish(500.0),
         cross_start(1000.0),
@@ -264,7 +264,7 @@ fn separate_finish_line_closes_the_run_opened_at_the_start_line() {
 }
 
 #[test]
-fn start_crossing_while_a_run_is_open_restarts_it() {
+fn start_crossing_while_a_timed_run_is_open_restarts_it() {
     let fixes: Vec<GpsFix> = [
         cross_start(1000.0),
         cross_start(3000.0),

@@ -59,6 +59,12 @@ export const linesGeoJson = (track: Track | null) => ({
   })
 });
 
+export const linePoints = (track: Track): Coordinate[] =>
+  LINES.flatMap(({ field }) => {
+    const line = track[field];
+    return line ? [line.a, line.b] : [];
+  });
+
 export const draftLineGeoJson = (pendingEnd: Coordinate | null, cursor: Coordinate | null) => ({
   type: 'FeatureCollection' as const,
   features: pendingEnd
