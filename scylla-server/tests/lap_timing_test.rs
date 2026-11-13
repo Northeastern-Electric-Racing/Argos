@@ -232,6 +232,26 @@ fn start_line_only_drops_the_short_laps_of_gps_jitter_on_the_line() {
 }
 
 #[test]
+fn gps_wander_while_parked_on_a_start_only_line_restarts_the_lap_until_the_car_drives_off() {
+    // crosses the line every 5 s, too far apart for the minimum lap time to catch
+    let parked: Vec<GpsFix> = (0..=12)
+        .map(|n| {
+            fix(
+                if n % 2 == 0 { -1.0 } else { 1.0 },
+                -3.0,
+                f64::from(n) * 5000.0,
+            )
+        })
+        .collect();
+    let fixes: Vec<GpsFix> = [parked, cross_start(80_000.0)].concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(57_500.0, 80_000.0)]
+    );
+}
+
+#[test]
 fn start_line_only_drops_a_lap_spanning_a_stop() {
     let fixes: Vec<GpsFix> = [
         cross_start(1000.0),

@@ -10,6 +10,9 @@ pub const METRES_PER_DEGREE: f64 = 6_371_000.0 * std::f64::consts::PI / 180.0;
 const MIN_LAP_MS: f64 = 2_000.0;
 /// Longer laps are dropped, as they span a stop, such as a break, rather than a lap
 const MAX_LAP_MS: f64 = 5.0 * 60_000.0;
+/// A crossing ends a lap only once the car has been this far from the start line since the lap began, as GPS wander
+/// while the car sits on the line crosses it every few seconds
+const LEAVE_START_M: f64 = 5.0;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct GeoPoint {
@@ -147,6 +150,13 @@ impl ProjectedLine {
 
         Some(from.time_ms + fraction_along_travel * (to.time_ms - from.time_ms))
     }
+
+    /// How far `point` is from the line, extended past its ends
+    fn distance_m(&self, point: GeoPoint) -> f64 {
+        let line_direction = self.b.minus(self.a);
+        let offset = self.projection.project(point).minus(self.a);
+        (line_direction.cross(offset) / line_direction.x.hypot(line_direction.y)).abs()
+    }
 }
 
 /// Which of a track's lines, as the client names it
@@ -159,13 +169,15 @@ pub enum LineKind {
 
 /// Times laps from GPS fixes as they arrive, oldest first.
 ///
-/// A start crossing opens a lap (restarting any open one) and the next finish crossing closes it.
+/// A start crossing opens a lap (restarting any open one), and once the car has left the start line the next finish
+/// crossing closes it.
 /// Without a finish line the start line is also the finish, so consecutive start crossings bound each lap.
 pub struct LapTimer {
     start: ProjectedLine,
     finish: ProjectedLine,
     last_fix: Option<GpsFix>,
     open_lap_start_ms: Option<f64>,
+    left_start: bool,
     laps: Vec<Lap>,
 }
 
@@ -177,6 +189,7 @@ impl LapTimer {
             finish: ProjectedLine::new(finish.unwrap_or(start)),
             last_fix: None,
             open_lap_start_ms: None,
+            left_start: false,
             laps: Vec::new(),
         }
     }
@@ -207,14 +220,20 @@ impl LapTimer {
         crossings.sort_by(|(left_ms, _), (right_ms, _)| left_ms.total_cmp(right_ms));
         for (time_ms, kind) in crossings {
             match kind {
-                LineKind::Start => self.open_lap_start_ms = Some(time_ms),
+                LineKind::Start => {
+                    self.open_lap_start_ms = Some(time_ms);
+                    self.left_start = false;
+                }
                 LineKind::Finish => {
-                    if let Some(start_ms) = self.open_lap_start_ms.take() {
+                    if self.left_start
+                        && let Some(start_ms) = self.open_lap_start_ms.take()
+                    {
                         self.laps.extend(lap(start_ms, time_ms));
                     }
                 }
             }
         }
+        self.left_start |= self.start.distance_m(fix.point) >= LEAVE_START_M;
     }
 
     #[must_use]
