@@ -12,7 +12,7 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LngLatBounds, Map as MapLibreMap, Marker } from 'maplibre-gl';
-import { EMPTY, asyncScheduler, from, merge, switchMap, tap, throttleTime } from 'rxjs';
+import { EMPTY, asyncScheduler, filter, from, merge, switchMap, tap, throttleTime } from 'rxjs';
 import { getTrace } from 'src/api/trace.api';
 import { addTrack, deleteTrack, editTrackLine } from 'src/api/track.api';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
@@ -86,7 +86,8 @@ export default class MapComponent {
   // Live view refits to the trace until the user pans or zooms.
   private followCar = true;
 
-  runId = toSignal(this.storage.getCurrentRunId());
+  // A dropped socket clears the current run; keep this Run's trace and the engineer's view until another Run starts.
+  runId = toSignal(this.storage.getCurrentRunId().pipe(filter((runId) => runId !== undefined)));
   // scylla sends the tracks and live laps every second; an unchanged copy must not redraw the map under a drag.
   tracks = toSignal(this.storage.getTracks(), { requireSync: true, equal: sameJson });
   selectedTrackId = signal<number | null>(null);

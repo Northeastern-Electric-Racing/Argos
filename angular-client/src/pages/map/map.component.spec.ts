@@ -80,6 +80,23 @@ describe('MapComponent live trace and laps', () => {
     expect(map.trace()).toEqual([fix(42, 1000), fix(42.1, 2000), fix(42.2, 3000)]);
   });
 
+  it('keeps the trace when the socket drops and comes back on the same run', async () => {
+    const { calls, storage, fixture, map } = setup((url) =>
+      url.endsWith('/trace/1') ? Promise.resolve(json([fix(42, 1000)])) : pending
+    );
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    await settle();
+    storage.setCurrentRunId(undefined);
+    fixture.detectChanges();
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    await settle();
+
+    expect(map.trace()).toEqual([fix(42, 1000)]);
+    expect(calls(/\/trace\//).length).toBe(1);
+  });
+
   it('keeps the live fixes newer than the stored trace when it arrives', async () => {
     let finishTrace: (response: Response) => void = () => undefined;
     const { storage, fixture, map } = setup((url) =>
@@ -133,7 +150,7 @@ describe('MapComponent tracks', () => {
   };
   const latitudeInput = (page: ReturnType<typeof selected>): HTMLInputElement => {
     page.fixture.detectChanges();
-    return page.fixture.nativeElement.querySelector('input[aria-label="Latitude"]');
+    return page.fixture.nativeElement.querySelector('input[aria-label="Start line end 1 latitude"]');
   };
 
   it('keeps the same selected track when scylla resends unchanged tracks', () => {
