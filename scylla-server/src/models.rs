@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::Serialize;
 
+use crate::lap_timing::{GeoPoint, TimingLine};
+
 /// Use this struct when querying data
 #[derive(Debug, Identifiable, Insertable, Selectable, Serialize, AsChangeset, Queryable)]
 #[diesel(table_name = crate::schema::data)]
@@ -51,4 +53,39 @@ pub struct Run {
     pub locationName: String,
     pub notes: String,
     pub time: DateTime<Utc>,
+}
+
+#[derive(Queryable, Debug, Identifiable, Selectable)]
+#[diesel(table_name = crate::argos_schema::track)]
+#[diesel(primary_key(id))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Track {
+    pub id: i32,
+    pub name: String,
+    pub startLine: Option<Vec<Option<f64>>>,
+    pub finishLine: Option<Vec<Option<f64>>>,
+}
+
+/// A line's `[a.lat, a.lon, b.lat, b.lon]` column; no line is NULL
+#[must_use]
+pub fn line_to_column(line: Option<TimingLine>) -> Option<Vec<f64>> {
+    line.map(|TimingLine { a, b }| vec![a.lat, a.lon, b.lat, b.lon])
+}
+
+/// The inverse of `line_to_column`
+#[must_use]
+pub fn line_from_column(column: Option<&[Option<f64>]>) -> Option<TimingLine> {
+    let [Some(a_lat), Some(a_lon), Some(b_lat), Some(b_lon)] = *column? else {
+        return None;
+    };
+    Some(TimingLine {
+        a: GeoPoint {
+            lat: a_lat,
+            lon: a_lon,
+        },
+        b: GeoPoint {
+            lat: b_lat,
+            lon: b_lon,
+        },
+    })
 }

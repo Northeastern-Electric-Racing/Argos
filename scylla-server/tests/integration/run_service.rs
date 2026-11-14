@@ -3,7 +3,7 @@ use scylla_server::{services::run_service, transformers::run_transformer::Public
 
 #[tokio::test]
 async fn test_get_all_runs() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // ensure runs is empty
@@ -14,7 +14,7 @@ async fn test_get_all_runs() -> Result<(), diesel::result::Error> {
 
 #[tokio::test]
 async fn test_get_run_by_id() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // add a run

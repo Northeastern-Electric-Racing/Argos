@@ -13,16 +13,15 @@ use axum::{
 };
 use clap::Parser;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use diesel_async::{
-    AsyncConnection, AsyncPgConnection,
-    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
-};
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
-    BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode, SOCKET_DISCARD_PERCENT,
-    STATIC_RATE_LIMIT_VALUE, SirenSendable,
+    ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
+    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
+    argos_database::{self, ARGOS_DATABASE_NAME},
+    build_pool,
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -31,12 +30,13 @@ use scylla_server::{
             add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info,
             get_client_subscribed_rules, subscribe_rules, unsubscribe_rules,
         },
-        run_controller, scylla_config_controller,
+        run_controller, scylla_config_controller, trace_controller, track_controller,
         video_streamer_controller::{self},
     },
     mqtt_processor::pub_handle,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
+    track_handler::{LiveRunHandle, TracksChanged, track_handler},
     zenoh_processor::ZenohProcessor,
 };
 use scylla_server::{
@@ -241,15 +241,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
+    // Argos-only data must never stop telemetry; without its DB only the map has no tracks
+    let argos_pool = match argos_database::connect(&db_url, ARGOS_DATABASE_NAME).await {
+        Ok(pool) => Some(pool),
+        Err(e) => {
+            warn!("{ARGOS_DATABASE_NAME} DB unavailable, the map will have no tracks: {e}");
+            None
+        }
+    };
+
     info!("Initializing database connections...");
-    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
-    let pool: Pool<AsyncPgConnection> = Pool::builder()
-        .max_size(10)
-        .min_idle(Some(2))
-        .max_lifetime(Some(Duration::from_hours(24)))
-        .idle_timeout(Some(Duration::from_mins(2)))
-        .build(manager)
-        .await?;
+    let pool = build_pool(&db_url).await?;
 
     // create the socket stuff
     let (socket_layer, io) = SocketIo::builder()
@@ -283,6 +285,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // create a task tracker and cancellation token
     let task_tracker = TaskTracker::new();
     let token = CancellationToken::new();
+
+    let tracks_changed = TracksChanged::default();
+    let live_run = LiveRunHandle::default();
+    let fut = track_handler(
+        token.clone(),
+        mqtt_send_socket.subscribe(),
+        ArgosPoolHandle(argos_pool.clone()),
+        tracks_changed.clone(),
+        live_run.clone(),
+        io.clone(),
+    );
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(fut).await;
+        warn!(task = "track_handler", "task ended: {:?}", res);
+    });
 
     if cli.no_metadata {
         let fut = socket_handler(token.clone(), mqtt_receive_socket, io);
@@ -346,7 +363,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
         let (client, eventloop) = AsyncClient::new(opts, 600);
-        let process_mqtt_fut = recv.process_mqtt(eventloop, pool.clone());
+        let process_mqtt_fut = recv.process_mqtt(eventloop, client.clone(), pool.clone());
         task_tracker.spawn(async move {
             let res = tokio::spawn(process_mqtt_fut).await;
             warn!(task = "mqtt_processor", "task ended: {:?}", res);
@@ -380,6 +397,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "/runs/update/{id}/{driver}/{location}/{notes}",
                     post(run_controller::update_run_with_data),
                 ),
+        )
+        .merge(
+            Router::new()
+                // TRACKS AND LAPS
+                .route("/tracks/add", put(track_controller::add_track))
+                .route(
+                    "/tracks/edit/{id}/{line}",
+                    put(track_controller::edit_track_line),
+                )
+                .route("/tracks/delete/{id}", post(track_controller::delete_track))
+                .route("/trace/{runId}", get(trace_controller::get_trace))
+                .layer(Extension(ArgosPoolHandle(argos_pool)))
+                .layer(Extension(tracks_changed))
+                .layer(Extension(live_run)),
         )
         .merge(
             Router::new()

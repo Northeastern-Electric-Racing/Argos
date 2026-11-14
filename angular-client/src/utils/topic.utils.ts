@@ -96,11 +96,6 @@ export const brakePressureBack = () => `VCU/Pedals/Voltages/brake_2`; // was VCU
 export const motorTemp = () => `DTI/Temps/Motor_Temperature`;
 
 // TPU
-// NOTE: The entire TPU/* namespace is absent from the current /datatypes list;
-// it appears the Raspberry-Pi telemetry feed (CPU/RAM/Wi-Fi/GPS) is no longer
-// wired through. Strings left in place because no replacement topics have been
-// identified — the raspberry-pi, map, and related components will stay blank
-// until a new topic source exists.
 export const cpuUsage = () => `TPU/OnBoard/CpuUsage`;
 export const cpuTemp = () => `TPU/OnBoard/CpuTemp`;
 export const ramUsage = () => `TPU/OnBoard/MemAvailable`;

@@ -42,3 +42,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# The offline map, fetched by utils/fetch-basemap.sh; never committed
+/src/assets/map/

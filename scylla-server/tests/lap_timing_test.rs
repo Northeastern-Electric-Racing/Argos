@@ -1,0 +1,351 @@
+use scylla_server::lap_timing::{
+    GeoPoint, GpsFix, Lap, LapTimer, METRES_PER_DEGREE, ProjectedLine, TimingLine,
+};
+
+const REFERENCE: GeoPoint = GeoPoint {
+    lat: 42.0,
+    lon: -84.0,
+};
+
+fn offset(east_m: f64, north_m: f64) -> GeoPoint {
+    GeoPoint {
+        lat: REFERENCE.lat + north_m / METRES_PER_DEGREE,
+        lon: REFERENCE.lon + east_m / (METRES_PER_DEGREE * REFERENCE.lat.to_radians().cos()),
+    }
+}
+
+fn fix(east_m: f64, north_m: f64, time_ms: f64) -> GpsFix {
+    GpsFix {
+        point: offset(east_m, north_m),
+        time_ms,
+    }
+}
+
+/// A north-to-south line through the reference
+fn start_line() -> TimingLine {
+    TimingLine {
+        a: offset(0.0, 6.0),
+        b: offset(0.0, -6.0),
+    }
+}
+
+/// A west-to-east line through the reference
+fn finish_line() -> TimingLine {
+    TimingLine {
+        a: offset(-6.0, 0.0),
+        b: offset(6.0, 0.0),
+    }
+}
+
+fn crossing_times_ms(fixes: &[GpsFix], line: TimingLine) -> Vec<f64> {
+    let projected = ProjectedLine::new(line);
+    fixes
+        .windows(2)
+        .filter_map(|pair| projected.crossing_time_ms(pair[0], pair[1]))
+        .collect()
+}
+
+fn lap(start_ms: f64, end_ms: f64) -> Lap {
+    Lap {
+        start_ms,
+        end_ms,
+        duration_ms: end_ms - start_ms,
+    }
+}
+
+/// Fixes along `route` of (east m, north m, ms after `time_ms`); each route below starts and ends
+/// at the same point and passes the other legs beyond the lines' ends, so it crosses once at `time_ms`
+fn drive(time_ms: f64, route: &[(f64, f64, f64)]) -> Vec<GpsFix> {
+    route
+        .iter()
+        .map(|&(east_m, north_m, offset_ms)| fix(east_m, north_m, time_ms + offset_ms))
+        .collect()
+}
+
+fn cross_start(time_ms: f64) -> Vec<GpsFix> {
+    drive(
+        time_ms,
+        &[
+            (-10.0, -10.0, -200.0),
+            (-1.0, -3.0, -50.0),
+            (1.0, -3.0, 50.0),
+            (1.0, -10.0, 100.0),
+            (-10.0, -10.0, 200.0),
+        ],
+    )
+}
+
+fn cross_start_backwards(time_ms: f64) -> Vec<GpsFix> {
+    drive(
+        time_ms,
+        &[
+            (-10.0, -10.0, -200.0),
+            (1.0, -10.0, -100.0),
+            (1.0, -3.0, -50.0),
+            (-1.0, -3.0, 50.0),
+            (-10.0, -10.0, 200.0),
+        ],
+    )
+}
+
+fn cross_finish(time_ms: f64) -> Vec<GpsFix> {
+    drive(
+        time_ms,
+        &[
+            (-10.0, -10.0, -200.0),
+            (3.0, -10.0, -100.0),
+            (3.0, -1.0, -50.0),
+            (3.0, 1.0, 50.0),
+            (10.0, 1.0, 100.0),
+            (10.0, -10.0, 150.0),
+            (-10.0, -10.0, 200.0),
+        ],
+    )
+}
+
+fn cross_finish_backwards(time_ms: f64) -> Vec<GpsFix> {
+    drive(
+        time_ms,
+        &[
+            (-10.0, -10.0, -200.0),
+            (10.0, -10.0, -150.0),
+            (10.0, 1.0, -100.0),
+            (3.0, 1.0, -50.0),
+            (3.0, -1.0, 50.0),
+            (3.0, -10.0, 100.0),
+            (-10.0, -10.0, 200.0),
+        ],
+    )
+}
+
+/// GPS noise while parked on the start line, crossing it at 1100, 1300, 1500, 1700 and 1900 ms
+fn jitter_on_start_line() -> Vec<GpsFix> {
+    vec![
+        fix(0.5, -3.0, 1000.0),
+        fix(-0.5, -3.0, 1200.0),
+        fix(0.5, -3.0, 1400.0),
+        fix(-0.5, -3.0, 1600.0),
+        fix(0.5, -3.0, 1800.0),
+        fix(-0.5, -3.0, 2000.0),
+    ]
+}
+
+#[test]
+fn crossing_a_quarter_of_the_way_interpolates_a_quarter_of_the_time() {
+    let fixes = [fix(-1.0, 0.0, 1000.0), fix(3.0, 0.0, 1100.0)];
+
+    let crossings = crossing_times_ms(&fixes, start_line());
+
+    assert_eq!(crossings.len(), 1);
+    assert!((crossings[0] - 1025.0).abs() < 1e-6, "got {}", crossings[0]);
+}
+
+#[test]
+fn a_fix_exactly_on_the_line_counts_once() {
+    let fixes = [
+        fix(-1.0, 0.0, 1000.0),
+        fix(0.0, 0.0, 1100.0),
+        fix(1.0, 0.0, 1200.0),
+    ];
+
+    assert_eq!(crossing_times_ms(&fixes, start_line()), vec![1100.0]);
+}
+
+#[test]
+fn touching_the_line_and_turning_back_counts_once() {
+    let fixes = [
+        fix(-1.0, 0.0, 1000.0),
+        fix(0.0, 0.0, 1100.0),
+        fix(-1.0, 0.0, 1200.0),
+    ];
+
+    assert_eq!(crossing_times_ms(&fixes, start_line()), vec![1100.0]);
+}
+
+#[test]
+fn a_fix_exactly_on_a_diagonal_line_counts_once() {
+    let diagonal = TimingLine {
+        a: offset(-6.0, -6.0),
+        b: offset(6.0, 6.0),
+    };
+    // on a diagonal, rounding puts this crossing a hair past the end of the first segment
+    let fixes = [
+        fix(-1.0, 0.0, 1000.0),
+        fix(0.0, 0.0, 1100.0),
+        fix(1.0, 0.0, 1200.0),
+    ];
+
+    assert_eq!(crossing_times_ms(&fixes, diagonal), vec![1100.0]);
+}
+
+#[test]
+fn passing_beyond_the_line_end_is_a_near_miss() {
+    let fixes = [fix(-1.0, 7.0, 1000.0), fix(1.0, 7.0, 1100.0)];
+
+    assert_eq!(crossing_times_ms(&fixes, start_line()), Vec::<f64>::new());
+}
+
+#[test]
+fn driving_alongside_without_reaching_the_line_is_no_crossing() {
+    let fixes = [fix(-5.0, 0.0, 1000.0), fix(-2.0, 0.0, 1100.0)];
+
+    assert_eq!(crossing_times_ms(&fixes, start_line()), Vec::<f64>::new());
+}
+
+#[test]
+fn fewer_than_two_fixes_time_no_laps() {
+    assert_eq!(LapTimer::from_fixes(&[], start_line(), None).laps(), vec![]);
+    assert_eq!(
+        LapTimer::from_fixes(&[fix(0.0, 0.0, 1000.0)], start_line(), None).laps(),
+        vec![]
+    );
+}
+
+#[test]
+fn start_line_only_times_a_lap_between_each_pair_of_crossings() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_start_backwards(5000.0),
+        cross_start(9000.0),
+        cross_start(20000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![
+            lap(1000.0, 5000.0),
+            lap(5000.0, 9000.0),
+            lap(9000.0, 20000.0)
+        ]
+    );
+}
+
+#[test]
+fn start_line_only_drops_the_short_laps_of_gps_jitter_on_the_line() {
+    let fixes: Vec<GpsFix> = [jitter_on_start_line(), cross_start(21900.0)].concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(1900.0, 21900.0)]
+    );
+}
+
+#[test]
+fn gps_wander_while_parked_on_a_start_only_line_restarts_the_lap_until_the_car_drives_off() {
+    // crosses the line every 5 s, too far apart for the minimum lap time to catch
+    let parked: Vec<GpsFix> = (0..=12)
+        .map(|n| {
+            fix(
+                if n % 2 == 0 { -1.0 } else { 1.0 },
+                -3.0,
+                f64::from(n) * 5000.0,
+            )
+        })
+        .collect();
+    let fixes: Vec<GpsFix> = [parked, cross_start(80_000.0)].concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(57_500.0, 80_000.0)]
+    );
+}
+
+#[test]
+fn start_line_only_drops_a_lap_spanning_a_stop() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_start(400_000.0),
+        cross_start(420_000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(400_000.0, 420_000.0)]
+    );
+}
+
+#[test]
+fn separate_finish_line_closes_the_timed_run_opened_at_the_start_line() {
+    let fixes: Vec<GpsFix> = [
+        cross_finish(500.0),
+        cross_start(1000.0),
+        cross_finish(4000.0),
+        cross_finish_backwards(5000.0),
+        cross_finish(6000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
+        vec![lap(1000.0, 4000.0)]
+    );
+}
+
+#[test]
+fn start_crossing_while_a_timed_run_is_open_restarts_it() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_start(3000.0),
+        cross_finish(6000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
+        vec![lap(3000.0, 6000.0)]
+    );
+}
+
+#[test]
+fn gps_jitter_on_the_start_line_restarts_the_lap_until_the_finish() {
+    let fixes: Vec<GpsFix> = [jitter_on_start_line(), cross_finish(21900.0)].concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
+        vec![lap(1900.0, 21900.0)]
+    );
+}
+
+#[test]
+fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_next() {
+    let through_both_lines = drive(
+        5000.0,
+        &[
+            (-10.0, -10.0, -200.0),
+            (-1.0, -1.0, -50.0),
+            (1.0, 1.0, 50.0),
+            (10.0, 10.0, 100.0),
+            (10.0, -10.0, 150.0),
+            (-10.0, -10.0, 200.0),
+        ],
+    );
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        through_both_lines,
+        cross_finish(9000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
+        vec![lap(1000.0, 5000.0), lap(5000.0, 9000.0)]
+    );
+}
+
+#[test]
+fn a_point_is_in_range_up_to_the_poles_and_the_antimeridian() {
+    for (lat, lon) in [(90.0, 180.0), (-90.0, -180.0)] {
+        assert!(GeoPoint { lat, lon }.is_in_range(), "({lat}, {lon})");
+    }
+    for (lat, lon) in [
+        (90.000_1, 0.0),
+        (-90.000_1, 0.0),
+        (0.0, 180.000_1),
+        (0.0, -180.000_1),
+        (f64::NAN, 0.0),
+    ] {
+        assert!(!GeoPoint { lat, lon }.is_in_range(), "({lat}, {lon})");
+    }
+}

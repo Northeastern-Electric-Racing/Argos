@@ -1,0 +1,225 @@
+import { draftLineGeoJson, fixAt, linePoints, linesGeoJson, pointGeoJson, toFix, traceGeoJson } from './map.utils';
+import { DataValue } from './socket.utils';
+import { Coordinate, Track } from './types.utils';
+
+const point = (lat: string, lon: string, time: string): DataValue => ({ values: [lat, lon], time, unit: 'deg' });
+
+const track: Track = {
+  id: 1,
+  name: 'Loop',
+  startLine: { a: { lat: 42, lon: -84 }, b: { lat: 42.1, lon: -84.1 } },
+  finishLine: { a: { lat: 43, lon: -85 }, b: { lat: 43.1, lon: -85.1 } }
+};
+
+describe('toFix', () => {
+  it('reads latitude then longitude from the point values, and the time in ms', () => {
+    expect(toFix(point('42.5', '-84.25', '1712345678901'))).toEqual({ lat: 42.5, lon: -84.25, timeMs: 1712345678901 });
+  });
+});
+
+describe('traceGeoJson', () => {
+  it('draws nothing without fixes', () => {
+    expect(traceGeoJson([]).geometry.coordinates).toEqual([]);
+  });
+
+  it('draws fixes up to 2 s apart as one line in longitude, latitude order', () => {
+    expect(
+      traceGeoJson([
+        { lat: 1, lon: 10, timeMs: 0 },
+        { lat: 2, lon: 20, timeMs: 2000 }
+      ])
+    ).toEqual({
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'MultiLineString',
+        coordinates: [
+          [
+            [10, 1],
+            [20, 2]
+          ]
+        ]
+      }
+    });
+  });
+
+  it('breaks the line where GPS is missing for over 2 s and 3 times the spacing beside it', () => {
+    expect(
+      traceGeoJson([
+        { lat: 1, lon: 10, timeMs: 0 },
+        { lat: 2, lon: 20, timeMs: 1000 },
+        { lat: 3, lon: 30, timeMs: 4001 },
+        { lat: 4, lon: 40, timeMs: 5000 }
+      ]).geometry.coordinates
+    ).toEqual([
+      [
+        [10, 1],
+        [20, 2]
+      ],
+      [
+        [30, 3],
+        [40, 4]
+      ]
+    ]);
+  });
+
+  it("keeps a long Run's sparser stored trace as one line", () => {
+    expect(
+      traceGeoJson([
+        { lat: 1, lon: 10, timeMs: 0 },
+        { lat: 2, lon: 20, timeMs: 5000 },
+        { lat: 3, lon: 30, timeMs: 10000 },
+        { lat: 4, lon: 40, timeMs: 15000 }
+      ]).geometry.coordinates
+    ).toEqual([
+      [
+        [10, 1],
+        [20, 2],
+        [30, 3],
+        [40, 4]
+      ]
+    ]);
+  });
+});
+
+describe('pointGeoJson', () => {
+  it('draws the point in longitude, latitude order', () => {
+    expect(pointGeoJson({ lat: 2, lon: 20 })).toEqual({
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [20, 2] } }]
+    });
+  });
+
+  it('draws nothing without a point', () => {
+    expect(pointGeoJson(null)).toEqual({ type: 'FeatureCollection', features: [] });
+  });
+});
+
+describe('linesGeoJson', () => {
+  it('draws the start and finish lines tagged by kind', () => {
+    expect(linesGeoJson(track)).toEqual({
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: { kind: 'start' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [-84, 42],
+              [-84.1, 42.1]
+            ]
+          }
+        },
+        {
+          type: 'Feature',
+          properties: { kind: 'finish' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [-85, 43],
+              [-85.1, 43.1]
+            ]
+          }
+        }
+      ]
+    });
+  });
+
+  it('draws only the start line when there is no finish line', () => {
+    expect(linesGeoJson({ ...track, finishLine: null }).features.map((feature) => feature.properties.kind)).toEqual([
+      'start'
+    ]);
+  });
+
+  it('draws only the finish line when there is no start line', () => {
+    expect(linesGeoJson({ ...track, startLine: null }).features.map((feature) => feature.properties.kind)).toEqual([
+      'finish'
+    ]);
+  });
+
+  it('draws nothing without a track', () => {
+    expect(linesGeoJson(null)).toEqual({ type: 'FeatureCollection', features: [] });
+  });
+});
+
+describe('linePoints', () => {
+  it("lists both ends of the start line, then the finish line's", () => {
+    expect(linePoints(track)).toEqual([
+      { lat: 42, lon: -84 },
+      { lat: 42.1, lon: -84.1 },
+      { lat: 43, lon: -85 },
+      { lat: 43.1, lon: -85.1 }
+    ]);
+  });
+
+  it('lists nothing for a track without lines', () => {
+    expect(linePoints({ ...track, startLine: null, finishLine: null })).toEqual([]);
+  });
+});
+
+describe('draftLineGeoJson', () => {
+  const a = { lat: 42, lon: -84 };
+
+  it('draws the pending end and a preview segment to the cursor', () => {
+    expect(draftLineGeoJson(a, { lat: 42.1, lon: -84.1 })).toEqual({
+      type: 'FeatureCollection',
+      features: [
+        { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [-84, 42] } },
+        {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [-84, 42],
+              [-84.1, 42.1]
+            ]
+          }
+        }
+      ]
+    });
+  });
+
+  it('draws only the pending end when the cursor is off the map', () => {
+    expect(draftLineGeoJson(a, null).features.map((feature) => feature.geometry.type)).toEqual(['Point']);
+  });
+
+  it('draws nothing before the first end is placed', () => {
+    expect(draftLineGeoJson(null, a)).toEqual({ type: 'FeatureCollection', features: [] });
+  });
+});
+
+const lat = 42;
+const lon = -84;
+const metresOfLatitude = 180 / (6371000 * Math.PI);
+const metresOfLongitude = metresOfLatitude / Math.cos((lat * Math.PI) / 180);
+const fixes = [
+  { lat, lon, timeMs: 1000 },
+  { lat, lon: lon + 10 * metresOfLongitude, timeMs: 1100 }
+];
+
+describe('fixAt', () => {
+  // One screen pixel per metre, y down.
+  const toScreen = (point: Coordinate) => ({
+    x: (point.lon - lon) / metresOfLongitude,
+    y: -(point.lat - lat) / metresOfLatitude
+  });
+
+  it('finds the nearest fix drawn within 10 px of the cursor', () => {
+    expect(fixAt(fixes, { lat: lat + 6 * metresOfLatitude, lon: lon + 16 * metresOfLongitude }, toScreen)).toEqual(fixes[1]);
+  });
+
+  it('finds the nearer of two fixes both drawn within 10 px, with its time', () => {
+    expect(fixAt(fixes, { lat, lon: lon + 4 * metresOfLongitude }, toScreen)).toEqual(fixes[0]);
+    expect(fixAt(fixes, { lat, lon: lon + 6 * metresOfLongitude }, toScreen)).toEqual(fixes[1]);
+  });
+
+  it('finds nothing when the nearest fix is drawn more than 10 px away', () => {
+    expect(fixAt(fixes, { lat: lat + 11 * metresOfLatitude, lon }, toScreen)).toBeNull();
+  });
+
+  it('finds nothing without fixes', () => {
+    expect(fixAt([], { lat, lon }, toScreen)).toBeNull();
+  });
+});

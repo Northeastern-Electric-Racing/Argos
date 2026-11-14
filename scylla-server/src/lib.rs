@@ -1,7 +1,15 @@
-use chrono::serde::ts_milliseconds;
+use std::time::Duration;
 
+use axum::http::StatusCode;
+use chrono::serde::ts_milliseconds;
+use diesel_async::pooled_connection::{AsyncDieselConnectionManager, PoolError};
+
+use crate::{argos_database::ARGOS_DATABASE_NAME, error::ScyllaError};
+
+pub mod argos_database;
 pub mod controllers;
 pub mod error;
+pub mod lap_timing;
 pub mod services;
 
 pub mod argos_inserter;
@@ -12,7 +20,10 @@ pub mod zenoh_processor;
 pub mod metadata_structs;
 pub mod rule_structs;
 pub mod socket_handler;
+pub mod track_handler;
 
+#[allow(non_snake_case)]
+pub mod argos_schema;
 #[allow(non_snake_case)]
 pub mod models;
 #[allow(non_snake_case)]
@@ -28,6 +39,34 @@ pub type Database<'a> =
     diesel_async::pooled_connection::bb8::PooledConnection<'a, diesel_async::AsyncPgConnection>;
 
 pub type PoolHandle = diesel_async::pooled_connection::bb8::Pool<diesel_async::AsyncPgConnection>;
+
+/// A pool of connections to `database_url`, as scylla uses for each of its databases
+pub async fn build_pool(database_url: &str) -> Result<PoolHandle, PoolError> {
+    PoolHandle::builder()
+        .max_size(10)
+        .min_idle(Some(2))
+        .max_lifetime(Some(Duration::from_hours(24)))
+        .idle_timeout(Some(Duration::from_mins(2)))
+        .build(AsyncDieselConnectionManager::new(database_url))
+        .await
+}
+
+/// The `argos_experimental` pool, `None` if scylla could not connect to it on startup.
+/// Its own type so routes can take it as an extension beside the car pool state.
+#[derive(Clone)]
+pub struct ArgosPoolHandle(pub Option<PoolHandle>);
+
+impl ArgosPoolHandle {
+    pub async fn get(&self) -> Result<Database<'_>, ScyllaError> {
+        let Some(pool) = &self.0 else {
+            return Err(ScyllaError::HttpError(
+                StatusCode::SERVICE_UNAVAILABLE,
+                format!("The {ARGOS_DATABASE_NAME} database is unavailable"),
+            ));
+        };
+        Ok(pool.get().await?)
+    }
+}
 
 #[derive(clap::ValueEnum, Debug, PartialEq, Copy, Clone, Default)]
 #[repr(u8)]

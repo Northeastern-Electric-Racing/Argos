@@ -107,9 +107,12 @@ impl MqttProcessor {
     /// This handles the reception of mqtt messages, will not return
     /// * `eventloop` - The eventloop returned by `::new` to connect to.  The loop isnt sync so this is the best that can be done
     /// * `client` - The async mqttt v5 client to use for subscriptions
-    /// # Panics
-    /// Panics if subscription call fails
-    pub async fn process_mqtt(mut self, mut eventloop: EventLoop, pool: Pool<AsyncPgConnection>) {
+    pub async fn process_mqtt(
+        mut self,
+        mut eventloop: EventLoop,
+        client: AsyncClient,
+        pool: Pool<AsyncPgConnection>,
+    ) {
         info!(task = "mqtt_processor", "starting");
         // let mut latency_interval = tokio::time::interval(Duration::from_millis(250));
         let mut latency_ringbuffer = ringbuffer::AllocRingBuffer::<TimeDelta>::new(20);
@@ -132,6 +135,12 @@ impl MqttProcessor {
                     break;
                 },
                 msg = eventloop.poll() => match msg {
+                    // a clean start drops the subscription on every reconnect, so subscribe again each time
+                    Ok(Event::Incoming(Packet::ConnAck(_))) => {
+                        if let Err(err) = client.try_subscribe("#", QoS::AtMostOnce) {
+                            warn!("Could not subscribe to Siren: {}", err);
+                        }
+                    }
                     Ok(Event::Incoming(Packet::Publish(msg))) => {
                         msgs_since_hb = msgs_since_hb.wrapping_add(1);
                         trace!("Received mqtt message: {:?}", msg);
@@ -325,20 +334,11 @@ impl MqttProcessor {
     }
 }
 
-///
-/// # Panics
-/// When you cannot subscribe to data
 pub async fn pub_handle(
     cancel_token: CancellationToken,
     mut mqtt_out_rx: mpsc::Receiver<SirenSendable>,
     client: AsyncClient,
 ) {
-    debug!("Subscribing to siren");
-    client
-        .subscribe("#", rumqttc::v5::mqttbytes::QoS::AtMostOnce)
-        .await
-        .expect("Could not subscribe to Siren");
-
     loop {
         tokio::select! {
         () = cancel_token.cancelled() => {

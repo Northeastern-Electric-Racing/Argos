@@ -1,0 +1,7 @@
+/*
+ * MapLibre GL's own stylesheet, from the installed package, in the vendor layer: above the base reset (so
+ * preflight doesn't strip its controls' margins and borders) and below components and utilities, so a utility
+ * on the map container wins. It is 70 kB, so it stays out of the global stylesheet: angular.json builds it as
+ * the non-injected `maplibre` bundle, and the map links it when it opens (pages/map/maplibre-styles.ts).
+ */
+@import 'maplibre-gl/dist/maplibre-gl.css' layer(vendor);

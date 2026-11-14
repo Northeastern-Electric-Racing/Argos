@@ -7,7 +7,12 @@ use diesel_async::{
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
-use scylla_server::schema::{data, data_type, run};
+use scylla_server::{
+    ArgosPoolHandle,
+    argos_database::{self, ARGOS_DATABASE_NAME},
+    argos_schema::track,
+    schema::{data, data_type, run},
+};
 use tokio::sync::OnceCell;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -38,7 +43,8 @@ fn wait_and_migrate(db_url: &str) -> Result<(), String> {
         .map_err(|e| format!("failed to run migrations: {e}"))
 }
 
-pub async fn cleanup_and_prepare() -> Result<Pool<AsyncPgConnection>, diesel::result::Error> {
+pub async fn cleanup_and_prepare()
+-> Result<(Pool<AsyncPgConnection>, ArgosPoolHandle), diesel::result::Error> {
     dotenv().ok();
 
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");
@@ -55,6 +61,9 @@ pub async fn cleanup_and_prepare() -> Result<Pool<AsyncPgConnection>, diesel::re
     if let Err(e) = ready {
         panic!("{e}");
     }
+    let argos_pool = argos_database::connect(&db_url, ARGOS_DATABASE_NAME)
+        .await
+        .unwrap();
 
     //let mut config = ManagerConfig::default();
     let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
@@ -74,5 +83,10 @@ pub async fn cleanup_and_prepare() -> Result<Pool<AsyncPgConnection>, diesel::re
         .await?;
     diesel::delete(run::table).execute(&mut client).await?;
 
-    Ok(pool.clone())
+    let mut argos_client = argos_pool.get().await.unwrap();
+    diesel::delete(track::table)
+        .execute(&mut argos_client)
+        .await?;
+
+    Ok((pool.clone(), ArgosPoolHandle(Some(argos_pool.clone()))))
 }

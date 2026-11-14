@@ -45,6 +45,7 @@ evalexpr = "13.1.0"
 serde_with = "3.21.0"
 derive_more = { version = "2.1.1", features = ["as_ref", "display"] }
 zenoh = "1.9.0"
+url = "2.5.8"
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = "0.7"
 

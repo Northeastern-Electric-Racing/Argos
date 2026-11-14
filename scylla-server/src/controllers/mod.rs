@@ -5,6 +5,8 @@ pub mod scylla_config_controller;
 pub mod data_controller;
 pub mod data_type_controller;
 pub mod run_controller;
+pub mod trace_controller;
+pub mod track_controller;
 
 pub mod file_insertion_controller;
 pub mod video_streamer_controller;
