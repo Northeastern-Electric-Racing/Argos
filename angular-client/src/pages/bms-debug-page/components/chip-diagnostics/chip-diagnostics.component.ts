@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import Storage from 'src/services/storage.service';
@@ -23,6 +23,13 @@ export class ChipDiagnosticsComponent implements OnInit {
   private storage = inject(Storage);
   chip = input.required<Chip>();
   segment = input.required<number>();
+  graphTopics = computed(() => [
+    topics.vref(this.segment(), this.chip()),
+    topics.vres(this.segment(), this.chip()),
+    topics.vAnalog(this.segment(), this.chip()),
+    topics.vDigital(this.segment(), this.chip()),
+    topics.boardTemp(this.segment(), this.chip())
+  ]);
   title!: string;
   vRef: number | undefined;
   vRes: number | undefined;

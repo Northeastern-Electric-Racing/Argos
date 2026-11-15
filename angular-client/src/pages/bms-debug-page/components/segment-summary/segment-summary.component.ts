@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { appRoutes } from 'src/app/app-routes';
@@ -22,6 +22,10 @@ export class SegmentSummaryComponent implements OnInit {
   private router = inject(Router);
   private storage = inject(Storage);
   segmentNumber = input.required<Segment>();
+  graphTopics = computed(() => {
+    const keys = segmentInfo(this.segmentNumber());
+    return [keys.segmentTempKey, keys.alphaChipTempKey, keys.betaChipTempKey, keys.voltageKey];
+  });
   temperature!: number;
   alphaChipTemp!: number;
   betaChipTemp!: number;

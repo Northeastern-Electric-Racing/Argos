@@ -33,6 +33,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 export default class CellTempDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.highTempValue(), topics.tempAvgValue()];
   avgTemp: number = 0;
   maxTemp: number = 0;
   resetGraphButton = {

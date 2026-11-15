@@ -1,5 +1,5 @@
 @if (isDesktop) {
-  <info-background svgIcon="electric_meter" title="Pack Voltage" [button]="resetGraphButton">
+  <info-background svgIcon="electric_meter" title="Pack Voltage" [button]="resetGraphButton" [graphTopics]="graphTopics">
     <hstack>
       <hstack class="mb-10 w-3/20">
         <typography variant="info-value" [content]="voltage.toFixed(1) + 'V'" />
@@ -8,5 +8,10 @@
     </hstack>
   </info-background>
 } @else {
-  <pack-voltage-mobile [packVoltData]="packVoltData" [voltage]="voltage" [resetGraphButton]="resetGraphButton" />
+  <pack-voltage-mobile
+    [packVoltData]="packVoltData"
+    [voltage]="voltage"
+    [resetGraphButton]="resetGraphButton"
+    [graphTopics]="graphTopics"
+  />
 }

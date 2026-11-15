@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
 import { ConnectionDotConfig, ThermometerConfig } from 'src/components/info-value-dispaly/info-value-display.component';
@@ -35,6 +35,13 @@ export class SegmentAtAGlanceComponent {
   private dataChange$ = new Subject<void>();
   private storage = inject(Storage);
   segmentNumber = input.required<Segment>();
+  // PECErrorChip is no longer stored, so the CRC status can't be graphed
+  graphTopics = computed(() => [
+    topics.segmentVoltage(this.segmentNumber()),
+    topics.segmentTemp(this.segmentNumber()),
+    topics.dieTemp(this.segmentNumber(), Chip.Alpha),
+    topics.dieTemp(this.segmentNumber(), Chip.Beta)
+  ]);
   voltage: number = 0;
   temperature: number = 0;
   alphaChipTemp: number = 0;

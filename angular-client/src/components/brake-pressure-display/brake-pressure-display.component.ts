@@ -17,6 +17,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 export default class BrakePressureDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.brakePressureFront(), topics.brakePressureBack()];
   brakePressureFront: number = 0;
   brakePressureBack: number = 0;
 

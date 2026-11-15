@@ -14,6 +14,7 @@ import HalfGaugeComponent from '../half-gauge/half-gauge.component';
 export default class SpeedDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.speed()];
   speed: number = 0;
 
   ngOnInit() {

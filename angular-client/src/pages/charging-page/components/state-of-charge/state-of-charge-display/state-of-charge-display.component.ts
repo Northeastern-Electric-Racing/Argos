@@ -17,6 +17,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 export default class StateOfChargeDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.stateOfCharge()];
   stateOfCharge: number = 0;
 
   ngOnInit() {

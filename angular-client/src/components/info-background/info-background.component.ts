@@ -1,5 +1,8 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Router } from '@angular/router';
+import { appRoutes } from 'src/app/app-routes';
 import Theme from 'src/services/theme.service';
+import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { UiIconButtonDirective } from 'src/ui/button/button.directive';
 import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
@@ -26,6 +29,9 @@ interface ButtonInputs {
   imports: [UiIconComponent, SelectDropdownComponent, TypographyComponent, HStackComponent, UiIconButtonDirective]
 })
 export class InfoBackgroundComponent {
+  private router = inject(Router);
+  private topicSelectionService = inject(TopicSelectionService);
+
   icon = input<string>();
   svgIcon = input<string>();
   backgroundColor = input<Theme>(Theme.infoBackground);
@@ -54,4 +60,19 @@ export class InfoBackgroundComponent {
     const x = this.slicePercentage();
     return `polygon(${x}px 0, 100% 0, 100% 100%, 0 100%, 0 ${x + 20}px)`;
   });
+
+  /**
+   * Topics this widget displays. When set, the title bar shows a graph link that
+   * opens the graph page with exactly these topics selected.
+   */
+  graphTopics = input<string[]>([]);
+
+  openGraph = (event: MouseEvent) => {
+    event.stopPropagation(); // don't also fire the card's onClick
+    // The graph page only adds ?topics= to the current selection, so clear it to replace it
+    this.topicSelectionService.clearSelection();
+    this.router.navigate([appRoutes.graphRoute()], {
+      queryParams: { topics: this.graphTopics().join(',') }
+    });
+  };
 }
