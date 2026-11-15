@@ -19,9 +19,7 @@ use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
     ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
-    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
-    argos_database::{self, ARGOS_DATABASE_NAME},
-    build_pool,
+    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable, argos_database, build_pool,
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -241,14 +239,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    // Argos-only data must never stop telemetry; without its DB only the map has no tracks
-    let argos_pool = match argos_database::connect(&db_url, ARGOS_DATABASE_NAME).await {
-        Ok(pool) => Some(pool),
-        Err(e) => {
-            warn!("{ARGOS_DATABASE_NAME} DB unavailable, the map will have no tracks: {e}");
-            None
-        }
-    };
+    // Argos-only data must never hold up telemetry, so its database connects in the background; until then the map
+    // has no tracks
+    let argos_pool = ArgosPoolHandle::default();
+    let tracks_changed = TracksChanged::default();
+    if let Ok(argos_database_url) = std::env::var("ARGOS_DATABASE_URL") {
+        tokio::spawn(argos_database::keep_connecting(
+            argos_database_url,
+            argos_pool.clone(),
+            tracks_changed.clone(),
+        ));
+    } else {
+        warn!("ARGOS_DATABASE_URL is not set, so the map will have no tracks");
+    }
 
     info!("Initializing database connections...");
     let pool = build_pool(&db_url).await?;
@@ -286,12 +289,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let task_tracker = TaskTracker::new();
     let token = CancellationToken::new();
 
-    let tracks_changed = TracksChanged::default();
     let live_run = LiveRunHandle::default();
     let fut = track_handler(
         token.clone(),
         mqtt_send_socket.subscribe(),
-        ArgosPoolHandle(argos_pool.clone()),
+        argos_pool.clone(),
         tracks_changed.clone(),
         live_run.clone(),
         io.clone(),
@@ -408,7 +410,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .route("/tracks/delete/{id}", post(track_controller::delete_track))
                 .route("/trace/{runId}", get(trace_controller::get_trace))
-                .layer(Extension(ArgosPoolHandle(argos_pool)))
+                .layer(Extension(argos_pool))
                 .layer(Extension(tracks_changed))
                 .layer(Extension(live_run)),
         )

@@ -127,6 +127,8 @@ fn jitter_on_start_line() -> Vec<GpsFix> {
         fix(-0.5, -3.0, 1600.0),
         fix(0.5, -3.0, 1800.0),
         fix(-0.5, -3.0, 2000.0),
+        // still parked until it drives off at 21.7 s
+        fix(-0.5, -3.0, 21_500.0),
     ]
 }
 
@@ -243,7 +245,13 @@ fn gps_wander_while_parked_on_a_start_only_line_restarts_the_lap_until_the_car_d
             )
         })
         .collect();
-    let fixes: Vec<GpsFix> = [parked, cross_start(80_000.0)].concat();
+    // still parked until it drives off at 79.8 s
+    let fixes: Vec<GpsFix> = [
+        parked,
+        vec![fix(-1.0, -3.0, 79_700.0)],
+        cross_start(80_000.0),
+    ]
+    .concat();
 
     assert_eq!(
         LapTimer::from_fixes(&fixes, start_line(), None).laps(),
@@ -332,6 +340,46 @@ fn finish_and_start_crossed_at_the_same_time_close_the_lap_before_opening_the_ne
         LapTimer::from_fixes(&fixes, start_line(), Some(finish_line())).laps(),
         vec![lap(1000.0, 5000.0), lap(5000.0, 9000.0)]
     );
+}
+
+#[test]
+fn a_lap_with_a_gps_dropout_while_driving_is_left_untimed() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        // nearly 4 s and 190 m without a fix, so the path between is unknown
+        vec![fix(-10.0, -200.0, 5000.0), fix(-10.0, -10.0, 9000.0)],
+        cross_start(10_000.0),
+        cross_start(15_000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(10_000.0, 15_000.0)]
+    );
+}
+
+#[test]
+fn a_crossing_across_a_gps_dropout_times_neither_lap_it_bounds() {
+    let fixes: Vec<GpsFix> = [
+        cross_start(1000.0),
+        cross_start(5000.0),
+        // crosses the line somewhere in 3 s without a fix
+        vec![fix(-10.0, -3.0, 9000.0), fix(10.0, -3.0, 12_000.0)],
+        cross_start(20_000.0),
+        cross_start(25_000.0),
+    ]
+    .concat();
+
+    assert_eq!(
+        LapTimer::from_fixes(&fixes, start_line(), None).laps(),
+        vec![lap(1000.0, 5000.0), lap(20_000.0, 25_000.0)]
+    );
+}
+
+#[test]
+fn distance_between_points_is_in_metres() {
+    assert!((offset(0.0, 0.0).distance_m(offset(3.0, 4.0)) - 5.0).abs() < 1e-6);
 }
 
 #[test]

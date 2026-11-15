@@ -1,4 +1,4 @@
-# For the argos_experimental database: pass `--config-file diesel.argos.toml` to the diesel CLI
+# For the argos database: pass `--config-file diesel.argos.toml` to the diesel CLI
 
 [print_schema]
 file = "src/argos_schema.rs"

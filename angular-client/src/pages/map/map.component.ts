@@ -46,6 +46,8 @@ const FIT_PADDING_PX = 60;
 const MAX_FIT_ZOOM = 19;
 // MapLibre re-tiles the whole trace on each redraw, too costly at GPS rates up to 10 Hz.
 const TRACE_REDRAW_MS = 1_000;
+// As scylla caps the stored trace; past it, every other fix is kept.
+const MAX_TRACE_FIXES = 10_000;
 
 // No scale: MapLibre positions markers with transform, which scale would multiply, moving the marker off the cursor.
 const LINE_END_CLASS = tw('size-3 rounded-full hover:ring-3 hover:ring-fg/40 data-dragging:ring-4 data-dragging:ring-fg');
@@ -241,9 +243,12 @@ export default class MapComponent {
       tap((value) => {
         const point = toFix(value);
         const last = this.trace().at(-1);
-        // The stored history may already hold this fix.
-        if (last && point.timeMs <= last.timeMs) return;
-        this.traceFixes.update((trace) => [...trace, point]);
+        // MapLibre throws on a malformed fix, which would end this stream; the stored history may already hold it.
+        if (!Number.isFinite(point.lat) || !Number.isFinite(point.lon) || (last && point.timeMs <= last.timeMs)) return;
+        this.traceFixes.update((trace) => {
+          const longer = [...trace, point];
+          return longer.length > MAX_TRACE_FIXES ? longer.filter((_, index) => index % 2 === 0) : longer;
+        });
         if (this.trace().length === 1 || (this.followCar && !this.map()?.getBounds().contains(point)))
           this.fit(this.trace());
       })

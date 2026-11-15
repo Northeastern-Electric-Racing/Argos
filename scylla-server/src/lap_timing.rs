@@ -13,6 +13,10 @@ const MAX_LAP_MS: f64 = 5.0 * 60_000.0;
 /// A crossing ends a lap only once the car has been this far from the start line since the lap began, as GPS wander
 /// while the car sits on the line crosses it every few seconds
 const LEAVE_START_M: f64 = 5.0;
+/// A dropout while driving, this long and this far between fixes, leaves the car's path unknown, so a lap through it
+/// could be missing a crossing or have one in the wrong place and is left untimed
+const DROPOUT_MS: f64 = 2_000.0;
+const DROPOUT_M: f64 = 10.0;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct GeoPoint {
@@ -24,6 +28,13 @@ impl GeoPoint {
     #[must_use]
     pub fn is_in_range(&self) -> bool {
         self.lat.abs() <= 90.0 && self.lon.abs() <= 180.0
+    }
+
+    /// Metres to `other` on a flat local projection, close enough at the scale of a track
+    #[must_use]
+    pub fn distance_m(self, other: GeoPoint) -> f64 {
+        let east = (other.lon - self.lon) * self.lat.to_radians().cos();
+        east.hypot(other.lat - self.lat) * METRES_PER_DEGREE
     }
 }
 
@@ -178,6 +189,7 @@ pub struct LapTimer {
     last_fix: Option<GpsFix>,
     open_lap_start_ms: Option<f64>,
     left_start: bool,
+    dropout_in_lap: bool,
     laps: Vec<Lap>,
 }
 
@@ -190,6 +202,7 @@ impl LapTimer {
             last_fix: None,
             open_lap_start_ms: None,
             left_start: false,
+            dropout_in_lap: false,
             laps: Vec::new(),
         }
     }
@@ -209,6 +222,9 @@ impl LapTimer {
         let Some(last_fix) = self.last_fix.replace(fix) else {
             return;
         };
+        let dropout = fix.time_ms - last_fix.time_ms > DROPOUT_MS
+            && last_fix.point.distance_m(fix.point) > DROPOUT_M;
+        self.dropout_in_lap |= dropout;
         let mut crossings: Vec<(f64, LineKind)> = [
             (&self.finish, LineKind::Finish),
             (&self.start, LineKind::Start),
@@ -223,10 +239,12 @@ impl LapTimer {
                 LineKind::Start => {
                     self.open_lap_start_ms = Some(time_ms);
                     self.left_start = false;
+                    self.dropout_in_lap = dropout;
                 }
                 LineKind::Finish => {
                     if self.left_start
                         && let Some(start_ms) = self.open_lap_start_ms.take()
+                        && !self.dropout_in_lap
                     {
                         self.laps.extend(lap(start_ms, time_ms));
                     }

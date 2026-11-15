@@ -1,10 +1,13 @@
-use std::time::Duration;
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
 use axum::http::StatusCode;
 use chrono::serde::ts_milliseconds;
 use diesel_async::pooled_connection::{AsyncDieselConnectionManager, PoolError};
 
-use crate::{argos_database::ARGOS_DATABASE_NAME, error::ScyllaError};
+use crate::error::ScyllaError;
 
 pub mod argos_database;
 pub mod controllers;
@@ -51,17 +54,17 @@ pub async fn build_pool(database_url: &str) -> Result<PoolHandle, PoolError> {
         .await
 }
 
-/// The `argos_experimental` pool, `None` if scylla could not connect to it on startup.
+/// The argos database's pool, set once scylla connects to it, which it keeps trying in the background.
 /// Its own type so routes can take it as an extension beside the car pool state.
-#[derive(Clone)]
-pub struct ArgosPoolHandle(pub Option<PoolHandle>);
+#[derive(Clone, Default)]
+pub struct ArgosPoolHandle(pub Arc<OnceLock<PoolHandle>>);
 
 impl ArgosPoolHandle {
     pub async fn get(&self) -> Result<Database<'_>, ScyllaError> {
-        let Some(pool) = &self.0 else {
+        let Some(pool) = self.0.get() else {
             return Err(ScyllaError::HttpError(
                 StatusCode::SERVICE_UNAVAILABLE,
-                format!("The {ARGOS_DATABASE_NAME} database is unavailable"),
+                "The argos database is unavailable".to_owned(),
             ));
         };
         Ok(pool.get().await?)

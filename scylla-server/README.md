@@ -58,11 +58,11 @@ We use diesel, for our ORM: [diesel docs](https://diesel.rs/guides/getting-start
 
 However, when creating schema changes to the car database please use charybdis, [Charybdis README](../charybdis/README.md).
 
-#### The argos_experimental database:
+#### The argos database:
 
-`argos_experimental` holds Argos-only data, such as tracks, on the same Postgres server as the car database. It is not car telemetry: it is not uploaded to the cloud, not in Grafana, and not managed by charybdis.
+The argos database holds Argos-only data, such as tracks and laps, in its own Postgres container (`argos-db` in `compose/compose.yml`). It is not car telemetry: it is not uploaded to the cloud, not in Grafana, and not managed by charybdis. Its data is a bind mount, so `down -v` keeps it; wipe it with `sudo rm -rf compose/argos-db-data` (its files belong to the container's postgres user).
 
-Scylla creates it on startup if it is missing (its URL is `DATABASE_URL` with the database name swapped) and runs its migrations from `argos_migrations/`, so a deploy needs no manual SQL. If that fails (for example, the DB user can't create databases), scylla logs a warning and keeps running; only the map has no tracks. `docker compose down -v` deletes the whole Postgres volume, `argos_experimental` included.
+Scylla connects to `ARGOS_DATABASE_URL`, retrying in the background until it answers, and runs its migrations from `argos_migrations/`, so a deploy needs no manual SQL. Without it, scylla runs as before and only the map has no tracks. For `cargo run`, set it to the container, `postgresql://postgres:password@127.0.0.1:5433/postgres`.
 
 To change its schema, add a Diesel migration instead of a charybdis one:
 
@@ -70,13 +70,13 @@ To change its schema, add a Diesel migration instead of a charybdis one:
 diesel migration generate --config-file diesel.argos.toml <migration_name>
 ```
 
-Write its `up.sql` and `down.sql`, then `diesel migration run --config-file diesel.argos.toml --database-url <argos_experimental URL>` applies it and regenerates `src/argos_schema.rs`.
+Write its `up.sql` and `down.sql`, then `diesel migration run --config-file diesel.argos.toml --database-url <ARGOS_DATABASE_URL>` applies it and regenerates `src/argos_schema.rs`.
 
 #### Tests:
 
 - Unit tests need no database and run in parallel: `cargo test`.
-- Integration tests (`tests/integration/`) need Postgres. They wait for it, set up the car and `argos_experimental` databases as scylla does on startup, and share them, so they run one at a time: `cargo test --test integration -- --test-threads=1`. Plain `cargo test` skips them.
-- `./integration_test.sh` starts a throwaway database and runs both.
+- Integration tests (`tests/integration/`) need Postgres. They wait for the car and argos databases (`DATABASE_URL`, `ARGOS_DATABASE_URL`), migrate them as scylla does on startup, and share them, so they run one at a time: `cargo test --test integration -- --test-threads=1`. Plain `cargo test` skips them.
+- `./integration_test.sh` starts throwaway databases and runs both.
 
 #### Mock GPS:
 

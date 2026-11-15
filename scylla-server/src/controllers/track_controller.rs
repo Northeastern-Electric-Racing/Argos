@@ -10,6 +10,8 @@ use crate::{
     transformers::track_transformer::PublicTrack,
 };
 
+const MIN_LINE_M: f64 = 1.0;
+
 #[derive(Deserialize)]
 pub struct AddTrackPayload {
     pub name: String,
@@ -39,6 +41,13 @@ pub async fn edit_track_line(
         return Err(ScyllaError::HttpError(
             StatusCode::BAD_REQUEST,
             "Line coordinates must be finite with |lat| <= 90 and |lon| <= 180".to_owned(),
+        ));
+    }
+    // shorter, such as a double-click leaves, the car's path would never cross it
+    if line.is_some_and(|line| line.a.distance_m(line.b) < MIN_LINE_M) {
+        return Err(ScyllaError::HttpError(
+            StatusCode::BAD_REQUEST,
+            format!("A line must be at least {MIN_LINE_M} m long"),
         ));
     }
 

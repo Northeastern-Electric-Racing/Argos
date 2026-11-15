@@ -1,6 +1,6 @@
 import { Component, output } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Map as MapLibreMap } from 'maplibre-gl';
+import { LngLatBounds, Map as MapLibreMap } from 'maplibre-gl';
 import Storage from 'src/services/storage.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ToastService } from 'src/ui/toast/toast.service';
@@ -122,6 +122,35 @@ describe('MapComponent live trace and laps', () => {
 
     expect(toast).toHaveBeenCalledExactlyOnceWith({ severity: 'error', summary: 'GPS History Unavailable', detail: 'Down' });
     expect(map.trace()).toEqual([fix(42, 1000)]);
+  });
+
+  it('skips a malformed live fix and keeps drawing the ones after it', () => {
+    const { storage, fixture, map } = setup();
+    map.onMapLoaded({
+      getSource: () => undefined,
+      getCanvas: () => ({ style: {} }),
+      on: () => undefined,
+      fitBounds: () => undefined,
+      getBounds: () => new LngLatBounds([-85, 41], [-83, 43])
+    } as unknown as MapLibreMap);
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    storage.addValue(topics.gpsLocation(), { values: ['', ''], time: '500', unit: 'deg' });
+    storage.addValue(topics.gpsLocation(), liveFix(42, 1000));
+
+    expect(map.trace()).toEqual([fix(42, 1000)]);
+  });
+
+  it('keeps every other fix once the trace passes the 10,000 scylla caps it at', async () => {
+    const stored = Array.from({ length: 10_000 }, (_, index) => fix(42, index));
+    const { storage, fixture, map } = setup((url) => (url.endsWith('/trace/1') ? Promise.resolve(json(stored)) : pending));
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    await settle();
+    storage.addValue(topics.gpsLocation(), liveFix(42.1, 10_000));
+
+    expect(map.trace().length).toBe(5_001);
+    expect([map.trace()[0], map.trace().at(-1)]).toEqual([fix(42, 0), fix(42.1, 10_000)]);
   });
 
   it('shows the live laps of the selected track on the current run only', () => {

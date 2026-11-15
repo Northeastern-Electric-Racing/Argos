@@ -25,6 +25,7 @@ Profiles:
 
 The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
 - It persists the database between `down` commands via a volume named `<project>_db-data` (e.g. `odyssey_client-dev_db-data` for the default `client-dev` stack).  Wipe it with `./argos.sh <profile> down -v` or `docker volume rm <project>_db-data` to start with a new database next `up`.
+- It runs `argos-db` for Argos-only data such as the map's tracks, on a bind mount (`compose/argos-db-data`) rather than a volume, so `down -v` keeps it; wipe it with `sudo rm -rf compose/argos-db-data` (its files belong to the container's postgres user).
 - It weighs the CPU usage of siren higher, so it is prioritized in CPU starvation scenarios.
 
 

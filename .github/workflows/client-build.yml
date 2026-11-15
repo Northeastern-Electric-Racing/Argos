@@ -11,7 +11,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write # the offline-map release
       packages: write
     defaults:
       run:
@@ -26,8 +26,20 @@ jobs:
       - name: Install deps
         run: npm ci
 
+      # One map per quarter and venue list, kept on the offline-map release, so images ship the same map until either
+      # changes; delete its asset to refresh it sooner
       - name: Fetch the offline map
-        run: sh ../utils/fetch-basemap.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          asset="basemap-$(date -u +%Y)q$((($(date -u +%-m) + 2) / 3))-$(sha256sum ../utils/map-venues.txt | cut -c1-12).pmtiles"
+          mkdir -p src/assets/map
+          if ! gh release download offline-map --pattern "$asset" --output src/assets/map/basemap.pmtiles; then
+            sh ../utils/fetch-basemap.sh
+            gh release view offline-map > /dev/null 2>&1 ||
+              gh release create offline-map --prerelease --title "Offline map" --notes "The client's offline map, built by client-build.yml"
+            cp src/assets/map/basemap.pmtiles "$RUNNER_TEMP/$asset" && gh release upload offline-map "$RUNNER_TEMP/$asset"
+          fi
 
       - name: Build production bundle
         run: npm run build:production

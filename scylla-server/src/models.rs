@@ -89,3 +89,14 @@ pub fn line_from_column(column: Option<&[Option<f64>]>) -> Option<TimingLine> {
         },
     })
 }
+
+/// Use this struct when saving a run's laps
+#[derive(Insertable, Debug)]
+#[diesel(table_name = crate::argos_schema::lap)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct NewLap {
+    pub runId: i32,
+    pub trackId: i32,
+    pub startMs: f64,
+    pub endMs: f64,
+}

@@ -1,41 +1,23 @@
-use diesel::sql_types::{Bool, Text};
+use std::time::Duration;
+
 use diesel_async::{
-    AsyncConnection, AsyncPgConnection, RunQueryDsl,
-    async_connection_wrapper::AsyncConnectionWrapper,
+    AsyncConnection, AsyncPgConnection, async_connection_wrapper::AsyncConnectionWrapper,
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+use tracing::warn;
 
-use crate::{PoolHandle, build_pool};
-
-/// Holds Argos-only data such as tracks, beside the car database on the same server
-pub const ARGOS_DATABASE_NAME: &str = "argos_experimental";
+use crate::{ArgosPoolHandle, PoolHandle, build_pool, track_handler::TracksChanged};
 
 const ARGOS_MIGRATIONS: EmbeddedMigrations = embed_migrations!("argos_migrations");
 
-/// The URL of the database `database_name` on the server of `database_url`, with the same credentials and options
-pub fn database_url_with_name(
-    database_url: &str,
-    database_name: &str,
-) -> Result<String, url::ParseError> {
-    let mut url = url::Url::parse(database_url)?;
-    url.set_path(database_name);
-    Ok(url.into())
-}
+const RETRY_AFTER: Duration = Duration::from_secs(5);
 
-/// A pool for the database `database_name` on the server of `database_url`, which is created and migrated first if needed
+/// A pool for the argos database at `database_url`, which holds Argos-only data such as tracks, migrated first
 pub async fn connect(
     database_url: &str,
-    database_name: &str,
 ) -> Result<PoolHandle, Box<dyn std::error::Error + Send + Sync>> {
-    let argos_database_url = database_url_with_name(database_url, database_name)?;
-    create_database_if_missing(
-        &mut AsyncPgConnection::establish(database_url).await?,
-        database_name,
-    )
-    .await?;
-
     let mut async_wrapper: AsyncConnectionWrapper<AsyncPgConnection> =
-        AsyncConnectionWrapper::from(AsyncPgConnection::establish(&argos_database_url).await?);
+        AsyncConnectionWrapper::from(AsyncPgConnection::establish(database_url).await?);
     tokio::task::spawn_blocking(move || {
         async_wrapper
             .run_pending_migrations(ARGOS_MIGRATIONS)
@@ -43,24 +25,27 @@ pub async fn connect(
     })
     .await??;
 
-    Ok(build_pool(&argos_database_url).await?)
+    Ok(build_pool(database_url).await?)
 }
 
-async fn create_database_if_missing(
-    connection: &mut AsyncPgConnection,
-    database_name: &str,
-) -> Result<(), diesel::result::Error> {
-    let exists: bool = diesel::select(
-        diesel::dsl::sql::<Bool>("EXISTS (SELECT FROM pg_database WHERE datname = ")
-            .bind::<Text, _>(database_name)
-            .sql(")"),
-    )
-    .get_result(connection)
-    .await?;
-    if !exists {
-        diesel::sql_query(format!("CREATE DATABASE \"{database_name}\""))
-            .execute(connection)
-            .await?;
+/// Connects to the argos database, retrying until it answers since it may start after scylla, then wakes the track
+/// handler to load the tracks
+pub async fn keep_connecting(
+    database_url: String,
+    ArgosPoolHandle(pool): ArgosPoolHandle,
+    TracksChanged(tracks_changed): TracksChanged,
+) {
+    loop {
+        match connect(&database_url).await {
+            Ok(connected) => {
+                let _ = pool.set(connected);
+                tracks_changed.notify_one();
+                return;
+            }
+            Err(e) => {
+                warn!("Argos database unavailable, retrying in {RETRY_AFTER:?}: {e}");
+                tokio::time::sleep(RETRY_AFTER).await;
+            }
+        }
     }
-    Ok(())
 }

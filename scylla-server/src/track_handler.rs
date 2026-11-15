@@ -9,8 +9,9 @@ use tracing::{debug, info, trace, warn};
 use crate::{
     ArgosPoolHandle, ClientData,
     error::ScyllaError,
-    lap_timing::{GPS_LOCATION_TOPIC, GpsFix, Lap, LapTimer, TimingLine},
-    services::track_service,
+    lap_timing::{GPS_LOCATION_TOPIC, GeoPoint, GpsFix, Lap, LapTimer, TimingLine},
+    models::NewLap,
+    services::{lap_service, track_service},
     transformers::track_transformer::PublicTrack,
 };
 
@@ -21,6 +22,10 @@ const LAPS_SOCKET_KEY: &str = "laps";
 const MAX_TRACE_FIXES: usize = 10_000;
 /// GPS fixes queue behind a track load in this task, so a database that stops answering must not hold it longer
 const LOAD_TRACKS_TIMEOUT: Duration = Duration::from_secs(1);
+/// Faster than any FSAE car, so a fix that implies more is a GPS jump
+const MAX_SPEED_M_PER_S: f64 = 40.0;
+/// A fix this far ahead of the one before it has a bad clock, and kept, it would hold back every fix after it
+const MAX_TIME_JUMP_MS: f64 = 60_000.0;
 
 /// Wakes the track handler to reload the tracks after a route changes them
 #[derive(Clone, Default)]
@@ -44,17 +49,30 @@ pub struct RunLaps<'a> {
 pub struct LiveRun {
     run_id: i32,
     fixes: Vec<GpsFix>,
+    last_received: Option<GpsFix>,
     lines: Vec<(i32, TimingLine, Option<TimingLine>)>,
     timers: BTreeMap<i32, LapTimer>,
 }
 
 impl LiveRun {
-    /// Times a fix of `run_id`, starting over when a new run begins; a fix no newer than the last is dropped
+    /// Times a fix of `run_id`, starting over when a new run begins. A fix off the globe, at (0, 0) where a receiver
+    /// without a fix reports, implausible after the fix before it, or no newer than the last is dropped
     pub fn push(&mut self, run_id: i32, fix: GpsFix) {
         if run_id != self.run_id {
             self.run_id = run_id;
             self.fixes.clear();
+            self.last_received = None;
             self.retime();
+        }
+        if !fix.point.is_in_range() || fix.point == (GeoPoint { lat: 0.0, lon: 0.0 }) {
+            return;
+        }
+        if self
+            .last_received
+            .replace(fix)
+            .is_some_and(|previous| !plausible(previous, fix))
+        {
+            return;
         }
         if self
             .fixes
@@ -111,6 +129,13 @@ impl LiveRun {
     }
 }
 
+/// Whether `fix` can follow `previous`: no faster than a car, and no further ahead in time than [`MAX_TIME_JUMP_MS`]
+fn plausible(previous: GpsFix, fix: GpsFix) -> bool {
+    let elapsed_ms = fix.time_ms - previous.time_ms;
+    elapsed_ms <= MAX_TIME_JUMP_MS
+        && previous.point.distance_m(fix.point) <= MAX_SPEED_M_PER_S * elapsed_ms.max(0.0) / 1000.0
+}
+
 /// Times the current run's laps on every track as GPS fixes arrive, and sends every client the tracks and those laps
 /// each second and whenever the tracks change
 pub async fn track_handler(
@@ -131,6 +156,7 @@ pub async fn track_handler(
             biased;
             () = cancel_token.cancelled() => {
                 debug!("Shutting down track handler!");
+                save_laps(argos_pool.clone(), lap_rows(&live_run.lock().await.run_laps())).await;
                 break;
             },
             () = tracks_changed.notified() => {
@@ -141,7 +167,12 @@ pub async fn track_handler(
                 match res {
                     Ok(data) => {
                         if data.name == GPS_LOCATION_TOPIC && let [lat, lon, ..] = data.values[..] {
-                            live_run.lock().await.push(data.run_id, GpsFix::new(lat, lon, data.timestamp.timestamp_micros()));
+                            let mut live_run = live_run.lock().await;
+                            // a new run clears the last one's laps, so they're saved first, off this loop
+                            if data.run_id != live_run.run_laps().run_id {
+                                tokio::spawn(save_laps(argos_pool.clone(), lap_rows(&live_run.run_laps())));
+                            }
+                            live_run.push(data.run_id, GpsFix::new(lat, lon, data.timestamp.timestamp_micros()));
                         }
                     }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
@@ -188,13 +219,45 @@ async fn reload_tracks(
 }
 
 async fn load_tracks(argos_pool: &ArgosPoolHandle) -> Result<Vec<PublicTrack>, ScyllaError> {
-    // without the database there are no tracks, rather than a load to retry
-    let Some(pool) = &argos_pool.0 else {
+    // no tracks until the database connects, which then wakes this handler to load them
+    let Some(pool) = argos_pool.0.get() else {
         return Ok(Vec::new());
     };
     let mut db = pool.get().await?;
     let tracks = track_service::get_all_tracks(&mut db).await?;
     Ok(tracks.into_iter().map(PublicTrack::from).collect())
+}
+
+/// The laps of `run_laps` as rows to save
+fn lap_rows(run_laps: &RunLaps<'_>) -> Vec<NewLap> {
+    run_laps
+        .laps
+        .iter()
+        .flat_map(|(&track_id, laps)| {
+            laps.iter().map(move |lap| NewLap {
+                runId: run_laps.run_id,
+                trackId: track_id,
+                startMs: lap.start_ms,
+                endMs: lap.end_ms,
+            })
+        })
+        .collect()
+}
+
+/// Saves a run's laps, so they outlast it
+async fn save_laps(argos_pool: ArgosPoolHandle, laps: Vec<NewLap>) {
+    if laps.is_empty() {
+        return;
+    }
+    let saved = match argos_pool.get().await {
+        Ok(mut db) => lap_service::add_laps(&mut db, &laps)
+            .await
+            .map_err(ScyllaError::from),
+        Err(err) => Err(err),
+    };
+    if let Err(err) = saved {
+        warn!("Could not save {} laps: {:?}", laps.len(), err);
+    }
 }
 
 async fn send(io: &SocketIo, tracks: &[PublicTrack], live_run: &Mutex<LiveRun>) {
