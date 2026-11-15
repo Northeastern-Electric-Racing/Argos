@@ -13,15 +13,13 @@ import LoadingPageComponent from 'src/components/loading-page/loading-page.compo
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import { loadMapboxStyles } from './mapbox-styles';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 @Component({
   selector: 'map',
   templateUrl: './map.component.html',
   imports: [RunSelectorComponent, LoadingPageComponent, ErrorPageComponent, SidebarToggleComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class MapComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -31,7 +29,7 @@ export default class MapComponent implements OnInit {
   isLoading: boolean = false;
   isError: boolean = false;
   error?: Error;
-  isMobile = window.innerWidth <= 768;
+  isMobile = injectIsMobile();
   /** Mapbox GL's stylesheet, requested as the page opens; every map is built once it has loaded. */
   private styles = loadMapboxStyles(inject(DOCUMENT));
   private destroyed = false;
@@ -49,10 +47,6 @@ export default class MapComponent implements OnInit {
 
   ngOnInit() {
     setTimeout(() => this.whenStyled(() => this.map.buildMap('map')), 1);
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= 768;
   }
 
   onRunSelected = (run: Run) => {

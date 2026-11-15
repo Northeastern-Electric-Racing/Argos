@@ -6,15 +6,13 @@ import { floatPipe } from 'src/utils/pipes.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
 import RaspberryPiDesktopComponent from './raspberry-pi-desktop-content/raspberry-pi-desktop.component';
 import RaspberryPiMobileComponent from './raspberry-pi-mobile-content/raspberry-pi-mobile.component';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 @Component({
   selector: 'raspberry-pi',
   templateUrl: './raspberry-pi.component.html',
   imports: [InfoBackgroundComponent, RaspberryPiDesktopComponent, RaspberryPiMobileComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class RasberryPiComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -25,8 +23,7 @@ export default class RasberryPiComponent implements OnInit {
   wifiRSSI: number = 0;
   mcs: number = 0;
 
-  mobileThreshold = 768;
-  isMobile = window.innerWidth < this.mobileThreshold;
+  isMobile = injectIsMobile();
 
   ngOnInit() {
     this.storage
@@ -59,9 +56,5 @@ export default class RasberryPiComponent implements OnInit {
       .subscribe((value) => {
         this.mcs = floatPipe(value.values[0]);
       });
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }
