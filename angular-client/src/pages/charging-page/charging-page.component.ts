@@ -14,6 +14,7 @@ import StateOfChargeDisplayComponent from './components/state-of-charge/state-of
 import PackTempComponent from './components/pack-temp/pack-temp.component';
 import CombinedStatusDisplayComponent from './components/combined-status-display/combined-status-display.component';
 import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mobile.component';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 /**
  * Container for the Charging page, obtains data from the storage service.
@@ -32,10 +33,7 @@ import ChargingPageMobileComponent from './charging-page-mobile/charging-page-mo
     PackTempComponent,
     CombinedStatusDisplayComponent
   ],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export default class ChargingPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -48,8 +46,7 @@ export default class ChargingPageComponent implements OnInit {
     faults: gridTileClass(2, 12),
     graph: gridTileClass(6, 6)
   };
-  mobileThreshold = 768;
-  isMobile = window.innerWidth < this.mobileThreshold;
+  isMobile = injectIsMobile();
 
   ngOnInit() {
     this.storage
@@ -58,9 +55,5 @@ export default class ChargingPageComponent implements OnInit {
       .subscribe((value) => {
         [this.location] = value.values || ['No Location Set'];
       });
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

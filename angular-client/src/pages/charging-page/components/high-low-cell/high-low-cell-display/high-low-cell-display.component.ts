@@ -37,7 +37,7 @@ export default class HighLowCellDisplayComponent implements OnInit {
   lowCellVoltage: number = 0;
   highCellVoltage: number = 0;
   mobileThreshold = 1070;
-  isDesktop = window.innerWidth > this.mobileThreshold;
+  isDesktop = window.innerWidth >= this.mobileThreshold;
   highVoltsData: GraphData[] = [];
   lowVoltsData: GraphData[] = [];
   resetGraphButton = {

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, OnInit } from '@angular/core';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 /**
  * Graph Header Component to display the graph page header.
@@ -9,14 +10,11 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
   selector: 'graph-header',
   templateUrl: './graph-header.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [SidebarToggleComponent],
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  imports: [SidebarToggleComponent]
 })
 export default class GraphHeaderComponent implements OnInit {
   rightHeader = input.required<string>();
-  isMobile = window.innerWidth <= 768;
+  isMobile = injectIsMobile();
 
   time = new Date();
 
@@ -24,9 +22,5 @@ export default class GraphHeaderComponent implements OnInit {
     setInterval(() => {
       this.time = new Date();
     }, 1000);
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= 768;
   }
 }

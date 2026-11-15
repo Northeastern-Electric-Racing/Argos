@@ -1,5 +1,5 @@
 <div class="mx-4 h-full">
-  @if (isMobile) {
+  @if (isMobile()) {
     <charging-page-mobile class="w-full" />
   } @else {
     <div [class]="grid">

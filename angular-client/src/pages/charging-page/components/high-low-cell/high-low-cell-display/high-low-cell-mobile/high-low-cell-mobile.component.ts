@@ -28,7 +28,7 @@ export default class HighLowCellMobileComponent {
   lowCellVoltage = input<number>(0);
   highCellVoltage = input<number>(0);
   mobileThreshold = 1070;
-  isDesktop = window.innerWidth > this.mobileThreshold;
+  isDesktop = window.innerWidth >= this.mobileThreshold;
   highVoltsData = input<GraphData[]>([]);
   lowVoltsData = input<GraphData[]>([]);
   resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
