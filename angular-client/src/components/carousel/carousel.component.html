@@ -48,7 +48,8 @@
       @if (runs.length <= 12) {
         <div class="flex justify-center gap-1.5">
           @for (r of runs; track r.id; let i = $index) {
-            <!-- A 24px target around the 5px bar, so the indicators meet the target-size minimum. -->
+            <!-- A 24px target around the 5px bar, so the indicators meet the target-size minimum. The grey is 3:1 but
+                 as light as the red, so the current bar is also twice as wide: it never differs by hue alone. -->
             <button
               type="button"
               class="group grid h-6 w-6 cursor-pointer place-items-center border-0 bg-transparent p-0 focus-visible:focus-ring"
@@ -56,7 +57,9 @@
               [attr.aria-label]="'Show run ' + r.id"
               (click)="goTo(i)"
             >
-              <span class="block h-1.25 w-6 rounded-xs bg-control-off group-aria-[current=true]:bg-accent"></span>
+              <span
+                class="block h-1.25 w-3 rounded-xs bg-indicator-off group-aria-[current=true]:w-6 group-aria-[current=true]:bg-accent"
+              ></span>
             </button>
           }
         </div>
