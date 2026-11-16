@@ -1,11 +1,11 @@
-<div class="card">
-  <mat-icon class="icon" svgIcon="battery_charging_2" aria-hidden="true" />
-  <div class="col">
+<div class="inline-flex items-center gap-2.5 rounded-md border border-border bg-page px-3.5 py-1.5">
+  <span class="size-6.5 shrink-0 text-fg-label"><ui-icon size="inline" svg="battery_charging_2" /></span>
+  <div class="flex flex-col leading-control">
     <div>
-      <span class="value">{{ value() }}</span
-      ><span class="unit">V</span>
+      <span class="text-lg font-bold text-fg tabular-nums">{{ value() }}</span
+      ><span class="ml-0.75 text-xs text-fg-label">V</span>
     </div>
-    <div class="subtitle">LV Battery</div>
+    <div class="text-xs tracking-[0.04em] text-fg-label uppercase">LV Battery</div>
   </div>
-  <span class="dot" role="img" [style.background]="dotColor()" [attr.aria-label]="dotLabel()"></span>
+  <span [class]="dotClass()" role="img" [attr.aria-label]="dotLabel()"></span>
 </div>

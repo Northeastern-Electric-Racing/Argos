@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   afterNextRender,
@@ -25,9 +26,10 @@ import {
 @Component({
   selector: 'graph-component',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
   providers: [provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
-  standalone: true,
+  // Fills its box by default; zero specificity, so a consumer's h-*/w-* class wins (#909's :host block).
+  host: { class: 'relative block [:where(&)]:h-full [:where(&)]:w-full' },
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [BaseChartDirective]
 })
 export class GraphComponent {

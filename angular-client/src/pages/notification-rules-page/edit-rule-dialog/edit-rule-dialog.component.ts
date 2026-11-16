@@ -1,8 +1,9 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
 
 export interface EditRuleResult {
   expr: string;
@@ -12,19 +13,25 @@ export interface EditRuleResult {
 @Component({
   selector: 'edit-rule-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, InputText, ButtonDirective],
-  templateUrl: './edit-rule-dialog.component.html',
-  styleUrls: ['./edit-rule-dialog.component.css']
+  imports: [ReactiveFormsModule, UiButtonDirective, UiInputDirective, UiLabelDirective, UiFieldErrorDirective],
+  templateUrl: './edit-rule-dialog.component.html'
 })
 export class EditRuleDialogComponent {
-  private ref = inject(DynamicDialogRef);
-  private config = inject(DynamicDialogConfig);
+  protected readonly f = fieldClasses;
+  private ref = inject(DialogRef);
+  private dialogData = inject(DIALOG_DATA);
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    expr: [this.config.data.expr as string, Validators.required],
-    debounce_time: [this.config.data.debounce_time as number, [Validators.required, Validators.min(0)]]
+    expr: [this.dialogData.expr as string, Validators.required],
+    debounce_time: [this.dialogData.debounce_time as number, [Validators.required, Validators.min(0)]]
   });
+
+  /** Whether a field shows an error, so its input gets aria-invalid and points at the message. */
+  protected invalid(name: keyof EditRuleDialogComponent['form']['controls']): boolean {
+    const control = this.form.controls[name];
+    return control.touched && control.invalid;
+  }
 
   onSubmit(): void {
     if (this.form.invalid) {

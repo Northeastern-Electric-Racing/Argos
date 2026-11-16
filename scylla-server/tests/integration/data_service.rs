@@ -11,7 +11,7 @@ const TEST_KEYWORD: &str = "test";
 
 #[tokio::test]
 async fn test_data_service() -> Result<(), ScyllaError> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     run_service::create_run_with_id(
@@ -30,7 +30,7 @@ async fn test_data_service() -> Result<(), ScyllaError> {
 
 #[tokio::test]
 async fn test_data_add() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // node_service::upsert_node(&db, TEST_KEYWORD.to_owned()).await?;
@@ -68,7 +68,7 @@ async fn test_data_add() -> Result<(), diesel::result::Error> {
 
 #[tokio::test]
 async fn test_data_fetch_empty() -> Result<(), ScyllaError> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // should be empty, nothing was added to run
@@ -81,7 +81,7 @@ async fn test_data_fetch_empty() -> Result<(), ScyllaError> {
 
 #[tokio::test]
 async fn test_data_no_prereqs() -> Result<(), diesel::result::Error> {
-    let pool = cleanup_and_prepare().await.unwrap();
+    let (pool, _) = cleanup_and_prepare().await.unwrap();
     let mut db = pool.get().await.unwrap();
 
     // should err out as data type name doesnt exist yet

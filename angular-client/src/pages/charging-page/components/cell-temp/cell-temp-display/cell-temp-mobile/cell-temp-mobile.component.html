@@ -1,22 +1,21 @@
 <info-background svgIcon="thermostat" title="Cell Temp" [button]="resetGraphButton()">
-  <div style="padding-top: 20px"></div>
+  <div class="pt-5"></div>
   <vstack>
     <hstack>
-      <vstack style="width: 10%; padding-bottom: 10px">
-        <typography variant="info-value" [content]="avgTemp().toString() + '°'" additionalStyles="fontSize:30px" />
-        <typography variant="info-subtitle" content="Avg. Temp" additionalStyles="fontSize:15px" />
+      <vstack class="w-1/10 pb-2.5">
+        <typography variant="info-value" [content]="avgTemp().toString() + '°'" textClass="text-stat" />
+        <typography variant="info-subtitle" content="Avg. Temp" textClass="text-sm" />
       </vstack>
 
-      <div style="padding-left: 20px"></div>
-      <!--TODO: temp fix for divider setting pixel height: is only way for divider to show-->
-      <divider style="height: 100px" />
-      <div style="padding-right: 20px"></div>
+      <div class="pl-5"></div>
+      <divider class="h-25" />
+      <div class="pl-5"></div>
 
-      <vstack style="width: 10%; padding-bottom: 10px">
-        <typography variant="info-value" [content]="maxTemp().toString() + '°'" additionalStyles="fontSize:30px" />
-        <typography variant="info-subtitle" content="Max. Temp" additionalStyles="fontSize:15px" />
+      <vstack class="w-1/10 pb-2.5">
+        <typography variant="info-value" [content]="maxTemp().toString() + '°'" textClass="text-stat" />
+        <typography variant="info-subtitle" content="Max. Temp" textClass="text-sm" />
       </vstack>
     </hstack>
-    <cell-temp-graph style="width: 100%; padding-bottom: 30px" [maxCellTempData]="cellTempData()" />
+    <cell-temp-graph class="w-full pb-7.5" [maxCellTempData]="cellTempData()" />
   </vstack>
 </info-background>

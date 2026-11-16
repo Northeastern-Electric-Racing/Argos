@@ -1,10 +1,10 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, effect, inject, input, output, untracked } from '@angular/core';
+import { Component, effect, inject, input, output, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ValidatorFn, Validators, ReactiveFormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
-import { NgClass } from '@angular/common';
-import { ButtonDirective } from 'primeng/button';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
+import { fieldClasses } from 'src/ui/recipes/field';
 
 type anyType = string | number | boolean | undefined;
 
@@ -27,17 +27,17 @@ export interface DynamicFormField {
 @Component({
   selector: 'form-template',
   templateUrl: './form-template.component.html',
-  styleUrl: './form-template.component.css',
-  standalone: true,
-  imports: [ReactiveFormsModule, InputText, NgClass, ButtonDirective]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [ReactiveFormsModule, UiButtonDirective, UiInputDirective, UiLabelDirective, UiFieldErrorDirective]
 })
 export class FormTemplateComponent {
   private fb = inject(FormBuilder);
-  public config = inject(DynamicDialogConfig);
+  public dialogData = inject(DIALOG_DATA);
 
   fields = input.required<DynamicFormField[]>();
+  protected readonly classes = fieldClasses;
 
-  public ref = inject(DynamicDialogRef);
+  public ref = inject(DialogRef);
 
   formData = input<Map<string, anyType>>(new Map());
   submitForm = output<FormGroup>();
@@ -96,6 +96,12 @@ export class FormTemplateComponent {
       const control = this.form.get(field);
       control?.markAsTouched({ onlySelf: true });
     });
+  }
+
+  /** A field shows its error once the user has edited or left it. */
+  isInvalid(name: string): boolean {
+    const control = this.form.get(name);
+    return !!control?.invalid && (control.dirty || control.touched);
   }
 
   getErrorMessage(field: DynamicFormField) {

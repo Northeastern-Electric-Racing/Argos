@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { DataValue, StorageMap, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
+import { RunLaps, Track } from 'src/utils/types.utils';
 
 /**
  * Service for interacting with the storage
@@ -11,6 +12,8 @@ export default class Storage {
   private timerStorage: TimerStorageMap;
 
   private currentRunId = new BehaviorSubject<number | undefined>(undefined);
+  private tracks = new BehaviorSubject<Track[]>([]);
+  private liveLaps = new BehaviorSubject<RunLaps | undefined>(undefined);
 
   private resolution: number = 100;
 
@@ -40,6 +43,22 @@ export default class Storage {
 
   public setCurrentRunId = (runId?: number) => {
     this.currentRunId.next(runId);
+  };
+
+  public getTracks = () => {
+    return this.tracks;
+  };
+
+  public setTracks = (tracks: Track[]) => {
+    this.tracks.next(tracks);
+  };
+
+  public getLiveLaps = () => {
+    return this.liveLaps;
+  };
+
+  public setLiveLaps = (laps: RunLaps) => {
+    this.liveLaps.next(laps);
   };
 
   public setResolution = (resolution: number) => {

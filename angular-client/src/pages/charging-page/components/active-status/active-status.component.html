@@ -1,16 +1,13 @@
 <info-background title="ACTIVE">
   <hstack>
-    <current-total-timer
-      style="padding-left: 20px; min-height: 100px"
-      [currentTime]="currentSeconds"
-      [totalTime]="totalSeconds"
-    />
-    <div style="padding-top: 40px">
+    <current-total-timer class="pl-5" [currentTime]="currentSeconds()" [totalTime]="totalSeconds()" />
+    <div class="pt-10">
       @if (displayLight()) {
         <div
-          class="connection-dot"
-          [style.background-color]="getStatusColor(isActive)"
-          [style.border-color]="isActive ? getStatusColor(isActive) : 'white'"
+          role="img"
+          [class]="lightClass()"
+          [attr.data-on]="isActive()"
+          [attr.aria-label]="isActive() ? 'Active' : 'Not active'"
         ></div>
       }
     </div>

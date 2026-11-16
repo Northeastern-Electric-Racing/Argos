@@ -6,27 +6,27 @@
       subtitle="Pack Voltage"
       [connectionDotStatusColor]="enableWidgets() ? getPackVoltageStatusColor : undefined"
     />
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display [value]="packTemp()" unit="C" subtitle="Average Temp." [unitBelow]="true">
       @if (enableWidgets()) {
         <glance-thermometer [temperature]="packTemp() ?? 0" [min]="-15" [max]="30" />
       }
     </stat-display>
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display [value]="chargeStatePercent()" unit="%" subtitle="Charge State" [unitBelow]="true">
       @if (enableWidgets()) {
         <battery-level-indicator [percentage]="chargeStatePercent()" />
       }
     </stat-display>
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display [value]="ccl()" unit="A" subtitle="CCL" />
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display [value]="dcl()" unit="A" subtitle="DCL" />
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display
       [value]="highVoltsValue()"
@@ -36,7 +36,7 @@
       headerIcon="battery"
       [headerLabel]="highVoltsLabel()"
     />
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display
       [value]="lowVoltsValue()"
@@ -46,7 +46,7 @@
       headerIcon="battery"
       [headerLabel]="lowVoltsLabel()"
     />
-    <div class="stat-divider"></div>
+    <div class="h-17.5 w-0.5 shrink-0 self-center bg-border"></div>
 
     <stat-display
       [value]="highTempValue()"

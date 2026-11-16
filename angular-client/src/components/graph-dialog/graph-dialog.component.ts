@@ -1,26 +1,26 @@
-import { Component, inject } from '@angular/core';
-import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { GraphData } from 'src/utils/types.utils';
 import { GraphComponent } from '../graph/graph.component';
 
 @Component({
   selector: 'graph-dialog',
   templateUrl: './graph-dialog.component.html',
-  providers: [DialogService],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [GraphComponent]
 })
 export class GraphDialogComponent {
-  public dialogService = inject(DialogService);
-  public config = inject(DynamicDialogConfig);
-  public ref = inject(DynamicDialogRef);
+  public dialogService = inject(UiDialogService);
+  public dialogData = inject(DIALOG_DATA);
+  public ref = inject(DialogRef);
   data: GraphData[];
   color: string;
   title: string;
 
   constructor() {
-    this.data = this.config.data.data;
-    this.color = this.config.data.color;
-    this.title = this.config.data.title;
+    this.data = this.dialogData.data;
+    this.color = this.dialogData.color;
+    this.title = this.dialogData.title;
   }
 }

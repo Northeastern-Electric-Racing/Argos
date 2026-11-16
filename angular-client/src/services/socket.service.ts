@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
 import { topics } from 'src/utils/topic.utils';
-import { FaultData, RuleNotification } from 'src/utils/types.utils';
+import { FaultData, RuleNotification, RunLaps, Track } from 'src/utils/types.utils';
 import { FaultService } from './fault.service';
 import { NotificationLogService } from './notification-log.service';
 import { EnvService } from './env.service';
@@ -93,6 +93,14 @@ export default class SocketService {
       } catch (error) {
         if (error instanceof Error) this.sendError(error.message);
       }
+    });
+
+    this.socket.on('tracks', (tracks: Track[]) => {
+      storage.setTracks(tracks);
+    });
+
+    this.socket.on('laps', (laps: RunLaps) => {
+      storage.setLiveLaps(laps);
     });
 
     this.socket.on('rule_notify', (message: RuleNotification) => {

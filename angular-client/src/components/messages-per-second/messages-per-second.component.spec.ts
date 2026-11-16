@@ -19,4 +19,13 @@ describe('MessagesPerSecondComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('shows N/A and Msgs/Sec in the muted text token, with no inline colour', () => {
+    const lines = [...fixture.nativeElement.querySelectorAll('p')] as HTMLElement[];
+    expect(lines.map((p) => p.textContent?.trim())).toEqual(['N/A', 'Msgs/Sec']);
+    for (const p of lines) {
+      expect(p.classList).toContain('text-fg-muted');
+      expect(p.getAttribute('style') ?? '').toBe('');
+    }
+  });
 });

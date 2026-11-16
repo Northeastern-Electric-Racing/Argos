@@ -1,42 +1,38 @@
-<div class="page-grid">
-  <p-toast position="top-right" />
-  <p-confirmDialog />
+<!-- #909's 6-column mat-grid-list (1.5rem rows, 15px gutter) as the grid recipe; each tile centres and clips its card -->
+<div [class]="grid" class="mx-4">
+  <div [class]="tiles.sessions">
+    <sessions-panel />
+  </div>
 
-  <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem">
-    <mat-grid-tile [colspan]="6" [rowspan]="8">
-      <sessions-panel />
-    </mat-grid-tile>
+  <div [class]="tiles.hero">
+    <timer-hero />
+  </div>
 
-    <mat-grid-tile [colspan]="3" [rowspan]="9">
-      <timer-hero />
-    </mat-grid-tile>
+  <div [class]="tiles.summary">
+    <session-summary />
+  </div>
 
-    <mat-grid-tile [colspan]="1" [rowspan]="9">
-      <session-summary />
-    </mat-grid-tile>
+  <div [class]="tiles.speed">
+    <info-background svgIcon="speed" title="Speed" class="h-full w-full">
+      <div class="flex h-full w-full items-center justify-center overflow-hidden">
+        <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" [color]="speedGaugeColor()" [size]="320" />
+      </div>
+    </info-background>
+  </div>
 
-    <mat-grid-tile [colspan]="2" [rowspan]="5">
-      <info-background svgIcon="speed" title="Speed" style="width: 100%; height: 100%">
-        <div class="gauge-wrap">
-          <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" [color]="speedGaugeColor()" [size]="320" />
-        </div>
-      </info-background>
-    </mat-grid-tile>
+  <div [class]="tiles.stat">
+    <info-background title="Battery" class="h-full w-full">
+      <gauge-stat [value]="liveSoc()" unit="%" [color]="socColor()" />
+    </info-background>
+  </div>
 
-    <mat-grid-tile [colspan]="1" [rowspan]="4">
-      <info-background title="Battery" style="width: 100%; height: 100%">
-        <gauge-stat [value]="liveSoc()" unit="%" [color]="socColor()" />
-      </info-background>
-    </mat-grid-tile>
+  <div [class]="tiles.stat">
+    <info-background title="Motor" class="h-full w-full">
+      <gauge-stat [value]="liveMotorTemp()" unit="°C" [color]="motorTempColor()" />
+    </info-background>
+  </div>
 
-    <mat-grid-tile [colspan]="1" [rowspan]="4">
-      <info-background title="Motor" style="width: 100%; height: 100%">
-        <gauge-stat [value]="liveMotorTemp()" unit="°C" [color]="motorTempColor()" />
-      </info-background>
-    </mat-grid-tile>
-
-    <mat-grid-tile [colspan]="6" [rowspan]="22">
-      <laps-table />
-    </mat-grid-tile>
-  </mat-grid-list>
+  <div [class]="tiles.laps">
+    <laps-table />
+  </div>
 </div>

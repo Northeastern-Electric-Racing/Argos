@@ -1,5 +1,5 @@
-<div class="switch" [class.on]="currentState()" (click)="onToggle()">
-  <div class="switch-inner" [class.on]="currentState()"></div>
+<div [class]="trackClass()" (click)="onToggle()">
+  <div [class]="knobClass()"></div>
 </div>
-<div style="height: 10%"></div>
+<div class="h-1/10"></div>
 <typography variant="info-subtitle" [content]="chargingString()" />

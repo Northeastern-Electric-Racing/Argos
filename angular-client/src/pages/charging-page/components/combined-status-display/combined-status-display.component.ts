@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 
 import { DividerComponent } from '../../../../components/divider/divider';
@@ -11,8 +11,6 @@ import ActiveStatusComponent from '../active-status/active-status.component';
 @Component({
   selector: 'combined-status-display',
   templateUrl: './combined-status-display.component.html',
-  styleUrls: ['./combined-status-display.component.css'],
-  standalone: true,
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -22,6 +20,7 @@ import ActiveStatusComponent from '../active-status/active-status.component';
     FaultedStatusComponent,
     ActiveStatusComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
@@ -32,7 +31,7 @@ export default class CombinedStatusDisplayComponent {
   lightsOn = window.innerWidth >= 1120;
 
   onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
+    this.isMobile = window.innerWidth < this.mobileThreshold;
     this.lightsOn = window.innerWidth >= 1120;
   }
 }

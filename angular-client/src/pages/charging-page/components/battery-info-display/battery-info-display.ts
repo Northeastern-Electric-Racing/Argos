@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -6,16 +6,13 @@ import Storage from 'src/services/storage.service';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import BatteryInfoDesktopComponent from './battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobile.component';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 @Component({
   selector: 'battery-info-display',
   templateUrl: './battery-info-display.html',
-  styleUrls: ['./battery-info-display.css'],
-  standalone: true,
   imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent],
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class BatteryInfoDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -25,8 +22,7 @@ export class BatteryInfoDisplayComponent implements OnInit {
   stateOfCharge: number = 0;
   chargeCurrentLimit: number = 0;
   dischargeCurrentLimit: number = 0;
-  mobileThreshold = 768;
-  isMobile = window.innerWidth < this.mobileThreshold;
+  isMobile = injectIsMobile();
 
   ngOnInit() {
     this.storage
@@ -59,9 +55,5 @@ export class BatteryInfoDisplayComponent implements OnInit {
       .subscribe((value) => {
         this.dischargeCurrentLimit = floatPipe(value.values[0]);
       });
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

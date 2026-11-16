@@ -1,17 +1,13 @@
-<div class="caption-container">
-  <div class="info-container">
-    <div class="left-info">
+<div class="mt-2.5 flex h-37.5">
+  <div class="flex w-full flex-1 flex-row justify-between rounded-md bg-panel px-4 font-sans text-fg">
+    <div class="text-left">
       @if (dataTypeName) {
         <div>
-          <typography variant="large-header" [content]="dataTypeName" additionalStyles="margin: 12px 0px" />
-          <typography
-            variant="large-secondary-header"
-            [content]="value + ' ' + dataTypeUnit"
-            additionalStyles="margin: 6px 0px 0px 0px"
-          />
+          <p class="my-3 text-xl font-bold">{{ dataTypeName }}</p>
+          <p class="mt-1.5 mb-0 text-xl font-bold text-fg-muted">{{ value + ' ' + dataTypeUnit }}</p>
         </div>
       } @else {
-        <typography variant="large-header" content="No Data Selected" additionalStyles="margin: 12px 0px" />
+        <p class="my-3 text-xl font-bold">No Data Selected</p>
       }
     </div>
     <ng-container *ngTemplateOutlet="rightInfo() ?? null"></ng-container>

@@ -1,10 +1,38 @@
-import { Component, effect, inject, input, OnInit, DestroyRef } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Segment } from 'src/utils/bms.utils';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { CellReading, CellService } from 'src/services/cell.service';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP } from 'src/utils/bms.config';
 import { HexTileComponent } from '../hex-tile/hex-tile.component';
+import { tw } from 'src/ui/recipes/tw';
+
+/**
+ * The hex grid's geometry, read by hex-tile: hex width (fluid), height (pointy-top, width x 1.155), the gap
+ * between hexes, the beta row's half-hex stagger and the negative gap that interlocks the two rows.
+ *   row   the segment rows on /bms
+ *   page  the larger grid on /bms/segment/:id, centred in its card
+ */
+export const HEATMAP_SIZES = ['row', 'page'] as const;
+export type HeatmapSize = (typeof HEATMAP_SIZES)[number];
+const sizeClasses: Record<HeatmapSize, string> = {
+  row: tw(
+    'block w-fit min-w-fit flex-[0_1_auto] [--hex-gap:2px] [--hex-h:calc(var(--hex-w)*1.155)] [--hex-w:clamp(28px,4.1vw,76px)] [--row-gap:calc(var(--hex-h)*-0.2)] [--row-offset:calc(var(--hex-w)/2+2px)]'
+  ),
+  page: tw(
+    'mx-auto block w-fit min-w-fit flex-[0_1_auto] [--hex-gap:3px] [--hex-h:calc(var(--hex-w)*1.155)] [--hex-w:clamp(60px,5.5vw,85px)] [--row-gap:calc(var(--hex-h)*-0.2)] [--row-offset:calc(var(--hex-w)/2+3px)]'
+  )
+};
+
+/** Tile fills for the flag views and cells with no data: the theme's heat-map tokens (styles/theme.css), AA under
+ *  the tiles' black text. */
+export const HEAT_FILLS = {
+  balancing: 'var(--color-heat-balancing)',
+  notBalancing: 'var(--color-heat-idle)',
+  failed: 'var(--color-heat-failed)',
+  passed: 'var(--color-heat-passed)',
+  noData: 'var(--color-heat-no-data)'
+} as const;
 
 export interface DisplayCell {
   /** All CellReadings this tile represents
@@ -23,8 +51,9 @@ export interface DisplayCell {
 @Component({
   selector: 'segment-heatmap',
   templateUrl: './segment-heatmap.component.html',
-  styleUrl: './segment-heatmap.component.css',
-  imports: [HexTileComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [HexTileComponent],
+  host: { '[class]': 'hostClass()' }
 })
 export class SegmentHeatmapComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -32,6 +61,9 @@ export class SegmentHeatmapComponent implements OnInit {
   private heatMapService = inject(HeatMapService);
 
   segment = input.required<Segment>();
+  size = input<HeatmapSize>('row');
+
+  protected hostClass = computed(() => sizeClasses[this.size()]);
 
   alphaCells!: Readonly<CellReading[]>;
   betaCells!: Readonly<CellReading[]>;
@@ -130,25 +162,25 @@ export class SegmentHeatmapComponent implements OnInit {
   }
 
   private getTempColor(value: number | undefined): string {
-    if (value === undefined) return 'grey';
+    if (value === undefined) return HEAT_FILLS.noData;
     const hsl = Math.min(Math.max(55 - value, 0) * 6, 120);
     return `hsl(${hsl}, 100%, 50%)`;
   }
 
   private getVoltColor(value: number | undefined): string {
-    if (value === undefined) return 'grey';
+    if (value === undefined) return HEAT_FILLS.noData;
     const hsl = Math.min(Math.max((value - 3.0) * 200, 0), 120);
     return `hsl(${hsl}, 100%, 50%)`;
   }
 
   private getBalancingColor(value: boolean | undefined): string {
-    if (value === undefined) return 'grey';
-    return value ? '#4169e1' : 'yellow';
+    if (value === undefined) return HEAT_FILLS.noData;
+    return value ? HEAT_FILLS.balancing : HEAT_FILLS.notBalancing;
   }
 
   private getCvsFailureColor(value: boolean | undefined): string {
-    if (value === undefined) return 'grey';
-    return value ? '#dc2626' : '#16a34a';
+    if (value === undefined) return HEAT_FILLS.noData;
+    return value ? HEAT_FILLS.failed : HEAT_FILLS.passed;
   }
 
   cellClicked(displayCell: DisplayCell): void {

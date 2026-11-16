@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { EMPTY, Subject, switchMap } from 'rxjs';
 import { allSegments, Chip, Segment } from 'src/utils/bms.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from '../components/bms-header/bms-header.component';
 import { SegmentAtAGlanceComponent } from '../components/segment-at-a-glance/segment-at-a-glance.component';
 import { SegmentHeatmapComponent } from '../components/segment-heatmap/segment-heatmap.component';
@@ -11,6 +11,7 @@ import { ChipFaultsComponent } from '../components/chip-faults/chip-faults.compo
 import { InfoBackgroundComponent } from '../../../components/info-background/info-background.component';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
+import { bmsGrid, bmsTile } from '../bms-grid';
 
 const formatAllSelectorName = (name: string) => {
   return 'Set ALL Maps: ' + name;
@@ -19,13 +20,11 @@ const formatAllSelectorName = (name: string) => {
 @Component({
   selector: 'bms-segment-view',
   templateUrl: './bms-segment-view.component.html',
-  styleUrl: './bms-segment-view.component.css',
   host: {
     '(window:resize)': 'onResize()'
   },
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
-    MatGridList,
-    MatGridTile,
     BmsHeaderComponent,
     SegmentAtAGlanceComponent,
     SegmentHeatmapComponent,
@@ -45,86 +44,100 @@ export class BmsSegmentViewComponent implements OnInit {
   private router = inject(Router);
   private heatMapService = inject(HeatMapService);
   changeTitleSize = window.innerWidth < 1060;
-  segmentId!: Segment;
+  /** A signal, so the page re-renders when the reused route moves to another segment with no event to trigger it. */
+  readonly segmentId = signal<Segment>(allSegments[0]);
+  private readonly shownSegment = new Subject<Segment>();
   chipAlpha: Chip = Chip.Alpha;
   chipBeta: Chip = Chip.Beta;
+  protected readonly grid = bmsGrid;
+  protected readonly tile = bmsTile;
 
   cellViewSelectOptions: DropdownOption[] = [
     {
       name: HeatMapView.Temperature.toString(),
       function: () => {
-        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.Temperature);
+        this.heatMapService.setCurrentView(this.segmentId(), HeatMapView.Temperature);
       }
     },
     {
       name: HeatMapView.Voltage.toString(),
       function: () => {
-        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.Voltage);
+        this.heatMapService.setCurrentView(this.segmentId(), HeatMapView.Voltage);
       }
     },
     {
       name: HeatMapView.SVolts.toString(),
       function: () => {
-        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.SVolts);
+        this.heatMapService.setCurrentView(this.segmentId(), HeatMapView.SVolts);
       }
     },
     {
       name: HeatMapView.Balancing.toString(),
       function: () => {
-        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.Balancing);
+        this.heatMapService.setCurrentView(this.segmentId(), HeatMapView.Balancing);
       }
     },
     {
       name: HeatMapView.CvsFailure.toString(),
       function: () => {
-        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.CvsFailure);
+        this.heatMapService.setCurrentView(this.segmentId(), HeatMapView.CvsFailure);
       }
     },
     {
       name: HeatMapView.OpenWire.toString(),
       function: () => {
-        this.heatMapService.setCurrentView(this.segmentId, HeatMapView.OpenWire);
+        this.heatMapService.setCurrentView(this.segmentId(), HeatMapView.OpenWire);
       }
     }
   ];
 
-  currentSegmentSelectorConfig: SelectorConfig = {
+  readonly currentSegmentSelectorConfig = signal<SelectorConfig>({
     options: this.cellViewSelectOptions,
     placeholder: 'Change View'
-  };
+  });
 
-  allSegSelectorConfig: SelectorConfig = {
+  readonly allSegSelectorConfig = signal<SelectorConfig>({
     options: this.cellViewSelectOptions.map((option) => ({
       name: formatAllSelectorName(option.name),
       function: () => {
         this.heatMapService.setAllSegViews(option.name as HeatMapView);
       }
     })),
-    placeholder: 'Change ALL Segments'
-  };
+    placeholder: 'Change ALL Segments',
+    ariaLabel: 'Heat map view for all segments'
+  });
 
   ngOnInit(): void {
+    // Follow the shown segment's view only: switching segments drops the previous segment's subscription.
+    this.shownSegment
+      .pipe(
+        switchMap((segment) => this.heatMapService.getCurrentView(segment) ?? EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((view) => {
+        this.allSegSelectorConfig.update((config) => ({
+          ...config,
+          defaultValue: view !== undefined ? formatAllSelectorName(view.toString()) : 'Change ALL Segments'
+        }));
+        this.currentSegmentSelectorConfig.update((config) => ({
+          ...config,
+          defaultValue: view !== undefined ? view : 'Change View'
+        }));
+      });
     this.subscribeToSegmentID();
   }
 
   getHeatmapTitle(): string {
-    return 'Segment ' + (this.segmentId + 1) + ': Cell-by-Cell';
+    return 'Segment ' + (this.segmentId() + 1) + ': Cell-by-Cell';
   }
 
   private subscribeToView(): void {
-    const viewSub = this.heatMapService.getCurrentView(this.segmentId);
-    if (viewSub) {
-      viewSub.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
-        this.allSegSelectorConfig = {
-          ...this.allSegSelectorConfig,
-          defaultValue: view !== undefined ? formatAllSelectorName(view.toString()) : 'Change ALL Segments'
-        };
-        this.currentSegmentSelectorConfig = {
-          ...this.currentSegmentSelectorConfig,
-          defaultValue: view !== undefined ? view : 'Change View'
-        };
-      });
-    }
+    // Named for the segment shown; the page is reused when the route moves to another segment.
+    this.currentSegmentSelectorConfig.update((config) => ({
+      ...config,
+      ariaLabel: `Segment ${this.segmentId() + 1} heat map view`
+    }));
+    this.shownSegment.next(this.segmentId());
   }
 
   // Update view width
@@ -139,7 +152,7 @@ export class BmsSegmentViewComponent implements OnInit {
       this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
         const possibleSegId = Number(params.get('id')) - 1;
         if (allSegments.indexOf(possibleSegId) !== -1) {
-          this.segmentId = possibleSegId;
+          this.segmentId.set(possibleSegId);
         } else {
           this.router.navigate(['bms']);
         }

@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import Storage from 'src/services/storage.service';
 
 import { GraphData } from 'src/utils/types.utils';
@@ -13,8 +13,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'cell-temp-mobile',
   templateUrl: './cell-temp-mobile.component.html',
-  styleUrls: ['./cell-temp-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -28,6 +27,6 @@ export default class CellTempMobileComponent {
   private storage = inject(Storage);
   avgTemp = input<number>(0);
   maxTemp = input<number>(0);
-  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
+  resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
   cellTempData = input<GraphData[]>([]);
 }

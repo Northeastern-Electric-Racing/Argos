@@ -1,99 +1,352 @@
-import { Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { provideRouter, Router } from '@angular/router';
-
-import SidebarChipComponent from 'src/components/sidebar-chip/sidebar-chip.component';
-import { appRoutes } from '../app-routes';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router, RouterOutlet } from '@angular/router';
+import SidebarService from 'src/services/sidebar.service';
+import { fakeViewport } from 'src/ui/layout/viewport.testing';
 import { AppNavBarComponent } from './app-nav-bar.component';
 
-@Component({ standalone: true, template: '' })
-class StubPageComponent {}
+@Component({ template: '' })
+class Blank {}
 
-describe('AppNavBarComponent', () => {
-  let component: AppNavBarComponent;
-  let fixture: ComponentFixture<AppNavBarComponent>;
-  let router: Router;
+/** A page with its own mobile menu button (charging, map). */
+@Component({
+  template: '<sidebar-toggle><button type="button">Open navigation</button></sidebar-toggle>',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+})
+class WithToggle {}
 
-  // The chips highlight themselves through routerLinkActive, so the active ones are read off the
-  // rendered chips rather than from any component state.
-  const activeChipLabels = (): string[] =>
-    fixture.debugElement
-      .queryAll(By.directive(SidebarChipComponent))
-      .filter((chip) => chip.componentInstance.active())
-      .map((chip) => chip.componentInstance.value());
+/** A page whose button navigates in-app and leaves with the page (BMS "See more", the segment selector). */
+let linkTarget = '/graph';
+@Component({ template: '<button type="button" (click)="go()">See more</button>' })
+class Linker {
+  private router = inject(Router);
+  go() {
+    void this.router.navigateByUrl(linkTarget);
+  }
+}
 
-  const navigateTo = async (url: string): Promise<void> => {
-    await router.navigateByUrl(url);
-    fixture.detectChanges();
+/** The nav bar and the routed page in their main region, as app-context lays them out. */
+@Component({
+  template: '<app-nav-bar /><main class="contents"><router-outlet /></main>',
+  imports: [AppNavBarComponent, RouterOutlet]
+})
+class Shell {}
+
+const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+/** The landing page went away in #847, so the app's pages start at the graph. */
+const pages = [
+  { path: 'graph', component: Blank },
+  { path: 'charging', component: WithToggle },
+  { path: 'link', component: Linker },
+  { path: 'notification-log', component: Blank },
+  { path: 'bms/segment/:id', component: Blank }
+];
+
+describe('AppNavBarComponent on a phone', () => {
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+  });
+
+  const setup = async () => {
+    TestBed.configureTestingModule({
+      providers: [fakeViewport(390).provider, provideRouter(pages)]
+    });
+    const fixture = TestBed.createComponent(Shell);
+    document.body.appendChild(fixture.nativeElement);
+    const main = fixture.nativeElement.querySelector('main') as HTMLElement;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const drawer = () => document.querySelector<HTMLElement>('[role="dialog"][aria-label="Navigation"]');
+    const open = async () => {
+      TestBed.inject(SidebarService).openSidebar();
+      await fixture.whenStable();
+      await settle();
+    };
+    const choose = async (label: string) => {
+      const item = [...drawer()!.querySelectorAll<HTMLButtonElement>('sidebar-chip button')].find(
+        (b) => b.textContent?.trim() === label
+      )!;
+      item.focus();
+      item.click();
+      await fixture.whenStable();
+      await settle();
+    };
+    return { fixture, drawer, open, choose, main };
   };
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [AppNavBarComponent],
+  it('shows no desktop bar, and opens the nav drawer from the sidebar service', async () => {
+    const { fixture, drawer, open } = await setup();
+    expect(fixture.nativeElement.querySelector('nav')).toBeNull();
+    expect(drawer()).toBeNull();
+    await open();
+    expect(drawer()).not.toBeNull();
+  });
+
+  it('lists every page in the drawer as a button, marking the current one', async () => {
+    const { drawer, open } = await setup();
+    await TestBed.inject(Router).navigateByUrl('/graph');
+    await open();
+    const buttons = [...drawer()!.querySelectorAll<HTMLButtonElement>('sidebar-chip button')];
+    expect(buttons.map((b) => b.textContent?.trim())).toContain('Lap Timer');
+    expect(buttons.filter((b) => b.getAttribute('aria-current') === 'page').map((b) => b.textContent?.trim())).toEqual([
+      'Graph'
+    ]);
+  });
+
+  it('closes the drawer once a nav item has navigated', async () => {
+    const { fixture, drawer, open } = await setup();
+    await open();
+    const graph = [...drawer()!.querySelectorAll<HTMLButtonElement>('sidebar-chip button')].find(
+      (b) => b.textContent?.trim() === 'Graph'
+    )!;
+    graph.click();
+    await fixture.whenStable();
+    await settle();
+    expect(TestBed.inject(Router).url).toBe('/graph');
+    expect(drawer()).toBeNull();
+  });
+
+  it('moves focus to the new page in the main region when that page has no menu button', async () => {
+    const { drawer, open, choose, main } = await setup();
+    await open();
+    await choose('Graph');
+    expect(drawer()).toBeNull();
+    const page = main.querySelector<HTMLElement>('router-outlet + *')!;
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(page);
+    // named after the chosen page while it holds focus, not after its whole content
+    expect(page.getAttribute('role')).toBe('group');
+    expect(page.getAttribute('aria-label')).toBe('Graph');
+    // focusable and named only while it holds focus, like a skip link's target
+    page.blur();
+    expect(page.hasAttribute('tabindex')).toBe(false);
+    expect(page.hasAttribute('aria-label')).toBe(false);
+    expect(page.hasAttribute('role')).toBe(false);
+  });
+
+  it("moves focus to the new page's menu button when it has one", async () => {
+    const { fixture, open, choose, main } = await setup();
+    await open();
+    await choose('Charging');
+    expect(main.querySelector('sidebar-toggle')).not.toBeNull();
+    await fixture.whenStable();
+    const toggle = document.querySelector<HTMLElement>('sidebar-toggle button');
+    expect(toggle).not.toBeNull();
+    expect(document.activeElement).toBe(toggle);
+  });
+});
+
+describe('AppNavBarComponent after an in-app navigation', () => {
+  afterEach(() => document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = '')));
+
+  const setup = async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter(pages)] });
+    const fixture = TestBed.createComponent(Shell);
+    document.body.appendChild(fixture.nativeElement);
+    const main = fixture.nativeElement.querySelector('main') as HTMLElement;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/graph');
+    await fixture.whenStable();
+    /** Opens the Linker page and presses its button, which navigates to `to` and leaves with the page. */
+    const follow = async (to: string) => {
+      linkTarget = to;
+      await router.navigateByUrl('/link');
+      await fixture.whenStable();
+      const button = main.querySelector<HTMLButtonElement>('button')!;
+      button.focus();
+      button.click();
+      await fixture.whenStable();
+      await settle();
+      expect(router.url).toBe(to);
+    };
+    const page = () => main.querySelector<HTMLElement>('router-outlet + *')!;
+    return { fixture, router, follow, page, main };
+  };
+
+  it('moves focus from a control that left with the old page to the new page, named after it', async () => {
+    const { follow, page } = await setup();
+    await follow('/graph');
+    expect(document.activeElement).toBe(page());
+    expect(page().getAttribute('aria-label')).toBe('Graph');
+    page().blur();
+    expect(page().hasAttribute('tabindex')).toBe(false);
+    expect(page().hasAttribute('aria-label')).toBe(false);
+  });
+
+  it('names a page outside the nav after the page (notification log, a BMS segment)', async () => {
+    const { follow, page } = await setup();
+    await follow('/notification-log');
+    expect(page().getAttribute('aria-label')).toBe('Notification Log');
+    await follow('/bms/segment/3');
+    expect(page().getAttribute('aria-label')).toBe('BMS Segment 3');
+  });
+
+  it("moves focus to the new page's menu button when it has one", async () => {
+    const { follow } = await setup();
+    await follow('/charging');
+    expect(document.activeElement).toBe(document.querySelector('sidebar-toggle button'));
+  });
+
+  it('leaves focus alone when it is still on something that stayed (the nav bar, a control of the page)', async () => {
+    const { fixture, router } = await setup();
+    const kept = document.createElement('button');
+    document.body.appendChild(kept);
+    kept.focus();
+    await router.navigateByUrl('/graph');
+    await fixture.whenStable();
+    await settle();
+    expect(document.activeElement).toBe(kept);
+    kept.remove();
+  });
+
+  it('leaves focus alone on the first navigation (page load)', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'graph', component: Blank }])] });
+    const fixture = TestBed.createComponent(Shell);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    (document.activeElement as HTMLElement | null)?.blur();
+    await TestBed.inject(Router).navigateByUrl('/graph');
+    await fixture.whenStable();
+    await settle();
+    expect(document.activeElement).toBe(document.body);
+  });
+});
+
+// #847: the router decides which chip reads as the current page, so a redirect or a query string can't
+// leave the bar with nothing marked.
+describe('AppNavBarComponent nav highlighting', () => {
+  const setup = async () => {
+    TestBed.configureTestingModule({
       providers: [
+        fakeViewport(1440).provider,
         provideRouter([
-          { path: '', redirectTo: appRoutes.graphRoute(), pathMatch: 'full' },
-          { path: 'graph', component: StubPageComponent },
-          { path: 'bms', component: StubPageComponent },
-          { path: 'bms/segment/:id', component: StubPageComponent },
-          { path: 'charging', component: StubPageComponent }
+          { path: '', redirectTo: '/graph', pathMatch: 'full' },
+          { path: 'graph', component: Blank },
+          { path: 'charging', component: Blank },
+          { path: 'bms', component: Blank },
+          { path: 'bms/segment/:id', component: Blank }
         ])
       ]
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(AppNavBarComponent);
-    component = fixture.componentInstance;
-    router = TestBed.inject(Router);
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  // The landing page was removed in #847: the home logo now opens the graph page.
-  it('sends the home logo to the graph page', async () => {
-    fixture.debugElement.query(By.css('.home-logo')).nativeElement.click();
+    });
+    const fixture = TestBed.createComponent(AppNavBarComponent);
+    fixture.autoDetectChanges();
     await fixture.whenStable();
+    const router = TestBed.inject(Router);
+    const go = async (url: string) => {
+      await router.navigateByUrl(url);
+      await fixture.whenStable();
+    };
+    const current = (): (string | undefined)[] =>
+      [...(fixture.nativeElement.querySelectorAll('nav sidebar-chip button') as NodeListOf<HTMLButtonElement>)]
+        .filter((b) => b.getAttribute('aria-current') === 'page')
+        .map((b) => b.textContent?.trim());
+    return { fixture, router, go, current };
+  };
 
-    expect(router.url).toBe(appRoutes.graphRoute());
+  it('marks the graph chip when the root redirects to it', async () => {
+    const { go, current } = await setup();
+    await go('/');
+    expect(current()).toEqual(['Graph']);
   });
 
-  it('lists the graph page once in the sidebar', () => {
-    const graphItems = component.allNavItems.filter((navItem) => navItem.route === appRoutes.graphRoute());
-
-    expect(graphItems).toHaveLength(1);
-    expect(graphItems[0].label).toBe('Graph');
+  it('keeps the graph chip marked once topics are in the query string', async () => {
+    const { go, current } = await setup();
+    await go('/graph?topics=DTI%2FRPM%2FERPM');
+    expect(current()).toEqual(['Graph']);
   });
 
-  it('still shows the current run', () => {
-    expect(fixture.nativeElement.querySelector('current-run-display')).toBeTruthy();
+  it('marks only the chip for the page being viewed', async () => {
+    const { go, current } = await setup();
+    await go('/charging');
+    expect(current()).toEqual(['Charging']);
   });
 
-  // Argos opens on '/', which redirects to the graph page; the chip has to follow the redirect.
-  it('highlights the graph chip when the root redirects to it', async () => {
-    await navigateTo('/');
-
-    expect(activeChipLabels()).toEqual(['Graph']);
+  // Prefix matching keeps the parent chip marked on nested pages.
+  it('keeps the bms chip marked on a segment page', async () => {
+    const { go, current } = await setup();
+    await go('/bms/segment/1');
+    expect(current()).toEqual(['BMS']);
   });
 
-  it('keeps the graph chip highlighted once topics are in the query string', async () => {
-    await navigateTo(`${appRoutes.graphRoute()}?topics=pack_temp`);
-
-    expect(activeChipLabels()).toEqual(['Graph']);
+  it('sends the home logo to the graph page', async () => {
+    const { fixture, router, go } = await setup();
+    await go('/charging');
+    (fixture.nativeElement.querySelector('nav button[aria-label="Home"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(router.url).toBe('/graph');
   });
 
-  it('highlights only the chip for the page being viewed', async () => {
-    await navigateTo(appRoutes.chargingRoute());
+  it('lists the graph page once, with no separate home item duplicating it', async () => {
+    const { fixture } = await setup();
+    const labels = fixture.componentInstance.allNavItems.map((item) => item.label);
+    expect(labels.filter((label) => label === 'Graph')).toHaveLength(1);
+    expect(labels).not.toContain('Home');
+  });
+});
 
-    expect(activeChipLabels()).toEqual(['Charging']);
+describe('AppNavBarComponent on a desktop', () => {
+  const realWidth = window.innerWidth;
+  beforeEach(() => Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1440 }));
+  afterEach(() => Object.defineProperty(window, 'innerWidth', { configurable: true, value: realWidth }));
+
+  it('draws the clock and its "Run #N" partner on one readout size, as 814 drew both at 36px', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AppNavBarComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const nav: HTMLElement = fixture.nativeElement.querySelector('nav');
+    const run = [...nav.querySelectorAll<HTMLElement>('current-run-display p')];
+    const clock = [...nav.querySelectorAll<HTMLElement>('typography p')].find((p) =>
+      /^\d\d:\d\d:\d\d$/.test(p.textContent!.trim())
+    )!;
+    expect(run.map((p) => p.textContent?.trim())).toEqual(['Run', '#0']);
+    expect(clock).toBeDefined();
+    for (const p of [clock, ...run]) {
+      expect(p.classList).toContain('text-readout');
+      expect(p.getAttribute('style') ?? '').not.toMatch(/font-?size/i);
+    }
+  });
+});
+
+describe('AppNavBarComponent Edit Runs dialog', () => {
+  const run = { id: 7, locationName: 'Boston', driverName: 'Ada', time: new Date(0), notes: 'wet' };
+  let fetchMock: ReturnType<typeof vi.fn>;
+  beforeEach(() => {
+    fetchMock = vi.fn((url: string) =>
+      Promise.resolve(new Response(JSON.stringify(url.endsWith('/runs') ? [run] : {}), { status: 200 }))
+    );
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
   });
 
-  // Prefix matching keeps the parent chip lit on nested pages.
-  it('keeps the bms chip highlighted on a segment page', async () => {
-    await navigateTo(appRoutes.bmsSegmentViewRoute(0));
+  it('updates the selected run once the form is submitted and the dialog has closed', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AppNavBarComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.openRunForm();
+    await fixture.whenStable();
+    await settle();
 
-    expect(activeChipLabels()).toEqual(['BMS']);
+    const submit = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
+      (b) => b.textContent?.trim() === 'Submit'
+    )!;
+    expect(submit).toBeDefined();
+    submit.click();
+    await fixture.whenStable();
+    await settle();
+
+    expect(document.querySelector('run-form')).toBeNull();
+    const update = fetchMock.mock.calls.find(([url]) => String(url).includes('/runs/update/'));
+    expect(update).toBeDefined();
+    expect(update![0]).toMatch(/\/runs\/update\/7\/Ada\/Boston\/wet$/);
+    expect(update![1]).toEqual({ method: 'POST' });
   });
 });

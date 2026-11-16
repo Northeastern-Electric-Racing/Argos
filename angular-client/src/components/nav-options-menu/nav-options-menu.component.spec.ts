@@ -1,64 +1,104 @@
+import { MenuHarness } from '@angular/aria/menu/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
-import { DynamicDialogConfig } from 'primeng/dynamicdialog';
-
 import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
+
 import { NavOptionsMenuComponent } from './nav-options-menu.component';
 
-@Component({ standalone: true, template: '' })
-class StubPageComponent {}
+@Component({ template: '' })
+class Blank {}
 
 describe('NavOptionsMenuComponent', () => {
-  let component: NavOptionsMenuComponent;
   let fixture: ComponentFixture<NavOptionsMenuComponent>;
+  let ran: string[];
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
-  const mount = async (items: NavItem[]): Promise<void> => {
-    await TestBed.configureTestingModule({
-      imports: [NavOptionsMenuComponent],
+  beforeEach(async () => {
+    ran = [];
+    const page = (route: string, label: string): NavItem => ({ route, label, icon: 'map' });
+    TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'map', component: StubPageComponent }]),
-        { provide: DynamicDialogConfig, useValue: { data: { items } } }
+        provideRouter([
+          { path: 'faults', component: Blank },
+          { path: 'map', component: Blank }
+        ])
       ]
-    }).compileComponents();
-
+    });
     fixture = TestBed.createComponent(NavOptionsMenuComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  };
-
-  const clickItem = (label: string): void => {
-    const item = fixture.debugElement
-      .queryAll(By.css('.menu-item'))
-      .find((el) => el.nativeElement.textContent.trim() === label);
-
-    item!.nativeElement.click();
-  };
-
-  it('should create', async () => {
-    await mount([]);
-
-    expect(component).toBeTruthy();
+    fixture.componentRef.setInput('items', [
+      page('/faults', 'Fault'),
+      page('/map', 'Map'),
+      { label: 'Edit Runs', icon: 'edit', action: () => ran.push('Edit Runs') }
+    ]);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
   });
 
-  // The menu renders the same NavItems as the nav bar, so pages navigate through routerLink.
-  it('navigates to an item with a route', async () => {
-    await mount([{ label: 'Map', route: '/map', icon: 'map' }]);
+  afterEach(() => document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = '')));
 
-    clickItem('Map');
+  const trigger = () => fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+  const menu = () => TestbedHarnessEnvironment.documentRootLoader(fixture).getHarness(MenuHarness);
+
+  it('has a named trigger that reports the menu it opens', async () => {
+    expect(trigger().getAttribute('aria-label')).toBe('More pages');
+    expect(['true', 'menu']).toContain(trigger().getAttribute('aria-haspopup'));
+    expect(trigger().getAttribute('aria-expanded')).toBe('false');
+    trigger().click();
     await fixture.whenStable();
+    expect(trigger().getAttribute('aria-expanded')).toBe('true');
+  });
 
+  // Menu items stay commands, so the one that is a page asks the router rather than being a link.
+  it('lists every page as a menu item and opens the chosen one', async () => {
+    trigger().click();
+    await fixture.whenStable();
+    const items = await (await menu()).getItems();
+    expect(await Promise.all(items.map((i) => i.getText()))).toEqual(['Fault', 'Map', 'Edit Runs']);
+    await items[1].click();
+    await fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/map');
   });
 
-  // Edit Runs opens a dialog instead of navigating.
-  it('runs the action of an item with no route', async () => {
-    const action = vi.fn();
-    await mount([{ label: 'Edit Runs', action, icon: 'edit' }]);
+  it('runs the action of an item that is not a page', async () => {
+    trigger().click();
+    await fixture.whenStable();
+    const items = await (await menu()).getItems();
+    await items[2].click();
+    await fixture.whenStable();
+    expect(ran).toEqual(['Edit Runs']);
+    expect(TestBed.inject(Router).url).toBe('/');
+  });
 
-    clickItem('Edit Runs');
+  it('closes on Escape and gives focus back to the trigger', async () => {
+    trigger().focus();
+    trigger().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await fixture.whenStable();
+    await settle();
+    expect(trigger().getAttribute('aria-expanded')).toBe('true');
+    const active = document.activeElement as HTMLElement;
+    expect(active.getAttribute('role')).toBe('menuitem');
+    active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+    await settle();
+    expect(trigger().getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(trigger());
+  });
 
-    expect(action).toHaveBeenCalled();
+  it('moves between items with the arrow keys and jumps by typeahead', async () => {
+    trigger().focus();
+    trigger().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await fixture.whenStable();
+    await settle();
+    const focused = () => (document.activeElement as HTMLElement).textContent?.trim();
+    expect(focused()).toBe('Fault');
+    document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await fixture.whenStable();
+    expect(focused()).toBe('Map');
+    document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', bubbles: true }));
+    await fixture.whenStable();
+    expect(focused()).toBe('Edit Runs');
   });
 });

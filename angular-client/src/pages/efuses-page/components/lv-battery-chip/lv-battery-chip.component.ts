@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
+import { tw } from 'src/ui/recipes/tw';
 
-/** Dot color while the LV low-voltage fault is active (shared battery-low token). */
-const LV_FAULT_COLOR = 'var(--color-battery-low)';
-/** Dot color while no LV low-voltage fault is active (shared battery-high token). */
-const LV_NORMAL_COLOR = 'var(--color-battery-high)';
+/** The status dot: the shared battery-low token while the LV low-voltage fault is active, battery-high otherwise. */
+const LV_FAULT_DOT = tw('size-2.5 shrink-0 rounded-full bg-battery-low');
+const LV_NORMAL_DOT = tw('size-2.5 shrink-0 rounded-full bg-battery-high');
 
 /**
- * LV Battery chip for the eFuses status bar: the live voltage over a "LV Battery" subtitle,
+ * LV Battery chip for the eFuses status bar: the live voltage (fixed-width digits, so the right-anchored
+ * shrink-to-fit panel never re-flows on an update) over a "LV Battery" subtitle,
  * with a status dot that is green normally and red on fault.
  *
  * Presentational — the host supplies the live voltage and the firmware low-voltage fault flag.
@@ -17,8 +18,7 @@ const LV_NORMAL_COLOR = 'var(--color-battery-high)';
 @Component({
   selector: 'lv-battery-chip',
   templateUrl: './lv-battery-chip.component.html',
-  styleUrl: './lv-battery-chip.component.css',
-  imports: [MatIcon],
+  imports: [UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class LvBatteryChipComponent {
@@ -32,7 +32,7 @@ export default class LvBatteryChipComponent {
     return voltage !== undefined && isFinite(voltage) ? voltage.toFixed(2) : '–';
   });
 
-  protected readonly dotColor = computed(() => (this.faulted() ? LV_FAULT_COLOR : LV_NORMAL_COLOR));
+  protected readonly dotClass = computed(() => (this.faulted() ? LV_FAULT_DOT : LV_NORMAL_DOT));
 
   /** Accessible label so the fault state is not conveyed by color alone (WCAG 1.4.1). */
   protected readonly dotLabel = computed(() => (this.faulted() ? 'LV battery fault' : 'LV battery nominal'));
