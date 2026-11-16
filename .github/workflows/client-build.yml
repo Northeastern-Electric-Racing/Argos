@@ -8,10 +8,35 @@ env:
   IMAGE_NAME: northeastern-electric-racing/argos-client
 
 jobs:
-  build-and-push:
+  # One map per quarter and venue list, kept on the offline-map release, so images ship the same map until either
+  # changes; delete its asset to refresh it sooner. Its own job, so only this one can write to the repo.
+  offline-map:
     runs-on: ubuntu-24.04
     permissions:
-      contents: write # the offline-map release
+      contents: write
+    outputs:
+      asset: ${{ steps.asset.outputs.asset }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          asset="basemap-$(date -u +%Y)q$((($(date -u +%-m) + 2) / 3))-$(sha256sum utils/map-venues.txt | cut -c1-12).pmtiles"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          if ! gh release view offline-map --json assets --jq '.assets[].name' 2>/dev/null | grep -Fx "$asset" > /dev/null; then
+            sh utils/fetch-basemap.sh
+            gh release view offline-map > /dev/null 2>&1 ||
+              gh release create offline-map --prerelease --title "Offline map" --notes "The client's offline map, built by client-build.yml"
+            cp angular-client/src/assets/map/basemap.pmtiles "$RUNNER_TEMP/$asset" && gh release upload offline-map "$RUNNER_TEMP/$asset"
+          fi
+
+  build-and-push:
+    needs: offline-map
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
       packages: write
     defaults:
       run:
@@ -26,20 +51,11 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      # One map per quarter and venue list, kept on the offline-map release, so images ship the same map until either
-      # changes; delete its asset to refresh it sooner
       - name: Fetch the offline map
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          asset="basemap-$(date -u +%Y)q$((($(date -u +%-m) + 2) / 3))-$(sha256sum ../utils/map-venues.txt | cut -c1-12).pmtiles"
-          mkdir -p src/assets/map
-          if ! gh release download offline-map --pattern "$asset" --output src/assets/map/basemap.pmtiles; then
-            sh ../utils/fetch-basemap.sh
-            gh release view offline-map > /dev/null 2>&1 ||
-              gh release create offline-map --prerelease --title "Offline map" --notes "The client's offline map, built by client-build.yml"
-            cp src/assets/map/basemap.pmtiles "$RUNNER_TEMP/$asset" && gh release upload offline-map "$RUNNER_TEMP/$asset"
-          fi
+          ASSET: ${{ needs.offline-map.outputs.asset }}
+        run: mkdir -p src/assets/map && gh release download offline-map --pattern "$ASSET" --output src/assets/map/basemap.pmtiles
 
       - name: Build production bundle
         run: npm run build:production
