@@ -40,8 +40,13 @@
    */
   --color-control-border: #808080;
   --color-control-border-hover: #a3a3a3;
-  --color-control-off: #555; /* an unlit indicator (carousel dots, BMS segment selects); not a switch track */
+  --color-control-off: #555; /* an unlit control fill under fg text (BMS segment selects, 6.48:1); not a switch track */
   --color-control-off-hover: #666;
+  /*
+   * An unlit indicator mark (carousel bars): 3:1 on surface-2 (3.19:1). It is as light as accent (1.25:1 apart), so a
+   * lit indicator must differ by more than colour too (WCAG 1.4.1), as the carousel's wider current bar does.
+   */
+  --color-indicator-off: #737373;
   --color-focus: #d4d4d4; /* neutral, so a focused field never reads as a red validation error */
 
   /* Brand */

@@ -6,15 +6,13 @@ import Storage from 'src/services/storage.service';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
 import BatteryInfoDesktopComponent from './battery-info-desktop/battery-info-desktop.component';
 import BatteryInfoMobileComponent from './battery-info-mobile/battery-info-mobile.component';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 @Component({
   selector: 'battery-info-display',
   templateUrl: './battery-info-display.html',
   imports: [InfoBackgroundComponent, BatteryInfoDesktopComponent, BatteryInfoMobileComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
-  host: {
-    '(window:resize)': 'onResize()'
-  }
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class BatteryInfoDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
@@ -24,8 +22,7 @@ export class BatteryInfoDisplayComponent implements OnInit {
   stateOfCharge: number = 0;
   chargeCurrentLimit: number = 0;
   dischargeCurrentLimit: number = 0;
-  mobileThreshold = 768;
-  isMobile = window.innerWidth < this.mobileThreshold;
+  isMobile = injectIsMobile();
 
   ngOnInit() {
     this.storage
@@ -58,9 +55,5 @@ export class BatteryInfoDisplayComponent implements OnInit {
       .subscribe((value) => {
         this.dischargeCurrentLimit = floatPipe(value.values[0]);
       });
-  }
-
-  onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
   }
 }

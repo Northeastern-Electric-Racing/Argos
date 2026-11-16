@@ -20,6 +20,7 @@ import Storage from 'src/services/storage.service';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { UiInputDirective } from 'src/ui/field/field.directive';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 import { cellClass, lightHeaderCellClass, tableClass } from 'src/ui/recipes/table';
 import { cx, tw } from 'src/ui/recipes/tw';
 import { UiSelectComponent } from 'src/ui/select/select.component';
@@ -73,7 +74,6 @@ const sameJson = (left: unknown, right: unknown) => JSON.stringify(left) === JSO
   ],
   host: {
     class: 'flex h-[calc(100vh-76px)] flex-col max-md:h-dvh',
-    '(window:resize)': 'onResize()',
     '(document:keydown.escape)': 'cancelPlacing()'
   }
 })
@@ -121,7 +121,7 @@ export default class MapComponent {
     delta: cx(cellClass(), tw('text-fg-label')),
     best: tw('bg-battery-high/15 text-battery-high')
   };
-  isMobile = signal(window.innerWidth <= 768);
+  isMobile = injectIsMobile();
   private lineEndMarkers = new Map<string, Marker>();
 
   constructor() {
@@ -168,10 +168,6 @@ export default class MapComponent {
       const map = this.map();
       if (map) map.getCanvas().style.cursor = this.placing() ? 'crosshair' : this.draggedMarker() ? 'grabbing' : '';
     });
-  }
-
-  onResize() {
-    this.isMobile.set(window.innerWidth <= 768);
   }
 
   cancelPlacing() {

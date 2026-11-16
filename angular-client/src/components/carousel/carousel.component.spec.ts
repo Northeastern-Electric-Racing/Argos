@@ -121,6 +121,17 @@ describe('CarouselComponent', () => {
     expect(button('Show run 1').getAttribute('aria-current')).toBe('false');
   });
 
+  // jsdom runs without Tailwind, so this checks the bar's classes: the look follows the button's aria-current.
+  it('draws unlit indicators in the 3:1 grey and widens the current one, not only recolours it', async () => {
+    await create([run(1), run(2)]);
+    const bar = (id: number) => [...button(`Show run ${id}`).querySelector('span')!.classList];
+    expect(bar(2)).toEqual(expect.arrayContaining(['bg-indicator-off', 'w-3']));
+    expect(bar(2)).toEqual(expect.arrayContaining(['group-aria-[current=true]:bg-accent', 'group-aria-[current=true]:w-6']));
+    expect(bar(2)).not.toContain('bg-control-off');
+    expect(button('Show run 1').getAttribute('aria-current')).toBe('true');
+    expect(button('Show run 2').getAttribute('aria-current')).toBe('false');
+  });
+
   it('selects the shown run and closes the dialog', async () => {
     await create([run(1), run(2)]);
     button('Next run').click();

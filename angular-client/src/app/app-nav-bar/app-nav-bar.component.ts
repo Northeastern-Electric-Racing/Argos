@@ -9,6 +9,7 @@ import {
   ChangeDetectionStrategy,
   Injector,
   afterNextRender,
+  computed,
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,6 +34,7 @@ import { FormGroup } from '@angular/forms';
 import { RunFormComponent } from 'src/components/run-form/run-form.component';
 import { NotificationBellComponent } from './notification-bell/notification-bell.component';
 import { focusIsLost, focusNewPage, pageLabel } from './focus-new-page';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 export interface NavItem {
   id: string;
@@ -81,14 +83,15 @@ export class AppNavBarComponent implements OnInit {
   sidebarVisible = signal(false);
   /** False until the first navigation (page load) ends. */
   private navigatedBefore = false;
-  isMobile = false;
-  isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+  isMobile = injectIsMobile();
+  private windowWidth = signal(window.innerWidth);
+  /** The desktop bar's compact layout. */
+  isWindowSmall = computed(() => this.windowWidth() <= 1160 && !this.isMobile());
 
   ngOnInit(): void {
     this.sidebarService.isOpen.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isOpen) => {
       this.sidebarVisible.set(isOpen);
     });
-    this.isMobile = window.innerWidth <= 768;
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
@@ -114,8 +117,7 @@ export class AppNavBarComponent implements OnInit {
 
   // on resize, set the screen width
   onResize(): void {
-    this.isMobile = window.innerWidth <= 768;
-    this.isWindowSmall = window.innerWidth <= 1160 && !this.isMobile;
+    this.windowWidth.set(window.innerWidth);
   }
 
   newRunIsLoading = false;

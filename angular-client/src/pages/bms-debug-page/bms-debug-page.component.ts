@@ -8,6 +8,7 @@ import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
 import { bmsGrid, bmsTile } from './bms-grid';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
 
@@ -26,9 +27,8 @@ export class BmsDebugPageComponent implements OnInit {
 
   time = new Date();
   newRunIsLoading = false;
-  mobileThreshold = 768;
   windowSize: number = window.innerWidth;
-  isMobile = window.innerWidth < this.mobileThreshold;
+  isMobile = injectIsMobile();
   segments = allSegments;
   protected readonly grid = bmsGrid;
   protected readonly tile = bmsTile;
@@ -76,7 +76,6 @@ export class BmsDebugPageComponent implements OnInit {
   }
 
   onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.windowSize = window.innerWidth;
   }
 }

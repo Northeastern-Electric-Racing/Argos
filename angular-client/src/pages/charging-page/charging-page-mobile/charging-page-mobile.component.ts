@@ -73,6 +73,6 @@ export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
   }
 
   onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
+    this.isMobile = window.innerWidth < this.mobileThreshold;
   }
 }

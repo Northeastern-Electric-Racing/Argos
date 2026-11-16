@@ -2,6 +2,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, RouterOutlet } from '@angular/router';
 import SidebarService from 'src/services/sidebar.service';
+import { fakeViewport } from 'src/ui/layout/viewport.testing';
 import { AppNavBarComponent } from './app-nav-bar.component';
 
 @Component({ template: '' })
@@ -34,16 +35,14 @@ class Shell {}
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
 describe('AppNavBarComponent on a phone', () => {
-  const realWidth = window.innerWidth;
-  beforeEach(() => Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 }));
   afterEach(() => {
-    Object.defineProperty(window, 'innerWidth', { configurable: true, value: realWidth });
     document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
   });
 
   const setup = async () => {
     TestBed.configureTestingModule({
       providers: [
+        fakeViewport(390).provider,
         provideRouter([
           { path: 'landing', component: Blank },
           { path: 'graph', component: Blank },
