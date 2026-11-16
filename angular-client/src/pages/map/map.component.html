@@ -89,7 +89,7 @@
       </div>
       @if (row.line; as line) {
         <details class="mt-1">
-          <summary class="cursor-pointer text-xs text-fg-label">Edit coordinates</summary>
+          <summary class="cursor-pointer text-xs text-fg-label focus-visible:focus-ring">Edit coordinates</summary>
           @for (end of lineEnds; track end) {
             <label class="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
               <span class="col-span-full text-fg-label">End {{ $index + 1 }}: latitude, longitude</span>
@@ -154,7 +154,10 @@
     } @else {
       <p class="text-xs text-fg-label">No laps yet.</p>
     }
-    <a class="mt-6 block text-xs text-fg-label" href="https://www.openstreetmap.org/copyright" target="_blank"
+    <a
+      class="mt-6 block text-xs text-fg-label focus-visible:focus-ring"
+      href="https://www.openstreetmap.org/copyright"
+      target="_blank"
       >© OpenStreetMap contributors</a
     >
   </aside>
