@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// The MQTT topic GPS fixes are published and stored on, as `[lat, lon, ..]` in degrees
+/// The MQTT topic GPS fixes are published on, and so the DataType they're stored as: `[lat, lon, ..]` in degrees
 pub const GPS_LOCATION_TOPIC: &str = "TPU/GPS/Location";
 
 /// Metres along a meridian per degree of latitude, on a spherical Earth of radius 6371 km
