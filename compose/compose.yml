@@ -20,7 +20,8 @@ services:
     stop_grace_period: 2m
 
   # Argos-only data such as tracks, apart from the car database. A bind mount, not a volume, so the test-day
-  # `down -v` that wipes the car database keeps it; `sudo rm -rf argos-db-data` wipes it.
+  # `down -v` that wipes the car database keeps it; one folder per project, as the car database's volume is, so the
+  # integration tests and side-by-side stacks keep off it; `sudo rm -rf argos-db-data` wipes it.
   argos-db:
     image: postgres:17.2
     restart: unless-stopped
@@ -29,7 +30,7 @@ services:
     ports:
       - ${ARGOS_DB_PORT:-5433}:5432
     volumes:
-      - ./argos-db-data:/var/lib/postgresql/data
+      - ./argos-db-data/${COMPOSE_PROJECT_NAME}:/var/lib/postgresql/data
     cpu_shares: 512
     stop_grace_period: 2m
 
