@@ -49,6 +49,9 @@ const MAX_FIT_ZOOM = 19;
 const TRACE_REDRAW_MS = 1_000;
 // As scylla caps the stored trace; past it, every other fix is kept.
 const MAX_TRACE_FIXES = 10_000;
+// As scylla drops a fix this far ahead of the one before it: its clock is wrong, and drawn, it would hold back every fix
+// after it.
+const MAX_TIME_JUMP_MS = 60_000;
 
 // No scale: MapLibre positions markers with transform, which scale would multiply, moving the marker off the cursor.
 const LINE_END_CLASS = tw('size-3 rounded-full hover:ring-3 hover:ring-fg/40 data-dragging:ring-4 data-dragging:ring-fg');
@@ -235,12 +238,17 @@ export default class MapComponent {
   }
 
   private liveTrace() {
+    let lastReceivedMs: number | undefined;
     return this.storage.get(topics.gpsLocation()).pipe(
       tap((value) => {
         const point = toFix(value);
+        // MapLibre throws on a fix off the globe or not a number, which would end this stream, and the stored history may
+        // already hold one; (0, 0) is where a receiver without a fix reports.
+        if (!(Math.abs(point.lat) <= 90 && Math.abs(point.lon) <= 180) || (point.lat === 0 && point.lon === 0)) return;
+        const jumped = lastReceivedMs !== undefined && point.timeMs - lastReceivedMs > MAX_TIME_JUMP_MS;
+        lastReceivedMs = point.timeMs;
         const last = this.trace().at(-1);
-        // MapLibre throws on a malformed fix, which would end this stream; the stored history may already hold it.
-        if (!Number.isFinite(point.lat) || !Number.isFinite(point.lon) || (last && point.timeMs <= last.timeMs)) return;
+        if (jumped || (last && point.timeMs <= last.timeMs)) return;
         this.traceFixes.update((trace) => {
           const longer = [...trace, point];
           return longer.length > MAX_TRACE_FIXES ? longer.filter((_, index) => index % 2 === 0) : longer;

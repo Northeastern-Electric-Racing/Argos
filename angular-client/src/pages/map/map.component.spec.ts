@@ -124,7 +124,11 @@ describe('MapComponent live trace and laps', () => {
     expect(map.trace()).toEqual([fix(42, 1000)]);
   });
 
-  it('skips a malformed live fix and keeps drawing the ones after it', () => {
+  it.each([
+    ['a malformed', ['', '']],
+    ['an off-the-globe', ['91', '-84']],
+    ['a (0, 0)', ['0', '0']]
+  ])('skips %s live fix and keeps drawing the ones after it', (_, values) => {
     const { storage, fixture, map } = setup();
     map.onMapLoaded({
       getSource: () => undefined,
@@ -135,10 +139,22 @@ describe('MapComponent live trace and laps', () => {
     } as unknown as MapLibreMap);
     storage.setCurrentRunId(1);
     fixture.detectChanges();
-    storage.addValue(topics.gpsLocation(), { values: ['', ''], time: '500', unit: 'deg' });
+    storage.addValue(topics.gpsLocation(), { values, time: '500', unit: 'deg' });
     storage.addValue(topics.gpsLocation(), liveFix(42, 1000));
 
     expect(map.trace()).toEqual([fix(42, 1000)]);
+  });
+
+  it('skips a live fix far ahead of the one before it and keeps drawing the ones after it', () => {
+    const { storage, fixture, map } = setup();
+    storage.setCurrentRunId(1);
+    fixture.detectChanges();
+    // a clock an hour ahead, then a real minute-long dropout
+    [1000, 3_601_000, 2000, 70_000, 71_000].forEach((timeMs, index) =>
+      storage.addValue(topics.gpsLocation(), liveFix(42 + index / 10, timeMs))
+    );
+
+    expect(map.trace()).toEqual([fix(42, 1000), fix(42.2, 2000), fix(42.4, 71_000)]);
   });
 
   it('keeps every other fix once the trace passes the 10,000 scylla caps it at', async () => {
