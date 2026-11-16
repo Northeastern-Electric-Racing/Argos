@@ -13,6 +13,7 @@ scylla-server-typescript/src/prisma/mydatabase.db-journal
 scylla-server/files
 scylla-server/target
 backups
+compose/argos-db-data
 /target
 
 # Xcode

@@ -25,6 +25,7 @@ Profiles:
 
 The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
 - It persists the database between `down` commands via a volume named `<project>_db-data` (e.g. `odyssey_client-dev_db-data` for the default `client-dev` stack).  Wipe it with `./argos.sh <profile> down -v` or `docker volume rm <project>_db-data` to start with a new database next `up`.
+- It runs `argos-db` for Argos-only data such as the map's tracks, on a bind mount (`compose/argos-db-data/<project>`) rather than a volume, so `down -v` keeps it; wipe it with `sudo rm -rf compose/argos-db-data` (its files belong to the container's postgres user).
 - It weighs the CPU usage of siren higher, so it is prioritized in CPU starvation scenarios.
 
 
@@ -32,7 +33,7 @@ The base docker compose (`compose.yml`) contains some important features to note
 
 #### Running multiple dev stacks side-by-side
 
-Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3000). With no env vars set, behavior is byte-identical to before.
+Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `ARGOS_DB_PORT` (5433), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3000). With no env vars set, behavior is byte-identical to before.
 
 The Zenoh router (`siren-base/compose.zenohd.yml`) publishes 7447/tcp and 7446/udp as fixed ports, so stacks using it cannot yet be offset and will collide if run side-by-side.
 
@@ -49,6 +50,7 @@ env STACK_OFFSET=$N \
     ODYSSEY_DB_PORT=$((5432+N))   SCYLLA_HOST_PORT=$((8000+N)) \
     CLIENT_HOST_PORT=$((80+N))    SIREN_MQTT_PORT=$((1883+N)) \
     SIREN_WS_PORT=$((9002+N))     GRAFANA_HOST_PORT=$((3000+N)) \
+    ARGOS_DB_PORT=$((5433+N)) \
     ./argos.sh fake-data up -d
 
 # Teardown: stack 1 needs nothing; stack 2 only needs STACK_OFFSET since
