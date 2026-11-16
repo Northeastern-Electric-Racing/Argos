@@ -239,6 +239,10 @@ export default class MapComponent {
 
   private liveTrace() {
     let lastReceivedMs: number | undefined;
+    // Each time the trace passes the cap, only every other new fix stays too, so it stays evenly spaced as scylla's
+    // is; the newest is drawn until the next replaces it.
+    let every = 1;
+    let tail = 0;
     return this.storage.get(topics.gpsLocation()).pipe(
       tap((value) => {
         const point = toFix(value);
@@ -249,10 +253,10 @@ export default class MapComponent {
         lastReceivedMs = point.timeMs;
         const last = this.trace().at(-1);
         if (jumped || (last && point.timeMs <= last.timeMs)) return;
-        this.traceFixes.update((trace) => {
-          const longer = [...trace, point];
-          return longer.length > MAX_TRACE_FIXES ? longer.filter((_, index) => index % 2 === 0) : longer;
-        });
+        const trace = this.traceFixes();
+        const longer = [...(tail++ % every === 0 ? trace : trace.slice(0, -1)), point];
+        if (longer.length > MAX_TRACE_FIXES) [every, tail] = [every * 2, 0];
+        this.traceFixes.set(longer.length > MAX_TRACE_FIXES ? longer.filter((_, index) => index % 2 === 0) : longer);
         if (this.trace().length === 1 || (this.followCar && !this.map()?.getBounds().contains(point)))
           this.fit(this.trace());
       })

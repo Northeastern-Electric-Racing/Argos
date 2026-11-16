@@ -157,7 +157,7 @@ describe('MapComponent live trace and laps', () => {
     expect(map.trace()).toEqual([fix(42, 1000), fix(42.2, 2000), fix(42.4, 71_000)]);
   });
 
-  it('keeps every other fix once the trace passes the 10,000 scylla caps it at', async () => {
+  it('keeps every other fix once the trace passes the 10,000 scylla caps it at, and only every other new one after', async () => {
     const stored = Array.from({ length: 10_000 }, (_, index) => fix(42, index));
     const { storage, fixture, map } = setup((url) => (url.endsWith('/trace/1') ? Promise.resolve(json(stored)) : pending));
     storage.setCurrentRunId(1);
@@ -167,6 +167,11 @@ describe('MapComponent live trace and laps', () => {
 
     expect(map.trace().length).toBe(5_001);
     expect([map.trace()[0], map.trace().at(-1)]).toEqual([fix(42, 0), fix(42.1, 10_000)]);
+
+    [10_001, 10_002, 10_003].forEach((timeMs) => storage.addValue(topics.gpsLocation(), liveFix(42.1, timeMs)));
+
+    // evenly spaced, with the newest fix drawn until the next replaces it
+    expect(map.trace().slice(-4)).toEqual([fix(42, 9_998), fix(42.1, 10_000), fix(42.1, 10_002), fix(42.1, 10_003)]);
   });
 
   it('shows the live laps of the selected track on the current run only', () => {
