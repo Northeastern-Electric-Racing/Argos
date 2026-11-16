@@ -18,6 +18,8 @@ jobs:
       asset: ${{ steps.asset.outputs.asset }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - id: asset
         env:
@@ -26,7 +28,8 @@ jobs:
           asset="basemap-$(date -u +%Y)q$((($(date -u +%-m) + 2) / 3))-$(sha256sum utils/map-venues.txt | cut -c1-12).pmtiles"
           echo "asset=$asset" >> "$GITHUB_OUTPUT"
           if ! gh release view offline-map --json assets --jq '.assets[].name' 2>/dev/null | grep -Fx "$asset" > /dev/null; then
-            sh utils/fetch-basemap.sh
+            # it runs a downloaded pmtiles binary, so not with the token that can write to the repo
+            env -u GH_TOKEN sh utils/fetch-basemap.sh
             gh release view offline-map > /dev/null 2>&1 ||
               gh release create offline-map --prerelease --title "Offline map" --notes "The client's offline map, built by client-build.yml"
             cp angular-client/src/assets/map/basemap.pmtiles "$RUNNER_TEMP/$asset" && gh release upload offline-map "$RUNNER_TEMP/$asset"
