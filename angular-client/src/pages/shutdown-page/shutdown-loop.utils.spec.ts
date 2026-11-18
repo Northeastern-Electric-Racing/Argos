@@ -113,6 +113,21 @@ describe('computeLoopStatus', () => {
     expect(suspectIds(status)).toEqual(['em-interlock', 'acc-sense']);
   });
 
+  it('lists no-data nodes inside the suspect stretch', () => {
+    const { readings, seen } = allClosed();
+    openFrom(readings, BMS.Acc);
+    readings.delete(VCU.HVD);
+    expect(run(readings, seen).noDataInStretch.map((n) => n.id)).toEqual(['hvd']);
+  });
+
+  it('blames from the loop start when the VCU is silent', () => {
+    const { readings } = allClosed();
+    openFrom(readings, BMS.Acc);
+    const status = run(readings, { BMS: NOW });
+    expect(suspectIds(status)).toEqual(['glvms', 'vcu', 'side-brb-r', 'side-brb-l', 'em-interlock', 'acc-sense']);
+    expect(status.noDataInStretch.map((n) => n.id)).toContain('tsms');
+  });
+
   it('mismatch after grace', () => {
     const { readings, seen } = allClosed();
     readings.set(VCU.BOTS, { value: 0, receivedAt: NOW, changedAt: NOW - 1000 });

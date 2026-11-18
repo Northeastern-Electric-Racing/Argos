@@ -64,6 +64,20 @@ describe('ShutdownLoopService', () => {
     expect(service.status().mismatch).toBeTrue();
   });
 
+  it('ignores blank values', () => {
+    pushAll('1');
+    push(SHUTDOWN_TOPICS.VCU.TSMS, ['']);
+    push(SHUTDOWN_TOPICS.VCU.TSMS, [' ']);
+    expect(service.status().verdict).toBe('closed');
+  });
+
+  it('tsOn goes stale with the BMS', () => {
+    push(SHUTDOWN_TOPICS.BMS.State, ['1']);
+    expect(service.tsOn()).toBeFalse();
+    jasmine.clock().tick(61_000);
+    expect(service.tsOn()).toBeUndefined();
+  });
+
   it('tsOn maps inverted state', () => {
     push(SHUTDOWN_TOPICS.BMS.State, ['0']);
     expect(service.tsOn()).toBeTrue();

@@ -27,6 +27,8 @@ export interface LoopStatus {
   verdict: Verdict;
   nodes: NodeStatus[];
   suspects: LoopNode[];
+  /** Measured nodes with no data that sit inside the suspect stretch: they could be the cause too. */
+  noDataInStretch: LoopNode[];
   silentBoards: Board[];
   mismatch: boolean;
   airsEnergized: boolean;
@@ -46,18 +48,21 @@ export function computeLoopStatus(
   boardLastSeen: BoardLastSeen,
   now: number
 ): LoopStatus {
+  const boardLive = (board: Board): boolean => {
+    const seen = boardLastSeen[board];
+    return seen !== undefined && now - seen <= STALE_AFTER_MS;
+  };
   const liveReading = (node: LoopNode): Reading | undefined => {
-    if (!node.topic || !node.board) return undefined;
-    const seen = boardLastSeen[node.board];
-    if (seen === undefined || now - seen > STALE_AFTER_MS) return undefined;
+    if (!node.topic || !node.board || !boardLive(node.board)) return undefined;
     return readings.get(node.topic);
   };
   const live = nodes.map(liveReading);
 
   const breakIdx = live.findIndex((r) => r !== undefined && r.value === 0);
-  // With no reading before the break, the loop is still known good up to its source: a live reading
-  // means GLV is on and the VCU is up and feeding the loop.
-  let lastClosedIdx = nodes.findIndex((n) => n.kind === 'source');
+  // With no reading before the break, the loop is still known good up to its source while the VCU
+  // (which sources the loop) is publishing: that means GLV is on and the VCU is up. If the VCU is
+  // silent, it and everything before it are suspects too.
+  let lastClosedIdx = boardLive('VCU') ? nodes.findIndex((n) => n.kind === 'source') : -1;
   if (breakIdx >= 0) {
     for (let i = breakIdx - 1; i >= 0; i--) {
       if (live[i] !== undefined) {
@@ -104,6 +109,9 @@ export function computeLoopStatus(
     verdict,
     nodes: statuses,
     suspects: statuses.filter((s) => s.state === 'suspect').map((s) => s.node),
+    noDataInStretch: breakReading
+      ? statuses.filter((s, i) => s.state === 'no-data' && i > lastClosedIdx && i < breakIdx).map((s) => s.node)
+      : [],
     silentBoards,
     mismatch: statuses.some((s) => s.mismatch),
     airsEnergized: verdict === 'closed'

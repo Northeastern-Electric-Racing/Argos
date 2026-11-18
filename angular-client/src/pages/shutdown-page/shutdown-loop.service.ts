@@ -2,7 +2,7 @@ import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Board, SHUTDOWN_LOOP } from './shutdown-loop.model';
-import { BoardLastSeen, computeLoopStatus, Reading } from './shutdown-loop.utils';
+import { BoardLastSeen, computeLoopStatus, Reading, STALE_AFTER_MS } from './shutdown-loop.utils';
 import { SHUTDOWN_TOPICS } from './shutdown-page.topics';
 
 const CLOCK_TICK_MS = 1000;
@@ -23,10 +23,12 @@ export class ShutdownLoopService implements OnDestroy {
   private timer = setInterval(() => this.now.set(Date.now()), CLOCK_TICK_MS);
 
   readonly status = computed(() => computeLoopStatus(SHUTDOWN_LOOP, this.readings(), this.lastSeen(), this.now()));
-  /** From BMS/Shutdown/State, which is inverted: 0 = TS ON, 1 = TS OFF. */
+  /** From BMS/Shutdown/State, which is inverted: 0 = TS ON, 1 = TS OFF. Undefined while BMS is silent. */
   readonly tsOn = computed(() => {
     const state = this.tsState();
-    return state === undefined ? undefined : state === 0;
+    const seen = this.lastSeen().BMS;
+    if (state === undefined || seen === undefined || this.now() - seen > STALE_AFTER_MS) return undefined;
+    return state === 0;
   });
 
   constructor() {
@@ -49,8 +51,11 @@ export class ShutdownLoopService implements OnDestroy {
   private subscribe(topic: string, onValue: (value: number) => void): void {
     this.subscriptions.push(
       this.storage.get(topic).subscribe((data) => {
-        const value = Number(data.values[0]);
-        if (data.values.length === 0 || Number.isNaN(value)) return;
+        const [raw] = data.values;
+        // Number('') and Number(' ') are 0, which would read as an open loop: reject blanks outright.
+        if (raw === undefined || raw === null || String(raw).trim() === '') return;
+        const value = Number(raw);
+        if (!Number.isFinite(value)) return;
         onValue(value);
       })
     );

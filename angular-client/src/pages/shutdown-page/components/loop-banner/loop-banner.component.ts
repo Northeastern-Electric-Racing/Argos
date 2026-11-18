@@ -17,7 +17,10 @@ export class LoopBannerComponent {
     switch (s.verdict) {
       case 'open': {
         const labels = s.suspects.map((n) => n.label);
-        return labels.length === 1 ? `LOOP OPEN — cause: ${labels[0]}` : `LOOP OPEN — cause is one of: ${labels.join(', ')}`;
+        const noData = s.noDataInStretch.map((n) => `${n.label} (no data)`);
+        if (labels.length === 1 && noData.length === 0) return `LOOP OPEN — cause: ${labels[0]}`;
+        const tail = noData.length ? `, or ${noData.join(', ')}` : '';
+        return `LOOP OPEN — cause is one of: ${labels.join(', ')}${tail}`;
       }
       case 'closed':
         return 'LOOP CLOSED · AIRs on';

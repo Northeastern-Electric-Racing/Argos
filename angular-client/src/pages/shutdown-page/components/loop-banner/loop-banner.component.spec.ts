@@ -8,6 +8,7 @@ const status = (overrides: Partial<LoopStatus>): LoopStatus => ({
   verdict: 'closed',
   nodes: [],
   suspects: [],
+  noDataInStretch: [],
   silentBoards: [],
   mismatch: false,
   airsEnergized: false,
@@ -36,6 +37,13 @@ describe('LoopBannerComponent', () => {
   it('lists several possible causes', () => {
     const text = render(status({ verdict: 'open', suspects: [node('side-brb-r'), node('side-brb-l'), node('bms-latch')] }));
     expect(text).toContain('LOOP OPEN — cause is one of: Side BRB R, Side BRB L, BMS latch');
+  });
+
+  it('names no-data nodes inside the stretch', () => {
+    const text = render(
+      status({ verdict: 'open', suspects: [node('em-interlock'), node('acc-sense')], noDataInStretch: [node('hvd')] })
+    );
+    expect(text).toContain('LOOP OPEN — cause is one of: Energy meter interlock, Accumulator sense, or HVD (no data)');
   });
 
   it('shows closed', () => {
