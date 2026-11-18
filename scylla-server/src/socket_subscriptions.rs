@@ -182,11 +182,13 @@ impl Subscriptions {
                         gate.remove_reader(topic);
                     }
                 }
-                if !join.is_empty() {
-                    socket.join(join);
+                for batch in batches(join) {
+                    socket.join(batch);
+                    tokio::task::yield_now().await;
                 }
-                if !leave.is_empty() {
-                    socket.leave(leave);
+                for batch in batches(leave) {
+                    socket.leave(batch);
+                    tokio::task::yield_now().await;
                 }
             }
         }
@@ -232,6 +234,17 @@ impl Subscriptions {
     fn gate_mut(&self) -> RwLockWriteGuard<'_, Gate> {
         self.gate.write().unwrap_or_else(PoisonError::into_inner)
     }
+}
+
+/// Rooms per adapter call when a socket changes topics. The adapter
+/// write-locks all rooms for each call, stalling every emit until it returns;
+/// small batches, with a yield between them, let emits through in between.
+const ROOM_BATCH: usize = 32;
+
+fn batches(mut rooms: Vec<Room>) -> impl Iterator<Item = Vec<Room>> {
+    std::iter::from_fn(move || {
+        (!rooms.is_empty()).then(|| rooms.split_off(rooms.len().saturating_sub(ROOM_BATCH)))
+    })
 }
 
 impl Gate {
