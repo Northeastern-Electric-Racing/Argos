@@ -6,9 +6,6 @@
     </button>
     <button type="button" class="btn" (click)="allClosed()">All closed</button>
     <button type="button" class="btn" (click)="breakAtTsms()">Break at TSMS</button>
-    <button type="button" class="btn" (click)="breakAtBmsLatch()">Break at BMS latch</button>
-    <button type="button" class="btn" [attr.aria-pressed]="bmsSilent()" (click)="toggleBmsSilent()">Silence BMS</button>
-    <button type="button" class="btn" (click)="toggleTs()">BMS State = {{ tsState() }}</button>
   </div>
   <div class="row">
     @for (n of nodes; track n.topic) {

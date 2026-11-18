@@ -27,8 +27,6 @@ export class MockPanelComponent implements OnDestroy {
 
   readonly nodes = MEASURED;
   readonly values = signal<Record<string, number>>(Object.fromEntries(MEASURED.map((n) => [n.topic, 1])));
-  readonly tsState = signal(1);
-  readonly bmsSilent = signal(false);
   readonly publishing = signal(false);
 
   ngOnDestroy(): void {
@@ -50,25 +48,12 @@ export class MockPanelComponent implements OnDestroy {
     this.values.update((v) => ({ ...v, [topic]: v[topic] ? 0 : 1 }));
   }
 
-  toggleTs(): void {
-    this.tsState.update((v) => (v ? 0 : 1));
-  }
-
-  toggleBmsSilent(): void {
-    this.bmsSilent.update((v) => !v);
-  }
-
   allClosed(): void {
     this.setOpenFrom(undefined);
-    this.bmsSilent.set(false);
   }
 
   breakAtTsms(): void {
     this.setOpenFrom(SHUTDOWN_TOPICS.VCU.TSMS);
-  }
-
-  breakAtBmsLatch(): void {
-    this.setOpenFrom(SHUTDOWN_TOPICS.VCU.BMS);
   }
 
   /** Opens `topic` and everything after it in loop order; undefined closes all. */
@@ -80,15 +65,7 @@ export class MockPanelComponent implements OnDestroy {
   private publish(): void {
     const values = this.values();
     for (const n of MEASURED) {
-      if (n.board === 'BMS' && this.bmsSilent()) continue;
       this.storage.addValue(n.topic, { values: [String(values[n.topic])], time: String(Date.now()), unit: '' });
-    }
-    if (!this.bmsSilent()) {
-      this.storage.addValue(SHUTDOWN_TOPICS.BMS.State, {
-        values: [String(this.tsState())],
-        time: String(Date.now()),
-        unit: ''
-      });
     }
   }
 }
