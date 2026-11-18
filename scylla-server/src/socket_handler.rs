@@ -22,7 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
-use crate::socket_subscriptions;
+use crate::socket_subscriptions::Subscriptions;
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -155,28 +155,33 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
+    let subscriptions = Arc::new(Subscriptions::default());
+    let ns_subscriptions = subscriptions.clone();
     io.ns(
         "/",
         |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
             // starts on the firehose; `set_subscriptions` narrows `data` to its topics
-            socket_subscriptions::register(&socket);
+            ns_subscriptions.register(&socket).await;
 
-            // unfortunate locking and ref counting due to the async closures
-            let mut owned = writable_socket_map.write().await;
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
-                return;
+            } else {
+                debug!(
+                    "Establishing client connection with {} on socket_id {}",
+                    client_id, socket.id
+                );
+                // unfortunate locking and ref counting due to the async closures
+                writable_socket_map
+                    .write()
+                    .await
+                    .insert(client_id.clone(), socket.id);
             }
 
-            debug!(
-                "Establishing client connection with {} on socket_id {}",
-                client_id, socket.id
-            );
-            owned.insert(client_id.clone(), socket.id);
-            drop(owned);
-
-            socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id);
+            socket.on_disconnect(async move |socket: SocketRef| {
+                ns_subscriptions.unregister(socket.id).await;
+                if !client_id.is_empty() {
+                    writable_socket_map.write().await.remove(&client_id);
+                }
             });
         },
     );
@@ -207,7 +212,7 @@ pub async fn socket_handler_with_metadata(
                         // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
                         // let emit_start = sample.then(tokio::time::Instant::now);
                         if keep_message(&mut upload_counter)
-                            && let Err(err) = socket_subscriptions::emit_data(&io, &data).await
+                            && let Err(err) = subscriptions.emit_data(&io, &data).await
                         {
                             log_broadcast_err(&err);
                         }
