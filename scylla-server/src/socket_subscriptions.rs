@@ -213,3 +213,225 @@ mod tests {
         assert!(matches!(ack, Packet::Message(m) if m.as_str() == "30[{\"count\":1}]"));
     }
 }
+
+/// Benchmark for the server-side cost of selective delivery. Run with
+/// `cargo test --release -- --ignored --nocapture bench_socket_subscriptions`.
+#[cfg(test)]
+mod bench {
+    use super::*;
+    use engineioxide::Packet;
+    use socketioxide::socket::Sid;
+    use std::collections::HashSet;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::time::{Duration, Instant};
+    use tokio::sync::mpsc::Sender;
+
+    const CLIENTS: usize = 15;
+    const TOPICS: usize = 900;
+    const RUNS: usize = 300;
+    const EMITS: usize = 5000;
+
+    // ---- API shim: the only part that differs between implementations ----
+    #[derive(Clone)]
+    struct Ctx;
+    fn setup() -> (SocketIo, Ctx) {
+        let (_svc, io) = SocketIo::new_svc();
+        io.ns("/", async |socket: SocketRef| register(&socket));
+        (io, Ctx)
+    }
+    async fn apply(_ctx: &Ctx, socket: &SocketRef, topics: Vec<String>) -> usize {
+        set_subscriptions(socket, topics)
+    }
+    async fn emit(_ctx: &Ctx, io: &SocketIo, data: &ClientData) -> bool {
+        emit_data(io, data).await.is_ok()
+    }
+    // ----------------------------------------------------------------------
+
+    fn topic(i: usize) -> String {
+        format!("BMS/Segment{}/Cell{}/Voltage", i / 30, i % 30)
+    }
+
+    fn data(name: String) -> ClientData {
+        ClientData {
+            run_id: 1,
+            name,
+            unit: "V".to_string(),
+            values: vec![3.71],
+            timestamp: chrono::DateTime::from_timestamp_millis(1_700_000_000_000).unwrap(),
+        }
+    }
+
+    /// Connects a dummy socket whose packets are drained in the background,
+    /// and returns its `SocketRef` plus the sender that keeps it open.
+    async fn connect(io: &SocketIo, known: &mut HashSet<Sid>) -> (SocketRef, Sender<Packet>) {
+        let (tx, mut rx) = io.new_dummy_sock("/", ()).await;
+        rx.recv().await.unwrap(); // namespace connect packet
+        tokio::spawn(async move { while rx.recv().await.is_some() {} });
+        let socket = io
+            .sockets()
+            .into_iter()
+            .find(|s| !known.contains(&s.id))
+            .unwrap();
+        known.insert(socket.id);
+        (socket, tx)
+    }
+
+    fn report(label: &str, mut samples: Vec<Duration>) {
+        samples.sort_unstable();
+        let us = |d: Duration| d.as_secs_f64() * 1e6;
+        let n = samples.len();
+        println!(
+            "{label:<48} n={n:<6} p50={:>9.2}us p99={:>9.2}us max={:>9.2}us",
+            us(samples[n / 2]),
+            us(samples[(n * 99 / 100).min(n - 1)]),
+            us(samples[n - 1]),
+        );
+    }
+
+    async fn timed_apply(ctx: &Ctx, socket: &SocketRef, topics: &[String]) -> Duration {
+        let topics = topics.to_vec();
+        let start = Instant::now();
+        let count = apply(ctx, socket, topics).await;
+        let elapsed = start.elapsed();
+        assert!(count > 0);
+        elapsed
+    }
+
+    /// Times a fresh socket's first `set_subscriptions` of `page`.
+    async fn first_set_runs(
+        io: &SocketIo,
+        ctx: &Ctx,
+        known: &mut HashSet<Sid>,
+        page: &[String],
+    ) -> Vec<Duration> {
+        let mut samples = Vec::with_capacity(RUNS);
+        for _ in 0..RUNS {
+            let (socket, _tx) = connect(io, known).await;
+            samples.push(timed_apply(ctx, &socket, page).await);
+            socket.disconnect().unwrap();
+            tokio::time::sleep(Duration::from_millis(1)).await; // let disconnect cleanup run
+        }
+        samples
+    }
+
+    /// Times one emit. If a dummy socket's buffer was full, pauses (untimed)
+    /// so the drains catch up, and counts it.
+    async fn timed_emit(ctx: &Ctx, io: &SocketIo, data: &ClientData, full: &mut u32) -> Duration {
+        let start = Instant::now();
+        let ok = emit(ctx, io, data).await;
+        let elapsed = start.elapsed();
+        if ok {
+            tokio::task::yield_now().await; // let the drains keep up
+        } else {
+            *full += 1;
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+        elapsed
+    }
+
+    async fn emit_runs(io: &SocketIo, ctx: &Ctx, data: &ClientData) -> Vec<Duration> {
+        let mut full = 0;
+        let mut samples = Vec::with_capacity(EMITS);
+        for _ in 0..EMITS {
+            samples.push(timed_emit(ctx, io, data, &mut full).await);
+        }
+        report_full(full);
+        samples
+    }
+
+    fn report_full(full: u32) {
+        if full > 0 {
+            println!("    ({full} emits hit a full dummy-socket buffer)");
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[ignore = "benchmark: run with --release -- --ignored --nocapture"]
+    async fn bench_socket_subscriptions() {
+        let topics: Vec<String> = (0..TOPICS).map(topic).collect();
+        let page_a = &topics[0..490];
+        let page_b = &topics[410..900];
+        let (io, ctx) = setup();
+        let mut known = HashSet::new();
+
+        // (a) first set of page A, nobody else subscribed
+        report(
+            "(a) first set_subscriptions, fresh, alone",
+            first_set_runs(&io, &ctx, &mut known, page_a).await,
+        );
+
+        // 14 other sockets on page A
+        let mut others = vec![];
+        for _ in 0..CLIENTS - 1 {
+            let (socket, tx) = connect(&io, &mut known).await;
+            apply(&ctx, &socket, page_a.to_vec()).await;
+            others.push((socket, tx));
+        }
+
+        // (b) first set of page A, others already on page A
+        report(
+            "(b) first set_subscriptions, others on page A",
+            first_set_runs(&io, &ctx, &mut known, page_a).await,
+        );
+
+        // the 15th client, on page A
+        let (switcher, _switcher_tx) = connect(&io, &mut known).await;
+        apply(&ctx, &switcher, page_a.to_vec()).await;
+
+        // (c) page switch A <-> B
+        let mut samples = Vec::with_capacity(RUNS * 2);
+        for _ in 0..RUNS {
+            samples.push(timed_apply(&ctx, &switcher, page_b).await);
+            samples.push(timed_apply(&ctx, &switcher, page_a).await);
+        }
+        report("(c) page switch A<->B", samples);
+
+        // (d) emit, topic watched by all 15
+        let watched = data(topics[0].clone());
+        report(
+            "(d) emit, topic watched by all 15",
+            emit_runs(&io, &ctx, &watched).await,
+        );
+
+        // (e) emit, topic nobody watches
+        let unwatched = data(topics[899].clone());
+        for (socket, _) in &others {
+            assert!(!socket.rooms().iter().any(|r| r == topics[899].as_str()));
+        }
+        report(
+            "(e) emit, topic nobody watches",
+            emit_runs(&io, &ctx, &unwatched).await,
+        );
+
+        // (f) emit while one client switches pages nonstop for ~2 s
+        let stop = Arc::new(AtomicBool::new(false));
+        let switching = {
+            let stop = stop.clone();
+            let ctx = ctx.clone();
+            let (a, b) = (page_a.to_vec(), page_b.to_vec());
+            tokio::spawn(async move {
+                let mut switches = 0u32;
+                while !stop.load(Ordering::Relaxed) {
+                    let page = if switches % 2 == 0 { &b } else { &a };
+                    apply(&ctx, &switcher, page.clone()).await;
+                    switches += 1;
+                    tokio::task::yield_now().await;
+                }
+                switches
+            })
+        };
+        let mut samples = vec![];
+        let mut full = 0;
+        let start = Instant::now();
+        while start.elapsed() < Duration::from_secs(2) {
+            samples.push(timed_emit(&ctx, &io, &watched, &mut full).await);
+        }
+        stop.store(true, Ordering::Relaxed);
+        let switches = switching.await.unwrap();
+        report("(f) emit while one client switches nonstop", samples);
+        println!("    (switcher made {switches} page switches)");
+        report_full(full);
+        drop(others);
+    }
+}
