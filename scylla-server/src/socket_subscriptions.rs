@@ -772,3 +772,7 @@ mod bench {
         drop(others);
     }
 }
+
+#[cfg(test)]
+#[path = "fair_bench.rs"]
+mod fair_bench;
