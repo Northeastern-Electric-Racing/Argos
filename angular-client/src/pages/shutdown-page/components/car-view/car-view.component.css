@@ -87,3 +87,6 @@
 .zone-label.end {
   text-anchor: end;
 }
+.zone-label.start {
+  text-anchor: start;
+}
