@@ -37,7 +37,7 @@ describe('computeLoopStatus', () => {
     const status = run(new Map(), {});
     expect(status.verdict).toBe('unknown');
     expect(status.silentBoards).toEqual(['VCU', 'BMS']);
-    expect(status.nodes.filter((n) => n.state === 'no-data').length).toBe(13);
+    expect(status.nodes.every((n) => n.state === 'no-data')).toBeTrue();
     expect(status.airsEnergized).toBeFalse();
   });
 
@@ -48,6 +48,16 @@ describe('computeLoopStatus', () => {
     expect(status.silentBoards).toEqual(['BMS']);
     for (const id of ['acc-sense', 'tsip-sense', 'ts-minus', 'ts-plus']) expect(stateOf(status, id)).toBe('no-data');
     expect(stateOf(status, 'tsms')).toBe('closed');
+  });
+
+  it('unmeasured nodes are no data when no live reading after them proves them closed', () => {
+    expect(stateOf(run(new Map(), {}), 'glvms')).toBe('no-data');
+    expect(stateOf(run(new Map(), {}), 'side-brb-r')).toBe('no-data');
+    const { readings } = allClosed();
+    const bmsSilent = run(readings, { VCU: NOW });
+    expect(stateOf(bmsSilent, 'glvms')).toBe('closed');
+    expect(stateOf(bmsSilent, 'em-interlock')).toBe('no-data');
+    expect(stateOf(bmsSilent, 'airs')).toBe('no-data');
   });
 
   it('not stale at exactly 60s', () => {

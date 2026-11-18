@@ -1,0 +1,85 @@
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
+import Storage from 'src/services/storage.service';
+import { Board, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
+import { SHUTDOWN_TOPICS } from '../../shutdown-page.topics';
+
+const PUBLISH_EVERY_MS = 1000;
+const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && n.board) as { id: string; label: string; topic: string; board: Board }[];
+
+/**
+ * Dev-mode only: publishes fake shutdown readings into Storage so the page can be checked without
+ * the car (the Calypso simulator randomizes each bit independently and can't show a healthy loop).
+ */
+@Component({
+  selector: 'shutdown-mock-panel',
+  templateUrl: './mock-panel.component.html',
+  styleUrls: ['./mock-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class MockPanelComponent implements OnDestroy {
+  private storage = inject(Storage);
+  private timer?: ReturnType<typeof setInterval>;
+
+  readonly nodes = MEASURED;
+  readonly values = signal<Record<string, number>>(Object.fromEntries(MEASURED.map((n) => [n.topic, 1])));
+  readonly tsState = signal(1);
+  readonly bmsSilent = signal(false);
+  readonly publishing = signal(false);
+
+  ngOnDestroy(): void {
+    clearInterval(this.timer);
+  }
+
+  togglePublishing(): void {
+    if (this.publishing()) {
+      clearInterval(this.timer);
+      this.publishing.set(false);
+      return;
+    }
+    this.publishing.set(true);
+    this.publish();
+    this.timer = setInterval(() => this.publish(), PUBLISH_EVERY_MS);
+  }
+
+  toggle(topic: string): void {
+    this.values.update((v) => ({ ...v, [topic]: v[topic] ? 0 : 1 }));
+  }
+
+  toggleTs(): void {
+    this.tsState.update((v) => (v ? 0 : 1));
+  }
+
+  toggleBmsSilent(): void {
+    this.bmsSilent.update((v) => !v);
+  }
+
+  allClosed(): void {
+    this.setOpenFrom(undefined);
+    this.bmsSilent.set(false);
+  }
+
+  breakAtTsms(): void {
+    this.setOpenFrom(SHUTDOWN_TOPICS.VCU.TSMS);
+  }
+
+  breakAtBmsLatch(): void {
+    this.setOpenFrom(SHUTDOWN_TOPICS.VCU.BMS);
+  }
+
+  /** Opens `topic` and everything after it in loop order; undefined closes all. */
+  private setOpenFrom(topic: string | undefined): void {
+    const start = topic ? MEASURED.findIndex((n) => n.topic === topic) : MEASURED.length;
+    this.values.set(Object.fromEntries(MEASURED.map((n, i) => [n.topic, i >= start ? 0 : 1])));
+  }
+
+  private publish(): void {
+    const values = this.values();
+    for (const n of MEASURED) {
+      if (n.board === 'BMS' && this.bmsSilent()) continue;
+      this.storage.addValue(n.topic, { values: [String(values[n.topic])], time: String(Date.now()), unit: '' });
+    }
+    if (!this.bmsSilent()) {
+      this.storage.addValue(SHUTDOWN_TOPICS.BMS.State, { values: [String(this.tsState())], time: String(Date.now()), unit: '' });
+    }
+  }
+}

@@ -12,6 +12,7 @@ import GraphPageComponent from 'src/pages/graph-page/graph-page.component';
 import LandingPageComponent from 'src/pages/landing-page/landing-page.component';
 import LapTimerPageComponent from 'src/pages/lap-timer-page/lap-timer-page.component';
 import MapComponent from 'src/pages/map/map.component';
+import ShutdownPageComponent from 'src/pages/shutdown-page/shutdown-page.component';
 import NotificationRulesPageComponent from 'src/pages/notification-rules-page/notification-rules-page.component';
 import { appRoutes } from './app-routes';
 
@@ -32,7 +33,8 @@ const routes: Routes = [
   { path: 'rules', component: NotificationRulesPageComponent },
   { path: 'efuses', component: EfusesPageComponent },
   { path: 'notification-log', component: NotificationLogPageComponent },
-  { path: 'lap-timer', component: LapTimerPageComponent }
+  { path: 'lap-timer', component: LapTimerPageComponent },
+  { path: 'shutdown', component: ShutdownPageComponent }
 ];
 
 @NgModule({

@@ -67,6 +67,13 @@ export function computeLoopStatus(
     }
   }
   const breakReading = breakIdx >= 0 ? live[breakIdx] : undefined;
+  // Without a break, an unmeasured node is only known closed if a live reading after it shows
+  // voltage, or if every reading is live (which covers the AIRs at the very end).
+  const allLive = nodes.every((n, i) => !n.topic || live[i] !== undefined);
+  let lastLiveIdx = -1;
+  live.forEach((r, i) => {
+    if (r !== undefined) lastLiveIdx = i;
+  });
 
   const statuses: NodeStatus[] = nodes.map((node, i) => {
     const reading = node.topic ? readings.get(node.topic) : undefined;
@@ -77,6 +84,7 @@ export function computeLoopStatus(
       mismatch: false
     };
     if (node.topic && live[i] === undefined) return { ...base, state: 'no-data' };
+    if (!breakReading && !node.topic && !allLive && i > lastLiveIdx) return { ...base, state: 'no-data' };
     if (!breakReading || i <= lastClosedIdx) return { ...base, state: 'closed' };
     if (i <= breakIdx) return { ...base, state: 'suspect' };
     const r = live[i];
