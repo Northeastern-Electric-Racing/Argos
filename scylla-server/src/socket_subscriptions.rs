@@ -5,11 +5,22 @@
 //! of topics, it is moved to exactly those topic rooms. Rooms live only in the
 //! server's in-memory adapter; nothing about them crosses the network.
 //!
+//! [`Subscriptions`] mirrors the room membership the adapter holds, so the
+//! server can tell without touching the adapter whether a topic has any
+//! reader, and diff a new topic list against the socket's current one instead
+//! of rejoining every room.
+//!
 //! Only `data` is gated. `metadata`, `faults`, `timers` and `rule_notify` are
 //! sent the same way as before.
 
+use std::borrow::Cow;
+use std::sync::{Arc, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
+
+use rustc_hash::{FxHashMap, FxHashSet};
 use socketioxide::SocketIo;
 use socketioxide::extract::{AckSender, Data, SocketRef};
+use socketioxide::socket::Sid;
+use tokio::sync::Mutex;
 use tracing::{debug, trace, warn};
 
 use crate::ClientData;
@@ -23,83 +34,231 @@ pub const SET_SUBSCRIPTIONS_EVENT: &str = "set_subscriptions";
 /// collide with a topic room.
 pub const FIREHOSE_ROOM: &str = "#";
 
+/// socketioxide's room name (`socketioxide_core::adapter::Room`).
+type Room = Cow<'static, str>;
+
 /// Ack payload for `set_subscriptions`: number of topics the socket is now in.
 #[derive(serde::Serialize, Debug)]
 pub struct SubscriptionAck {
     pub count: usize,
 }
 
-/// Puts a newly connected socket on the firehose and listens for its
-/// `set_subscriptions` event.
-pub fn register(socket: &SocketRef) {
-    socket.join(FIREHOSE_ROOM);
-    socket.on(
-        SET_SUBSCRIPTIONS_EVENT,
-        async |socket: SocketRef, Data(topics): Data<Vec<String>>, ack: AckSender| {
-            let count = set_subscriptions(&socket, topics);
-            debug!("Socket {} now subscribed to {} topics", socket.id, count);
-            if let Err(err) = ack.send(&SubscriptionAck { count }) {
-                trace!("Could not ack set_subscriptions: {}", err);
-            }
-        },
-    );
+/// Which `data` messages a connected socket receives.
+enum Delivery {
+    /// Every topic, via [`FIREHOSE_ROOM`]: it has not sent `set_subscriptions`.
+    Firehose,
+    /// Exactly these topic rooms.
+    Topics(FxHashSet<Room>),
 }
 
-/// Replace-set: moves the socket to exactly the rooms for `topics`.
-///
-/// Joins the new rooms before leaving the old ones, so a topic kept across the
-/// change is never dropped. The cost is that, during the first switch off the
-/// firehose, a message may arrive twice: socketioxide does not dedupe a socket
-/// that is in more than one target room. Outside that switch the firehose room
-/// and the topic rooms never share a socket.
-fn set_subscriptions(socket: &SocketRef, topics: Vec<String>) -> usize {
-    let mut topics: Vec<String> = topics
-        .into_iter()
-        .filter(|topic| {
-            // exact topics only: wildcards would silently match nothing
-            let ok = !topic.is_empty() && !topic.contains(['#', '+']);
-            if !ok {
-                warn!(
-                    "Socket {} sent invalid topic {:?}, dropping",
-                    socket.id, topic
-                );
-            }
-            ok
-        })
-        .collect();
-    topics.sort_unstable();
-    topics.dedup();
-
-    let stale: Vec<_> = socket
-        .rooms()
-        .into_iter()
-        .filter(|room| topics.binary_search_by(|t| t.as_str().cmp(room)).is_err())
-        .collect();
-    let count = topics.len();
-    socket.join(topics);
-    socket.leave(stale);
-    count
+/// What an emit needs to know: which rooms have sockets.
+#[derive(Default)]
+struct Gate {
+    /// Sockets in [`FIREHOSE_ROOM`].
+    firehose: usize,
+    /// Topic rooms with at least one socket, and how many sockets each has.
+    readers: FxHashMap<Room, usize>,
 }
 
-/// Sends one `data` message to the firehose room plus the room for its topic.
+/// Room membership for `data`, mirrored from the adapter so an emit can skip
+/// a topic nobody reads and a topic change only touches the rooms that change.
 ///
-/// # Panics
-/// If `ClientData` fails to serialize, which it cannot (plain fields only).
-pub async fn emit_data(
-    io: &SocketIo,
-    client_data: &ClientData,
-) -> Result<(), socketioxide::BroadcastError> {
-    let payload = serde_json::to_string(client_data).expect("Could not serialize ClientData");
-    io.to(FIREHOSE_ROOM)
-        .to(client_data.name.clone())
-        .emit(DATA_SOCKET_KEY, &payload)
-        .await
+/// Shared by the connect handler, which registers sockets, and the data loop,
+/// which emits through it.
+#[derive(Default)]
+pub struct Subscriptions {
+    /// Every registered socket's delivery. Held for each whole room change,
+    /// so the changes for one socket apply in order. Emits never take it.
+    sockets: Mutex<FxHashMap<Sid, Delivery>>,
+    /// Read by every emit to pick its rooms; written briefly to update counts.
+    gate: RwLock<Gate>,
+    /// Read by every emit across its broadcast; written across the room
+    /// change of a socket leaving the firehose, which happens once per socket.
+    /// An emit then sees that socket either only in [`FIREHOSE_ROOM`] or only
+    /// in its topic rooms: never both (socketioxide does not dedupe a socket in
+    /// more than one target room, so it would get the message twice) and never
+    /// neither (it would miss a topic it kept).
+    firehose_exit: tokio::sync::RwLock<()>,
+}
+
+impl Subscriptions {
+    /// Puts a newly connected socket on the firehose and listens for its
+    /// `set_subscriptions` event. The caller's disconnect handler must call
+    /// [`Self::unregister`].
+    pub async fn register(self: &Arc<Self>, socket: &SocketRef) {
+        {
+            let mut sockets = self.sockets.lock().await;
+            sockets.insert(socket.id, Delivery::Firehose);
+            self.gate_mut().firehose += 1;
+            socket.join(FIREHOSE_ROOM);
+        }
+        let subscriptions = self.clone();
+        socket.on(
+            SET_SUBSCRIPTIONS_EVENT,
+            async move |socket: SocketRef, Data(topics): Data<Vec<String>>, ack: AckSender| {
+                let count = subscriptions.set_subscriptions(&socket, topics).await;
+                debug!("Socket {} now subscribed to {} topics", socket.id, count);
+                if let Err(err) = ack.send(&SubscriptionAck { count }) {
+                    trace!("Could not ack set_subscriptions: {}", err);
+                }
+            },
+        );
+    }
+
+    /// Forgets a disconnected socket. socketioxide removes it from its rooms.
+    pub async fn unregister(&self, sid: Sid) {
+        let mut sockets = self.sockets.lock().await;
+        let Some(delivery) = sockets.remove(&sid) else {
+            return;
+        };
+        let mut gate = self.gate_mut();
+        match delivery {
+            Delivery::Firehose => gate.firehose -= 1,
+            Delivery::Topics(topics) => {
+                for topic in &topics {
+                    gate.remove_reader(topic);
+                }
+            }
+        }
+    }
+
+    /// Replace-set: moves the socket to exactly the rooms for `topics`, joining
+    /// only the rooms it is not in yet and leaving only the ones it no longer
+    /// wants. Returns the number of topics it is now in.
+    async fn set_subscriptions(&self, socket: &SocketRef, topics: Vec<String>) -> usize {
+        let wanted: FxHashSet<Room> = topics
+            .into_iter()
+            .filter(|topic| {
+                // exact topics only: wildcards would silently match nothing
+                let ok = !topic.is_empty() && !topic.contains(['#', '+']);
+                if !ok {
+                    warn!(
+                        "Socket {} sent invalid topic {:?}, dropping",
+                        socket.id, topic
+                    );
+                }
+                ok
+            })
+            .map(Cow::Owned)
+            .collect();
+        let count = wanted.len();
+
+        let mut sockets = self.sockets.lock().await;
+        // None: disconnected while this event was in flight
+        let Some(delivery) = sockets.get_mut(&socket.id) else {
+            return 0;
+        };
+        match std::mem::replace(delivery, Delivery::Topics(FxHashSet::default())) {
+            Delivery::Firehose => {
+                let join: Vec<Room> = wanted.iter().cloned().collect();
+                let _exit = self.firehose_exit.write().await;
+                {
+                    let mut gate = self.gate_mut();
+                    for topic in &join {
+                        gate.add_reader(topic);
+                    }
+                    gate.firehose -= 1;
+                }
+                if !join.is_empty() {
+                    socket.join(join);
+                }
+                socket.leave(FIREHOSE_ROOM);
+            }
+            Delivery::Topics(current) => {
+                let join: Vec<Room> = wanted.difference(&current).cloned().collect();
+                let leave: Vec<Room> = current
+                    .into_iter()
+                    .filter(|topic| !wanted.contains(topic))
+                    .collect();
+                {
+                    // A count can lead its room: an emit may target a room
+                    // the socket is about to join, or skip one it is about to
+                    // leave. Topics it keeps are untouched either way.
+                    let mut gate = self.gate_mut();
+                    for topic in &join {
+                        gate.add_reader(topic);
+                    }
+                    for topic in &leave {
+                        gate.remove_reader(topic);
+                    }
+                }
+                if !join.is_empty() {
+                    socket.join(join);
+                }
+                if !leave.is_empty() {
+                    socket.leave(leave);
+                }
+            }
+        }
+        *delivery = Delivery::Topics(wanted);
+        count
+    }
+
+    /// Sends one `data` message to the sockets that want its topic: the
+    /// firehose room plus the topic's room. Does nothing, not even
+    /// serialization, when neither has a socket.
+    ///
+    /// # Panics
+    /// If `ClientData` fails to serialize, which it cannot (plain fields only).
+    pub async fn emit_data(
+        &self,
+        io: &SocketIo,
+        client_data: &ClientData,
+    ) -> Result<(), socketioxide::BroadcastError> {
+        let _exit = self.firehose_exit.read().await;
+        let (firehose, topic_room) = {
+            let gate = self.gate();
+            let topic_room = gate
+                .readers
+                .get_key_value(client_data.name.as_str())
+                .map(|(room, _)| room.clone());
+            (gate.firehose > 0, topic_room)
+        };
+        let to = match (firehose, topic_room) {
+            (false, None) => return Ok(()),
+            (false, Some(room)) => io.to(room),
+            (true, None) => io.to(FIREHOSE_ROOM),
+            (true, Some(room)) => io.to(FIREHOSE_ROOM).to(room),
+        };
+        let payload = serde_json::to_string(client_data).expect("Could not serialize ClientData");
+        to.emit(DATA_SOCKET_KEY, &payload).await
+    }
+
+    fn gate(&self) -> RwLockReadGuard<'_, Gate> {
+        // counts are updated in place and stay consistent if a holder panics
+        self.gate.read().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    fn gate_mut(&self) -> RwLockWriteGuard<'_, Gate> {
+        self.gate.write().unwrap_or_else(PoisonError::into_inner)
+    }
+}
+
+impl Gate {
+    fn add_reader(&mut self, topic: &Room) {
+        match self.readers.get_mut(topic) {
+            Some(count) => *count += 1,
+            None => {
+                self.readers.insert(topic.clone(), 1);
+            }
+        }
+    }
+
+    fn remove_reader(&mut self, topic: &str) {
+        if let Some(count) = self.readers.get_mut(topic) {
+            *count -= 1;
+            if *count == 0 {
+                self.readers.remove(topic);
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use engineioxide::Packet;
+    use std::sync::Arc;
     use std::time::Duration;
     use tokio::sync::mpsc::Receiver;
 
@@ -149,18 +308,38 @@ mod tests {
         assert!(matches!(ack, Packet::Message(m) if m.starts_with("30")));
     }
 
-    fn io_with_register() -> SocketIo {
+    struct Server {
+        io: SocketIo,
+        subs: Arc<Subscriptions>,
+    }
+
+    impl Server {
+        async fn emit(&self, topic: &str) {
+            self.subs
+                .emit_data(&self.io, &client_data(topic))
+                .await
+                .unwrap();
+        }
+    }
+
+    fn io_with_register() -> Server {
         let (_svc, io) = SocketIo::new_svc();
-        io.ns("/", async |socket: SocketRef| register(&socket));
-        io
+        let subs = Arc::new(Subscriptions::default());
+        let ns_subs = subs.clone();
+        io.ns("/", async move |socket: SocketRef| {
+            ns_subs.register(&socket).await;
+            let subs = ns_subs.clone();
+            socket.on_disconnect(async move |socket: SocketRef| subs.unregister(socket.id).await);
+        });
+        Server { io, subs }
     }
 
     #[tokio::test]
     async fn new_socket_gets_every_topic() {
-        let io = io_with_register();
-        let (_tx, mut rx) = connect(&io).await;
-        emit_data(&io, &client_data("BMS/Pack/SOC")).await.unwrap();
-        emit_data(&io, &client_data("VCU/Speed")).await.unwrap();
+        let srv = io_with_register();
+        let (_tx, mut rx) = connect(&srv.io).await;
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
         assert_eq!(
             received_topics(&mut rx).await,
             ["BMS/Pack/SOC", "VCU/Speed"]
@@ -169,40 +348,76 @@ mod tests {
 
     #[tokio::test]
     async fn subscribed_socket_gets_only_its_topics_once() {
-        let io = io_with_register();
-        let (tx, mut rx) = connect(&io).await;
-        send_set(&tx, &mut rx, r#"["BMS/Pack/SOC"]"#).await;
-        emit_data(&io, &client_data("BMS/Pack/SOC")).await.unwrap();
-        emit_data(&io, &client_data("VCU/Speed")).await.unwrap();
+        let srv = io_with_register();
+        let (tx, mut rx) = connect(&srv.io).await;
+        send_set(&tx, &mut rx, r#"["BMS/Pack/SOC","BMS/Pack/SOC"]"#).await;
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
         assert_eq!(received_topics(&mut rx).await, ["BMS/Pack/SOC"]);
     }
 
     #[tokio::test]
     async fn second_set_replaces_the_first() {
-        let io = io_with_register();
-        let (tx, mut rx) = connect(&io).await;
+        let srv = io_with_register();
+        let (tx, mut rx) = connect(&srv.io).await;
         send_set(&tx, &mut rx, r#"["BMS/Pack/SOC"]"#).await;
         send_set(&tx, &mut rx, r#"["VCU/Speed"]"#).await;
-        emit_data(&io, &client_data("BMS/Pack/SOC")).await.unwrap();
-        emit_data(&io, &client_data("VCU/Speed")).await.unwrap();
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
         assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
     }
 
     #[tokio::test]
+    async fn overlapping_sets_keep_shared_topics() {
+        let srv = io_with_register();
+        let (tx, mut rx) = connect(&srv.io).await;
+        let (peer_tx, mut peer_rx) = connect(&srv.io).await;
+        send_set(&tx, &mut rx, r#"["A","B"]"#).await;
+        send_set(&peer_tx, &mut peer_rx, r#"["B"]"#).await;
+        send_set(&tx, &mut rx, r#"["B","C"]"#).await;
+        for topic in ["A", "B", "C"] {
+            srv.emit(topic).await;
+        }
+        assert_eq!(received_topics(&mut rx).await, ["B", "C"]);
+        assert_eq!(received_topics(&mut peer_rx).await, ["B"]);
+        let state = srv.subs.gate();
+        assert_eq!(state.firehose, 0);
+        assert_eq!(state.readers.get("A"), None);
+        assert_eq!(state.readers.get("B"), Some(&2));
+        assert_eq!(state.readers.get("C"), Some(&1));
+    }
+
+    #[tokio::test]
     async fn empty_set_gets_nothing_and_firehose_peer_is_unaffected() {
-        let io = io_with_register();
-        let (tx, mut rx) = connect(&io).await;
-        let (_peer_tx, mut peer_rx) = connect(&io).await;
+        let srv = io_with_register();
+        let (tx, mut rx) = connect(&srv.io).await;
+        let (_peer_tx, mut peer_rx) = connect(&srv.io).await;
         send_set(&tx, &mut rx, "[]").await;
-        emit_data(&io, &client_data("VCU/Speed")).await.unwrap();
+        srv.emit("VCU/Speed").await;
         assert!(received_topics(&mut rx).await.is_empty());
         assert_eq!(received_topics(&mut peer_rx).await, ["VCU/Speed"]);
     }
 
     #[tokio::test]
+    async fn disconnect_forgets_the_socket() {
+        let srv = io_with_register();
+        let (_tx, _rx) = connect(&srv.io).await;
+        let (tx, mut rx) = connect(&srv.io).await;
+        send_set(&tx, &mut rx, r#"["VCU/Speed"]"#).await;
+        for socket in srv.io.sockets() {
+            socket.disconnect().unwrap();
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        assert!(srv.subs.sockets.lock().await.is_empty());
+        let state = srv.subs.gate();
+        assert_eq!(state.firehose, 0);
+        assert!(state.readers.is_empty());
+    }
+
+    #[tokio::test]
     async fn wildcards_and_empty_topics_are_dropped() {
-        let io = io_with_register();
-        let (tx, mut rx) = connect(&io).await;
+        let srv = io_with_register();
+        let (tx, mut rx) = connect(&srv.io).await;
         tx.send(Packet::Message(
             format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",[\"BMS/#\",\"+/Speed\",\"\",\"VCU/Speed\"]]")
                 .into(),
@@ -211,6 +426,73 @@ mod tests {
         .unwrap();
         let ack = rx.recv().await.unwrap();
         assert!(matches!(ack, Packet::Message(m) if m.as_str() == "30[{\"count\":1}]"));
+    }
+
+    /// Sockets leave the firehose while a kept topic is being emitted: each
+    /// must get every message exactly once, in order.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn first_switch_neither_drops_nor_duplicates() {
+        const SOCKETS: usize = 16;
+        const MESSAGES: usize = 1000;
+        let (_svc, io) = SocketIo::builder().max_buffer_size(4096).build_svc();
+        let subs = Arc::new(Subscriptions::default());
+        let ns_subs = subs.clone();
+        io.ns("/", async move |socket: SocketRef| {
+            ns_subs.register(&socket).await;
+        });
+
+        // keep the topic room busy and wide so the switch takes a while
+        let mut set: Vec<String> = (0..2000).map(|i| format!("Other/{i}")).collect();
+        set.push("Kept".to_string());
+        let set = serde_json::to_string(&set).unwrap();
+
+        let mut receivers = vec![];
+        let mut senders = vec![];
+        for _ in 0..SOCKETS {
+            let (tx, rx) = connect(&io).await;
+            senders.push(tx);
+            receivers.push(tokio::spawn(async move {
+                let mut rx = rx;
+                let mut values = vec![];
+                while values.len() < MESSAGES {
+                    let Ok(Some(Packet::Message(msg))) =
+                        tokio::time::timeout(Duration::from_secs(5), rx.recv()).await
+                    else {
+                        break;
+                    };
+                    // ack packets carry no "values"
+                    if let Some(rest) = msg.split("\\\"values\\\":[").nth(1) {
+                        let value = rest.split(']').next().unwrap();
+                        values.push(value.parse::<f32>().unwrap() as usize);
+                    }
+                }
+                values
+            }));
+        }
+
+        let emitter = {
+            let (io, subs) = (io.clone(), subs.clone());
+            tokio::spawn(async move {
+                for i in 0..MESSAGES {
+                    let mut data = client_data("Kept");
+                    data.values = vec![i as f32];
+                    subs.emit_data(&io, &data).await.unwrap();
+                    tokio::task::yield_now().await;
+                }
+            })
+        };
+        tokio::time::sleep(Duration::from_millis(2)).await;
+        for tx in &senders {
+            tx.send(Packet::Message(
+                format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",{set}]").into(),
+            ))
+            .await
+            .unwrap();
+        }
+        emitter.await.unwrap();
+        for receiver in receivers {
+            assert_eq!(receiver.await.unwrap(), (0..MESSAGES).collect::<Vec<_>>());
+        }
     }
 }
 
@@ -233,18 +515,23 @@ mod bench {
     const EMITS: usize = 5000;
 
     // ---- API shim: the only part that differs between implementations ----
-    #[derive(Clone)]
-    struct Ctx;
+    type Ctx = Arc<Subscriptions>;
     fn setup() -> (SocketIo, Ctx) {
         let (_svc, io) = SocketIo::new_svc();
-        io.ns("/", async |socket: SocketRef| register(&socket));
-        (io, Ctx)
+        let subs = Arc::new(Subscriptions::default());
+        let ns_subs = subs.clone();
+        io.ns("/", async move |socket: SocketRef| {
+            ns_subs.register(&socket).await;
+            let subs = ns_subs.clone();
+            socket.on_disconnect(async move |socket: SocketRef| subs.unregister(socket.id).await);
+        });
+        (io, subs)
     }
-    async fn apply(_ctx: &Ctx, socket: &SocketRef, topics: Vec<String>) -> usize {
-        set_subscriptions(socket, topics)
+    async fn apply(ctx: &Ctx, socket: &SocketRef, topics: Vec<String>) -> usize {
+        ctx.set_subscriptions(socket, topics).await
     }
-    async fn emit(_ctx: &Ctx, io: &SocketIo, data: &ClientData) -> bool {
-        emit_data(io, data).await.is_ok()
+    async fn emit(ctx: &Ctx, io: &SocketIo, data: &ClientData) -> bool {
+        ctx.emit_data(io, data).await.is_ok()
     }
     // ----------------------------------------------------------------------
 
@@ -281,11 +568,13 @@ mod bench {
         samples.sort_unstable();
         let us = |d: Duration| d.as_secs_f64() * 1e6;
         let n = samples.len();
+        let mean = samples.iter().sum::<Duration>() / n as u32;
         println!(
-            "{label:<48} n={n:<6} p50={:>9.2}us p99={:>9.2}us max={:>9.2}us",
+            "{label:<48} n={n:<6} p50={:>9.2}us p99={:>9.2}us max={:>9.2}us mean={:>8.2}us",
             us(samples[n / 2]),
             us(samples[(n * 99 / 100).min(n - 1)]),
             us(samples[n - 1]),
+            us(mean),
         );
     }
 
@@ -411,14 +700,14 @@ mod bench {
             let ctx = ctx.clone();
             let (a, b) = (page_a.to_vec(), page_b.to_vec());
             tokio::spawn(async move {
-                let mut switches = 0u32;
+                let mut flips = 0u32;
                 while !stop.load(Ordering::Relaxed) {
-                    let page = if switches % 2 == 0 { &b } else { &a };
+                    let page = if flips.is_multiple_of(2) { &b } else { &a };
                     apply(&ctx, &switcher, page.clone()).await;
-                    switches += 1;
+                    flips += 1;
                     tokio::task::yield_now().await;
                 }
-                switches
+                flips
             })
         };
         let mut samples = vec![];
@@ -428,9 +717,9 @@ mod bench {
             samples.push(timed_emit(&ctx, &io, &watched, &mut full).await);
         }
         stop.store(true, Ordering::Relaxed);
-        let switches = switching.await.unwrap();
+        let flips = switching.await.unwrap();
         report("(f) emit while one client switches nonstop", samples);
-        println!("    (switcher made {switches} page switches)");
+        println!("    (switcher made {flips} page switches)");
         report_full(full);
         drop(others);
     }
