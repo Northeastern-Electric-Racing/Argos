@@ -29,7 +29,7 @@ export const SHUTDOWN_LOOP: readonly LoopNode[] = [
   { id: 'bms-latch', label: 'BMS latch', kind: 'latch', topic: VCU.BMS, board: 'VCU', car: { x: 49.5, y: 62.5 } },
   { id: 'imd-latch', label: 'IMD latch', kind: 'latch', topic: VCU.IMD, board: 'VCU', car: { x: 52.5, y: 62.5 } },
   { id: 'bspd-latch', label: 'BSPD latch', kind: 'latch', topic: VCU.BSPD, board: 'VCU', car: { x: 55.5, y: 62.5 } },
-  { id: 'mc-hvil', label: 'MC HVIL interlock', kind: 'interlock', topic: VCU.HV_C, board: 'VCU', car: { x: 74.5, y: 50 } },
+  { id: 'mc-hvil', label: 'MC HVIL interlock', kind: 'interlock', topic: VCU.HV_C, board: 'VCU', car: { x: 74.5, y: 55 } },
   { id: 'bots', label: 'BOTS', kind: 'switch', topic: VCU.BOTS, board: 'VCU', car: { x: 29, y: 68.75 } },
   { id: 'inertia', label: 'Inertia switch', kind: 'switch', topic: VCU.INERTIA_SW, board: 'VCU', car: { x: 33, y: 60 } },
   { id: 'cockpit-brb', label: 'Cockpit BRB', kind: 'kill', topic: VCU.CKPT, board: 'VCU', car: { x: 37, y: 51.25 } },
