@@ -28,7 +28,9 @@ describe('SHUTDOWN_LOOP', () => {
 
   it('measured nodes have a board', () => {
     for (const node of SHUTDOWN_LOOP) {
-      expect(node.topic === undefined).withContext(node.id).toBe(node.board === undefined);
+      expect(node.topic === undefined)
+        .withContext(node.id)
+        .toBe(node.board === undefined);
     }
   });
 

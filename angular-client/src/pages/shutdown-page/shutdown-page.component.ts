@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, isDevMode } from '@angular/core';
+import { CarViewComponent } from './components/car-view/car-view.component';
 import { LoopBannerComponent } from './components/loop-banner/loop-banner.component';
 import { LoopStripComponent } from './components/loop-strip/loop-strip.component';
 import { MockPanelComponent } from './components/mock-panel/mock-panel.component';
@@ -13,7 +14,7 @@ import { ShutdownLoopService } from './shutdown-loop.service';
   styleUrls: ['./shutdown-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ShutdownLoopService],
-  imports: [LoopBannerComponent, LoopStripComponent, MockPanelComponent]
+  imports: [LoopBannerComponent, CarViewComponent, LoopStripComponent, MockPanelComponent]
 })
 export default class ShutdownPageComponent {
   private loop = inject(ShutdownLoopService);

@@ -95,7 +95,7 @@ export function computeLoopStatus(
 
   const silentBoards: Board[] = [];
   for (const s of statuses) {
-    const board = s.node.board;
+    const { board } = s.node;
     if (s.state === 'no-data' && board && !silentBoards.includes(board)) silentBoards.push(board);
   }
 

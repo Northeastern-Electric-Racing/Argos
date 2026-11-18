@@ -1,0 +1,89 @@
+:host {
+  display: block;
+}
+.car {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+}
+.outline path,
+.outline rect,
+.outline circle {
+  fill: none;
+  stroke: var(--color-text-secondary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.outline .wheel {
+  stroke-width: 10;
+  stroke: var(--color-divider);
+}
+.outline .ground {
+  stroke: var(--color-divider);
+  stroke-width: 2;
+}
+.outline .zone {
+  stroke-dasharray: 6 5;
+  stroke-width: 1.5;
+}
+.zone-label {
+  fill: var(--color-text-secondary);
+  font-size: 15px;
+  text-anchor: middle;
+}
+.segment {
+  stroke: var(--sd-color);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.segment.state-downstream,
+.segment.state-no-data {
+  stroke-dasharray: 8 7;
+  stroke-width: 3;
+}
+.marker circle {
+  fill: var(--sd-color);
+  stroke: var(--color-background-page);
+  stroke-width: 3;
+}
+.marker.unmeasured circle {
+  fill: var(--color-background-page);
+  stroke: var(--sd-color);
+}
+.marker.state-downstream circle {
+  stroke-dasharray: 4 3;
+}
+.marker text {
+  fill: var(--color-background-page);
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.marker.unmeasured text {
+  fill: var(--sd-color);
+}
+.marker.state-suspect circle {
+  stroke: #fff;
+}
+.marker:focus-visible {
+  outline: none;
+}
+.marker:focus-visible circle {
+  stroke: #fff;
+  stroke-width: 4;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .marker.state-suspect circle {
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+}
+@keyframes pulse {
+  50% {
+    stroke-width: 7;
+  }
+}
+.zone-label.end {
+  text-anchor: end;
+}

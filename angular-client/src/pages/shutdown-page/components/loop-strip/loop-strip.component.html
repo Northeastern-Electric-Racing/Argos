@@ -1,5 +1,5 @@
 <ol class="strip" aria-label="Shutdown loop in series order">
-  @for (s of nodes(); track s.node.id; let last = $last) {
+  @for (s of nodes(); track s.node.id; let last = $last, i = $index) {
     <li
       class="item"
       [class]="display[s.state].cssClass"
@@ -9,7 +9,9 @@
       [attr.aria-label]="s.node.label + ': ' + display[s.state].label + (s.node.topic ? '' : ' (no sensor)')"
     >
       <span class="marker"><status-glyph [state]="s.state" /></span>
-      <span class="label">{{ s.node.label }}</span>
+      <span class="label"
+        ><span class="order">{{ i + 1 }}</span> {{ s.node.label }}</span
+      >
       <span class="state">{{ display[s.state].label }}</span>
       @if (s.node.placeholder) {
         <span class="tag">{{ placeholderTag }}</span>

@@ -1,0 +1,60 @@
+<svg
+  class="car"
+  viewBox="0 0 1000 400"
+  preserveAspectRatio="xMidYMid meet"
+  role="group"
+  aria-label="Car side view with shutdown nodes"
+>
+  <!-- Car outline (decorative) -->
+  <g class="outline" aria-hidden="true">
+    <line x1="0" y1="365" x2="1000" y2="365" class="ground" />
+    <rect x="10" y="318" width="120" height="8" rx="3" />
+    <path d="M25 318 L60 300 L250 262 L360 222 L470 212 L620 222 L760 228 L900 250 L915 300 L890 320 Z" />
+    <path d="M500 215 L520 110 L545 110 L560 215" />
+    <path d="M345 225 L362 185" />
+    <circle cx="400" cy="178" r="22" />
+    <rect x="880" y="95" width="90" height="12" rx="3" />
+    <path d="M925 107 L905 250" />
+    <circle cx="200" cy="305" r="55" class="wheel" />
+    <circle cx="200" cy="305" r="20" />
+    <circle cx="820" cy="305" r="58" class="wheel" />
+    <circle cx="820" cy="305" r="21" />
+    <rect x="470" y="228" width="150" height="42" rx="6" class="zone" />
+    <text x="462" y="254" class="zone-label end">E-Box</text>
+    <rect x="595" y="274" width="150" height="44" rx="6" class="zone" />
+    <text x="670" y="334" class="zone-label">Accumulator</text>
+    <text x="835" y="200" class="zone-label">TSIP</text>
+  </g>
+
+  <!-- Loop wiring in series order -->
+  <g aria-hidden="true">
+    @for (s of segments(); track s.key) {
+      <line
+        class="segment"
+        [class]="'segment ' + s.cssClass"
+        [attr.x1]="s.x1"
+        [attr.y1]="s.y1"
+        [attr.x2]="s.x2"
+        [attr.y2]="s.y2"
+      />
+    }
+  </g>
+
+  <!-- Nodes -->
+  @for (m of markers(); track m.id) {
+    <g
+      class="marker"
+      [class]="'marker ' + m.cssClass"
+      [class.unmeasured]="m.unmeasured"
+      [attr.data-node-id]="m.id"
+      [attr.transform]="'translate(' + m.x + ' ' + m.y + ')'"
+      [attr.aria-label]="m.ariaLabel"
+      role="img"
+      tabindex="0"
+    >
+      <title>{{ m.tooltip }}</title>
+      <circle r="14" />
+      <text dy="0.35em">{{ m.order }}</text>
+    </g>
+  }
+</svg>

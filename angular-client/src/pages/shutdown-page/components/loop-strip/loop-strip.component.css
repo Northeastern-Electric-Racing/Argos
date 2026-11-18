@@ -70,3 +70,7 @@
 .mismatch-tag {
   color: #ffd166;
 }
+.order {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}

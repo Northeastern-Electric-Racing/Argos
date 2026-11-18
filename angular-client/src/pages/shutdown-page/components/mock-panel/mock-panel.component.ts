@@ -4,7 +4,12 @@ import { Board, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { SHUTDOWN_TOPICS } from '../../shutdown-page.topics';
 
 const PUBLISH_EVERY_MS = 1000;
-const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && n.board) as { id: string; label: string; topic: string; board: Board }[];
+const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && n.board) as {
+  id: string;
+  label: string;
+  topic: string;
+  board: Board;
+}[];
 
 /**
  * Dev-mode only: publishes fake shutdown readings into Storage so the page can be checked without
@@ -79,7 +84,11 @@ export class MockPanelComponent implements OnDestroy {
       this.storage.addValue(n.topic, { values: [String(values[n.topic])], time: String(Date.now()), unit: '' });
     }
     if (!this.bmsSilent()) {
-      this.storage.addValue(SHUTDOWN_TOPICS.BMS.State, { values: [String(this.tsState())], time: String(Date.now()), unit: '' });
+      this.storage.addValue(SHUTDOWN_TOPICS.BMS.State, {
+        values: [String(this.tsState())],
+        time: String(Date.now()),
+        unit: ''
+      });
     }
   }
 }
