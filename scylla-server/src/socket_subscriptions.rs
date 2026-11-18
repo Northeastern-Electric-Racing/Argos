@@ -51,6 +51,42 @@ enum Delivery {
     Topics(FxHashSet<Room>),
 }
 
+/// Every registered socket's delivery, plus the room names they use.
+#[derive(Default)]
+struct Registry {
+    sockets: FxHashMap<Sid, Delivery>,
+    names: Names,
+}
+
+/// Topic names leaked once each, so a topic's room is a `Cow::Borrowed` and
+/// copying it is free: the adapter clones the room name on every join and
+/// leave, and every emit names its room. Capped in bytes so made-up topics
+/// from a client can't grow it without bound; past the cap, names stay owned
+/// (correct, just allocating).
+#[derive(Default)]
+struct Names {
+    names: FxHashSet<&'static str>,
+    bytes: usize,
+}
+
+/// About 35,000 names the length of `BMS/Segment12/Cell29/Voltage`.
+const NAMES_MAX_BYTES: usize = 1 << 20;
+
+impl Names {
+    fn room(&mut self, topic: String) -> Room {
+        if let Some(&name) = self.names.get(topic.as_str()) {
+            return Cow::Borrowed(name);
+        }
+        if self.bytes + topic.len() > NAMES_MAX_BYTES {
+            return Cow::Owned(topic);
+        }
+        self.bytes += topic.len();
+        let name: &'static str = Box::leak(topic.into_boxed_str());
+        self.names.insert(name);
+        Cow::Borrowed(name)
+    }
+}
+
 /// What an emit needs to know: which rooms have sockets.
 #[derive(Default)]
 struct Gate {
@@ -67,9 +103,9 @@ struct Gate {
 /// which emits through it.
 #[derive(Default)]
 pub struct Subscriptions {
-    /// Every registered socket's delivery. Held for each whole room change,
-    /// so the changes for one socket apply in order. Emits never take it.
-    sockets: Mutex<FxHashMap<Sid, Delivery>>,
+    /// Held for each whole room change, so the changes for one socket apply
+    /// in order. Emits never take it.
+    registry: Mutex<Registry>,
     /// Read by every emit to pick its rooms; written briefly to update counts.
     gate: RwLock<Gate>,
     /// Read by every emit across its broadcast; written across the room
@@ -87,8 +123,8 @@ impl Subscriptions {
     /// [`Self::unregister`].
     pub async fn register(self: &Arc<Self>, socket: &SocketRef) {
         {
-            let mut sockets = self.sockets.lock().await;
-            sockets.insert(socket.id, Delivery::Firehose);
+            let mut registry = self.registry.lock().await;
+            registry.sockets.insert(socket.id, Delivery::Firehose);
             self.gate_mut().firehose += 1;
             socket.join(FIREHOSE_ROOM);
         }
@@ -107,8 +143,8 @@ impl Subscriptions {
 
     /// Forgets a disconnected socket. socketioxide removes it from its rooms.
     pub async fn unregister(&self, sid: Sid) {
-        let mut sockets = self.sockets.lock().await;
-        let Some(delivery) = sockets.remove(&sid) else {
+        let mut registry = self.registry.lock().await;
+        let Some(delivery) = registry.sockets.remove(&sid) else {
             return;
         };
         let mut gate = self.gate_mut();
@@ -126,7 +162,7 @@ impl Subscriptions {
     /// only the rooms it is not in yet and leaving only the ones it no longer
     /// wants. Returns the number of topics it is now in.
     async fn set_subscriptions(&self, socket: &SocketRef, topics: Vec<String>) -> usize {
-        let wanted: FxHashSet<Room> = topics
+        let topics: Vec<String> = topics
             .into_iter()
             .filter(|topic| {
                 // exact topics only: wildcards would silently match nothing
@@ -139,15 +175,16 @@ impl Subscriptions {
                 }
                 ok
             })
-            .map(Cow::Owned)
             .collect();
-        let count = wanted.len();
 
-        let mut sockets = self.sockets.lock().await;
+        let mut registry = self.registry.lock().await;
+        let Registry { sockets, names } = &mut *registry;
         // None: disconnected while this event was in flight
         let Some(delivery) = sockets.get_mut(&socket.id) else {
             return 0;
         };
+        let wanted: FxHashSet<Room> = topics.into_iter().map(|topic| names.room(topic)).collect();
+        let count = wanted.len();
         match std::mem::replace(delivery, Delivery::Topics(FxHashSet::default())) {
             Delivery::Firehose => {
                 let join: Vec<Room> = wanted.iter().cloned().collect();
@@ -236,9 +273,9 @@ impl Subscriptions {
     }
 }
 
-/// Rooms per adapter call when a socket changes topics. The adapter
-/// write-locks all rooms for each call, stalling every emit until it returns;
-/// small batches, with a yield between them, let emits through in between.
+/// Rooms per adapter call when a socket changes topics. Each call holds the
+/// adapter's write lock, which stalls every emit, until it returns; small
+/// batches with a yield between them let emits through in between.
 const ROOM_BATCH: usize = 32;
 
 fn batches(mut rooms: Vec<Room>) -> impl Iterator<Item = Vec<Room>> {
@@ -421,10 +458,21 @@ mod tests {
             socket.disconnect().unwrap();
         }
         tokio::time::sleep(Duration::from_millis(20)).await;
-        assert!(srv.subs.sockets.lock().await.is_empty());
+        assert!(srv.subs.registry.lock().await.sockets.is_empty());
         let state = srv.subs.gate();
         assert_eq!(state.firehose, 0);
         assert!(state.readers.is_empty());
+    }
+
+    #[test]
+    fn names_past_the_cap_stay_owned() {
+        let mut names = Names {
+            bytes: NAMES_MAX_BYTES - 3,
+            ..Names::default()
+        };
+        assert!(matches!(names.room("abc".into()), Cow::Borrowed("abc")));
+        assert!(matches!(names.room("d".into()), Cow::Owned(_)));
+        assert!(matches!(names.room("abc".into()), Cow::Borrowed("abc")));
     }
 
     #[tokio::test]
