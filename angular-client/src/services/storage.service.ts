@@ -9,6 +9,8 @@ import { RunLaps, Track } from 'src/utils/types.utils';
 @Injectable({ providedIn: 'root' })
 export default class Storage {
   private storage: StorageMap;
+  /** Each topic's latest value, so a reader that subscribes late (an expanded tree row) shows it at once. */
+  private latestValues = new Map<string, DataValue>();
   private timerStorage: TimerStorageMap;
 
   private currentRunId = new BehaviorSubject<number | undefined>(undefined);
@@ -33,9 +35,13 @@ export default class Storage {
   };
 
   public addValue = (key: string, value: DataValue): void => {
+    this.latestValues.set(key, value);
     const subject = this.get(key);
     subject.next(value);
   };
+
+  /** The topic's latest value, or undefined before its first one. */
+  public latest = (key: string): DataValue | undefined => this.latestValues.get(key);
 
   public getCurrentRunId = () => {
     return this.currentRunId;
