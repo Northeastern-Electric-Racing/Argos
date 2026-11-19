@@ -23,6 +23,7 @@ pub mod zenoh_processor;
 pub mod metadata_structs;
 pub mod rule_structs;
 pub mod socket_handler;
+pub mod socket_rate_cap;
 pub mod track_handler;
 
 #[allow(non_snake_case)]
@@ -114,6 +115,10 @@ pub static STATIC_RATE_LIMIT_VALUE: std::sync::atomic::AtomicU16 =
 /// the percentage of messages to discard in send over the socket to the client
 pub static SOCKET_DISCARD_PERCENT: std::sync::atomic::AtomicU8 =
     std::sync::atomic::AtomicU8::new(0);
+
+/// the most live "data" messages per second sent to each socket client, 0 for no cap
+pub static SOCKET_CLIENT_MAX_RATE: std::sync::atomic::AtomicU32 =
+    std::sync::atomic::AtomicU32::new(0);
 
 /// Represents the client data
 /// This has the dual purposes of

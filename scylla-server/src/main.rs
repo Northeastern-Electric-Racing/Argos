@@ -19,7 +19,8 @@ use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
     ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
-    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable, argos_database, build_pool,
+    SOCKET_CLIENT_MAX_RATE, SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
+    argos_database, build_pool,
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -121,6 +122,10 @@ struct ScyllaArgs {
     )]
     socketio_discard_percent: u8,
 
+    /// The most live data messages per second sent to each socket client, regardless of topic (0 = no cap)
+    #[arg(long, env = "SCYLLA_SOCKET_CLIENT_MAX_RATE", default_value = "0")]
+    socket_client_max_rate: u32,
+
     /// The output directory to store the .cap and .mp4 files coming in from the odysseus daemon
     #[arg(
         short = 'o',
@@ -221,6 +226,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     RATE_LIMIT_MODE.store(cli.rate_limit_mode as u8, Ordering::Relaxed);
     STATIC_RATE_LIMIT_VALUE.store(cli.static_rate_limit_value, Ordering::Relaxed);
     SOCKET_DISCARD_PERCENT.store(cli.socketio_discard_percent, Ordering::Relaxed);
+    SOCKET_CLIENT_MAX_RATE.store(cli.socket_client_max_rate, Ordering::Relaxed);
 
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");

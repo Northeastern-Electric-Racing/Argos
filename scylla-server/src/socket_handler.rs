@@ -22,7 +22,8 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
-use crate::{ClientData, SOCKET_DISCARD_PERCENT};
+use crate::socket_rate_cap::{Admission, BURST_SECS, ClientRateCap};
+use crate::{ClientData, SOCKET_CLIENT_MAX_RATE, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
     cancel_token: CancellationToken,
@@ -31,6 +32,7 @@ pub async fn socket_handler(
 ) {
     info!(task = "socket_handler", "starting");
     let mut upload_counter = 0u8;
+    let mut data_sender = DataSender::from_config();
     let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
     let mut iter_count: u64 = 0;
     let mut msgs_since_hb: u64 = 0;
@@ -43,7 +45,7 @@ pub async fn socket_handler(
             },
             res = data_channel.recv() => {
                 match res {
-                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Ok(data) => data_sender.send(&data, &mut upload_counter, &io).await,
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
                     }
@@ -59,6 +61,7 @@ pub async fn socket_handler(
                     iter = iter_count,
                     data_channel_len = data_channel.len(),
                     msgs_in_window = msgs_since_hb,
+                    capped_drops = data_sender.take_capped_drops(),
                     "heartbeat"
                 );
                 msgs_since_hb = 0;
@@ -114,6 +117,7 @@ pub async fn socket_handler_with_metadata(
 ) {
     info!(task = "socket_handler_with_metadata", "starting");
     let mut upload_counter = 0u8;
+    let mut data_sender = DataSender::from_config();
 
     // BEGIN METADATA
 
@@ -201,12 +205,7 @@ pub async fn socket_handler_with_metadata(
                         // let sample = msg_cnt % 500 == 0;
                         // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
                         // let emit_start = sample.then(tokio::time::Instant::now);
-                        send_socket_msg(
-                            &data,
-                            &mut upload_counter,
-                            &io,
-                            DATA_SOCKET_KEY,
-                        ).await;
+                        data_sender.send(&data, &mut upload_counter, &io).await;
                         // if let (Some(age), Some(start)) = (age_ms, emit_start) {
                         //     debug!(
                         //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
@@ -233,6 +232,7 @@ pub async fn socket_handler_with_metadata(
                     iter = iter_count,
                     data_channel_len = data_channel.len(),
                     msgs_in_window = msgs_since_hb,
+                    capped_drops = data_sender.take_capped_drops(),
                     "heartbeat"
                 );
                 msgs_since_hb = 0;
@@ -452,6 +452,94 @@ fn handle_socket_msg(
     }
 }
 
+/// Sends live "data" messages, applying `SOCKET_DISCARD_PERCENT` and then, when
+/// `SOCKET_CLIENT_MAX_RATE` is set, the per-client message rate cap (spike #990).
+pub(crate) struct DataSender {
+    cap: Option<ClientRateCap<Sid>>,
+    capped_drops: u64,
+}
+
+impl DataSender {
+    /// Reads the cap from `SOCKET_CLIENT_MAX_RATE` (0 means no cap).
+    pub(crate) fn from_config() -> Self {
+        Self::new(SOCKET_CLIENT_MAX_RATE.load(Ordering::Relaxed))
+    }
+
+    /// A sender capping each client at `rate` messages per second, or not at all for 0.
+    pub(crate) fn new(rate: u32) -> Self {
+        if rate > 0 {
+            info!("Capping live data at {} msgs/s per client", rate);
+        }
+        Self {
+            cap: (rate > 0).then(|| ClientRateCap::new(rate, BURST_SECS)),
+            capped_drops: 0,
+        }
+    }
+
+    /// Per-client deliveries the cap dropped since the last call.
+    pub(crate) fn take_capped_drops(&mut self) -> u64 {
+        std::mem::take(&mut self.capped_drops)
+    }
+
+    /// Sends one live data message to the clients the cap admits: one broadcast when
+    /// all are admitted (the uncapped cost), one emit per admitted socket otherwise.
+    pub(crate) async fn send(&mut self, data: &ClientData, upload_counter: &mut u8, io: &SocketIo) {
+        let Some(cap) = self.cap.as_mut() else {
+            send_socket_msg(data, upload_counter, io, DATA_SOCKET_KEY).await;
+            return;
+        };
+        if !keep_after_discard(upload_counter) {
+            trace!("Discarding message!");
+            return;
+        }
+        let sockets = io.sockets();
+        let sids: Vec<Sid> = sockets.iter().map(|s| s.id).collect();
+        let payload = serde_json::to_string(data).expect("Could not serialize ClientData");
+        match cap.admit(&sids, std::time::Instant::now()) {
+            Admission::All => broadcast(io, DATA_SOCKET_KEY, &payload).await,
+            Admission::None => self.capped_drops += sids.len() as u64,
+            Admission::Some(allowed) => {
+                self.capped_drops += (sids.len() - allowed.len()) as u64;
+                for socket in sockets.iter().filter(|s| allowed.contains(&s.id)) {
+                    if let Err(e) = socket.emit(DATA_SOCKET_KEY, &payload) {
+                        trace!("Socket: Transmit error: {:?}", e);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Advances the rolling `upload_counter` and says whether `SOCKET_DISCARD_PERCENT` keeps
+/// this message.
+///
+/// `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
+/// 100 drops everything. Cycle the counter through 0..100 and keep the message only
+/// when its position is at or above the discard threshold, e.g. a value of 25 drops
+/// positions 0..24 (~25%) and keeps positions 25..99 (~75%).
+fn keep_after_discard(upload_counter: &mut u8) -> bool {
+    *upload_counter = upload_counter.wrapping_add(1) % 100;
+    *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed)
+}
+
+/// Broadcasts an already-serialized payload to every socket, logging any error.
+async fn broadcast(io: &SocketIo, socket_key: &'static str, payload: &String) {
+    match io.emit(socket_key, payload).await {
+        Ok(()) => (),
+        Err(err) => match err {
+            socketioxide::BroadcastError::Socket(e) => {
+                trace!("Socket: Transmit error: {:?}", e);
+            }
+            socketioxide::BroadcastError::Serialize(_) => {
+                warn!("Socket: Serialize error: {}", err);
+            }
+            socketioxide::BroadcastError::Adapter(_) => {
+                warn!("Socket: Adapter error: {}", err);
+            }
+        },
+    }
+}
+
 /// Sends a message to the socket, printing and IGNORING any error that may occur
 /// * `client_data` - The client data to send over the broadcast
 /// * `upload_counter` - A rolling 0..100 position used to decide whether to keep this message
@@ -465,32 +553,9 @@ async fn send_socket_msg<T>(
 ) where
     T: Serialize,
 {
-    // `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
-    // 100 drops everything. Cycle the counter through 0..100 and keep the message only
-    // when its position is at or above the discard threshold, e.g. a value of 25 drops
-    // positions 0..24 (~25%) and keeps positions 25..99 (~75%).
-    *upload_counter = upload_counter.wrapping_add(1) % 100;
-    if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
-        match io
-            .emit(
-                socket_key,
-                &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
-            )
-            .await
-        {
-            Ok(()) => (),
-            Err(err) => match err {
-                socketioxide::BroadcastError::Socket(e) => {
-                    trace!("Socket: Transmit error: {:?}", e);
-                }
-                socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err);
-                }
-                socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err);
-                }
-            },
-        }
+    if keep_after_discard(upload_counter) {
+        let payload = serde_json::to_string(client_data).expect("Could not serialize ClientData");
+        broadcast(io, socket_key, &payload).await;
     } else {
         trace!("Discarding message!");
     }

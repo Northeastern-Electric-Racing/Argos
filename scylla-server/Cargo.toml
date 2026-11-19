@@ -52,6 +52,10 @@ tikv-jemallocator = "0.7"
 [features]
 top = ["dep:console-subscriber"]
 
+[dev-dependencies]
+# __test_harness: dummy sockets for measuring emit cost without a network (spike #990)
+socketioxide = { version = "0.18.3", features = ["tracing", "__test_harness"] }
+
 [build-dependencies]
 protobuf-codegen = "3.7.1"
 
