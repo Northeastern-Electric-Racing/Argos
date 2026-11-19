@@ -1154,3 +1154,78 @@ async fn test_handle_msg_failing_rule_does_not_block_others_on_topic()
 
     Ok(())
 }
+
+fn rule_with_expr(id: &str, expr: &str) -> Rule {
+    Rule::new(
+        RuleId(id.to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(0),
+        expr.to_owned(),
+    )
+}
+
+#[tokio::test]
+async fn test_add_rule_rejects_invalid_expressions() {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    for expr in [
+        "a >",        // does not parse
+        "",           // empty
+        "speed > 10", // values are named a-z, not by name
+        "a + 1",      // not a boolean
+        "a = 5",      // assignment
+    ] {
+        let result = rule_manager
+            .add_rule(client.clone(), rule_with_expr("rule", expr))
+            .await;
+        assert!(
+            matches!(result, Err(RuleManagerError::InvalidExpression(_))),
+            "expected {expr:?} to be rejected"
+        );
+    }
+    assert!(rule_manager.get_all_rules().await.is_empty());
+}
+
+#[tokio::test]
+async fn test_add_rule_accepts_valid_expressions() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    for (i, expr) in ["a > 10", "a > 10 && b < 5", "(a - b) >= 2.5 || z == 0"]
+        .iter()
+        .enumerate()
+    {
+        rule_manager
+            .add_rule(client.clone(), rule_with_expr(&format!("rule_{i}"), expr))
+            .await?;
+    }
+    assert_eq!(rule_manager.get_all_rules().await.len(), 3);
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_edit_rule_rejects_invalid_expression_and_keeps_old() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+    rule_manager
+        .add_rule(client, rule_with_expr("rule", "a > 10"))
+        .await?;
+
+    let result = rule_manager
+        .edit_rule(
+            RuleId("rule".to_string()),
+            "a >".to_owned(),
+            core::time::Duration::from_secs(0),
+        )
+        .await;
+    assert!(matches!(
+        result,
+        Err(RuleManagerError::InvalidExpression(_))
+    ));
+
+    let rules = rule_manager.get_all_rules().await;
+    assert_eq!(rules.len(), 1);
+    assert_eq!(rules[0].expr, "a > 10");
+    Ok(())
+}

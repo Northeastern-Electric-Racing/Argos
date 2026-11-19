@@ -73,6 +73,7 @@ impl IntoResponse for ScyllaError {
                 RuleManagerError::NoSuchClient => {
                     (StatusCode::NOT_FOUND, "No client found".to_owned())
                 }
+                RuleManagerError::InvalidExpression(reason) => (StatusCode::BAD_REQUEST, reason),
                 RuleManagerError::RuleFailure => {
                     (StatusCode::INTERNAL_SERVER_ERROR, "Rule failure".to_owned())
                 }
