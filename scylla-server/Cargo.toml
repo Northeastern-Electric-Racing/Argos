@@ -75,3 +75,7 @@ path = "src/main.rs"
 name = "integration"
 path = "tests/integration/main.rs"
 test = false
+
+[dev-dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+rust_socketio = { version = "0.6", features = ["async"] }

@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use axum::{
-    Extension, Json, debug_handler,
+    Extension, Json, Router, debug_handler,
     extract::{FromRequestParts, Path},
     http::{StatusCode, request::Parts},
+    routing::{get, post, put},
 };
 use serde::Deserialize;
 use serde_with::DurationSeconds;
@@ -17,6 +18,28 @@ use crate::{
 };
 
 const CLIENT_ID_HEADER: &str = "x-client-id";
+
+/// The Rule routes, backed by `rules_manager`. They need no database, so tests can
+/// mount them on their own.
+pub fn rule_router<S>(rules_manager: Arc<RuleManager>) -> Router<S>
+where
+    S: Clone + Send + Sync + 'static,
+{
+    Router::new()
+        // client id arrives in the x-client-id header, never the path
+        .route("/rules", get(get_all_rules))
+        .route(
+            "/rules/subscription-status",
+            get(get_all_rules_with_client_info),
+        )
+        .route("/rules/subscribed", get(get_client_subscribed_rules))
+        .route("/rules/add", put(add_rule))
+        .route("/rules/delete/{rule_id}", post(delete_rule))
+        .route("/rules/edit/{rule_id}", put(edit_rule))
+        .route("/rules/subscribe", post(subscribe_rules))
+        .route("/rules/unsubscribe", post(unsubscribe_rules))
+        .layer(Extension(rules_manager))
+}
 
 /// client id comes from the x-client-id header, keeping it out of conflict-prone route paths
 /// extractor pattern: <https://docs.rs/axum/latest/axum/extract/index.html#defining-custom-extractors>
