@@ -408,11 +408,17 @@ impl RuleManager {
                 .map(|rule| rule.tick(&data.values))
             {
                 Some(Some(val)) => val,
-                // Rule tick failed
-                Some(None) => return Err(RuleManagerError::RuleFailure),
+                // Skip only this rule, so one bad rule can't stop the others on the topic
+                Some(None) => {
+                    warn!(
+                        "Rule {} failed to evaluate on {}, skipping it",
+                        rule_id, data.name
+                    );
+                    continue;
+                }
                 None => {
-                    warn!("Could not find rule in rules map: {}", rule_id);
-                    return Err(RuleManagerError::NoMatchingRule);
+                    warn!("Could not find rule in rules map: {}, skipping it", rule_id);
+                    continue;
                 }
             };
 

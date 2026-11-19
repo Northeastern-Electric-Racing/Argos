@@ -1110,3 +1110,47 @@ async fn test_subscribe_rules_concurrent() -> Result<(), RuleManagerError> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_handle_msg_failing_rule_does_not_block_others_on_topic()
+-> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+    let topic = "test/topic".to_string();
+
+    // `b` is undefined for a single-value topic, so these fail to evaluate on every message.
+    // Several of them, so the good rule is not the first one evaluated.
+    for i in 0..5 {
+        let broken = Rule::new(
+            RuleId(format!("broken_{i}")),
+            Topic(topic.clone()),
+            core::time::Duration::from_secs(0),
+            format!("b > {i}"),
+        );
+        rule_manager.add_rule(client.clone(), broken).await?;
+    }
+    let good = Rule::new(
+        RuleId("good".to_string()),
+        Topic(topic.clone()),
+        core::time::Duration::from_secs(0),
+        "a > 10".to_owned(),
+    );
+    rule_manager.add_rule(client.clone(), good).await?;
+
+    let client_data = ClientData {
+        run_id: 1,
+        name: topic,
+        unit: "test_unit".to_string(),
+        values: vec![15.0],
+        timestamp: Utc::now(),
+    };
+
+    let notifications = rule_manager
+        .handle_msg(&client_data)
+        .await?
+        .expect("the good rule should still notify");
+    assert_eq!(notifications.len(), 1);
+    assert_eq!(notifications[0].1.id.0, "good");
+
+    Ok(())
+}
