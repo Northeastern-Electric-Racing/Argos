@@ -19,7 +19,8 @@ use dotenvy::dotenv;
 use rumqttc::v5::AsyncClient;
 use scylla_server::{
     ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
-    SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable, argos_database, build_pool,
+    SOCKET_CONFLATE_WINDOW_MS, SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable,
+    argos_database, build_pool,
     controllers::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
@@ -121,6 +122,17 @@ struct ScyllaArgs {
     )]
     socketio_discard_percent: u8,
 
+    /// The window, in ms, over which the socket sends clients only the latest `data` value of
+    /// each topic, once per window, instead of every value (0 sends every value). Faults, timers,
+    /// rules and the database still see every value. A value waits at most one window.
+    #[arg(
+        short = 'c',
+        long,
+        env = "SCYLLA_SOCKET_CONFLATE_WINDOW_MS",
+        default_value = "0"
+    )]
+    socket_conflate_window_ms: u16,
+
     /// The output directory to store the .cap and .mp4 files coming in from the odysseus daemon
     #[arg(
         short = 'o',
@@ -221,6 +233,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     RATE_LIMIT_MODE.store(cli.rate_limit_mode as u8, Ordering::Relaxed);
     STATIC_RATE_LIMIT_VALUE.store(cli.static_rate_limit_value, Ordering::Relaxed);
     SOCKET_DISCARD_PERCENT.store(cli.socketio_discard_percent, Ordering::Relaxed);
+    SOCKET_CONFLATE_WINDOW_MS.store(cli.socket_conflate_window_ms, Ordering::Relaxed);
 
     dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be specified");

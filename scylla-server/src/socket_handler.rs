@@ -16,13 +16,14 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, trace, warn};
 
 use crate::argos_inserter::ArgosInserter;
+use crate::conflator::Conflator;
 use crate::metadata_structs::{
     DATA_SOCKET_KEY, FAULT_BINS, FAULT_MIN_REG_GAP, FAULT_SOCKET_KEY, FaultData,
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
-use crate::{ClientData, SOCKET_DISCARD_PERCENT};
+use crate::{ClientData, SOCKET_CONFLATE_WINDOW_MS, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
     cancel_token: CancellationToken,
@@ -34,6 +35,7 @@ pub async fn socket_handler(
     let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
     let mut iter_count: u64 = 0;
     let mut msgs_since_hb: u64 = 0;
+    let (mut conflator, mut conflate_interval) = conflation();
     loop {
         iter_count = iter_count.wrapping_add(1);
         tokio::select! {
@@ -41,9 +43,17 @@ pub async fn socket_handler(
                 debug!("Shutting down socket handler!");
                 break;
             },
+            _ = conflate_interval.tick(), if conflator.is_some() => {
+                if let Some(conflator) = conflator.as_mut() {
+                    flush_conflated(conflator, &mut upload_counter, &io).await;
+                }
+            }
             res = data_channel.recv() => {
                 match res {
-                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Ok(data) => match conflator.as_mut() {
+                        Some(conflator) => conflator.push(data),
+                        None => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    },
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
                     }
@@ -54,11 +64,14 @@ pub async fn socket_handler(
                 }
             }
             _ = heartbeat.tick() => {
+                let (conflate_in, conflate_out) = conflator.as_mut().map_or((0, 0), Conflator::take_counts);
                 info!(
                     task = "socket_handler",
                     iter = iter_count,
                     data_channel_len = data_channel.len(),
                     msgs_in_window = msgs_since_hb,
+                    conflate_in,
+                    conflate_out,
                     "heartbeat"
                 );
                 msgs_since_hb = 0;
@@ -96,6 +109,29 @@ impl<A: Adapter> FromConnectParts<A> for SocketClientId {
             .unwrap_or_default();
 
         Ok(SocketClientId(client_id.to_string()))
+    }
+}
+
+/// The conflator for the `data` event and its flush interval, from [`SOCKET_CONFLATE_WINDOW_MS`].
+/// With no window there is no conflator, and the interval is never polled.
+fn conflation() -> (Option<Conflator>, tokio::time::Interval) {
+    let window_ms = SOCKET_CONFLATE_WINDOW_MS.load(Ordering::Relaxed);
+    let window = Duration::from_millis(u64::from(window_ms.max(1)));
+    let mut interval = tokio::time::interval(window);
+    // A slow flush should not be followed by a burst of near-empty ones.
+    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    if window_ms == 0 {
+        (None, interval)
+    } else {
+        info!("Conflating the data event: latest value per topic every {window_ms} ms");
+        (Some(Conflator::new()), interval)
+    }
+}
+
+/// Emits the latest pending value of each topic on the `data` event.
+async fn flush_conflated(conflator: &mut Conflator, upload_counter: &mut u8, io: &SocketIo) {
+    for data in conflator.drain() {
+        send_socket_msg(&data, upload_counter, io, DATA_SOCKET_KEY).await;
     }
 }
 
@@ -183,6 +219,7 @@ pub async fn socket_handler_with_metadata(
     let mut heartbeat = tokio::time::interval(Duration::from_secs(30));
     let mut iter_count: u64 = 0;
     let mut msgs_since_hb: u64 = 0;
+    let (mut conflator, mut conflate_interval) = conflation();
 
     loop {
         iter_count = iter_count.wrapping_add(1);
@@ -201,12 +238,14 @@ pub async fn socket_handler_with_metadata(
                         // let sample = msg_cnt % 500 == 0;
                         // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
                         // let emit_start = sample.then(tokio::time::Instant::now);
-                        send_socket_msg(
-                            &data,
-                            &mut upload_counter,
-                            &io,
-                            DATA_SOCKET_KEY,
-                        ).await;
+                        if conflator.is_none() {
+                            send_socket_msg(
+                                &data,
+                                &mut upload_counter,
+                                &io,
+                                DATA_SOCKET_KEY,
+                            ).await;
+                        }
                         // if let (Some(age), Some(start)) = (age_ms, emit_start) {
                         //     debug!(
                         //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
@@ -217,6 +256,10 @@ pub async fn socket_handler_with_metadata(
                         // }
                         handle_socket_msg(&data, &fault_regex_mpu, &fault_regex_bms, &fault_regex_charger, &mut timer_map, &mut fault_ringbuffer);
                         handle_rule_processing(&data, &rules_manager, &client_socket_map, &io).await;
+                        // Faults, timers and rules above saw this value; only the `data` event waits.
+                        if let Some(conflator) = conflator.as_mut() {
+                            conflator.push(data);
+                        }
                     }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
@@ -227,12 +270,20 @@ pub async fn socket_handler_with_metadata(
                     }
                 }
             }
+            _ = conflate_interval.tick(), if conflator.is_some() => {
+                if let Some(conflator) = conflator.as_mut() {
+                    flush_conflated(conflator, &mut upload_counter, &io).await;
+                }
+            }
             _ = heartbeat.tick() => {
+                let (conflate_in, conflate_out) = conflator.as_mut().map_or((0, 0), Conflator::take_counts);
                 info!(
                     task = "socket_handler_with_metadata",
                     iter = iter_count,
                     data_channel_len = data_channel.len(),
                     msgs_in_window = msgs_since_hb,
+                    conflate_in,
+                    conflate_out,
                     "heartbeat"
                 );
                 msgs_since_hb = 0;

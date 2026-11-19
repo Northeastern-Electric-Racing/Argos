@@ -16,6 +16,7 @@ pub mod lap_timing;
 pub mod services;
 
 pub mod argos_inserter;
+pub mod conflator;
 pub mod db_handler;
 pub mod mqtt_processor;
 pub mod zenoh_processor;
@@ -114,6 +115,10 @@ pub static STATIC_RATE_LIMIT_VALUE: std::sync::atomic::AtomicU16 =
 /// the percentage of messages to discard in send over the socket to the client
 pub static SOCKET_DISCARD_PERCENT: std::sync::atomic::AtomicU8 =
     std::sync::atomic::AtomicU8::new(0);
+
+/// the window, in ms, over which the socket sends only each topic's latest `data` value (0 sends every value)
+pub static SOCKET_CONFLATE_WINDOW_MS: std::sync::atomic::AtomicU16 =
+    std::sync::atomic::AtomicU16::new(0);
 
 /// Represents the client data
 /// This has the dual purposes of
