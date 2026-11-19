@@ -60,7 +60,8 @@
         node.label
       }}</span>
       @if (!node.children?.length) {
-        <span class="shrink-0 font-sans text-base text-fg">{{ node.data.displayValue() }}</span>
+        <!-- Reads its topic only while the row is on screen (#988). -->
+        <topic-value class="shrink-0 font-sans text-base text-fg" [topic]="node.data.dataType.name" />
       }
     </li>
 

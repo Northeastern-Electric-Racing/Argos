@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, defer, startWith } from 'rxjs';
 import { DataValue, StorageMap, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 import { RunLaps, Track } from 'src/utils/types.utils';
 
@@ -9,6 +9,8 @@ import { RunLaps, Track } from 'src/utils/types.utils';
 @Injectable({ providedIn: 'root' })
 export default class Storage {
   private storage: StorageMap;
+  /** The last value each topic received, so a late reader (see watch) need not wait for the next one. */
+  private latest = new Map<string, DataValue>();
   private timerStorage: TimerStorageMap;
 
   private currentRunId = new BehaviorSubject<number | undefined>(undefined);
@@ -32,7 +34,18 @@ export default class Storage {
     return subject;
   };
 
+  /**
+   * Like get, but starts with the topic's latest value when it has one, so a reader that subscribes late
+   * (such as a sidebar row scrolled into view) shows a value at once rather than waiting for the next message.
+   */
+  public watch = (key: string): Observable<DataValue> =>
+    defer(() => {
+      const last = this.latest.get(key);
+      return last ? this.get(key).pipe(startWith(last)) : this.get(key);
+    });
+
   public addValue = (key: string, value: DataValue): void => {
+    this.latest.set(key, value);
     const subject = this.get(key);
     subject.next(value);
   };

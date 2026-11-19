@@ -1,9 +1,6 @@
-import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNode, TreeNodeData } from './tree.utils';
 import { DataType, Node } from './types.utils';
-
-const EMPTY_DISPLAY = signal('');
 
 const leaf = (name: string, unit = ''): TreeNode<TreeNodeData> => {
   const dataType: DataType = { name, unit };
@@ -16,8 +13,7 @@ const leaf = (name: string, unit = ''): TreeNode<TreeNodeData> => {
       name: name.split('/').pop()!,
       topicName: name + '/',
       dataType,
-      nodes: new BehaviorSubject<Node[]>([]),
-      displayValue: EMPTY_DISPLAY
+      nodes: new BehaviorSubject<Node[]>([])
     }
   };
 };
@@ -31,8 +27,7 @@ const branch = (name: string, children: TreeNode<TreeNodeData>[]): TreeNode<Tree
     name,
     topicName: name + '/',
     dataType: { name, unit: '' },
-    nodes: new BehaviorSubject<Node[]>([]),
-    displayValue: EMPTY_DISPLAY
+    nodes: new BehaviorSubject<Node[]>([])
   }
 });
 
@@ -82,11 +77,11 @@ describe('flattenTreeNodes', () => {
     expect(flat[0].label).toBe('BMS...1/Burning/0');
   });
 
-  it('preserves the leaf data so displayValue stays wired', () => {
+  it('preserves the leaf data so a flat leaf reads its original topic', () => {
     const original = leaf('BMS/Pack/Voltage', 'V');
     const flat = flattenTreeNodes([branch('BMS', [original])]);
     expect(flat[0].data?.dataType).toBe(original.data!.dataType);
-    expect(flat[0].data?.displayValue).toBe(original.data!.displayValue);
+    expect(flat[0].data).toBe(original.data);
     expect(flat[0].key).toBe(original.key);
   });
 

@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { UiInputDirective } from 'src/ui/field/field.directive';
 import { TreeNode, TreeNodeData } from 'src/utils/tree.utils';
+import { TopicValueComponent } from './topic-value/topic-value.component';
 
 type TopicNode = TreeNode<TreeNodeData>;
 
@@ -44,7 +45,7 @@ function collectLeafKeys(nodes: TopicNode[], into: Set<string>): Set<string> {
   // Eager, not OnPush: Clear Topics collapses the tree by setting node.expanded on the nodes it already has, which
   // changes none of our inputs, so only the parent's check re-reads [(expanded)] (see the sidebar's Clear Topics spec).
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [Tree, TreeItem, TreeItemGroup, NgTemplateOutlet, UiIconComponent, UiInputDirective]
+  imports: [Tree, TreeItem, TreeItemGroup, NgTemplateOutlet, UiIconComponent, UiInputDirective, TopicValueComponent]
 })
 export class TopicTreeComponent {
   nodes = input<TopicNode[]>([]);
