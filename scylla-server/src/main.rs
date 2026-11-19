@@ -24,10 +24,7 @@ use scylla_server::{
         self, OutputDirectory, VideoSuffix,
         car_command_controller::{self},
         data_type_controller, file_insertion_controller,
-        rule_controller::{
-            add_rule, delete_rule, edit_rule, get_all_rules, get_all_rules_with_client_info,
-            get_client_subscribed_rules, subscribe_rules, unsubscribe_rules,
-        },
+        rule_controller::rule_router,
         run_controller, scylla_config_controller, trace_controller, track_controller,
         video_streamer_controller::{self},
     },
@@ -495,22 +492,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .layer(Extension(OutputDirectory(cli.output_directory)))
                 .layer(DefaultBodyLimit::disable()),
         )
-        .merge(
-            Router::new()
-                // client id arrives in the x-client-id header, never the path
-                .route("/rules", get(get_all_rules))
-                .route(
-                    "/rules/subscription-status",
-                    get(get_all_rules_with_client_info),
-                )
-                .route("/rules/subscribed", get(get_client_subscribed_rules))
-                .route("/rules/add", put(add_rule))
-                .route("/rules/delete/{rule_id}", post(delete_rule))
-                .route("/rules/edit/{rule_id}", put(edit_rule))
-                .route("/rules/subscribe", post(subscribe_rules))
-                .route("/rules/unsubscribe", post(unsubscribe_rules))
-                .layer(Extension(rules_manager)),
-        )
+        .merge(rule_router(rules_manager))
         // for CORS handling
         .layer(
             CorsLayer::new()
