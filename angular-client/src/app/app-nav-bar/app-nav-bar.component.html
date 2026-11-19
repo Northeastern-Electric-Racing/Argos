@@ -1,4 +1,4 @@
-@if (isMobile || this.sidebarVisible()) {
+@if (isMobile() || this.sidebarVisible()) {
   <ui-drawer [(visible)]="sidebarVisible" position="left" width="20rem" ariaLabel="Navigation">
     <typography uiDrawerHeader textClass="w-full text-center" variant="large-header" content="Argos" />
     @for (navItem of allNavItems; track navItem) {
@@ -26,7 +26,7 @@
         <sidebar-chip
           icon="{{ navItem.icon }}"
           value="{{ navItem.label }}"
-          [small]="this.isWindowSmall"
+          [small]="this.isWindowSmall()"
           [active]="this.isSelected(navItem)"
           (click)="navItem.onClick()"
         >
@@ -36,9 +36,9 @@
 
     <hstack>
       <button type="button" uiButton class="min-w-[130px]" (click)="startNewRun()">Start New Run</button>
-      <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall" />
+      <current-run-display [navBarStyle]="true" [small]="this.isWindowSmall()" />
       <typography
-        [variant]="this.isWindowSmall ? 'sidebar-label' : 'large-header'"
+        [variant]="this.isWindowSmall() ? 'sidebar-label' : 'large-header'"
         content="{{ time$ | async | date: 'HH:mm:ss' }}"
         textClass="text-readout"
       />

@@ -20,14 +20,4 @@ describe('BmsHeaderComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-
-  it('should call onResize and update windowSize on window resize', () => {
-    vi.spyOn(component, 'onResize');
-    component.windowSize = -1;
-
-    window.dispatchEvent(new Event('resize'));
-
-    expect(component.onResize).toHaveBeenCalled();
-    expect(component.windowSize).toBe(window.innerWidth);
-  });
 });

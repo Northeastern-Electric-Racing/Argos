@@ -29,12 +29,12 @@ describe('global stylesheets', () => {
   });
 
   // Third-party CSS sits in the vendor layer, so utilities beat it; only the CDK overlay's runtime CSS is unlayered.
-  it('layers the installed Mapbox GL stylesheet in vendor, as a bundle the map page links', () => {
-    expect(read('styles/mapbox.css')).toMatch(/^@import 'mapbox-gl\/dist\/mapbox-gl\.css' layer\(vendor\);$/m);
+  it('layers the installed MapLibre GL stylesheet in vendor, as a bundle the map page links', () => {
+    expect(read('styles/maplibre.css')).toMatch(/^@import 'maplibre-gl\/dist\/maplibre-gl\.css' layer\(vendor\);$/m);
     const angular = JSON.parse(readFileSync(resolve(process.cwd(), 'angular.json'), 'utf8'));
     const { styles } = angular.projects['angular-client'].architect.build.options;
-    expect(styles).toEqual(['src/styles.css', { input: 'src/styles/mapbox.css', bundleName: 'mapbox', inject: false }]);
-    expect(read('index.html')).not.toMatch(/mapbox/i);
+    expect(styles).toEqual(['src/styles.css', { input: 'src/styles/maplibre.css', bundleName: 'maplibre', inject: false }]);
+    expect(read('index.html')).not.toMatch(/maplibre/i);
   });
 
   it('keeps only the legacy aliases something still reads', () => {
@@ -54,7 +54,10 @@ describe('global stylesheets', () => {
       [Theme.battteryHigh, 'battery-high'],
       [Theme.infoBackground, 'panel'],
       [Theme.page, 'page'],
-      [Theme.secondaryBorder, 'secondary-border']
+      [Theme.secondaryBorder, 'secondary-border'],
+      [Theme.fg, 'fg'],
+      [Theme.fgMuted, 'fg-muted'],
+      [Theme.accent, 'accent']
     ];
     for (const [value, name] of pairs) expect([name, value.toLowerCase()]).toEqual([name, token(name)?.toLowerCase()]);
   });

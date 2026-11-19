@@ -1,6 +1,8 @@
 /* Prebuild script */
 fn main() {
     println!("cargo:rerun-if-changed=src/proto");
+    // embed_migrations! does not notice a new migration directory, and argos migrations are added as new ones
+    println!("cargo:rerun-if-changed=argos_migrations");
 
     protobuf_codegen::Codegen::new()
         .pure()

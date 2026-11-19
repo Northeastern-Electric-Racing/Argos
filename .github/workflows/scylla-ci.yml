@@ -53,9 +53,9 @@ jobs:
           cargo clippy --test integration --locked
       - name: Fmt
         run: cargo fmt --check
-      - name: Start DB # starts in the background; the integration tests wait for it to accept connections
+      - name: Start DBs # start in the background; the integration tests wait for them to accept connections
         working-directory: compose
-        run: docker compose up -d odyssey-db
+        run: docker compose up -d odyssey-db argos-db
       - name: Build
         run: cargo build --verbose --locked
       - name: Unit tests
@@ -63,6 +63,7 @@ jobs:
       - name: Integration tests # share one database, so run one at a time
         env:
           DATABASE_URL: postgresql://postgres:password@127.0.0.1:5432/postgres
+          ARGOS_DATABASE_URL: postgresql://postgres:password@127.0.0.1:5433/postgres
         run: cargo test --locked --test integration -- --test-threads=1
       - name: Cleanup
         working-directory: compose
