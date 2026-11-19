@@ -19,7 +19,6 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
 @Component({
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
-  styleUrl: './bms-at-a-glance.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     InfoPanelComponent,
@@ -29,6 +28,7 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
     BatteryLevelIndicatorComponent
   ],
   host: {
+    class: 'block',
     '(window:resize)': 'onResize()'
   }
 })

@@ -1,0 +1,7 @@
+/*
+ * Mapbox GL's own stylesheet, from the installed package, in the vendor layer: above the base reset (so
+ * preflight doesn't strip its controls' margins and borders) and below components and utilities, so a utility
+ * on the map container wins. It is 36 kB, so it stays out of the global stylesheet: angular.json builds it as
+ * the non-injected `mapbox` bundle, and the map page links it when it opens (pages/map/mapbox-styles.ts).
+ */
+@import 'mapbox-gl/dist/mapbox-gl.css' layer(vendor);

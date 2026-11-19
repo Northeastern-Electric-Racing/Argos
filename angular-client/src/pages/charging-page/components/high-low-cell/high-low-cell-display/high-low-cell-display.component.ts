@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
@@ -16,8 +16,6 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'high-low-cell-display',
   templateUrl: './high-low-cell-display.component.html',
-  styleUrls: ['./high-low-cell-display.component.css'],
-  standalone: true,
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -27,6 +25,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
     VStackComponent,
     HStackComponent
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
@@ -46,7 +45,8 @@ export default class HighLowCellDisplayComponent implements OnInit {
       this.highVoltsData = [];
       this.lowVoltsData = [];
     },
-    icon: 'restart_alt'
+    icon: 'restart_alt',
+    ariaLabel: 'Reset the cell voltage graph'
   };
 
   onResize() {

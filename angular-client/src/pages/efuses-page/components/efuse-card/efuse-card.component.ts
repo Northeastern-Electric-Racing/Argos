@@ -1,17 +1,17 @@
-import { Component, OnInit, input, computed, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, input, computed, signal, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { sendConfig } from 'src/api/car-command.api';
 import { EFUSE_TOPICS } from '../../efuses-page.topics';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-import HStackComponent from 'src/components/hstack/hstack.component';
-import VStackComponent from 'src/components/vstack/vstack.component';
 import SevenSegmentDisplayComponent from '../seven-segment-display/seven-segment-display.component';
 import IndicatorLightComponent from '../indicator-light/indicator-light.component';
 import EfuseSwitchComponent, { EfuseSwitchState } from '../efuse-switch/efuse-switch.component';
 import { LockButtonComponent } from '../lock-button/lock-button.component';
 import { inject } from '@angular/core';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
+import { tw } from 'src/ui/recipes/tw';
 
 export enum EfuseLockMode {
   Unlocked,
@@ -28,16 +28,18 @@ export enum EfuseLockMode {
  *    and `autoUnit` to enable the AUTO option and show a small
  *    seven-segment display for the telemetry value that controls the
  *    eFuse's state in AUTO mode.
+ *
+ * A caution card (UnlockToEdit) gates its switch behind the lock: a command sends only while unlocked, then the
+ * card locks again and focus moves to the lock (the pressed switch button is disabled under it). The switch shows
+ * a new position at once and goes back to the previous one when the command fails.
  */
 @Component({
   selector: 'efuse-card',
   templateUrl: './efuse-card.component.html',
-  styleUrls: ['./efuse-card.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'block h-full w-full' },
   imports: [
     InfoBackgroundComponent,
-    HStackComponent,
-    VStackComponent,
     SevenSegmentDisplayComponent,
     IndicatorLightComponent,
     EfuseSwitchComponent,
@@ -47,6 +49,18 @@ export enum EfuseLockMode {
 export default class EfuseCardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  private focusAfterRender = injectFocusAfterRender();
+  private lockButton = viewChild(LockButtonComponent);
+
+  /** The small labels under the ADC and AUTO displays */
+  protected readonly displayLabelClass = tw('text-sm leading-[1.2] font-black text-fg');
+
+  /** The switch row: the AUTO display at the far end when there is one; centred and wrapping on phones */
+  protected controlRowClass = computed(() =>
+    this.hasAutoMode()
+      ? tw('flex w-full flex-wrap items-center justify-between gap-5 max-md:justify-center')
+      : tw('flex w-full flex-wrap items-center justify-center gap-5')
+  );
 
   private static readonly FIGURE_SPACE = '\u2007';
 
@@ -224,27 +238,24 @@ export default class EfuseCardComponent implements OnInit {
     }
   }
 
-  getStatusColor(): string {
-    if (this.isFaulted) return '#ef4444';
-    if (this.isEnabled) return '#22c55e';
-    return '#6b7280';
-  }
-
-  getStatusText(): string {
-    if (this.isFaulted) return 'FAULTED';
-    if (this.isEnabled) return 'ENABLED';
-    return 'DISABLED';
-  }
-
-  /** Handle switch state change — sends the appropriate CAN message */
+  /** Handle switch state change — sends the appropriate CAN message; reverts the switch if it fails */
   onSwitchStateChange(state: EfuseSwitchState): void {
     if (this.effectivelyLocked()) return;
     const payload = state === 'ON' ? 0 : state === 'AUTO' ? 1 : 2;
-    sendConfig(this.resolvedCommandKey(), [payload]).catch((error) => {
-      console.error(`Failed to send ${this.efuseName()} command`, error);
-    });
+    const previous = this.switchState();
+    this.switchState.set(state);
+    sendConfig(this.resolvedCommandKey(), [payload])
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      })
+      .catch((error) => {
+        console.error(`Failed to send ${this.efuseName()} command`, error);
+        // Calypso may have reported a newer state meanwhile; only undo our own optimistic one.
+        if (this.switchState() === state) this.switchState.set(previous);
+      });
     if (this.relockAfterCommand()) {
       this.lockEfuse();
+      this.focusAfterRender(() => this.lockButton()?.button().nativeElement);
     }
   }
 

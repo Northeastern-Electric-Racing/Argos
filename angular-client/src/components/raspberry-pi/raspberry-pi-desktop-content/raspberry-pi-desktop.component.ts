@@ -1,21 +1,21 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CircularPercentageComponent } from '../../circular-percentage/circular-percentage.component';
 import { DividerComponent } from '../../divider/divider';
-import { MatIcon } from '@angular/material/icon';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import TypographyComponent from 'src/components/typography/typography.component';
 import HStackComponent from 'src/components/hstack/hstack.component';
 import VStackComponent from 'src/components/vstack/vstack.component';
 import ThermometerComponent from 'src/components/thermometer/thermometer.component';
+import { wifi } from '../wifi.classes';
 
 @Component({
   selector: 'raspberry-pi-desktop',
   templateUrl: './raspberry-pi-desktop.component.html',
-  styleUrls: ['./raspberry-pi-desktop.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     CircularPercentageComponent,
     DividerComponent,
-    MatIcon,
+    UiIconComponent,
     TypographyComponent,
     HStackComponent,
     VStackComponent,
@@ -29,6 +29,7 @@ export default class RaspberryPiDesktopComponent {
   wifiRSSI = input<number>(0);
   mcs = input<number>(0);
 
+  protected readonly wifi = wifi;
   colorRed = '#FF0000';
   colorPurple = '#800080';
 }

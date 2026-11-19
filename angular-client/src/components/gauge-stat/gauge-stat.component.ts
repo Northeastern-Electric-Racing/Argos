@@ -4,7 +4,6 @@ import { DecimalPipe } from '@angular/common';
 @Component({
   selector: 'gauge-stat',
   templateUrl: './gauge-stat.component.html',
-  styleUrl: './gauge-stat.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DecimalPipe]
 })

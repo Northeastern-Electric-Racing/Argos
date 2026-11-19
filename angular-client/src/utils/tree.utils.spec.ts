@@ -1,7 +1,6 @@
 import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { TreeNode } from 'primeng/api';
-import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNodeData } from './tree.utils';
+import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNode, TreeNodeData } from './tree.utils';
 import { DataType, Node } from './types.utils';
 
 const EMPTY_DISPLAY = signal('');
@@ -119,7 +118,7 @@ describe('filterSelectedNodes', () => {
     expect(result).toEqual([voltage, speed]);
   });
 
-  it('preserves original node references so PrimeNG selection-by-ref works', () => {
+  it('preserves original node references so tree selection stays stable', () => {
     const [match] = filterSelectedNodes(flat, [voltage.data!.dataType]);
     expect(match).toBe(voltage);
   });

@@ -1,18 +1,18 @@
 <info-background svgIcon="electric_car" title="Motor">
-  <div style="display: flex; flex-direction: row; width: 100%; height: 150px; justify-content: space-between">
+  <div [class]="layout.row">
     <hstack>
-      <vstack style="padding-left: 20px">
+      <vstack class="pl-5">
         <hstack spacing="5px">
           <typography variant="info-value" [content]="motorTemp.toString() + '°'" />
           <typography variant="info-unit" [content]="'C'" />
-          <div class="thermometer-container">
+          <div class="ml-2.5 flex h-18.5 w-7 items-center justify-center">
             <thermometer [temperature]="motorTemp" [min]="-15" [max]="30" />
           </div>
         </hstack>
         <typography variant="info-subtitle" content="Motor Temp" />
       </vstack>
 
-      <divider style="height: 78px" />
+      <divider class="h-19.5" />
 
       <vstack>
         <hstack spacing="0px">
@@ -26,6 +26,6 @@
         </hstack>
       </vstack>
     </hstack>
-    <pie-chart style="margin-right: -45px; margin-top: -20px" [data]="piechartData" title="Current Motor Usage" />
+    <pie-chart [class]="layout.pie" [data]="piechartData" title="Current Motor Usage" />
   </div>
 </info-background>

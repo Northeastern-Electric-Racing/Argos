@@ -1,19 +1,13 @@
-<div
-  class="panel"
-  [class.full]="widthMode() === 'full'"
-  [class.fit]="widthMode() === 'fit'"
-  [style.padding]="padding()"
-  [style.background-color]="backgroundColor()"
->
+<div [class]="panelClass()" [style.padding]="padding()" [style.background-color]="backgroundColor()">
   @if (title()) {
-    <div class="title-bar">
+    <div class="flex items-center gap-1 text-fg">
       @if (icon()) {
-        <mat-icon aria-hidden="false" [fontIcon]="icon()" class="title-icon" />
+        <ui-icon size="sm" [name]="icon()" />
       }
       @if (svgIcon()) {
-        <mat-icon aria-hidden="false" [svgIcon]="svgIcon()" class="title-icon" />
+        <ui-icon size="sm" [svg]="svgIcon()" />
       }
-      <span class="title-text">{{ title() }}</span>
+      <span class="font-sans text-sm font-medium whitespace-nowrap">{{ title() }}</span>
     </div>
   }
   <ng-content />

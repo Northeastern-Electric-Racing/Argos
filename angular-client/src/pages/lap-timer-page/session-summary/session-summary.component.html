@@ -1,11 +1,11 @@
-<info-background title="Session" style="width: 100%; height: 100%">
-  <div class="session-summary">
-    <div class="session-laps-hero">{{ timer.lapCount() }}</div>
-    <div class="hero-label">LAPS</div>
-    <div class="summary-divider"></div>
-    <div class="stat-row">
-      <span class="stat-label">Best</span>
-      <span class="stat-value best-text">
+<info-background title="Session" class="h-full w-full">
+  <div class="flex w-full flex-col gap-2 px-2 py-1">
+    <div [class]="lapsClass">{{ timer.lapCount() }}</div>
+    <div [class]="cls.heroLabel">LAPS</div>
+    <div [class]="dividerClass"></div>
+    <div [class]="statRow">
+      <span [class]="statLabel">Best</span>
+      <span [class]="bestValue">
         @if (timer.bestLap(); as best) {
           {{ formatLapMs(best.durationMs) }}
         } @else {
@@ -13,9 +13,9 @@
         }
       </span>
     </div>
-    <div class="stat-row">
-      <span class="stat-label">Avg</span>
-      <span class="stat-value">
+    <div [class]="statRow">
+      <span [class]="statLabel">Avg</span>
+      <span [class]="statValue">
         @if (timer.lapCount() > 0) {
           {{ formatLapMs(timer.averageLapTime()) }}
         } @else {
@@ -23,13 +23,13 @@
         }
       </span>
     </div>
-    <div class="stat-row">
-      <span class="stat-label">Energy</span>
-      <span class="stat-value">{{ timer.totalEnergyUsed() | number: '1.2-2' }}%</span>
+    <div [class]="statRow">
+      <span [class]="statLabel">Energy</span>
+      <span [class]="statValue">{{ timer.totalEnergyUsed() | number: '1.2-2' }}%</span>
     </div>
-    <div class="stat-row">
-      <span class="stat-label">Run</span>
-      <span class="stat-value">{{ timer.activeSession()?.runIdAtSessionStart ?? '—' }}</span>
+    <div [class]="statRow">
+      <span [class]="statLabel">Run</span>
+      <span [class]="statValue">{{ timer.activeSession()?.runIdAtSessionStart ?? '—' }}</span>
     </div>
   </div>
 </info-background>

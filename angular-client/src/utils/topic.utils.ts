@@ -121,11 +121,6 @@ export const statusBalancing = () => `BMS/Status/Balancing`;
 export const bmsMode = () => `BMS/Status/State`;
 export const charging = () => `BMS/Charging/Control`;
 export const packVoltage = () => `BMS/Pack/Voltage`;
-// BMS faults were moved out of BMS/Status/F/* into BMS/Faults/Critical/* — the
-// old Status/F branch no longer exists in /datatypes. Leaf names are unchanged.
-export const cellUndervoltage = () => `BMS/Faults/Critical/Cell_Undervoltage`; // was BMS/Status/F/Cell_Undervoltage
-export const cellOvervoltage = () => `BMS/Faults/Critical/Cell_Overvoltage`; // was BMS/Status/F/Cell_Overvoltage
-export const cellsNotBalancing = () => `BMS/Faults/Critical/Cells_Not_Balancing`; // was BMS/Status/F/Cells_Not_Balancing
 
 // Charger Faults
 export const commTimeoutFault = () => `Charger/Box/F_CommTimeout`;
@@ -136,24 +131,16 @@ export const overVoltageFault = () => `Charger/Box/F_VoltageWrong`; // was Charg
 export const wrongBatConnectFault = () => `Charger/Box/F_WrongBatConnection`; // was Charger/Box/F_WrongBatConnect
 
 // BMS Faults
-// All BMS faults moved from BMS/Status/F/* to BMS/Faults/Critical/* — see the
-// Cell_Undervoltage/Overvoltage/NotBalancing block above for the same rename.
-// Leaf names unchanged.
-export const openWire = () => `BMS/Faults/Critical/Open_Wire`; // was BMS/Status/F/Open_Wire
-export const chargerLimitEnforcementFault = () => `BMS/Faults/Critical/CCL_Enforce`; // was BMS/Status/F/CCL_Enforce
-export const chargerCanFault = () => `BMS/Faults/Critical/Charger_Can`; // was BMS/Status/F/Charger_Can
-export const batteryThermistor = () => `BMS/Faults/Critical/Battery_Therm`; // was BMS/Status/F/Battery_Therm
-export const chargerSafetyRelay = () => `BMS/Faults/Critical/Charger_Safety`; // was BMS/Status/F/Charger_Safety
-export const dischargeLimitEnforcementFault = () => `BMS/Faults/Critical/DCL_Enforce`; // was BMS/Status/F/DCL_Enforce
-export const externalCanFault = () => `BMS/Faults/Critical/External_Can`; // was BMS/Status/F/External_Can
-export const weakPackFault = () => `BMS/Faults/Critical/Weak_Pack`; // was BMS/Status/F/Weak_Pack
-export const lowCellVoltage = () => `BMS/Faults/Critical/Low_Cell_Volts`; // was BMS/Status/F/Low_Cell_Volts
-export const chargeReadingMismatch = () => `BMS/Faults/Critical/Charge_Reading`; // was BMS/Status/F/Charge_Reading
-export const currentSensorFault = () => `BMS/Faults/Critical/Current_Sense`; // was BMS/Status/F/Current_Sense
-export const internalCellCommFault = () => `BMS/Faults/Critical/IC_Comm`; // was BMS/Status/F/IC_Comm
-export const internalThermalError = () => `BMS/Faults/Critical/Thermal_Err`; // was BMS/Status/F/Thermal_Err
-export const internalSoftwareFault = () => `BMS/Faults/Critical/Software`; // was BMS/Status/F/Software
-export const packOverheat = () => `BMS/Faults/Critical/Pack_Overheat`; // was BMS/Status/F/Pack_Overheat
+// The critical faults the car publishes, as defined in Odyssey-Definitions'
+// can-messages/bms.json.
+export const chargerLimitEnforcementFault = () => `BMS/Faults/Critical/CCL_Enforce`;
+export const dischargeLimitEnforcementFault = () => `BMS/Faults/Critical/DCL_Enforce`;
+export const cellVoltageLow = () => `BMS/Faults/Critical/Cell_Voltage_Low`;
+export const cellVoltageHigh = () => `BMS/Faults/Critical/Cell_Voltage_High`;
+export const chargingVoltageHigh = () => `BMS/Faults/Critical/Charging_Voltage_High`;
+export const packTooHot = () => `BMS/Faults/Critical/Pack_too_hot`;
+export const highDieTemp = () => `BMS/Faults/Critical/High_die_temp`;
+export const cellOpenWire = () => `BMS/Faults/Critical/Cell_open_wire`;
 
 // Fake / Mock Data
 // These placeholder names were never real CAN/MQTT topics; the widgets that
@@ -241,29 +228,19 @@ export const topics = {
   bmsMode,
   charging,
   packVoltage,
-  cellUndervoltage,
-  cellOvervoltage,
-  cellsNotBalancing,
   commTimeoutFault,
   hardwareFailureFault,
   overTempFault,
   overVoltageFault,
   wrongBatConnectFault,
-  openWire,
   chargerLimitEnforcementFault,
-  chargerCanFault,
-  batteryThermistor,
-  chargerSafetyRelay,
   dischargeLimitEnforcementFault,
-  externalCanFault,
-  weakPackFault,
-  lowCellVoltage,
-  chargeReadingMismatch,
-  currentSensorFault,
-  internalCellCommFault,
-  internalThermalError,
-  internalSoftwareFault,
-  packOverheat,
+  cellVoltageLow,
+  cellVoltageHigh,
+  chargingVoltageHigh,
+  packTooHot,
+  highDieTemp,
+  cellOpenWire,
   perCellOverflowId,
   motorUsage,
   coolingUsage,

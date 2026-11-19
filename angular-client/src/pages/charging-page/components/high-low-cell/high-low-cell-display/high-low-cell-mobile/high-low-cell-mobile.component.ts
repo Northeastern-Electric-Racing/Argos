@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { GraphData } from 'src/utils/types.utils';
 import { InfoBackgroundComponent } from '../../../../../../components/info-background/info-background.component';
@@ -12,8 +12,7 @@ import VStackComponent from 'src/components/vstack/vstack.component';
 @Component({
   selector: 'high-low-cell-mobile',
   templateUrl: './high-low-cell-mobile.component.html',
-  styleUrls: ['./high-low-cell-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     InfoBackgroundComponent,
     DividerComponent,
@@ -32,5 +31,5 @@ export default class HighLowCellMobileComponent {
   isDesktop = window.innerWidth > this.mobileThreshold;
   highVoltsData = input<GraphData[]>([]);
   lowVoltsData = input<GraphData[]>([]);
-  resetGraphButton = input.required<{ onClick: () => void; icon: string }>();
+  resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
 }

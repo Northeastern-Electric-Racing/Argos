@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 @Component({
   selector: 'half-gauge',
   templateUrl: './half-gauge.component.html',
-  styleUrls: ['./half-gauge.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class HalfGaugeComponent {

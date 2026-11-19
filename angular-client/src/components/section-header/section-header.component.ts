@@ -4,7 +4,6 @@ import { SelectorConfig, SelectDropdownComponent } from '../select-dropdown/sele
 @Component({
   selector: 'section-header',
   templateUrl: './section-header.component.html',
-  styleUrl: './section-header.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SelectDropdownComponent]
 })

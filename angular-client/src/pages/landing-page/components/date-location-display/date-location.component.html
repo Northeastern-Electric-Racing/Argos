@@ -1,14 +1,10 @@
-<info-background backgroundColor="#101010" st>
+<info-background backgroundColor="var(--color-page)">
   <vstack spacing="20px">
-    <typography variant="x-large-title" content="Argos" additionalStyles="margin: 0px; fontSize:80px" />
-    <div class="date-location-display">
-      <typography
-        variant="subheader"
-        content="{{ time | date: 'MM/dd/yyyy' }} "
-        additionalStyles="margin: 0px; fontSize:20px"
-      />
-      <divider style="height: 20px; margin-left: 20px; margin-right: 20px" />
-      <typography variant="subheader" content="{{ location }}" additionalStyles="margin: 0px; fontSize:20px" />
+    <typography variant="x-large-title" content="Argos" textClass="text-numeral" />
+    <div class="flex h-full w-full flex-row items-center justify-center">
+      <typography variant="subheader" content="{{ time | date: 'MM/dd/yyyy' }} " textClass="m-0 text-lg" />
+      <divider class="mx-5 h-5" />
+      <typography variant="subheader" content="{{ location }}" textClass="m-0 text-lg" />
     </div>
   </vstack>
 </info-background>

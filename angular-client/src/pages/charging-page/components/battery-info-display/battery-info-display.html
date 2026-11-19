@@ -1,7 +1,7 @@
 <info-background title="Battery" svgIcon="battery_charging_full">
   @if (isMobile) {
   <battery-info-mobile
-    style="width: 100%"
+    class="w-full"
     [voltage]="voltage"
     [chargeCurrentLimit]="chargeCurrentLimit"
     [dischargeCurrentLimit]="dischargeCurrentLimit"
@@ -10,7 +10,7 @@
   />
   } @else {
   <battery-info-desktop
-    style="width: 100%"
+    class="w-full"
     [voltage]="voltage"
     [chargeCurrentLimit]="chargeCurrentLimit"
     [dischargeCurrentLimit]="dischargeCurrentLimit"

@@ -1,9 +1,9 @@
-<div class="strip">
+<div class="flex min-w-min items-center gap-2 whitespace-nowrap">
   @for (item of displayItems(); track item.name) {
-    <div class="strip-item">
-      <span class="strip-item-label">{{ item.shortName }}</span>
-      <span class="strip-item-value">
-        {{ item.value }}<span class="strip-item-unit">{{ item.unit }}</span>
+    <div class="flex min-w-17.5 shrink-0 flex-col items-center rounded-md bg-panel px-3 py-1 font-sans">
+      <span class="max-w-30 truncate text-xs font-normal text-fg-label">{{ item.shortName }}</span>
+      <span class="text-base font-extrabold whitespace-nowrap text-fg">
+        {{ item.value }}<span class="ml-0.5 text-xs font-bold text-fg-muted">{{ item.unit }}</span>
       </span>
     </div>
   }

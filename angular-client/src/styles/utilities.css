@@ -1,0 +1,17 @@
+/*
+ * Our own utilities and variants, on top of Tailwind's. Keep this short: a look that repeats belongs in a
+ * recipe (src/ui/recipes), not here.
+ */
+
+/*
+ * The keyboard focus ring: a solid 2px outline in the neutral focus token, offset 2px, no alpha, so it
+ * reaches 3:1 on every surface (#d4d4d4 is 8.5:1 on surface-3 and 12:1 on the page). Use it behind
+ * `focus-visible:` so a mouse click never shows it. Rows and options that clip it use `-outline-offset-2`.
+ */
+@utility focus-ring {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* aria-invalid="true" (Tailwind's `aria-*` built-ins have no invalid). */
+@custom-variant aria-invalid (&[aria-invalid='true']);

@@ -1,6 +1,6 @@
+import { ToastService } from 'src/ui/toast/toast.service';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { MessageService } from 'primeng/api';
 import { GraphPresetService, PRESET_SEEDS, Preset } from './graph-preset.service';
 
 const STORAGE_KEY = 'argos.graphPresets';
@@ -19,9 +19,11 @@ describe('GraphPresetService', () => {
   beforeEach(() => {
     localStorage.clear();
   });
+  // Spec files in one worker share window (Vitest runs with isolate: false): leave storage empty.
+  afterEach(() => localStorage.clear());
 
   function build(): GraphPresetService {
-    TestBed.configureTestingModule({ providers: [GraphPresetService, MessageService] });
+    TestBed.configureTestingModule({ providers: [GraphPresetService, ToastService] });
     return TestBed.inject(GraphPresetService);
   }
 

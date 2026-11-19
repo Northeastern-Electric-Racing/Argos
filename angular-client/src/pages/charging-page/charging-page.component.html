@@ -1,39 +1,39 @@
-<div class="image-container" style="margin-right: 16px; margin-left: 16px">
+<div class="mx-4 h-full">
   @if (isMobile) {
-    <charging-page-mobile style="width: 100%" />
+    <charging-page-mobile class="w-full" />
   } @else {
-    <mat-grid-list cols="6" gutterSize="15px" rowHeight="1.2rem">
+    <div [class]="grid">
       <!-- Left: Combined Status Display -->
-      <mat-grid-tile [colspan]="3" [rowspan]="12">
-        <combined-status-display style="width: 100%; height: 100%" />
-      </mat-grid-tile>
+      <div [class]="tiles.status">
+        <combined-status-display class="size-full" />
+      </div>
 
       <!-- Middle: Vertically Stacked Displays -->
-      <mat-grid-tile [colspan]="1" [rowspan]="12">
-        <div style="display: flex; flex-direction: column; width: 100%; height: 100%; gap: 10px">
-          <pack-temp style="width: 100%; max-height: 35%" />
-          <state-of-charge-display style="width: 100%; max-height: 35%" />
-          <current-display style="width: 100%; max-height: 30%" />
+      <div [class]="tiles.stack">
+        <div class="flex size-full flex-col gap-2.5">
+          <pack-temp class="max-h-7/20 w-full" />
+          <state-of-charge-display class="max-h-7/20 w-full" />
+          <current-display class="max-h-3/10 w-full" />
         </div>
-      </mat-grid-tile>
+      </div>
 
       <!-- Right: Fault Display -->
-      <mat-grid-tile [colspan]="2" [rowspan]="12">
-        <fault-display style="width: 100%; height: 100%" />
-      </mat-grid-tile>
+      <div [class]="tiles.faults">
+        <fault-display class="size-full" />
+      </div>
 
       <!-- Bottom section -->
-      <mat-grid-tile [colspan]="6" [rowspan]="6">
-        <cell-temp-display style="width: 100%; height: 100%" />
-      </mat-grid-tile>
+      <div [class]="tiles.graph">
+        <cell-temp-display class="size-full" />
+      </div>
 
-      <mat-grid-tile [colspan]="6" [rowspan]="6">
-        <high-low-cell-display style="width: 100%; height: 100%" />
-      </mat-grid-tile>
+      <div [class]="tiles.graph">
+        <high-low-cell-display class="size-full" />
+      </div>
 
-      <mat-grid-tile [colspan]="6" [rowspan]="6">
-        <pack-voltage-display style="width: 100%; height: 100%" />
-      </mat-grid-tile>
-    </mat-grid-list>
+      <div [class]="tiles.graph">
+        <pack-voltage-display class="size-full" />
+      </div>
+    </div>
   }
 </div>
