@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs';
 import { DataValue, StorageMap, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 import { RunLaps, Track } from 'src/utils/types.utils';
 
@@ -22,10 +22,11 @@ export default class Storage {
     this.timerStorage = new Map<string, Subject<TimerData>>();
   }
 
+  /** The topic's values. A new subscriber gets the latest one at once (e.g. a tree row shown on expand), then each new one. */
   public get = (key: string): Subject<DataValue> => {
     const subject = this.storage.get(key);
     if (!subject) {
-      const subject = new Subject<DataValue>();
+      const subject = new ReplaySubject<DataValue>(1);
       this.storage.set(key, subject);
       return subject;
     }
