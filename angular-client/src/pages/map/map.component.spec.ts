@@ -47,7 +47,7 @@ describe('MapComponent live trace and laps', () => {
     expect(map.runId()).toBe(2);
   });
 
-  it("restarts the trace from the car's latest fix and clears the laps when the run changes", () => {
+  it('clears the trace and laps when the run changes', () => {
     const { storage, fixture, map } = setup();
     storage.setCurrentRunId(1);
     storage.setTracks([track(7)]);
@@ -62,7 +62,7 @@ describe('MapComponent live trace and laps', () => {
     storage.setCurrentRunId(2);
     fixture.detectChanges();
 
-    expect(map.trace()).toEqual([fix(42, 1000)]);
+    expect(map.trace()).toEqual([]);
     expect(map.lapTable()).toBeNull();
   });
 
