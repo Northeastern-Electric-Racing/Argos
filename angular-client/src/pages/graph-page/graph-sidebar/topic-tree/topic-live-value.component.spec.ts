@@ -14,9 +14,11 @@ describe('TopicLiveValueComponent', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
   };
-  /** Readers of the topic; a released topic stays in getTopics() until the sweep, so count readers. */
-  const readers = () =>
-    (storage as unknown as { entries: Map<string, { readers: number }> }).entries.get(topic)?.readers ?? 0;
+  /** Whether this client reads the topic, once the task's topic changes are batched. */
+  const reading = async () => {
+    await Promise.resolve();
+    return storage.getTopics().includes(topic);
+  };
   const text = () => (fixture.nativeElement as HTMLElement).textContent?.trim();
 
   beforeEach(() => {
@@ -40,10 +42,10 @@ describe('TopicLiveValueComponent', () => {
   });
 
   it('subscribes to its topic only while it exists', async () => {
-    expect(readers()).toBe(0);
+    expect(await reading()).toBe(false);
     await create();
-    expect(readers()).toBe(1);
+    expect(await reading()).toBe(true);
     fixture.destroy();
-    expect(readers()).toBe(0);
+    expect(await reading()).toBe(false);
   });
 });
