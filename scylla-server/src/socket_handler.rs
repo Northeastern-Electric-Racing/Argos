@@ -43,7 +43,10 @@ pub async fn socket_handler(
             },
             res = data_channel.recv() => {
                 match res {
-                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Ok(data) => {
+                        msgs_since_hb += 1;
+                        send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await;
+                    }
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
                     }
@@ -195,6 +198,7 @@ pub async fn socket_handler_with_metadata(
                 match res {
                     Ok(data) => {
                         msg_cnt += 1;
+                        msgs_since_hb += 1;
                         // DIAGNOSTIC PROBE (disabled): sample 1/500 messages to localize lag --
                         // emit() duration vs data age at emit. Re-enable when isolating socket
                         // vs upstream latency.
