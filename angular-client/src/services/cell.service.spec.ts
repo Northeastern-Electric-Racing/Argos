@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CellService } from './cell.service';
-import Storage, { TOPIC_LINGER_MS } from './storage.service';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 
@@ -56,18 +56,18 @@ describe('CellService', () => {
     expect(cellTopics()).toContain(topics.betaOw(4, 12));
   });
 
-  it('keeps the topics while any reader holds them, and drops them after the last releases and the linger', async () => {
+  it('keeps the topics while any reader holds them, and drops them at the sweep after the last releases', async () => {
     const first = retain();
     const second = retain();
     await flush();
 
     first();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS * 2);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS * 2);
     await flush();
     expect(cellTopics()).toHaveLength(CELL_TOPIC_COUNT);
 
     second();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS - 1);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
     await flush();
     expect(cellTopics()).toHaveLength(CELL_TOPIC_COUNT);
 
@@ -81,7 +81,7 @@ describe('CellService', () => {
     retain();
     first();
     first();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS * 2);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS * 2);
     await flush();
     expect(cellTopics()).toHaveLength(CELL_TOPIC_COUNT);
   });
@@ -111,16 +111,16 @@ describe('CellService', () => {
     release();
     expect(alphaCell(0, 0).voltage).toBeUndefined(); // nothing reads the cells now
 
-    vi.advanceTimersByTime(TOPIC_LINGER_MS - 1);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
     retain();
-    expect(alphaCell(0, 0).voltage).toBeCloseTo(3.4); // replayed from the lingering topic
+    expect(alphaCell(0, 0).voltage).toBeCloseTo(3.4); // replayed from the expired topic, not yet swept
   });
 
-  it('shows no stale readings once the topics were released for longer than the linger', () => {
+  it('shows no stale readings once the topics were released and swept', () => {
     const release = retain();
     push(storage, topics.alphaVolt(0, 0), '3.40');
     release();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
 
     retain();
     expect(alphaCell(0, 0).voltage).toBeUndefined();
