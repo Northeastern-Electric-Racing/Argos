@@ -38,6 +38,12 @@ export default class SocketService {
   private storage = inject(Storage);
   /** The topic list the server last got from this client, in the handshake or set_subscriptions. */
   private sentTopics: string[] = [];
+  /**
+   * Numbers each set_subscriptions list. The server may handle lists sent close together out of
+   * order, and applies one only if its number is higher than the last it applied (the handshake's
+   * is 0), so the socket always ends on the latest list. Never reset: higher on every socket.
+   */
+  private listSeq = 0;
   // Opens the connection on construction; specs that inject SocketService (or render AppContext) should provide a mock.
   private socket = inject(SOCKET_IO)(this.envService.backendUrl, {
     query: {
@@ -70,7 +76,7 @@ export default class SocketService {
     const topics = this.storage.getTopics();
     if (!this.socket.connected || sameTopics(topics, this.sentTopics)) return;
     this.sentTopics = topics;
-    this.socket.emit('set_subscriptions', topics);
+    this.socket.emit('set_subscriptions', { seq: ++this.listSeq, topics });
   };
 
   /**

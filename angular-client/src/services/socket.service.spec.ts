@@ -47,9 +47,16 @@ class FakeSocket {
     this.handlers.get('disconnect')?.forEach((handler) => handler('transport close'));
   }
 
+  /** The set_subscriptions payloads. */
+  lists(): { seq: number; topics: string[] }[] {
+    return this.emitted
+      .filter(([event]) => event === 'set_subscriptions')
+      .map(([, list]) => list as { seq: number; topics: string[] });
+  }
+
   /** The topic lists sent with set_subscriptions. */
-  subscriptions(): unknown[] {
-    return this.emitted.filter(([event]) => event === 'set_subscriptions').map(([, topics]) => topics);
+  subscriptions(): string[][] {
+    return this.lists().map(({ topics }) => topics);
   }
 }
 
@@ -116,6 +123,17 @@ describe('SocketService (topic subscriptions)', () => {
     vi.advanceTimersByTime(1);
     await flush();
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D'], ['A/B']]);
+  });
+
+  it('numbers each list higher than the last, across reconnects', async () => {
+    socket.connect();
+    storage.get('A/B').subscribe();
+    await flush();
+    socket.disconnect();
+    socket.connect();
+    storage.get('C/D').subscribe();
+    await flush();
+    expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2]);
   });
 
   it('restores the same topics on reconnect, through the handshake', async () => {
