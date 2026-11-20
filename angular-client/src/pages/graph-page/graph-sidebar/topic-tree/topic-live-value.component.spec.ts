@@ -14,6 +14,9 @@ describe('TopicLiveValueComponent', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
   };
+  /** Readers of the topic; a released topic stays in getTopics() until the sweep, so count readers. */
+  const readers = () =>
+    (storage as unknown as { entries: Map<string, { readers: number }> }).entries.get(topic)?.readers ?? 0;
   const text = () => (fixture.nativeElement as HTMLElement).textContent?.trim();
 
   beforeEach(() => {
@@ -28,17 +31,19 @@ describe('TopicLiveValueComponent', () => {
     expect(text()).toBe('1.235V');
   });
 
-  it("starts from the topic's latest value, as a row shown on expand does", async () => {
+  it("starts from the topic's latest value when something else already reads it", async () => {
+    const graph = storage.get(topic).subscribe();
     storage.addValue(topic, value('4'));
     await create();
     expect(text()).toBe('4.000V');
+    graph.unsubscribe();
   });
 
   it('subscribes to its topic only while it exists', async () => {
-    expect(storage.get(topic).observed).toBe(false);
+    expect(readers()).toBe(0);
     await create();
-    expect(storage.get(topic).observed).toBe(true);
+    expect(readers()).toBe(1);
     fixture.destroy();
-    expect(storage.get(topic).observed).toBe(false);
+    expect(readers()).toBe(0);
   });
 });

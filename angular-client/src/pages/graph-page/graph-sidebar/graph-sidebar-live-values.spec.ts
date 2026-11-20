@@ -1,9 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { DataValue } from 'src/utils/socket.utils';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
 
@@ -35,10 +33,11 @@ describe('graph sidebar live values', () => {
   let storage: Storage;
   const dataTypes = realisticDataTypes();
 
-  /** Topics whose storage stream has at least one subscriber. */
+  /** Topics with at least one reader; a released topic stays in getTopics() until the sweep, so count readers. */
   const liveTopics = (): number =>
-    [...(storage as unknown as { storage: Map<string, Subject<DataValue>> }).storage.values()].filter((s) => s.observed)
-      .length;
+    [...(storage as unknown as { entries: Map<string, { readers: number }> }).entries.values()].filter(
+      (entry) => entry.readers > 0
+    ).length;
   /** Clicks the rendered tree item labelled exactly `label`, as a user would, and lets the tree re-render. */
   const click = async (label: string) => {
     const items: HTMLElement[] = [...fixture.nativeElement.querySelectorAll('[role="treeitem"]')];
@@ -87,7 +86,8 @@ describe('graph sidebar live values', () => {
     expect(counts['tree again']).toBe(0);
   });
 
-  it("shows a row's latest value as soon as its parent is expanded, not N/A", async () => {
+  it("shows a row's latest value as soon as its parent is expanded when something else reads it, not N/A", async () => {
+    const graph = storage.get('VCU/CarState/speed').subscribe();
     storage.addValue('VCU/CarState/speed', { values: ['12.5'], time: '0', unit: 'mph' });
     await click('VCU');
     await click('CarState');
@@ -95,5 +95,6 @@ describe('graph sidebar live values', () => {
       (li: HTMLElement) => li.querySelector('span.flex-1')?.textContent?.trim() === 'speed'
     ) as HTMLElement;
     expect(row.querySelector('topic-live-value')?.textContent?.trim()).toBe('12.500mph');
+    graph.unsubscribe();
   });
 });
