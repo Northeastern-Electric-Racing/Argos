@@ -1,11 +1,12 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CellService } from './cell.service';
 import Storage from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 
-/** Lets the microtask that batches a task's topic changes run. */
-const flush = () => Promise.resolve();
+/** Renders, which sends the topic changes batched since the last render. */
+const flush = () => TestBed.inject(ApplicationRef).whenStable();
 
 const push = (storage: Storage, key: string, value: string): void => {
   storage.addValue(key, { values: [value], time: '0', unit: '' } as DataValue);

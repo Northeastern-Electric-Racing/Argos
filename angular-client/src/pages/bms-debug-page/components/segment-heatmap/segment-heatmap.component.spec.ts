@@ -1,5 +1,5 @@
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { ChangeDetectorRef } from '@angular/core';
+import { ApplicationRef, ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -77,11 +77,11 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
 
   it('holds the BMS cell topics while shown, and releases them once destroyed', async () => {
     const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
-    await Promise.resolve();
+    await TestBed.inject(ApplicationRef).whenStable();
     expect(cellTopics()).toContain(topics.alphaVolt(SEGMENT, CELL));
 
     fixture.destroy();
-    await Promise.resolve();
+    await TestBed.inject(ApplicationRef).whenStable();
     expect(cellTopics()).toEqual([]);
     expect(cellService.getAlphaCellsBySegment(SEGMENT)[CELL].voltage).toBeUndefined();
   });
