@@ -1,6 +1,6 @@
 # Deliver each topic through its own Socket.IO room
 
-scylla-server sends the live `data` event for a topic only to clients that asked for it, over the Socket.IO connection they already have. Each topic is a room. A client names the full list of topics it reads, in the connect handshake (auth payload `{"topics": [...]}`) or later with the `set_subscriptions` event (an array of topic names, acked with `{"count": n}`), and scylla moves its socket into exactly those rooms. A client that never names any, such as an old Angular build or the Flutter app, sits in one every-topic room (`#`) and gets every topic, as before. Once a client has named a list, even an empty one, it is never in the every-topic room again. `metadata`, `faults`, `timers` and rule notifications still go to every socket.
+scylla-server sends the live `data` event for a topic only to clients that asked for it, over the Socket.IO connection they already have. Each topic is a room. A client names the full list of topics it reads, in the connect handshake (auth payload `{"topics": [...]}`) or later with the `set_subscriptions` event (`{"seq": n, "topics": [...]}`, acked with `{"count", "seq"}` of the list it ended on), and scylla moves its socket into exactly those rooms. A client that never names any, such as an old Angular build or the Flutter app, sits in one every-topic room (`#`) and gets every topic, as before. Once a client has named a list, even an empty one, it is never in the every-topic room again. `metadata`, `faults`, `timers` and rule notifications still go to every socket.
 
 ## Considered Options
 
@@ -14,6 +14,7 @@ scylla-server sends the live `data` event for a topic only to clients that asked
 - **Old clients keep working.** A socket stays on the every-topic room until it names topics, so each screen can move over on its own and mixed fleets get correct data.
 - **Unwatched topics cost nothing.** scylla mirrors which rooms have sockets, and skips a topic nobody reads before serializing it. socketioxide creates a room on its first join and removes it on its last leave, so incoming data never creates one.
 - **The full list every time.** socketioxide has no connection-state recovery, so a client must re-send its topics on every connect anyway. Sending the whole list (and replacing, not patching) leaves nothing to drift; scylla still only joins and leaves the rooms that changed.
+- **Numbered lists, latest wins.** socketioxide handles each event in its own task, so two lists sent close together can be applied in either order. Each list carries a number the client raises every time, and scylla applies a list only if its number is higher than the last one it applied to that socket (the handshake's counts as 0). A client can so change its topics as often as it likes and always ends on its latest list, without sending patches that would have to apply in order.
 - **Topics in the handshake** let a client that knows its page's topics skip the every-topic flood between connecting and its first `set_subscriptions`.
 
 ## Consequences

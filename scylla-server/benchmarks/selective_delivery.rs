@@ -119,13 +119,17 @@ struct Client {
     tx: Sender<Packet>,
     acks: Receiver<String>,
     data: Arc<AtomicU64>,
+    /// The last `set_subscriptions` list's number.
+    seq: u64,
 }
 
 impl Client {
     /// Sends `set_subscriptions` and waits for its ack.
     async fn set(&mut self, topics: &[String]) -> Duration {
+        self.seq += 1;
         let packet = format!(
-            "20[\"{SET_SUBSCRIPTIONS_EVENT}\",{}]",
+            "20[\"{SET_SUBSCRIPTIONS_EVENT}\",{{\"seq\":{},\"topics\":{}}}]",
+            self.seq,
             serde_json::to_string(topics).unwrap()
         );
         let start = Instant::now();
@@ -180,7 +184,12 @@ impl Server {
                 }
             }
         });
-        Client { tx, acks, data }
+        Client {
+            tx,
+            acks,
+            data,
+            seq: 0,
+        }
     }
 }
 
