@@ -1,11 +1,6 @@
 import { Subject } from 'rxjs';
 
 /**
- * The storage system for the data received from the server
- */
-export type StorageMap = Map<string, Subject<DataValue>>;
-
-/**
  * The storage system for timer data received from the server
  */
 export type TimerStorageMap = Map<string, Subject<TimerData>>;
