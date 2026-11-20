@@ -16,13 +16,13 @@
 >
   <div ngMenu [class]="classes.panel" #appsMenu="ngMenu" (itemSelected)="select($event)">
     <ng-template ngMenuContent>
-      @for (menuItem of items(); track menuItem.id) {
+      @for (menuItem of items(); track menuItem.label) {
         <div
           ngMenuItem
           [class]="classes.item"
-          [value]="menuItem.id"
+          [value]="menuItem.label"
           [searchTerm]="menuItem.label"
-          [attr.data-id]="menuItem.id"
+          [attr.data-id]="menuItem.route"
         >
           <span class="mb-2 inline-flex size-12">
             <ui-icon [svg]="menuItem.icon" size="inline" />

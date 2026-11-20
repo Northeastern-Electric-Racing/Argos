@@ -138,10 +138,10 @@ export const highDieTemp = () => `BMS/Faults/Critical/High_die_temp`;
 export const cellOpenWire = () => `BMS/Faults/Critical/Cell_open_wire`;
 
 // Fake / Mock Data
-// These placeholder names were never real CAN/MQTT topics; the widgets that
-// consume them (motor-info, steering-angle-display, torque-display, accel
-// graphs) still reference them but will remain blank until real source topics
-// are identified. Leaving strings untouched.
+// These placeholder names were never real CAN/MQTT topics and will remain blank
+// until real source topics are identified. Leaving strings untouched. Only
+// steering-angle-display still consumes one (steeringAngle); the rest lost their
+// consumers when the landing page went away (#847).
 export const motorUsage = () => `Motor Usage`;
 export const coolingUsage = () => `Cooling Usage`;
 export const steeringAngle = () => `Steering Angle`;

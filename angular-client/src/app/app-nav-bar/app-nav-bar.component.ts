@@ -13,14 +13,14 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { interval, map, Observable, startWith } from 'rxjs';
 import { startNewRun, updateRun } from 'src/api/run.api';
 import APIService from 'src/services/api.service';
 import SidebarService from 'src/services/sidebar.service';
 import { appRoutes } from '../app-routes';
 import { UiDrawerComponent } from 'src/ui/drawer/drawer.component';
-import { CurrentRunDisplayComponent } from '../../pages/landing-page/components/current-run-display/current-run-display.component';
+import { CurrentRunDisplayComponent } from '../../components/current-run-display/current-run-display.component';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { MessagesPerSecondComponent } from '../../components/messages-per-second/messages-per-second.component';
 import { AsyncPipe, DatePipe } from '@angular/common';
@@ -37,10 +37,12 @@ import { focusIsLost, focusNewPage, pageLabel } from './focus-new-page';
 import { injectIsMobile } from 'src/ui/layout/mobile';
 
 export interface NavItem {
-  id: string;
   label: string;
-  onClick: () => void;
   icon: string;
+  /** Router destination, bound with routerLink so the router owns navigation and which item reads as current. */
+  route?: string;
+  /** Runs instead of navigating, for the items that are not pages (Edit Runs). */
+  action?: () => void;
 }
 
 @Component({
@@ -58,7 +60,9 @@ export interface NavItem {
     SidebarChipComponent,
     UiIconComponent,
     NotificationBellComponent,
-    NavOptionsMenuComponent
+    NavOptionsMenuComponent,
+    RouterLink,
+    RouterLinkActive
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   host: {
@@ -77,8 +81,6 @@ export class AppNavBarComponent implements OnInit {
   ref: DialogRef | null | undefined;
   editRunRef: DialogRef<FormGroup> | null | undefined;
 
-  // Set selected route to current URL path
-  selectedRoute: string = window.location.pathname;
   /** The mobile nav drawer; a signal, so the zoneless app re-renders when the sidebar service opens it. */
   sidebarVisible = signal(false);
   /** False until the first navigation (page load) ends. */
@@ -98,7 +100,6 @@ export class AppNavBarComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((event: NavigationEnd) => {
-        this.selectedRoute = event.url;
         const label = pageLabel(event.urlAfterRedirects, this.allNavItems);
         // A nav item was chosen in the drawer: close it. Its trigger left with the old page, so focus goes to
         // the new page's menu button when it has one, and otherwise to the page itself in the main region, never
@@ -175,33 +176,28 @@ export class AppNavBarComponent implements OnInit {
     });
   };
 
+  // The landing page was removed in #847, so the home logo opens the graph page.
   homeNavItem: NavItem = {
-    id: appRoutes.landingRoute(),
     label: 'Home',
-    onClick: () => this.navigateTo(appRoutes.landingRoute()),
+    route: appRoutes.graphRoute(),
     icon: 'logo'
   };
 
   mostUsedNavItems: NavItem[] = [
     {
-      id: appRoutes.chargingRoute(),
       label: 'Charging',
-      onClick: () => {
-        this.navigateTo(appRoutes.chargingRoute());
-      },
+      route: appRoutes.chargingRoute(),
       icon: 'ev_station'
     },
     {
-      id: appRoutes.graphRoute(),
       label: 'Graph',
-      onClick: () => this.navigateTo(appRoutes.graphRoute()),
+      route: appRoutes.graphRoute(),
       icon: 'bar_chart'
     },
-    { id: appRoutes.bmsRoute(), label: 'BMS', onClick: () => this.navigateTo(appRoutes.bmsRoute()), icon: 'action_key' },
+    { label: 'BMS', route: appRoutes.bmsRoute(), icon: 'action_key' },
     {
-      id: appRoutes.efusesRoute(),
       label: 'eFuses',
-      onClick: () => this.navigateTo(appRoutes.efusesRoute()),
+      route: appRoutes.efusesRoute(),
       icon: 'electrical_services'
     }
   ];
@@ -210,57 +206,42 @@ export class AppNavBarComponent implements OnInit {
 
   navMenuItems: NavItem[] = [
     {
-      id: appRoutes.faultsRoute(),
       label: 'Fault',
-      onClick: () => this.navigateTo(appRoutes.faultsRoute()),
+      route: appRoutes.faultsRoute(),
       icon: 'error'
     },
     {
-      id: appRoutes.mapRoute(),
       label: 'Map',
-      onClick: () => this.navigateTo(appRoutes.mapRoute()),
+      route: appRoutes.mapRoute(),
       icon: 'map'
     },
     {
-      id: appRoutes.cameraRoute(),
       label: 'Camera',
-      onClick: () => this.navigateTo(appRoutes.cameraRoute()),
+      route: appRoutes.cameraRoute(),
       icon: 'linked_camera'
     },
     {
-      id: '',
       label: 'Edit Runs',
-      onClick: this.openRunForm,
+      action: this.openRunForm,
       icon: 'edit'
     },
     {
-      id: appRoutes.commandsRoute(),
       label: 'Commands',
-      onClick: () => this.navigateTo(appRoutes.commandsRoute()),
+      route: appRoutes.commandsRoute(),
       icon: 'electrical_services'
     },
     {
-      id: appRoutes.rulesRoute(),
       label: 'Rules',
-      onClick: () => this.navigateTo(appRoutes.rulesRoute()),
+      route: appRoutes.rulesRoute(),
       icon: 'notifications'
     },
     {
-      id: appRoutes.lapTimerRoute(),
       label: 'Lap Timer',
-      onClick: () => this.navigateTo(appRoutes.lapTimerRoute()),
+      route: appRoutes.lapTimerRoute(),
       icon: 'timer'
     }
   ];
 
-  allNavItems: NavItem[] = [this.homeNavItem, ...this.mostUsedNavItems, ...this.navMenuItems];
-
-  navigateTo(route: string): void {
-    this.selectedRoute = route;
-    this.router.navigate([route]);
-  }
-
-  isSelected(navItem: NavItem) {
-    return navItem.id === this.selectedRoute;
-  }
+  // The home logo is desktop-only; in the drawer its graph-page destination is already listed as Graph.
+  allNavItems: NavItem[] = [...this.mostUsedNavItems, ...this.navMenuItems];
 }

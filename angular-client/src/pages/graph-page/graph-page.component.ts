@@ -30,6 +30,7 @@ import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
 import CustomGraphComponent from './graph/graph.component';
 import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
+import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import { numberInputClass } from 'src/ui/recipes/number-input';
 import { UiInputDirective } from 'src/ui/field/field.directive';
@@ -43,6 +44,7 @@ import { FormsModule, NgModel } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     LoadingPageComponent,
+    SidebarToggleComponent,
     ErrorPageComponent,
     ButtonComponent,
     FaultButtonsComponent,
