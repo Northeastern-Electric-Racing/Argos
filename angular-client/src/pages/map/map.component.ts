@@ -12,7 +12,7 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LngLatBounds, Map as MapLibreMap, Marker, VectorTileSource } from 'maplibre-gl';
-import { EMPTY, Observable, asyncScheduler, filter, from, merge, switchMap, tap, throttleTime } from 'rxjs';
+import { EMPTY, asyncScheduler, filter, from, merge, switchMap, tap, throttleTime } from 'rxjs';
 import { getTrace } from 'src/api/trace.api';
 import { addTrack, deleteTrack, editTrackLine } from 'src/api/track.api';
 import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
@@ -39,7 +39,6 @@ import {
   traceGeoJson
 } from 'src/utils/map.utils';
 import { lapTable } from 'src/utils/lap-timer.types';
-import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 import { Coordinate, Fix, TimingLine, Track } from 'src/utils/types.utils';
 import MapCanvasComponent from './map-canvas/map-canvas.component';
@@ -244,7 +243,7 @@ export default class MapComponent {
     // is; the newest is drawn until the next replaces it.
     let every = 1;
     let tail = 0;
-    return this.liveFixes().pipe(
+    return this.storage.get(topics.gpsLocation()).pipe(
       tap((value) => {
         const point = toFix(value);
         // MapLibre throws on a fix off the globe or not a number, which would end this stream, and the stored history may
@@ -262,21 +261,6 @@ export default class MapComponent {
           this.fit(this.trace());
       })
     );
-  }
-
-  // Storage replays a topic's latest value to each new subscriber; after a run change that fix is the last run's, and
-  // the run's stored history holds the latest one anyway, so only fixes that arrive after subscribing are drawn.
-  private liveFixes() {
-    return new Observable<DataValue>((subscriber) => {
-      let replaying = true;
-      const subscription = this.storage
-        .get(topics.gpsLocation())
-        .pipe(filter(() => !replaying))
-        // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- returned as the teardown, so it ends with this stream
-        .subscribe(subscriber);
-      replaying = false;
-      return subscription;
-    });
   }
 
   // The live trace draws while this loads, so a failure toasts instead of covering the map.
