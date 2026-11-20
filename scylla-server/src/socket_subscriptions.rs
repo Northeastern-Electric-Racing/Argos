@@ -6,6 +6,14 @@
 //! those topic rooms, and never in [`EVERY_TOPIC_ROOM`] again, even with an
 //! empty list.
 //!
+//! Each `set_subscriptions` list carries a number, `seq`, that the client
+//! raises with every list. socketioxide runs each event in its own task, so
+//! lists sent close together can be handled out of order; the server applies
+//! a list only if its number is higher than the last one applied to that
+//! socket, and drops older ones. The handshake's list counts as 0. A client
+//! can so change its topics as often as it likes and the socket always ends
+//! up on its latest list.
+//!
 //! socketioxide creates a room on its first join and removes it on its last
 //! leave (or disconnect), so a topic room exists only while a socket reads the
 //! topic. Emitting `data` never creates one.
@@ -32,8 +40,8 @@ use tracing::{debug, trace, warn};
 use crate::ClientData;
 use crate::metadata_structs::DATA_SOCKET_KEY;
 
-/// Client -> server event carrying the socket's full list of topics; acked
-/// with a [`SubscriptionAck`].
+/// Client -> server event carrying a [`TopicList`]; acked with a
+/// [`SubscriptionAck`].
 pub const SET_SUBSCRIPTIONS_EVENT: &str = "set_subscriptions";
 
 /// Room for sockets that never named their topics. `#` is the MQTT
@@ -41,10 +49,21 @@ pub const SET_SUBSCRIPTIONS_EVENT: &str = "set_subscriptions";
 /// wildcards are dropped, so it cannot collide with a topic room.
 pub const EVERY_TOPIC_ROOM: &str = "#";
 
-/// Ack payload for `set_subscriptions`: the number of topics the socket is now in.
+/// `set_subscriptions` payload: the socket's full list of topics, numbered.
+#[derive(serde::Deserialize, Debug)]
+pub struct TopicList {
+    /// Higher than every list this client sent before on this socket.
+    pub seq: u64,
+    pub topics: Vec<String>,
+}
+
+/// Ack payload for `set_subscriptions`: the socket's latest applied list, by
+/// its number and topic count. When the acked list was older than one already
+/// applied, `seq` is that newer list's.
 #[derive(serde::Serialize, Debug)]
 pub struct SubscriptionAck {
     pub count: usize,
+    pub seq: u64,
 }
 
 /// Connect extractor for the topics a socket named in its handshake, the
@@ -80,8 +99,25 @@ impl<A: Adapter> FromConnectParts<A> for HandshakeTopics {
 enum Delivery {
     /// Every topic, through [`EVERY_TOPIC_ROOM`].
     EveryTopic,
-    /// Exactly these topic rooms.
-    Topics(FxHashSet<String>),
+    /// Exactly these topic rooms, from the list numbered `seq`.
+    Topics { topics: FxHashSet<String>, seq: u64 },
+}
+
+impl Delivery {
+    /// The number of the last list applied; 0 before any.
+    fn seq(&self) -> u64 {
+        match self {
+            Delivery::EveryTopic => 0,
+            Delivery::Topics { seq, .. } => *seq,
+        }
+    }
+
+    fn count(&self) -> usize {
+        match self {
+            Delivery::EveryTopic => 0,
+            Delivery::Topics { topics, .. } => topics.len(),
+        }
+    }
 }
 
 /// What an emit needs to know: which rooms have sockets.
@@ -100,7 +136,8 @@ struct Gate {
 #[derive(Default)]
 pub struct Subscriptions {
     /// Each registered socket's delivery. Held across a socket's whole room
-    /// change, so its changes apply in order. Emits never take it.
+    /// change, so one change applies at a time; which list wins is decided by
+    /// its `seq`, not by when its event is handled. Emits never take it.
     sockets: Mutex<FxHashMap<Sid, Delivery>>,
     /// Read by every emit to pick its rooms; written briefly to update counts.
     gate: RwLock<Gate>,
@@ -135,18 +172,22 @@ impl Subscriptions {
                         wanted.len()
                     );
                     self.join(socket, wanted.iter().cloned().collect());
-                    sockets.insert(socket.id, Delivery::Topics(wanted));
+                    sockets.insert(
+                        socket.id,
+                        Delivery::Topics {
+                            topics: wanted,
+                            seq: 0,
+                        },
+                    );
                 }
             }
         }
         let subscriptions = self.clone();
         socket.on(
             SET_SUBSCRIPTIONS_EVENT,
-            async move |socket: SocketRef,
-                        TryData(topics): TryData<Vec<String>>,
-                        ack: AckSender| {
-                let topics = match topics {
-                    Ok(topics) => topics,
+            async move |socket: SocketRef, TryData(list): TryData<TopicList>, ack: AckSender| {
+                let list = match list {
+                    Ok(list) => list,
                     Err(err) => {
                         warn!(
                             "Socket {} sent unreadable {}: {}",
@@ -155,9 +196,12 @@ impl Subscriptions {
                         return;
                     }
                 };
-                let count = subscriptions.set_subscriptions(&socket, topics).await;
-                debug!("Socket {} now subscribed to {} topics", socket.id, count);
-                if let Err(err) = ack.send(&SubscriptionAck { count }) {
+                let applied = subscriptions.set_subscriptions(&socket, list).await;
+                debug!(
+                    "Socket {} now subscribed to {} topics (list {})",
+                    socket.id, applied.count, applied.seq
+                );
+                if let Err(err) = ack.send(&applied) {
                     trace!("Could not ack {}: {}", SET_SUBSCRIPTIONS_EVENT, err);
                 }
             },
@@ -172,7 +216,7 @@ impl Subscriptions {
         let mut gate = self.gate_mut();
         match delivery {
             Delivery::EveryTopic => gate.every_topic -= 1,
-            Delivery::Topics(topics) => {
+            Delivery::Topics { topics, .. } => {
                 for topic in &topics {
                     gate.remove_reader(topic);
                 }
@@ -180,17 +224,30 @@ impl Subscriptions {
         }
     }
 
-    /// Replace-set: moves the socket to exactly the rooms for `topics`,
-    /// joining only the rooms it is not in yet and leaving only the ones it no
-    /// longer wants. Returns the number of topics it is now in.
-    async fn set_subscriptions(&self, socket: &SocketRef, topics: Vec<String>) -> usize {
-        let wanted = valid_topics(socket.id, topics);
-        let count = wanted.len();
+    /// Replace-set: moves the socket to exactly the rooms for `list`, joining
+    /// only the rooms it is not in yet and leaving only the ones it no longer
+    /// wants, unless a list with the same or a higher number was already
+    /// applied. Returns the socket's latest applied list.
+    async fn set_subscriptions(&self, socket: &SocketRef, list: TopicList) -> SubscriptionAck {
         let mut sockets = self.sockets.lock().await;
         // None: disconnected while this event was in flight
         let Some(delivery) = sockets.get_mut(&socket.id) else {
-            return 0;
+            return SubscriptionAck { count: 0, seq: 0 };
         };
+        if list.seq <= delivery.seq() {
+            debug!(
+                "Socket {} sent list {} after list {}, dropping it",
+                socket.id,
+                list.seq,
+                delivery.seq()
+            );
+            return SubscriptionAck {
+                count: delivery.count(),
+                seq: delivery.seq(),
+            };
+        }
+        let wanted = valid_topics(socket.id, list.topics);
+        let count = wanted.len();
         match delivery {
             Delivery::EveryTopic => {
                 let _exit = self.every_topic_exit.write().await;
@@ -198,7 +255,9 @@ impl Subscriptions {
                 self.gate_mut().every_topic -= 1;
                 socket.leave(EVERY_TOPIC_ROOM);
             }
-            Delivery::Topics(current) => {
+            Delivery::Topics {
+                topics: current, ..
+            } => {
                 // An emit may target a room the socket is about to join, or
                 // skip one it is about to leave; topics it keeps are untouched.
                 self.join(socket, wanted.difference(current).cloned().collect());
@@ -214,8 +273,14 @@ impl Subscriptions {
                 }
             }
         }
-        *delivery = Delivery::Topics(wanted);
-        count
+        *delivery = Delivery::Topics {
+            topics: wanted,
+            seq: list.seq,
+        };
+        SubscriptionAck {
+            count,
+            seq: list.seq,
+        }
     }
 
     /// Counts the socket as a reader of `topics`, then joins their rooms.
@@ -412,13 +477,22 @@ mod tests {
         }
     }
 
+    /// A `set_subscriptions` packet for list `seq` of `topics` (a JSON array).
+    fn set_packet(seq: u64, topics: &str) -> Packet {
+        Packet::Message(
+            format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",{{\"seq\":{seq},\"topics\":{topics}}}]")
+                .into(),
+        )
+    }
+
     /// Sends `set_subscriptions` and returns its ack packet.
-    async fn send_set(tx: &Sender<Packet>, rx: &mut Receiver<Packet>, json: &str) -> String {
-        tx.send(Packet::Message(
-            format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",{json}]").into(),
-        ))
-        .await
-        .unwrap();
+    async fn send_set(
+        tx: &Sender<Packet>,
+        rx: &mut Receiver<Packet>,
+        seq: u64,
+        topics: &str,
+    ) -> String {
+        tx.send(set_packet(seq, topics)).await.unwrap();
         match rx.recv().await.unwrap() {
             Packet::Message(msg) if msg.starts_with("30") => msg.to_string(),
             other => panic!("expected an ack, got {other:?}"),
@@ -472,8 +546,8 @@ mod tests {
     async fn subscribed_socket_gets_only_its_topics_once() {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect_old().await;
-        let ack = send_set(&tx, &mut rx, r#"["BMS/Pack/SOC","BMS/Pack/SOC"]"#).await;
-        assert_eq!(ack, r#"30[{"count":1}]"#);
+        let ack = send_set(&tx, &mut rx, 1, r#"["BMS/Pack/SOC","BMS/Pack/SOC"]"#).await;
+        assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
         srv.emit("BMS/Pack/SOC").await;
         srv.emit("VCU/Speed").await;
         assert_eq!(received_topics(&mut rx).await, ["BMS/Pack/SOC"]);
@@ -483,7 +557,7 @@ mod tests {
     async fn second_set_replaces_the_first() {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect(json!({ "topics": ["BMS/Pack/SOC"] })).await;
-        send_set(&tx, &mut rx, r#"["VCU/Speed"]"#).await;
+        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         srv.emit("BMS/Pack/SOC").await;
         srv.emit("VCU/Speed").await;
         assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
@@ -495,8 +569,11 @@ mod tests {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect_old().await;
         let (_peer_tx, mut peer_rx) = srv.connect_old().await;
-        send_set(&tx, &mut rx, r#"["VCU/Speed"]"#).await;
-        assert_eq!(send_set(&tx, &mut rx, "[]").await, r#"30[{"count":0}]"#);
+        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
+        assert_eq!(
+            send_set(&tx, &mut rx, 2, "[]").await,
+            r#"30[{"count":0,"seq":2}]"#
+        );
         srv.emit("BMS/Pack/SOC").await;
         srv.emit("VCU/Speed").await;
         assert!(received_topics(&mut rx).await.is_empty());
@@ -511,9 +588,9 @@ mod tests {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect_old().await;
         let (peer_tx, mut peer_rx) = srv.connect_old().await;
-        send_set(&tx, &mut rx, r#"["A","B"]"#).await;
-        send_set(&peer_tx, &mut peer_rx, r#"["B"]"#).await;
-        send_set(&tx, &mut rx, r#"["B","C"]"#).await;
+        send_set(&tx, &mut rx, 1, r#"["A","B"]"#).await;
+        send_set(&peer_tx, &mut peer_rx, 1, r#"["B"]"#).await;
+        send_set(&tx, &mut rx, 2, r#"["B","C"]"#).await;
         for topic in ["A", "B", "C"] {
             srv.emit(topic).await;
         }
@@ -524,6 +601,78 @@ mod tests {
             (0, vec![("B".to_string(), 2), ("C".to_string(), 1)])
         );
         assert_eq!(srv.rooms().await, ["B", "C"]);
+    }
+
+    #[tokio::test]
+    async fn older_or_repeated_list_is_dropped() {
+        let srv = Server::new();
+        let (tx, mut rx) = srv.connect_old().await;
+        send_set(&tx, &mut rx, 2, r#"["B"]"#).await;
+        assert_eq!(
+            send_set(&tx, &mut rx, 1, r#"["A","C"]"#).await,
+            r#"30[{"count":1,"seq":2}]"#
+        );
+        assert_eq!(
+            send_set(&tx, &mut rx, 2, r#"["A"]"#).await,
+            r#"30[{"count":1,"seq":2}]"#
+        );
+        assert_eq!(srv.rooms().await, ["B"]);
+    }
+
+    #[tokio::test]
+    async fn handshake_list_counts_as_zero() {
+        let srv = Server::new();
+        let (tx, mut rx) = srv.connect(json!({ "topics": ["A"] })).await;
+        assert_eq!(
+            send_set(&tx, &mut rx, 0, r#"["B"]"#).await,
+            r#"30[{"count":1,"seq":0}]"#
+        );
+        assert_eq!(srv.rooms().await, ["A"]);
+    }
+
+    #[tokio::test]
+    async fn list_without_seq_is_ignored() {
+        let srv = Server::new();
+        let (tx, mut rx) = srv.connect(json!({ "topics": ["A"] })).await;
+        tx.send(Packet::Message(
+            format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",[\"B\"]]").into(),
+        ))
+        .await
+        .unwrap();
+        assert!(
+            tokio::time::timeout(Duration::from_millis(50), rx.recv())
+                .await
+                .is_err()
+        );
+        assert_eq!(srv.rooms().await, ["A"]);
+    }
+
+    /// A page releasing its topics one by one sends many lists at once; their
+    /// events race, and the socket must still end on the last list sent.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn lists_sent_at_once_end_on_the_latest() {
+        const LISTS: u64 = 300;
+        let srv = Server::with_builder(SocketIo::builder().max_buffer_size(4096));
+        let (tx, mut rx) = srv.connect_old().await;
+        let (peer_tx, mut peer_rx) = srv.connect_old().await;
+        send_set(&peer_tx, &mut peer_rx, 1, r#"["T0"]"#).await;
+        for seq in 1..=LISTS {
+            // each list one topic shorter: list LISTS keeps only T0
+            let topics: Vec<String> = (0..=LISTS - seq).map(|i| format!("T{i}")).collect();
+            tx.send(set_packet(seq, &serde_json::to_string(&topics).unwrap()))
+                .await
+                .unwrap();
+        }
+        let mut acks = 0;
+        while acks < LISTS {
+            match tokio::time::timeout(Duration::from_secs(5), rx.recv()).await {
+                Ok(Some(Packet::Message(msg))) if msg.starts_with("30") => acks += 1,
+                Ok(Some(_)) => {}
+                other => panic!("missing acks after {acks}: {other:?}"),
+            }
+        }
+        assert_eq!(srv.rooms().await, ["T0"]);
+        assert_eq!(srv.subs.reader_counts(), (0, vec![("T0".to_string(), 2)]));
     }
 
     #[tokio::test]
@@ -551,7 +700,7 @@ mod tests {
         let (_tx, _rx) = srv.connect_old().await;
         let (_hs_tx, _hs_rx) = srv.connect(json!({ "topics": ["A"] })).await;
         let (tx, mut rx) = srv.connect_old().await;
-        send_set(&tx, &mut rx, r#"["VCU/Speed"]"#).await;
+        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         assert_eq!(srv.subs.socket_count().await, 3);
         for socket in srv.io.sockets() {
             socket.disconnect().unwrap();
@@ -567,8 +716,8 @@ mod tests {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect(json!({ "topics": ["#", "+/Speed", ""] })).await;
         assert_eq!(srv.rooms().await, Vec::<String>::new());
-        let ack = send_set(&tx, &mut rx, r#"["BMS/#","+/Speed","","VCU/Speed"]"#).await;
-        assert_eq!(ack, r#"30[{"count":1}]"#);
+        let ack = send_set(&tx, &mut rx, 1, r#"["BMS/#","+/Speed","","VCU/Speed"]"#).await;
+        assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
         assert_eq!(srv.rooms().await, ["VCU/Speed"]);
     }
 
@@ -579,11 +728,7 @@ mod tests {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect_old().await;
         let emit_in_flight = srv.subs.every_topic_exit.read().await;
-        tx.send(Packet::Message(
-            format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",[\"Kept\"]]").into(),
-        ))
-        .await
-        .unwrap();
+        tx.send(set_packet(1, r#"["Kept"]"#)).await.unwrap();
         tokio::time::sleep(Duration::from_millis(20)).await;
         assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM]);
         drop(emit_in_flight);
@@ -640,11 +785,7 @@ mod tests {
         };
         tokio::time::sleep(Duration::from_millis(2)).await;
         for tx in &senders {
-            tx.send(Packet::Message(
-                format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",{set}]").into(),
-            ))
-            .await
-            .unwrap();
+            tx.send(set_packet(1, &set)).await.unwrap();
         }
         emitter.await.unwrap();
         for receiver in receivers {

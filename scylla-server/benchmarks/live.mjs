@@ -118,7 +118,7 @@ async function child() {
   if (kind === 'small' || kind === 'empty') {
     const start = performance.now();
     try {
-      const ack = await socket.timeout(3000).emitWithAck('set_subscriptions', wanted);
+      const ack = await socket.timeout(3000).emitWithAck('set_subscriptions', { seq: 1, topics: wanted });
       ackMs = performance.now() - start;
       ackCount = ack.count;
     } catch {
