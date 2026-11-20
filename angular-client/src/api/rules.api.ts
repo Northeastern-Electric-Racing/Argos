@@ -5,6 +5,7 @@ export interface RulePayload {
   topic: string;
   expr: string;
   debounce_time: number;
+  description?: string;
 }
 
 export interface ClientRule {
@@ -12,6 +13,8 @@ export interface ClientRule {
   topic: string;
   expr: string;
   debounce_time: number;
+  description: string | null;
+  uploaded_by: string | null;
   subscribers: string[];
   is_subscribed: boolean;
 }

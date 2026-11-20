@@ -8,6 +8,7 @@ import { fieldClasses } from 'src/ui/recipes/field';
 export interface EditRuleResult {
   expr: string;
   debounce_time: number;
+  description: string;
 }
 
 @Component({
@@ -24,7 +25,8 @@ export class EditRuleDialogComponent {
 
   form = this.fb.group({
     expr: [this.dialogData.expr as string, Validators.required],
-    debounce_time: [this.dialogData.debounce_time as number, [Validators.required, Validators.min(0)]]
+    debounce_time: [this.dialogData.debounce_time as number, [Validators.required, Validators.min(0)]],
+    description: [(this.dialogData.description as string | null) ?? '']
   });
 
   /** Whether a field shows an error, so its input gets aria-invalid and points at the message. */
@@ -42,7 +44,8 @@ export class EditRuleDialogComponent {
     const value = this.form.getRawValue();
     const result: EditRuleResult = {
       expr: value.expr!,
-      debounce_time: Number(value.debounce_time)
+      debounce_time: Number(value.debounce_time),
+      description: value.description?.trim() ?? ''
     };
 
     this.ref.close(result);

@@ -11,6 +11,8 @@ const rule = (id: string, is_subscribed: boolean): ClientRule => ({
   topic: 'BMS/Pack/Voltage',
   expr: 'a > 1',
   debounce_time: 5,
+  description: null,
+  uploaded_by: null,
   subscribers: [],
   is_subscribed
 });
@@ -241,6 +243,34 @@ describe('RulesTableComponent', () => {
     fixture.componentRef.setInput('searchTerm', 'nothing');
     await settle();
     expect(fixture.nativeElement.textContent).toContain('No rules match your search.');
+  });
+
+  it('also filters on description and uploaded by', async () => {
+    fixture.componentInstance.rules.set([
+      { ...rule('volts', false), description: 'Pack overvoltage', uploaded_by: 'client-abc' },
+      rule('bare', false)
+    ]);
+    const ids = () => fixture.componentInstance.filteredRules().map((r) => r.id);
+    for (const term of ['overvoltage', 'CLIENT-ABC']) {
+      fixture.componentRef.setInput('searchTerm', term);
+      await settle();
+      expect(ids()).toEqual(['volts']);
+    }
+  });
+
+  it('shows uploaded by and description, or a dash when missing', async () => {
+    fixture.componentInstance.rules.set([
+      { ...rule('described', false), description: 'Pack overvoltage', uploaded_by: 'client-abc' },
+      rule('bare', false)
+    ]);
+    await settle();
+    const cells = (row: number): string[] =>
+      Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('tbody tr')[row].querySelectorAll('td')).map((td) =>
+        td.textContent!.trim()
+      );
+
+    expect(cells(0).slice(3, 5)).toEqual(['client-abc', 'Pack overvoltage']);
+    expect(cells(1).slice(3, 5)).toEqual(['-', '-']);
   });
 
   it("covers the rows with develop's loading mask and spinner on a reload, not only on the first load", async () => {

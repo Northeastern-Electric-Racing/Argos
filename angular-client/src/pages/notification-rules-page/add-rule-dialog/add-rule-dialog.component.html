@@ -110,6 +110,17 @@
     }
   </div>
 
+  <div [class]="f.field">
+    <label uiLabel for="rule-description">Description (optional)</label>
+    <input
+      uiInput
+      class="w-full"
+      id="rule-description"
+      formControlName="description"
+      placeholder="e.g. Pack voltage out of safe range"
+    />
+  </div>
+
   <div [class]="f.actions">
     <button uiButton variant="text" type="button" (click)="onCancel()">Cancel</button>
     <button uiButton type="submit">Add Rule</button>
