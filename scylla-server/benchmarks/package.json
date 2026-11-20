@@ -1,0 +1,12 @@
+{
+  "name": "scylla-selective-delivery-benchmarks",
+  "private": true,
+  "description": "Live end-to-end benchmark of scylla-server's per-topic data delivery (epic #991); see README.md",
+  "type": "module",
+  "scripts": {
+    "live": "node live.mjs"
+  },
+  "devDependencies": {
+    "socket.io-client": "4.8.1"
+  }
+}
