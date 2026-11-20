@@ -1,0 +1,42 @@
+name: Board Status
+
+# Moves an issue's Argos Tickets card to In Progress when its {issue}-… branch is created and to
+# Under Review when that branch's PR opens, as the NER Board App. The board itself sets Done.
+on:
+  push:
+    branches: ["[0-9]*"]
+  pull_request:
+    types: [opened]
+
+concurrency: board-status-${{ github.head_ref || github.ref_name }}
+
+permissions: {}
+
+jobs:
+  move-card:
+    if: github.event.created || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - id: issue
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if [[ $BRANCH =~ ^([0-9]+)- ]]; then echo "number=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"; fi
+      - id: app
+        if: steps.issue.outputs.number
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BOARD_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BOARD_APP_PRIVATE_KEY }}
+      - if: steps.issue.outputs.number
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          ISSUE: ${{ github.server_url }}/${{ github.repository }}/issues/${{ steps.issue.outputs.number }}
+          STATUS: ${{ github.event_name == 'push' && 'In Progress' || 'Under Review' }}
+        run: |
+          item=$(gh project item-add 23 --owner "$OWNER" --url "$ISSUE" --format json --jq .id)
+          project=$(gh project view 23 --owner "$OWNER" --format json --jq .id)
+          read -r field option < <(gh project field-list 23 --owner "$OWNER" --format json --jq \
+            '.fields[] | select(.name == "Status") | "\(.id) \(.options[] | select(.name == env.STATUS) | .id)"')
+          gh project item-edit --project-id "$project" --id "$item" --field-id "$field" --single-select-option-id "$option"
