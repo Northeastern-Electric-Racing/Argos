@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { afterNextRender, inject, Injectable, Injector } from '@angular/core';
 import { BehaviorSubject, defer, finalize, Observable, ReplaySubject, share, Subject } from 'rxjs';
 import { DataValue, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 import { RunLaps, Track } from 'src/utils/types.utils';
@@ -21,6 +21,7 @@ export default class Storage {
   private topics: string[] = [];
   private topicChanges = new Subject<string[]>();
   private syncScheduled = false;
+  private injector = inject(Injector);
 
   private timerStorage: TimerStorageMap = new Map<string, Subject<TimerData>>();
 
@@ -62,7 +63,7 @@ export default class Storage {
     return this.topics;
   };
 
-  /** The full sorted topic list each time it changes, once per task however many get()s changed it. */
+  /** The full sorted topic list each time it changes, once per render however many get()s changed it. */
   public topicsChanged = (): Observable<string[]> => {
     return this.topicChanges.asObservable();
   };
@@ -74,20 +75,23 @@ export default class Storage {
   };
 
   /**
-   * Batches every change in the current task into one, so a page that leaves and the page that
-   * replaces it send one list, and a topic both read never leaves it. A microtask runs right after
-   * the task with no added delay and isn't throttled in background tabs.
+   * Batches every change until the next render into one list. Zoneless, the router destroys the old
+   * page in its own task and the new page subscribes when it renders a frame later, so batching
+   * until then makes a page switch send one list, and a topic both pages read never leaves it.
    */
   private scheduleSync = (): void => {
     if (this.syncScheduled) return;
     this.syncScheduled = true;
-    queueMicrotask(() => {
-      this.syncScheduled = false;
-      const topics = [...this.read].sort();
-      if (topics.length === this.topics.length && topics.every((topic, i) => topic === this.topics[i])) return;
-      this.topics = topics;
-      this.topicChanges.next(topics);
-    });
+    afterNextRender(
+      () => {
+        this.syncScheduled = false;
+        const topics = [...this.read].sort();
+        if (topics.length === this.topics.length && topics.every((topic, i) => topic === this.topics[i])) return;
+        this.topics = topics;
+        this.topicChanges.next(topics);
+      },
+      { injector: this.injector }
+    );
   };
 
   public getCurrentRunId = () => {

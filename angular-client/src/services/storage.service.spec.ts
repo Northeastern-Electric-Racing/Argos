@@ -1,17 +1,19 @@
+import { ApplicationRef } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import Storage from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 
 const value = (v: string): DataValue => ({ values: [v], time: '0', unit: 'x' });
 
-/** Lets the microtask that batches a task's topic changes run. */
-const flush = () => Promise.resolve();
+/** Renders, which sends the topic changes batched since the last render. */
+const flush = () => TestBed.inject(ApplicationRef).whenStable();
 
 describe('Storage (topic subscriptions)', () => {
   let storage: Storage;
   let changes: string[][];
 
   beforeEach(() => {
-    storage = new Storage();
+    storage = TestBed.inject(Storage);
     changes = [];
     storage.topicsChanged().subscribe((topics) => changes.push(topics));
   });
@@ -29,7 +31,7 @@ describe('Storage (topic subscriptions)', () => {
     expect(changes).toEqual([]);
   });
 
-  it('batches every get() subscription in one task into a single change', async () => {
+  it('batches every get() subscription before a render into a single change', async () => {
     ['E/F', 'A/B', 'C/D'].forEach((topic) => storage.get(topic).subscribe());
     expect(changes).toEqual([]);
     await flush();
@@ -64,7 +66,7 @@ describe('Storage (topic subscriptions)', () => {
     expect(changes).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['G/H']]);
   });
 
-  it('sends nothing when a topic is left and read again in the same task, as on a page switch', async () => {
+  it('sends nothing when a topic is left and read again before the next render, as on a page switch', async () => {
     const leaving = storage.get('A/B').subscribe();
     await flush();
     leaving.unsubscribe();
