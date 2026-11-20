@@ -1,14 +1,15 @@
 #!/bin/sh
 # Live selective-delivery benchmark (epic #991): brings up an offset scylla-dev
 # stack (Mosquitto + Calypso's simulator over MQTT + Postgres), runs this
-# branch's scylla-server in release, and runs live.mjs against it; then does
+# branch's scylla-server in release, samples the simulator's topics through it,
+# and runs live.mjs and the micro-benchmark on that sample; then does
 # the same against develop's published server image as the baseline, where
 # every client gets every topic. See README.md.
 # BASELINE=build builds develop's server instead, from a checkout of develop
 # (DEVELOP_DIR), which also works where Docker has no host network (macOS).
 #
 #   scylla-server/benchmarks/run.sh            # from anywhere
-#   SECS=60 BASELINE=none TEARDOWN=0 ./run.sh  # knobs, defaults below
+#   SECS=60 BASELINE=none TEARDOWN=0 MICRO=0 ./run.sh  # knobs, defaults below
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -28,6 +29,7 @@ BASELINE="${BASELINE:-image}" # image | build | none
 DEVELOP_DIR="${DEVELOP_DIR:-}"   # with BASELINE=build: a checkout of develop
 DEVELOP_PID=""
 TEARDOWN="${TEARDOWN:-1}"
+MICRO="${MICRO:-1}"
 WARMUP="${WARMUP:-5}"
 SECS="${SECS:-30}"
 OUT="$HERE/results/$(date +%Y%m%d-%H%M%S)"
@@ -97,6 +99,13 @@ live rooms "$ROOMS_PORT" "$ROOMS_PID" "small*15"
 kill -INT "$ROOMS_PID"
 wait "$ROOMS_PID" 2>/dev/null || true
 ROOMS_PID=""
+
+# the micro-benchmark replays the same sample, with no server running
+if [ "$MICRO" = 1 ]; then
+    echo "== micro-benchmark on the sample"
+    (cd "$SCYLLA" && SIM_SAMPLE="$OUT/topics-sample.json" cargo bench -q --bench selective_delivery) \
+        | tee "$OUT/micro.md"
+fi
 
 if [ "$BASELINE" = image ]; then
     echo "== develop's scylla-server ($DEVELOP_IMAGE), :$DEVELOP_PORT"
