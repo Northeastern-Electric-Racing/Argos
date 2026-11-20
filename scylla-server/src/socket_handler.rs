@@ -22,6 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::socket_subscriptions::{HandshakeTopics, Subscriptions};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -154,13 +155,22 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
+    let subscriptions = Arc::new(Subscriptions::default());
+    let ns_subscriptions = subscriptions.clone();
     io.ns(
         "/",
-        |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
+        |socket: SocketRef,
+         SocketClientId(client_id): SocketClientId,
+         HandshakeTopics(topics): HandshakeTopics| async move {
+            // `data`: every topic, or only the handshake's or `set_subscriptions`' topics
+            ns_subscriptions.register(&socket, topics).await;
             // unfortunate locking and ref counting due to the async closures
             let mut owned = writable_socket_map.write().await;
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
+                socket.on_disconnect(async move |socket: SocketRef| {
+                    ns_subscriptions.unregister(socket.id).await;
+                });
                 return;
             }
 
@@ -171,7 +181,8 @@ pub async fn socket_handler_with_metadata(
             owned.insert(client_id.clone(), socket.id);
             drop(owned);
 
-            socket.on_disconnect(async move || {
+            socket.on_disconnect(async move |socket: SocketRef| {
+                ns_subscriptions.unregister(socket.id).await;
                 writable_socket_map.write().await.remove(&client_id);
             });
         },
@@ -201,12 +212,11 @@ pub async fn socket_handler_with_metadata(
                         // let sample = msg_cnt % 500 == 0;
                         // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
                         // let emit_start = sample.then(tokio::time::Instant::now);
-                        send_socket_msg(
-                            &data,
-                            &mut upload_counter,
-                            &io,
-                            DATA_SOCKET_KEY,
-                        ).await;
+                        if keep_message(&mut upload_counter)
+                            && let Err(err) = subscriptions.emit_data(&io, &data).await
+                        {
+                            log_broadcast_err(&err);
+                        }
                         // if let (Some(age), Some(start)) = (age_ms, emit_start) {
                         //     debug!(
                         //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
@@ -465,33 +475,41 @@ async fn send_socket_msg<T>(
 ) where
     T: Serialize,
 {
-    // `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
-    // 100 drops everything. Cycle the counter through 0..100 and keep the message only
-    // when its position is at or above the discard threshold, e.g. a value of 25 drops
-    // positions 0..24 (~25%) and keeps positions 25..99 (~75%).
-    *upload_counter = upload_counter.wrapping_add(1) % 100;
-    if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
-        match io
+    if keep_message(upload_counter)
+        && let Err(err) = io
             .emit(
                 socket_key,
                 &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
             )
             .await
-        {
-            Ok(()) => (),
-            Err(err) => match err {
-                socketioxide::BroadcastError::Socket(e) => {
-                    trace!("Socket: Transmit error: {:?}", e);
-                }
-                socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err);
-                }
-                socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err);
-                }
-            },
-        }
-    } else {
+    {
+        log_broadcast_err(&err);
+    }
+}
+
+/// `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
+/// 100 drops everything. Cycle the counter through 0..100 and keep the message only
+/// when its position is at or above the discard threshold, e.g. a value of 25 drops
+/// positions 0..24 (~25%) and keeps positions 25..99 (~75%).
+fn keep_message(upload_counter: &mut u8) -> bool {
+    *upload_counter = upload_counter.wrapping_add(1) % 100;
+    let keep = *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed);
+    if !keep {
         trace!("Discarding message!");
+    }
+    keep
+}
+
+fn log_broadcast_err(err: &socketioxide::BroadcastError) {
+    match err {
+        socketioxide::BroadcastError::Socket(e) => {
+            trace!("Socket: Transmit error: {:?}", e);
+        }
+        socketioxide::BroadcastError::Serialize(_) => {
+            warn!("Socket: Serialize error: {}", err);
+        }
+        socketioxide::BroadcastError::Adapter(_) => {
+            warn!("Socket: Adapter error: {}", err);
+        }
     }
 }
