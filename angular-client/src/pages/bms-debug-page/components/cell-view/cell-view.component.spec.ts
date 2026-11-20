@@ -2,6 +2,10 @@ import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SelectedCellInfo } from 'src/services/heat-map.service';
+import { CellService } from 'src/services/cell.service';
+import Storage from 'src/services/storage.service';
+import { DataValue } from 'src/utils/socket.utils';
+import { topics } from 'src/utils/topic.utils';
 import { CellViewComponent } from './cell-view.component';
 
 describe('CellViewComponent', () => {
@@ -32,5 +36,16 @@ describe('CellViewComponent', () => {
     cell.reading.cvs = false;
     expect(classOf('Balancing')).toBe('text-warn');
     expect(classOf('CvS Failure')).toBe('text-success');
+  });
+
+  /** The panel stays open across navigation, so it keeps its cells live even off the BMS pages. */
+  it('keeps the selected cells live while open', () => {
+    const storage = TestBed.inject(Storage);
+    const [reading] = TestBed.inject(CellService).getAlphaCellsBySegment(0);
+    storage.addValue(topics.alphaVolt(0, 0), { values: ['3.70'], time: '0', unit: 'V' } as DataValue);
+    expect(reading.voltage).toBeCloseTo(3.7);
+
+    fixture.destroy();
+    expect(reading.voltage).toBeUndefined();
   });
 });
