@@ -29,27 +29,18 @@ module.exports = {
       run: async (h) => {
         await nav(h, 'BMS');
         await lib.waitFor(h.page, (msgs) => msgs > 300);
-        // Real time, not a dwell, even for stills: the sweep that drops Charging-only topics runs meanwhile.
-        await h.wait(6000);
-        await h.dwell(2000);
+        await h.wait(3000); // the counter's windows fill
+        await h.dwell(3000);
       },
     },
     {
       name: 'Back to Charging',
-      caption: "BMS's topics expire but keep arriving until the next sweep, so a quick switch back would keep them.",
+      caption: "Switching back sends one list: BMS's topics stop as soon as the page leaves, the shared ones stay.",
       run: async (h) => {
         await nav(h, 'Charging');
-        await h.wait(1500);
-        await h.dwell(1000);
-      },
-    },
-    {
-      name: 'Sweep',
-      caption: 'The sweep drops every expired topic at once: one list, and back to Charging only.',
-      run: async (h) => {
-        await lib.waitFor(h.page, (msgs) => msgs < 100, 8000);
-        await h.wait(1500); // the counter's 1 s window catches up
-        await h.dwell(4500);
+        await lib.waitFor(h.page, (msgs) => msgs < 100, 5000);
+        await h.wait(2000); // the counter's 2 s topic window catches up
+        await h.dwell(4000);
       },
     },
   ],
