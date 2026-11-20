@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import Storage from 'src/services/storage.service';
 import { TopicLiveValueComponent } from './topic-live-value.component';
@@ -14,9 +15,9 @@ describe('TopicLiveValueComponent', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
   };
-  /** Whether this client reads the topic, once the task's topic changes are batched. */
+  /** Whether this client reads the topic, once the next render sends the batched topic changes. */
   const reading = async () => {
-    await Promise.resolve();
+    await TestBed.inject(ApplicationRef).whenStable();
     return storage.getTopics().includes(topic);
   };
   const text = () => (fixture.nativeElement as HTMLElement).textContent?.trim();

@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { EnvService } from './env.service';
@@ -60,8 +61,8 @@ class FakeSocket {
   }
 }
 
-/** Lets the microtask that batches a task's topic changes run. */
-const flush = () => Promise.resolve();
+/** Renders, which sends the topic changes batched since the last render. */
+const flush = () => TestBed.inject(ApplicationRef).whenStable();
 
 describe('SocketService (topic subscriptions)', () => {
   let socket: FakeSocket;
