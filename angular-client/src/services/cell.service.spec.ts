@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CellService } from './cell.service';
-import Storage, { TOPIC_SWEEP_MS } from './storage.service';
+import Storage from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 
@@ -32,7 +32,6 @@ describe('CellService', () => {
   const betaCell = (segment: number, cell: number) => cells.getBetaCellsBySegment(segment)[cell];
 
   beforeEach(() => {
-    vi.useFakeTimers();
     TestBed.configureTestingModule({ providers: [Storage, CellService] });
     storage = TestBed.inject(Storage);
     cells = TestBed.inject(CellService);
@@ -40,7 +39,6 @@ describe('CellService', () => {
 
   afterEach(() => {
     releases.splice(0).forEach((release) => release());
-    vi.useRealTimers();
   });
 
   it('subscribes no cell topics until something retains it', async () => {
@@ -56,22 +54,16 @@ describe('CellService', () => {
     expect(cellTopics()).toContain(topics.betaOw(4, 12));
   });
 
-  it('keeps the topics while any reader holds them, and drops them at the sweep after the last releases', async () => {
+  it('keeps the topics while any reader holds them, and drops them once the last releases', async () => {
     const first = retain();
     const second = retain();
     await flush();
 
     first();
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS * 2);
     await flush();
     expect(cellTopics()).toHaveLength(CELL_TOPIC_COUNT);
 
     second();
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
-    await flush();
-    expect(cellTopics()).toHaveLength(CELL_TOPIC_COUNT);
-
-    vi.advanceTimersByTime(1);
     await flush();
     expect(cellTopics()).toEqual([]);
   });
@@ -81,7 +73,6 @@ describe('CellService', () => {
     retain();
     first();
     first();
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS * 2);
     await flush();
     expect(cellTopics()).toHaveLength(CELL_TOPIC_COUNT);
   });
@@ -104,23 +95,11 @@ describe('CellService', () => {
     expect(betaCell(0, 7).ow).toBe(true);
   });
 
-  it('keeps the latest values through a quick release and retain, such as a page switch', () => {
-    const release = retain();
-    push(storage, topics.alphaVolt(0, 0), '3.40');
-
-    release();
-    expect(alphaCell(0, 0).voltage).toBeUndefined(); // nothing reads the cells now
-
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
-    retain();
-    expect(alphaCell(0, 0).voltage).toBeCloseTo(3.4); // replayed from the expired topic, not yet swept
-  });
-
-  it('shows no stale readings once the topics were released and swept', () => {
+  it('shows no stale readings once the topics were released', () => {
     const release = retain();
     push(storage, topics.alphaVolt(0, 0), '3.40');
     release();
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+    expect(alphaCell(0, 0).voltage).toBeUndefined();
 
     retain();
     expect(alphaCell(0, 0).voltage).toBeUndefined();

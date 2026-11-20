@@ -3,7 +3,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import Storage, { TOPIC_SWEEP_MS } from 'src/services/storage.service';
+import Storage from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -75,21 +75,15 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     expect(component).toBeTruthy();
   });
 
-  it('holds the BMS cell topics while shown, and releases them at the sweep once destroyed', async () => {
-    vi.useFakeTimers();
-    try {
-      const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
-      await Promise.resolve();
-      expect(cellTopics()).toContain(topics.alphaVolt(SEGMENT, CELL));
+  it('holds the BMS cell topics while shown, and releases them once destroyed', async () => {
+    const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
+    await Promise.resolve();
+    expect(cellTopics()).toContain(topics.alphaVolt(SEGMENT, CELL));
 
-      fixture.destroy();
-      vi.advanceTimersByTime(TOPIC_SWEEP_MS);
-      await Promise.resolve();
-      expect(cellTopics()).toEqual([]);
-      expect(cellService.getAlphaCellsBySegment(SEGMENT)[CELL].voltage).toBeUndefined();
-    } finally {
-      vi.useRealTimers();
-    }
+    fixture.destroy();
+    await Promise.resolve();
+    expect(cellTopics()).toEqual([]);
+    expect(cellService.getAlphaCellsBySegment(SEGMENT)[CELL].voltage).toBeUndefined();
   });
 
   it('fills the flag views from theme tokens, each under black text at AA', () => {
