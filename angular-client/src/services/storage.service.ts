@@ -3,14 +3,18 @@ import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
 import { DataValue, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 import { RunLaps, Track } from 'src/utils/types.utils';
 
-/** How long a topic stays subscribed after its last reader leaves, so a quick page switch keeps it. */
-export const TOPIC_LINGER_MS = 2500;
+/**
+ * How often expired topics (ones whose last reader left) are dropped, all in one sweep so leaving a
+ * page sends one topic list. An expired topic is kept 0-5 s, so a quick page switch keeps it.
+ */
+export const TOPIC_SWEEP_MS = 5000;
 
 type TopicEntry = {
   /** Replays the latest value to late subscribers. */
   stream: ReplaySubject<DataValue>;
   readers: number;
-  linger?: ReturnType<typeof setTimeout>;
+  /** Lost its last reader; dropped at the next sweep unless a reader returns first. */
+  expired: boolean;
 };
 
 /**
@@ -18,8 +22,9 @@ type TopicEntry = {
  */
 @Injectable({ providedIn: 'root' })
 export default class Storage {
-  /** The topics this client reads: each one has a reader, or lost its last within the linger. */
+  /** The topics this client reads: each one has a reader, or expired since the last sweep. */
   private entries = new Map<string, TopicEntry>();
+  private sweep?: ReturnType<typeof setTimeout>;
   private topics: string[] = [];
   private topicChanges = new Subject<string[]>();
   private syncScheduled = false;
@@ -34,7 +39,7 @@ export default class Storage {
 
   /**
    * Live values of one topic, replaying the latest to late subscribers. While anything is
-   * subscribed (and for TOPIC_LINGER_MS after the last unsubscribes) the topic is one this
+   * subscribed (and until the next sweep after the last unsubscribes) the topic is one this
    * client reads, so the server delivers it.
    */
   public get = (key: string): Observable<DataValue> => {
@@ -65,12 +70,11 @@ export default class Storage {
   private retain = (key: string): TopicEntry => {
     let entry = this.entries.get(key);
     if (!entry) {
-      entry = { stream: new ReplaySubject<DataValue>(1), readers: 0 };
+      entry = { stream: new ReplaySubject<DataValue>(1), readers: 0, expired: false };
       this.entries.set(key, entry);
       this.scheduleSync();
     }
-    clearTimeout(entry.linger);
-    entry.linger = undefined;
+    entry.expired = false;
     entry.readers++;
     return entry;
   };
@@ -78,10 +82,17 @@ export default class Storage {
   private release = (key: string): void => {
     const entry = this.entries.get(key);
     if (!entry || --entry.readers > 0) return;
-    entry.linger = setTimeout(() => {
-      this.entries.delete(key);
-      this.scheduleSync();
-    }, TOPIC_LINGER_MS);
+    entry.expired = true;
+    this.sweep ??= setTimeout(this.dropExpired, TOPIC_SWEEP_MS);
+  };
+
+  /** The sweep: drops every expired topic at once. Runs only while some topic has expired. */
+  private dropExpired = (): void => {
+    this.sweep = undefined;
+    for (const [key, entry] of this.entries) {
+      if (entry.expired) this.entries.delete(key);
+    }
+    this.scheduleSync();
   };
 
   /**

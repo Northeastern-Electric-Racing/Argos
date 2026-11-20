@@ -1,4 +1,4 @@
-import Storage, { TOPIC_LINGER_MS } from './storage.service';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 
 const value = (v: string): DataValue => ({ values: [v], time: '0', unit: 'x' });
@@ -47,22 +47,17 @@ describe('Storage (topic subscriptions)', () => {
     storage.get('A/B').subscribe();
     await flush();
     first.unsubscribe();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS * 2);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS * 2);
     await flush();
     expect(changes).toEqual([['A/B']]);
   });
 
-  it('lingers about 2-3 s after the last reader leaves', () => {
-    expect(TOPIC_LINGER_MS).toBeGreaterThanOrEqual(2000);
-    expect(TOPIC_LINGER_MS).toBeLessThanOrEqual(3000);
-  });
-
-  it('releases a topic only once the linger elapses', async () => {
+  it('drops an expired topic only at the sweep', async () => {
     storage.get('A/B').subscribe();
     const leaving = storage.get('C/D').subscribe();
     await flush();
     leaving.unsubscribe();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS - 1);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
     await flush();
     expect(storage.getTopics()).toEqual(['A/B', 'C/D']);
     vi.advanceTimersByTime(1);
@@ -71,14 +66,41 @@ describe('Storage (topic subscriptions)', () => {
     expect(changes).toEqual([['A/B', 'C/D'], ['A/B']]);
   });
 
-  it('keeps a topic when a reader returns within the linger', async () => {
+  it('drops every topic that expired since the last sweep in one change', async () => {
+    const page = ['A/B', 'C/D', 'E/F'].map((topic) => storage.get(topic).subscribe());
+    storage.get('G/H').subscribe();
+    await flush();
+    for (const subscription of page) {
+      subscription.unsubscribe();
+      await vi.advanceTimersByTimeAsync(TOPIC_SWEEP_MS / 4);
+    }
+    await vi.advanceTimersByTimeAsync(TOPIC_SWEEP_MS);
+    expect(changes).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['G/H']]);
+  });
+
+  it('keeps a topic when a reader returns before the sweep', async () => {
     storage.get('A/B').subscribe().unsubscribe();
     await flush();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS / 2);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS / 2);
     storage.get('A/B').subscribe();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS * 2);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS * 2);
     await flush();
     expect(changes).toEqual([['A/B']]);
+  });
+
+  it('sweeps a topic that expires after a sweep at the next one', async () => {
+    storage.get('A/B').subscribe().unsubscribe();
+    const later = storage.get('C/D').subscribe();
+    await flush();
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+    await flush();
+    later.unsubscribe();
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
+    await flush();
+    expect(storage.getTopics()).toEqual(['C/D']);
+    vi.advanceTimersByTime(1);
+    await flush();
+    expect(changes).toEqual([['A/B', 'C/D'], ['C/D'], []]);
   });
 
   it('delivers values to subscribers of the topic', () => {

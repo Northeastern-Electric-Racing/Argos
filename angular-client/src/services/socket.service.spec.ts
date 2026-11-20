@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { EnvService } from './env.service';
 import SocketService, { SOCKET_IO } from './socket.service';
-import Storage, { TOPIC_LINGER_MS } from './storage.service';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 
 type Auth = (cb: (data: object) => void) => void;
 
@@ -47,9 +47,16 @@ class FakeSocket {
     this.handlers.get('disconnect')?.forEach((handler) => handler('transport close'));
   }
 
+  /** The set_subscriptions payloads. */
+  lists(): { seq: number; topics: string[] }[] {
+    return this.emitted
+      .filter(([event]) => event === 'set_subscriptions')
+      .map(([, list]) => list as { seq: number; topics: string[] });
+  }
+
   /** The topic lists sent with set_subscriptions. */
-  subscriptions(): unknown[] {
-    return this.emitted.filter(([event]) => event === 'set_subscriptions').map(([, topics]) => topics);
+  subscriptions(): string[][] {
+    return this.lists().map(({ topics }) => topics);
   }
 }
 
@@ -104,18 +111,40 @@ describe('SocketService (topic subscriptions)', () => {
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D']]);
   });
 
-  it('sends the full list again when a page leaves, after the linger', async () => {
+  it('sends one list when a page leaves, however many topics it read', async () => {
+    socket.connect();
+    storage.get('A/B').subscribe();
+    const page = ['C/D', 'E/F', 'G/H'].map((topic) => storage.get(topic).subscribe());
+    await flush();
+    page.forEach((subscription) => subscription.unsubscribe());
+    // The async variant runs queued microtasks between timers, as the browser does between tasks.
+    await vi.advanceTimersByTimeAsync(TOPIC_SWEEP_MS);
+    expect(socket.subscriptions()).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['A/B']]);
+  });
+
+  it('sends the full list again when a page leaves, at the sweep', async () => {
     socket.connect();
     storage.get('A/B').subscribe();
     const leaving = storage.get('C/D').subscribe();
     await flush();
     leaving.unsubscribe();
-    vi.advanceTimersByTime(TOPIC_LINGER_MS - 1);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
     await flush();
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D']]);
     vi.advanceTimersByTime(1);
     await flush();
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D'], ['A/B']]);
+  });
+
+  it('numbers each list higher than the last, across reconnects', async () => {
+    socket.connect();
+    storage.get('A/B').subscribe();
+    await flush();
+    socket.disconnect();
+    socket.connect();
+    storage.get('C/D').subscribe();
+    await flush();
+    expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2]);
   });
 
   it('restores the same topics on reconnect, through the handshake', async () => {
