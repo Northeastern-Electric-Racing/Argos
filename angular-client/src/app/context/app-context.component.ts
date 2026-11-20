@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CellService } from 'src/services/cell.service';
 import { FaultService } from 'src/services/fault.service';
 import SocketService from 'src/services/socket.service';
 import Storage from 'src/services/storage.service';
@@ -62,7 +61,6 @@ const SVG_ICONS: Record<string, string> = {
 })
 export default class AppContextComponent implements OnInit {
   private storage = inject(Storage);
-  private cellService = inject(CellService);
   private faultService = inject(FaultService);
   private notificationLogService = inject(NotificationLogService);
   socketService = inject(SocketService);
@@ -72,7 +70,6 @@ export default class AppContextComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cellService.updateCellInfo();
     this.socketService.receiveData(this.storage, this.faultService, this.notificationLogService);
   }
 }
