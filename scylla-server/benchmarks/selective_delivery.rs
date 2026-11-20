@@ -2,8 +2,9 @@
 //!
 //! Run in release: `cargo bench --bench selective_delivery` (see `README.md`).
 //!
-//! Replays 20 s of the simulator's traffic (`sim-topics.txt`: 1,048 topics,
-//! ~3,900 msgs/s, counted off its MQTT broker) through the `data` emit path to
+//! Replays a sample of Calypso's simulator traffic (`SIM_SAMPLE`: the
+//! `topics-sample.json` that `run.sh` records with `live.mjs --sample-only`,
+//! each topic's message count over the sample) through the `data` emit path to
 //! in-process dummy sockets (socketioxide's test harness, no network), and
 //! times each emit:
 //!
@@ -34,16 +35,13 @@ use socketioxide::SocketIo;
 use socketioxide::extract::SocketRef;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
-/// `<messages in SAMPLE_SECS> <topic>` per line.
-const SIM_TOPICS: &str = include_str!("sim-topics.txt");
-const SAMPLE_SECS: f64 = 20.0;
 const SOCKET_COUNTS: [usize; 3] = [1, 5, 15];
 /// Timed `set_subscriptions` per change.
 const CHANGES: usize = 300;
 /// Sockets already connected while changes are timed.
 const BYSTANDERS: usize = 14;
 
-/// The BMS page reads every `BMS/` topic (821 of them, ~half the traffic).
+/// The BMS page reads every `BMS/` topic (~800 of them, about half the traffic).
 const BMS_PAGE: &[&str] = &["BMS/"];
 /// Small pages, ~10-30 topics each; socket `i` reads page `i % 4`.
 const SMALL_PAGES: [&[&str]; 4] = [
@@ -60,18 +58,32 @@ const SMALL_PAGES: [&[&str]; 4] = [
 
 struct Sim {
     topics: Vec<(String, u32)>,
+    /// Seconds the counts were sampled over.
+    secs: f64,
 }
 
 impl Sim {
+    /// The sample named by `SIM_SAMPLE`: `{"secs": 20, "counts": {"<topic>": <messages>, ...}}`.
     fn load() -> Self {
-        let topics = SIM_TOPICS
-            .lines()
-            .filter_map(|line| {
-                let (count, topic) = line.trim().split_once(' ')?;
-                Some((topic.to_string(), count.parse().ok()?))
-            })
+        let path = std::env::var("SIM_SAMPLE").unwrap_or_else(|_| {
+            panic!(
+                "SIM_SAMPLE=<topics-sample.json> is needed: run benchmarks/run.sh, or record one with \
+                 `node benchmarks/live.mjs --url <server on the simulator> --sample-only --sample-out <file>`"
+            )
+        });
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+        let sample: serde_json::Value =
+            serde_json::from_str(&text).unwrap_or_else(|e| panic!("{path}: {e}"));
+        let topics = sample["counts"]
+            .as_object()
+            .unwrap_or_else(|| panic!("{path}: no counts"))
+            .iter()
+            .map(|(topic, count)| (topic.clone(), count.as_u64().unwrap() as u32))
             .collect();
-        Sim { topics }
+        let secs = sample["secs"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("{path}: no secs"));
+        Sim { topics, secs }
     }
 
     fn page(&self, prefixes: &[&str]) -> Vec<String> {
@@ -287,8 +299,8 @@ async fn emit_pass(sim: &Sim, stream: &[ClientData], sockets: usize, shape: Shap
         s.mean,
         s.p50,
         s.p99,
-        total.as_secs_f64() / SAMPLE_SECS * 100.0,
-        delivered as f64 / sockets as f64 / SAMPLE_SECS,
+        total.as_secs_f64() / sim.secs * 100.0,
+        delivered as f64 / sockets as f64 / sim.secs,
     );
 }
 
@@ -346,10 +358,11 @@ fn main() {
             .map(|i| sim.page(SMALL_PAGES[i]))
             .collect();
         println!(
-            "{} topics, {} msgs in {SAMPLE_SECS} s ({:.0} msgs/s); BMS page {} topics, small pages {:?} topics",
+            "{} topics, {} msgs in {} s ({:.0} msgs/s); BMS page {} topics, small pages {:?} topics",
             sim.topics.len(),
             stream.len(),
-            stream.len() as f64 / SAMPLE_SECS,
+            sim.secs,
+            stream.len() as f64 / sim.secs,
             bms.len(),
             small.iter().map(Vec::len).collect::<Vec<_>>(),
         );
