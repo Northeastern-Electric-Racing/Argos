@@ -21,7 +21,7 @@
 // client first samples what the server sends for --sample-secs and writes it.
 
 import { execSync, spawn } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
@@ -177,8 +177,13 @@ async function sample(sampleSecs, out) {
   console.log(`  ${Object.keys(counts).length} topics, ${(total / sampleSecs).toFixed(0)} msgs/s -> ${out}`);
 }
 
+// Without /proc (macOS), ps: its CPU time is [[dd-]hh:]mm:ss.ss there, centisecond resolution.
+const HAS_PROC = existsSync('/proc/self/stat');
+const ps = (pid, field) => execSync(`ps -o ${field}= -p ${pid}`).toString().trim();
+
 /** utime + stime of a process, in seconds. */
 function procCpu(pid) {
+  if (!HAS_PROC) return ps(pid, 'time').replace('-', ':').split(':').reduce((acc, part) => acc * 60 + Number(part), 0);
   const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
   const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
   return (Number(fields[11]) + Number(fields[12])) / CLK_TCK;
@@ -186,6 +191,7 @@ function procCpu(pid) {
 let CLK_TCK = 100;
 
 function procRssMb(pid) {
+  if (!HAS_PROC) return Number(ps(pid, 'rss')) / 1024;
   const m = readFileSync(`/proc/${pid}/status`, 'utf8').match(/VmRSS:\s+(\d+)/);
   return m ? Number(m[1]) / 1024 : null;
 }

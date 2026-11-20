@@ -4,6 +4,8 @@
 # branch's scylla-server in release, and runs live.mjs against it; then does
 # the same against develop's published server image as the baseline, where
 # every client gets every topic. See README.md.
+# BASELINE=build builds develop's server instead, from a checkout of develop
+# (DEVELOP_DIR), which also works where Docker has no host network (macOS).
 #
 #   scylla-server/benchmarks/run.sh            # from anywhere
 #   SECS=60 BASELINE=none TEARDOWN=0 ./run.sh  # knobs, defaults below
@@ -22,7 +24,9 @@ export GRAFANA_HOST_PORT="${GRAFANA_HOST_PORT:-3120}"
 ROOMS_PORT="${ROOMS_PORT:-8121}"
 DEVELOP_PORT="${DEVELOP_PORT:-8122}"
 DEVELOP_IMAGE="${DEVELOP_IMAGE:-ghcr.io/northeastern-electric-racing/argos-scylla:develop}"
-BASELINE="${BASELINE:-image}" # image | none
+BASELINE="${BASELINE:-image}" # image | build | none
+DEVELOP_DIR="${DEVELOP_DIR:-}"   # with BASELINE=build: a checkout of develop
+DEVELOP_PID=""
 TEARDOWN="${TEARDOWN:-1}"
 WARMUP="${WARMUP:-5}"
 SECS="${SECS:-30}"
@@ -33,6 +37,7 @@ DEVELOP_NAME="scylla-bench-develop-$STACK_OFFSET"
 ROOMS_PID=""
 cleanup() {
     [ -n "$ROOMS_PID" ] && kill -INT "$ROOMS_PID" 2>/dev/null && wait "$ROOMS_PID" 2>/dev/null || true
+    [ -n "$DEVELOP_PID" ] && kill -INT "$DEVELOP_PID" 2>/dev/null && wait "$DEVELOP_PID" 2>/dev/null || true
     docker rm -f "$DEVELOP_NAME" >/dev/null 2>&1 || true
     if [ "$TEARDOWN" = 1 ]; then
         (cd "$ROOT" && ./argos.sh scylla-dev down -v >/dev/null 2>&1) || true
@@ -63,9 +68,20 @@ echo "== stack (offset $STACK_OFFSET)"
 (cd "$ROOT" && ./argos.sh scylla-dev up -d siren calypso odyssey-db)
 until docker exec "odyssey_scylla-dev_${STACK_OFFSET}-odyssey-db-1" pg_isready -q 2>/dev/null; do sleep 1; done
 
+# develop builds into its own target dir: in a shared one cargo sees the second build as fresh
+BIN="$HERE/results/bin"
+mkdir -p "$BIN"
+if [ "$BASELINE" = build ]; then
+    [ -n "$DEVELOP_DIR" ] || { echo "BASELINE=build needs DEVELOP_DIR" >&2; exit 1; }
+    echo "== building develop's scylla-server ($(git -C "$DEVELOP_DIR" log --oneline -1))"
+    (cd "$DEVELOP_DIR/scylla-server" && CARGO_TARGET_DIR="$SCYLLA/target/develop-baseline" cargo build --release -q)
+    cp "$SCYLLA/target/develop-baseline/release/scylla-server" "$BIN/scylla-develop"
+fi
+
 echo "== this branch's scylla-server (rooms), release, :$ROOMS_PORT"
 (cd "$SCYLLA" && cargo build --release -q)
-(cd "$SCYLLA" && DATABASE_URL="$DB_URL" RUST_LOG=warn exec ./target/release/scylla-server \
+cp "$SCYLLA/target/release/scylla-server" "$BIN/scylla-rooms"
+(cd "$SCYLLA" && DATABASE_URL="$DB_URL" RUST_LOG=warn exec "$BIN/scylla-rooms" \
     -p "$ROOMS_PORT" -u "localhost:$SIREN_MQTT_PORT" >"$OUT/rooms-server.log" 2>&1) &
 ROOMS_PID=$!
 wait_port "$ROOMS_PORT"
@@ -87,6 +103,15 @@ if [ "$BASELINE" = image ]; then
     docker run -d --rm --name "$DEVELOP_NAME" --network host -e DATABASE_URL="$DB_URL" -e RUST_LOG=warn \
         "$DEVELOP_IMAGE" -p "$DEVELOP_PORT" -u "localhost:$SIREN_MQTT_PORT" >/dev/null
     DEVELOP_PID=$(docker inspect --format '{{.State.Pid}}' "$DEVELOP_NAME")
+    wait_port "$DEVELOP_PORT"
+    sleep 5
+    live develop "$DEVELOP_PORT" "$DEVELOP_PID" "old,bms,small,empty"
+    live develop "$DEVELOP_PORT" "$DEVELOP_PID" "small*15"
+elif [ "$BASELINE" = build ]; then
+    echo "== develop's scylla-server, release, :$DEVELOP_PORT"
+    (cd "$DEVELOP_DIR/scylla-server" && DATABASE_URL="$DB_URL" RUST_LOG=warn exec "$BIN/scylla-develop" \
+        -p "$DEVELOP_PORT" -u "localhost:$SIREN_MQTT_PORT" >"$OUT/develop-server.log" 2>&1) &
+    DEVELOP_PID=$!
     wait_port "$DEVELOP_PORT"
     sleep 5
     live develop "$DEVELOP_PORT" "$DEVELOP_PID" "old,bms,small,empty"
