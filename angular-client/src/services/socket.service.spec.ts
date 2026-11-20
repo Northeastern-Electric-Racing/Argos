@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { EnvService } from './env.service';
 import SocketService, { SOCKET_IO } from './socket.service';
-import Storage, { TOPIC_SWEEP_MS } from './storage.service';
+import Storage from './storage.service';
 
 type Auth = (cb: (data: object) => void) => void;
 
@@ -68,7 +68,6 @@ describe('SocketService (topic subscriptions)', () => {
   let storage: Storage;
 
   beforeEach(() => {
-    vi.useFakeTimers();
     TestBed.configureTestingModule({
       providers: [
         { provide: EnvService, useValue: { backendUrl: 'http://scylla.test' } },
@@ -80,10 +79,6 @@ describe('SocketService (topic subscriptions)', () => {
     });
     storage = TestBed.inject(Storage);
     TestBed.inject(SocketService);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it('keeps the clientId query parameter', () => {
@@ -117,23 +112,21 @@ describe('SocketService (topic subscriptions)', () => {
     const page = ['C/D', 'E/F', 'G/H'].map((topic) => storage.get(topic).subscribe());
     await flush();
     page.forEach((subscription) => subscription.unsubscribe());
-    // The async variant runs queued microtasks between timers, as the browser does between tasks.
-    await vi.advanceTimersByTimeAsync(TOPIC_SWEEP_MS);
+    await flush();
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['A/B']]);
   });
 
-  it('sends the full list again when a page leaves, at the sweep', async () => {
+  it('sends one list on a page switch, keeping topics both pages read', async () => {
     socket.connect();
-    storage.get('A/B').subscribe();
-    const leaving = storage.get('C/D').subscribe();
+    const leaving = ['A/B', 'C/D'].map((topic) => storage.get(topic).subscribe());
     await flush();
-    leaving.unsubscribe();
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
+    leaving.forEach((subscription) => subscription.unsubscribe());
+    ['C/D', 'E/F'].forEach((topic) => storage.get(topic).subscribe());
     await flush();
-    expect(socket.subscriptions()).toEqual([['A/B', 'C/D']]);
-    vi.advanceTimersByTime(1);
-    await flush();
-    expect(socket.subscriptions()).toEqual([['A/B', 'C/D'], ['A/B']]);
+    expect(socket.subscriptions()).toEqual([
+      ['A/B', 'C/D'],
+      ['C/D', 'E/F']
+    ]);
   });
 
   it('numbers each list higher than the last, across reconnects', async () => {

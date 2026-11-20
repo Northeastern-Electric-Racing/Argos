@@ -33,11 +33,8 @@ describe('graph sidebar live values', () => {
   let storage: Storage;
   const dataTypes = realisticDataTypes();
 
-  /** Topics with at least one reader; a released topic stays in getTopics() until the sweep, so count readers. */
-  const liveTopics = (): number =>
-    [...(storage as unknown as { entries: Map<string, { readers: number }> }).entries.values()].filter(
-      (entry) => entry.readers > 0
-    ).length;
+  /** Topics this client reads; each step awaits whenStable, which runs the batched topic change. */
+  const liveTopics = (): number => storage.getTopics().length;
   /** Clicks the rendered tree item labelled exactly `label`, as a user would, and lets the tree re-render. */
   const click = async (label: string) => {
     const items: HTMLElement[] = [...fixture.nativeElement.querySelectorAll('[role="treeitem"]')];

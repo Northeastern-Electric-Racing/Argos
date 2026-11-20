@@ -1,20 +1,13 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
+import { BehaviorSubject, defer, finalize, Observable, ReplaySubject, share, Subject } from 'rxjs';
 import { DataValue, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 import { RunLaps, Track } from 'src/utils/types.utils';
 
-/**
- * How often expired topics (ones whose last reader left) are dropped, all in one sweep so leaving a
- * page sends one topic list. An expired topic is kept 0-5 s, so a quick page switch keeps it.
- */
-export const TOPIC_SWEEP_MS = 5000;
-
-type TopicEntry = {
-  /** Replays the latest value to late subscribers. */
-  stream: ReplaySubject<DataValue>;
-  readers: number;
-  /** Lost its last reader; dropped at the next sweep unless a reader returns first. */
-  expired: boolean;
+type Topic = {
+  /** Fed by addValue. */
+  values: Subject<DataValue>;
+  /** What get() returns: shared by its readers, replaying the latest value while any remain. */
+  stream: Observable<DataValue>;
 };
 
 /**
@@ -22,9 +15,9 @@ type TopicEntry = {
  */
 @Injectable({ providedIn: 'root' })
 export default class Storage {
-  /** The topics this client reads: each one has a reader, or expired since the last sweep. */
-  private entries = new Map<string, TopicEntry>();
-  private sweep?: ReturnType<typeof setTimeout>;
+  private topicStreams = new Map<string, Topic>();
+  /** The topics with at least one reader. */
+  private read = new Set<string>();
   private topics: string[] = [];
   private topicChanges = new Subject<string[]>();
   private syncScheduled = false;
@@ -39,22 +32,29 @@ export default class Storage {
 
   /**
    * Live values of one topic, replaying the latest to late subscribers. While anything is
-   * subscribed (and until the next sweep after the last unsubscribes) the topic is one this
-   * client reads, so the server delivers it.
+   * subscribed the topic is one this client reads, so the server delivers it; when the last
+   * subscriber leaves, it isn't.
    */
   public get = (key: string): Observable<DataValue> => {
-    return new Observable<DataValue>((subscriber) => {
-      const subscription = this.retain(key).stream.subscribe(subscriber);
-      return () => {
-        subscription.unsubscribe();
-        this.release(key);
-      };
-    });
+    let topic = this.topicStreams.get(key);
+    if (!topic) {
+      const values = new Subject<DataValue>();
+      const stream = defer(() => {
+        this.setRead(key, true);
+        return values;
+      }).pipe(
+        finalize(() => this.setRead(key, false)),
+        share({ connector: () => new ReplaySubject<DataValue>(1) })
+      );
+      topic = { values, stream };
+      this.topicStreams.set(key, topic);
+    }
+    return topic.stream;
   };
 
   /** Delivers a value to the topic's readers; a topic nothing reads drops it. */
   public addValue = (key: string, value: DataValue): void => {
-    this.entries.get(key)?.stream.next(value);
+    this.topicStreams.get(key)?.values.next(value);
   };
 
   /** The topics this client reads, sorted. */
@@ -67,44 +67,23 @@ export default class Storage {
     return this.topicChanges.asObservable();
   };
 
-  private retain = (key: string): TopicEntry => {
-    let entry = this.entries.get(key);
-    if (!entry) {
-      entry = { stream: new ReplaySubject<DataValue>(1), readers: 0, expired: false };
-      this.entries.set(key, entry);
-      this.scheduleSync();
-    }
-    entry.expired = false;
-    entry.readers++;
-    return entry;
-  };
-
-  private release = (key: string): void => {
-    const entry = this.entries.get(key);
-    if (!entry || --entry.readers > 0) return;
-    entry.expired = true;
-    this.sweep ??= setTimeout(this.dropExpired, TOPIC_SWEEP_MS);
-  };
-
-  /** The sweep: drops every expired topic at once. Runs only while some topic has expired. */
-  private dropExpired = (): void => {
-    this.sweep = undefined;
-    for (const [key, entry] of this.entries) {
-      if (entry.expired) this.entries.delete(key);
-    }
+  private setRead = (key: string, read: boolean): void => {
+    if (read) this.read.add(key);
+    else this.read.delete(key);
     this.scheduleSync();
   };
 
   /**
-   * Batches every change in the current task (a page mount's many get() calls) into one. A
-   * microtask runs right after the task with no added delay and isn't throttled in background tabs.
+   * Batches every change in the current task into one, so a page that leaves and the page that
+   * replaces it send one list, and a topic both read never leaves it. A microtask runs right after
+   * the task with no added delay and isn't throttled in background tabs.
    */
   private scheduleSync = (): void => {
     if (this.syncScheduled) return;
     this.syncScheduled = true;
     queueMicrotask(() => {
       this.syncScheduled = false;
-      const topics = [...this.entries.keys()].sort();
+      const topics = [...this.read].sort();
       if (topics.length === this.topics.length && topics.every((topic, i) => topic === this.topics[i])) return;
       this.topics = topics;
       this.topicChanges.next(topics);
