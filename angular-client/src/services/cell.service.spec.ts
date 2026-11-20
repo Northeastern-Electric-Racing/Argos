@@ -22,7 +22,7 @@ describe('CellService', () => {
   const releases: (() => void)[] = [];
 
   const retain = () => {
-    const release = cells.retain();
+    const release = cells.updateCellInfo();
     releases.push(release);
     return release;
   };

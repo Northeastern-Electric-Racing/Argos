@@ -68,7 +68,7 @@ export class CellViewComponent implements OnDestroy {
 
   constructor() {
     // The panel stays open across navigation, so it keeps the cell topics subscribed itself.
-    inject(DestroyRef).onDestroy(inject(CellService).retain());
+    inject(DestroyRef).onDestroy(inject(CellService).updateCellInfo());
     this.cellsMap = this.dialogData.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);

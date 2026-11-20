@@ -71,7 +71,7 @@ export class SegmentHeatmapComponent implements OnInit {
 
   constructor() {
     // The cell topics stay subscribed while any heatmap is on screen.
-    this.destroyRef.onDestroy(this.cellService.retain());
+    this.destroyRef.onDestroy(this.cellService.updateCellInfo());
 
     effect(() => {
       this.alphaCells = this.cellService.getAlphaCellsBySegment(this.segment());

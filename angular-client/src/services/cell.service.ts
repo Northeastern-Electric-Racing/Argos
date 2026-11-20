@@ -67,12 +67,12 @@ export class CellService {
   private readers = 0;
 
   /**
-   * Keeps the ~720 BMS cell topics subscribed until the returned release is called, so a
-   * client reads them only while something shows cell data. The first reader subscribes them
-   * (Storage replays each topic's latest value, so a quick page switch keeps the readings); the
-   * last release drops them and clears the readings, which would otherwise go stale.
+   * Subscribes the ~720 BMS cell topics until the returned release is called, so a client reads
+   * them only while something shows cell data. The first caller subscribes them (Storage replays
+   * each topic's latest value, so a quick page switch keeps the readings); the last release drops
+   * them and clears the readings, which would otherwise go stale.
    */
-  retain = (): (() => void) => {
+  updateCellInfo = (): (() => void) => {
     if (this.readers++ === 0) {
       this.subscribeToAlphaCellInfo();
       this.subscribeToBetaCellInfo();
@@ -88,11 +88,6 @@ export class CellService {
     };
   };
 
-  /** Applies each value of a topic to the cells while retained. */
-  private read = (topic: string, apply: (value: string) => void) => {
-    this.subscriptions.add(this.storageService.get(topic).subscribe((data) => apply(data.values[0])));
-  };
-
   private clearReadings = () => {
     for (const cell of [...this.perSegmentAlphaCells, ...this.perSegmentBetaCells].flat()) {
       cell.temp = cell.voltage = cell.svolts = undefined;
@@ -101,109 +96,133 @@ export class CellService {
   };
 
   private subscribeToAlphaCellInfo = () => {
-    this.perSegmentAlphaCells.forEach((segmentAlphaCells, index) => {
+    this.perSegmentAlphaCells.map((segmentAlphaCells, index) => {
       const segmentNumber = numToSegmentType(index);
 
       // Therms: apply temperature to cells defined in ALPHA_THERM_CELL_MAP
       allAlphaThermValues.forEach((therm, thermIndex) => {
-        this.read(topics.alphaTemp(segmentNumber, therm), (value) => {
-          const temp = parseFloat(value);
-          const cellIndices = ALPHA_THERM_CELL_MAP[thermIndex] ?? [];
-          for (const cellIdx of cellIndices) {
-            if (cellIdx < segmentAlphaCells.length) {
-              segmentAlphaCells[cellIdx].temp = temp;
+        this.subscriptions.add(
+          this.storageService.get(topics.alphaTemp(segmentNumber, therm)).subscribe((data) => {
+            const temp = parseFloat(data.values[0]);
+            const cellIndices = ALPHA_THERM_CELL_MAP[thermIndex] ?? [];
+            for (const cellIdx of cellIndices) {
+              if (cellIdx < segmentAlphaCells.length) {
+                segmentAlphaCells[cellIdx].temp = temp;
+              }
             }
-          }
-        });
+          })
+        );
       });
 
       // Volts: one per cell (C-ADC voltage)
       allAlphaVoltValues.forEach((volt, voltIndex) => {
-        this.read(topics.alphaVolt(segmentNumber, volt), (value) => {
-          segmentAlphaCells[voltIndex].voltage = parseFloat(value);
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.alphaVolt(segmentNumber, volt)).subscribe((data) => {
+            segmentAlphaCells[voltIndex].voltage = parseFloat(data.values[0]);
+          })
+        );
       });
 
       // S Volts: one per cell (S-ADC voltage, mirrors Volts)
       allAlphaSVoltValues.forEach((sVolt, sVoltIndex) => {
-        this.read(topics.alphaSVolt(segmentNumber, sVolt), (value) => {
-          segmentAlphaCells[sVoltIndex].svolts = parseFloat(value);
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.alphaSVolt(segmentNumber, sVolt)).subscribe((data) => {
+            segmentAlphaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
+          })
+        );
       });
 
       // Burns: one per cell
       allAlphaBurnValues.forEach((burn, burnIndex) => {
-        this.read(topics.alphaBurning(segmentNumber, burn), (value) => {
-          segmentAlphaCells[burnIndex].balancing = parseInt(value) === 1;
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.alphaBurning(segmentNumber, burn)).subscribe((data) => {
+            segmentAlphaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
+          })
+        );
       });
 
       // CvS: one per cell
       allAlphaCvsValues.forEach((cvs, cvsIndex) => {
-        this.read(topics.alphaCvs(segmentNumber, cvs), (value) => {
-          segmentAlphaCells[cvsIndex].cvs = parseInt(value) === 1;
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.alphaCvs(segmentNumber, cvs)).subscribe((data) => {
+            segmentAlphaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
+          })
+        );
       });
 
       // Open Wire: one per cell (mirrors CvS)
       allAlphaOwValues.forEach((ow, owIndex) => {
-        this.read(topics.alphaOw(segmentNumber, ow), (value) => {
-          segmentAlphaCells[owIndex].ow = parseInt(value) === 1;
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.alphaOw(segmentNumber, ow)).subscribe((data) => {
+            segmentAlphaCells[owIndex].ow = parseInt(data.values[0]) === 1;
+          })
+        );
       });
     });
   };
 
   private subscribeToBetaCellInfo = () => {
-    this.perSegmentBetaCells.forEach((segmentBetaCells, index) => {
+    this.perSegmentBetaCells.map((segmentBetaCells, index) => {
       const segmentNumber = numToSegmentType(index);
 
       // Therms: apply temperature to cells defined in BETA_THERM_CELL_MAP
-      allBetaThermValues.forEach((therm, thermIndex) => {
-        this.read(topics.betaTemp(segmentNumber, therm), (value) => {
-          const temp = parseFloat(value);
-          const cellIndices = BETA_THERM_CELL_MAP[thermIndex] ?? [];
-          for (const cellIdx of cellIndices) {
-            if (cellIdx < segmentBetaCells.length) {
-              segmentBetaCells[cellIdx].temp = temp;
+      allBetaThermValues.map((therm, thermIndex) => {
+        this.subscriptions.add(
+          this.storageService.get(topics.betaTemp(segmentNumber, therm)).subscribe((data) => {
+            const temp = parseFloat(data.values[0]);
+            const cellIndices = BETA_THERM_CELL_MAP[thermIndex] ?? [];
+            for (const cellIdx of cellIndices) {
+              if (cellIdx < segmentBetaCells.length) {
+                segmentBetaCells[cellIdx].temp = temp;
+              }
             }
-          }
-        });
+          })
+        );
       });
 
       // Volts: one per cell (C-ADC voltage)
-      allBetaVoltValues.forEach((volt, voltIndex) => {
-        this.read(topics.betaVolt(segmentNumber, volt), (value) => {
-          segmentBetaCells[voltIndex].voltage = parseFloat(value);
-        });
+      allBetaVoltValues.map((volt, voltIndex) => {
+        this.subscriptions.add(
+          this.storageService.get(topics.betaVolt(segmentNumber, volt)).subscribe((data) => {
+            segmentBetaCells[voltIndex].voltage = parseFloat(data.values[0]);
+          })
+        );
       });
 
       // S Volts: one per cell (S-ADC voltage, mirrors Volts)
-      allBetaSVoltValues.forEach((sVolt, sVoltIndex) => {
-        this.read(topics.betaSVolt(segmentNumber, sVolt), (value) => {
-          segmentBetaCells[sVoltIndex].svolts = parseFloat(value);
-        });
+      allBetaSVoltValues.map((sVolt, sVoltIndex) => {
+        this.subscriptions.add(
+          this.storageService.get(topics.betaSVolt(segmentNumber, sVolt)).subscribe((data) => {
+            segmentBetaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
+          })
+        );
       });
 
       // Burns: one per cell
-      allBetaBurnValues.forEach((burn, burnIndex) => {
-        this.read(topics.betaBurning(segmentNumber, burn), (value) => {
-          segmentBetaCells[burnIndex].balancing = parseInt(value) === 1;
-        });
+      allBetaBurnValues.map((burn, burnIndex) => {
+        this.subscriptions.add(
+          this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
+            segmentBetaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
+          })
+        );
       });
 
       // CvS: one per cell
       allBetaCvsValues.forEach((cvs, cvsIndex) => {
-        this.read(topics.betaCvs(segmentNumber, cvs), (value) => {
-          segmentBetaCells[cvsIndex].cvs = parseInt(value) === 1;
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.betaCvs(segmentNumber, cvs)).subscribe((data) => {
+            segmentBetaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
+          })
+        );
       });
 
       // Open Wire: one per cell (mirrors CvS)
       allBetaOwValues.forEach((ow, owIndex) => {
-        this.read(topics.betaOw(segmentNumber, ow), (value) => {
-          segmentBetaCells[owIndex].ow = parseInt(value) === 1;
-        });
+        this.subscriptions.add(
+          this.storageService.get(topics.betaOw(segmentNumber, ow)).subscribe((data) => {
+            segmentBetaCells[owIndex].ow = parseInt(data.values[0]) === 1;
+          })
+        );
       });
     });
   };
