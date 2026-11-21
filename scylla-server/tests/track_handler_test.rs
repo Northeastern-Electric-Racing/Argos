@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use scylla_server::{
     ArgosPoolHandle, ClientData, PoolHandle,
-    lap_timing::{GPS_LOCATION_TOPIC, GeoPoint, GpsFix, Lap, TimingLine},
+    lap_timing::{GPS_LOCATION_TOPIC, GeoPoint, GpsFix, Lap, METRES_PER_DEGREE, TimingLine},
     track_handler::{LiveRun, LiveRunHandle, RunLaps, TracksChanged, track_handler},
     transformers::track_transformer::PublicTrack,
 };
@@ -108,7 +108,10 @@ fn a_fix_no_newer_than_the_last_is_dropped() {
     let mut live_run = LiveRun::default();
     live_run.set_tracks(&[track(7, Some(start_line(LINE_LON)))]);
 
-    push_seconds(&mut live_run, 3, &[0, 2, 4, 3, 6]);
+    push_seconds(&mut live_run, 3, &[0, 2, 4]);
+    // where the last fix was, so only its time gives it away
+    live_run.push(3, fix_at(fix(4).point, 3000.0));
+    push_seconds(&mut live_run, 3, &[6]);
 
     assert_eq!(
         live_run.run_laps().laps[&7],
@@ -150,6 +153,48 @@ fn a_gps_jump_is_dropped_with_the_fix_after_it() {
     push_seconds(&mut live_run, 3, &[2, 4]);
 
     assert_eq!(live_run.trace(3), [fix(0), fix(4)]);
+}
+
+/// A fix `metres` east of the line, level with its middle, at `time_ms`
+fn east_of_line(metres: f64, time_ms: f64) -> GpsFix {
+    fix_at(
+        GeoPoint {
+            lat: 42.0,
+            lon: LINE_LON + metres / (METRES_PER_DEGREE * 42_f64.to_radians().cos()),
+        },
+        time_ms,
+    )
+}
+
+#[test]
+fn a_fix_past_the_speed_limit_by_gps_jitter_is_kept() {
+    let mut live_run = LiveRun::default();
+    // 5 m in 0.1 s: past the 4 m that 40 m/s allows, within it plus the jitter allowance
+    let fixes = [east_of_line(-10.0, 0.0), east_of_line(-5.0, 100.0)];
+    for fix in fixes {
+        live_run.push(3, fix);
+    }
+
+    assert_eq!(live_run.trace(3), fixes);
+}
+
+#[test]
+fn a_jump_past_the_speed_limit_and_gps_jitter_is_dropped_and_times_no_lap() {
+    let mut live_run = LiveRun::default();
+    live_run.set_tracks(&[track(7, Some(start_line(LINE_LON)))]);
+    // a lap opens at 1 s; kept, the 6.5 m jump in 0.1 s would cross back at 3.015 s and close it
+    let fixes = [
+        east_of_line(-10.0, 0.0),
+        east_of_line(10.0, 2000.0),
+        east_of_line(1.0, 3000.0),
+    ];
+    for fix in fixes {
+        live_run.push(3, fix);
+    }
+    live_run.push(3, east_of_line(-5.5, 3100.0));
+
+    assert_eq!(live_run.trace(3), fixes);
+    assert_eq!(live_run.run_laps().laps[&7], []);
 }
 
 #[test]
