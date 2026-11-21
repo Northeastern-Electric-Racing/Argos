@@ -47,42 +47,42 @@ Client kinds: `old` names no topics, as an old Angular build or the Flutter app;
 
 Run 2026-11-20 on an Apple M4 Pro (14 cores, 48 GB, macOS), rustc 1.98.1, release builds; Docker (8 CPUs) ran the stack. The develop baseline is a release build of `develop` at cc50fa06 (`BASELINE=build`). One run each; other work on the machine kept the load average at 5–7, so read the numbers as an order of magnitude.
 
-### Micro: cost per `data` emit (µs) and one core's share of ~3,900 msgs/s
+### Micro: cost per `data` emit (µs) and one core's share of ~4,040 msgs/s
 
 | Sockets | Path, subscriptions | mean µs | p50 µs | p99 µs | core | msgs/s per socket |
 |---|---|---|---|---|---|---|
-| 1 | broadcast (develop) | 0.96 | 0.79 | 2.6 | 0.37 % | 3,909 |
-| 1 | rooms, firehose | 0.95 | 0.83 | 2.0 | 0.37 % | 3,909 |
-| 1 | rooms, BMS page | 0.59 | 0.12 | 2.1 | 0.23 % | 1,858 |
-| 1 | rooms, small page | 0.17 | 0.08 | 2.9 | 0.07 % | 98 |
-| 1 | rooms, empty list | 0.04 | 0.04 | 0.04 | 0.01 % | 0 |
-| 5 | broadcast (develop) | 1.44 | 1.29 | 3.5 | 0.56 % | 3,909 |
-| 5 | rooms, firehose | 1.81 | 1.42 | 6.3 | 0.71 % | 3,909 |
-| 5 | rooms, BMS page | 1.01 | 0.17 | 4.8 | 0.40 % | 1,858 |
-| 5 | rooms, small page | 0.41 | 0.08 | 2.8 | 0.16 % | 170 |
-| 5 | rooms, empty list | 0.08 | 0.08 | 0.08 | 0.03 % | 0 |
-| 15 | broadcast (develop) | 3.05 | 2.58 | 11.3 | 1.19 % | 3,909 |
-| 15 | rooms, firehose | 3.40 | 3.17 | 11.4 | 1.33 % | 3,909 |
-| 15 | rooms, BMS page | 1.64 | 0.17 | 11.7 | 0.64 % | 1,858 |
-| 15 | rooms, small page | 0.52 | 0.08 | 4.0 | 0.20 % | 199 |
-| 15 | rooms, empty list | 0.09 | 0.08 | 0.25 | 0.04 % | 0 |
+| 1 | broadcast (develop) | 1.02 | 0.96 | 2.0 | 0.41 % | 4,044 |
+| 1 | rooms, firehose | 1.09 | 1.04 | 2.0 | 0.44 % | 4,044 |
+| 1 | rooms, BMS page | 0.59 | 0.12 | 1.8 | 0.24 % | 1,950 |
+| 1 | rooms, small page | 0.14 | 0.08 | 2.5 | 0.06 % | 99 |
+| 1 | rooms, empty list | 0.07 | 0.08 | 0.12 | 0.03 % | 0 |
+| 5 | broadcast (develop) | 2.05 | 1.88 | 4.9 | 0.83 % | 4,044 |
+| 5 | rooms, firehose | 2.12 | 1.96 | 4.8 | 0.86 % | 4,044 |
+| 5 | rooms, BMS page | 1.14 | 0.17 | 4.4 | 0.46 % | 1,950 |
+| 5 | rooms, small page | 0.30 | 0.08 | 1.8 | 0.12 % | 174 |
+| 5 | rooms, empty list | 0.09 | 0.08 | 0.25 | 0.04 % | 0 |
+| 15 | broadcast (develop) | 3.81 | 3.71 | 7.6 | 1.54 % | 4,044 |
+| 15 | rooms, firehose | 4.45 | 4.67 | 8.1 | 1.80 % | 4,044 |
+| 15 | rooms, BMS page | 2.25 | 0.21 | 7.9 | 0.91 % | 1,950 |
+| 15 | rooms, small page | 0.53 | 0.08 | 4.3 | 0.22 % | 203 |
+| 15 | rooms, empty list | 0.11 | 0.08 | 0.25 | 0.05 % | 0 |
 
-- With every socket on the firehose, rooms cost about what develop's broadcast does (within ~10–25 %).
-- A topic nobody reads costs ~0.08 µs (a lock and a hash lookup, no serialization), so at 15 sockets small pages make the emit loop ~6× cheaper than broadcast, and empty lists ~35×.
-- Neither path is a bottleneck at the simulator's rate: develop's broadcast to 15 sockets is ~1.2 % of a core, before WebSocket writes.
+- With every socket on the firehose, rooms cost about what develop's broadcast does (within ~5–20 %).
+- A topic nobody reads costs ~0.08 µs (a lock and a hash lookup, no serialization), so at 15 sockets small pages make the emit loop ~7× cheaper than broadcast, and empty lists ~35×.
+- Neither path is a bottleneck at the simulator's rate: develop's broadcast to 15 sockets is ~1.5 % of a core, before WebSocket writes.
 
 ### Micro: `set_subscriptions` round trip to its ack (µs), 14 other sockets on small pages
 
 | Change | mean | p50 | p99 |
 |---|---|---|---|
-| first set, old client → small page | 85 | 84 | 180 |
-| first set, old client → BMS page (821 rooms) | 766 | 766 | 1,351 |
-| small page A ↔ small page B | 29 | 28 | 59 |
-| small page ↔ BMS page | 228 | 193 | 626 |
-| same small page again (no-op: packet dispatch and ack only) | 22 | 21 | 58 |
-| small page ↔ empty list | 32 | 28 | 72 |
+| first set, old client → small page | 67 | 69 | 132 |
+| first set, old client → BMS page (777 rooms) | 666 | 576 | 1,154 |
+| small page A ↔ small page B | 24 | 24 | 39 |
+| small page ↔ BMS page | 219 | 209 | 329 |
+| same small page again (no-op: packet dispatch and ack only) | 23 | 21 | 34 |
+| small page ↔ empty list | 28 | 27 | 50 |
 
-A page change costs well under a millisecond; joining the 821 BMS rooms from the firehose is the slowest, at ~0.8 ms.
+A page change costs well under a millisecond; joining the 777 BMS rooms from the firehose is the slowest, at ~0.7 ms.
 
 ### Live: per client, 30 s measured after 5 s warm-up
 
@@ -122,4 +122,4 @@ Every client also gets ~10 other events/s of `metadata`, `faults` and `timers`, 
 - Client CPU is Node with `JSON.parse`, a lower bound for a browser tab.
 - The micro-benchmark's dummy sockets stop at a channel, so it shows the emit loop's cost, not WebSocket writes; the live server CPU includes those.
 - Page sets are prefix-based approximations of the BMS page and small pages, not lists taken from the Angular pages.
-- The micro numbers above replayed an earlier 20 s sample of the simulator (1,048 topics, ~3,900 msgs/s) committed as a file; `run.sh` now replays each run's own sample.
+- The micro-benchmark replayed the live run's own sample (1,004 topics, ~4,040 msgs/s) and ran separately, at a load average of 2–3.
