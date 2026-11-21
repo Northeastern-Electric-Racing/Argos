@@ -1,9 +1,9 @@
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import { ApplicationRef, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import Storage from 'src/services/storage.service';
+import Storage, { TOPIC_SWEEP_MS } from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -54,6 +54,8 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
   let heatMap: HeatMapService;
 
   beforeEach(async () => {
+    // only the topic sweep's interval: Angular renders on real timers
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     await TestBed.configureTestingModule({
       imports: [SegmentHeatmapComponent],
       providers: [Storage, CellService, HeatMapService, { provide: UiDialogService, useValue: { openPanel: () => null } }]
@@ -69,6 +71,10 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     fixture.detectChanges(); // runs the effect (loads cells) + ngOnInit (view subscription)
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   const alphaCell = (cellNumber: number) => component.alphaDisplayCells.find((c) => c.cellLabel === cellNumber.toString());
 
   it('should create', () => {
@@ -77,11 +83,11 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
 
   it('holds the BMS cell topics while shown, and releases them once destroyed', async () => {
     const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
-    await TestBed.inject(ApplicationRef).whenStable();
+    await Promise.resolve();
     expect(cellTopics()).toContain(topics.alphaVolt(SEGMENT, CELL));
 
     fixture.destroy();
-    await TestBed.inject(ApplicationRef).whenStable();
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
     expect(cellTopics()).toEqual([]);
     expect(cellService.getAlphaCellsBySegment(SEGMENT)[CELL].voltage).toBeUndefined();
   });

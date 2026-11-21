@@ -1,12 +1,14 @@
-import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CellService } from './cell.service';
-import Storage from './storage.service';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 
-/** Renders, which sends the topic changes batched since the last render. */
-const flush = () => TestBed.inject(ApplicationRef).whenStable();
+/** Ends the task, which adds the topics first read in it, then runs the sweep, which removes those nothing reads. */
+const flush = async () => {
+  await Promise.resolve();
+  vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+};
 
 const push = (storage: Storage, key: string, value: string): void => {
   storage.addValue(key, { values: [value], time: '0', unit: '' } as DataValue);
@@ -33,6 +35,7 @@ describe('CellService', () => {
   const betaCell = (segment: number, cell: number) => cells.getBetaCellsBySegment(segment)[cell];
 
   beforeEach(() => {
+    vi.useFakeTimers();
     TestBed.configureTestingModule({ providers: [Storage, CellService] });
     storage = TestBed.inject(Storage);
     cells = TestBed.inject(CellService);
@@ -40,6 +43,7 @@ describe('CellService', () => {
 
   afterEach(() => {
     releases.splice(0).forEach((release) => release());
+    vi.useRealTimers();
   });
 
   it('subscribes no cell topics until something retains it', async () => {

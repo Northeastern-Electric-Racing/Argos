@@ -25,7 +25,7 @@ module.exports = {
     },
     {
       name: 'Open BMS',
-      caption: 'Opening BMS sends one list with its topics, cell topics included while the heatmap shows them.',
+      caption: 'Opening BMS adds its topics at once, in one list, cell topics included while the heatmap shows them.',
       run: async (h) => {
         await nav(h, 'BMS');
         await lib.waitFor(h.page, (msgs) => msgs > 300);
@@ -35,10 +35,10 @@ module.exports = {
     },
     {
       name: 'Back to Charging',
-      caption: "Switching back sends one list: BMS's topics stop as soon as the page leaves, the shared ones stay.",
+      caption: "Back on Charging, BMS's topics stop at the next sweep (every 2.5 s), in one list; the shared ones stay.",
       run: async (h) => {
         await nav(h, 'Charging');
-        await lib.waitFor(h.page, (msgs) => msgs < 100, 5000);
+        await lib.waitFor(h.page, (msgs) => msgs < 100, 8000);
         await h.wait(2000); // the counter's 2 s topic window catches up
         await h.dwell(4000);
       },
