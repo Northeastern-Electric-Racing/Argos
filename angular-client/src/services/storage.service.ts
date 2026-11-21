@@ -1,7 +1,11 @@
-import { afterNextRender, inject, Injectable, Injector } from '@angular/core';
-import { BehaviorSubject, defer, finalize, Observable, ReplaySubject, share, Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, defer, finalize, interval, Observable, ReplaySubject, share, Subject } from 'rxjs';
 import { DataValue, TimerData, TimerStorageMap } from 'src/utils/socket.utils';
 import { RunLaps, Track } from 'src/utils/types.utils';
+
+/** How often topics nothing reads any more leave the list the server sends this client. */
+export const TOPIC_SWEEP_MS = 2500;
 
 type Topic = {
   /** Fed by addValue. */
@@ -18,10 +22,11 @@ export default class Storage {
   private topicStreams = new Map<string, Topic>();
   /** The topics with at least one reader. */
   private read = new Set<string>();
+  /** The topics the server sends: every read topic, plus those whose last reader left since the last sweep. */
+  private listed = new Set<string>();
   private topics: string[] = [];
   private topicChanges = new Subject<string[]>();
-  private syncScheduled = false;
-  private injector = inject(Injector);
+  private publishScheduled = false;
 
   private timerStorage: TimerStorageMap = new Map<string, Subject<TimerData>>();
 
@@ -31,10 +36,16 @@ export default class Storage {
 
   private resolution: number = 100;
 
+  constructor() {
+    interval(TOPIC_SWEEP_MS)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.sweep());
+  }
+
   /**
-   * Live values of one topic, replaying the latest to late subscribers. While anything is
-   * subscribed the topic is one this client reads, so the server delivers it; when the last
-   * subscriber leaves, it isn't.
+   * Live values of one topic, replaying the latest to late subscribers. The first subscriber
+   * adds the topic to the list the server sends at once; after the last leaves, the next sweep
+   * removes it.
    */
   public get = (key: string): Observable<DataValue> => {
     let topic = this.topicStreams.get(key);
@@ -58,40 +69,50 @@ export default class Storage {
     this.topicStreams.get(key)?.values.next(value);
   };
 
-  /** The topics this client reads, sorted. */
+  /** The topics the server sends this client, sorted. */
   public getTopics = (): string[] => {
     return this.topics;
   };
 
-  /** The full sorted topic list each time it changes, once per render however many get()s changed it. */
+  /** The full sorted topic list each time it changes: when a topic is first read, and when a sweep removes some. */
   public topicsChanged = (): Observable<string[]> => {
     return this.topicChanges.asObservable();
   };
 
   private setRead = (key: string, read: boolean): void => {
-    if (read) this.read.add(key);
-    else this.read.delete(key);
-    this.scheduleSync();
+    if (!read) {
+      this.read.delete(key);
+      return;
+    }
+    this.read.add(key);
+    if (this.listed.has(key)) return;
+    this.listed.add(key);
+    this.schedulePublish();
   };
 
-  /**
-   * Batches every change until the next render into one list. Zoneless, the router destroys the old
-   * page in its own task and the new page subscribes when it renders a frame later, so batching
-   * until then makes a page switch send one list, and a topic both pages read never leaves it.
-   */
-  private scheduleSync = (): void => {
-    if (this.syncScheduled) return;
-    this.syncScheduled = true;
-    afterNextRender(
-      () => {
-        this.syncScheduled = false;
-        const topics = [...this.read].sort();
-        if (topics.length === this.topics.length && topics.every((topic, i) => topic === this.topics[i])) return;
-        this.topics = topics;
-        this.topicChanges.next(topics);
-      },
-      { injector: this.injector }
-    );
+  /** Removes the topics nothing reads any more. A topic read again before the sweep never leaves the list. */
+  private sweep = (): void => {
+    // read is a subset of listed, so the same size means the same topics
+    if (this.listed.size === this.read.size) return;
+    this.listed = new Set(this.read);
+    this.publish();
+  };
+
+  /** Publishes at the end of the task, so a page's many get()s add their topics in one list. */
+  private schedulePublish = (): void => {
+    if (this.publishScheduled) return;
+    this.publishScheduled = true;
+    queueMicrotask(() => {
+      this.publishScheduled = false;
+      this.publish();
+    });
+  };
+
+  private publish = (): void => {
+    const topics = [...this.listed].sort();
+    if (topics.length === this.topics.length && topics.every((topic, i) => topic === this.topics[i])) return;
+    this.topics = topics;
+    this.topicChanges.next(topics);
   };
 
   public getCurrentRunId = () => {

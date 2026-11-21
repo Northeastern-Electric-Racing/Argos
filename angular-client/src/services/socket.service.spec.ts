@@ -1,9 +1,8 @@
-import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { EnvService } from './env.service';
 import SocketService, { SOCKET_IO } from './socket.service';
-import Storage from './storage.service';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 
 type Auth = (cb: (data: object) => void) => void;
 
@@ -61,14 +60,17 @@ class FakeSocket {
   }
 }
 
-/** Renders, which sends the topic changes batched since the last render. */
-const flush = () => TestBed.inject(ApplicationRef).whenStable();
+/** Ends the task, which sends the topics added in it. */
+const endTask = () => Promise.resolve();
+/** Runs the next sweep, which removes the topics nothing reads any more. */
+const sweep = () => vi.advanceTimersByTime(TOPIC_SWEEP_MS);
 
 describe('SocketService (topic subscriptions)', () => {
   let socket: FakeSocket;
   let storage: Storage;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     TestBed.configureTestingModule({
       providers: [
         { provide: EnvService, useValue: { backendUrl: 'http://scylla.test' } },
@@ -80,6 +82,10 @@ describe('SocketService (topic subscriptions)', () => {
     });
     storage = TestBed.inject(Storage);
     TestBed.inject(SocketService);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('keeps the clientId query parameter', () => {
@@ -94,7 +100,7 @@ describe('SocketService (topic subscriptions)', () => {
 
   it('sends the topics already read in the handshake', async () => {
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     socket.connect();
     expect(socket.handshakes).toEqual([{ topics: ['A/B'] }]);
     expect(socket.subscriptions()).toEqual([]);
@@ -103,29 +109,33 @@ describe('SocketService (topic subscriptions)', () => {
   it('sends exactly the topics a page opens with, in one message', async () => {
     socket.connect();
     ['C/D', 'A/B', 'A/B'].forEach((topic) => storage.get(topic).subscribe());
-    await flush();
+    await endTask();
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D']]);
   });
 
-  it('sends one list when a page leaves, however many topics it read', async () => {
+  it('sends one list at the sweep after a page leaves, however many topics it read', async () => {
     socket.connect();
     storage.get('A/B').subscribe();
     const page = ['C/D', 'E/F', 'G/H'].map((topic) => storage.get(topic).subscribe());
-    await flush();
+    await endTask();
     page.forEach((subscription) => subscription.unsubscribe());
-    await flush();
+    await endTask();
+    expect(socket.subscriptions()).toEqual([['A/B', 'C/D', 'E/F', 'G/H']]);
+    sweep();
     expect(socket.subscriptions()).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['A/B']]);
   });
 
-  it('sends one list on a page switch, keeping topics both pages read', async () => {
+  it("on a page switch, adds the new page's topics at once and removes the old page's at the sweep", async () => {
     socket.connect();
     const leaving = ['A/B', 'C/D'].map((topic) => storage.get(topic).subscribe());
-    await flush();
+    await endTask();
     leaving.forEach((subscription) => subscription.unsubscribe());
     ['C/D', 'E/F'].forEach((topic) => storage.get(topic).subscribe());
-    await flush();
+    await endTask();
+    sweep();
     expect(socket.subscriptions()).toEqual([
       ['A/B', 'C/D'],
+      ['A/B', 'C/D', 'E/F'],
       ['C/D', 'E/F']
     ]);
   });
@@ -133,18 +143,18 @@ describe('SocketService (topic subscriptions)', () => {
   it('numbers each list higher than the last, across reconnects', async () => {
     socket.connect();
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     socket.disconnect();
     socket.connect();
     storage.get('C/D').subscribe();
-    await flush();
+    await endTask();
     expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2]);
   });
 
   it('restores the same topics on reconnect, through the handshake', async () => {
     socket.connect();
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     socket.disconnect();
     socket.connect();
     expect(socket.handshakes).toEqual([{ topics: [] }, { topics: ['A/B'] }]);
@@ -155,7 +165,7 @@ describe('SocketService (topic subscriptions)', () => {
     socket.connect();
     socket.disconnect();
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     expect(socket.subscriptions()).toEqual([]);
     socket.connect();
     expect(socket.handshakes).toEqual([{ topics: [] }, { topics: ['A/B'] }]);
@@ -165,7 +175,7 @@ describe('SocketService (topic subscriptions)', () => {
   it('sends the list on connect when it changed after the handshake was sent', async () => {
     socket.handshake();
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     socket.open();
     expect(socket.handshakes).toEqual([{ topics: [] }]);
     expect(socket.subscriptions()).toEqual([['A/B']]);
