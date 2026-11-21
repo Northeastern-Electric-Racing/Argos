@@ -1,6 +1,5 @@
-import { ApplicationRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import Storage from 'src/services/storage.service';
+import Storage, { TOPIC_SWEEP_MS } from 'src/services/storage.service';
 import { TopicLiveValueComponent } from './topic-live-value.component';
 
 describe('TopicLiveValueComponent', () => {
@@ -15,15 +14,22 @@ describe('TopicLiveValueComponent', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
   };
-  /** Whether this client reads the topic, once the next render sends the batched topic changes. */
+  /** Whether the server sends this client the topic, once the task and the next sweep have run. */
   const reading = async () => {
-    await TestBed.inject(ApplicationRef).whenStable();
+    await Promise.resolve();
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
     return storage.getTopics().includes(topic);
   };
   const text = () => (fixture.nativeElement as HTMLElement).textContent?.trim();
 
   beforeEach(() => {
+    // only the sweep's interval: Angular renders on real timers
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     storage = TestBed.inject(Storage);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('shows N/A until the topic has a value, then follows it', async () => {
