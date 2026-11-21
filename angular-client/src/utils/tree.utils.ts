@@ -1,7 +1,3 @@
-import { Injector, Signal, runInInjectionContext, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
-import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
 import { DataValue } from 'src/utils/socket.utils';
 import { DataType, Node } from 'src/utils/types.utils';
@@ -18,33 +14,22 @@ export interface TreeNode<T = unknown> {
   expanded?: boolean;
 }
 
-export interface TreeNodeData extends Node {
-  displayValue: Signal<string>;
+/** A tree node's data. Its live value is not part of it: the leaf's row reads that while it is rendered (topic-live-value). */
+export type TreeNodeData = Node;
+
+/** Formats a topic's value for a tree row: its first value to `precision` places plus its unit, or N/A. */
+export function formatLiveValue(value: DataValue | undefined, precision = 3): string {
+  const num = value?.values?.length ? decimalPipe(value.values[0], precision) : NaN;
+  return Number.isNaN(num) ? 'N/A' : num.toFixed(precision) + (value?.unit ?? '');
 }
 
-// Shared sentinel for non-leaf nodes whose displayValue is never read.
-const EMPTY_DISPLAY: Signal<string> = signal('');
-
-/** Builds TreeNodes from Nodes; leaf signals cleanup via the injector's DestroyRef. */
-export function mapNodesToTreeNodes(
-  nodes: Node[],
-  storage: Storage,
-  injector: Injector,
-  precision = 3
-): TreeNode<TreeNodeData>[] {
-  const formatValue = (value: DataValue): string => {
-    const num = value?.values?.length ? decimalPipe(value.values[0], precision) : NaN;
-    return Number.isNaN(num) ? 'N/A' : num.toFixed(precision) + (value.unit ?? '');
-  };
-
+/** Builds TreeNodes from Nodes. Subscribes to nothing: each leaf row subscribes to its topic only while it is rendered. */
+export function mapNodesToTreeNodes(nodes: Node[]): TreeNode<TreeNodeData>[] {
   const mapToTreeNode = (node: Node): TreeNode<TreeNodeData> => {
     const isLeaf = node.nodes.value.length === 0;
-    const displayValue = isLeaf
-      ? toSignal(storage.get(node.dataType.name).pipe(map(formatValue)), { initialValue: 'N/A' })
-      : EMPTY_DISPLAY;
     return {
       label: node.name,
-      data: { ...node, displayValue },
+      data: node,
       key: node.topicName,
       children: node.nodes.value.map(mapToTreeNode),
       selectable: isLeaf,
@@ -52,7 +37,7 @@ export function mapNodesToTreeNodes(
     };
   };
 
-  return runInInjectionContext(injector, () => nodes.map(mapToTreeNode));
+  return nodes.map(mapToTreeNode);
 }
 
 /**
@@ -78,7 +63,7 @@ export function compactTopicLabel(name: string, maxLength: number): string {
  * Flattens a tree of TreeNodes to a leaf-only list. Each leaf's label is the
  * full `dataType.name` when it fits under `maxLabelLength`, otherwise compacted
  * to `<firstSegment>...<tail>` keeping as much of the tail as fits.
- * Preserves `data` so each leaf's `displayValue` signal stays wired to live values.
+ * Preserves `data` and `key`, so a flat leaf is the same topic as its tree original.
  */
 export function flattenTreeNodes(treeNodes: TreeNode<TreeNodeData>[], maxLabelLength = 30): TreeNode<TreeNodeData>[] {
   const leaves: TreeNode<TreeNodeData>[] = [];

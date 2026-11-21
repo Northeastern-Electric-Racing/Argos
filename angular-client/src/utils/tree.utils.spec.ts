@@ -1,9 +1,15 @@
-import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { compactTopicLabel, filterSelectedNodes, flattenTreeNodes, TreeNode, TreeNodeData } from './tree.utils';
+import {
+  compactTopicLabel,
+  filterSelectedNodes,
+  flattenTreeNodes,
+  formatLiveValue,
+  mapNodesToTreeNodes,
+  TreeNode,
+  TreeNodeData
+} from './tree.utils';
+import { dataTypesToNodes } from './dataTypes.utils';
 import { DataType, Node } from './types.utils';
-
-const EMPTY_DISPLAY = signal('');
 
 const leaf = (name: string, unit = ''): TreeNode<TreeNodeData> => {
   const dataType: DataType = { name, unit };
@@ -16,8 +22,7 @@ const leaf = (name: string, unit = ''): TreeNode<TreeNodeData> => {
       name: name.split('/').pop()!,
       topicName: name + '/',
       dataType,
-      nodes: new BehaviorSubject<Node[]>([]),
-      displayValue: EMPTY_DISPLAY
+      nodes: new BehaviorSubject<Node[]>([])
     }
   };
 };
@@ -31,8 +36,7 @@ const branch = (name: string, children: TreeNode<TreeNodeData>[]): TreeNode<Tree
     name,
     topicName: name + '/',
     dataType: { name, unit: '' },
-    nodes: new BehaviorSubject<Node[]>([]),
-    displayValue: EMPTY_DISPLAY
+    nodes: new BehaviorSubject<Node[]>([])
   }
 });
 
@@ -82,11 +86,10 @@ describe('flattenTreeNodes', () => {
     expect(flat[0].label).toBe('BMS...1/Burning/0');
   });
 
-  it('preserves the leaf data so displayValue stays wired', () => {
+  it('preserves the leaf data and key, so a flat leaf is the same topic as its original', () => {
     const original = leaf('BMS/Pack/Voltage', 'V');
     const flat = flattenTreeNodes([branch('BMS', [original])]);
-    expect(flat[0].data?.dataType).toBe(original.data!.dataType);
-    expect(flat[0].data?.displayValue).toBe(original.data!.displayValue);
+    expect(flat[0].data).toBe(original.data);
     expect(flat[0].key).toBe(original.key);
   });
 
@@ -131,5 +134,30 @@ describe('filterSelectedNodes', () => {
     const ghost: DataType = { name: 'Does/Not/Exist', unit: '' };
     const result = filterSelectedNodes(flat, [ghost, soc.data!.dataType]);
     expect(result).toEqual([soc]);
+  });
+});
+
+describe('mapNodesToTreeNodes', () => {
+  it('builds leaves as selectable, collapsed nodes keyed by topic', () => {
+    const [bms] = mapNodesToTreeNodes(dataTypesToNodes([{ name: 'BMS/Pack/SoC', unit: '%' }]));
+    const [pack] = bms.children!;
+    const [soc] = pack.children!;
+    expect(bms.selectable).toBe(false);
+    expect(bms.expanded).toBe(false);
+    expect(soc.selectable).toBe(true);
+    expect(soc.data?.dataType.name).toBe('BMS/Pack/SoC');
+  });
+});
+
+describe('formatLiveValue', () => {
+  it('formats the first value to the precision, with its unit', () => {
+    expect(formatLiveValue({ values: ['1.23456'], time: '0', unit: 'V' })).toBe('1.235V');
+    expect(formatLiveValue({ values: ['2'], time: '0', unit: '%' }, 1)).toBe('2.0%');
+  });
+
+  it('shows N/A for no value or a non-number', () => {
+    expect(formatLiveValue(undefined)).toBe('N/A');
+    expect(formatLiveValue({ values: [], time: '0', unit: 'V' })).toBe('N/A');
+    expect(formatLiveValue({ values: ['abc'], time: '0', unit: 'V' })).toBe('N/A');
   });
 });

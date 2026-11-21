@@ -1,17 +1,6 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  Injector,
-  OnDestroy,
-  computed,
-  inject,
-  input,
-  linkedSignal,
-  signal,
-  untracked
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { TopicTreeComponent } from '../topic-tree/topic-tree.component';
@@ -25,7 +14,6 @@ import {
   SelectorConfig
 } from 'src/components/select-dropdown/select-dropdown.component';
 import { GraphPresetService, Preset } from 'src/services/graph-preset.service';
-import Storage from 'src/services/storage.service';
 import { dataTypesToNodes } from 'src/utils/dataTypes.utils';
 import {
   mapNodesToTreeNodes,
@@ -60,16 +48,11 @@ export default class GraphSidebarMobileComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
   private dialogService = inject(UiDialogService);
-  private storage = inject(Storage);
-  private injector = inject(Injector);
   private presetDialogRef?: DialogRef<DataType[] | null> | null;
 
   sidebarVisible = signal(false);
-  treeNodes = computed(() => {
-    const nodes = dataTypesToNodes(this.dataTypes());
-    // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
-    return untracked(() => mapNodesToTreeNodes(nodes, this.storage, this.injector));
-  });
+  /** Holds no live values: each leaf row subscribes to its topic only while it is rendered, i.e. while its parents are expanded. */
+  treeNodes = computed(() => mapNodesToTreeNodes(dataTypesToNodes(this.dataTypes())));
   flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
   // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
   selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>

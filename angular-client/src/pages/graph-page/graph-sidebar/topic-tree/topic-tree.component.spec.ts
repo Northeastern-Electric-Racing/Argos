@@ -2,7 +2,6 @@ import { Tree } from '@angular/aria/tree';
 import { TreeHarness } from '@angular/aria/tree/testing';
 import { By } from '@angular/platform-browser';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
-import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TreeNode, TreeNodeData } from 'src/utils/tree.utils';
 import { TopicTreeComponent } from './topic-tree.component';
@@ -11,7 +10,7 @@ const leaf = (key: string, label: string): TreeNode<TreeNodeData> => ({
   key,
   label,
   selectable: true,
-  data: { displayValue: signal('1') } as unknown as TreeNodeData
+  data: { dataType: { name: key, unit: '' } } as unknown as TreeNodeData
 });
 const branch = (key: string, children: TreeNode<TreeNodeData>[]): TreeNode<TreeNodeData> => ({
   key,

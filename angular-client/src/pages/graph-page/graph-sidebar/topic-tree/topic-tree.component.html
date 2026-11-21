@@ -60,7 +60,8 @@
         node.label
       }}</span>
       @if (!node.children?.length) {
-        <span class="shrink-0 font-sans text-base text-fg">{{ node.data.displayValue() }}</span>
+        <!-- Aria renders a group only while its parent is expanded, so this row's topic is live only then. -->
+        <topic-live-value class="shrink-0 font-sans text-base text-fg" [topic]="node.data.dataType.name" />
       }
     </li>
 
