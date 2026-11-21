@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import Storage from 'src/services/storage.service';
+import Storage, { TOPIC_SWEEP_MS } from 'src/services/storage.service';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { DataType } from 'src/utils/types.utils';
@@ -33,8 +33,11 @@ describe('graph sidebar live values', () => {
   let storage: Storage;
   const dataTypes = realisticDataTypes();
 
-  /** Topics this client reads; each step awaits whenStable, which runs the batched topic change. */
-  const liveTopics = (): number => storage.getTopics().length;
+  /** Topics the server sends this client after the next sweep; each step awaits whenStable, which ends the task that adds them. */
+  const liveTopics = (): number => {
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+    return storage.getTopics().length;
+  };
   /** Clicks the rendered tree item labelled exactly `label`, as a user would, and lets the tree re-render. */
   const click = async (label: string) => {
     const items: HTMLElement[] = [...fixture.nativeElement.querySelectorAll('[role="treeitem"]')];
@@ -45,6 +48,8 @@ describe('graph sidebar live values', () => {
   };
 
   beforeEach(async () => {
+    // only the sweep's interval: Angular renders on real timers
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     Element.prototype.scrollIntoView ??= () => undefined;
     await TestBed.configureTestingModule({
       imports: [GraphSidebarDesktopComponent],
@@ -55,6 +60,10 @@ describe('graph sidebar live values', () => {
     fixture.componentRef.setInput('dataTypes', dataTypes);
     fixture.autoDetectChanges();
     await fixture.whenStable();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // Pins Angular Aria destroying collapsed groups (DeferredContent, preserveContent false): rows exist only while

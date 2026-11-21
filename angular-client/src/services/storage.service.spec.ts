@@ -1,40 +1,47 @@
-import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import Storage from './storage.service';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 
 const value = (v: string): DataValue => ({ values: [v], time: '0', unit: 'x' });
 
-/** Renders, which sends the topic changes batched since the last render. */
-const flush = () => TestBed.inject(ApplicationRef).whenStable();
+/** Ends the task, which sends the topics added in it. */
+const endTask = () => Promise.resolve();
+/** Runs the next sweep, which removes the topics nothing reads any more. */
+const sweep = () => vi.advanceTimersByTime(TOPIC_SWEEP_MS);
 
 describe('Storage (topic subscriptions)', () => {
   let storage: Storage;
   let changes: string[][];
 
   beforeEach(() => {
+    vi.useFakeTimers();
     storage = TestBed.inject(Storage);
     changes = [];
     storage.topicsChanged().subscribe((topics) => changes.push(topics));
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('reads no topics before anything subscribes', async () => {
-    await flush();
+    await endTask();
+    sweep();
     expect(storage.getTopics()).toEqual([]);
     expect(changes).toEqual([]);
   });
 
   it('does not read a topic that is only fetched, not subscribed', async () => {
     storage.get('A/B');
-    await flush();
+    await endTask();
     expect(storage.getTopics()).toEqual([]);
     expect(changes).toEqual([]);
   });
 
-  it('batches every get() subscription before a render into a single change', async () => {
+  it('adds every topic first read in a task in one change, without waiting for a sweep', async () => {
     ['E/F', 'A/B', 'C/D'].forEach((topic) => storage.get(topic).subscribe());
     expect(changes).toEqual([]);
-    await flush();
+    await endTask();
     expect(changes).toEqual([['A/B', 'C/D', 'E/F']]);
     expect(storage.getTopics()).toEqual(['A/B', 'C/D', 'E/F']);
   });
@@ -42,36 +49,47 @@ describe('Storage (topic subscriptions)', () => {
   it('counts readers of the same topic once', async () => {
     const first = storage.get('A/B').subscribe();
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     first.unsubscribe();
-    await flush();
+    sweep();
     expect(changes).toEqual([['A/B']]);
   });
 
-  it('drops a topic as soon as its last reader leaves', async () => {
+  it('keeps a topic whose last reader left until the next sweep, then removes it', async () => {
     storage.get('A/B').subscribe();
     const leaving = storage.get('C/D').subscribe();
-    await flush();
+    await endTask();
     leaving.unsubscribe();
-    await flush();
+    await endTask();
+    expect(storage.getTopics()).toEqual(['A/B', 'C/D']);
+    sweep();
     expect(changes).toEqual([['A/B', 'C/D'], ['A/B']]);
   });
 
-  it('drops every topic a page read in one change when the page leaves', async () => {
+  it('removes every topic a page read in one change at the sweep after the page leaves', async () => {
     const page = ['A/B', 'C/D', 'E/F'].map((topic) => storage.get(topic).subscribe());
     storage.get('G/H').subscribe();
-    await flush();
+    await endTask();
     page.forEach((subscription) => subscription.unsubscribe());
-    await flush();
+    sweep();
     expect(changes).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['G/H']]);
   });
 
-  it('sends nothing when a topic is left and read again before the next render, as on a page switch', async () => {
+  it('never removes a topic read again before the sweep, as on a page switch', async () => {
     const leaving = storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
     leaving.unsubscribe();
     storage.get('A/B').subscribe();
-    await flush();
+    await endTask();
+    sweep();
+    expect(changes).toEqual([['A/B']]);
+  });
+
+  it('sends nothing at a sweep when no topic was left', async () => {
+    storage.get('A/B').subscribe();
+    await endTask();
+    sweep();
+    sweep();
     expect(changes).toEqual([['A/B']]);
   });
 
@@ -92,7 +110,7 @@ describe('Storage (topic subscriptions)', () => {
     expect(seen).toEqual(['2']);
   });
 
-  it('forgets the latest value once nothing reads the topic', () => {
+  it('forgets the latest value as soon as nothing reads the topic, before the sweep', () => {
     const reader = storage.get('A/B').subscribe();
     storage.addValue('A/B', value('1'));
     reader.unsubscribe();
