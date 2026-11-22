@@ -59,10 +59,9 @@ export function computeLoopStatus(
   const live = nodes.map(liveReading);
 
   const breakIdx = live.findIndex((r) => r !== undefined && r.value === 0);
-  // With no reading before the break, the loop is still known good up to its source while the VCU
-  // (which sources the loop) is publishing: that means GLV is on and the VCU is up. If the VCU is
-  // silent, it and everything before it are suspects too.
-  let lastClosedIdx = boardLive('VCU') ? nodes.findIndex((n) => n.kind === 'source') : -1;
+  // With no reading before the break, the first node (GLV master switch) is still known closed while
+  // the VCU is publishing: that means GLV is on. If the VCU is silent, it is a suspect too.
+  let lastClosedIdx = boardLive('VCU') ? 0 : -1;
   if (breakIdx >= 0) {
     for (let i = breakIdx - 1; i >= 0; i--) {
       if (live[i] !== undefined) {

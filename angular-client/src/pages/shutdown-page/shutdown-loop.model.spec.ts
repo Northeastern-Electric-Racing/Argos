@@ -5,12 +5,12 @@ describe('SHUTDOWN_LOOP', () => {
   it('has 19 nodes in spec order', () => {
     expect(SHUTDOWN_LOOP.map((n) => n.id)).toEqual([
       'glvms',
-      'vcu',
       'side-brb-r',
       'side-brb-l',
       'bms-latch',
       'imd-latch',
       'bspd-latch',
+      'can-latch',
       'mc-hvil',
       'bots',
       'inertia',
@@ -34,9 +34,9 @@ describe('SHUTDOWN_LOOP', () => {
     }
   });
 
-  it('has 13 measured nodes and excludes BMS/Shutdown/State', () => {
+  it('has 14 measured nodes and excludes BMS/Shutdown/State', () => {
     const topics = SHUTDOWN_LOOP.filter((n) => n.topic).map((n) => n.topic);
-    expect(topics.length).toBe(13);
+    expect(topics.length).toBe(14);
     expect(topics).not.toContain(SHUTDOWN_TOPICS.BMS.State);
   });
 

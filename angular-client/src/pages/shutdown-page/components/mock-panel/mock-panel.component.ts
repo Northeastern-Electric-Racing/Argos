@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
 import Storage from 'src/services/storage.service';
 import { Board, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
-import { SHUTDOWN_TOPICS } from '../../shutdown-page.topics';
+import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from '../../shutdown-page.topics';
 
 const PUBLISH_EVERY_MS = 1000;
 const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && n.board) as {
@@ -64,8 +64,15 @@ export class MockPanelComponent implements OnDestroy {
 
   private publish(): void {
     const values = this.values();
+    const time = String(Date.now());
     for (const n of MEASURED) {
-      this.storage.addValue(n.topic, { values: [String(values[n.topic])], time: String(Date.now()), unit: '' });
+      if (n.topic === SHUTDOWN_TOPICS.VCU.CAN_LATCH) {
+        // The CAN latch is derived from the critical faults: open = every fault tripped.
+        const fault = values[n.topic] ? '0' : '1';
+        for (const t of VCU_CRITICAL_FAULT_TOPICS) this.storage.addValue(t, { values: [fault], time, unit: '' });
+      } else {
+        this.storage.addValue(n.topic, { values: [String(values[n.topic])], time, unit: '' });
+      }
     }
   }
 }

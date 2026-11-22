@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { NODE_STATE_DISPLAY } from '../../shutdown-loop.display';
 import { NodeStatus } from '../../shutdown-loop.utils';
 
-/** viewBox is 1000 x 400; node `car` coords are % of that. */
+/** viewBox is 1000 x 535 (frame image aspect); node `car` coords are % of that. */
 const VIEW_W = 1000;
-const VIEW_H = 400;
+const VIEW_H = 535;
 
 interface Marker {
   id: string;
@@ -33,7 +33,7 @@ const tooltipFor = (s: NodeStatus): string => {
   return `${label} · ${topic} = ${s.value} · ${Math.round(s.ageMs / 1000)} s ago`;
 };
 
-/** Simplified side view of the car with each shutdown node where it sits, joined in loop order. */
+/** Side view of the car frame with each shutdown node where it sits, joined in loop order. */
 @Component({
   selector: 'car-view',
   templateUrl: './car-view.component.html',

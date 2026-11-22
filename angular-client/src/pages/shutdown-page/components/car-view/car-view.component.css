@@ -7,30 +7,8 @@
   height: auto;
   max-height: 60vh;
 }
-.outline path,
-.outline rect,
-.outline circle {
-  fill: none;
-  stroke: var(--color-text-secondary);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-}
-.outline .wheel {
-  stroke-width: 10;
-  stroke: var(--color-divider);
-}
-.outline .ground {
-  stroke: var(--color-divider);
-  stroke-width: 2;
-}
-.outline .zone {
-  stroke-dasharray: 6 5;
-  stroke-width: 1.5;
-}
-.zone-label {
-  fill: var(--color-text-secondary);
-  font-size: 15px;
-  text-anchor: middle;
+.frame {
+  pointer-events: none;
 }
 .segment {
   stroke: var(--sd-color);
@@ -83,10 +61,4 @@
   50% {
     stroke-width: 7;
   }
-}
-.zone-label.end {
-  text-anchor: end;
-}
-.zone-label.start {
-  text-anchor: start;
 }

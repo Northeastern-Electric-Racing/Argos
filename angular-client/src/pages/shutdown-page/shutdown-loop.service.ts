@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
 import { Board, SHUTDOWN_LOOP } from './shutdown-loop.model';
 import { BoardLastSeen, computeLoopStatus, Reading, STALE_AFTER_MS } from './shutdown-loop.utils';
-import { SHUTDOWN_TOPICS } from './shutdown-page.topics';
+import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 
 const CLOCK_TICK_MS = 1000;
 
@@ -20,6 +20,8 @@ export class ShutdownLoopService implements OnDestroy {
   private lastSeen = signal<BoardLastSeen>({});
   private now = signal(Date.now());
   private tsState = signal<number | undefined>(undefined);
+  /** Latest value of each critical VCU fault received so far. */
+  private criticalFaults = new Map<string, number>();
   private timer = setInterval(() => this.now.set(Date.now()), CLOCK_TICK_MS);
 
   readonly status = computed(() => computeLoopStatus(SHUTDOWN_LOOP, this.readings(), this.lastSeen(), this.now()));
@@ -34,7 +36,16 @@ export class ShutdownLoopService implements OnDestroy {
   constructor() {
     for (const node of SHUTDOWN_LOOP) {
       const { topic, board } = node;
-      if (topic && board) this.subscribe(topic, (value) => this.record(topic, board, value));
+      if (topic && board && topic !== SHUTDOWN_TOPICS.VCU.CAN_LATCH) {
+        this.subscribe(topic, (value) => this.record(topic, board, value));
+      }
+    }
+    for (const fault of VCU_CRITICAL_FAULT_TOPICS) {
+      this.subscribe(fault, (value) => {
+        this.criticalFaults.set(fault, value);
+        const anyTripped = [...this.criticalFaults.values()].some((v) => v !== 0);
+        this.record(SHUTDOWN_TOPICS.VCU.CAN_LATCH, 'VCU', anyTripped ? 0 : 1);
+      });
     }
     this.subscribe(SHUTDOWN_TOPICS.BMS.State, (value) => {
       this.tsState.set(value);

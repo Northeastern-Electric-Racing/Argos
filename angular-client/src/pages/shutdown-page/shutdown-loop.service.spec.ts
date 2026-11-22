@@ -2,16 +2,23 @@ import { TestBed } from '@angular/core/testing';
 import Storage from 'src/services/storage.service';
 import { SHUTDOWN_LOOP } from './shutdown-loop.model';
 import { ShutdownLoopService } from './shutdown-loop.service';
-import { SHUTDOWN_TOPICS } from './shutdown-page.topics';
+import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 
-const MEASURED_TOPICS = SHUTDOWN_LOOP.filter((n) => n.topic).map((n) => n.topic!);
+const MEASURED_TOPICS = SHUTDOWN_LOOP.filter((n) => n.topic && n.topic !== SHUTDOWN_TOPICS.VCU.CAN_LATCH).map(
+  (n) => n.topic!
+);
 
 describe('ShutdownLoopService', () => {
   let service: ShutdownLoopService;
   let storage: Storage;
 
   const push = (topic: string, values: string[]) => storage.addValue(topic, { values, time: '', unit: '' });
-  const pushAll = (value: string) => MEASURED_TOPICS.forEach((t) => push(t, [value]));
+  /** Every sense topic = `value`; critical faults all clear when `value` is '1', all tripped otherwise. */
+  const pushAll = (value: string) => {
+    MEASURED_TOPICS.forEach((t) => push(t, [value]));
+    VCU_CRITICAL_FAULT_TOPICS.forEach((t) => push(t, [value === '1' ? '0' : '1']));
+  };
+  const canLatch = () => service.status().nodes.find((n) => n.node.id === 'can-latch')!;
 
   beforeEach(() => {
     jasmine.clock().install();
@@ -83,6 +90,22 @@ describe('ShutdownLoopService', () => {
     expect(service.tsOn()).toBeTrue();
     push(SHUTDOWN_TOPICS.BMS.State, ['1']);
     expect(service.tsOn()).toBeFalse();
+  });
+
+  it('CAN latch closed only while every critical fault is 0', () => {
+    pushAll('1');
+    expect(canLatch().state).toBe('closed');
+    push(VCU_CRITICAL_FAULT_TOPICS[2], ['1']);
+    expect(canLatch().value).toBe(0);
+    expect(service.status().suspects.map((n) => n.id)).toEqual(['can-latch']);
+    push(VCU_CRITICAL_FAULT_TOPICS[2], ['0']);
+    expect(canLatch().value).toBe(1);
+    expect(service.status().verdict).toBe('closed');
+  });
+
+  it('CAN latch has no data until a critical fault arrives', () => {
+    MEASURED_TOPICS.forEach((t) => push(t, ['1']));
+    expect(canLatch().state).toBe('no-data');
   });
 
   it('unsubscribes on destroy', () => {

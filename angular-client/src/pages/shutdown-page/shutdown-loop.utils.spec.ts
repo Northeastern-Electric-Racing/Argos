@@ -83,7 +83,6 @@ describe('computeLoopStatus', () => {
     const status = run(readings, seen);
     expect(suspectIds(status)).toEqual(['side-brb-r', 'side-brb-l', 'bms-latch']);
     expect(stateOf(status, 'glvms')).toBe('closed');
-    expect(stateOf(status, 'vcu')).toBe('closed');
   });
 
   it('em placeholder suspect', () => {
@@ -124,7 +123,7 @@ describe('computeLoopStatus', () => {
     const { readings } = allClosed();
     openFrom(readings, BMS.Acc);
     const status = run(readings, { BMS: NOW });
-    expect(suspectIds(status)).toEqual(['glvms', 'vcu', 'side-brb-r', 'side-brb-l', 'em-interlock', 'acc-sense']);
+    expect(suspectIds(status)).toEqual(['glvms', 'side-brb-r', 'side-brb-l', 'em-interlock', 'acc-sense']);
     expect(status.noDataInStretch.map((n) => n.id)).toContain('tsms');
   });
 
