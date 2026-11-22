@@ -8,7 +8,7 @@ import { AppNavBarComponent } from './app-nav-bar.component';
 @Component({ template: '' })
 class Blank {}
 
-/** A page with its own mobile menu button (landing, charging, map). */
+/** A page with its own mobile menu button (charging, map). */
 @Component({
   template: '<sidebar-toggle><button type="button">Open navigation</button></sidebar-toggle>',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -34,6 +34,15 @@ class Shell {}
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
+/** The landing page went away in #847, so the app's pages start at the graph. */
+const pages = [
+  { path: 'graph', component: Blank },
+  { path: 'charging', component: WithToggle },
+  { path: 'link', component: Linker },
+  { path: 'notification-log', component: Blank },
+  { path: 'bms/segment/:id', component: Blank }
+];
+
 describe('AppNavBarComponent on a phone', () => {
   afterEach(() => {
     document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
@@ -41,17 +50,7 @@ describe('AppNavBarComponent on a phone', () => {
 
   const setup = async () => {
     TestBed.configureTestingModule({
-      providers: [
-        fakeViewport(390).provider,
-        provideRouter([
-          { path: 'landing', component: Blank },
-          { path: 'graph', component: Blank },
-          { path: 'charging', component: WithToggle },
-          { path: 'link', component: Linker },
-          { path: 'notification-log', component: Blank },
-          { path: 'bms/segment/:id', component: Blank }
-        ])
-      ]
+      providers: [fakeViewport(390).provider, provideRouter(pages)]
     });
     const fixture = TestBed.createComponent(Shell);
     document.body.appendChild(fixture.nativeElement);
@@ -142,25 +141,14 @@ describe('AppNavBarComponent after an in-app navigation', () => {
   afterEach(() => document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = '')));
 
   const setup = async () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideRouter([
-          { path: 'landing', component: Blank },
-          { path: 'graph', component: Blank },
-          { path: 'charging', component: WithToggle },
-          { path: 'link', component: Linker },
-          { path: 'notification-log', component: Blank },
-          { path: 'bms/segment/:id', component: Blank }
-        ])
-      ]
-    });
+    TestBed.configureTestingModule({ providers: [provideRouter(pages)] });
     const fixture = TestBed.createComponent(Shell);
     document.body.appendChild(fixture.nativeElement);
     const main = fixture.nativeElement.querySelector('main') as HTMLElement;
     fixture.autoDetectChanges();
     await fixture.whenStable();
     const router = TestBed.inject(Router);
-    await router.navigateByUrl('/landing');
+    await router.navigateByUrl('/graph');
     await fixture.whenStable();
     /** Opens the Linker page and presses its button, which navigates to `to` and leaves with the page. */
     const follow = async (to: string) => {
@@ -225,6 +213,78 @@ describe('AppNavBarComponent after an in-app navigation', () => {
     await fixture.whenStable();
     await settle();
     expect(document.activeElement).toBe(document.body);
+  });
+});
+
+// #847: the router decides which chip reads as the current page, so a redirect or a query string can't
+// leave the bar with nothing marked.
+describe('AppNavBarComponent nav highlighting', () => {
+  const setup = async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        fakeViewport(1440).provider,
+        provideRouter([
+          { path: '', redirectTo: '/graph', pathMatch: 'full' },
+          { path: 'graph', component: Blank },
+          { path: 'charging', component: Blank },
+          { path: 'bms', component: Blank },
+          { path: 'bms/segment/:id', component: Blank }
+        ])
+      ]
+    });
+    const fixture = TestBed.createComponent(AppNavBarComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const router = TestBed.inject(Router);
+    const go = async (url: string) => {
+      await router.navigateByUrl(url);
+      await fixture.whenStable();
+    };
+    const current = (): (string | undefined)[] =>
+      [...(fixture.nativeElement.querySelectorAll('nav sidebar-chip button') as NodeListOf<HTMLButtonElement>)]
+        .filter((b) => b.getAttribute('aria-current') === 'page')
+        .map((b) => b.textContent?.trim());
+    return { fixture, router, go, current };
+  };
+
+  it('marks the graph chip when the root redirects to it', async () => {
+    const { go, current } = await setup();
+    await go('/');
+    expect(current()).toEqual(['Graph']);
+  });
+
+  it('keeps the graph chip marked once topics are in the query string', async () => {
+    const { go, current } = await setup();
+    await go('/graph?topics=DTI%2FRPM%2FERPM');
+    expect(current()).toEqual(['Graph']);
+  });
+
+  it('marks only the chip for the page being viewed', async () => {
+    const { go, current } = await setup();
+    await go('/charging');
+    expect(current()).toEqual(['Charging']);
+  });
+
+  // Prefix matching keeps the parent chip marked on nested pages.
+  it('keeps the bms chip marked on a segment page', async () => {
+    const { go, current } = await setup();
+    await go('/bms/segment/1');
+    expect(current()).toEqual(['BMS']);
+  });
+
+  it('sends the home logo to the graph page', async () => {
+    const { fixture, router, go } = await setup();
+    await go('/charging');
+    (fixture.nativeElement.querySelector('nav button[aria-label="Home"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(router.url).toBe('/graph');
+  });
+
+  it('lists the graph page once, with no separate home item duplicating it', async () => {
+    const { fixture } = await setup();
+    const labels = fixture.componentInstance.allNavItems.map((item) => item.label);
+    expect(labels.filter((label) => label === 'Graph')).toHaveLength(1);
+    expect(labels).not.toContain('Home');
   });
 });
 

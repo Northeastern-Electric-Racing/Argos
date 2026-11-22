@@ -12,7 +12,7 @@ describe('EditRuleDialogComponent', () => {
       imports: [EditRuleDialogComponent],
       providers: [
         { provide: DialogRef, useValue: { close } },
-        { provide: DIALOG_DATA, useValue: { expr: 'a > 1', debounce_time: 5 } }
+        { provide: DIALOG_DATA, useValue: { expr: 'a > 1', debounce_time: 5, description: 'Old' } }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(EditRuleDialogComponent);
@@ -50,6 +50,17 @@ describe('EditRuleDialogComponent', () => {
   it('closes with the edited rule when valid', async () => {
     fixture.componentInstance.form.controls.debounce_time.setValue(9);
     await submit();
-    expect(close).toHaveBeenCalledWith({ expr: 'a > 1', debounce_time: 9 });
+    expect(close).toHaveBeenCalledWith({ expr: 'a > 1', debounce_time: 9, description: 'Old' });
+  });
+
+  it('pre-fills the current description', () => {
+    expect(input('edit-description').value).toBe('Old');
+  });
+
+  it('returns the edited description on save', async () => {
+    input('edit-description').value = 'New';
+    input('edit-description').dispatchEvent(new Event('input'));
+    await submit();
+    expect(close).toHaveBeenCalledWith({ expr: 'a > 1', debounce_time: 5, description: 'New' });
   });
 });

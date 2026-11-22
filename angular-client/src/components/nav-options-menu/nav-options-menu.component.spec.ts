@@ -1,20 +1,37 @@
 import { MenuHarness } from '@angular/aria/menu/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { NavItem } from 'src/app/app-nav-bar/app-nav-bar.component';
 
 import { NavOptionsMenuComponent } from './nav-options-menu.component';
 
+@Component({ template: '' })
+class Blank {}
+
 describe('NavOptionsMenuComponent', () => {
   let fixture: ComponentFixture<NavOptionsMenuComponent>;
-  let clicked: string[];
+  let ran: string[];
   const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
   beforeEach(async () => {
-    clicked = [];
-    const item = (id: string, label: string): NavItem => ({ id, label, icon: 'map', onClick: () => clicked.push(id) });
+    ran = [];
+    const page = (route: string, label: string): NavItem => ({ route, label, icon: 'map' });
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([
+          { path: 'faults', component: Blank },
+          { path: 'map', component: Blank }
+        ])
+      ]
+    });
     fixture = TestBed.createComponent(NavOptionsMenuComponent);
-    fixture.componentRef.setInput('items', [item('/faults', 'Fault'), item('/map', 'Map'), item('', 'Edit Runs')]);
+    fixture.componentRef.setInput('items', [
+      page('/faults', 'Fault'),
+      page('/map', 'Map'),
+      { label: 'Edit Runs', icon: 'edit', action: () => ran.push('Edit Runs') }
+    ]);
     document.body.appendChild(fixture.nativeElement);
     fixture.autoDetectChanges();
     await fixture.whenStable();
@@ -34,14 +51,25 @@ describe('NavOptionsMenuComponent', () => {
     expect(trigger().getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('lists every page as a menu item and runs the chosen one', async () => {
+  // Menu items stay commands, so the one that is a page asks the router rather than being a link.
+  it('lists every page as a menu item and opens the chosen one', async () => {
     trigger().click();
     await fixture.whenStable();
     const items = await (await menu()).getItems();
     expect(await Promise.all(items.map((i) => i.getText()))).toEqual(['Fault', 'Map', 'Edit Runs']);
     await items[1].click();
     await fixture.whenStable();
-    expect(clicked).toEqual(['/map']);
+    expect(TestBed.inject(Router).url).toBe('/map');
+  });
+
+  it('runs the action of an item that is not a page', async () => {
+    trigger().click();
+    await fixture.whenStable();
+    const items = await (await menu()).getItems();
+    await items[2].click();
+    await fixture.whenStable();
+    expect(ran).toEqual(['Edit Runs']);
+    expect(TestBed.inject(Router).url).toBe('/');
   });
 
   it('closes on Escape and gives focus back to the trigger', async () => {
