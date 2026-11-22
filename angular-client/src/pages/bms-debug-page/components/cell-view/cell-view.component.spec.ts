@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SelectedCellInfo } from 'src/services/heat-map.service';
 import { CellService } from 'src/services/cell.service';
-import Storage from 'src/services/storage.service';
+import Storage, { TOPIC_SWEEP_MS } from 'src/services/storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 import { CellViewComponent } from './cell-view.component';
@@ -45,7 +45,10 @@ describe('CellViewComponent', () => {
     storage.addValue(topics.alphaVolt(0, 0), { values: ['3.70'], time: '0', unit: 'V' } as DataValue);
     expect(reading.voltage).toBeCloseTo(3.7);
 
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     fixture.destroy();
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS); // the cell teardown's delay
     expect(reading.voltage).toBeUndefined();
+    vi.useRealTimers();
   });
 });

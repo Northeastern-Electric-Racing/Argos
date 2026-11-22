@@ -54,8 +54,8 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
   let heatMap: HeatMapService;
 
   beforeEach(async () => {
-    // only the topic sweep's interval: Angular renders on real timers
-    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    // only the topic sweep's interval and the cell teardown's timeout: Angular renders on real timers
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
     await TestBed.configureTestingModule({
       imports: [SegmentHeatmapComponent],
       providers: [Storage, CellService, HeatMapService, { provide: UiDialogService, useValue: { openPanel: () => null } }]
@@ -81,15 +81,27 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     expect(component).toBeTruthy();
   });
 
-  it('holds the BMS cell topics while shown, and releases them once destroyed', async () => {
+  it("holds only its segment's cell topics while shown, and releases them once destroyed", async () => {
     const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
     await Promise.resolve();
-    expect(cellTopics()).toContain(topics.alphaVolt(SEGMENT, CELL));
+    expect(cellTopics()).toHaveLength(144);
+    expect(cellTopics().every((topic) => topic.includes(`/${SEGMENT}/`))).toBe(true);
 
     fixture.destroy();
-    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+    // the cell teardown's delay, then the sweep that drops the released topics
+    vi.advanceTimersByTime(2 * TOPIC_SWEEP_MS);
     expect(cellTopics()).toEqual([]);
     expect(cellService.getAlphaCellsBySegment(SEGMENT)[CELL].voltage).toBeUndefined();
+  });
+
+  it('moves its hold to the next segment when the segment page reuses it', async () => {
+    const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
+    fixture.componentRef.setInput('segment', 1);
+    fixture.detectChanges();
+    await Promise.resolve();
+    vi.advanceTimersByTime(2 * TOPIC_SWEEP_MS);
+    expect(cellTopics()).toHaveLength(144);
+    expect(cellTopics().every((topic) => topic.includes('/1/'))).toBe(true);
   });
 
   it('fills the flag views from theme tokens, each under black text at AA', () => {

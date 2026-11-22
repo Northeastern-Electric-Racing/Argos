@@ -4,10 +4,10 @@ import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 import { DataValue } from 'src/utils/socket.utils';
 import { topics } from 'src/utils/topic.utils';
 
-/** Ends the task, which adds the topics first read in it, then runs the sweep, which removes those nothing reads. */
+/** Ends the task, which adds the topics first read in it, then waits out the cell teardown's delay and the sweep after it. */
 const flush = async () => {
   await Promise.resolve();
-  vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+  vi.advanceTimersByTime(2 * TOPIC_SWEEP_MS);
 };
 
 const push = (storage: Storage, key: string, value: string): void => {
@@ -16,16 +16,18 @@ const push = (storage: Storage, key: string, value: string): void => {
 
 const isCellTopic = (topic: string) => topic.startsWith('BMS/PerCell/');
 
-/** 5 segments x 2 chips x (7 therms + 13 each of volts, S volts, burns, CvS and open wire). */
-const CELL_TOPIC_COUNT = 720;
+/** 2 chips x (7 therms + 13 each of volts, S volts, burns, CvS and open wire). */
+const SEGMENT_TOPIC_COUNT = 144;
+/** Every segment's. */
+const CELL_TOPIC_COUNT = 5 * SEGMENT_TOPIC_COUNT;
 
 describe('CellService', () => {
   let storage: Storage;
   let cells: CellService;
   const releases: (() => void)[] = [];
 
-  const retain = () => {
-    const release = cells.updateCellInfo();
+  const retain = (segments?: number[]) => {
+    const release = cells.updateCellInfo(segments);
     releases.push(release);
     return release;
   };
@@ -43,6 +45,8 @@ describe('CellService', () => {
 
   afterEach(() => {
     releases.splice(0).forEach((release) => release());
+    // tear the cells down: their readings are shared across tests
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
     vi.useRealTimers();
   });
 
@@ -100,10 +104,37 @@ describe('CellService', () => {
     expect(betaCell(0, 7).ow).toBe(true);
   });
 
+  it('subscribes only the segments asked for', async () => {
+    retain([2]);
+    await flush();
+    expect(cellTopics()).toHaveLength(SEGMENT_TOPIC_COUNT);
+    expect(cellTopics().every((topic) => topic.includes('/2/'))).toBe(true);
+  });
+
+  it("holds a segment while any reader holds it, as the overview and a segment's own page", async () => {
+    const overview = retain();
+    retain([2]);
+    overview();
+    await flush();
+    expect(cellTopics()).toHaveLength(SEGMENT_TOPIC_COUNT);
+  });
+
+  it('keeps the readings when read again within the teardown delay, as on a BMS page switch', () => {
+    const leaving = retain();
+    push(storage, topics.alphaVolt(0, 0), '3.40');
+    leaving();
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS - 1);
+    retain([0]);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+    expect(alphaCell(0, 0).voltage).toBeCloseTo(3.4);
+  });
+
   it('shows no stale readings once the topics were released', () => {
     const release = retain();
     push(storage, topics.alphaVolt(0, 0), '3.40');
     release();
+    expect(alphaCell(0, 0).voltage).toBeCloseTo(3.4);
+    vi.advanceTimersByTime(TOPIC_SWEEP_MS);
     expect(alphaCell(0, 0).voltage).toBeUndefined();
 
     retain();
