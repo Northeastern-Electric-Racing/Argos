@@ -34,6 +34,16 @@ module.exports = {
       },
     },
     {
+      name: 'Open Segment 2',
+      caption: "A segment's page keeps only that segment's cell topics; the other four segments' stop at the next sweep.",
+      run: async (h) => {
+        await h.click(h.page.getByText('See more').nth(1));
+        await lib.waitFor(h.page, (msgs) => msgs < 300, 8000);
+        await h.wait(2000); // the counter's 2 s topic window catches up
+        await h.dwell(3000);
+      },
+    },
+    {
       name: 'Back to Charging',
       caption: "Back on Charging, BMS's topics stop at the next sweep (every 2.5 s), in one list; the shared ones stay.",
       run: async (h) => {
