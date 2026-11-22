@@ -2,6 +2,7 @@ import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
+import Storage from 'src/services/storage.service';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile.component';
 
@@ -39,5 +40,18 @@ describe('GraphSidebarMobileComponent', () => {
     expect(component.treeNodes().map((n) => n.label)).toEqual(['BMS', 'MPU']);
     expect(component.flatNodes().length).toBe(2);
     expect(component.selectedNodes()?.map((n) => n.data?.dataType.name)).toEqual(['MPU/State/Speed']);
+  });
+
+  it('reads no live values while the drawer is closed, and its rows once it opens', async () => {
+    const storage = TestBed.inject(Storage);
+    component.toggleFlattenMode(true); // every leaf row is rendered
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(storage.getTopics()).toEqual([]);
+
+    component.toggleSidebar();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(storage.getTopics()).toEqual(['BMS/Pack/SoC']);
   });
 });
