@@ -12,40 +12,45 @@
 
 <ui-drawer [(visible)]="sidebarVisible" position="right" width="85vw" [dismissible]="false" ariaLabel="Topics">
   <h2 uiDrawerHeader class="mx-0 my-8 w-full text-center font-sans text-xl font-bold text-fg">Topics</h2>
-  <div class="flex h-full flex-col gap-2">
-    <div class="flex items-center justify-start gap-1.5">
-      <select-dropdown
-        class="max-w-full min-w-0 flex-[0_1_auto]"
-        [options]="presetSelectorConfig().options"
-        [placeholder]="presetSelectorConfig().placeholder"
-        [defaultValue]="activePresetName()"
-      />
-      <argos-button class="shrink-0" [onClick]="openPresetsDialog" label="Manage" size="sm" variant="tonal" />
-    </div>
-    <button type="button" uiButton variant="tonal" size="sm" class="w-full" (click)="clearSelections()">Clear Topics</button>
-    <div class="inline-flex items-center gap-4 self-start">
-      <label class="inline-flex cursor-pointer items-center gap-2">
-        <span class="font-sans text-base font-bold text-fg select-none">Selected</span>
-        <ui-switch
-          [checked]="selectedOnly()"
-          (checkedChange)="toggleSelectedOnly($event)"
-          ariaLabel="Show only selected topics"
+  <!-- Projected content is built even while the drawer is closed: render it only while open, so its rows read no live values. -->
+  @if (sidebarVisible()) {
+    <div class="flex h-full flex-col gap-2">
+      <div class="flex items-center justify-start gap-1.5">
+        <select-dropdown
+          class="max-w-full min-w-0 flex-[0_1_auto]"
+          [options]="presetSelectorConfig().options"
+          [placeholder]="presetSelectorConfig().placeholder"
+          [defaultValue]="activePresetName()"
         />
-      </label>
-      <label class="inline-flex cursor-pointer items-center gap-2">
-        <span class="font-sans text-base font-bold text-fg select-none">Flat</span>
-        <ui-switch [checked]="flattenMode()" (checkedChange)="toggleFlattenMode($event)" ariaLabel="Flatten topic tree" />
-      </label>
+        <argos-button class="shrink-0" [onClick]="openPresetsDialog" label="Manage" size="sm" variant="tonal" />
+      </div>
+      <button type="button" uiButton variant="tonal" size="sm" class="w-full" (click)="clearSelections()">
+        Clear Topics
+      </button>
+      <div class="inline-flex items-center gap-4 self-start">
+        <label class="inline-flex cursor-pointer items-center gap-2">
+          <span class="font-sans text-base font-bold text-fg select-none">Selected</span>
+          <ui-switch
+            [checked]="selectedOnly()"
+            (checkedChange)="toggleSelectedOnly($event)"
+            ariaLabel="Show only selected topics"
+          />
+        </label>
+        <label class="inline-flex cursor-pointer items-center gap-2">
+          <span class="font-sans text-base font-bold text-fg select-none">Flat</span>
+          <ui-switch [checked]="flattenMode()" (checkedChange)="toggleFlattenMode($event)" ariaLabel="Flatten topic tree" />
+        </label>
+      </div>
+      <!-- The tree takes the drawer's remaining height and scrolls inside it. -->
+      <topic-tree
+        class="min-h-0 flex-1"
+        [nodes]="activeNodes()"
+        [selectedKeys]="selectedKeys()"
+        (nodeSelect)="nodeSelect($event)"
+        (nodeUnselect)="onNodeUnselect($event)"
+        filterPlaceholder="Search topics..."
+        height="100%"
+      />
     </div>
-    <!-- The tree takes the drawer's remaining height and scrolls inside it. -->
-    <topic-tree
-      class="min-h-0 flex-1"
-      [nodes]="activeNodes()"
-      [selectedKeys]="selectedKeys()"
-      (nodeSelect)="nodeSelect($event)"
-      (nodeUnselect)="onNodeUnselect($event)"
-      filterPlaceholder="Search topics..."
-      height="100%"
-    />
-  </div>
+  }
 </ui-drawer>
