@@ -1,7 +1,8 @@
 name: Board Status
 
-# Moves an issue's Argos Tickets card to In Progress when its {issue}-… branch is created and to
-# Under Review when that branch's PR opens, as the NER Board App. The board itself sets Done.
+# Moves an open issue's Argos Tickets card to In Progress when its {issue}-… branch is created and
+# to Under Review when that branch's PR opens, as the NER Board App. A new branch leaves a card in
+# review while the issue still has an open PR. The board itself sets Done.
 on:
   push:
     branches: ["[0-9]*"]
@@ -10,7 +11,8 @@ on:
 
 concurrency: board-status-${{ github.head_ref || github.ref_name }}
 
-permissions: {}
+permissions:
+  pull-requests: read
 
 jobs:
   move-card:
@@ -31,10 +33,15 @@ jobs:
       - if: steps.issue.outputs.number
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
+          NUMBER: ${{ steps.issue.outputs.number }}
           ISSUE: ${{ github.server_url }}/${{ github.repository }}/issues/${{ steps.issue.outputs.number }}
           STATUS: ${{ github.event_name == 'push' && 'In Progress' || 'Under Review' }}
         run: |
+          [[ $(gh issue view "$ISSUE" --json state,url --jq '"\(.state) \(.url)"') == "OPEN $ISSUE" ]] || exit 0
+          [[ $STATUS == "Under Review" || $(GH_TOKEN=$REPO_TOKEN gh pr list -R "$GITHUB_REPOSITORY" -L 100 \
+            --json headRefName --jq '[.[].headRefName | select(startswith(env.NUMBER + "-"))] | length') == 0 ]] || exit 0
           item=$(gh project item-add 23 --owner "$OWNER" --url "$ISSUE" --format json --jq .id)
           project=$(gh project view 23 --owner "$OWNER" --format json --jq .id)
           read -r field option < <(gh project field-list 23 --owner "$OWNER" --format json --jq \
