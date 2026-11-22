@@ -4,13 +4,10 @@ import { EnvService } from './env.service';
 import SocketService, { SOCKET_IO } from './socket.service';
 import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 
-type Auth = (cb: (data: object) => void) => void;
-
-/** Stands in for a socket.io-client socket: records emits and plays connection attempts. */
+/** Stands in for a socket.io-client socket: records emits and plays connections. */
 class FakeSocket {
   connected = false;
   emitted: unknown[][] = [];
-  handshakes: object[] = [];
   private handlers = new Map<string, ((...args: unknown[]) => void)[]>();
 
   constructor(readonly options: Partial<ManagerOptions & SocketOptions>) {}
@@ -25,19 +22,8 @@ class FakeSocket {
     return this;
   }
 
-  /** A connection attempt: socket.io-client evaluates the auth callback, then connects. */
+  /** The server accepted a connection, first or reconnect. */
   connect(): void {
-    this.handshake();
-    this.open();
-  }
-
-  /** Sends the connect packet, carrying the auth payload. */
-  handshake(): void {
-    (this.options.auth as Auth)((data) => this.handshakes.push(data));
-  }
-
-  /** The server accepted the handshake. */
-  open(): void {
     this.connected = true;
     this.handlers.get('connect')?.forEach((handler) => handler());
   }
@@ -88,22 +74,21 @@ describe('SocketService (topic subscriptions)', () => {
     vi.useRealTimers();
   });
 
-  it('keeps the clientId query parameter', () => {
-    expect(socket.options.query).toEqual({ clientId: expect.any(String) });
+  it('connects with the clientId and the subscriptions flag, and nothing in auth', () => {
+    expect(socket.options.query).toEqual({ clientId: expect.any(String), subscriptions: '1' });
+    expect(socket.options.auth).toBeUndefined();
   });
 
-  it('sends an empty topic list in the handshake when nothing is read yet', () => {
+  it('sends no list on connect when nothing is read yet', () => {
     socket.connect();
-    expect(socket.handshakes).toEqual([{ topics: [] }]);
     expect(socket.subscriptions()).toEqual([]);
   });
 
-  it('sends the topics already read in the handshake', async () => {
+  it('sends the topics already read as soon as it connects', async () => {
     storage.get('A/B').subscribe();
     await endTask();
     socket.connect();
-    expect(socket.handshakes).toEqual([{ topics: ['A/B'] }]);
-    expect(socket.subscriptions()).toEqual([]);
+    expect(socket.lists()).toEqual([{ seq: 1, topics: ['A/B'] }]);
   });
 
   it('sends exactly the topics a page opens with, in one message', async () => {
@@ -148,36 +133,25 @@ describe('SocketService (topic subscriptions)', () => {
     socket.connect();
     storage.get('C/D').subscribe();
     await endTask();
-    expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2]);
+    expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2, 3]);
   });
 
-  it('restores the same topics on reconnect, through the handshake', async () => {
+  it('restores the same topics on reconnect', async () => {
     socket.connect();
     storage.get('A/B').subscribe();
     await endTask();
     socket.disconnect();
     socket.connect();
-    expect(socket.handshakes).toEqual([{ topics: [] }, { topics: ['A/B'] }]);
-    expect(socket.subscriptions()).toEqual([['A/B']]);
+    expect(socket.subscriptions()).toEqual([['A/B'], ['A/B']]);
   });
 
-  it('sends nothing while disconnected and hands the latest list to the next handshake', async () => {
+  it('sends nothing while disconnected and the latest list on the next connect', async () => {
     socket.connect();
     socket.disconnect();
     storage.get('A/B').subscribe();
     await endTask();
     expect(socket.subscriptions()).toEqual([]);
     socket.connect();
-    expect(socket.handshakes).toEqual([{ topics: [] }, { topics: ['A/B'] }]);
-    expect(socket.subscriptions()).toEqual([]);
-  });
-
-  it('sends the list on connect when it changed after the handshake was sent', async () => {
-    socket.handshake();
-    storage.get('A/B').subscribe();
-    await endTask();
-    socket.open();
-    expect(socket.handshakes).toEqual([{ topics: [] }]);
     expect(socket.subscriptions()).toEqual([['A/B']]);
   });
 });

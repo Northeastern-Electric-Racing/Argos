@@ -36,24 +36,21 @@ const sameTopics = (a: string[], b: string[]) => a.length === b.length && a.ever
 export default class SocketService {
   private envService = inject(EnvService);
   private storage = inject(Storage);
-  /** The topic list the server last got from this client, in the handshake or set_subscriptions. */
+  /** The topic list the server has for this socket: none on a new connection, then the last set_subscriptions. */
   private sentTopics: string[] = [];
   /**
    * Numbers each set_subscriptions list. The server may handle lists sent close together out of
-   * order, and applies one only if its number is higher than the last it applied (the handshake's
-   * is 0), so the socket always ends on the latest list. Never reset: higher on every socket.
+   * order, and applies one only if its number is higher than the last it applied (0 on a new
+   * socket), so the socket always ends on the latest list. Never reset: higher on every socket.
    */
   private listSeq = 0;
   // Opens the connection on construction; specs that inject SocketService (or render AppContext) should provide a mock.
   private socket = inject(SOCKET_IO)(this.envService.backendUrl, {
     query: {
-      clientId: getOrCreateClientId()
-    },
-    // Evaluated on every connection attempt, so a reconnect restores the topics read now. Always
-    // carries topics, even empty: a client that sends them never receives every topic.
-    auth: (cb) => {
-      this.sentTopics = this.storage.getTopics();
-      cb({ topics: this.sentTopics });
+      clientId: getOrCreateClientId(),
+      // The server sends this socket only the topics of its set_subscriptions lists, none until the
+      // first; without the flag it sends every topic.
+      subscriptions: '1'
     }
   });
   private lastLatencyTimestamp: number = 0;
@@ -63,14 +60,17 @@ export default class SocketService {
       .topicsChanged()
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
       .subscribe(() => this.syncSubscriptions());
-    // The topics can change between sending the handshake and the server accepting it.
-    this.socket.on('connect', () => this.syncSubscriptions());
+    // Every connection, reconnects included, starts with no topics: send the ones read now.
+    this.socket.on('connect', () => {
+      this.sentTopics = [];
+      this.syncSubscriptions();
+    });
   }
 
   /**
    * Sends the server the full topic list when it differs from the last one sent. Only while
-   * connected: socket.io-client would buffer the emit and replay a stale list after the
-   * handshake of the next connection, which already carries the current one.
+   * connected: socket.io-client would buffer the emit and replay a stale list on the next
+   * connection, which sends the current one when it connects.
    */
   private syncSubscriptions = () => {
     const topics = this.storage.getTopics();
