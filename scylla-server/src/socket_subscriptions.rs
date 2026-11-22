@@ -1,13 +1,18 @@
 //! Delivery of the `data` event through one Socket.IO room per topic (ADR 0009).
 //!
-//! A client that reads topics connects with `subscriptions=1` in its query
-//! string ([`SubscribesTopics`]). Its socket starts in no room, and each
-//! [`SET_SUBSCRIPTIONS_EVENT`] list moves it to exactly those topic rooms. A
-//! socket without the flag (old clients) is in [`EVERY_TOPIC_ROOM`] for its
-//! whole connection and gets every topic, as before; its `set_subscriptions`
-//! are ignored. The flag settles this at connect, so a socket never moves
-//! between the two, and an emit never sees it in both rooms (socketioxide
-//! would send it the message twice).
+//! Every topic also goes to [`EVERY_TOPIC_ROOM`], `#`, which is otherwise a
+//! room like any other: a socket is in it while `#` is in its list. A client
+//! that reads topics connects with `subscriptions=1` in its query string
+//! ([`SubscribesTopics`]) and starts with an empty list; a socket without the
+//! flag (old clients) starts with the list `#` and gets every topic, as
+//! before. Each [`SET_SUBSCRIPTIONS_EVENT`] list replaces the socket's list,
+//! `#` included, so a socket whose flag was lost still ends up on its own
+//! topics after its first list (with a warning).
+//!
+//! A list with `#` in it is just `#`: socketioxide does not dedupe a socket in
+//! two target rooms, so a socket in `#` and a topic room would get that topic
+//! twice. Emits take no lock, so a message emitted while a socket changes
+//! rooms may reach it twice or not at all, around the change only.
 //!
 //! Each `set_subscriptions` list carries a number, `seq`, that the client
 //! raises with every list. socketioxide runs each event in its own task, so
@@ -51,9 +56,10 @@ pub const SET_SUBSCRIPTIONS_EVENT: &str = "set_subscriptions";
 /// connects with: `subscriptions=1`.
 pub const SUBSCRIPTIONS_QUERY_KEY: &str = "subscriptions";
 
-/// Room for sockets that connected without the flag. `#` is the MQTT
-/// "everything" filter and never a published topic name, and topics with
-/// wildcards are dropped, so it cannot collide with a topic room.
+/// Room every topic is also sent to: the list of a socket that connected
+/// without the flag, and a client may list it to get every topic. `#` is the
+/// MQTT "everything" filter and never a published topic name, and other
+/// topics with wildcards are dropped, so it cannot collide with a topic room.
 pub const EVERY_TOPIC_ROOM: &str = "#";
 
 /// `set_subscriptions` payload: the socket's full list of topics, numbered.
@@ -66,8 +72,7 @@ pub struct TopicList {
 
 /// Ack payload for `set_subscriptions`: the socket's latest applied list, by
 /// its number and topic count. When the acked list was older than one already
-/// applied, `seq` is that newer list's; when none was applied (or the socket
-/// connected without the flag), both are 0.
+/// applied, `seq` is that newer list's; when none was applied, both are 0.
 #[derive(serde::Serialize, Debug)]
 pub struct SubscriptionAck {
     pub count: usize,
@@ -97,21 +102,10 @@ fn subscribes_topics(query: Option<&str>) -> bool {
     })
 }
 
-/// Which `data` messages a connected socket receives.
-enum Delivery {
-    /// Every topic, through [`EVERY_TOPIC_ROOM`].
-    EveryTopic,
-    /// Exactly these topic rooms, from the list numbered `seq` (0 at connect).
-    Topics { topics: FxHashSet<String>, seq: u64 },
-}
-
-/// What an emit needs to know: which rooms have sockets.
-#[derive(Default)]
-struct Gate {
-    /// Sockets in [`EVERY_TOPIC_ROOM`].
-    every_topic: usize,
-    /// Topic rooms with at least one socket, and how many each has.
-    readers: FxHashMap<String, usize>,
+/// A connected socket's rooms, from its list numbered `seq` (0 at connect).
+struct Delivery {
+    topics: FxHashSet<String>,
+    seq: u64,
 }
 
 /// Room membership for `data`, mirrored from the adapter.
@@ -124,13 +118,14 @@ pub struct Subscriptions {
     /// change, so one change applies at a time; which list wins is decided by
     /// its `seq`, not by when its event is handled. Emits never take it.
     sockets: Mutex<FxHashMap<Sid, Delivery>>,
-    /// Read by every emit to pick its rooms; written briefly to update counts.
-    gate: RwLock<Gate>,
+    /// Rooms with at least one socket, and how many each has. Read by every
+    /// emit to pick its rooms; written briefly to update counts.
+    readers: RwLock<FxHashMap<String, usize>>,
 }
 
 impl Subscriptions {
-    /// Puts a newly connected socket in [`EVERY_TOPIC_ROOM`], or in no room
-    /// when it `subscribes` to topics, and listens for its
+    /// Gives a newly connected socket the list [`EVERY_TOPIC_ROOM`], or an
+    /// empty one when it `subscribes` to topics, and listens for its
     /// `set_subscriptions`.
     ///
     /// Call it from connect middleware, which socketioxide awaits before it
@@ -141,19 +136,13 @@ impl Subscriptions {
     pub async fn register(self: &Arc<Self>, socket: &SocketRef, subscribes: bool) {
         {
             let mut sockets = self.sockets.lock().await;
-            if subscribes {
-                sockets.insert(
-                    socket.id,
-                    Delivery::Topics {
-                        topics: FxHashSet::default(),
-                        seq: 0,
-                    },
-                );
+            let topics: FxHashSet<String> = if subscribes {
+                FxHashSet::default()
             } else {
-                self.gate_mut().every_topic += 1;
-                socket.join(EVERY_TOPIC_ROOM);
-                sockets.insert(socket.id, Delivery::EveryTopic);
-            }
+                std::iter::once(EVERY_TOPIC_ROOM.to_string()).collect()
+            };
+            self.join(socket, topics.iter().cloned().collect());
+            sockets.insert(socket.id, Delivery { topics, seq: 0 });
         }
         let subscriptions = self.clone();
         #[expect(
@@ -190,14 +179,9 @@ impl Subscriptions {
         let Some(delivery) = self.sockets.lock().await.remove(&sid) else {
             return;
         };
-        let mut gate = self.gate_mut();
-        match delivery {
-            Delivery::EveryTopic => gate.every_topic -= 1,
-            Delivery::Topics { topics, .. } => {
-                for topic in &topics {
-                    gate.remove_reader(topic);
-                }
-            }
+        let mut readers = self.readers_mut();
+        for topic in &delivery.topics {
+            remove_reader(&mut readers, topic);
         }
     }
 
@@ -211,17 +195,10 @@ impl Subscriptions {
             // disconnected while this event was in flight
             return SubscriptionAck { count: 0, seq: 0 };
         };
-        let Delivery::Topics {
+        let Delivery {
             topics: current,
             seq,
-        } = delivery
-        else {
-            warn!(
-                "Socket {} sent {} without connecting with {}=1, so it keeps every topic",
-                socket.id, SET_SUBSCRIPTIONS_EVENT, SUBSCRIPTIONS_QUERY_KEY
-            );
-            return SubscriptionAck { count: 0, seq: 0 };
-        };
+        } = delivery;
         if list.seq <= *seq {
             debug!(
                 "Socket {} sent list {} after list {}, dropping it",
@@ -232,6 +209,12 @@ impl Subscriptions {
                 seq: *seq,
             };
         }
+        if *seq == 0 && current.contains(EVERY_TOPIC_ROOM) {
+            warn!(
+                "Socket {} sent {} without connecting with {}=1",
+                socket.id, SET_SUBSCRIPTIONS_EVENT, SUBSCRIPTIONS_QUERY_KEY
+            );
+        }
         let wanted = valid_topics(socket.id, list.topics);
         // An emit may target a room the socket is about to join, or skip one
         // it is about to leave; topics it keeps are untouched.
@@ -239,9 +222,9 @@ impl Subscriptions {
         let leave: Vec<String> = current.difference(&wanted).cloned().collect();
         if !leave.is_empty() {
             {
-                let mut gate = self.gate_mut();
+                let mut readers = self.readers_mut();
                 for topic in &leave {
-                    gate.remove_reader(topic);
+                    remove_reader(&mut readers, topic);
                 }
             }
             socket.leave(leave);
@@ -260,9 +243,9 @@ impl Subscriptions {
             return;
         }
         {
-            let mut gate = self.gate_mut();
+            let mut readers = self.readers_mut();
             for topic in &topics {
-                *gate.readers.entry(topic.clone()).or_default() += 1;
+                *readers.entry(topic.clone()).or_default() += 1;
             }
         }
         socket.join(topics);
@@ -271,12 +254,12 @@ impl Subscriptions {
     /// The rooms a `data` message for `topic` goes to, or `None` when no
     /// socket reads it.
     fn rooms_for(&self, topic: &str) -> Option<Vec<String>> {
-        let gate = self.gate();
+        let readers = self.readers();
         let mut rooms = Vec::with_capacity(2);
-        if gate.every_topic > 0 {
+        if readers.contains_key(EVERY_TOPIC_ROOM) {
             rooms.push(EVERY_TOPIC_ROOM.to_string());
         }
-        if gate.readers.contains_key(topic) {
+        if readers.contains_key(topic) {
             rooms.push(topic.to_string());
         }
         (!rooms.is_empty()).then_some(rooms)
@@ -299,54 +282,58 @@ impl Subscriptions {
         io.to(rooms).emit(DATA_SOCKET_KEY, &payload).await
     }
 
-    fn gate(&self) -> RwLockReadGuard<'_, Gate> {
+    fn readers(&self) -> RwLockReadGuard<'_, FxHashMap<String, usize>> {
         // counts are updated in place and stay consistent if a holder panics
-        self.gate.read().unwrap_or_else(PoisonError::into_inner)
+        self.readers.read().unwrap_or_else(PoisonError::into_inner)
     }
 
-    fn gate_mut(&self) -> RwLockWriteGuard<'_, Gate> {
-        self.gate.write().unwrap_or_else(PoisonError::into_inner)
+    fn readers_mut(&self) -> RwLockWriteGuard<'_, FxHashMap<String, usize>> {
+        self.readers.write().unwrap_or_else(PoisonError::into_inner)
     }
 }
 
-impl Gate {
-    fn remove_reader(&mut self, topic: &str) {
-        if let Some(count) = self.readers.get_mut(topic) {
-            *count -= 1;
-            if *count == 0 {
-                self.readers.remove(topic);
-            }
+fn remove_reader(readers: &mut FxHashMap<String, usize>, topic: &str) {
+    if let Some(count) = readers.get_mut(topic) {
+        *count -= 1;
+        if *count == 0 {
+            readers.remove(topic);
         }
     }
 }
 
-/// Drops empty topics and topics with MQTT wildcards (which would silently
-/// match nothing), and duplicates.
+/// Drops empty topics, topics with MQTT wildcards other than
+/// [`EVERY_TOPIC_ROOM`] itself (they would silently match nothing), and
+/// duplicates. A list with [`EVERY_TOPIC_ROOM`] is just that room.
 fn valid_topics(sid: Sid, topics: Vec<String>) -> FxHashSet<String> {
-    topics
+    let topics: FxHashSet<String> = topics
         .into_iter()
         .filter(|topic| {
-            let ok = !topic.is_empty() && !topic.contains(['#', '+']);
+            let ok =
+                topic == EVERY_TOPIC_ROOM || (!topic.is_empty() && !topic.contains(['#', '+']));
             if !ok {
                 warn!("Socket {} sent invalid topic {:?}, dropping", sid, topic);
             }
             ok
         })
-        .collect()
+        .collect();
+    if topics.contains(EVERY_TOPIC_ROOM) {
+        return std::iter::once(EVERY_TOPIC_ROOM.to_string()).collect();
+    }
+    topics
 }
 
 #[cfg(test)]
 impl Subscriptions {
     /// Sockets in [`EVERY_TOPIC_ROOM`], and each read topic's socket count, sorted.
     fn reader_counts(&self) -> (usize, Vec<(String, usize)>) {
-        let gate = self.gate();
-        let mut readers: Vec<(String, usize)> = gate
-            .readers
+        let readers = self.readers();
+        let mut topics: Vec<(String, usize)> = readers
             .iter()
+            .filter(|(topic, _)| *topic != EVERY_TOPIC_ROOM)
             .map(|(topic, count)| (topic.clone(), *count))
             .collect();
-        readers.sort();
-        (gate.every_topic, readers)
+        topics.sort();
+        (readers.get(EVERY_TOPIC_ROOM).copied().unwrap_or(0), topics)
     }
 
     async fn socket_count(&self) -> usize {
@@ -544,13 +531,38 @@ mod tests {
         assert_eq!(srv.rooms().await, ["VCU/Speed"]);
     }
 
+    /// A client whose flag was lost still ends up on its own topics: its first
+    /// list replaces `#` like any other room.
     #[tokio::test]
-    async fn socket_without_flag_ignores_lists() {
+    async fn socket_without_flag_leaves_every_topic_on_its_first_list() {
+        let srv = Server::new();
+        let (tx, mut rx) = srv.connect_old().await;
+        let (_peer_tx, mut peer_rx) = srv.connect_old().await;
+        assert_eq!(
+            send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await,
+            r#"30[{"count":1,"seq":1}]"#
+        );
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
+        assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
+        assert_eq!(
+            received_topics(&mut peer_rx).await,
+            ["BMS/Pack/SOC", "VCU/Speed"]
+        );
+        assert_eq!(
+            srv.subs.reader_counts(),
+            (1, vec![("VCU/Speed".to_string(), 1)])
+        );
+        assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM, "VCU/Speed"]);
+    }
+
+    #[tokio::test]
+    async fn socket_without_flag_keeps_every_topic_on_a_list_numbered_zero() {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect_old().await;
         assert_eq!(
-            send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await,
-            r#"30[{"count":0,"seq":0}]"#
+            send_set(&tx, &mut rx, 0, r#"["VCU/Speed"]"#).await,
+            r#"30[{"count":1,"seq":0}]"#
         );
         srv.emit("BMS/Pack/SOC").await;
         assert_eq!(received_topics(&mut rx).await, ["BMS/Pack/SOC"]);
@@ -734,14 +746,37 @@ mod tests {
     async fn wildcards_and_empty_topics_are_dropped() {
         let srv = Server::new();
         let (tx, mut rx) = srv.connect_subscriber().await;
-        let ack = send_set(
-            &tx,
-            &mut rx,
-            1,
-            r##"["#","BMS/#","+/Speed","","VCU/Speed"]"##,
-        )
-        .await;
+        let ack = send_set(&tx, &mut rx, 1, r#"["BMS/#","+/Speed","","VCU/Speed"]"#).await;
         assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
         assert_eq!(srv.rooms().await, ["VCU/Speed"]);
+    }
+
+    /// A subscriber can list `#` to get every topic, and leave it like any
+    /// other room; with other topics in the same list it still gets each
+    /// message once.
+    #[tokio::test]
+    async fn listing_every_topic_room_gets_every_topic_once() {
+        let srv = Server::new();
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        assert_eq!(
+            send_set(&tx, &mut rx, 1, r##"["VCU/Speed","#"]"##).await,
+            r#"30[{"count":1,"seq":1}]"#
+        );
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
+        assert_eq!(
+            received_topics(&mut rx).await,
+            ["BMS/Pack/SOC", "VCU/Speed"]
+        );
+        assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM]);
+
+        send_set(&tx, &mut rx, 2, r#"["VCU/Speed"]"#).await;
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
+        assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
+        assert_eq!(
+            srv.subs.reader_counts(),
+            (0, vec![("VCU/Speed".to_string(), 1)])
+        );
     }
 }
