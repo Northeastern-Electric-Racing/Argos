@@ -1,5 +1,4 @@
-import { DestroyRef, Injectable, InjectionToken, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { io } from 'socket.io-client';
 import { DataValue, ServerData, TimerData } from 'src/utils/socket.utils';
 import Storage from './storage.service';
@@ -25,8 +24,6 @@ function getOrCreateClientId(): string {
 /** Opens the Socket.IO connection; specs provide a fake socket here instead of a server. */
 export const SOCKET_IO = new InjectionToken<typeof io>('SOCKET_IO', { providedIn: 'root', factory: () => io });
 
-const sameTopics = (a: string[], b: string[]) => a.length === b.length && a.every((topic, i) => topic === b[i]);
-
 /**
  * Service for interacting with the socket
  */
@@ -36,8 +33,6 @@ const sameTopics = (a: string[], b: string[]) => a.length === b.length && a.ever
 export default class SocketService {
   private envService = inject(EnvService);
   private storage = inject(Storage);
-  /** The topic list the server has for this socket: none on a new connection, then the last set_subscriptions. */
-  private sentTopics: string[] = [];
   /**
    * Numbers each set_subscriptions list. The server may handle lists sent close together out of
    * order, and applies one only if its number is higher than the last it applied (0 on a new
@@ -56,27 +51,17 @@ export default class SocketService {
   private lastLatencyTimestamp: number = 0;
 
   constructor() {
-    this.storage
-      .topicsChanged()
-      .pipe(takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe(() => this.syncSubscriptions());
+    this.storage.setTopicsListener((topics) => this.sendTopics(topics));
     // Every connection, reconnects included, starts with no topics: send the ones read now.
-    this.socket.on('connect', () => {
-      this.sentTopics = [];
-      this.syncSubscriptions();
-    });
+    this.socket.on('connect', () => this.sendTopics(this.storage.getTopics()));
   }
 
   /**
-   * Sends the server the full topic list when it differs from the last one sent. Only while
-   * connected: socket.io-client would buffer the emit and replay a stale list on the next
-   * connection, which sends the current one when it connects.
+   * Sends the server the full topic list. Only while connected: socket.io-client would buffer the
+   * emit and replay a stale list on the next connection, which sends the current one when it connects.
    */
-  private syncSubscriptions = () => {
-    const topics = this.storage.getTopics();
-    if (!this.socket.connected || sameTopics(topics, this.sentTopics)) return;
-    this.sentTopics = topics;
-    this.socket.emit('set_subscriptions', { seq: ++this.listSeq, topics });
+  private sendTopics = (topics: string[]) => {
+    if (this.socket.connected) this.socket.emit('set_subscriptions', { seq: ++this.listSeq, topics });
   };
 
   /**

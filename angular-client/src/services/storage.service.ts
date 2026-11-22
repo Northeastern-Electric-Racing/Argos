@@ -22,10 +22,9 @@ export default class Storage {
   private topicStreams = new Map<string, Topic>();
   /** The topics with at least one reader. */
   private read = new Set<string>();
-  /** The topics the server sends: every read topic, plus those whose last reader left since the last sweep. */
-  private listed = new Set<string>();
-  private topics: string[] = [];
-  private topicChanges = new Subject<string[]>();
+  /** The topics whose last reader left since the last sweep. The server still sends them, so a topic read again before the sweep never leaves its list. */
+  private released = new Set<string>();
+  private onTopicsChange: (topics: string[]) => void = () => undefined;
   private publishScheduled = false;
 
   private timerStorage: TimerStorageMap = new Map<string, Subject<TimerData>>();
@@ -69,32 +68,31 @@ export default class Storage {
     this.topicStreams.get(key)?.values.next(value);
   };
 
-  /** The topics the server sends this client, sorted. */
+  /** The topics the server sends this client: those read now, plus those released since the last sweep. */
   public getTopics = (): string[] => {
-    return this.topics;
+    return [...new Set([...this.read, ...this.released])];
   };
 
-  /** The full sorted topic list each time it changes: when a topic is first read, and when a sweep removes some. */
-  public topicsChanged = (): Observable<string[]> => {
-    return this.topicChanges.asObservable();
+  /** Calls listener with the full topic list each time it changes: when a topic is first read, and at a sweep after releases. */
+  public setTopicsListener = (listener: (topics: string[]) => void): void => {
+    this.onTopicsChange = listener;
   };
 
-  private setRead = (key: string, read: boolean): void => {
-    if (!read) {
+  private setRead = (key: string, reading: boolean): void => {
+    if (!reading) {
       this.read.delete(key);
+      this.released.add(key);
       return;
     }
     this.read.add(key);
-    if (this.listed.has(key)) return;
-    this.listed.add(key);
-    this.schedulePublish();
+    // A released topic is still on the server's list
+    if (!this.released.has(key)) this.schedulePublish();
   };
 
-  /** Removes the topics nothing reads any more. A topic read again before the sweep never leaves the list. */
+  /** Drops the released topics; those read again since are in read, so they stay on the list. */
   private sweep = (): void => {
-    // read is a subset of listed, so the same size means the same topics
-    if (this.listed.size === this.read.size) return;
-    this.listed = new Set(this.read);
+    if (this.released.size === 0) return;
+    this.released.clear();
     this.publish();
   };
 
@@ -109,10 +107,7 @@ export default class Storage {
   };
 
   private publish = (): void => {
-    const topics = [...this.listed].sort();
-    if (topics.length === this.topics.length && topics.every((topic, i) => topic === this.topics[i])) return;
-    this.topics = topics;
-    this.topicChanges.next(topics);
+    this.onTopicsChange(this.getTopics());
   };
 
   public getCurrentRunId = () => {

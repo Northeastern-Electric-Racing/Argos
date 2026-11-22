@@ -8,6 +8,7 @@ const value = (v: string): DataValue => ({ values: [v], time: '0', unit: 'x' });
 const endTask = () => Promise.resolve();
 /** Runs the next sweep, which removes the topics nothing reads any more. */
 const sweep = () => vi.advanceTimersByTime(TOPIC_SWEEP_MS);
+const sorted = (topics: string[]) => [...topics].sort();
 
 describe('Storage (topic subscriptions)', () => {
   let storage: Storage;
@@ -17,7 +18,8 @@ describe('Storage (topic subscriptions)', () => {
     vi.useFakeTimers();
     storage = TestBed.inject(Storage);
     changes = [];
-    storage.topicsChanged().subscribe((topics) => changes.push(topics));
+    // Lists are sets: compare them sorted
+    storage.setTopicsListener((topics) => changes.push([...topics].sort()));
   });
 
   afterEach(() => {
@@ -43,7 +45,7 @@ describe('Storage (topic subscriptions)', () => {
     expect(changes).toEqual([]);
     await endTask();
     expect(changes).toEqual([['A/B', 'C/D', 'E/F']]);
-    expect(storage.getTopics()).toEqual(['A/B', 'C/D', 'E/F']);
+    expect(sorted(storage.getTopics())).toEqual(['A/B', 'C/D', 'E/F']);
   });
 
   it('counts readers of the same topic once', async () => {
@@ -61,7 +63,7 @@ describe('Storage (topic subscriptions)', () => {
     await endTask();
     leaving.unsubscribe();
     await endTask();
-    expect(storage.getTopics()).toEqual(['A/B', 'C/D']);
+    expect(sorted(storage.getTopics())).toEqual(['A/B', 'C/D']);
     sweep();
     expect(changes).toEqual([['A/B', 'C/D'], ['A/B']]);
   });
@@ -82,7 +84,9 @@ describe('Storage (topic subscriptions)', () => {
     storage.get('A/B').subscribe();
     await endTask();
     sweep();
-    expect(changes).toEqual([['A/B']]);
+    sweep();
+    // The sweep after a release sends the list again, unchanged
+    expect(changes).toEqual([['A/B'], ['A/B']]);
   });
 
   it('sends nothing at a sweep when no topic was left', async () => {
