@@ -24,6 +24,9 @@ const MAX_TRACE_FIXES: usize = 10_000;
 const LOAD_TRACKS_TIMEOUT: Duration = Duration::from_secs(1);
 /// Faster than any FSAE car, so a fix that implies more is a GPS jump
 const MAX_SPEED_M_PER_S: f64 = 40.0;
+/// GPS jitter between fixes, under 1.7 m 95% of the time while the car is stopped, so a fix this far past the speed
+/// limit isn't taken for a jump
+const GPS_JITTER_M: f64 = 2.0;
 /// A fix this far ahead of the one before it has a bad clock, and kept, it would hold back every fix after it
 const MAX_TIME_JUMP_MS: f64 = 60_000.0;
 
@@ -129,11 +132,13 @@ impl LiveRun {
     }
 }
 
-/// Whether `fix` can follow `previous`: no faster than a car, and no further ahead in time than [`MAX_TIME_JUMP_MS`]
+/// Whether `fix` can follow `previous`: no faster than a car, give or take [`GPS_JITTER_M`], and no further ahead in
+/// time than [`MAX_TIME_JUMP_MS`]
 fn plausible(previous: GpsFix, fix: GpsFix) -> bool {
     let elapsed_ms = fix.time_ms - previous.time_ms;
     elapsed_ms <= MAX_TIME_JUMP_MS
-        && previous.point.distance_m(fix.point) <= MAX_SPEED_M_PER_S * elapsed_ms.max(0.0) / 1000.0
+        && previous.point.distance_m(fix.point)
+            <= MAX_SPEED_M_PER_S * elapsed_ms.max(0.0) / 1000.0 + GPS_JITTER_M
 }
 
 /// Times the current run's laps on every track as GPS fixes arrive, and sends every client the tracks and those laps
