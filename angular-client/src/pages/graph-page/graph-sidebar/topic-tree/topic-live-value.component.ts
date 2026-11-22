@@ -16,6 +16,7 @@ import { formatLiveValue } from 'src/utils/tree.utils';
 export class TopicLiveValueComponent implements OnInit {
   /** Fixed for the row's life: the tree tracks rows by topic. */
   topic = input.required<string>();
+  precision = input(3);
 
   private storage = inject(Storage);
   private destroyRef = inject(DestroyRef);
@@ -25,6 +26,6 @@ export class TopicLiveValueComponent implements OnInit {
     this.storage
       .get(this.topic())
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => this.value.set(formatLiveValue(value)));
+      .subscribe((value) => this.value.set(formatLiveValue(value, this.precision())));
   }
 }
