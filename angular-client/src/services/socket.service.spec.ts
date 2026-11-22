@@ -40,9 +40,9 @@ class FakeSocket {
       .map(([, list]) => list as { seq: number; topics: string[] });
   }
 
-  /** The topic lists sent with set_subscriptions. */
+  /** The topic lists sent with set_subscriptions, each sorted: the server reads them as sets. */
   subscriptions(): string[][] {
-    return this.lists().map(({ topics }) => topics);
+    return this.lists().map(({ topics }) => [...topics].sort());
   }
 }
 
@@ -79,9 +79,9 @@ describe('SocketService (topic subscriptions)', () => {
     expect(socket.options.auth).toBeUndefined();
   });
 
-  it('sends no list on connect when nothing is read yet', () => {
+  it('sends an empty list on connect when nothing is read yet', () => {
     socket.connect();
-    expect(socket.subscriptions()).toEqual([]);
+    expect(socket.subscriptions()).toEqual([[]]);
   });
 
   it('sends the topics already read as soon as it connects', async () => {
@@ -95,7 +95,7 @@ describe('SocketService (topic subscriptions)', () => {
     socket.connect();
     ['C/D', 'A/B', 'A/B'].forEach((topic) => storage.get(topic).subscribe());
     await endTask();
-    expect(socket.subscriptions()).toEqual([['A/B', 'C/D']]);
+    expect(socket.subscriptions()).toEqual([[], ['A/B', 'C/D']]);
   });
 
   it('sends one list at the sweep after a page leaves, however many topics it read', async () => {
@@ -105,9 +105,9 @@ describe('SocketService (topic subscriptions)', () => {
     await endTask();
     page.forEach((subscription) => subscription.unsubscribe());
     await endTask();
-    expect(socket.subscriptions()).toEqual([['A/B', 'C/D', 'E/F', 'G/H']]);
+    expect(socket.subscriptions()).toEqual([[], ['A/B', 'C/D', 'E/F', 'G/H']]);
     sweep();
-    expect(socket.subscriptions()).toEqual([['A/B', 'C/D', 'E/F', 'G/H'], ['A/B']]);
+    expect(socket.subscriptions()).toEqual([[], ['A/B', 'C/D', 'E/F', 'G/H'], ['A/B']]);
   });
 
   it("on a page switch, adds the new page's topics at once and removes the old page's at the sweep", async () => {
@@ -118,11 +118,7 @@ describe('SocketService (topic subscriptions)', () => {
     ['C/D', 'E/F'].forEach((topic) => storage.get(topic).subscribe());
     await endTask();
     sweep();
-    expect(socket.subscriptions()).toEqual([
-      ['A/B', 'C/D'],
-      ['A/B', 'C/D', 'E/F'],
-      ['C/D', 'E/F']
-    ]);
+    expect(socket.subscriptions()).toEqual([[], ['A/B', 'C/D'], ['A/B', 'C/D', 'E/F'], ['C/D', 'E/F']]);
   });
 
   it('numbers each list higher than the last, across reconnects', async () => {
@@ -133,7 +129,7 @@ describe('SocketService (topic subscriptions)', () => {
     socket.connect();
     storage.get('C/D').subscribe();
     await endTask();
-    expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2, 3]);
+    expect(socket.lists().map(({ seq }) => seq)).toEqual([1, 2, 3, 4]);
   });
 
   it('restores the same topics on reconnect', async () => {
@@ -142,7 +138,7 @@ describe('SocketService (topic subscriptions)', () => {
     await endTask();
     socket.disconnect();
     socket.connect();
-    expect(socket.subscriptions()).toEqual([['A/B'], ['A/B']]);
+    expect(socket.subscriptions()).toEqual([[], ['A/B'], ['A/B']]);
   });
 
   it('sends nothing while disconnected and the latest list on the next connect', async () => {
@@ -150,8 +146,8 @@ describe('SocketService (topic subscriptions)', () => {
     socket.disconnect();
     storage.get('A/B').subscribe();
     await endTask();
-    expect(socket.subscriptions()).toEqual([]);
+    expect(socket.subscriptions()).toEqual([[]]);
     socket.connect();
-    expect(socket.subscriptions()).toEqual([['A/B']]);
+    expect(socket.subscriptions()).toEqual([[], ['A/B']]);
   });
 });
