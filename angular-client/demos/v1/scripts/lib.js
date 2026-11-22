@@ -28,7 +28,6 @@ function counter() {
     const send = ws.send.bind(ws);
     ws.send = (msg) => {
       if (typeof msg === 'string') {
-        if (msg.startsWith('40{')) state.list = `handshake: ${JSON.parse(msg.slice(2)).topics?.length ?? 'none'} topics`;
         if (msg.startsWith('42["set_subscriptions"')) {
           const { seq, topics } = JSON.parse(msg.slice(2))[1];
           state.list = `list #${seq}: ${topics.length} topics`;
@@ -78,12 +77,14 @@ module.exports = {
       ws.onClose(() => route.open.delete(conn));
     });
     // Socket.IO reconnects over HTTP long-polling first, so refuse that too while dropped.
-    // Its handshake (with the topic list) then goes over polling too, out of the counter's sight, so read it here.
+    // The topic list it sends on connect then goes over polling too, out of the counter's sight, so read it here.
     await page.route(/\/socket\.io\//, async (req) => {
       if (Date.now() < route.blockUntil) return req.abort('connectionrefused');
-      const handshake = (req.request().postData() ?? '').split('\x1e').find((packet) => packet.startsWith('40{'));
-      if (handshake) {
-        const list = `handshake: ${JSON.parse(handshake.slice(2)).topics?.length ?? 'none'} topics`;
+      const packets = (req.request().postData() ?? '').split('\x1e');
+      const sent = packets.filter((packet) => packet.startsWith('42["set_subscriptions"')).pop();
+      if (sent) {
+        const { seq, topics } = JSON.parse(sent.slice(2))[1];
+        const list = `list #${seq}: ${topics.length} topics`;
         await page.evaluate((list) => window.__demo && (window.__demo.list = list), list).catch(() => {});
       }
       return req.fallback();

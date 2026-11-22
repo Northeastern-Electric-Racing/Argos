@@ -1,5 +1,5 @@
 // covers: services/socket.service services/storage.service
-// reconnect: after the connection drops, the client reconnects with the same topics in its handshake, no
+// reconnect: after the connection drops, the client reconnects and sends the same topics again, no
 // reload. The counter in the corner (lib.js) shows what this browser receives. Needs scylla-server with topic
 // rooms (#1010) and Calypso's simulator.
 const lib = require('./lib');
@@ -33,7 +33,7 @@ module.exports = {
     },
     {
       name: 'Reconnected',
-      caption: "Reconnected: the handshake carries the page's topics, so the same data comes back without a reload.",
+      caption: "Reconnected: the client sends the page's topics again on connect, so the same data comes back without a reload.",
       run: async (h) => {
         await lib.waitFor(h.page, (msgs) => msgs > 300, 20000);
         await h.wait(1500); // the counter's 1 s window catches up
